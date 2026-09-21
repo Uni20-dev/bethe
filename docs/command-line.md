@@ -2,7 +2,7 @@
 
 [Back to the overview](../README.md)
 
-The five programs share precision selection, convergence controls, and
+The six programs share precision selection, convergence controls, and
 report formatting. The periodic XXX chain is a useful first example; model
 and state-selection details live in the linked guides.
 
@@ -14,6 +14,9 @@ For electrons, [`bethe-hubbard-pbc`](hubbard.md) requires `--u` and supports
 either sign of the interaction on even rings. Select `--particles N` and
 `--sz VALUE`; the defaults remain N=L and Sz=0. See the
 [supported sector families](hubbard-sectors.md) before choosing a doped sector.
+For free ends, [`bethe-hubbard-obc`](hubbard-open.md) supports every physical
+N and Sz, odd or even L, and either sign of U. It defaults to N=L and the
+smallest nonnegative Sz compatible with N (0 or 1/2).
 
 Each program's `--help` (and no-argument usage) includes relevant literature
 references with links and a note on the modes they support. Normal numerical
@@ -107,11 +110,13 @@ estimate. There is no silent precision fallback. Run `--help` for the options.
 The residual measures how closely the rapidities satisfy the Bethe equations;
 it is not a bound on the error in the energy. The default tolerance is 32
 times the selected type's epsilon. Periodic spin-chain solvers normalize by N,
-while the open-chain solvers normalize by 2N. Hubbard normalizes both equation
-families by the number of sites L and reports their maximum; even a stopped
-continuation reports residuals at the requested U. See the model guides for the equations.
+while the open spin-chain solvers normalize by 2N. Hubbard normalizes both
+equation families by L for periodic rings or 2(L+1) for free ends, and reports
+their maximum. Even a stopped continuation reports residuals at the requested
+root-sector U. See the model guides for the equations.
 Increasing precision can help resolve closely spaced levels, but always
 inspect the convergence status before treating an energy as an eigenvalue.
 
 Continue with [periodic XXX conventions](xxx.md), [free-end chains](open-chains.md),
-or XXZ with [periodic](xxz.md) or [free-end](xxz-open.md) boundaries.
+XXZ with [periodic](xxz.md) or [free-end](xxz-open.md) boundaries, or Hubbard
+with [periodic](hubbard.md) or [free-end](hubbard-open.md) boundaries.

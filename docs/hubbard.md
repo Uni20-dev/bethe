@@ -13,7 +13,9 @@ rings**, including repulsive half-filled spin sectors, balanced attractive
 systems at every even particle number, and selected doped sectors. Not every
 finite-ring shell parity is supported: see [sectors and symmetry mappings](hubbard-sectors.md).
 There is an unrestricted exact free-fermion path at `U=0`. Excited-state scans
-and open boundaries are not yet implemented.
+are not yet implemented. For free ends, use the separate
+[`bethe-hubbard-obc` front end](hubbard-open.md), which supports every physical
+particle/spin sector and odd as well as even lengths.
 
 ## First calculations
 

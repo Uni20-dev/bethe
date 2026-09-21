@@ -22,8 +22,8 @@ int main()
       if (!ids.insert(ref.id).second || refs::find(ref.id) != &ref || ref.links.empty())
         throw std::runtime_error("invalid citation registry");
     }
-    for (auto tool :
-         {refs::Tool::xxx_pbc, refs::Tool::xxx_obc, refs::Tool::xxz_pbc, refs::Tool::xxz_obc, refs::Tool::hubbard_pbc})
+    for (auto tool : {refs::Tool::xxx_pbc, refs::Tool::xxx_obc, refs::Tool::xxz_pbc, refs::Tool::xxz_obc,
+                      refs::Tool::hubbard_pbc, refs::Tool::hubbard_obc})
     {
       ids.clear();
       auto const uses = refs::for_tool(tool);

@@ -88,13 +88,27 @@ neither the full excited-state string classification nor correlation functions.
 
 The Hubbard full and partial particle-hole transformations are reviewed in
 [rylands-2022](#rylands-2022), Sec. II, Eqs. (4)-(7). We apply them to fixed
-particle/spin sectors on even rings. The unshifted-Hamiltonian energy offsets
+particle/spin sectors on even rings and open chains of either length parity.
+The unshifted-Hamiltonian energy offsets
 are derived from `n_down -> 1-n_down`; momentum offsets follow from the
 complementary occupied momenta under `k -> pi-k`. Both are independently
 tested against fermionic exact diagonalization. See the
 [sector guide](docs/hubbard-sectors.md) for the explicit conventions and the
 distinction between physical observables and auxiliary repulsive roots.
 We do not implement that paper's quench dynamics or overlap formulas.
+
+The free-end Hubbard equations follow [deguchi-yue-1997](#deguchi-yue-1997),
+Eqs. (2.5)-(2.8) and (3.1)-(3.2), with all boundary potentials and fields set
+to zero. The charge boundary factor supplies the length L+1; both direct
+and reflected spin self-scattering terms are excluded. We use positive
+roots and consecutive integer labels, as documented in the
+[open Hubbard guide](docs/hubbard-open.md#reflected-scattering-and-ground-state-labels).
+The one-dimensional open-chain spin ordering of
+[lieb-mattis-1962](#lieb-mattis-1962) underlies selecting the minimum-spin
+branch in each fixed-Sz sector, without the periodic shell-parity restrictions.
+The Jacobian, continuation scheme, and symmetry-sector bookkeeping are our
+implementation, tested against independent fermionic exact diagonalization.
+We implement neither boundary fields nor the papers' conformal-dimension analysis.
 
 <!-- BEGIN GENERATED BIBLIOGRAPHY -->
 
@@ -200,5 +214,28 @@ J. Stat. Mech. 2022, 103103 (2022).
 Relevant tool modes:
 
 - `bethe-hubbard-pbc`: Full particle-hole and partial particle-hole (Shiba) transformations, Sec. II, Eqs. (4)-(7); used for sector mappings, not quench dynamics.
+- `bethe-hubbard-obc`: Bipartite particle-hole and Shiba transformations, Sec. II; used for physical-to-auxiliary sector mappings, not quench dynamics.
+
+### deguchi-yue-1997
+
+Tetsuo Deguchi and Ruihong Yue. *Exact solutions of 1-D Hubbard model with open boundary conditions and the conformal dimensions under boundary magnetic fields*.
+arXiv:cond-mat/9704138 (1997).
+
+[arXiv v2](<https://arxiv.org/abs/cond-mat/9704138v2>).
+
+Relevant tool modes:
+
+- `bethe-hubbard-obc`: Free-end Hubbard energy and nested reflection equations, Eqs. (2.5)-(2.8), (3.1)-(3.2), with all boundary potentials zero; t=1 and unshifted interaction.
+
+### lieb-mattis-1962
+
+Elliott Lieb and Daniel Mattis. *Theory of Ferromagnetism and the Ordering of Electronic Energy Levels*.
+Phys. Rev. 125, 164-172 (1962).
+
+[DOI](<https://doi.org/10.1103/PhysRev.125.164>).
+
+Relevant tool modes:
+
+- `bethe-hubbard-obc`: Spin ordering for the nearest-neighbour open chain: the sector minimum has S=|Sz|. No periodic-shell spin-branch selection is required.
 
 <!-- END GENERATED BIBLIOGRAPHY -->

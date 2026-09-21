@@ -1,4 +1,4 @@
-# Hubbard filling, spin sectors, and attractive U
+# Periodic Hubbard filling, spin sectors, and attractive U
 
 [Hubbard equations and numerical method](hubbard.md) · [Overview](../README.md)
 
@@ -6,6 +6,9 @@ Use `--particles N` and `--sz VALUE` to select the physical sector. The two
 spin populations are `N_up=N/2+Sz` and `N_down=N/2-Sz`; each must be an integer
 between zero and L. Half-integers can be written as `1/2` or `0.5`.
 The defaults remain N=L and Sz=0, and L must be even.
+This guide describes `bethe-hubbard-pbc`. The [free-end solver](hubbard-open.md)
+uses the same energy mappings without the periodic shell-parity restrictions;
+it also accepts odd L and defaults to Sz=1/2 when N is odd.
 
 ## Supported ground states
 

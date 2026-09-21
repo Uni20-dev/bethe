@@ -19,6 +19,9 @@ set_target_properties(bethe_xxz_open_tests PROPERTIES CXX_EXTENSIONS OFF)
 add_executable(bethe_hubbard_tests test_hubbard.cpp)
 target_link_libraries(bethe_hubbard_tests PRIVATE bethe::bethe)
 set_target_properties(bethe_hubbard_tests PROPERTIES CXX_EXTENSIONS OFF)
+add_executable(bethe_hubbard_open_tests test_hubbard_open.cpp)
+target_link_libraries(bethe_hubbard_open_tests PRIVATE bethe::bethe)
+set_target_properties(bethe_hubbard_open_tests PROPERTIES CXX_EXTENSIONS OFF)
 add_executable(bethe_citation_tests test_citations.cpp)
 # The citation data API is deliberately standard-library-only.
 target_compile_features(bethe_citation_tests PRIVATE cxx_std_23)
@@ -44,6 +47,7 @@ foreach(precision IN ITEMS fp64 long-double)
   add_test(NAME XXZ.${precision} COMMAND bethe_xxz_tests ${precision})
   add_test(NAME XXZOpen.${precision} COMMAND bethe_xxz_open_tests ${precision})
   add_test(NAME Hubbard.${precision} COMMAND bethe_hubbard_tests ${precision})
+  add_test(NAME HubbardOpen.${precision} COMMAND bethe_hubbard_open_tests ${precision})
 endforeach()
 if(UNI20_ENABLE_MPLAPACK)
   add_test(NAME Heisenberg.fp128 COMMAND bethe_heisenberg_tests fp128)
@@ -53,10 +57,11 @@ if(UNI20_ENABLE_MPLAPACK)
   add_test(NAME XXZ.fp128 COMMAND bethe_xxz_tests fp128)
   add_test(NAME XXZOpen.fp128 COMMAND bethe_xxz_open_tests fp128)
   add_test(NAME Hubbard.fp128 COMMAND bethe_hubbard_tests fp128)
+  add_test(NAME HubbardOpen.fp128 COMMAND bethe_hubbard_open_tests fp128)
 endif()
 
 if(BETHE_BUILD_APPS)
-  foreach(app IN ITEMS bethe-xxx-pbc bethe-xxx-obc bethe-xxz-pbc bethe-xxz-obc bethe-hubbard-pbc)
+  foreach(app IN ITEMS bethe-xxx-pbc bethe-xxx-obc bethe-xxz-pbc bethe-xxz-obc bethe-hubbard-pbc bethe-hubbard-obc)
     add_test(NAME Citations.${app}.cli
       COMMAND "${CMAKE_COMMAND}" "-DPROGRAM=$<TARGET_FILE:${app}>" "-DTOOL=${app}"
         -P "${CMAKE_CURRENT_SOURCE_DIR}/check_citations_cli.cmake")
@@ -65,6 +70,10 @@ if(BETHE_BUILD_APPS)
     COMMAND "${CMAKE_COMMAND}" "-DPROGRAM=$<TARGET_FILE:bethe-hubbard-pbc>"
       "-DFLOAT128=${UNI20_ENABLE_MPLAPACK}"
       -P "${CMAKE_CURRENT_SOURCE_DIR}/check_hubbard_cli.cmake")
+  add_test(NAME HubbardOpen.cli
+    COMMAND "${CMAKE_COMMAND}" "-DPROGRAM=$<TARGET_FILE:bethe-hubbard-obc>"
+      "-DFLOAT128=${UNI20_ENABLE_MPLAPACK}"
+      -P "${CMAKE_CURRENT_SOURCE_DIR}/check_hubbard_open_cli.cmake")
   add_test(NAME XXZOpen.cli
     COMMAND "${CMAKE_COMMAND}" "-DPROGRAM=$<TARGET_FILE:bethe-xxz-obc>"
       "-DFLOAT128=${UNI20_ENABLE_MPLAPACK}"

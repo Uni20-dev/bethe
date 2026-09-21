@@ -2,16 +2,16 @@
 // Copyright (C) 2026 Ian McCulloch
 #include "citation-report.hpp"
 #include "hubbard-report.hpp"
-#include <bethe/hubbard.hpp>
+#include <bethe/hubbard_open.hpp>
 
 namespace
 {
-namespace model = bethe::hubbard;
+namespace model = bethe::hubbard::open;
 struct Arguments
 {
     std::size_t sites;
     std::optional<std::size_t> particles;
-    uni20::half_int sz{0};
+    std::optional<uni20::half_int> sz;
     std::optional<std::string_view> interaction, tolerance;
     std::string_view precision = "fp64", format = "auto";
     std::size_t max_iterations = 10000;
@@ -19,36 +19,36 @@ struct Arguments
 };
 void usage(std::ostream& out)
 {
-  out << "Usage: bethe-hubbard-pbc L --u VALUE [options]\n"
-      << "Periodic Hubbard sector ground state, t=1, either sign of U.\n"
-      << "H=-sum_(j,sigma)(c^dagger_(j,sigma)c_(j+1,sigma)+h.c.)+U sum_j n_up n_down.\n"
-      << "Even L>=2; supported sector families are listed below.\n"
+  out << "Usage: bethe-hubbard-obc L --u VALUE [options]\n"
+      << "Free-end Hubbard sector ground state, t=1, either sign of U, L>=1.\n"
+      << "H=-sum_(j=0..L-2,sigma)(c^dagger_(j,sigma)c_(j+1,sigma)+h.c.)+U sum_j n_up n_down.\n"
+      << "No boundary fields; all physically valid particle/spin sectors are supported.\n"
       << "  --u VALUE                          required finite interaction\n"
       << "  --particles COUNT                  0 <= N <= 2L (default: L)\n"
-      << "  --sz VALUE                         integer or half-integer spin projection (default: 0)\n"
+      << "  --sz VALUE                         spin projection (default: 0 for even N, 1/2 for odd N)\n"
       << "  --precision fp64|long-double|fp128  (default: fp64)\n"
-      << "  --tolerance VALUE                  max normalized charge/spin residual (default: 32 epsilon)\n"
+      << "  --tolerance VALUE                  max charge/spin residual divided by 2*(L+1)\n"
+      << "                                     (default: 32 epsilon)\n"
       << "  --max-iterations COUNT             total Newton update budget, including continuation\n"
-      << "  --roots                            print charge momenta k and spin rapidities Lambda\n"
+      << "  --roots                            print standing-wave k and spin rapidities Lambda\n"
       << "  --format auto|pretty|plain         terminal report or script output (default: auto)\n"
       << "  --help                             show this help\n"
       << "The interaction is U*n_up*n_down, not the particle-hole-shifted convention.\n"
-      << "L=2 counts the periodic hopping bond twice. U=0 uses exact free fermions.\n"
-      << "Repulsive root sectors: half filling with any Sz, doped odd N_up and N_down,\n"
-      << "or a single spin species. Above half filling uses particle-hole symmetry.\n"
-      << "Attractive U uses the Shiba mapping; all balanced even-N sectors are supported.\n"
-      << "Other sectors work only if their mapped repulsive sector is supported. U=0 is unrestricted.\n"
-      << "Other interacting shell parities, excitations and odd rings are not implemented here.\n"
-      << "For free ends and unrestricted sectors, use bethe-hubbard-obc.\n"
-      << "Mapped roots and residuals explicitly describe the auxiliary sector, not attractive roots.\n"
+      << "Odd and even lengths are supported. L=2 is the ordinary single-bond dimer.\n"
+      << "There is no conserved lattice momentum; k labels standing waves.\n"
+      << "Attractive U uses Shiba mapping; N>L uses particle-hole symmetry.\n"
+      << "Mapped roots and residuals explicitly describe the auxiliary sector.\n"
+      << "U=0 and single-species root sectors use exact free fermions.\n"
       << "Residuals use the final root-sector U and are not energy-error bounds.\n"
+      << "Excitations and boundary fields are not implemented.\n"
       << "fp128 requires a Uni20 build with MPLAPACK enabled.\n";
-  bethe::cli::print_citations(out, bethe::citations::Tool::hubbard_pbc);
+  bethe::cli::print_citations(out, bethe::citations::Tool::hubbard_obc);
 }
 Arguments parse(int argc, char** argv)
 {
   Arguments result{.sites = bethe::cli::parse_size(argv[1]),
                    .particles = std::nullopt,
+                   .sz = std::nullopt,
                    .interaction = std::nullopt,
                    .tolerance = std::nullopt};
   for (int i = 2; i < argc; ++i)
@@ -62,18 +62,18 @@ Arguments parse(int argc, char** argv)
       if (++i == argc) throw std::invalid_argument("missing value for " + std::string(option));
       if (option == "--u")
         result.interaction = argv[i];
+      else if (option == "--particles")
+        result.particles = bethe::cli::parse_size(argv[i]);
+      else if (option == "--sz")
+        result.sz = uni20::half_int::parse(argv[i]);
       else if (option == "--precision")
         result.precision = argv[i];
       else if (option == "--format")
         result.format = argv[i];
       else if (option == "--tolerance")
         result.tolerance = argv[i];
-      else if (option == "--max-iterations")
-        result.max_iterations = bethe::cli::parse_size(argv[i]);
-      else if (option == "--particles")
-        result.particles = bethe::cli::parse_size(argv[i]);
       else
-        result.sz = uni20::half_int::parse(argv[i]);
+        result.max_iterations = bethe::cli::parse_size(argv[i]);
     }
     else
       throw std::invalid_argument("unknown option: " + std::string(option));
@@ -86,15 +86,16 @@ Arguments parse(int argc, char** argv)
 template <uni20::Real Real> int run(Arguments const& args)
 {
   Real const interaction = uni20::parse_real<Real>(*args.interaction);
+  auto const particles = args.particles.value_or(args.sites);
+  auto const sz = args.sz.value_or(uni20::from_twice(static_cast<std::int64_t>(particles % 2)));
   model::SolverOptions<Real> options;
   options.max_iterations = args.max_iterations;
   if (args.tolerance) options.residual_tolerance = uni20::parse_real<Real>(*args.tolerance);
   bethe::cli::CpuTimer const timer;
-  auto const state =
-      model::sector_ground_state<Real>(args.sites, args.particles.value_or(args.sites), args.sz, interaction, options);
+  auto const state = model::sector_ground_state<Real>(args.sites, particles, sz, interaction, options);
   auto const cpu_time = timer.elapsed_text();
-  return bethe::cli::print_hubbard_state(state, args.sz, args.precision, args.format, options.residual_tolerance,
-                                         cpu_time, args.roots);
+  return bethe::cli::print_hubbard_state(state, sz, args.precision, args.format, options.residual_tolerance, cpu_time,
+                                         args.roots);
 }
 } // namespace
 int main(int argc, char** argv)
@@ -116,7 +117,7 @@ int main(int argc, char** argv)
   }
   catch (std::exception const& error)
   {
-    std::cerr << "bethe-hubbard-pbc: " << error.what() << '\n';
+    std::cerr << "bethe-hubbard-obc: " << error.what() << '\n';
     return 1;
   }
 }

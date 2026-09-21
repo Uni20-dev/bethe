@@ -33,6 +33,9 @@ and `obc` means open boundaries (currently free ends, with no boundary fields).
 - [Periodic Hubbard](docs/hubbard.md): `bethe-hubbard-pbc` gives repulsive
   half-filled spin sectors, balanced attractive ground states at any even filling,
   and selected doped sectors on even rings, plus the unrestricted U=0 limit.
+- [Free-end Hubbard](docs/hubbard-open.md): `bethe-hubbard-obc` gives ground
+  states at every physical filling and spin projection, for either sign of U
+  and odd or even lengths, without lattice momentum.
 
 The XXX and XXZ models use spin-1/2 operators, J=1, and zero magnetic field.
 Hubbard uses hopping t=1 and the unshifted interaction `U*n_up*n_down`.
@@ -81,7 +84,8 @@ build/bethe-xxz-obc 4 --delta 0.5
 
 For mobile electrons rather than a spin-only chain, try
 `build/bethe-hubbard-pbc 6 --u 4 --roots`; its nested Bethe ansatz has separate
-charge momenta and spin rapidities. See the [Hubbard guide](docs/hubbard.md).
+charge momenta and spin rapidities. Use `bethe-hubbard-obc` for free ends;
+see the [periodic](docs/hubbard.md) and [open-chain](docs/hubbard-open.md) guides.
 
 Next, distinguish the lowest state in a magnetization sector from a family
 of excited states:
@@ -128,6 +132,8 @@ together. Read them in roughly this order, or go straight to your model:
    standing waves, and open-chain excitations.
 9. [Periodic Hubbard rings](docs/hubbard.md) — nested charge/spin equations,
    doping, attractive interactions, symmetry mappings, and weak/strong coupling limits.
+10. [Free-end Hubbard chains](docs/hubbard-open.md) — reflected scattering,
+    standing waves, and unrestricted ground-state sectors.
 
 ## Source and attribution
 

@@ -51,8 +51,14 @@ inline constexpr std::array<Link, 2> links_8{{
   {"DOI", "https://doi.org/10.1088/1742-5468/ac98be"},
   {"arXiv", "https://arxiv.org/abs/2206.07985"},
 }};
+inline constexpr std::array<Link, 1> links_9{{
+  {"arXiv v2", "https://arxiv.org/abs/cond-mat/9704138v2"},
+}};
+inline constexpr std::array<Link, 1> links_10{{
+  {"DOI", "https://doi.org/10.1103/PhysRev.125.164"},
+}};
 
-inline constexpr std::array<Reference, 9> references{{
+inline constexpr std::array<Reference, 11> references{{
   {"karbach-1998", "Michael Karbach, Kun Hu, and Gerhard Müller", "Introduction to the Bethe ansatz II", "Computers in Physics 12, 565", 1998, links_0},
   {"groha-2017", "Stefan Groha and Fabian H. L. Essler", "Spinon decay in the spin-1/2 Heisenberg chain with weak next nearest neighbour exchange", "J. Phys. A 50, 334002", 2017, links_1},
   {"caux-xxx-spinons", "Jean-Sébastien Caux", "The Bethe Ansatz: XXX spinons", "Online notes", 0, links_2},
@@ -62,6 +68,8 @@ inline constexpr std::array<Reference, 9> references{{
   {"vlijm-2016", "R. Vlijm, I. S. Eliëns, and J.-S. Caux", "Correlations of zero-entropy critical states in the XXZ model: integrability and Luttinger theory far from the ground state", "SciPost Phys. 1, 008", 2016, links_6},
   {"lieb-wu-2003", "Elliott H. Lieb and F. Y. Wu", "The one-dimensional Hubbard model: A reminiscence", "Physica A 321, 1-27", 2003, links_7},
   {"rylands-2022", "Colin Rylands, Bruno Bertini, and Pasquale Calabrese", "Integrable quenches in the Hubbard model", "J. Stat. Mech. 2022, 103103", 2022, links_8},
+  {"deguchi-yue-1997", "Tetsuo Deguchi and Ruihong Yue", "Exact solutions of 1-D Hubbard model with open boundary conditions and the conformal dimensions under boundary magnetic fields", "arXiv:cond-mat/9704138", 1997, links_9},
+  {"lieb-mattis-1962", "Elliott Lieb and Daniel Mattis", "Theory of Ferromagnetism and the Ordering of Electronic Energy Levels", "Phys. Rev. 125, 164-172", 1962, links_10},
 }};
 
 inline constexpr std::array<Use, 4> uses_xxx_pbc{{
@@ -86,8 +94,13 @@ inline constexpr std::array<Use, 2> uses_hubbard_pbc{{
   {&references[7], "Lieb-Wu ground-state equations and quantum-number parity, Eqs. (1), (11), (14)-(18); t=1 and unshifted U*n_up*n_down."},
   {&references[8], "Full particle-hole and partial particle-hole (Shiba) transformations, Sec. II, Eqs. (4)-(7); used for sector mappings, not quench dynamics."},
 }};
+inline constexpr std::array<Use, 3> uses_hubbard_obc{{
+  {&references[9], "Free-end Hubbard energy and nested reflection equations, Eqs. (2.5)-(2.8), (3.1)-(3.2), with all boundary potentials zero; t=1 and unshifted interaction."},
+  {&references[10], "Spin ordering for the nearest-neighbour open chain: the sector minimum has S=|Sz|. No periodic-shell spin-branch selection is required."},
+  {&references[8], "Bipartite particle-hole and Shiba transformations, Sec. II; used for physical-to-auxiliary sector mappings, not quench dynamics."},
+}};
 
-enum class Tool { xxx_pbc, xxx_obc, xxz_pbc, xxz_obc, hubbard_pbc };
+enum class Tool { xxx_pbc, xxx_obc, xxz_pbc, xxz_obc, hubbard_pbc, hubbard_obc };
 
 [[nodiscard]] constexpr std::span<Use const> for_tool(Tool tool)
 {
@@ -98,6 +111,7 @@ enum class Tool { xxx_pbc, xxx_obc, xxz_pbc, xxz_obc, hubbard_pbc };
     case Tool::xxz_pbc: return uses_xxz_pbc;
     case Tool::xxz_obc: return uses_xxz_obc;
     case Tool::hubbard_pbc: return uses_hubbard_pbc;
+    case Tool::hubbard_obc: return uses_hubbard_obc;
   }
   throw std::invalid_argument("unknown citation tool");
 }
