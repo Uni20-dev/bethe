@@ -30,9 +30,12 @@ and `obc` means open boundaries (currently free ends, with no boundary fields).
   and an anisotropy-dependent real-root excitation family for `0 <= Delta <= 1`.
 - [Free-end XXZ](docs/xxz-open.md): `bethe-xxz-obc` provides the corresponding
   open-chain calculations with no boundary fields or lattice momentum.
+- [Periodic Hubbard](docs/hubbard.md): `bethe-hubbard-pbc` gives the repulsive,
+  half-filled, Sz=0 ground state on even rings, plus the exact U=0 limit.
 
-The finite-chain models use spin-1/2 operators, J=1, and zero magnetic field.
-Excitation scans cover explicitly supported real-root families, **not complete
+The XXX and XXZ models use spin-1/2 operators, J=1, and zero magnetic field.
+Hubbard uses hopping t=1 and the unshifted interaction `U*n_up*n_down`.
+Spin-chain excitation scans cover explicitly supported real-root families, **not complete
 spectra**: `--excitations all` means all states in that family. Complex strings
 and infinite-root descendants are not implemented.
 
@@ -74,6 +77,10 @@ build/bethe-xxx-obc 4
 build/bethe-xxz-pbc 4 --delta 0.5
 build/bethe-xxz-obc 4 --delta 0.5
 ```
+
+For mobile electrons rather than a spin-only chain, try
+`build/bethe-hubbard-pbc 6 --u 4 --roots`; its nested Bethe ansatz has separate
+charge momenta and spin rapidities. See the [Hubbard guide](docs/hubbard.md).
 
 Next, distinguish the lowest state in a magnetization sector from a family
 of excited states:
@@ -118,6 +125,8 @@ together. Read them in roughly this order, or go straight to your model:
    sector minima, and the excitation window.
 8. [Free-end XXZ chains](docs/xxz-open.md) — boundary reflection phases,
    standing waves, and open-chain excitations.
+9. [Periodic Hubbard rings](docs/hubbard.md) — nested charge/spin equations,
+   half-filled ground states, and weak/strong coupling limits.
 
 ## Source and attribution
 

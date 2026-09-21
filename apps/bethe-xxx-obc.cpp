@@ -3,6 +3,7 @@
 
 #include <bethe/heisenberg_open.hpp>
 
+#include "citation-report.hpp"
 #include "heisenberg-cli.hpp"
 #include "heisenberg-report.hpp"
 
@@ -48,6 +49,7 @@ void usage(std::ostream& out)
       << "  --help                             show this help\n"
       << "No boundary fields, complex strings, or lattice momentum.\n"
       << "fp128 requires a Uni20 build with MPLAPACK enabled.\n";
+  bethe::cli::print_citations(out, bethe::citations::Tool::xxx_obc);
 }
 
 template <uni20::Real Real> int run(Arguments const& args)

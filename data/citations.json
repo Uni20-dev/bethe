@@ -1,0 +1,132 @@
+{
+  "schema_version": 1,
+  "references": [
+    {
+      "id": "karbach-1998",
+      "authors": "Michael Karbach, Kun Hu, and Gerhard Müller",
+      "title": "Introduction to the Bethe ansatz II",
+      "publication": "Computers in Physics 12, 565",
+      "year": 1998,
+      "links": [
+        {"label": "DOI", "url": "https://doi.org/10.1063/1.168740"},
+        {"label": "arXiv", "url": "https://arxiv.org/abs/cond-mat/9809163"}
+      ]
+    },
+    {
+      "id": "groha-2017",
+      "authors": "Stefan Groha and Fabian H. L. Essler",
+      "title": "Spinon decay in the spin-1/2 Heisenberg chain with weak next nearest neighbour exchange",
+      "publication": "J. Phys. A 50, 334002",
+      "year": 2017,
+      "links": [
+        {"label": "arXiv", "url": "https://arxiv.org/abs/1702.06550"}
+      ]
+    },
+    {
+      "id": "caux-xxx-spinons",
+      "authors": "Jean-Sébastien Caux",
+      "title": "The Bethe Ansatz: XXX spinons",
+      "publication": "Online notes",
+      "year": null,
+      "links": [
+        {"label": "XXX spinons", "url": "https://integrability.org/g_h_e.html"}
+      ]
+    },
+    {
+      "id": "caux-xxz-spinons",
+      "authors": "Jean-Sébastien Caux",
+      "title": "The Bethe Ansatz: XXZ spinons",
+      "publication": "Online notes",
+      "year": null,
+      "links": [
+        {"label": "XXZ spinons", "url": "https://integrability.org/g_sc_p_e.html"}
+      ]
+    },
+    {
+      "id": "mei-2017",
+      "authors": "Zhongtao Mei and C. J. Bolech",
+      "title": "Derivation of matrix product states for the Heisenberg spin chain with open boundary conditions",
+      "publication": "Phys. Rev. E 95, 032127",
+      "year": 2017,
+      "links": [
+        {"label": "arXiv", "url": "https://arxiv.org/abs/1609.08045"}
+      ]
+    },
+    {
+      "id": "caux-xxx-states",
+      "authors": "Jean-Sébastien Caux",
+      "title": "The Bethe Ansatz: real rapidities, SU(2) descendants, and two-string states",
+      "publication": "Online notes",
+      "year": null,
+      "links": [
+        {"label": "Real rapidities", "url": "https://integrability.org/c_h_e_rr.html"},
+        {"label": "SU(2) descendants", "url": "https://integrability.org/c_h_e_rr_10.html"},
+        {"label": "Two-string states", "url": "https://integrability.org/c_h_e_s_2.html"}
+      ]
+    },
+    {
+      "id": "vlijm-2016",
+      "authors": "R. Vlijm, I. S. Eliëns, and J.-S. Caux",
+      "title": "Correlations of zero-entropy critical states in the XXZ model: integrability and Luttinger theory far from the ground state",
+      "publication": "SciPost Phys. 1, 008",
+      "year": 2016,
+      "links": [
+        {"label": "DOI", "url": "https://doi.org/10.21468/SciPostPhys.1.1.008"},
+        {"label": "arXiv", "url": "https://arxiv.org/abs/1606.09516"}
+      ]
+    },
+    {
+      "id": "lieb-wu-2003",
+      "authors": "Elliott H. Lieb and F. Y. Wu",
+      "title": "The one-dimensional Hubbard model: A reminiscence",
+      "publication": "Physica A 321, 1-27",
+      "year": 2003,
+      "links": [
+        {"label": "arXiv v2", "url": "https://arxiv.org/abs/cond-mat/0207529v2"}
+      ]
+    }
+  ],
+  "tools": [
+    {
+      "id": "xxx_pbc",
+      "executable": "bethe-xxx-pbc",
+      "references": [
+        {"id": "karbach-1998", "context": "Periodic XXX equations, energy normalization, and sector quantum numbers; Eqs. (6)-(9), (16), Table I."},
+        {"id": "groha-2017", "context": "Odd-chain one-spinon states and hole labels, Sec. 3; only the unperturbed integrable chain is used."},
+        {"id": "caux-xxx-spinons", "context": "Thermodynamic XXX spinon dispersion and the bulk reference for --spinons."},
+        {"id": "caux-xxx-states", "context": "Highest-weight and string-classification background; strings and infinite-root descendants are not implemented."}
+      ]
+    },
+    {
+      "id": "xxx_obc",
+      "executable": "bethe-xxx-obc",
+      "references": [
+        {"id": "mei-2017", "context": "Free-end XXX equations: rational limit of Eqs. (11)-(12) and footnote 2; our spin-1/2 normalization differs."},
+        {"id": "caux-xxx-states", "context": "SU(2) and string-classification background, not the boundary equations; scans include only the supported finite-real family."}
+      ]
+    },
+    {
+      "id": "xxz_pbc",
+      "executable": "bethe-xxz-pbc",
+      "references": [
+        {"id": "vlijm-2016", "context": "Periodic XXZ equations, energy, and momentum, Eqs. (1), (3)-(5); our energy includes the N*Delta/4 shift."},
+        {"id": "karbach-1998", "context": "XXX limit at Delta=1 and the conventional real-root quantum-number window."},
+        {"id": "caux-xxx-states", "context": "Background for the XXX window used to restrict the XXZ scan; not a complete XXZ state classification."}
+      ]
+    },
+    {
+      "id": "xxz_obc",
+      "executable": "bethe-xxz-obc",
+      "references": [
+        {"id": "mei-2017", "context": "Free-end XXZ equations and boundary reflection phase, Eqs. (11)-(12); our Hamiltonian is divided by four and shifted."}
+      ]
+    },
+    {
+      "id": "hubbard_pbc",
+      "executable": "bethe-hubbard-pbc",
+      "references": [
+        {"id": "lieb-wu-2003", "context": "Lieb-Wu ground-state equations and quantum-number parity, Eqs. (1), (11), (14)-(18); t=1 and unshifted U*n_up*n_down."}
+      ]
+    }
+  ]
+}

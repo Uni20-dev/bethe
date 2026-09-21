@@ -78,13 +78,21 @@ yet. Use `add_subdirectory`/FetchContent and link `bethe::bethe` in a parent.
 
 `include/bethe/` contains the scalar-templated library; `apps/` contains thin
 command-line front ends; `tests/` contains the regression suite. We currently
-link `uni20_core` for scalar facilities and `uni20_common` for `half_int` and
-the CLI presentation layer. Formatting stays in `apps/`, separate from the
+link `uni20_core` for scalar facilities, `uni20_common` for `half_int` and
+the CLI presentation layer, and `uni20_linalg` for the Hubbard Newton solves.
+The latter uses Uni20's native-precision dense-solve dispatch, including its
+generic CPU path where needed; no separate linear algebra implementation is
+vendored here. Formatting stays in `apps/`, separate from the
 numerical API and any future Python bindings.
 Generic CLI, precision dispatch, and report rendering live in
 `apps/cli-common.hpp`, `apps/report-common.hpp`, and `apps/excitation-report.hpp`;
 model-specific arguments and report metadata stay in their respective front ends.
 The repository's `.clang-format` is copied from Uni20; use `clang-format -i`
 on changed C++ files to apply the shared style.
+
+Literature metadata is centralized in `data/citations.json`; see
+[maintaining citations](citations.md) to regenerate the C++ registry and the
+bibliography in `CITATIONS.md`. Generated files are checked in, so Python is
+needed only for regeneration and optional maintainer tests, not normal builds.
 
 Next: [run a calculation and interpret its output](command-line.md).

@@ -2,7 +2,7 @@
 
 [Back to the overview](../README.md)
 
-The four programs share precision selection, convergence controls, and
+The five programs share precision selection, convergence controls, and
 report formatting. The periodic XXX chain is a useful first example; model
 and state-selection details live in the linked guides.
 
@@ -10,6 +10,13 @@ and state-selection details live in the linked guides.
 `bethe-xxx-obc` program described in the [open-chain guide](open-chains.md).
 For anisotropy, use [`bethe-xxz-pbc`](xxz.md) or the free-end
 [`bethe-xxz-obc`](xxz-open.md); both require `--delta`.
+For electrons, [`bethe-hubbard-pbc`](hubbard.md) requires `--u` and currently
+supports even rings at half filling, Sz=0, U>=0 only.
+
+Each program's `--help` (and no-argument usage) includes relevant literature
+references with links and a note on the modes they support. Normal numerical
+output is unchanged. [CITATIONS.md](../CITATIONS.md) gives the full bibliography
+and explains the conventions used here.
 
 ## Choose a calculation
 
@@ -87,15 +94,20 @@ before plain scan tables. Very short runs may report zero at the clock's
 resolution; an unavailable or wrapped CPU clock is reported as `unavailable`.
 
 `--max-iterations` defaults to 10000 **per state**;
-zero evaluates only the initial zero-root guess. Exit status is 0 if all states
-converged, 2 if any exhausted their budget, and 1 for invalid input or another
-error. A budget-exhausted result is explicitly marked as an unconverged
+zero evaluates only the initial guess (zero roots for the spin-chain solvers).
+Hubbard counts accepted Newton updates across all continuation stages and
+uses a large-U seed; its exact U=0 path needs no updates.
+Exit status is 0 if all states converged, 2 if any exhausted their budget
+or a Hubbard line search stalled, and 1 for invalid input or another
+error. A nonconverged result is explicitly marked as an unconverged
 estimate. There is no silent precision fallback. Run `--help` for the options.
 
 The residual measures how closely the rapidities satisfy the Bethe equations;
 it is not a bound on the error in the energy. The default tolerance is 32
-times the selected type's epsilon. Periodic solvers normalize by N, while the
-open-chain solvers normalize by 2N. See the model guides for the equations.
+times the selected type's epsilon. Periodic spin-chain solvers normalize by N,
+while the open-chain solvers normalize by 2N. Hubbard normalizes both equation
+families by the number of sites L and reports their maximum; even a stopped
+continuation reports residuals at the requested U. See the model guides for the equations.
 Increasing precision can help resolve closely spaced levels, but always
 inspect the convergence status before treating an energy as an eigenvalue.
 

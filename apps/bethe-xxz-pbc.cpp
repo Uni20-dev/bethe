@@ -3,6 +3,7 @@
 
 #include <bethe/xxz_excitations.hpp>
 
+#include "citation-report.hpp"
 #include "excitation-report.hpp"
 #include "xxz-cli.hpp"
 
@@ -39,6 +40,7 @@ void usage(std::ostream& out)
       << "The finite-real window depends on Delta; strings and infinite rapidities are excluded.\n"
       << "No OBC or SU(2) multiplet classification; even-N Sz=0 has only one supported state.\n"
       << "fp128 requires a Uni20 build with MPLAPACK enabled.\n";
+  bethe::cli::print_citations(out, bethe::citations::Tool::xxz_pbc);
 }
 
 template <uni20::Real Real> int run(Arguments const& args)

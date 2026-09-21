@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Copyright (C) 2026 Ian McCulloch
 
+#include "citation-report.hpp"
 #include "heisenberg-cli.hpp"
 #include "heisenberg-report.hpp"
 
@@ -50,6 +51,7 @@ void usage(std::ostream& out)
       << "  --format auto|pretty|plain         terminal report or script output (default: auto)\n"
       << "  --help                             show this help\n"
       << "fp128 requires a Uni20 build with MPLAPACK enabled.\n";
+  bethe::cli::print_citations(out, bethe::citations::Tool::xxx_pbc);
 }
 
 template <uni20::Real Real> int run(Arguments const& args)
