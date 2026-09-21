@@ -77,13 +77,24 @@ Eqs. (1), (11), and (14)-(18): unshifted Hamiltonian, energy, logarithmic
 equations, quantum-number parity, and the consecutive ground-state labels.
 We set t=1, use u=U/4, and write the scattering phases as positive `2*atan`
 terms with the signs shown in the [Hubbard guide](docs/hubbard.md).
-The paper's Eq. (18) treats odd M (our L=4m+2). For L=4m we use its parity
-rules and a full charge Brillouin zone with the +pi endpoint, together with
-centered spin labels. This extension is checked against small-ring fermionic
+The paper's Eq. (18) supplies the centered labels for even N and odd M,
+including our supported doped sectors. At half filling with even M we use
+its parity rules and a full charge Brillouin zone with the +pi endpoint,
+together with centered spin labels. This extension is checked against small-ring fermionic
 exact diagonalization, including momentum; Eq. (18) alone is not a statement
 of both parity branches. The reflection reduction, analytic Jacobian, and
 damped-Newton continuation are our numerical implementation. We implement
 neither the full excited-state string classification nor correlation functions.
+
+The Hubbard full and partial particle-hole transformations are reviewed in
+[rylands-2022](#rylands-2022), Sec. II, Eqs. (4)-(7). We apply them to fixed
+particle/spin sectors on even rings. The unshifted-Hamiltonian energy offsets
+are derived from `n_down -> 1-n_down`; momentum offsets follow from the
+complementary occupied momenta under `k -> pi-k`. Both are independently
+tested against fermionic exact diagonalization. See the
+[sector guide](docs/hubbard-sectors.md) for the explicit conventions and the
+distinction between physical observables and auxiliary repulsive roots.
+We do not implement that paper's quench dynamics or overlap formulas.
 
 <!-- BEGIN GENERATED BIBLIOGRAPHY -->
 
@@ -178,5 +189,16 @@ Physica A 321, 1-27 (2003).
 Relevant tool modes:
 
 - `bethe-hubbard-pbc`: Lieb-Wu ground-state equations and quantum-number parity, Eqs. (1), (11), (14)-(18); t=1 and unshifted U\*n\_up\*n\_down.
+
+### rylands-2022
+
+Colin Rylands, Bruno Bertini, and Pasquale Calabrese. *Integrable quenches in the Hubbard model*.
+J. Stat. Mech. 2022, 103103 (2022).
+
+[DOI](<https://doi.org/10.1088/1742-5468/ac98be>), [arXiv](<https://arxiv.org/abs/2206.07985>).
+
+Relevant tool modes:
+
+- `bethe-hubbard-pbc`: Full particle-hole and partial particle-hole (Shiba) transformations, Sec. II, Eqs. (4)-(7); used for sector mappings, not quench dynamics.
 
 <!-- END GENERATED BIBLIOGRAPHY -->

@@ -47,8 +47,12 @@ inline constexpr std::array<Link, 2> links_6{{
 inline constexpr std::array<Link, 1> links_7{{
   {"arXiv v2", "https://arxiv.org/abs/cond-mat/0207529v2"},
 }};
+inline constexpr std::array<Link, 2> links_8{{
+  {"DOI", "https://doi.org/10.1088/1742-5468/ac98be"},
+  {"arXiv", "https://arxiv.org/abs/2206.07985"},
+}};
 
-inline constexpr std::array<Reference, 8> references{{
+inline constexpr std::array<Reference, 9> references{{
   {"karbach-1998", "Michael Karbach, Kun Hu, and Gerhard Müller", "Introduction to the Bethe ansatz II", "Computers in Physics 12, 565", 1998, links_0},
   {"groha-2017", "Stefan Groha and Fabian H. L. Essler", "Spinon decay in the spin-1/2 Heisenberg chain with weak next nearest neighbour exchange", "J. Phys. A 50, 334002", 2017, links_1},
   {"caux-xxx-spinons", "Jean-Sébastien Caux", "The Bethe Ansatz: XXX spinons", "Online notes", 0, links_2},
@@ -57,6 +61,7 @@ inline constexpr std::array<Reference, 8> references{{
   {"caux-xxx-states", "Jean-Sébastien Caux", "The Bethe Ansatz: real rapidities, SU(2) descendants, and two-string states", "Online notes", 0, links_5},
   {"vlijm-2016", "R. Vlijm, I. S. Eliëns, and J.-S. Caux", "Correlations of zero-entropy critical states in the XXZ model: integrability and Luttinger theory far from the ground state", "SciPost Phys. 1, 008", 2016, links_6},
   {"lieb-wu-2003", "Elliott H. Lieb and F. Y. Wu", "The one-dimensional Hubbard model: A reminiscence", "Physica A 321, 1-27", 2003, links_7},
+  {"rylands-2022", "Colin Rylands, Bruno Bertini, and Pasquale Calabrese", "Integrable quenches in the Hubbard model", "J. Stat. Mech. 2022, 103103", 2022, links_8},
 }};
 
 inline constexpr std::array<Use, 4> uses_xxx_pbc{{
@@ -77,8 +82,9 @@ inline constexpr std::array<Use, 3> uses_xxz_pbc{{
 inline constexpr std::array<Use, 1> uses_xxz_obc{{
   {&references[4], "Free-end XXZ equations and boundary reflection phase, Eqs. (11)-(12); our Hamiltonian is divided by four and shifted."},
 }};
-inline constexpr std::array<Use, 1> uses_hubbard_pbc{{
+inline constexpr std::array<Use, 2> uses_hubbard_pbc{{
   {&references[7], "Lieb-Wu ground-state equations and quantum-number parity, Eqs. (1), (11), (14)-(18); t=1 and unshifted U*n_up*n_down."},
+  {&references[8], "Full particle-hole and partial particle-hole (Shiba) transformations, Sec. II, Eqs. (4)-(7); used for sector mappings, not quench dynamics."},
 }};
 
 enum class Tool { xxx_pbc, xxx_obc, xxz_pbc, xxz_obc, hubbard_pbc };

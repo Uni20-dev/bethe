@@ -84,6 +84,17 @@
       "links": [
         {"label": "arXiv v2", "url": "https://arxiv.org/abs/cond-mat/0207529v2"}
       ]
+    },
+    {
+      "id": "rylands-2022",
+      "authors": "Colin Rylands, Bruno Bertini, and Pasquale Calabrese",
+      "title": "Integrable quenches in the Hubbard model",
+      "publication": "J. Stat. Mech. 2022, 103103",
+      "year": 2022,
+      "links": [
+        {"label": "DOI", "url": "https://doi.org/10.1088/1742-5468/ac98be"},
+        {"label": "arXiv", "url": "https://arxiv.org/abs/2206.07985"}
+      ]
     }
   ],
   "tools": [
@@ -125,7 +136,8 @@
       "id": "hubbard_pbc",
       "executable": "bethe-hubbard-pbc",
       "references": [
-        {"id": "lieb-wu-2003", "context": "Lieb-Wu ground-state equations and quantum-number parity, Eqs. (1), (11), (14)-(18); t=1 and unshifted U*n_up*n_down."}
+        {"id": "lieb-wu-2003", "context": "Lieb-Wu ground-state equations and quantum-number parity, Eqs. (1), (11), (14)-(18); t=1 and unshifted U*n_up*n_down."},
+        {"id": "rylands-2022", "context": "Full particle-hole and partial particle-hole (Shiba) transformations, Sec. II, Eqs. (4)-(7); used for sector mappings, not quench dynamics."}
       ]
     }
   ]

@@ -10,8 +10,10 @@ and state-selection details live in the linked guides.
 `bethe-xxx-obc` program described in the [open-chain guide](open-chains.md).
 For anisotropy, use [`bethe-xxz-pbc`](xxz.md) or the free-end
 [`bethe-xxz-obc`](xxz-open.md); both require `--delta`.
-For electrons, [`bethe-hubbard-pbc`](hubbard.md) requires `--u` and currently
-supports even rings at half filling, Sz=0, U>=0 only.
+For electrons, [`bethe-hubbard-pbc`](hubbard.md) requires `--u` and supports
+either sign of the interaction on even rings. Select `--particles N` and
+`--sz VALUE`; the defaults remain N=L and Sz=0. See the
+[supported sector families](hubbard-sectors.md) before choosing a doped sector.
 
 Each program's `--help` (and no-argument usage) includes relevant literature
 references with links and a note on the modes they support. Normal numerical

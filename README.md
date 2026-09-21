@@ -30,8 +30,9 @@ and `obc` means open boundaries (currently free ends, with no boundary fields).
   and an anisotropy-dependent real-root excitation family for `0 <= Delta <= 1`.
 - [Free-end XXZ](docs/xxz-open.md): `bethe-xxz-obc` provides the corresponding
   open-chain calculations with no boundary fields or lattice momentum.
-- [Periodic Hubbard](docs/hubbard.md): `bethe-hubbard-pbc` gives the repulsive,
-  half-filled, Sz=0 ground state on even rings, plus the exact U=0 limit.
+- [Periodic Hubbard](docs/hubbard.md): `bethe-hubbard-pbc` gives repulsive
+  half-filled spin sectors, balanced attractive ground states at any even filling,
+  and selected doped sectors on even rings, plus the unrestricted U=0 limit.
 
 The XXX and XXZ models use spin-1/2 operators, J=1, and zero magnetic field.
 Hubbard uses hopping t=1 and the unshifted interaction `U*n_up*n_down`.
@@ -126,7 +127,7 @@ together. Read them in roughly this order, or go straight to your model:
 8. [Free-end XXZ chains](docs/xxz-open.md) — boundary reflection phases,
    standing waves, and open-chain excitations.
 9. [Periodic Hubbard rings](docs/hubbard.md) — nested charge/spin equations,
-   half-filled ground states, and weak/strong coupling limits.
+   doping, attractive interactions, symmetry mappings, and weak/strong coupling limits.
 
 ## Source and attribution
 

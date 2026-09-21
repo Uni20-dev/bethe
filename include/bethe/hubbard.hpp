@@ -31,12 +31,20 @@ enum class SolveStatus
   stalled
 };
 
-/// Periodic, half-filled, Sz=0 ground state, t=1, U>=0, even L>=2.
+/// Periodic sector ground state, t=1, even L>=2 (supported sectors below).
 /// H=-sum_(j,sigma)(c^dagger_j c_(j+1)+h.c.)+U sum_j n_up n_down.
 template <uni20::Real Real> struct State
 {
     std::size_t sites = 0, particles = 0, down_spins = 0;
     Real interaction = Real{0};
+    /// Roots and residuals describe this sector, which may be symmetry-mapped.
+    std::size_t root_particles = 0, root_down_spins = 0;
+    Real root_interaction = Real{0};
+    /// E_physical = E_roots + energy_offset; likewise for momentum modulo L.
+    Real energy_offset = Real{0};
+    std::size_t momentum_offset = 0;
+    bool shiba_transformed = false, particle_hole_transformed = false, spin_reversed = false;
+    bool auxiliary_roots() const { return shiba_transformed || particle_hole_transformed || spin_reversed; }
     std::vector<Real> charge_momenta;
     /// Conventional Lieb-Wu Lambda (not the internally scaled Newton variable).
     std::vector<Real> spin_rapidities;
@@ -44,13 +52,13 @@ template <uni20::Real Real> struct State
     Real energy = Real{0};
     std::size_t momentum_index = 0;
     Real momentum = Real{0};
-    /// max|F_charge|/L and max|F_spin|/L, both at the requested interaction.
+    /// max|F_charge|/L and max|F_spin|/L, at root_interaction (not a continuation stage).
     Real charge_residual = Real{0}, spin_residual = Real{0}, residual_norm = Real{0};
     std::size_t iterations = 0, continuation_steps = 0;
     bool converged = false;
     SolveStatus status = SolveStatus::iteration_limit;
-    /// At U=0 momenta are free-fermion occupations, possibly repeated. Bethe
-    /// labels and spin rapidities are absent: the interacting equations are singular.
+    /// Exact free occupations at U=0 or with only one spin species in the root
+    /// sector. Bethe labels and spin rapidities are absent in either case.
     bool free_fermion = false;
 };
 
@@ -62,22 +70,41 @@ inline std::int64_t checked_sites(std::size_t sites)
     throw std::invalid_argument("Hubbard ground state requires even 2 <= sites <= INT64_MAX/4");
   return static_cast<std::int64_t>(sites);
 }
+
+inline void checked_root_sector(std::size_t sites, std::size_t particles, std::size_t down)
+{
+  checked_sites(sites);
+  if (particles > sites || down > particles / 2)
+    throw std::invalid_argument("repulsive root sector requires N <= L and 0 <= M <= N/2");
+  if (down != 0 && particles != sites && (particles % 2 != 0 || down % 2 == 0))
+    throw std::invalid_argument(
+        "unsupported Hubbard sector: after symmetry mapping, interacting doped sectors require odd "
+        "N_up and N_down; other shell parities need competing spin branches (not implemented)");
+}
 } // namespace detail
 
-/// Half-filled ground branch. Charge labels occupy a full Brillouin zone:
-/// symmetric half-odd integers for L=4m+2, integers -L/2+1,...,L/2 for L=4m.
-/// Spin labels are centered consecutively, with integer/half-odd parity respectively.
-[[nodiscard]] inline NestedQuantumNumbers ground_quantum_numbers(std::size_t sites)
+/// Labels in a supported normalized repulsive sector. At half filling, charge
+/// labels fill a Brillouin zone (the +pi endpoint for even M). Doped interacting
+/// sectors have even N, odd M and centered half-odd I / integer J. Spin labels
+/// are centered consecutively. These are auxiliary labels if a mapping is used.
+[[nodiscard]] inline NestedQuantumNumbers ground_quantum_numbers(std::size_t sites, std::size_t particles,
+                                                                 std::size_t down)
 {
-  auto const n = detail::checked_sites(sites), m = n / 2;
+  detail::checked_root_sector(sites, particles, down);
+  auto const n = static_cast<std::int64_t>(particles), m = static_cast<std::int64_t>(down);
   NestedQuantumNumbers result;
-  result.charge.reserve(sites);
-  result.spin.reserve(sites / 2);
+  result.charge.reserve(particles);
+  result.spin.reserve(down);
   for (std::int64_t j = 0; j < n; ++j)
-    result.charge.push_back(uni20::from_twice(2 * j - n + (m % 2 == 0 ? 2 : 1)));
+    result.charge.push_back(uni20::from_twice(2 * j - n + (m % 2 == 0 && n % 2 == 0 ? 2 : 1)));
   for (std::int64_t j = 0; j < m; ++j)
     result.spin.push_back(uni20::from_twice(2 * j - m + 1));
   return result;
+}
+
+[[nodiscard]] inline NestedQuantumNumbers ground_quantum_numbers(std::size_t sites)
+{
+  return ground_quantum_numbers(sites, sites, sites / 2);
 }
 
 namespace detail
@@ -96,13 +123,14 @@ template <uni20::Real Real> Real kernel(Real d, Real width)
 }
 
 /// Reflection-symmetric ground-state equations. Only positive k and Lambda
-/// vary; k=0,pi (L=4m) or Lambda=0 (L=4m+2) are held exactly fixed.
+/// vary; k=0,pi (half filling, even M) or Lambda=0 (odd M) are held exactly fixed.
 /// Spin variables are Lambda/max(1,U/4), to condition the large-U solve.
 template <uni20::Real Real> class GroundSystem {
   public:
-    explicit GroundSystem(std::size_t sites)
-        : n(sites), m(sites / 2), nk(m - (m % 2 == 0 ? 1 : 0)), ns(m / 2), order(nk + ns),
-          pi(Real{4} * std::atan(Real{1})), labels(ground_quantum_numbers(sites))
+    explicit GroundSystem(std::size_t sites) : GroundSystem(sites, sites, sites / 2) {}
+    GroundSystem(std::size_t sites, std::size_t particles, std::size_t down)
+        : sites(sites), n(particles), m(down), nk(n / 2 - (m % 2 == 0 ? 1 : 0)), ns(m / 2), order(nk + ns),
+          pi(Real{4} * std::atan(Real{1})), labels(ground_quantum_numbers(sites, particles, down))
     {}
 
     std::vector<Real> seed() const
@@ -110,7 +138,7 @@ template <uni20::Real Real> class GroundSystem {
       using std::tan;
       std::vector<Real> x(order);
       for (std::size_t j = 0; j < nk; ++j)
-        x[j] = Real{2} * pi * charge_label(j) / Real(n);
+        x[j] = Real{2} * pi * charge_label(j) / Real(sites);
       for (std::size_t a = 0; a < ns; ++a)
         x[nk + a] = tan(pi * spin_label(a) / Real(n));
       return x;
@@ -170,7 +198,7 @@ template <uni20::Real Real> class GroundSystem {
         for (std::size_t i = 0; i < order; ++i)
           for (std::size_t j = 0; j < order; ++j)
             (*jacobian)[i, j] = Real{0};
-      Real const scale = std::max(Real{1}, u), weight = Real{2} / Real(n);
+      Real const scale = std::max(Real{1}, u), weight = Real{2} / Real(sites);
       Evaluation result{.residual = std::vector<Real>(order)};
       for (std::size_t i = 0; i < nk; ++i)
       {
@@ -189,7 +217,7 @@ template <uni20::Real Real> class GroundSystem {
             if (variable >= 0) (*jacobian)[i, nk + variable] -= spin_sign(b) * scale * derivative;
           }
         }
-        result.residual[i] = x[i] - Real{2} * pi * charge_label(i) / Real(n) + weight * phases.value();
+        result.residual[i] = x[i] - Real{2} * pi * charge_label(i) / Real(sites) + weight * phases.value();
         result.charge = std::max(result.charge, abs(result.residual[i]));
       }
       for (std::size_t a = 0; a < ns; ++a)
@@ -232,7 +260,7 @@ template <uni20::Real Real> class GroundSystem {
             if (!uni20::isfinite((*jacobian)[i, j])) throw std::runtime_error("nonfinite Hubbard Jacobian");
       return result;
     }
-    std::size_t const n, m, nk, ns, order;
+    std::size_t const sites, n, m, nk, ns, order;
     Real const pi;
     NestedQuantumNumbers const labels;
 
@@ -256,51 +284,69 @@ template <uni20::Real Real> class GroundSystem {
     }
     Real spin_sign(std::size_t b) const { return b < ns ? Real{-1} : Real{1}; }
 };
-} // namespace detail
 
-/// Ground state only: even L, half filling, Sz=0, repulsive U (plus exact U=0).
-/// Damped Newton with analytic reduced Jacobian; for U<8, continuation from
-/// U=8 in factors of two. Budget counts accepted Newton updates over ALL stages.
-/// Every returned residual and energy describes the returned roots at requested U,
-/// even if continuation exhausts its budget or stalls before reaching that U.
-template <uni20::Real Real = double>
-[[nodiscard]] State<Real> ground_state(std::size_t sites, Real interaction, SolverOptions<Real> const& options = {})
+template <uni20::Real Real>
+State<Real> free_state(std::size_t sites, std::size_t particles, std::size_t down, Real interaction)
+{
+  using std::atan;
+  using std::cos;
+  using std::sin;
+  State<Real> result;
+  result.sites = sites;
+  result.particles = result.root_particles = particles;
+  result.down_spins = result.root_down_spins = down;
+  result.interaction = result.root_interaction = interaction;
+  result.free_fermion = result.converged = true;
+  result.status = SolveStatus::converged;
+  Real const pi = Real{4} * atan(Real{1}), angle = pi / Real(sites);
+  std::int64_t momentum = 0, length = static_cast<std::int64_t>(sites);
+  for (auto count : {particles - down, down})
+  {
+    if (count == 0) continue;
+    auto const first = -(static_cast<std::int64_t>(count) - 1) / 2;
+    for (std::size_t j = 0; j < count; ++j)
+    {
+      auto const q = first + static_cast<std::int64_t>(j);
+      result.charge_momenta.push_back(Real{2} * pi * Real(q) / Real(sites));
+      momentum = (momentum + q) % length;
+    }
+    // A filled band has exactly zero kinetic energy; do not evaluate sin(pi).
+    if (count != sites)
+      result.energy -= Real{2} * sin(Real(count) * angle) / sin(angle) * (count % 2 == 0 ? cos(angle) : Real{1});
+  }
+  result.momentum_index = static_cast<std::size_t>((momentum + length) % length);
+  result.momentum = Real{2} * pi * Real(result.momentum_index) / Real(sites);
+  return result;
+}
+
+/// Normalized repulsive sector. Caller validates the public parameters.
+/// Analytic reduced Newton with U=8 -> requested U continuation when U<8.
+/// The update budget is shared by all stages; final residuals use the target U.
+template <uni20::Real Real>
+State<Real> repulsive_ground_state(std::size_t sites, std::size_t particles, std::size_t down, Real interaction,
+                                   SolverOptions<Real> const& options)
 {
   using std::abs;
   using std::atan;
   using std::cos;
   using std::sin;
-  detail::checked_sites(sites);
-  if (!uni20::isfinite(interaction) || interaction < Real{0})
-    throw std::invalid_argument("Hubbard ground state requires finite U >= 0");
-  if (!uni20::isfinite(options.residual_tolerance) || options.residual_tolerance <= Real{0})
-    throw std::invalid_argument("residual tolerance must be finite and positive");
+  checked_root_sector(sites, particles, down);
+  if (down == 0) return free_state(sites, particles, down, interaction);
   State<Real> result;
-  result.sites = result.particles = sites;
-  result.down_spins = sites / 2;
-  result.interaction = interaction;
+  result.sites = sites;
+  result.particles = result.root_particles = particles;
+  result.down_spins = result.root_down_spins = down;
+  result.interaction = result.root_interaction = interaction;
   Real const pi = Real{4} * atan(Real{1});
-  result.momentum_index = sites % 4 == 0 ? sites / 2 : 0;
+  result.momentum_index = down % 2 == 0 ? sites / 2 : 0;
   result.momentum = result.momentum_index == 0 ? Real{0} : pi;
-  if (interaction == Real{0})
-  {
-    result.free_fermion = result.converged = true;
-    result.status = SolveStatus::converged;
-    auto const m = static_cast<std::int64_t>(sites / 2);
-    for (std::int64_t j = 0; j < m; ++j)
-      for (int spin = 0; spin < 2; ++spin)
-        result.charge_momenta.push_back(Real{2} * pi * Real(j - (m - 1) / 2) / Real(sites));
-    Real const angle = pi / Real(sites);
-    result.energy = -Real{4} * (sites % 4 == 0 ? cos(angle) : Real{1}) / sin(angle);
-    return result;
-  }
   Real const target_u = interaction / Real{4};
   if (target_u == Real{0} || !uni20::isfinite(Real{1} / target_u))
     throw std::invalid_argument("U is too small for this precision; U/4 and its reciprocal must be representable");
-  auto const order = sites / 2 - (sites % 4 == 0 ? 1 : 0) + sites / 4;
+  auto const order = particles / 2 - (down % 2 == 0 ? 1 : 0) + down / 2;
   auto const max_elements = static_cast<std::size_t>(std::numeric_limits<std::ptrdiff_t>::max()) / sizeof(Real);
   if (order > max_elements / order) throw std::invalid_argument("Hubbard Newton matrix is too large");
-  detail::GroundSystem<Real> const system(sites);
+  GroundSystem<Real> const system(sites, particles, down);
   auto x = system.seed();
   Real u = std::max(Real{2}, target_u);
   uni20::DenseMatrix<Real> jacobian(system.order, system.order), step(system.order, 1);
@@ -368,5 +414,74 @@ template <uni20::Real Real = double>
   for (Real lambda : result.spin_rapidities)
     if (!uni20::isfinite(lambda)) throw std::runtime_error("nonfinite Hubbard spin rapidity");
   return result;
+}
+} // namespace detail
+
+/// Lowest energy in a supported (N,Sz) sector on an even periodic ring.
+/// Normalize U<0 by down-spin particle-hole (Shiba), N>L by full particle-hole,
+/// and negative Sz by spin reversal. The repulsive solver covers half filling,
+/// doped odd/odd spin populations, and fully polarized sectors. U=0 is unrestricted.
+/// Roots/residuals belong to root_* metadata; energy/momentum to the requested sector.
+template <uni20::Real Real = double>
+[[nodiscard]] State<Real> sector_ground_state(std::size_t sites, std::size_t particles, uni20::half_int sz,
+                                              Real interaction, SolverOptions<Real> const& options = {})
+{
+  detail::checked_sites(sites);
+  if (!uni20::isfinite(interaction)) throw std::invalid_argument("Hubbard ground state requires finite U");
+  if (!uni20::isfinite(options.residual_tolerance) || options.residual_tolerance <= Real{0})
+    throw std::invalid_argument("residual tolerance must be finite and positive");
+  if (particles > 2 * sites) throw std::invalid_argument("Hubbard particles must satisfy 0 <= N <= 2L");
+  auto const bound = static_cast<std::int64_t>(std::min(particles, 2 * sites - particles)), twice_sz = sz.twice();
+  if (twice_sz < -bound || twice_sz > bound || (static_cast<std::int64_t>(particles) - twice_sz) % 2 != 0)
+    throw std::invalid_argument("Hubbard N and Sz must give integer N_up and N_down between 0 and L");
+  auto const physical_down = static_cast<std::size_t>((static_cast<std::int64_t>(particles) - twice_sz) / 2);
+  auto up = particles - physical_down, down = physical_down;
+  if (interaction == Real{0} || up == 0 || down == 0) return detail::free_state(sites, particles, down, interaction);
+
+  bool const shiba = interaction < Real{0};
+  Real const root_u = shiba ? -interaction : interaction;
+  // Combine integer coefficients BEFORE multiplying by U, avoiding cancellation
+  // between potentially huge Shiba and particle-hole energy offsets.
+  std::int64_t shift = 0;
+  std::size_t momentum_shift = 0;
+  if (shiba)
+  {
+    shift = static_cast<std::int64_t>(up);
+    if (down % 2 == 0) momentum_shift = sites / 2;
+    down = sites - down;
+  }
+  bool const particle_hole = up + down > sites;
+  if (particle_hole)
+  {
+    shift += (shiba ? -1 : 1) * static_cast<std::int64_t>(up + down - sites);
+    if ((up + down) % 2 != 0) momentum_shift = (momentum_shift + sites / 2) % sites;
+    up = sites - up;
+    down = sites - down;
+  }
+  bool const spin_reversed = up < down;
+  if (spin_reversed) std::swap(up, down);
+  Real const offset = interaction * Real(shift);
+  if (!uni20::isfinite(offset)) throw std::overflow_error("Hubbard symmetry energy offset exceeds this precision");
+  auto result = detail::repulsive_ground_state(sites, up + down, down, root_u, options);
+  result.particles = particles;
+  result.down_spins = physical_down;
+  result.interaction = interaction;
+  result.energy_offset = offset;
+  result.momentum_offset = momentum_shift;
+  result.shiba_transformed = shiba;
+  result.particle_hole_transformed = particle_hole;
+  result.spin_reversed = spin_reversed;
+  result.energy += offset;
+  result.momentum_index = (result.momentum_index + momentum_shift) % sites;
+  result.momentum = Real{8} * std::atan(Real{1}) * Real(result.momentum_index) / Real(sites);
+  if (!uni20::isfinite(result.energy)) throw std::overflow_error("Hubbard energy exceeds this precision");
+  return result;
+}
+
+/// Convenience wrapper: half filling, Sz=0. Both signs of U are supported.
+template <uni20::Real Real = double>
+[[nodiscard]] State<Real> ground_state(std::size_t sites, Real interaction, SolverOptions<Real> const& options = {})
+{
+  return sector_ground_state(sites, sites, uni20::half_int{0}, interaction, options);
 }
 } // namespace bethe::hubbard

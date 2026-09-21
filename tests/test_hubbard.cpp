@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Copyright (C) 2026 Ian McCulloch
+#include <array>
 #include <bethe/heisenberg.hpp>
 #include <bethe/hubbard.hpp>
 #include <bit>
@@ -34,15 +35,16 @@ template <typename Exception = std::invalid_argument, typename Function> void re
 struct ExactGround
 {
     double energy, translation;
+    std::vector<double> momentum_weights;
 };
-ExactGround exact_ground(unsigned n, double u)
+ExactGround exact_ground(unsigned n, double u, unsigned num_up, unsigned num_down)
 {
   unsigned const mask = (1U << n) - 1;
   std::vector<unsigned> basis;
   std::vector<std::size_t> index(1U << (2 * n));
   for (unsigned up = 0; up <= mask; ++up)
     for (unsigned down = 0; down <= mask; ++down)
-      if (std::popcount(up) == int(n / 2) && std::popcount(down) == int(n / 2))
+      if (std::popcount(up) == int(num_up) && std::popcount(down) == int(num_down))
       {
         unsigned const state = up | (down << n);
         index[state] = basis.size();
@@ -70,6 +72,8 @@ ExactGround exact_ground(unsigned n, double u)
   }
   auto const eig = uni20::linalg::eigh(std::move(h));
   double translation = 0;
+  std::vector<std::size_t> translated_index(basis.size());
+  std::vector<double> translation_sign(basis.size());
   for (std::size_t col = 0; col < basis.size(); ++col)
   {
     unsigned translated = 0;
@@ -81,9 +85,31 @@ ExactGround exact_ground(unsigned n, double u)
       if (bits & (1U << (n - 1))) parity += std::popcount(bits) - 1;
     }
     translation += (parity % 2 ? -1.0 : 1.0) * eig.eigenvectors[index[translated], 0] * eig.eigenvectors[col, 0];
+    translated_index[col] = index[translated];
+    translation_sign[col] = parity % 2 ? -1.0 : 1.0;
   }
-  return {eig.eigenvalues[0], translation};
+  // Fourier-project the entire degenerate ground eigenspace, not a single
+  // arbitrary real eigenvector (which need not have definite momentum).
+  std::vector<double> weights(n, 0);
+  double const pi = 4 * std::atan(1.0);
+  for (std::size_t v = 0; v < basis.size() && eig.eigenvalues[v] - eig.eigenvalues[0] < 1e-9; ++v)
+    for (std::size_t col = 0; col < basis.size(); ++col)
+    {
+      std::size_t row = col;
+      double sign = 1;
+      for (unsigned power = 0; power < n; ++power)
+      {
+        double const contribution = sign * eig.eigenvectors[row, v] * eig.eigenvectors[col, v] / n;
+        for (unsigned q = 0; q < n; ++q)
+          weights[q] += contribution * std::cos(2 * pi * q * power / n);
+        sign *= translation_sign[row];
+        row = translated_index[row];
+      }
+    }
+  return {eig.eigenvalues[0], translation, weights};
 }
+
+ExactGround exact_ground(unsigned n, double u) { return exact_ground(n, u, n / 2, n / 2); }
 
 // All original Lieb-Wu equations, not the reduced implementation or Jacobian.
 template <uni20::Real Real> void check_state(model::State<Real> const& s)
@@ -92,26 +118,26 @@ template <uni20::Real Real> void check_state(model::State<Real> const& s)
   using std::atan;
   using std::cos;
   using std::sin;
-  auto const n = s.sites, m = n / 2;
+  auto const sites = s.sites, n = s.root_particles, m = s.root_down_spins;
   Real const pi = Real{4} * atan(Real{1}), eps = uni20::numeric_limits<Real>::epsilon();
   auto const& k = s.charge_momenta;
   auto const& l = s.spin_rapidities;
-  require(s.particles == n && s.down_spins == m && k.size() == n, "Hubbard particle metadata");
-  Real energy = Real{0}, momentum = Real{0};
+  require(k.size() == n, "Hubbard root particle metadata");
+  Real energy = s.energy_offset, momentum = Real{2} * pi * Real(s.momentum_offset) / Real(sites);
   for (Real value : k)
   {
     energy -= Real{2} * cos(value);
     momentum += value;
   }
-  Real const allowance = Real{64} * Real(n) * eps;
+  Real const allowance = Real{64} * Real(sites) * eps * (Real{1} + abs(s.energy_offset));
   require(abs(energy - s.energy) < allowance, "Hubbard energy from returned momenta");
   require(abs(cos(momentum) - cos(s.momentum)) < allowance && abs(sin(momentum) - sin(s.momentum)) < allowance,
           "Hubbard momentum from returned roots");
-  require(s.momentum_index == (n % 4 == 0 ? n / 2 : 0), "Hubbard ground momentum parity");
   require(s.converged == (s.status == model::SolveStatus::converged), "consistent solve status");
   if (s.free_fermion)
   {
-    require(s.interaction == Real{0} && l.empty() && s.quantum_numbers.charge.empty() && s.quantum_numbers.spin.empty(),
+    require((s.root_interaction == Real{0} || m == 0 || m == n) && l.empty() && s.quantum_numbers.charge.empty() &&
+                s.quantum_numbers.spin.empty(),
             "free fermions do not have interacting Bethe labels or Lambda");
     require(s.converged && s.iterations == 0 && s.continuation_steps == 0 && s.residual_norm == Real{0},
             "exact free-fermion path does not iterate");
@@ -119,7 +145,7 @@ template <uni20::Real Real> void check_state(model::State<Real> const& s)
   }
   require(l.size() == m && s.quantum_numbers.charge.size() == n && s.quantum_numbers.spin.size() == m,
           "nested root and label counts");
-  Real const u = s.interaction / Real{4};
+  Real const u = s.root_interaction / Real{4};
   std::vector<Real> sine(n);
   for (std::size_t j = 0; j < n; ++j)
     sine[j] = k[j] == Real{0} || k[j] == pi ? Real{0} : sin(k[j]);
@@ -132,16 +158,16 @@ template <uni20::Real Real> void check_state(model::State<Real> const& s)
     if (j)
       require(k[j - 1] < k[j] && s.quantum_numbers.charge[j] - s.quantum_numbers.charge[j - 1] == uni20::half_int{1},
               "ordered distinct charge roots and consecutive labels");
-    Real f = Real(n) * k[j] - pi * Real(label);
+    Real f = Real(sites) * k[j] - pi * Real(label);
     for (Real lambda : l)
       f += Real{2} * atan((sine[j] - lambda) / u);
-    rc = std::max(rc, abs(f) / Real(n));
+    rc = std::max(rc, abs(f) / Real(sites));
     twice_labels += label;
   }
   for (std::size_t a = 0; a < m; ++a)
   {
     auto const label = s.quantum_numbers.spin[a].twice();
-    require((label % 2 == 0) == (m % 2 != 0), "spin integer/half-integer parity");
+    require((label % 2 == 0) == ((n - m) % 2 != 0), "spin integer/half-integer parity");
     if (a)
       require(l[a - 1] < l[a] && s.quantum_numbers.spin[a] - s.quantum_numbers.spin[a - 1] == uni20::half_int{1},
               "ordered distinct spin roots and consecutive labels");
@@ -150,13 +176,14 @@ template <uni20::Real Real> void check_state(model::State<Real> const& s)
       f += Real{2} * atan((l[a] - value) / u);
     for (Real lambda : l)
       f -= Real{2} * atan((l[a] - lambda) / (Real{2} * u));
-    rs = std::max(rs, abs(f) / Real(n));
+    rs = std::max(rs, abs(f) / Real(sites));
     twice_labels += label;
   }
   require(abs(rc - s.charge_residual) < allowance && abs(rs - s.spin_residual) < allowance,
           "independent full charge/spin residuals at requested U");
   require(s.residual_norm == std::max(s.charge_residual, s.spin_residual), "nested max norm");
-  require(static_cast<std::size_t>(twice_labels / 2) % n == s.momentum_index, "exact label momentum");
+  require((static_cast<std::size_t>(twice_labels / 2) + s.momentum_offset) % sites == s.momentum_index,
+          "exact label momentum");
 }
 
 template <uni20::Real Real> void jacobian()
@@ -164,10 +191,19 @@ template <uni20::Real Real> void jacobian()
   using std::abs;
   using std::cbrt;
   Real const step = cbrt(uni20::numeric_limits<Real>::epsilon());
-  for (std::size_t n : {2, 4, 6, 8, 10})
+  for (auto [sites, particles, down] : {std::array<std::size_t, 3>{2, 2, 1},
+                                        {4, 4, 2},
+                                        {6, 6, 3},
+                                        {8, 8, 4},
+                                        {10, 10, 5},
+                                        {8, 8, 2},
+                                        {8, 8, 3},
+                                        {8, 2, 1},
+                                        {10, 6, 1},
+                                        {10, 6, 3}})
     for (Real u : {Real{1} / Real{4}, Real{1}, Real{4}})
     {
-      model::detail::GroundSystem<Real> system(n);
+      model::detail::GroundSystem<Real> system(sites, particles, down);
       auto x = system.seed();
       for (std::size_t j = 0; j < x.size(); ++j)
         x[j] *= Real{9} / Real{10};
@@ -290,11 +326,109 @@ template <uni20::Real Real> void tests()
     (void)model::ground_state<Real>(static_cast<std::size_t>(std::numeric_limits<std::int64_t>::max() / 4) - 1,
                                     Real{4});
   });
-  for (Real u : {Real{-1}, uni20::numeric_limits<Real>::infinity(), uni20::numeric_limits<Real>::quiet_NaN()})
+  for (Real u : {uni20::numeric_limits<Real>::infinity(), uni20::numeric_limits<Real>::quiet_NaN()})
     rejects([&] { (void)model::ground_state<Real>(4, u); });
   for (Real t : {Real{0}, Real{-1}, uni20::numeric_limits<Real>::infinity(), uni20::numeric_limits<Real>::quiet_NaN()})
     rejects([&] { (void)model::ground_state<Real>(4, Real{4}, {.residual_tolerance = t}); });
   rejects([&] { (void)model::ground_state<Real>(4, uni20::numeric_limits<Real>::min() / Real{16}); });
+  // All physical spin populations on small even rings, including both signs
+  // of U, above half filling, empty/filled bands and degenerate free shells.
+  for (unsigned sites : {2, 4, 6})
+    for (unsigned up = 0; up <= sites; ++up)
+      for (unsigned down = 0; down <= sites; ++down)
+        for (Real interaction :
+             {Real{0}, Real{1} / Real{10}, Real{4}, Real{100}, Real{-1} / Real{10}, Real{-4}, Real{-100}})
+        {
+          auto root_up = up, root_down = interaction < Real{0} ? sites - down : down;
+          if (root_up + root_down > sites)
+          {
+            root_up = sites - root_up;
+            root_down = sites - root_down;
+          }
+          auto const m = std::min(root_up, root_down), n = root_up + root_down;
+          bool const supported =
+              interaction == Real{0} || up == 0 || down == 0 || m == 0 || n == sites || (n % 2 == 0 && m % 2 == 1);
+          auto solve = [&] {
+            return model::sector_ground_state<Real>(
+                sites, up + down, uni20::from_twice(static_cast<std::int64_t>(up) - down), interaction);
+          };
+          if (!supported)
+          {
+            rejects(solve);
+            continue;
+          }
+          auto const state = solve();
+          auto const ed = exact_ground(sites, static_cast<double>(interaction), up, down);
+          if (!state.converged || std::abs(static_cast<double>(state.energy) - ed.energy) > 3e-10 ||
+              ed.momentum_weights[state.momentum_index] < 0.9)
+          {
+            std::cerr << "sector L=" << sites << " up=" << up << " down=" << down
+                      << " U=" << uni20::format_real(interaction) << " E=" << uni20::format_real(state.energy)
+                      << " ED=" << ed.energy << " P=" << state.momentum_index
+                      << " weight=" << ed.momentum_weights[state.momentum_index] << '\n';
+            require(false, "Hubbard sector energy and momentum vs independent ED");
+          }
+          require(state.particles == up + down && state.down_spins == down && state.interaction == interaction,
+                  "physical sector metadata survives mappings");
+          check_state(state);
+        }
+
+  // Native-precision mapping identities, including balanced attraction away
+  // from half filling and both signs of physical Sz.
+  for (std::size_t pairs = 1; pairs < 16; ++pairs)
+  {
+    Real const u = Real{4};
+    auto const attractive = model::sector_ground_state<Real>(16, 2 * pairs, uni20::half_int{0}, -u);
+    auto const repulsive =
+        model::sector_ground_state<Real>(16, 16, uni20::from_twice(2 * static_cast<std::int64_t>(pairs) - 16), u);
+    require(attractive.converged && repulsive.converged && attractive.shiba_transformed &&
+                attractive.root_particles == 16 && attractive.root_down_spins == std::min(pairs, 16 - pairs) &&
+                attractive.root_interaction == u && attractive.energy_offset == -u * Real(pairs) &&
+                abs(attractive.energy - (repulsive.energy - u * Real(pairs))) < Real{256} * eps,
+            "balanced attraction maps to the correct half-filled spin sector in native precision");
+    check_state(attractive);
+    check_state(repulsive);
+  }
+  for (Real u : {Real{1} / Real{100}, Real{4}, Real{100}})
+  {
+    auto const state = model::ground_state<Real>(2, -u, {.residual_tolerance = Real{2} * eps});
+    Real const exact = -(u + sqrt(u * u + Real{64})) / Real{2};
+    require(state.converged && abs(state.energy - exact) < Real{32} * eps * (Real{1} + u),
+            "native-precision attractive dimer energy");
+  }
+  for (auto [sites, particles, down] : {std::array<std::size_t, 3>{16, 6, 3}, {32, 10, 1}, {32, 14, 5}, {16, 16, 2}})
+    for (Real interaction : {Real{1} / Real{1000000}, Real{4}, Real{100}})
+    {
+      auto const sz = uni20::from_twice(static_cast<std::int64_t>(particles - 2 * down));
+      auto const state = model::sector_ground_state<Real>(sites, particles, sz, interaction);
+      require(state.converged, "doped/polarized convergence beyond ED sizes");
+      check_state(state);
+      if (interaction < Real{1})
+      {
+        auto const free = model::sector_ground_state<Real>(sites, particles, sz, Real{0});
+        require(state.energy > free.energy && state.energy - free.energy < Real(sites) * interaction,
+                "doped/polarized weak coupling approaches independently filled free bands");
+      }
+      for (std::size_t budget : {0, 1})
+      {
+        auto const unfinished =
+            model::sector_ground_state<Real>(sites, particles, sz, interaction, {.max_iterations = budget});
+        require(!unfinished.converged && unfinished.iterations == budget, "doped/polarized global update budget");
+        check_state(unfinished);
+      }
+    }
+  auto const mapped_unfinished =
+      model::sector_ground_state<Real>(16, 10, uni20::half_int{0}, -Real{1} / Real{100}, {.max_iterations = 1});
+  require(!mapped_unfinished.converged && mapped_unfinished.auxiliary_roots() &&
+              mapped_unfinished.root_interaction == Real{1} / Real{100},
+          "mapped failure retains final root U");
+  check_state(mapped_unfinished);
+  rejects([&] { (void)model::sector_ground_state<Real>(4, 9, uni20::half_int{0}, Real{4}); });
+  rejects([&] { (void)model::sector_ground_state<Real>(4, 3, uni20::half_int{0}, Real{4}); });
+  rejects([&] { (void)model::sector_ground_state<Real>(4, 4, uni20::half_int{3}, Real{4}); });
+  rejects([&] { (void)model::sector_ground_state<Real>(4, 4, uni20::half_int{-3}, Real{4}); });
+  rejects<std::overflow_error>(
+      [&] { (void)model::sector_ground_state<Real>(4, 8, uni20::half_int{0}, -uni20::numeric_limits<Real>::max()); });
   std::cout << "Hubbard ED, momentum, Jacobian, native precision, limits and failure checks passed\n";
 }
 } // namespace
