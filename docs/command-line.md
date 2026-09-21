@@ -1,0 +1,101 @@
+# Command-line calculations and diagnostics
+
+[Back to the overview](../README.md)
+
+The three programs share precision selection, convergence controls, and
+report formatting. The periodic XXX chain is a useful first example; model
+and state-selection details live in the linked guides.
+
+`heisenberg-energy` is the periodic front end. For free-end OBC, use the separate
+`heisenberg-open-energy` program described in the [open-chain guide](open-chains.md).
+For anisotropy, use [`xxz-energy`](xxz.md), which requires `--delta`.
+
+## Choose a calculation
+
+```sh
+build/heisenberg-energy 16
+build/heisenberg-energy 64 --precision fp64 --tolerance 1e-12
+build/heisenberg-energy 6 --precision long-double --roots
+build/heisenberg-energy 15 --sz 1/2
+build/heisenberg-energy 16 --sectors
+build/heisenberg-energy 65 --spinons
+build/heisenberg-energy 32 --excitations 10 --spin 1
+build/heisenberg-energy 5 --quantum-numbers -1,1 --roots
+# In a binary128-enabled build:
+build/heisenberg-energy 16 --precision fp128 --tolerance 1e-30
+```
+
+The default is a ground state; odd lengths return one of the degenerate
+`Sz=1/2` representatives. `--sz` accepts integers, fractions such as `-3/2`,
+or half-integer decimals. `--sectors` reports one lowest-energy representative
+in each sector, including spin-reversed partners. `--spinons` requires odd
+`N>=3` and reports the one-spinon family, not the full `Sz=1/2` spectrum.
+`--quantum-numbers` takes a strictly increasing comma-separated list;
+an empty string selects the fully polarized state. `--excitations COUNT|all`
+scans a restricted real-root family, described in the [XXX excitation guide](excitations.md).
+These five explicit XXX modes are mutually exclusive. `--roots` also prints
+the exact Bethe quantum numbers.
+
+XXZ uses the same common precision and output controls, but different mode
+combinations: `--excitations` selects a family at fixed `--sz`, not `--spin`.
+See [XXZ excitations](xxz.md#real-root-excitations) before transferring XXX
+commands directly to the anisotropic model.
+
+## Select arithmetic precision
+
+`--precision` selects `fp64` (the default), `long-double`, or optional `fp128`.
+`long double` precision is platform-dependent; `fp128` uses Uni20's configured
+MPLAPACK binary128 type. The fp128 CLI currently requires MPLAPACK's native
+`_Float128/strfromf128` mode: other modes are rejected at compile time because
+the pinned Uni20's scalar I/O narrows them to `long double`.
+Calculations, tolerance parsing, and output retain the
+selected precision; displayed digits are not a guarantee of energy accuracy.
+
+For setup details and the supported MPLAPACK configuration, see
+[building with binary128](building.md#enable-binary128).
+
+## Read and save the report
+
+Output uses Uni20's presentation layer on terminals: aligned fields and tables,
+exact fractional quantum-number labels, and semantic convergence markers.
+`--format auto` (the default) selects this report on a terminal and the existing
+plain, whitespace-separated output when redirected. Use `--format pretty` to
+save a formatted report or `--format plain` to request script-oriented output
+explicitly. Both retain the selected type's full round-trip precision, including
+binary128; no displayed values are narrowed to `double`.
+
+The pretty report honors `UNI20_COLOR`, `NO_COLOR`, `UNI20_GLYPHS`, and
+`UNI20_CHARSET`. For example, `UNI20_GLYPHS=ascii UNI20_COLOR=never` selects
+ASCII table rules and status markers without ANSI color. Terminal width (or
+`COLUMNS`) selects aligned tables or labeled records; numeric strings are never
+split or truncated, so a single long value can still exceed a very narrow
+terminal. Scans separate energies from convergence diagnostics, and root tables
+identify their sector, hole, or excitation level.
+
+## CPU time and convergence
+
+Output includes energy, momentum (periodic chains only), normalized equation
+residual, convergence status, update count, and solver CPU time in seconds.
+CPU time measures process CPU consumption during state construction and solving,
+not elapsed wall time;
+for scans it covers the whole scan, including the ground reference and energy
+ordering for excitations. Report formatting and output
+are excluded. Both output formats include it, with a `# CPU time:` comment
+before plain scan tables. Very short runs may report zero at the clock's
+resolution; an unavailable or wrapped CPU clock is reported as `unavailable`.
+
+`--max-iterations` defaults to 10000 **per state**;
+zero evaluates only the initial zero-root guess. Exit status is 0 if all states
+converged, 2 if any exhausted their budget, and 1 for invalid input or another
+error. A budget-exhausted result is explicitly marked as an unconverged
+estimate. There is no silent precision fallback. Run `--help` for the options.
+
+The residual measures how closely the rapidities satisfy the Bethe equations;
+it is not a bound on the error in the energy. The default tolerance is 32
+times the selected type's epsilon. Periodic solvers normalize by N, while the
+open-chain solver normalizes by 2N. See the model guides for the equations.
+Increasing precision can help resolve closely spaced levels, but always
+inspect the convergence status before treating an energy as an eigenvalue.
+
+Continue with [periodic XXX conventions](xxx.md), [free-end chains](open-chains.md),
+or [XXZ](xxz.md).

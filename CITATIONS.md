@@ -37,7 +37,8 @@ for the Heisenberg spin chain with open boundary conditions*, Phys. Rev. E
 Our rapidity is `z=2*lambda`; our spin-1/2 Hamiltonian is the paper's XXX
 Hamiltonian divided by four and shifted by `N/4`. This gives the ferromagnetic
 reference `(N-1)/4`. Taking the positive-root logarithmic branch gives the
-integer quantum-number convention documented in README.md.
+integer quantum-number convention documented in the
+[open-chain guide](docs/open-chains.md#allowed-states-and-convergence).
 
 For the highest-weight multiplet and string classification relevant to
 real-root excitation scans, see Caux's notes on
@@ -55,7 +56,8 @@ and Luttinger theory far from the ground state*, SciPost Phys. **1**, 008 (2016)
 [arXiv:1606.09516](https://arxiv.org/abs/1606.09516), Eqs. (1), (3)-(5).
 We set J=1, h=0 and add N*Delta/4 to the paper's shifted Hamiltonian.
 Our coordinate z=tanh(lambda)/tan(gamma/2), Delta=cos(gamma), rewrites the
-equations algebraically into the rational form documented in README.md;
+equations algebraically into the rational form documented in the
+[XXZ guide](docs/xxz.md#scaled-rapidities-and-bethe-equations);
 it has the smooth XXX limit z=2*lambda_XXX. The excitation scan's one-rapidity
 infinity bound is derived by taking lambda_j to infinity in Eq. (3):
 theta_1 tends to pi-gamma and theta_2 to pi-2*gamma, giving
