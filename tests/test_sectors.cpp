@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Copyright (C) 2026 Ian McCulloch
 
+#include "exact_spectrum.hpp"
 #include <bethe/heisenberg.hpp>
 #include <uni20/core/scalar_io.hpp>
 
@@ -13,8 +14,7 @@ namespace
 {
 void require(bool condition, std::string_view message)
 {
-  if (!condition)
-    throw std::runtime_error(std::string(message));
+  if (!condition) throw std::runtime_error(std::string(message));
 }
 
 template <typename Function> void invalid_argument(Function&& function)
@@ -30,79 +30,7 @@ template <typename Function> void invalid_argument(Function&& function)
   throw std::runtime_error("expected invalid_argument");
 }
 
-// Independent small-chain oracle: construct H directly in the Sz bit basis.
-// Optionally add a*(T+T^-1)/2, which shifts an eigenvalue by a*cos(P), to
-// check momentum as well as energy without a momentum-space Bethe formula.
-// Double is intentional only in this ED oracle; separate analytic regressions
-// below check the solver and dispersions in the selected precision.
-std::vector<double> exact_spectrum(unsigned n, unsigned down, double translation_weight = 0)
-{
-  std::vector<unsigned> basis;
-  std::vector<std::size_t> index(1U << n);
-  for (unsigned bits = 0; bits < (1U << n); ++bits)
-    if (std::popcount(bits) == static_cast<int>(down))
-    {
-      index[bits] = basis.size();
-      basis.push_back(bits);
-    }
-  auto const dim = basis.size();
-  std::vector<double> matrix(dim * dim, 0);
-  auto at = [&](std::size_t i, std::size_t j) -> double& { return matrix[i * dim + j]; };
-  for (std::size_t i = 0; i < dim; ++i)
-  {
-    auto const bits = basis[i];
-    for (unsigned site = 0; site < n; ++site)
-    {
-      unsigned const next = (site + 1) % n;
-      bool const opposite = ((bits >> site) & 1U) != ((bits >> next) & 1U);
-      at(i, i) += opposite ? -0.25 : 0.25;
-      if (opposite)
-        at(index[bits ^ (1U << site) ^ (1U << next)], i) += 0.5;
-    }
-    unsigned const translated = ((bits << 1) & ((1U << n) - 1)) | (bits >> (n - 1));
-    at(index[translated], i) += translation_weight / 2;
-    at(i, index[translated]) += translation_weight / 2;
-  }
-  // Cyclic Jacobi diagonalization of a real symmetric matrix.
-  bool diagonal = false;
-  for (int sweep = 0; sweep < 80; ++sweep)
-  {
-    double largest = 0;
-    for (std::size_t p = 0; p < dim; ++p)
-      for (std::size_t q = p + 1; q < dim; ++q)
-      {
-        double const off = at(p, q);
-        largest = std::max(largest, std::abs(off));
-        if (std::abs(off) < 1e-14)
-          continue;
-        double const tau = (at(q, q) - at(p, p)) / (2 * off);
-        double const t = std::copysign(1.0, tau) / (std::abs(tau) + std::hypot(1.0, tau));
-        double const c = 1 / std::sqrt(1 + t * t);
-        double const s = t * c;
-        at(p, p) -= t * off;
-        at(q, q) += t * off;
-        at(p, q) = at(q, p) = 0;
-        for (std::size_t r = 0; r < dim; ++r)
-          if (r != p && r != q)
-          {
-            double const rp = at(r, p), rq = at(r, q);
-            at(r, p) = at(p, r) = c * rp - s * rq;
-            at(r, q) = at(q, r) = s * rp + c * rq;
-          }
-      }
-    if (largest < 1e-13)
-    {
-      diagonal = true;
-      break;
-    }
-  }
-  require(diagonal, "ED oracle diagonalization failed");
-  std::vector<double> energies(dim);
-  for (std::size_t i = 0; i < dim; ++i)
-    energies[i] = at(i, i);
-  std::sort(energies.begin(), energies.end());
-  return energies;
-}
+using test_support::exact_spectrum;
 
 template <uni20::Real Real> void check_state(std::size_t n, bethe::heisenberg::RealState<Real> const& state)
 {
@@ -121,13 +49,11 @@ template <uni20::Real Real> void check_state(std::size_t n, bethe::heisenberg::R
     auto const z = state.rapidities[i];
     Real f = Real{2} * static_cast<Real>(n) * atan(z) - pi * static_cast<Real>(state.quantum_numbers[i].twice());
     for (std::size_t j = 0; j < state.rapidities.size(); ++j)
-      if (i != j)
-        f -= Real{2} * atan((z - state.rapidities[j]) / Real{2});
+      if (i != j) f -= Real{2} * atan((z - state.rapidities[j]) / Real{2});
     residual = std::max(residual, abs(f) / static_cast<Real>(n));
     energy -= Real{2} / (Real{1} + z * z);
     momentum += pi - Real{2} * atan(z);
-    if (i > 0 && state.converged)
-      require(state.rapidities[i - 1] < z, "ordered converged roots");
+    if (i > 0 && state.converged) require(state.rapidities[i - 1] < z, "ordered converged roots");
   }
   Real const allowance = Real{64} * static_cast<Real>(n) * eps;
   require(abs(energy - state.energy) < allowance, "returned energy matches roots");
@@ -236,8 +162,7 @@ template <uni20::Real Real> void tests()
                   state.quantum_numbers.end(),
               "specified hole is absent");
       require(point.spinon_momentum > Real{0} && point.spinon_momentum < pi, "spinon k range");
-      if (i > 0)
-        require(branch[i - 1].spinon_momentum < point.spinon_momentum, "ascending spinon k");
+      if (i > 0) require(branch[i - 1].spinon_momentum < point.spinon_momentum, "ascending spinon k");
       auto const& mirror = branch[branch.size() - 1 - i];
       require(abs(point.spinon_momentum + mirror.spinon_momentum - pi) < tolerance, "spinon k reflection");
       require(abs(state.energy - mirror.state.energy) < tolerance, "spinon energy reflection");
@@ -312,12 +237,10 @@ template <uni20::Real Real> void tests()
   invalid_argument([&] { (void)one_spinon_state<Real>(5, half(1)); });
   invalid_argument([&] { (void)one_spinon_state<Real>(5, half(4)); });
   invalid_argument([&] { (void)solve_real<Real>(5, center.state.quantum_numbers, {}, std::vector<Real>{Real{0}}); });
-  invalid_argument(
-      [&]
-      {
-        (void)solve_real<Real>(5, center.state.quantum_numbers, {},
-                               std::vector<Real>{Real{0}, uni20::numeric_limits<Real>::infinity()});
-      });
+  invalid_argument([&] {
+    (void)solve_real<Real>(5, center.state.quantum_numbers, {},
+                           std::vector<Real>{Real{0}, uni20::numeric_limits<Real>::infinity()});
+  });
   for (Real const bad : {-Real{1}, uni20::numeric_limits<Real>::infinity(), uni20::numeric_limits<Real>::quiet_NaN()})
   {
     invalid_argument([&] { (void)spinon_energy(bad); });

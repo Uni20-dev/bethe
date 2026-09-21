@@ -29,3 +29,12 @@ by P=pi*M+pi/2-k modulo 2*pi. The bulk reference energy is J*(1/4-log(2)).
 
 Research using these tools should acknowledge the Matrix Product Toolkit and
 Uni20 where relevant, and cite the methods used in the calculation.
+
+The free-end XXX equations follow the rational limit of Eqs. (11)-(12) and
+footnote 2 in Zhongtao Mei and C. J. Bolech, *Derivation of matrix product states
+for the Heisenberg spin chain with open boundary conditions*, Phys. Rev. E
+**95**, 032127 (2017), [arXiv:1609.08045](https://arxiv.org/abs/1609.08045).
+Our rapidity is `z=2*lambda`; our spin-1/2 Hamiltonian is the paper's XXX
+Hamiltonian divided by four and shifted by `N/4`. This gives the ferromagnetic
+reference `(N-1)/4`. Taking the positive-root logarithmic branch gives the
+integer quantum-number convention documented in README.md.

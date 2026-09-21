@@ -1,0 +1,60 @@
+# .clang-format
+# This configuration is based on the Google style as a starting point
+
+BasedOnStyle: LLVM
+
+PointerAlignment: Left
+ReferenceAlignment: Pointer
+
+# 2-space intents.
+IndentWidth: 2
+
+# Never use tabs. They are evil.
+UseTab: Never
+
+# Break before braces in functions, classes, namespaces, etc. Alternative is 'attach'
+# BreakBeforeBraces: Allman
+BreakBeforeBraces: Custom
+BraceWrapping:
+  AfterCaseLabel: true
+  AfterControlStatement: true
+  AfterEnum: true
+  AfterFunction: true
+  AfterNamespace: true
+  AfterStruct: true
+  AfterUnion: true
+  AfterExternBlock: true
+  BeforeCatch: true
+  BeforeElse: true
+  BeforeLambdaBody: false
+  BeforeWhile: true
+  IndentBraces: false
+  SplitEmptyFunction: false
+  SplitEmptyRecord: false
+  SplitEmptyNamespace: false
+
+
+
+# Allow short if statements on one line, e.g.:
+#   if (condition) return;
+AllowShortIfStatementsOnASingleLine: true
+
+# Indent access modifiers in classes and structs (e.g., public, private)
+# this has an annoyance that structures that have no access modifiers end
+# up with a double indentation.  See https://github.com/llvm/llvm-project/issues/61631
+# Hopefully this will be fixed in clang-format one day!
+IndentAccessModifiers: true
+
+# Indent case labels within a switch statement.
+IndentCaseLabels: true
+
+# Set a reasonable column limit.
+ColumnLimit: 120
+
+# Allow short functions on a single line.
+# Use 'All' to allow even non-member functions or friend functions to be on one line if short
+AllowShortFunctionsOnASingleLine: All
+
+AllowShortBlocksOnASingleLine: Empty
+
+AllowShortLambdasOnASingleLine: true

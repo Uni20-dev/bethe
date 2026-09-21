@@ -4,10 +4,11 @@ C++23 tools for finite-system Bethe ansatz calculations, complementing
 [Uni20](https://github.com/Uni20-dev/uni20) and the
 [Matrix Product Toolkit](https://github.com/mptoolkit/mptoolkit).
 
-The finite-size solver covers periodic spin-1/2 Heisenberg (XXX) chains at
-zero field: ground states for even and odd lengths, lowest energies in each
-magnetization sector, specified real-root states, and the odd-chain one-spinon
-branch. Analytic thermodynamic spinon dispersions are provided for XXX and
+The finite-size solvers cover periodic and free-end open spin-1/2 Heisenberg
+(XXX) chains at zero field: ground states for even and odd lengths, lowest
+energies in each magnetization sector, and specified real-root states. The
+periodic solver also provides the odd-chain one-spinon branch.
+Analytic thermodynamic spinon dispersions are provided for XXX and
 gapless XXZ. It succeeds MPToolkit's `misc/heisenberg-energy.cpp`; no legacy
 copy is kept here.
 
@@ -55,6 +56,9 @@ on machine-local storage when the source checkout is shared between hosts.
 yet. Use `add_subdirectory`/FetchContent and link `bethe::bethe` in a parent.
 
 ## Command line
+
+`heisenberg-energy` is the periodic front end. For free-end OBC, use the separate
+`heisenberg-open-energy` program described [below](#open-boundary-chains).
 
 ```sh
 build/heisenberg-energy 16
@@ -144,7 +148,8 @@ H = sum_(i=0)^(N-1) S_i . S_((i+1) mod N),     J = 1, h = 0.
 This is the spin-1/2, not Pauli-matrix, normalization. For N=2 the periodic sum
 counts the bond twice, giving E=-3/2. For N=4, E=-2; for N=6,
 E=-(2+sqrt(13))/2. Complex roots, infinite-root SU(2) descendants, finite-size
-XXZ calculations, and nonperiodic boundaries are not supported yet.
+XXZ calculations, boundary fields, and other boundary conditions are not
+supported yet. The API in this section is periodic; the open-chain API is separate.
 
 For M finite real roots, the conventions are:
 
@@ -235,6 +240,65 @@ XXZ. They require finite `k` in `[0,pi]`, positive finite J, and for XXZ
 k=pi return exactly zero. They are analytic functions, not a finite-size XXZ
 solver. See [CITATIONS.md](CITATIONS.md) for the derivations.
 
+## Open-boundary chains
+
+`heisenberg-open-energy` has free ends with no boundary fields:
+
+```sh
+build/heisenberg-open-energy 16
+build/heisenberg-open-energy 15 --sz 3/2
+build/heisenberg-open-energy 16 --sectors
+build/heisenberg-open-energy 4 --quantum-numbers 1,2 --roots --precision fp128
+```
+
+It shares precision selection, CPU timing, convergence diagnostics, and
+pretty/plain reports with the periodic program, but has no `--spinons` or
+boundary-selection switch. Open chains have no translation momentum, so no
+momentum fields or columns are reported. The library likewise uses a separate
+result type without momentum members:
+
+```cpp
+#include <bethe/heisenberg_open.hpp>
+
+namespace obc = bethe::heisenberg::open;
+auto ground = obc::ground_state<long double>(16);
+auto sector = obc::sector_ground_state<long double>(15, uni20::half_int::parse("3/2"));
+auto sectors = obc::sector_ground_states<long double>(16);
+bethe::heisenberg::QuantumNumbers numbers{uni20::half_int{1}, uni20::half_int{2}};
+auto state = obc::solve_real<long double>(4, numbers);
+```
+
+The free-end Hamiltonian and logarithmic equations use the same rapidity scale
+as the periodic solver:
+
+```text
+H   = sum_(i=0)^(N-2) S_i . S_(i+1),
+F_i = 2 N phi(z_i) - 2 pi I_i
+      - sum_(j != i) [phi((z_i-z_j)/2) + phi((z_i+z_j)/2)],
+phi(z) = 2 atan(z),
+E   = (N-1)/4 - sum_i 2/(1+z_i^2).
+```
+
+Only the positive, finite real-root branch is represented: `M<=N/2`, with
+distinct increasing integer labels `1<=I_i<=N-M`. Labels still use
+`uni20::half_int`, but half-odd integers are rejected. The sector minimum fills
+`I=1,...,M`, where `M=N/2-|Sz|`; negative sectors use spin reversal. The
+ground-state wrapper selects Sz=0 for even N and Sz=1/2 for odd N.
+
+The sum excludes **both** self-scattering terms, including the reflected root
+of the same particle. The residual is `max|F_i|/(2N)`, not `max|F_i|/N`.
+`SolverOptions<Real>` and update-budget semantics are shared with the periodic
+solver. Initial guesses may be finite and nonnegative; the default is zero.
+The physical roots are strictly positive. Zero-root Bethe vectors, complex
+strings, and infinite-root descendants are outside the supported family;
+this is not a complete-spectrum enumerator. N must be at least 2.
+
+For N=2 there is just one bond, giving E=-3/4, rather than the periodic
+double-bond value -3/2. N=3 gives E=-1; N=4 gives E=-3/4-sqrt(3)/2. Tests compare
+every sector minimum with independent exact diagonalization through N=9,
+all supported real-root configurations through N=8, and the one-magnon standing
+waves. Irrational analytic references test precision beyond double separately.
+
 ## Source and attribution
 
 `include/bethe/` contains the scalar-templated library; `apps/` contains thin
@@ -242,6 +306,8 @@ command-line front ends; `tests/` contains the regression suite. We currently
 link `uni20_core` for scalar facilities and `uni20_common` for `half_int` and
 the CLI presentation layer. Formatting stays in `apps/`, separate from the
 numerical API and any future Python bindings.
+The repository's `.clang-format` is copied from Uni20; use `clang-format -i`
+on changed C++ files to apply the shared style.
 
 The successor code retains the original GPL-3.0-or-later licensing and
 attribution; see [COPYING](COPYING) and [CITATIONS.md](CITATIONS.md).

@@ -57,8 +57,7 @@ inline void print_report(report_builder const& report)
     {
       auto const newline = remaining.find('\n');
       fits = fits && presentation::display_width(remaining.substr(0, newline), policy) <= columns;
-      if (newline == std::string_view::npos)
-        break;
+      if (newline == std::string_view::npos) break;
       remaining.remove_prefix(newline + 1);
     }
     std::cout << '\n';
@@ -77,8 +76,7 @@ inline void print_report(report_builder const& report)
     for (auto const& entry : table.entries())
     {
       auto const& row = std::get<std::vector<presentation::table_cell>>(entry);
-      if (!first)
-        records.append("\n");
+      if (!first) records.append("\n");
       first = false;
       for (std::size_t i = 0; i < row.size(); ++i)
         records.append("  ")
@@ -94,10 +92,10 @@ inline void print_report(report_builder const& report)
 template <uni20::Real Real>
 report_builder report_header(std::size_t sites, std::string_view precision,
                              heisenberg::SolverOptions<Real> const& options, std::string_view mode,
-                             std::string_view cpu_time)
+                             std::string_view cpu_time, bool periodic = true)
 {
   report_builder report("Heisenberg XXX - " + std::string(mode));
-  report.field("Model", "periodic spin-1/2, J=1, h=0")
+  report.field("Model", periodic ? "periodic spin-1/2, J=1, h=0" : "open spin-1/2, free ends, J=1, h=0")
       .field("Sites", sites)
       .field("Precision", precision)
       .field("Residual tolerance", uni20::format_real(options.residual_tolerance))
@@ -105,8 +103,7 @@ report_builder report_header(std::size_t sites, std::string_view precision,
   return report;
 }
 
-template <uni20::Real Real>
-void add_roots(report_builder& report, heisenberg::RealState<Real> const& state, std::string title)
+template <typename State> void add_roots(report_builder& report, State const& state, std::string title)
 {
   if (state.rapidities.empty())
   {
@@ -119,24 +116,24 @@ void add_roots(report_builder& report, heisenberg::RealState<Real> const& state,
     table.row(i, uni20::to_string_fraction(state.quantum_numbers[i]), uni20::format_real(state.rapidities[i]));
 }
 
-template <uni20::Real Real>
+template <uni20::Real Real, typename State>
 bool print_state(std::size_t sites, std::string_view precision, heisenberg::SolverOptions<Real> const& options,
-                 heisenberg::RealState<Real> const& state, std::string_view mode, bool roots, std::string_view cpu_time)
+                 State const& state, std::string_view mode, bool roots, std::string_view cpu_time)
 {
-  auto report = report_header(sites, precision, options, mode, cpu_time);
+  constexpr bool periodic = requires { state.momentum; };
+  auto report = report_header(sites, precision, options, mode, cpu_time, periodic);
   report
       .status(state.converged ? semantic_glyph::success : semantic_glyph::warning,
               state.converged ? "converged" : "iteration limit reached; unconverged estimate")
       .field("Sz", uni20::to_string_fraction(state.sz))
-      .field("Reference vacuum", state.spin_reversed ? "all down (spin reversed)" : "all up")
-      .field("Momentum index", state.momentum_index)
-      .field("Momentum P", uni20::format_real(state.momentum))
-      .field("Iterations", state.iterations)
+      .field("Reference vacuum", state.spin_reversed ? "all down (spin reversed)" : "all up");
+  if constexpr (periodic)
+    report.field("Momentum index", state.momentum_index).field("Momentum P", uni20::format_real(state.momentum));
+  report.field("Iterations", state.iterations)
       .field("Residual norm", uni20::format_real(state.residual_norm))
       .field("Total energy", uni20::format_real(state.energy))
       .field("Energy per site", uni20::format_real(state.energy / static_cast<Real>(sites)));
-  if (roots)
-    add_roots(report, state, "Rapidities");
+  if (roots) add_roots(report, state, "Rapidities");
   print_report(report);
   return state.converged;
 }
@@ -149,18 +146,17 @@ inline void add_scan_status(report_builder& report, std::size_t converged, std::
                     (all ? "" : "; remaining energies are unconverged estimates"));
 }
 
-template <uni20::Real Real>
+template <uni20::Real Real, typename State>
 bool print_sectors(std::size_t sites, std::string_view precision, heisenberg::SolverOptions<Real> const& options,
-                   std::vector<heisenberg::RealState<Real>> const& states, bool roots, std::string_view cpu_time)
+                   std::vector<State> const& states, bool roots, std::string_view cpu_time)
 {
-  auto report = report_header(sites, precision, options, "sector minima", cpu_time);
-  report.field("Momentum convention", "P = 2*pi*momentum_index/N (mod 2*pi)");
-  auto& energies = report.table("Sector energies and momenta");
-  energies.header_separator()
-      .column("Sz")
-      .column("Momentum index")
-      .column("P", table_alignment::decimal)
-      .column("Energy", table_alignment::decimal);
+  constexpr bool periodic = requires(State state) { state.momentum; };
+  auto report = report_header(sites, precision, options, "sector minima", cpu_time, periodic);
+  if constexpr (periodic) report.field("Momentum convention", "P = 2*pi*momentum_index/N (mod 2*pi)");
+  auto& energies = report.table(periodic ? "Sector energies and momenta" : "Sector energies");
+  energies.header_separator().column("Sz");
+  if constexpr (periodic) energies.column("Momentum index").column("P", table_alignment::decimal);
+  energies.column("Energy", table_alignment::decimal);
   auto& diagnostics = report.table("Convergence");
   diagnostics.header_separator()
       .column("Sz")
@@ -171,11 +167,13 @@ bool print_sectors(std::size_t sites, std::string_view precision, heisenberg::So
   for (auto const& state : states)
   {
     auto const sz = uni20::to_string_fraction(state.sz);
-    energies.row(sz, state.momentum_index, uni20::format_real(state.momentum), uni20::format_real(state.energy));
+    if constexpr (periodic)
+      energies.row(sz, state.momentum_index, uni20::format_real(state.momentum), uni20::format_real(state.energy));
+    else
+      energies.row(sz, uni20::format_real(state.energy));
     diagnostics.row(sz, uni20::format_real(state.residual_norm), state.iterations, convergence_status(state.converged));
     converged += state.converged;
-    if (roots)
-      add_roots(report, state, "Rapidities: Sz=" + sz + (state.spin_reversed ? " (spin reversed)" : ""));
+    if (roots) add_roots(report, state, "Rapidities: Sz=" + sz + (state.spin_reversed ? " (spin reversed)" : ""));
   }
   add_scan_status(report, converged, states.size());
   print_report(report);
@@ -222,8 +220,7 @@ bool print_spinons(std::size_t sites, std::string_view precision, heisenberg::So
     diagnostics.row(hole, uni20::format_real(state.residual_norm), state.iterations,
                     convergence_status(state.converged));
     converged += state.converged;
-    if (roots)
-      add_roots(report, state, "Rapidities: hole=" + hole);
+    if (roots) add_roots(report, state, "Rapidities: hole=" + hole);
   }
   add_scan_status(report, converged, branch.size());
   print_report(report);

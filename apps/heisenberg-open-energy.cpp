@@ -1,14 +1,12 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Copyright (C) 2026 Ian McCulloch
 
+#include <bethe/heisenberg_open.hpp>
+
 #include "heisenberg-cli.hpp"
 #include "heisenberg-report.hpp"
 
-#include <iostream>
 #include <optional>
-#include <stdexcept>
-#include <string>
-#include <string_view>
 
 namespace
 {
@@ -17,6 +15,7 @@ using bethe::cli::finish;
 using bethe::cli::parse_quantum_numbers;
 using bethe::cli::parse_size;
 using bethe::cli::print_roots;
+namespace model = bethe::heisenberg::open;
 
 struct Arguments
 {
@@ -28,25 +27,24 @@ struct Arguments
     std::optional<uni20::half_int> sz = std::nullopt;
     std::optional<std::string_view> quantum_numbers = std::nullopt;
     bool sectors = false;
-    bool spinons = false;
     std::string_view format = "auto";
 };
 
 void usage(std::ostream& out)
 {
-  out << "Usage: heisenberg-energy N [options]\n"
-      << "Periodic spin-1/2 Heisenberg chain, J=1, zero field.\n"
-      << "Default: ground state (one representative for odd N). Modes:\n"
+  out << "Usage: heisenberg-open-energy N [options]\n"
+      << "Open spin-1/2 Heisenberg chain, free ends, J=1, zero field.\n"
+      << "Default: ground state (Sz=0 for even N, Sz=1/2 for odd N). Modes:\n"
       << "  --sz VALUE                         lowest energy in an Sz sector, e.g. 1/2\n"
       << "  --sectors                          lowest energy in every Sz sector\n"
-      << "  --spinons                          odd-N one-spinon branch (Sz=1/2)\n"
-      << "  --quantum-numbers I0,I1,...         specified finite real-root state\n"
+      << "  --quantum-numbers I0,I1,...         distinct integers in [1,N-M], M<=N/2\n"
       << "  --precision fp64|long-double|fp128  (default: fp64)\n"
-      << "  --tolerance VALUE                  normalized equation residual\n"
+      << "  --tolerance VALUE                  normalized equation residual, max|F|/(2N)\n"
       << "  --max-iterations COUNT             update budget (default: 10000)\n"
-      << "  --roots                            print the rapidities\n"
+      << "  --roots                            print the positive rapidities\n"
       << "  --format auto|pretty|plain         terminal report or script output (default: auto)\n"
       << "  --help                             show this help\n"
+      << "No boundary fields, complex strings, or lattice momentum.\n"
       << "fp128 requires a Uni20 build with MPLAPACK enabled.\n";
 }
 
@@ -58,74 +56,52 @@ template <uni20::Real Real> int run(Arguments const& args)
   bool const pretty = args.format == "pretty" || (args.format == "auto" && terminal::is_a_terminal(stdout));
   if (!pretty)
     std::cout << "Sites: " << args.sites << '\n'
+              << "Boundary: open (free ends)\n"
               << "Precision: " << args.precision << '\n'
               << "Residual tolerance: " << uni20::format_real(options.residual_tolerance) << '\n';
   CpuTimer const timer;
   if (args.sectors)
   {
-    auto const states = bethe::heisenberg::sector_ground_states<Real>(args.sites, options);
+    auto const states = model::sector_ground_states<Real>(args.sites, options);
     auto const cpu_time = timer.elapsed_text();
     if (pretty)
       return finish(bethe::cli::print_sectors(args.sites, args.precision, options, states, args.print_roots, cpu_time));
-    std::cout << "# CPU time: " << cpu_time << '\n' << "# Sz momentum_index P energy residual iterations converged\n";
+    std::cout << "# CPU time: " << cpu_time << '\n' << "# Sz energy residual iterations converged\n";
     bool converged = true;
     for (auto const& state : states)
     {
-      std::cout << state.sz << ' ' << state.momentum_index << ' ' << uni20::format_real(state.momentum) << ' '
-                << uni20::format_real(state.energy) << ' ' << uni20::format_real(state.residual_norm) << ' '
-                << state.iterations << ' ' << state.converged << '\n';
-      if (args.print_roots) print_roots(state);
+      std::cout << state.sz << ' ' << uni20::format_real(state.energy) << ' ' << uni20::format_real(state.residual_norm)
+                << ' ' << state.iterations << ' ' << state.converged << '\n';
+      if (args.print_roots)
+      {
+        std::cout << "# Roots: Sz=" << state.sz << '\n';
+        print_roots(state);
+      }
       converged = converged && state.converged;
     }
     return finish(converged);
   }
-  if (args.spinons)
-  {
-    auto const branch = bethe::heisenberg::one_spinon_branch<Real>(args.sites, options);
-    auto const cpu_time = timer.elapsed_text();
-    if (pretty)
-      return finish(bethe::cli::print_spinons(args.sites, args.precision, options, branch, args.print_roots, cpu_time));
-    std::cout << "# CPU time: " << cpu_time << '\n'
-              << "# Sz=1/2; k=pi/2-2*pi*I_h/N; bulk reference e_inf=1/4-log(2)\n"
-              << "# hole k momentum_index P energy E_minus_N_e_inf epsilon_inf residual iterations converged\n";
-    bool converged = true;
-    for (auto const& point : branch)
-    {
-      auto const& state = point.state;
-      std::cout << point.hole << ' ' << uni20::format_real(point.spinon_momentum) << ' ' << state.momentum_index << ' '
-                << uni20::format_real(state.momentum) << ' ' << uni20::format_real(state.energy) << ' '
-                << uni20::format_real(point.bulk_subtracted_energy) << ' '
-                << uni20::format_real(bethe::heisenberg::spinon_energy(point.spinon_momentum)) << ' '
-                << uni20::format_real(state.residual_norm) << ' ' << state.iterations << ' ' << state.converged << '\n';
-      if (args.print_roots) print_roots(state);
-      converged = converged && state.converged;
-    }
-    return finish(converged);
-  }
-  auto const result =
-      args.quantum_numbers
-          ? bethe::heisenberg::solve_real<Real>(args.sites, parse_quantum_numbers(*args.quantum_numbers), options)
-      : args.sz ? bethe::heisenberg::sector_ground_state<Real>(args.sites, *args.sz, options)
-                : bethe::heisenberg::ground_state<Real>(args.sites, options);
+  auto const state = args.quantum_numbers
+                         ? model::solve_real<Real>(args.sites, parse_quantum_numbers(*args.quantum_numbers), options)
+                     : args.sz ? model::sector_ground_state<Real>(args.sites, *args.sz, options)
+                               : model::ground_state<Real>(args.sites, options);
   auto const cpu_time = timer.elapsed_text();
   if (pretty)
-    return finish(bethe::cli::print_state(args.sites, args.precision, options, result,
+    return finish(bethe::cli::print_state(args.sites, args.precision, options, state,
                                           args.quantum_numbers ? "specified real-root state"
                                           : args.sz            ? "sector minimum"
                                                                : "ground state",
                                           args.print_roots, cpu_time));
-  std::cout << "Sz: " << result.sz << '\n'
-            << "Spin-reversed reference: " << result.spin_reversed << '\n'
-            << "Momentum index: " << result.momentum_index << '\n'
-            << "Momentum: " << uni20::format_real(result.momentum) << '\n'
-            << "Status: " << (result.converged ? "converged" : "iteration limit reached") << '\n'
-            << "Iterations: " << result.iterations << '\n'
+  std::cout << "Sz: " << state.sz << '\n'
+            << "Spin-reversed reference: " << state.spin_reversed << '\n'
+            << "Status: " << (state.converged ? "converged" : "iteration limit reached") << '\n'
+            << "Iterations: " << state.iterations << '\n'
             << "CPU time: " << cpu_time << '\n'
-            << "Residual norm: " << uni20::format_real(result.residual_norm) << '\n'
-            << "Total energy: " << uni20::format_real(result.energy) << '\n'
-            << "Energy per site: " << uni20::format_real(result.energy / static_cast<Real>(args.sites)) << '\n';
-  if (args.print_roots) print_roots(result);
-  return finish(result.converged);
+            << "Residual norm: " << uni20::format_real(state.residual_norm) << '\n'
+            << "Total energy: " << uni20::format_real(state.energy) << '\n'
+            << "Energy per site: " << uni20::format_real(state.energy / static_cast<Real>(args.sites)) << '\n';
+  if (args.print_roots) print_roots(state);
+  return finish(state.converged);
 }
 } // namespace
 
@@ -151,8 +127,6 @@ int main(int argc, char** argv)
         args.print_roots = true;
       else if (option == "--sectors")
         args.sectors = true;
-      else if (option == "--spinons")
-        args.spinons = true;
       else if (option == "--precision" || option == "--tolerance" || option == "--max-iterations" || option == "--sz" ||
                option == "--quantum-numbers" || option == "--format")
       {
@@ -174,9 +148,9 @@ int main(int argc, char** argv)
         throw std::invalid_argument("unknown option: " + std::string(option));
     }
     if (static_cast<int>(args.sz.has_value()) + static_cast<int>(args.quantum_numbers.has_value()) +
-            static_cast<int>(args.sectors) + static_cast<int>(args.spinons) >
+            static_cast<int>(args.sectors) >
         1)
-      throw std::invalid_argument("--sz, --sectors, --spinons and --quantum-numbers are mutually exclusive");
+      throw std::invalid_argument("--sz, --sectors and --quantum-numbers are mutually exclusive");
     if (args.format != "auto" && args.format != "pretty" && args.format != "plain")
       throw std::invalid_argument("unknown output format: " + std::string(args.format));
     if (args.precision == "fp64") return run<double>(args);
@@ -193,7 +167,7 @@ int main(int argc, char** argv)
   }
   catch (std::exception const& error)
   {
-    std::cerr << "heisenberg-energy: " << error.what() << '\n';
+    std::cerr << "heisenberg-open-energy: " << error.what() << '\n';
     return 1;
   }
 }

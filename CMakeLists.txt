@@ -28,9 +28,11 @@ target_include_directories(bethe INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/include"
 target_link_libraries(bethe INTERFACE uni20_core uni20_common)
 
 if(BETHE_BUILD_APPS)
-  add_executable(heisenberg-energy apps/heisenberg-energy.cpp)
-  target_link_libraries(heisenberg-energy PRIVATE bethe::bethe)
-  set_target_properties(heisenberg-energy PROPERTIES CXX_EXTENSIONS OFF)
+  foreach(app IN ITEMS heisenberg-energy heisenberg-open-energy)
+    add_executable(${app} apps/${app}.cpp)
+    target_link_libraries(${app} PRIVATE bethe::bethe)
+    set_target_properties(${app} PROPERTIES CXX_EXTENSIONS OFF)
+  endforeach()
 endif()
 
 if(BETHE_BUILD_TESTS)
