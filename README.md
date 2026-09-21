@@ -88,7 +88,7 @@ or half-integer decimals. `--sectors` reports one lowest-energy representative
 in each sector, including spin-reversed partners. `--spinons` requires odd
 `N>=3` and reports the one-spinon family, not the full `Sz=1/2` spectrum.
 `--quantum-numbers` takes a strictly increasing comma-separated list;
-an empty string selects the fully polarized state. `--excitations COUNT`
+an empty string selects the fully polarized state. `--excitations COUNT|all`
 scans a restricted real-root family, described [below](#real-root-excitation-scans).
 These five modes are mutually exclusive. `--roots` also prints the exact
 Bethe quantum numbers.
@@ -215,13 +215,15 @@ chosen **total spin S**, with `M=N/2-S` roots and `Sz=S`:
 ```sh
 build/heisenberg-energy 64 --excitations 10 --spin 1
 build/heisenberg-open-energy 64 --excitations 10 --spin 1
+build/heisenberg-energy 64 --excitations all --spin 1
+build/heisenberg-open-energy 64 --excitations all --spin 1
 build/heisenberg-energy 65 --excitations 10 --spin 1/2 --precision long-double
 build/heisenberg-open-energy 32 --excitations 5 --spin 2 --roots
 ```
 
 `--spin` defaults to 1 for even N and 1/2 for odd N. It must be nonnegative,
 no greater than N/2, and have the same integer/half-integer parity as N/2.
-`--spin` and `--max-candidates` require `--excitations COUNT`; `--sz` remains
+`--spin` and `--max-candidates` require `--excitations COUNT|all`; `--sz` remains
 the separate sector-minimum mode, not a filter for this scan.
 
 The scan returns up to COUNT lowest **converged multiplets in this family**,
@@ -232,6 +234,11 @@ can cut through such degeneracies. Results are sorted by computed energy;
 exact ties use lexicographic Bethe quantum numbers. Near-degenerate ordering
 can change with numerical precision, and the residual is not an energy-error
 bound. For odd N and S=1/2 the family includes ground-state multiplets.
+
+Use `--excitations all` to return every converged multiplet in the selected
+real-root family, without needing its size in advance. This does not include
+other total-spin sectors or unsupported string states, and still respects
+`--max-candidates`. For N=64, S=1 it returns 528 multiplets if all converge.
 
 Reports give S, absolute energy, `gap=E-E0` relative to the **global ground
 state of the same finite chain**, quantum numbers, and convergence diagnostics.
@@ -253,10 +260,12 @@ There are `C(N-M,M)` candidates for either boundary: for example, N=64, S=1
 has 528. The scan solves **every** candidate before returning the requested
 lowest subset, not just the first COUNT configurations. The default
 `--max-candidates 10000` rejects larger families before any solve; raise it
-explicitly for larger jobs. COUNT and this limit must both be positive. The
-limit bounds the number of configurations, not the cost of an individual
-solve. A bounded heap retains only O(COUNT*M+N) data, including the global
-ground reference; the underlying O(M^2) work per iteration is unchanged.
+explicitly for larger jobs, including when using `all`. A numeric COUNT and
+this limit must both be positive. The limit bounds the number of configurations,
+not the cost of an individual solve. A bounded heap retains only O(COUNT*M+N)
+data, including the global ground reference; the underlying O(M^2) work per
+iteration is unchanged.
+With `all`, roots for the entire converged family are retained.
 
 Failed candidates are excluded from the energy-ordered list, but **all**
 candidate failures count toward the scan status. Reports show total and
