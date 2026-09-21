@@ -4,6 +4,7 @@
 #pragma once
 
 #include <bethe/heisenberg_open.hpp>
+#include <bethe/real_excitations.hpp>
 
 #include <numeric>
 #include <optional>
@@ -11,22 +12,8 @@
 
 namespace bethe::heisenberg
 {
-/// Scan the entire supported real-root family at a fixed total spin, retaining
-/// at most count lowest converged multiplets. The sector minimum is included.
-struct RealExcitationOptions
-{
-    std::size_t count = 10;
-    /// Reject larger families before allocating roots or solving any state.
-    std::size_t max_candidates = 10000;
-};
-
-template <typename State> struct RealExcitation
-{
-    State state;
-    /// E-E0 at the selected precision; absent if the ground reference failed.
-    std::optional<decltype(State{}.energy)> gap;
-};
-
+using RealExcitationOptions = bethe::RealExcitationOptions;
+template <typename State> using RealExcitation = bethe::RealExcitation<State>;
 template <typename State> struct RealExcitationScan
 {
     uni20::half_int spin;
@@ -56,20 +43,7 @@ template <typename State> struct RealExcitationScan
     throw std::invalid_argument("S must lie in [0,N/2] with the same half-integer parity as N/2");
   auto const m = static_cast<std::size_t>((n - spin.twice()) / 2);
   auto const slots = sites - m;
-  auto const k = std::min(m, slots - m);
-  std::size_t count = 1;
-  if (limit == 0) throw std::length_error("real-root family exceeds max_candidates");
-  for (std::size_t i = 1; i <= k; ++i)
-  {
-    auto numerator = slots - k + i;
-    auto const divisor = std::gcd(numerator, i);
-    numerator /= divisor;
-    // The remaining denominator divides the previous binomial coefficient.
-    count /= i / divisor;
-    if (count > limit / numerator) throw std::length_error("real-root family exceeds max_candidates");
-    count *= numerator;
-  }
-  return count;
+  return bethe::detail::bounded_binomial(slots, m, limit);
 }
 
 namespace detail
@@ -81,57 +55,13 @@ RealExcitationScan<State> scan_real_excitations(std::size_t sites, uni20::half_i
 {
   if (scan.count == 0 || scan.max_candidates == 0)
     throw std::invalid_argument("excitation count and max_candidates must be positive");
-  RealExcitationScan<State> result;
-  result.spin = spin;
-  result.candidate_count = real_excitation_count(sites, spin, scan.max_candidates);
-  result.ground_state = ground();
+  (void)real_excitation_count(sites, spin, scan.max_candidates);
   auto const m = static_cast<std::size_t>((static_cast<std::int64_t>(sites) - spin.twice()) / 2);
   auto const slots = sites - m;
   auto const first = periodic ? -static_cast<std::int64_t>(slots - 1) : std::int64_t{2};
-  QuantumNumbers numbers(m);
-  for (std::size_t i = 0; i < m; ++i)
-    numbers[i] = uni20::from_twice(first + 2 * static_cast<std::int64_t>(i));
-
-  // A bounded max heap avoids retaining roots for every solved candidate.
-  auto less = [](auto const& left, auto const& right) {
-    if (left.state.energy != right.state.energy) return left.state.energy < right.state.energy;
-    return left.state.quantum_numbers < right.state.quantum_numbers;
-  };
-  auto const keep = std::min(scan.count, result.candidate_count);
-  result.levels.reserve(keep);
-  for (;;)
-  {
-    auto state = numbers == result.ground_state.quantum_numbers ? result.ground_state : solve(numbers);
-    if (state.converged)
-    {
-      ++result.converged_count;
-      RealExcitation<State> level{.state = std::move(state), .gap = std::nullopt};
-      if (result.ground_state.converged) level.gap = level.state.energy - result.ground_state.energy;
-      if (result.levels.size() < keep)
-      {
-        result.levels.push_back(std::move(level));
-        std::push_heap(result.levels.begin(), result.levels.end(), less);
-      }
-      else if (less(level, result.levels.front()))
-      {
-        std::pop_heap(result.levels.begin(), result.levels.end(), less);
-        result.levels.back() = std::move(level);
-        std::push_heap(result.levels.begin(), result.levels.end(), less);
-      }
-    }
-    else if (!result.first_unconverged)
-      result.first_unconverged = std::move(state);
-
-    // Lexicographic combinations of M slots, including the unique M=0 set.
-    std::size_t i = m;
-    while (i > 0 && numbers[i - 1].twice() == first + 2 * static_cast<std::int64_t>(slots - m + i - 1))
-      --i;
-    if (i == 0) break;
-    numbers[i - 1] = uni20::from_twice(numbers[i - 1].twice() + 2);
-    for (std::size_t j = i; j < m; ++j)
-      numbers[j] = uni20::from_twice(numbers[j - 1].twice() + 2);
-  }
-  std::sort_heap(result.levels.begin(), result.levels.end(), less);
+  auto result = bethe::detail::scan_real_combinations<RealExcitationScan<State>>(
+      slots, m, first, scan, std::forward<Solve>(solve), std::forward<Ground>(ground));
+  result.spin = spin;
   return result;
 }
 } // namespace detail

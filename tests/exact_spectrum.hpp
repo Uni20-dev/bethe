@@ -18,7 +18,7 @@ namespace test_support
 // Double is intentional only in this ED oracle; separate analytic regressions
 // in the test programs check the solver at the selected precision.
 inline std::vector<double> exact_spectrum(unsigned n, unsigned down, double translation_weight = 0,
-                                          bool periodic = true)
+                                          bool periodic = true, double delta = 1)
 {
   std::vector<unsigned> basis;
   std::vector<std::size_t> index(1U << n);
@@ -38,7 +38,7 @@ inline std::vector<double> exact_spectrum(unsigned n, unsigned down, double tran
     {
       unsigned const next = (site + 1) % n;
       bool const opposite = ((bits >> site) & 1U) != ((bits >> next) & 1U);
-      at(i, i) += opposite ? -0.25 : 0.25;
+      at(i, i) += delta * (opposite ? -0.25 : 0.25);
       if (opposite) at(index[bits ^ (1U << site) ^ (1U << next)], i) += 0.5;
     }
     unsigned const translated = ((bits << 1) & ((1U << n) - 1)) | (bits >> (n - 1));

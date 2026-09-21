@@ -165,17 +165,7 @@ int main(int argc, char** argv)
       throw std::invalid_argument("--sz, --sectors, --quantum-numbers and --excitations are mutually exclusive");
     if (args.format != "auto" && args.format != "pretty" && args.format != "plain")
       throw std::invalid_argument("unknown output format: " + std::string(args.format));
-    if (args.precision == "fp64") return run<double>(args);
-    if (args.precision == "long-double") return run<long double>(args);
-    if (args.precision == "fp128")
-    {
-#if UNI20_HAS_FLOAT128
-      return run<uni20::float128>(args);
-#else
-      throw std::invalid_argument("fp128 is unavailable; configure with -DUNI20_ENABLE_MPLAPACK=ON");
-#endif
-    }
-    throw std::invalid_argument("unknown precision: " + std::string(args.precision));
+    return bethe::cli::dispatch_precision(args.precision, [&]<uni20::Real Real> { return run<Real>(args); });
   }
   catch (std::exception const& error)
   {

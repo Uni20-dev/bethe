@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include <bethe/solver.hpp>
 #include <bethe/spinon.hpp>
 #include <uni20/common/half_int.hpp>
 
@@ -20,30 +21,26 @@ namespace bethe::heisenberg
 {
 
 /// Controls the real-root, zero-field fixed-point iteration.
-template <uni20::Real Real> struct SolverOptions
-{
-  Real residual_tolerance = Real{32} * uni20::numeric_limits<Real>::epsilon();
-  std::size_t max_iterations = 10000;
-};
+template <uni20::Real Real> using SolverOptions = bethe::SolverOptions<Real>;
 
 /// The last iterate, including on iteration-limit exhaustion.
 /// Energy includes the ferromagnetic reference N/4 for J=1.
 template <uni20::Real Real> struct RealState
 {
-  std::vector<Real> rapidities;
-  Real energy = Real{0};
-  /// Infinity norm of the logarithmic Bethe equations divided by N (radians).
-  Real residual_norm = Real{0};
-  /// Number of simultaneous updates; evaluating the initial guess is not an update.
-  std::size_t iterations = 0;
-  bool converged = false;
-  std::vector<uni20::half_int> quantum_numbers;
-  uni20::half_int sz;
-  /// Exact lattice momentum index: P = 2*pi*momentum_index/sites in [0,2*pi).
-  std::size_t momentum_index = 0;
-  Real momentum = Real{0};
-  /// Roots describe overturned spins relative to the all-down vacuum if true.
-  bool spin_reversed = false;
+    std::vector<Real> rapidities;
+    Real energy = Real{0};
+    /// Infinity norm of the logarithmic Bethe equations divided by N (radians).
+    Real residual_norm = Real{0};
+    /// Number of simultaneous updates; evaluating the initial guess is not an update.
+    std::size_t iterations = 0;
+    bool converged = false;
+    std::vector<uni20::half_int> quantum_numbers;
+    uni20::half_int sz;
+    /// Exact lattice momentum index: P = 2*pi*momentum_index/sites in [0,2*pi).
+    std::size_t momentum_index = 0;
+    Real momentum = Real{0};
+    /// Roots describe overturned spins relative to the all-down vacuum if true.
+    bool spin_reversed = false;
 };
 
 // Preserve the original public result name.
@@ -72,8 +69,7 @@ inline std::int64_t sector_roots(std::size_t sites, uni20::half_int sz)
 inline void validate_quantum_numbers(std::size_t sites, std::span<uni20::half_int const> numbers)
 {
   auto const n = checked_sites(sites);
-  if (numbers.size() > sites / 2)
-    throw std::invalid_argument("finite real-root states require M <= N/2");
+  if (numbers.size() > sites / 2) throw std::invalid_argument("finite real-root states require M <= N/2");
   auto const m = static_cast<std::int64_t>(numbers.size());
   auto const bound = n - m - 1; // Conventional all-1-string window, in doubled units.
   for (std::size_t i = 0; i < numbers.size(); ++i)
@@ -96,30 +92,13 @@ inline std::size_t momentum_index(std::size_t sites, std::span<uni20::half_int c
   for (auto const number : numbers)
   {
     index = (index - number.twice()) % modulus;
-    if (index < 0)
-      index += modulus;
+    if (index < 0) index += modulus;
   }
   return static_cast<std::size_t>(index / 2);
 }
 
 // Keep roundoff in the phase and energy sums from growing with the root count.
-template <typename Real> class CompensatedSum
-{
-public:
-  void add(Real value)
-  {
-    Real const corrected = value - correction_;
-    Real const next = sum_ + corrected;
-    correction_ = (next - sum_) - corrected;
-    sum_ = next;
-  }
-
-  Real value() const { return sum_; }
-
-private:
-  Real sum_ = Real{0};
-  Real correction_ = Real{0};
-};
+template <typename Real> using CompensatedSum = bethe::detail::CompensatedSum<Real>;
 } // namespace detail
 
 /// Solve a specified periodic XXX highest-weight state, J=1, h=0.
@@ -156,11 +135,9 @@ template <uni20::Real Real = double>
   result.rapidities.resize(roots, Real{0});
   if (!initial_roots.empty())
   {
-    if (initial_roots.size() != roots)
-      throw std::invalid_argument("initial root count must match the quantum numbers");
+    if (initial_roots.size() != roots) throw std::invalid_argument("initial root count must match the quantum numbers");
     for (Real const root : initial_roots)
-      if (!uni20::isfinite(root))
-        throw std::invalid_argument("initial roots must be finite");
+      if (!uni20::isfinite(root)) throw std::invalid_argument("initial roots must be finite");
     result.rapidities.assign(initial_roots.begin(), initial_roots.end());
   }
   std::vector<Real> angles(roots);
@@ -175,27 +152,23 @@ template <uni20::Real Real = double>
       detail::CompensatedSum<Real> phase;
       for (std::size_t j = 0; j < roots; ++j)
       {
-        if (i != j)
-          phase.add(atan((result.rapidities[i] - result.rapidities[j]) / Real{2}));
+        if (i != j) phase.add(atan((result.rapidities[i] - result.rapidities[j]) / Real{2}));
       }
       Real const quantum_number = static_cast<Real>(numbers[i].twice()) / Real{2};
       angles[i] = (pi * quantum_number + phase.value()) / n;
       Real const residual = Real{2} * abs(atan(result.rapidities[i]) - angles[i]);
-      if (!uni20::isfinite(residual))
-        throw std::runtime_error("nonfinite Heisenberg equation residual");
+      if (!uni20::isfinite(residual)) throw std::runtime_error("nonfinite Heisenberg equation residual");
       result.residual_norm = std::max(result.residual_norm, residual);
     }
 
     result.converged = result.residual_norm <= options.residual_tolerance;
-    if (result.converged || result.iterations == options.max_iterations)
-      break;
+    if (result.converged || result.iterations == options.max_iterations) break;
 
     // All angles were computed before any roots change: this is a Jacobi update.
     for (std::size_t i = 0; i < roots; ++i)
     {
       result.rapidities[i] = tan(angles[i]);
-      if (!uni20::isfinite(result.rapidities[i]))
-        throw std::runtime_error("nonfinite Heisenberg rapidity");
+      if (!uni20::isfinite(result.rapidities[i])) throw std::runtime_error("nonfinite Heisenberg rapidity");
     }
     ++result.iterations;
   }
@@ -204,8 +177,7 @@ template <uni20::Real Real = double>
   for (Real const z : result.rapidities)
     magnons.add(-Real{2} / (Real{1} + z * z));
   result.energy = n / Real{4} + magnons.value();
-  if (!uni20::isfinite(result.energy))
-    throw std::runtime_error("nonfinite Heisenberg energy");
+  if (!uni20::isfinite(result.energy)) throw std::runtime_error("nonfinite Heisenberg energy");
   return result;
 }
 
@@ -270,8 +242,7 @@ template <uni20::Real Real = double>
 [[nodiscard]] inline QuantumNumbers one_spinon_quantum_numbers(std::size_t sites, uni20::half_int hole)
 {
   auto const n = detail::checked_sites(sites);
-  if (sites % 2 == 0)
-    throw std::invalid_argument("one-spinon states require odd N >= 3");
+  if (sites % 2 == 0) throw std::invalid_argument("one-spinon states require odd N >= 3");
   auto const m = (n - 1) / 2;
   if (hole.twice() < -m || hole.twice() > m || (hole.twice() + m) % 2 != 0)
     throw std::invalid_argument("spinon hole outside the allowed window or wrong parity");
@@ -280,21 +251,20 @@ template <uni20::Real Real = double>
   for (std::int64_t i = 0; i <= m; ++i)
   {
     auto const number = uni20::from_twice(-m + 2 * i);
-    if (number != hole)
-      numbers.push_back(number);
+    if (number != hole) numbers.push_back(number);
   }
   return numbers;
 }
 
 template <uni20::Real Real> struct SpinonState
 {
-  RealState<Real> state;
-  uni20::half_int hole;
-  /// k=pi/2-2*pi*I_h/N in (0,pi). P=pi*M+pi/2-k modulo 2*pi.
-  /// A finite-size labeling convention; not momentum relative to the odd-N GS.
-  Real spinon_momentum = Real{0};
-  /// E_N - N*(1/4-log(2)), J=1. Includes finite-size corrections.
-  Real bulk_subtracted_energy = Real{0};
+    RealState<Real> state;
+    uni20::half_int hole;
+    /// k=pi/2-2*pi*I_h/N in (0,pi). P=pi*M+pi/2-k modulo 2*pi.
+    /// A finite-size labeling convention; not momentum relative to the odd-N GS.
+    Real spinon_momentum = Real{0};
+    /// E_N - N*(1/4-log(2)), J=1. Includes finite-size corrections.
+    Real bulk_subtracted_energy = Real{0};
 };
 
 template <uni20::Real Real = double>
@@ -319,8 +289,7 @@ template <uni20::Real Real = double>
                                                                SolverOptions<Real> const& options = {})
 {
   auto const n = detail::checked_sites(sites);
-  if (sites % 2 == 0)
-    throw std::invalid_argument("one-spinon states require odd N >= 3");
+  if (sites % 2 == 0) throw std::invalid_argument("one-spinon states require odd N >= 3");
   auto const m = (n - 1) / 2;
   std::vector<SpinonState<Real>> branch;
   branch.reserve(static_cast<std::size_t>(m + 1));
