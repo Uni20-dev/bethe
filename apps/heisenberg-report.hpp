@@ -93,13 +93,15 @@ inline void print_report(report_builder const& report)
 
 template <uni20::Real Real>
 report_builder report_header(std::size_t sites, std::string_view precision,
-                             heisenberg::SolverOptions<Real> const& options, std::string_view mode)
+                             heisenberg::SolverOptions<Real> const& options, std::string_view mode,
+                             std::string_view cpu_time)
 {
   report_builder report("Heisenberg XXX - " + std::string(mode));
   report.field("Model", "periodic spin-1/2, J=1, h=0")
       .field("Sites", sites)
       .field("Precision", precision)
-      .field("Residual tolerance", uni20::format_real(options.residual_tolerance));
+      .field("Residual tolerance", uni20::format_real(options.residual_tolerance))
+      .field("CPU time", cpu_time);
   return report;
 }
 
@@ -119,9 +121,9 @@ void add_roots(report_builder& report, heisenberg::RealState<Real> const& state,
 
 template <uni20::Real Real>
 bool print_state(std::size_t sites, std::string_view precision, heisenberg::SolverOptions<Real> const& options,
-                 heisenberg::RealState<Real> const& state, std::string_view mode, bool roots)
+                 heisenberg::RealState<Real> const& state, std::string_view mode, bool roots, std::string_view cpu_time)
 {
-  auto report = report_header(sites, precision, options, mode);
+  auto report = report_header(sites, precision, options, mode, cpu_time);
   report
       .status(state.converged ? semantic_glyph::success : semantic_glyph::warning,
               state.converged ? "converged" : "iteration limit reached; unconverged estimate")
@@ -149,9 +151,9 @@ inline void add_scan_status(report_builder& report, std::size_t converged, std::
 
 template <uni20::Real Real>
 bool print_sectors(std::size_t sites, std::string_view precision, heisenberg::SolverOptions<Real> const& options,
-                   std::vector<heisenberg::RealState<Real>> const& states, bool roots)
+                   std::vector<heisenberg::RealState<Real>> const& states, bool roots, std::string_view cpu_time)
 {
-  auto report = report_header(sites, precision, options, "sector minima");
+  auto report = report_header(sites, precision, options, "sector minima", cpu_time);
   report.field("Momentum convention", "P = 2*pi*momentum_index/N (mod 2*pi)");
   auto& energies = report.table("Sector energies and momenta");
   energies.header_separator()
@@ -182,9 +184,9 @@ bool print_sectors(std::size_t sites, std::string_view precision, heisenberg::So
 
 template <uni20::Real Real>
 bool print_spinons(std::size_t sites, std::string_view precision, heisenberg::SolverOptions<Real> const& options,
-                   std::vector<heisenberg::SpinonState<Real>> const& branch, bool roots)
+                   std::vector<heisenberg::SpinonState<Real>> const& branch, bool roots, std::string_view cpu_time)
 {
-  auto report = report_header(sites, precision, options, "one-spinon branch");
+  auto report = report_header(sites, precision, options, "one-spinon branch", cpu_time);
   report.field("Sz", "1/2")
       .field("Spinon momentum", "k = pi/2 - 2*pi*hole/N")
       .field("Lattice momentum", "P = 2*pi*momentum_index/N (mod 2*pi)")

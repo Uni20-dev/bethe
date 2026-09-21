@@ -1,0 +1,16 @@
+# Check the overview timing field, then remove only that nondeterministic line
+# before comparing numerical output, color policies, or precision tokens.
+function(normalize_cpu_time input_variable output_variable)
+  string(ASCII 27 escape)
+  string(REGEX REPLACE "${escape}\\[[0-9;]*m" "" unstyled "${${input_variable}}")
+  string(REGEX MATCHALL "[^\n]*CPU time[^\n]*\n" timings "${unstyled}")
+  list(LENGTH timings count)
+  if(NOT count EQUAL 1)
+    message(FATAL_ERROR "Expected one CPU time field\n${unstyled}")
+  endif()
+  if(NOT timings MATCHES "^(# )?[ ]*CPU time[: ]+([0-9]+\\.[0-9][0-9][0-9][0-9][0-9][0-9] s|unavailable)\n$")
+    message(FATAL_ERROR "Invalid CPU time field: ${timings}")
+  endif()
+  string(REGEX REPLACE "[^\n]*CPU time[^\n]*\n" "" normalized "${${input_variable}}")
+  set(${output_variable} "${normalized}" PARENT_SCOPE)
+endfunction()

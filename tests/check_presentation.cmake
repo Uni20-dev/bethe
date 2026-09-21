@@ -1,4 +1,5 @@
 # Exercise the real executable, including Uni20's environment-controlled policies.
+include("${CMAKE_CURRENT_LIST_DIR}/check_cpu_time.cmake")
 set(ENV{UNI20_GLYPHS} ascii)
 set(ENV{UNI20_CHARSET} escape)
 set(ENV{UNI20_COLOR} never)
@@ -11,6 +12,9 @@ function(run_cli expected_status)
     RESULT_VARIABLE status OUTPUT_VARIABLE output ERROR_VARIABLE error TIMEOUT 30)
   if(NOT "${status}" STREQUAL "${expected_status}")
     message(FATAL_ERROR "Unexpected status ${status} for ${ARGN}\n${output}\n${error}")
+  endif()
+  if(expected_status EQUAL 0 OR expected_status EQUAL 2)
+    normalize_cpu_time(output output)
   endif()
   set(output "${output}" PARENT_SCOPE)
 endfunction()
@@ -29,7 +33,7 @@ function(forbid_text text)
   endif()
 endfunction()
 
-# Captured auto output remains byte-for-byte identical to the plain format,
+# Apart from CPU time, captured auto output is identical to the plain format,
 # even when the presentation environment would otherwise force ANSI styles.
 foreach(mode IN ITEMS --sectors --spinons)
   run_cli(0 5 ${mode} --roots)

@@ -7,6 +7,8 @@
 #include "heisenberg-report.hpp"
 
 #include <charconv>
+#include <ctime>
+#include <fmt/format.h>
 #include <iostream>
 #include <optional>
 #include <stdexcept>
@@ -25,7 +27,7 @@ static_assert(MPLAPACK_BINARY128_MODE == MPLAPACK_BINARY128_MODE_FLOAT128,
 struct Arguments
 {
   std::size_t sites;
-  std::string_view precision = "long-double";
+  std::string_view precision = "fp64";
   std::optional<std::string_view> tolerance = std::nullopt;
   std::size_t max_iterations = 10000;
   bool print_roots = false;
@@ -34,6 +36,24 @@ struct Arguments
   bool sectors = false;
   bool spinons = false;
   std::string_view format = "auto";
+};
+
+// Process CPU time, not wall time. Keep timing in the front end and stop it
+// before constructing reports or printing roots, so output costs are excluded.
+class CpuTimer
+{
+public:
+  std::string elapsed_text() const
+  {
+    auto const end = std::clock();
+    if (start_ == std::clock_t{-1} || end == std::clock_t{-1} || end < start_)
+      return "unavailable";
+    auto const seconds = (static_cast<long double>(end) - static_cast<long double>(start_)) / CLOCKS_PER_SEC;
+    return fmt::format("{:.6f} s", seconds);
+  }
+
+private:
+  std::clock_t const start_ = std::clock();
 };
 
 void usage(std::ostream& out)
@@ -45,7 +65,7 @@ void usage(std::ostream& out)
       << "  --sectors                          lowest energy in every Sz sector\n"
       << "  --spinons                          odd-N one-spinon branch (Sz=1/2)\n"
       << "  --quantum-numbers I0,I1,...         specified finite real-root state\n"
-      << "  --precision fp64|long-double|fp128  (default: long-double)\n"
+      << "  --precision fp64|long-double|fp128  (default: fp64)\n"
       << "  --tolerance VALUE                  normalized equation residual\n"
       << "  --max-iterations COUNT             update budget (default: 10000)\n"
       << "  --roots                            print the rapidities\n"
@@ -104,12 +124,14 @@ template <uni20::Real Real> int run(Arguments const& args)
     std::cout << "Sites: " << args.sites << '\n'
               << "Precision: " << args.precision << '\n'
               << "Residual tolerance: " << uni20::format_real(options.residual_tolerance) << '\n';
+  CpuTimer const timer;
   if (args.sectors)
   {
     auto const states = bethe::heisenberg::sector_ground_states<Real>(args.sites, options);
+    auto const cpu_time = timer.elapsed_text();
     if (pretty)
-      return finish(bethe::cli::print_sectors(args.sites, args.precision, options, states, args.print_roots));
-    std::cout << "# Sz momentum_index P energy residual iterations converged\n";
+      return finish(bethe::cli::print_sectors(args.sites, args.precision, options, states, args.print_roots, cpu_time));
+    std::cout << "# CPU time: " << cpu_time << '\n' << "# Sz momentum_index P energy residual iterations converged\n";
     bool converged = true;
     for (auto const& state : states)
     {
@@ -125,9 +147,11 @@ template <uni20::Real Real> int run(Arguments const& args)
   if (args.spinons)
   {
     auto const branch = bethe::heisenberg::one_spinon_branch<Real>(args.sites, options);
+    auto const cpu_time = timer.elapsed_text();
     if (pretty)
-      return finish(bethe::cli::print_spinons(args.sites, args.precision, options, branch, args.print_roots));
-    std::cout << "# Sz=1/2; k=pi/2-2*pi*I_h/N; bulk reference e_inf=1/4-log(2)\n"
+      return finish(bethe::cli::print_spinons(args.sites, args.precision, options, branch, args.print_roots, cpu_time));
+    std::cout << "# CPU time: " << cpu_time << '\n'
+              << "# Sz=1/2; k=pi/2-2*pi*I_h/N; bulk reference e_inf=1/4-log(2)\n"
               << "# hole k momentum_index P energy E_minus_N_e_inf epsilon_inf residual iterations converged\n";
     bool converged = true;
     for (auto const& point : branch)
@@ -149,18 +173,20 @@ template <uni20::Real Real> int run(Arguments const& args)
           ? bethe::heisenberg::solve_real<Real>(args.sites, parse_quantum_numbers(*args.quantum_numbers), options)
       : args.sz ? bethe::heisenberg::sector_ground_state<Real>(args.sites, *args.sz, options)
                 : bethe::heisenberg::ground_state<Real>(args.sites, options);
+  auto const cpu_time = timer.elapsed_text();
   if (pretty)
     return finish(bethe::cli::print_state(args.sites, args.precision, options, result,
                                           args.quantum_numbers ? "specified real-root state"
                                           : args.sz            ? "sector minimum"
                                                                : "ground state",
-                                          args.print_roots));
+                                          args.print_roots, cpu_time));
   std::cout << "Sz: " << result.sz << '\n'
             << "Spin-reversed reference: " << result.spin_reversed << '\n'
             << "Momentum index: " << result.momentum_index << '\n'
             << "Momentum: " << uni20::format_real(result.momentum) << '\n'
             << "Status: " << (result.converged ? "converged" : "iteration limit reached") << '\n'
             << "Iterations: " << result.iterations << '\n'
+            << "CPU time: " << cpu_time << '\n'
             << "Residual norm: " << uni20::format_real(result.residual_norm) << '\n'
             << "Total energy: " << uni20::format_real(result.energy) << '\n'
             << "Energy per site: " << uni20::format_real(result.energy / static_cast<Real>(args.sites)) << '\n';

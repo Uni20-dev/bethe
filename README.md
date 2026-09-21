@@ -68,7 +68,7 @@ build/heisenberg-energy 5 --quantum-numbers -1,1 --roots
 build/heisenberg-energy 16 --precision fp128 --tolerance 1e-30
 ```
 
-`--precision` selects `fp64`, `long-double` (the default), or optional `fp128`.
+`--precision` selects `fp64` (the default), `long-double`, or optional `fp128`.
 `long double` precision is platform-dependent; `fp128` uses Uni20's configured
 MPLAPACK binary128 type. The fp128 CLI currently requires MPLAPACK's native
 `_Float128/strfromf128` mode: other modes are rejected at compile time because
@@ -102,7 +102,14 @@ terminal. Sector and spinon scans separate energies from convergence diagnostics
 and root tables identify their sector or hole.
 
 Output includes energy, momentum, normalized equation residual, convergence
-status, and update count. `--max-iterations` defaults to 10000 **per state**;
+status, update count, and solver CPU time in seconds. CPU time measures process
+CPU consumption during state construction and solving, not elapsed wall time;
+for sector/spinon scans it covers the whole scan. Report formatting and output
+are excluded. Both output formats include it, with a `# CPU time:` comment
+before plain scan tables. Very short runs may report zero at the clock's
+resolution; an unavailable or wrapped CPU clock is reported as `unavailable`.
+
+`--max-iterations` defaults to 10000 **per state**;
 zero evaluates only the initial zero-root guess. Exit status is 0 if all states
 converged, 2 if any exhausted their budget, and 1 for invalid input or another
 error. A budget-exhausted result is explicitly marked as an unconverged
