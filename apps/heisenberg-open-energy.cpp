@@ -27,6 +27,7 @@ struct Arguments
     std::optional<uni20::half_int> sz = std::nullopt;
     std::optional<std::string_view> quantum_numbers = std::nullopt;
     bool sectors = false;
+    bethe::cli::ExcitationArguments excitations = {};
     std::string_view format = "auto";
 };
 
@@ -37,8 +38,9 @@ void usage(std::ostream& out)
       << "Default: ground state (Sz=0 for even N, Sz=1/2 for odd N). Modes:\n"
       << "  --sz VALUE                         lowest energy in an Sz sector, e.g. 1/2\n"
       << "  --sectors                          lowest energy in every Sz sector\n"
-      << "  --quantum-numbers I0,I1,...         distinct integers in [1,N-M], M<=N/2\n"
-      << "  --precision fp64|long-double|fp128  (default: fp64)\n"
+      << "  --quantum-numbers I0,I1,...         distinct integers in [1,N-M], M<=N/2\n";
+  bethe::cli::excitation_usage(out);
+  out << "  --precision fp64|long-double|fp128  (default: fp64)\n"
       << "  --tolerance VALUE                  normalized equation residual, max|F|/(2N)\n"
       << "  --max-iterations COUNT             update budget (default: 10000)\n"
       << "  --roots                            print the positive rapidities\n"
@@ -60,6 +62,14 @@ template <uni20::Real Real> int run(Arguments const& args)
               << "Precision: " << args.precision << '\n'
               << "Residual tolerance: " << uni20::format_real(options.residual_tolerance) << '\n';
   CpuTimer const timer;
+  if (args.excitations.count)
+  {
+    auto const scan = model::real_excitations<Real>(args.sites, args.excitations.selected_spin(args.sites),
+                                                    args.excitations.options(), options);
+    auto const cpu_time = timer.elapsed_text();
+    return finish(
+        bethe::cli::print_excitations(args.sites, args.precision, options, scan, args.print_roots, cpu_time, pretty));
+  }
   if (args.sectors)
   {
     auto const states = model::sector_ground_states<Real>(args.sites, options);
@@ -128,7 +138,8 @@ int main(int argc, char** argv)
       else if (option == "--sectors")
         args.sectors = true;
       else if (option == "--precision" || option == "--tolerance" || option == "--max-iterations" || option == "--sz" ||
-               option == "--quantum-numbers" || option == "--format")
+               option == "--quantum-numbers" || option == "--format" || option == "--excitations" ||
+               option == "--spin" || option == "--max-candidates")
       {
         if (++i == argc) throw std::invalid_argument("missing value for " + std::string(option));
         if (option == "--precision")
@@ -141,16 +152,17 @@ int main(int argc, char** argv)
           args.sz = uni20::half_int::parse(argv[i]);
         else if (option == "--quantum-numbers")
           args.quantum_numbers = argv[i];
-        else
+        else if (!args.excitations.parse(option, argv[i]))
           args.max_iterations = parse_size(argv[i]);
       }
       else
         throw std::invalid_argument("unknown option: " + std::string(option));
     }
+    args.excitations.validate();
     if (static_cast<int>(args.sz.has_value()) + static_cast<int>(args.quantum_numbers.has_value()) +
-            static_cast<int>(args.sectors) >
+            static_cast<int>(args.sectors) + static_cast<int>(args.excitations.count.has_value()) >
         1)
-      throw std::invalid_argument("--sz, --sectors and --quantum-numbers are mutually exclusive");
+      throw std::invalid_argument("--sz, --sectors, --quantum-numbers and --excitations are mutually exclusive");
     if (args.format != "auto" && args.format != "pretty" && args.format != "plain")
       throw std::invalid_argument("unknown output format: " + std::string(args.format));
     if (args.precision == "fp64") return run<double>(args);

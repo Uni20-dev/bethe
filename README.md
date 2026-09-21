@@ -6,8 +6,9 @@ C++23 tools for finite-system Bethe ansatz calculations, complementing
 
 The finite-size solvers cover periodic and free-end open spin-1/2 Heisenberg
 (XXX) chains at zero field: ground states for even and odd lengths, lowest
-energies in each magnetization sector, and specified real-root states. The
-periodic solver also provides the odd-chain one-spinon branch.
+energies in each magnetization sector, specified real-root states, and
+energy-ordered real-root excitation scans at fixed total spin. The periodic
+solver also provides the odd-chain one-spinon branch.
 Analytic thermodynamic spinon dispersions are provided for XXX and
 gapless XXZ. It succeeds MPToolkit's `misc/heisenberg-energy.cpp`; no legacy
 copy is kept here.
@@ -67,6 +68,7 @@ build/heisenberg-energy 6 --precision long-double --roots
 build/heisenberg-energy 15 --sz 1/2
 build/heisenberg-energy 16 --sectors
 build/heisenberg-energy 65 --spinons
+build/heisenberg-energy 32 --excitations 10 --spin 1
 build/heisenberg-energy 5 --quantum-numbers -1,1 --roots
 # In a binary128-enabled build:
 build/heisenberg-energy 16 --precision fp128 --tolerance 1e-30
@@ -86,8 +88,10 @@ or half-integer decimals. `--sectors` reports one lowest-energy representative
 in each sector, including spin-reversed partners. `--spinons` requires odd
 `N>=3` and reports the one-spinon family, not the full `Sz=1/2` spectrum.
 `--quantum-numbers` takes a strictly increasing comma-separated list;
-an empty string selects the fully polarized state. These four modes are
-mutually exclusive. `--roots` also prints the exact Bethe quantum numbers.
+an empty string selects the fully polarized state. `--excitations COUNT`
+scans a restricted real-root family, described [below](#real-root-excitation-scans).
+These five modes are mutually exclusive. `--roots` also prints the exact
+Bethe quantum numbers.
 
 Output uses Uni20's presentation layer on terminals: aligned fields and tables,
 exact fractional quantum-number labels, and semantic convergence markers.
@@ -102,13 +106,14 @@ The pretty report honors `UNI20_COLOR`, `NO_COLOR`, `UNI20_GLYPHS`, and
 ASCII table rules and status markers without ANSI color. Terminal width (or
 `COLUMNS`) selects aligned tables or labeled records; numeric strings are never
 split or truncated, so a single long value can still exceed a very narrow
-terminal. Sector and spinon scans separate energies from convergence diagnostics,
-and root tables identify their sector or hole.
+terminal. Scans separate energies from convergence diagnostics, and root tables
+identify their sector, hole, or excitation level.
 
 Output includes energy, momentum, normalized equation residual, convergence
 status, update count, and solver CPU time in seconds. CPU time measures process
 CPU consumption during state construction and solving, not elapsed wall time;
-for sector/spinon scans it covers the whole scan. Report formatting and output
+for scans it covers the whole scan, including the ground reference and energy
+ordering for excitations. Report formatting and output
 are excluded. Both output formats include it, with a `# CPU time:` comment
 before plain scan tables. Very short runs may report zero at the clock's
 resolution; an unavailable or wrapped CPU clock is reported as `unavailable`.
@@ -201,6 +206,96 @@ N=2..9 and the odd-chain one-spinon energies and momenta through N=9. The
 momentum check adds a multiple of `(T+T^-1)/2` to the Hamiltonian. This oracle
 uses double precision; separate irrational analytic references test native
 long-double and binary128 accuracy.
+
+## Real-root excitation scans
+
+Both front ends enumerate supported real-root highest-weight states at a
+chosen **total spin S**, with `M=N/2-S` roots and `Sz=S`:
+
+```sh
+build/heisenberg-energy 64 --excitations 10 --spin 1
+build/heisenberg-open-energy 64 --excitations 10 --spin 1
+build/heisenberg-energy 65 --excitations 10 --spin 1/2 --precision long-double
+build/heisenberg-open-energy 32 --excitations 5 --spin 2 --roots
+```
+
+`--spin` defaults to 1 for even N and 1/2 for odd N. It must be nonnegative,
+no greater than N/2, and have the same integer/half-integer parity as N/2.
+`--spin` and `--max-candidates` require `--excitations COUNT`; `--sz` remains
+the separate sector-minimum mode, not a filter for this scan.
+
+The scan returns up to COUNT lowest **converged multiplets in this family**,
+including its sector minimum. Each multiplet is represented once; its `2S+1`
+SU(2) partners are not listed separately. Distinct multiplets with equal
+energies are retained, including periodic reflection/momentum partners. COUNT
+can cut through such degeneracies. Results are sorted by computed energy;
+exact ties use lexicographic Bethe quantum numbers. Near-degenerate ordering
+can change with numerical precision, and the residual is not an energy-error
+bound. For odd N and S=1/2 the family includes ground-state multiplets.
+
+Reports give S, absolute energy, `gap=E-E0` relative to the **global ground
+state of the same finite chain**, quantum numbers, and convergence diagnostics.
+Periodic reports additionally give lattice momentum; open reports do not.
+Gaps retain the selected arithmetic precision, including fp128. Tiny negative
+gaps due to roundoff are not clamped. Optional root blocks identify each level.
+In plain output, S and I use exact fractions, the I column is comma-separated,
+and `-` denotes an empty set of quantum numbers.
+
+This is **not a complete low-energy spectrum**, even in the requested S
+sector. It enumerates only the quantum-number windows of the existing
+real-root solvers. For periodic even N, S=1 gives the conventional two-spinon
+triplet family; further triplets and excited singlets require additional
+families. In particular, for even N and S=0 the current window contains only
+the ground-state configuration. Complex/string states and infinite-root
+descendants are not solved by this mode.
+
+There are `C(N-M,M)` candidates for either boundary: for example, N=64, S=1
+has 528. The scan solves **every** candidate before returning the requested
+lowest subset, not just the first COUNT configurations. The default
+`--max-candidates 10000` rejects larger families before any solve; raise it
+explicitly for larger jobs. COUNT and this limit must both be positive. The
+limit bounds the number of configurations, not the cost of an individual
+solve. A bounded heap retains only O(COUNT*M+N) data, including the global
+ground reference; the underlying O(M^2) work per iteration is unchanged.
+
+Failed candidates are excluded from the energy-ordered list, but **all**
+candidate failures count toward the scan status. Reports show total and
+converged candidate counts, returned multiplets, and the first failed
+configuration's diagnostics. An exhausted candidate makes the ordering
+incomplete and returns exit status 2, even if all displayed states converged.
+If only the ground reference fails, absolute-energy ordering can still be
+complete within the family, but gaps are `unavailable` and the exit status
+is also 2. No unconverged ground energy is used to manufacture gaps.
+
+The independent small-chain tests compare the scans against exact
+diagonalization through N=8, subtracting the Sz=S+1 spectrum from Sz=S to
+check total-spin multiplicities, not just energy membership. They also check
+momentum, exhaustive quantum-number coverage, bounded-prefix ordering,
+omitted singlets, failure accounting, and an irrational gap beyond fp64.
+
+Library usage:
+
+```cpp
+#include <bethe/heisenberg_excitations.hpp>
+
+namespace xxx = bethe::heisenberg;
+auto const spin = uni20::half_int{1};
+auto const candidates = xxx::real_excitation_count(64, spin); // no solves
+xxx::RealExcitationOptions selection{.count = 10, .max_candidates = 10000};
+auto periodic = xxx::real_excitations<long double>(64, spin, selection);
+auto open = xxx::open::real_excitations<long double>(64, spin, selection);
+// Optional fourth argument: SolverOptions<Real>.
+// Each scan.levels entry contains .state and .gap (std::optional<Real>).
+// scan.family_converged() covers every candidate, not only retained levels.
+// scan.converged() additionally requires the ground reference to converge.
+```
+
+`real_excitation_count` accepts an optional upper limit (default: maximum
+`size_t`). Exceeding that limit, `max_candidates`, or representable count
+throws `std::length_error`; invalid spin or scan options throw
+`std::invalid_argument`. Nonfinite numerical failures propagate from the
+underlying solver. Arithmetic, sorting, and gap subtraction never narrow
+the selected real type to double.
 
 ## Single-spinon dispersion
 

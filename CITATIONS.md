@@ -38,3 +38,11 @@ Our rapidity is `z=2*lambda`; our spin-1/2 Hamiltonian is the paper's XXX
 Hamiltonian divided by four and shifted by `N/4`. This gives the ferromagnetic
 reference `(N-1)/4`. Taking the positive-root logarithmic branch gives the
 integer quantum-number convention documented in README.md.
+
+For the highest-weight multiplet and string classification relevant to
+real-root excitation scans, see Caux's notes on
+[real rapidities](https://integrability.org/c_h_e_rr.html),
+[SU(2) descendants](https://integrability.org/c_h_e_rr_10.html), and
+[two-string states](https://integrability.org/c_h_e_s_2.html).
+The scans enumerate only the supported all-real quantum-number window;
+they do not implement the string sectors described in those references.
