@@ -7,6 +7,10 @@ option(BETHE_BUILD_TESTS "Build Bethe ansatz regression tests" ${PROJECT_IS_TOP_
 # Reuse an enclosing project's Uni20 when present. Otherwise use a reproducible
 # source dependency; FETCHCONTENT_SOURCE_DIR_UNI20 provides the local override.
 if(NOT TARGET uni20_core)
+  # Uni20's directory-local IPO setting does not reach our final link steps.
+  # In particular, Clang LTO archives need a matching LTO-enabled linker.
+  # Keep dependency IPO opt-in; CACHE preserves an explicit caller choice.
+  set(UNI20_ENABLE_LTO OFF CACHE BOOL "Enable LTO/IPO for optimized Uni20 builds")
   include(FetchContent)
   FetchContent_Declare(uni20
     GIT_REPOSITORY https://github.com/Uni20-dev/uni20.git
@@ -21,7 +25,7 @@ add_library(bethe INTERFACE)
 add_library(bethe::bethe ALIAS bethe)
 target_compile_features(bethe INTERFACE cxx_std_23)
 target_include_directories(bethe INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/include")
-target_link_libraries(bethe INTERFACE uni20_core)
+target_link_libraries(bethe INTERFACE uni20_core uni20_common)
 
 if(BETHE_BUILD_APPS)
   add_executable(heisenberg-energy apps/heisenberg-energy.cpp)

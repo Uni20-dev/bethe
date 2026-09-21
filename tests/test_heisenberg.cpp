@@ -129,7 +129,7 @@ template <uni20::Real Real> void tests()
   require(abs(one_update.energy + Real{1} + sqrt(Real{2})) < tolerance, "one simultaneous update, not two");
   check_diagnostics(4, one_update);
 
-  for (std::size_t const sites : {0, 1, 3, 7})
+  for (std::size_t const sites : {std::size_t{0}, std::size_t{1}, std::numeric_limits<std::size_t>::max()})
     invalid_argument([&] { (void)ground_state<Real>(sites); });
   for (Real const bad_tolerance : {Real{0}, -Real{1}, uni20::numeric_limits<Real>::infinity(),
                                   uni20::numeric_limits<Real>::quiet_NaN()})
