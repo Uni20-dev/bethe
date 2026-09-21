@@ -9,16 +9,17 @@ labelled by magnetization Sz, not total spin S.
 
 ## Model and supported regime
 
-`xxz-energy` is a separate periodic-chain front end for
+`bethe-xxz-pbc` is a separate periodic-chain front end for
 
 ```text
 H = sum_i (Sx_i Sx_(i+1) + Sy_i Sy_(i+1) + Delta Sz_i Sz_(i+1)),
 J=1, h=0, 0 <= Delta <= 1.
 ```
 
-The anisotropy is required. The finite-size XXZ implementation supports
+The anisotropy is required. This periodic-chain implementation supports
 ground states, magnetization-sector minima, and a restricted finite-real-root
-excitation family, not the complete spectrum, strings, or open boundaries.
+excitation family, not the complete spectrum or strings. For open boundaries,
+use the separate [`bethe-xxz-obc` front end](xxz-open.md).
 Negative Delta and Delta>1 are rejected. The
 existing analytic thermodynamic `bethe::xxz::spinon_energy` retains its wider
 `-1 < Delta <= 1` domain; it is independent of this finite-size solver.
@@ -26,12 +27,12 @@ existing analytic thermodynamic `bethe::xxz::spinon_energy` retains its wider
 ## Ground states and sectors
 
 ```sh
-build/xxz-energy 64 --delta 0.5
-build/xxz-energy 65 --delta 0.5 --sz -1/2 --roots
-build/xxz-energy 16 --delta 0.75 --sectors --precision long-double
-build/xxz-energy 4 --delta 0 --format pretty
+build/bethe-xxz-pbc 64 --delta 0.5
+build/bethe-xxz-pbc 65 --delta 0.5 --sz -1/2 --roots
+build/bethe-xxz-pbc 16 --delta 0.75 --sectors --precision long-double
+build/bethe-xxz-pbc 4 --delta 0 --format pretty
 # In a binary128-enabled build:
-build/xxz-energy 64 --delta 0.999999999999999999999999 --precision fp128
+build/bethe-xxz-pbc 64 --delta 0.999999999999999999999999 --precision fp128
 ```
 
 For ground-state and sector-minimum runs, `--sz` and `--sectors` work as in
@@ -119,10 +120,10 @@ near-endpoint anisotropies, spin reversal, larger chains, and CLI formatting.
 ## Real-root excitations
 
 ```sh
-build/xxz-energy 64 --delta 0.5 --excitations 10
-build/xxz-energy 16 --delta 0.75 --sz -1 --excitations all --roots
-build/xxz-energy 8 --delta 0.5 --sz 2 --excitations all --max-candidates 100
-build/xxz-energy 8 --delta 0.5 --quantum-numbers -3/2,1/2
+build/bethe-xxz-pbc 64 --delta 0.5 --excitations 10
+build/bethe-xxz-pbc 16 --delta 0.75 --sz -1 --excitations all --roots
+build/bethe-xxz-pbc 8 --delta 0.5 --sz 2 --excitations all --max-candidates 100
+build/bethe-xxz-pbc 8 --delta 0.5 --quantum-numbers -3/2,1/2
 ```
 
 `--excitations COUNT|all` scans the entire supported quantum-number family,

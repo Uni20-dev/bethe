@@ -4,6 +4,13 @@ C++23 tools for finite-system Bethe ansatz calculations, complementing
 [Uni20](https://github.com/Uni20-dev/uni20) and the
 [Matrix Product Toolkit](https://github.com/mptoolkit/mptoolkit).
 
+High precision is a first-class feature: all finite-chain solvers support
+**fp64**, **long-double** (platform-dependent extended precision), and optional
+**fp128** (binary128, about 34 significant decimal digits) through Uni20/MPLAPACK.
+Parameters, numerical calculations, excitation gaps, and output retain the
+selected precision. See [precision controls](docs/command-line.md#select-arithmetic-precision)
+and [binary128 setup](docs/building.md#enable-binary128).
+
 A calculation starts with a model, a boundary condition, and a choice of
 Bethe quantum numbers. The solver finds the corresponding rapidities and
 uses them to calculate energies and, for periodic chains, momenta. You can
@@ -12,12 +19,17 @@ then explore magnetization sectors, excitation families, and spinons.
 
 ## Choose a model
 
-- [Periodic XXX](docs/xxx.md): `heisenberg-energy` gives ground states,
+Commands follow `bethe-<model>-<boundary>`: `pbc` means periodic boundaries,
+and `obc` means open boundaries (currently free ends, with no boundary fields).
+
+- [Periodic XXX](docs/xxx.md): `bethe-xxx-pbc` gives ground states,
   sector minima, real-root excitations, and the odd-chain one-spinon branch.
-- [Free-end XXX](docs/open-chains.md): `heisenberg-open-energy` supports
+- [Free-end XXX](docs/open-chains.md): `bethe-xxx-obc` supports
   ground states, sector minima, and real-root excitations, without lattice momentum.
-- [Periodic XXZ](docs/xxz.md): `xxz-energy` supports ground states, sector minima,
+- [Periodic XXZ](docs/xxz.md): `bethe-xxz-pbc` supports ground states, sector minima,
   and an anisotropy-dependent real-root excitation family for `0 <= Delta <= 1`.
+- [Free-end XXZ](docs/xxz-open.md): `bethe-xxz-obc` provides the corresponding
+  open-chain calculations with no boundary fields or lattice momentum.
 
 The finite-chain models use spin-1/2 operators, J=1, and zero magnetic field.
 Excitation scans cover explicitly supported real-root families, **not complete
@@ -50,7 +62,7 @@ For a checkout shared between hosts, keep builds on machine-local storage;
 Start with the ground state of a four-site periodic XXX chain:
 
 ```sh
-build/heisenberg-energy 4
+build/bethe-xxx-pbc 4
 ```
 
 Its total energy is E=-2 in our spin-1/2 normalization. The report includes
@@ -58,26 +70,28 @@ energy per site, convergence diagnostics, and solver CPU time. To see how the
 boundary condition or anisotropy changes the problem, try:
 
 ```sh
-build/heisenberg-open-energy 4
-build/xxz-energy 4 --delta 0.5
+build/bethe-xxx-obc 4
+build/bethe-xxz-pbc 4 --delta 0.5
+build/bethe-xxz-obc 4 --delta 0.5
 ```
 
 Next, distinguish the lowest state in a magnetization sector from a family
 of excited states:
 
 ```sh
-build/heisenberg-energy 16 --sz 1
-build/heisenberg-energy 16 --sectors
-build/heisenberg-energy 16 --excitations 10 --spin 1
-build/xxz-energy 16 --delta 0.5 --excitations all --sz 1
+build/bethe-xxx-pbc 16 --sz 1
+build/bethe-xxx-pbc 16 --sectors
+build/bethe-xxx-pbc 16 --excitations 10 --spin 1
+build/bethe-xxz-pbc 16 --delta 0.5 --excitations all --sz 1
 ```
 
 XXX excitation scans select total spin with `--spin`; XXZ scans select
 magnetization with `--sz`. Both include the sector minimum and report gaps
 relative to the global ground state.
 
-The default arithmetic is fp64. Add `--roots` to inspect rapidities and
-quantum numbers, or `--precision long-double` for the platform's extended type.
+The default arithmetic is fp64. Select `--precision long-double` or, in an
+enabled build, `--precision fp128` for higher precision. Add `--roots` to inspect
+rapidities and quantum numbers.
 Reports are formatted on a terminal and plain when redirected; `--format plain`
 makes that choice explicit. Always check convergence: the equation residual
 is not an energy-error bound. See [CLI controls and diagnostics](docs/command-line.md)
@@ -102,6 +116,8 @@ together. Read them in roughly this order, or go straight to your model:
    versus the thermodynamic curve.
 7. [Periodic XXZ chains](docs/xxz.md) — anisotropy, scaled rapidities,
    sector minima, and the excitation window.
+8. [Free-end XXZ chains](docs/xxz-open.md) — boundary reflection phases,
+   standing waves, and open-chain excitations.
 
 ## Source and attribution
 

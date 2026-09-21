@@ -4,6 +4,7 @@
 
 #include <bethe/real_excitations.hpp>
 #include <bethe/xxz.hpp>
+#include <bethe/xxz_open.hpp>
 
 namespace bethe::xxz
 {
@@ -57,4 +58,47 @@ template <uni20::Real Real = double>
   }
   return result;
 }
+namespace open
+{
+using xxz::RealExcitation;
+using xxz::RealExcitationOptions;
+using xxz::RealExcitationScan;
+
+template <uni20::Real Real = double>
+[[nodiscard]] std::size_t real_excitation_count(std::size_t sites, Real delta, uni20::half_int sz,
+                                                std::size_t limit = std::numeric_limits<std::size_t>::max())
+{
+  auto const window = open::real_quantum_number_window(sites, delta, sz);
+  return bethe::detail::bounded_binomial(window.slots, xxz::detail::sector_roots(sites, sz), limit);
+}
+
+/// Positive finite-root, free-end XXZ states at fixed Sz; NOT the complete
+/// sector spectrum. Includes the sector minimum. Gaps use the global ground.
+template <uni20::Real Real = double>
+[[nodiscard]] RealExcitationScan<RealState<Real>> real_excitations(std::size_t sites, Real delta, uni20::half_int sz,
+                                                                   RealExcitationOptions const& scan = {},
+                                                                   SolverOptions<Real> const& solver = {})
+{
+  auto const window = open::real_quantum_number_window(sites, delta, sz);
+  auto const m = xxz::detail::sector_roots(sites, sz);
+  auto result = bethe::detail::scan_real_combinations<RealExcitationScan<RealState<Real>>>(
+      window.slots, m, window.first.twice(), scan,
+      [&](QuantumNumbers const& numbers) { return open::solve_real<Real>(sites, delta, numbers, solver); },
+      [&] { return open::ground_state<Real>(sites, delta, solver); });
+  result.sz = sz;
+  result.delta = delta;
+  result.window = window;
+  for (auto& level : result.levels)
+  {
+    level.state.sz = sz;
+    level.state.spin_reversed = sz.twice() < 0;
+  }
+  if (result.first_unconverged)
+  {
+    result.first_unconverged->sz = sz;
+    result.first_unconverged->spin_reversed = sz.twice() < 0;
+  }
+  return result;
+}
+} // namespace open
 } // namespace bethe::xxz

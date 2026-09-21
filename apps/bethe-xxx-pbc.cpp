@@ -35,7 +35,7 @@ struct Arguments
 
 void usage(std::ostream& out)
 {
-  out << "Usage: heisenberg-energy N [options]\n"
+  out << "Usage: bethe-xxx-pbc N [options]\n"
       << "Periodic spin-1/2 Heisenberg chain, J=1, zero field.\n"
       << "Default: ground state (one representative for odd N). Modes:\n"
       << "  --sz VALUE                         lowest energy in an Sz sector, e.g. 1/2\n"
@@ -197,7 +197,7 @@ int main(int argc, char** argv)
   }
   catch (std::exception const& error)
   {
-    std::cerr << "heisenberg-energy: " << error.what() << '\n';
+    std::cerr << "bethe-xxx-pbc: " << error.what() << '\n';
     return 1;
   }
 }

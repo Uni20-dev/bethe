@@ -7,8 +7,8 @@ chain supplies a finite-size one-spinon branch, while analytic functions give
 the infinite-chain dispersion. Their energy references are different.
 
 ```sh
-build/heisenberg-energy 65 --spinons
-build/heisenberg-energy 15 --spinons --roots --precision long-double
+build/bethe-xxx-pbc 65 --spinons
+build/bethe-xxx-pbc 15 --spinons --roots --precision long-double
 ```
 
 The finite branch is not the complete Sz=1/2 spectrum. Begin with

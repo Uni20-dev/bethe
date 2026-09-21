@@ -2,27 +2,28 @@
 
 [Back to the overview](../README.md)
 
-The three programs share precision selection, convergence controls, and
+The four programs share precision selection, convergence controls, and
 report formatting. The periodic XXX chain is a useful first example; model
 and state-selection details live in the linked guides.
 
-`heisenberg-energy` is the periodic front end. For free-end OBC, use the separate
-`heisenberg-open-energy` program described in the [open-chain guide](open-chains.md).
-For anisotropy, use [`xxz-energy`](xxz.md), which requires `--delta`.
+`bethe-xxx-pbc` is the periodic XXX front end. For free-end OBC, use the separate
+`bethe-xxx-obc` program described in the [open-chain guide](open-chains.md).
+For anisotropy, use [`bethe-xxz-pbc`](xxz.md) or the free-end
+[`bethe-xxz-obc`](xxz-open.md); both require `--delta`.
 
 ## Choose a calculation
 
 ```sh
-build/heisenberg-energy 16
-build/heisenberg-energy 64 --precision fp64 --tolerance 1e-12
-build/heisenberg-energy 6 --precision long-double --roots
-build/heisenberg-energy 15 --sz 1/2
-build/heisenberg-energy 16 --sectors
-build/heisenberg-energy 65 --spinons
-build/heisenberg-energy 32 --excitations 10 --spin 1
-build/heisenberg-energy 5 --quantum-numbers -1,1 --roots
+build/bethe-xxx-pbc 16
+build/bethe-xxx-pbc 64 --precision fp64 --tolerance 1e-12
+build/bethe-xxx-pbc 6 --precision long-double --roots
+build/bethe-xxx-pbc 15 --sz 1/2
+build/bethe-xxx-pbc 16 --sectors
+build/bethe-xxx-pbc 65 --spinons
+build/bethe-xxx-pbc 32 --excitations 10 --spin 1
+build/bethe-xxx-pbc 5 --quantum-numbers -1,1 --roots
 # In a binary128-enabled build:
-build/heisenberg-energy 16 --precision fp128 --tolerance 1e-30
+build/bethe-xxx-pbc 16 --precision fp128 --tolerance 1e-30
 ```
 
 The default is a ground state; odd lengths return one of the degenerate
@@ -38,8 +39,9 @@ the exact Bethe quantum numbers.
 
 XXZ uses the same common precision and output controls, but different mode
 combinations: `--excitations` selects a family at fixed `--sz`, not `--spin`.
-See [XXZ excitations](xxz.md#real-root-excitations) before transferring XXX
-commands directly to the anisotropic model.
+See [periodic XXZ excitations](xxz.md#real-root-excitations) or
+[free-end XXZ excitations](xxz-open.md#real-root-excitations) before transferring
+XXX commands directly to the anisotropic model.
 
 ## Select arithmetic precision
 
@@ -93,9 +95,9 @@ estimate. There is no silent precision fallback. Run `--help` for the options.
 The residual measures how closely the rapidities satisfy the Bethe equations;
 it is not a bound on the error in the energy. The default tolerance is 32
 times the selected type's epsilon. Periodic solvers normalize by N, while the
-open-chain solver normalizes by 2N. See the model guides for the equations.
+open-chain solvers normalize by 2N. See the model guides for the equations.
 Increasing precision can help resolve closely spaced levels, but always
 inspect the convergence status before treating an energy as an eigenvalue.
 
 Continue with [periodic XXX conventions](xxx.md), [free-end chains](open-chains.md),
-or [XXZ](xxz.md).
+or XXZ with [periodic](xxz.md) or [free-end](xxz-open.md) boundaries.

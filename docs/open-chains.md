@@ -7,16 +7,17 @@ momentum is no longer a quantum number, and the Bethe equations include
 reflected scattering. A separate front end and result type keep these
 differences explicit. Precision and presentation controls are shared with the
 [other programs](command-line.md).
+For anisotropic interactions, see [free-end XXZ chains](xxz-open.md).
 
 ## Calculate a free-end state
 
-`heisenberg-open-energy` has free ends with no boundary fields:
+`bethe-xxx-obc` has free ends with no boundary fields:
 
 ```sh
-build/heisenberg-open-energy 16
-build/heisenberg-open-energy 15 --sz 3/2
-build/heisenberg-open-energy 16 --sectors
-build/heisenberg-open-energy 4 --quantum-numbers 1,2 --roots --precision fp128
+build/bethe-xxx-obc 16
+build/bethe-xxx-obc 15 --sz 3/2
+build/bethe-xxx-obc 16 --sectors
+build/bethe-xxx-obc 4 --quantum-numbers 1,2 --roots --precision fp128
 ```
 
 It shares precision selection, CPU timing, convergence diagnostics, and

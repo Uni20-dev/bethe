@@ -13,6 +13,9 @@ set_target_properties(bethe_excitation_tests PROPERTIES CXX_EXTENSIONS OFF)
 add_executable(bethe_xxz_tests test_xxz.cpp)
 target_link_libraries(bethe_xxz_tests PRIVATE bethe::bethe)
 set_target_properties(bethe_xxz_tests PROPERTIES CXX_EXTENSIONS OFF)
+add_executable(bethe_xxz_open_tests test_xxz_open.cpp)
+target_link_libraries(bethe_xxz_open_tests PRIVATE bethe::bethe)
+set_target_properties(bethe_xxz_open_tests PROPERTIES CXX_EXTENSIONS OFF)
 
 foreach(precision IN ITEMS fp64 long-double)
   add_test(NAME Heisenberg.${precision} COMMAND bethe_heisenberg_tests ${precision})
@@ -20,6 +23,7 @@ foreach(precision IN ITEMS fp64 long-double)
   add_test(NAME Open.${precision} COMMAND bethe_open_tests ${precision})
   add_test(NAME Excitations.${precision} COMMAND bethe_excitation_tests ${precision})
   add_test(NAME XXZ.${precision} COMMAND bethe_xxz_tests ${precision})
+  add_test(NAME XXZOpen.${precision} COMMAND bethe_xxz_open_tests ${precision})
 endforeach()
 if(UNI20_ENABLE_MPLAPACK)
   add_test(NAME Heisenberg.fp128 COMMAND bethe_heisenberg_tests fp128)
@@ -27,26 +31,31 @@ if(UNI20_ENABLE_MPLAPACK)
   add_test(NAME Open.fp128 COMMAND bethe_open_tests fp128)
   add_test(NAME Excitations.fp128 COMMAND bethe_excitation_tests fp128)
   add_test(NAME XXZ.fp128 COMMAND bethe_xxz_tests fp128)
+  add_test(NAME XXZOpen.fp128 COMMAND bethe_xxz_open_tests fp128)
 endif()
 
 if(BETHE_BUILD_APPS)
+  add_test(NAME XXZOpen.cli
+    COMMAND "${CMAKE_COMMAND}" "-DPROGRAM=$<TARGET_FILE:bethe-xxz-obc>"
+      "-DFLOAT128=${UNI20_ENABLE_MPLAPACK}"
+      -P "${CMAKE_CURRENT_SOURCE_DIR}/check_xxz_open_cli.cmake")
   add_test(NAME XXZ.cli
-    COMMAND "${CMAKE_COMMAND}" "-DPROGRAM=$<TARGET_FILE:xxz-energy>"
+    COMMAND "${CMAKE_COMMAND}" "-DPROGRAM=$<TARGET_FILE:bethe-xxz-pbc>"
       "-DFLOAT128=${UNI20_ENABLE_MPLAPACK}"
       -P "${CMAKE_CURRENT_SOURCE_DIR}/check_xxz_cli.cmake")
   add_test(NAME Heisenberg.cli
-    COMMAND "${CMAKE_COMMAND}" "-DPROGRAM=$<TARGET_FILE:heisenberg-energy>"
+    COMMAND "${CMAKE_COMMAND}" "-DPROGRAM=$<TARGET_FILE:bethe-xxx-pbc>"
       "-DFLOAT128=${UNI20_ENABLE_MPLAPACK}"
       -P "${CMAKE_CURRENT_SOURCE_DIR}/check_cli.cmake")
   add_test(NAME Heisenberg.presentation
-    COMMAND "${CMAKE_COMMAND}" "-DPROGRAM=$<TARGET_FILE:heisenberg-energy>"
+    COMMAND "${CMAKE_COMMAND}" "-DPROGRAM=$<TARGET_FILE:bethe-xxx-pbc>"
       "-DFLOAT128=${UNI20_ENABLE_MPLAPACK}"
       -P "${CMAKE_CURRENT_SOURCE_DIR}/check_presentation.cmake")
   add_test(NAME Open.cli
-    COMMAND "${CMAKE_COMMAND}" "-DPROGRAM=$<TARGET_FILE:heisenberg-open-energy>"
+    COMMAND "${CMAKE_COMMAND}" "-DPROGRAM=$<TARGET_FILE:bethe-xxx-obc>"
       "-DFLOAT128=${UNI20_ENABLE_MPLAPACK}"
       -P "${CMAKE_CURRENT_SOURCE_DIR}/check_open_cli.cmake")
-  foreach(app IN ITEMS heisenberg-energy heisenberg-open-energy)
+  foreach(app IN ITEMS bethe-xxx-pbc bethe-xxx-obc)
     add_test(NAME Excitations.${app}.cli
       COMMAND "${CMAKE_COMMAND}" "-DPROGRAM=$<TARGET_FILE:${app}>"
         "-DFLOAT128=${UNI20_ENABLE_MPLAPACK}"

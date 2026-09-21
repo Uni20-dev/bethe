@@ -66,3 +66,16 @@ the conventional XXX window and exclude a precision-dependent rounding band
 at the infinity threshold. This deliberately restricted family is not a
 complete classification of XXZ solutions. We do not implement the paper's
 correlation functions.
+
+The free-end XXZ solver uses Mei and Bolech's Eqs. (11)-(12), cited above,
+with the paper's Hamiltonian divided by four and shifted by `N*Delta/4`.
+The resulting ferromagnetic reference is `(N-1)*Delta/4`. In the massless
+regime, the cosh ratio in Eq. (11) supplies the boundary reflection phase;
+in our scaled coordinate it contributes `4*atan(c*z)`,
+`c=(1-Delta)/(1+Delta)`. This term remains nonzero at the XX point, producing
+the open-chain standing-wave denominator N+1. Taking one rapidity to infinity
+gives `I_infinity=N-M+1-(N-2*M+1)*gamma/pi`. As in the periodic case, we intersect
+this strict bound with the conventional XXX window and exclude a rounding
+band at the threshold; this is a restricted positive finite-root family.
+See the [free-end XXZ guide](docs/xxz-open.md#boundary-equations-and-limiting-cases)
+for the transformed equations and supported excitation window.

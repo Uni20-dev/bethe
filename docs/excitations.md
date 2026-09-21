@@ -10,17 +10,17 @@ interpreting both `COUNT` and `all`. For anisotropic chains, use the separate
 
 ## Select a total-spin family
 
-The periodic `heisenberg-energy` and free-end `heisenberg-open-energy`
+The periodic `bethe-xxx-pbc` and free-end `bethe-xxx-obc`
 front ends enumerate supported real-root highest-weight states at a
 chosen **total spin S**, with `M=N/2-S` roots and `Sz=S`:
 
 ```sh
-build/heisenberg-energy 64 --excitations 10 --spin 1
-build/heisenberg-open-energy 64 --excitations 10 --spin 1
-build/heisenberg-energy 64 --excitations all --spin 1
-build/heisenberg-open-energy 64 --excitations all --spin 1
-build/heisenberg-energy 65 --excitations 10 --spin 1/2 --precision long-double
-build/heisenberg-open-energy 32 --excitations 5 --spin 2 --roots
+build/bethe-xxx-pbc 64 --excitations 10 --spin 1
+build/bethe-xxx-obc 64 --excitations 10 --spin 1
+build/bethe-xxx-pbc 64 --excitations all --spin 1
+build/bethe-xxx-obc 64 --excitations all --spin 1
+build/bethe-xxx-pbc 65 --excitations 10 --spin 1/2 --precision long-double
+build/bethe-xxx-obc 32 --excitations 5 --spin 2 --roots
 ```
 
 `--spin` defaults to 1 for even N and 1/2 for odd N. It must be nonnegative,
