@@ -7,6 +7,21 @@
 
 namespace bethe::cli::xxz_open_report
 {
+inline std::string_view residual_description(bethe::xxz::open::GroundResidualConvention convention)
+{
+  using Convention = bethe::xxz::open::GroundResidualConvention;
+  switch (convention)
+  {
+    case Convention::logarithmic_phase:
+      return "max|F|/(2*N), logarithmic phase";
+    case Convention::massive_regularized:
+      return "normalized bulk and regularized boundary equations";
+    case Convention::negative_rank_scaled:
+      return "rank-subtracted equations divided by N*s; s=sqrt((1+Delta)/(1-Delta))";
+  }
+  throw std::logic_error("unknown open XXZ residual convention");
+}
+
 inline std::string_view status_code(bethe::xxz::open::GroundSolveStatus status)
 {
   using Status = bethe::xxz::open::GroundSolveStatus;
@@ -40,7 +55,15 @@ template <uni20::Real Real> std::string_view boundary_kind(bethe::xxz::open::Bou
 
 template <uni20::Real Real> void print_roots(bethe::xxz::open::GroundState<Real> const& state)
 {
-  cli::print_roots(state);
+  if (state.residual_convention == bethe::xxz::open::GroundResidualConvention::negative_rank_scaled)
+  {
+    std::cout << "# index rapidity I lambda\n";
+    for (std::size_t i = 0; i < state.rapidities.size(); ++i)
+      std::cout << i << ' ' << uni20::format_real(state.rapidities[i]) << ' ' << state.quantum_numbers[i] << ' '
+                << uni20::format_real(state.log_rapidities[i]) << '\n';
+  }
+  else
+    cli::print_roots(state);
   if (state.boundary_root)
   {
     auto const& root = *state.boundary_root;
@@ -53,7 +76,19 @@ template <uni20::Real Real> void print_roots(bethe::xxz::open::GroundState<Real>
 template <uni20::Real Real>
 void add_roots(report_builder& report, bethe::xxz::open::GroundState<Real> const& state, std::string const& title)
 {
-  if (state.rapidities.empty() && state.boundary_root)
+  if (!state.log_rapidities.empty())
+  {
+    auto& table = report.table(title);
+    table.header_separator()
+        .column("Index")
+        .column("I")
+        .column("Rapidity z", table_alignment::decimal)
+        .column("Lambda", table_alignment::decimal);
+    for (std::size_t i = 0; i < state.rapidities.size(); ++i)
+      table.row(i, uni20::to_string_fraction(state.quantum_numbers[i]), uni20::format_real(state.rapidities[i]),
+                uni20::format_real(state.log_rapidities[i]));
+  }
+  else if (state.rapidities.empty() && state.boundary_root)
     report.table(title + " (no bulk roots)");
   else
     cli::add_roots(report, state, title);
@@ -80,7 +115,8 @@ bool print_state(report_builder report, std::size_t sites, State const& state, b
 template <uni20::Real Real>
 bool print_state(report_builder report, std::size_t sites, bethe::xxz::open::GroundState<Real> const& state, bool roots)
 {
-  if (state.delta <= Real{1}) return cli::print_state_report<Real>(std::move(report), sites, state, roots);
+  if (state.residual_convention == bethe::xxz::open::GroundResidualConvention::logarithmic_phase)
+    return cli::print_state_report<Real>(std::move(report), sites, state, roots);
   report.status(state.converged ? semantic_glyph::success : semantic_glyph::warning, std::string(status_text(state)))
       .field("Sz", uni20::to_string_fraction(state.sz))
       .field("Reference vacuum", state.spin_reversed ? "all down (spin reversed)" : "all up")
@@ -98,7 +134,8 @@ bool print_state(report_builder report, std::size_t sites, bethe::xxz::open::Gro
 template <uni20::Real Real>
 bool print_sectors(report_builder report, std::vector<bethe::xxz::open::GroundState<Real>> const& states, bool roots)
 {
-  if (states.front().delta <= Real{1}) return cli::print_sector_report(std::move(report), states, roots);
+  if (states.front().residual_convention == bethe::xxz::open::GroundResidualConvention::logarithmic_phase)
+    return cli::print_sector_report(std::move(report), states, roots);
   auto& energies = report.table("Sector energies");
   energies.header_separator().column("Sz").column("Energy", table_alignment::decimal);
   auto& diagnostics = report.table("Convergence");

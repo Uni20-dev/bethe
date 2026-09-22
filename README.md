@@ -29,7 +29,7 @@ and `obc` means open boundaries (currently free ends, with no boundary fields).
 - [Periodic XXZ](docs/xxz.md): `bethe-xxz-pbc` supports ground states and sector minima
   for `Delta >= 0`, plus restricted real-root excitations for `0 <= Delta <= 1`.
 - [Free-end XXZ](docs/xxz-open.md): `bethe-xxz-obc` supports ground states and
-  sector minima for `Delta >= 0`, including massive boundary roots, and restricted
+  sector minima for `Delta > -1`, including massive boundary roots, and restricted
   real-root excitations for `0 <= Delta <= 1`, without lattice momentum.
 - [Periodic Hubbard](docs/hubbard.md): `bethe-hubbard-pbc` gives repulsive
   half-filled spin sectors, balanced attractive ground states at any even filling,

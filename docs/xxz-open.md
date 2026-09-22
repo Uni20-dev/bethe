@@ -11,7 +11,7 @@ doubling the periodic chain length would miss that phase.
 
 ```text
 H = sum_(i=0)^(N-2) [Sx_i Sx_(i+1) + Sy_i Sy_(i+1) + Delta Sz_i Sz_(i+1)],
-J=1, h=0, Delta >= 0 (ground states), no boundary fields, N >= 2.
+J=1, h=0, Delta > -1 (ground states), no boundary fields, N >= 2.
 ```
 
 ```sh
@@ -19,6 +19,7 @@ build/bethe-xxz-obc 64 --delta 0.5
 build/bethe-xxz-obc 65 --delta 0.5 --sz -1/2 --roots
 build/bethe-xxz-obc 16 --delta 0.75 --sectors --precision long-double
 build/bethe-xxz-obc 16 --delta 3 --roots
+build/bethe-xxz-obc 33 --delta -0.9 --sz -1/2 --roots
 # In a binary128-enabled build:
 build/bethe-xxz-obc 64 --delta 0.999999999999999999999999 --precision fp128
 ```
@@ -29,6 +30,15 @@ per magnetization sector. Negative sectors use spin reversal. There is no
 lattice momentum for free ends, and generic XXZ states are not classified
 by total spin S or SU(2) multiplets. There is no `--spin`, `--spinons`, or
 boundary-selection option.
+
+For `-1<Delta<0`, the solver uses positive hyperbolic lambda coordinates
+and Newton iteration. `--roots` prints both lambda and
+`z=s*tanh(lambda)`, with `s=sqrt((1+Delta)/(1-Delta))`. The reported residual
+uses **rank-subtracted equations divided by N*s**, not the nonnegative
+solver's `max|F|/(2*N)`. This scaling keeps the stopping test meaningful as
+Delta approaches -1, where the z roots shrink. See the
+[negative-anisotropy guide](xxz-negative.md) for the equations and derivation.
+Exactly Delta=-1 and lower anisotropies are not included by this extension.
 
 For `Delta>1`, even zero-magnetization ground states need a distinguished
 boundary root. `--roots` prints its inverse square `y=1/z_B^2` and logarithmic
@@ -44,7 +54,7 @@ precision in parameters, roots, energies, gaps, and output. See the shared
 ## Real-root excitations
 
 Both excitation scans and specified quantum-number lists still require
-`0<=Delta<=1`; massive ground-state support does not extend that family.
+`0<=Delta<=1`; negative and massive ground-state support do not extend that family.
 
 ```sh
 build/bethe-xxz-obc 16 --delta 0.5 --excitations 10 --sz 1
@@ -110,6 +120,7 @@ auto sector = obc::sector_ground_state<long double>(65, 0.5L,
                                                    uni20::half_int::parse("-1/2"));
 auto sectors = obc::sector_ground_states<long double>(16, 0.75L);
 auto massive = obc::ground_state<long double>(16, 3.0L);
+auto negative = obc::ground_state<long double>(33, -0.9L);
 auto scan = obc::real_excitations<long double>(
     16, 0.5L, uni20::half_int{1}, {.count = 10, .max_candidates = 10000});
 auto count = obc::real_excitation_count(8, 0.5L, uni20::half_int{2});
@@ -120,11 +131,18 @@ auto state = obc::solve_real<long double>(8, 0.75L, numbers);
 
 The three ground-state functions return `obc::GroundState<Real>` (or a vector
 of it). Alongside delta, bulk scaled roots and labels, Sz, spin reversal,
-energy, and convergence diagnostics, this includes an optional `boundary_root`,
+energy, and convergence diagnostics, this includes `log_rapidities`, a
+`GroundResidualConvention` tag, an optional `boundary_root`,
 `root_delta`, and a `GroundSolveStatus` distinguishing convergence, budget
 exhaustion, and a stalled line search. Bulk arrays exclude the distinguished
-root and its label. At `Delta<=1`, `boundary_root` is empty and all numerical
-results retain the original real-root solver's values.
+root and its label. `log_rapidities` stores the solver's lambda coordinates
+only for negative Delta; do not reconstruct them from rounded z values.
+The convention tag distinguishes `logarithmic_phase` (0<=Delta<=1),
+`negative_rank_scaled` (-1<Delta<0), and `massive_regularized` (Delta>1).
+At `Delta<=1`, `boundary_root` is empty. At `0<=Delta<=1`, all numerical
+results retain the original real-root solver's values. Always check
+`converged`: on failure, the reported energy is an unconverged estimate,
+with the residual evaluated at the returned coordinates and requested Delta.
 
 `solve_real` and excitation scans retain `obc::RealState<Real>` with no boundary
 root. Ground states no longer implicitly convert to `RealState`: code with an
@@ -138,6 +156,8 @@ are shared with the other models. Numerical code has no presentation dependency.
 
 This section describes the all-real solver for `0<=Delta<=1`; the
 [massive equations and regularization](xxz-open-massive.md) are separate.
+The [negative-Delta scaled equations](xxz-negative.md) are also separate;
+the excitation labels below must not be extrapolated to that regime.
 
 Use the same scaled coordinate as periodic XXZ:
 `z=tanh(lambda)/tan(gamma/2)`, not the conventional rapidity lambda. Physical
@@ -184,6 +204,14 @@ include `E0(N=2)=-1/2-Delta/4`, its root
 against narrowing higher precision to double. Further checks cover independent
 hyperbolic residuals, the XX and XXX limits, both sides of an infinity threshold,
 larger chains, exhausted budgets, and full-precision plain/pretty output.
+
+The negative-Delta public API is checked separately against all spin-basis
+sector minima through N=9 at four couplings. Tests also check spin reversal,
+the global ground-state selection, the residual-convention tags, independent
+scaled residuals at successful and failed iterates, and native-precision
+two-/three-site energies. Endpoint tests reach `Delta=-1+128*epsilon` on
+even and odd open chains. CLI tests retain all printed z/lambda digits in
+both wide and narrow terminal reports, and keep negative excitations rejected.
 
 Related: [periodic XXZ](xxz.md), [free-end XXX](open-chains.md), and
 [references and provenance](../CITATIONS.md).

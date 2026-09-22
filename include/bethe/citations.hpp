@@ -239,7 +239,7 @@ inline constexpr std::array<Use, 4> uses_xxz_pbc{{
   {&references[5], "Background for the XXX window used to restrict the XXZ scan; not a complete XXZ state classification."},
 }};
 inline constexpr std::array<Use, 2> uses_xxz_obc{{
-  {&references[4], "Free-end XXZ equations and boundary reflection phase, Eqs. (11)-(12); our Hamiltonian is divided by four and shifted."},
+  {&references[4], "Free-end XXZ equations and boundary reflection phase, Eqs. (11)-(12); our Hamiltonian is divided by four and shifted. Negative-Delta ground states use an algebraically rank-subtracted, rescaled form of these equations."},
   {&references[42], "Massive open XXZ boundary root and finite-size deviation, Sec. 4.3.2, specialized to zero boundary fields; used for Delta>1 ground states, not boundary correlations or excitation scans."},
 }};
 inline constexpr std::array<Use, 2> uses_hubbard_pbc{{

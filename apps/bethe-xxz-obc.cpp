@@ -22,10 +22,10 @@ using Arguments = bethe::cli::XxzArguments;
 void usage(std::ostream& out)
 {
   out << "Usage: bethe-xxz-obc N --delta VALUE [options]\n"
-      << "Open spin-1/2 XXZ chain, free ends, J=1, zero field; Delta >= 0 ground states.\n"
+      << "Open spin-1/2 XXZ chain, free ends, J=1, zero field; Delta > -1 ground states.\n"
       << "H=sum_(i=0)^(N-2) (Sx_i Sx_(i+1) + Sy_i Sy_(i+1) + Delta Sz_i Sz_(i+1)).\n"
       << "Default: ground state (one Sz=1/2 representative for odd N).\n"
-      << "  --delta VALUE                      required anisotropy >= 0 (real-root excitations: [0,1])\n"
+      << "  --delta VALUE                      required anisotropy > -1 (real-root excitations: [0,1])\n"
       << "  --sz VALUE                         lowest energy in an Sz sector, e.g. -1/2\n"
       << "  --sectors                          lowest energy in every Sz sector\n"
       << "  --excitations COUNT|all             lowest COUNT, or all, states in a restricted real-root family\n"
@@ -33,12 +33,14 @@ void usage(std::ostream& out)
       << "  --max-candidates COUNT             exhaustive scan limit (default: 10000)\n"
       << "  --quantum-numbers I1,I2,...         positive integer labels; use none for vacuum\n"
       << "  --precision fp64|long-double|fp128  (default: fp64)\n"
-      << "  --tolerance VALUE                  normalized equation residual (regularized boundary at Delta>1)\n"
+      << "  --tolerance VALUE                  residual in the reported convention (default: 32*epsilon)\n"
       << "  --max-iterations COUNT             update budget (default: 10000)\n"
       << "  --roots                            print scaled rapidities z and quantum numbers\n"
       << "  --format auto|pretty|plain         terminal report or script output (default: auto)\n"
       << "  --help                             show this help\n"
       << "z=tanh(lambda)/tan(gamma/2), Delta=cos(gamma); at Delta=1, z=2*lambda_XXX.\n"
+      << "For -1<Delta<0, --roots also prints lambda; residuals use rank-subtracted equations divided by N*s,\n"
+      << "where s=sqrt((1+Delta)/(1-Delta)); this avoids false convergence near Delta=-1.\n"
       << "For Delta>1, bulk z=tan(lambda)/tanh(eta/2), Delta=cosh(eta).\n"
       << "Even zero-Sz massive ground states also carry a boundary root as y=1/z_B^2 and log distance w.\n"
       << "--excitations and --quantum-numbers require 0 <= Delta <= 1.\n"
@@ -56,8 +58,12 @@ template <uni20::Real Real> int run(Arguments const& args)
   options.max_iterations = args.max_iterations;
   if (args.tolerance) options.residual_tolerance = uni20::parse_real<Real>(*args.tolerance);
   bool const pretty = args.format == "pretty" || (args.format == "auto" && terminal::is_a_terminal(stdout));
-  auto const coordinate =
-      delta > Real{1} ? "bulk scaled rapidity z; boundary y=1/z_B^2, log distance w" : "scaled rapidity z";
+  auto const coordinate = delta > Real{1}   ? "bulk scaled rapidity z; boundary y=1/z_B^2, log distance w"
+                          : delta < Real{0} ? "scaled rapidity z=s*tanh(lambda); hyperbolic lambda"
+                                            : "scaled rapidity z";
+  auto const convention = delta < Real{0}   ? model::GroundResidualConvention::negative_rank_scaled
+                          : delta > Real{1} ? model::GroundResidualConvention::massive_regularized
+                                            : model::GroundResidualConvention::logarithmic_phase;
   if (!pretty)
     std::cout << "Sites: " << args.sites << '\n'
               << "Model: open XXZ, free ends, J=1, h=0\n"
@@ -65,8 +71,8 @@ template <uni20::Real Real> int run(Arguments const& args)
               << "Precision: " << args.precision << '\n'
               << "Residual tolerance: " << uni20::format_real(options.residual_tolerance) << '\n'
               << "Root coordinate: " << coordinate << '\n';
-  if (!pretty && delta > Real{1})
-    std::cout << "Residual convention: normalized bulk and regularized boundary equations\n";
+  if (!pretty && (delta > Real{1} || delta < Real{0}))
+    std::cout << "Residual convention: " << output::residual_description(convention) << '\n';
   auto header = [&](std::string_view mode, std::string_view cpu_time) {
     bethe::cli::report_builder report("Heisenberg XXZ (free ends) - " + std::string(mode));
     report.field("Model", "open spin-1/2, free ends, J=1, h=0")
@@ -76,7 +82,8 @@ template <uni20::Real Real> int run(Arguments const& args)
         .field("Residual tolerance", uni20::format_real(options.residual_tolerance))
         .field("CPU time", cpu_time)
         .field("Root coordinate", coordinate);
-    if (delta > Real{1}) report.field("Residual convention", "normalized bulk and regularized boundary equations");
+    if (delta > Real{1} || delta < Real{0})
+      report.field("Residual convention", output::residual_description(convention));
     return report;
   };
   bethe::cli::CpuTimer const timer;
@@ -112,14 +119,14 @@ template <uni20::Real Real> int run(Arguments const& args)
     auto const cpu_time = timer.elapsed_text();
     if (pretty) return finish(output::print_sectors(header("sector minima", cpu_time), states, args.print_roots));
     std::cout << "# CPU time: " << cpu_time << '\n' << "# Sz energy residual iterations converged";
-    if (delta > Real{1}) std::cout << " root_delta status";
+    if (delta > Real{1} || delta < Real{0}) std::cout << " root_delta status";
     std::cout << '\n';
     bool converged = true;
     for (auto const& state : states)
     {
       std::cout << state.sz << ' ' << uni20::format_real(state.energy) << ' ' << uni20::format_real(state.residual_norm)
                 << ' ' << state.iterations << ' ' << state.converged;
-      if (delta > Real{1})
+      if (delta > Real{1} || delta < Real{0})
         std::cout << ' ' << uni20::format_real(state.root_delta) << ' ' << output::status_code(state.status);
       std::cout << '\n';
       if (args.print_roots)

@@ -5,6 +5,7 @@
 
 #include <bethe/heisenberg_open.hpp>
 #include <bethe/xxz.hpp>
+#include <bethe/xxz_negative.hpp>
 #include <bethe/xxz_open_massive.hpp>
 
 namespace bethe::xxz::open
@@ -197,14 +198,44 @@ template <uni20::Real Real = double>
   return numbers;
 }
 
-/// Ground states cover Delta>=0; explicit all-real states and scans remain
-/// restricted to Delta<=1. GroundState carries any massive boundary root.
+/// Ground states cover Delta>-1; explicit all-real states and scans remain
+/// restricted to 0<=Delta<=1. GroundState carries the representation's
+/// coordinates and residual convention, including any massive boundary root.
 template <uni20::Real Real = double>
 [[nodiscard]] GroundState<Real> sector_ground_state(std::size_t sites, Real delta, uni20::half_int sz,
                                                     SolverOptions<Real> const& options = {})
 {
-  if (!uni20::isfinite(delta) || delta < Real{0})
-    throw std::invalid_argument("open XXZ ground states require finite Delta >= 0");
+  if (!uni20::isfinite(delta) || delta <= -Real{1})
+    throw std::invalid_argument("open XXZ ground states require finite Delta > -1");
+  if (delta < Real{0})
+  {
+    auto roots = xxz::detail::negative_ground_roots<Real>(sites, delta, sz, true, options);
+    GroundState<Real> result;
+    result.rapidities = std::move(roots.rapidities);
+    result.log_rapidities = std::move(roots.log_rapidities);
+    result.quantum_numbers = std::move(roots.quantum_numbers);
+    result.delta = result.root_delta = delta;
+    result.energy = roots.energy;
+    result.residual_norm = roots.residual_norm;
+    result.residual_convention = GroundResidualConvention::negative_rank_scaled;
+    result.iterations = roots.iterations;
+    result.converged = roots.converged;
+    switch (roots.status)
+    {
+      case xxz::detail::NegativeSolveStatus::converged:
+        result.status = GroundSolveStatus::converged;
+        break;
+      case xxz::detail::NegativeSolveStatus::iteration_limit:
+        result.status = GroundSolveStatus::iteration_limit;
+        break;
+      case xxz::detail::NegativeSolveStatus::stalled:
+        result.status = GroundSolveStatus::stalled;
+        break;
+    }
+    result.sz = sz;
+    result.spin_reversed = sz.twice() < 0;
+    return result;
+  }
   if (delta > Real{1}) return massive::sector_ground_state<Real>(sites, delta, sz, options);
   auto const numbers = open::sector_ground_quantum_numbers(sites, sz);
   auto real = open::solve_real<Real>(sites, delta, numbers, options);
@@ -229,8 +260,8 @@ template <uni20::Real Real = double>
                                                                   SolverOptions<Real> const& options = {})
 {
   auto const n = xxz::detail::checked_sites(sites);
-  if (!uni20::isfinite(delta) || delta < Real{0})
-    throw std::invalid_argument("open XXZ ground states require finite Delta >= 0");
+  if (!uni20::isfinite(delta) || delta <= -Real{1})
+    throw std::invalid_argument("open XXZ ground states require finite Delta > -1");
   std::vector<GroundState<Real>> states(sites + 1);
   for (std::size_t m = 0; m <= sites / 2; ++m)
   {

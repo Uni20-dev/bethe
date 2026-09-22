@@ -115,7 +115,10 @@ are excluded. Both output formats include it, in metadata before scan tables
 resolution; an unavailable or wrapped CPU clock is reported as `unavailable`.
 
 `--max-iterations` defaults to 10000 **per state**;
-zero evaluates only the initial guess (zero roots for the XXX/XXZ solvers).
+zero evaluates only the initial guess. XXX and gapless nonnegative XXZ start
+from zero roots. Negative-Delta open XXZ uses a free-fermion hyperbolic seed,
+and massive open XXZ uses coupling continuation; these count accepted Newton
+updates, with one shared budget across any continuation stages.
 Hubbard counts accepted Newton updates across all continuation stages and
 uses a large-U seed; its exact U=0 path needs no updates.
 SU(3) counts accepted Newton updates from a filled-sea density seed.
@@ -128,8 +131,11 @@ estimate. There is no silent precision fallback. Run `--help` for the options.
 
 The residual measures how closely the rapidities satisfy the Bethe equations;
 it is not a bound on the error in the energy. The default tolerance is 32
-times the selected type's epsilon. Periodic spin-chain solvers normalize by N,
-while the open spin-chain solvers normalize by 2N. Hubbard normalizes both
+times the selected type's epsilon. The logarithmic spin-chain solvers normalize
+by N (periodic) or 2N (open). Negative-Delta open XXZ instead uses
+[rank-subtracted, scaled equations](xxz-negative.md); massive open XXZ includes
+a [regularized boundary residual](xxz-open-massive.md) when needed. These
+conventions are explicitly reported and are not interchangeable. Hubbard normalizes both
 equation families by L for periodic rings or 2(L+1) for free ends, and reports
 their maximum. Even a stopped continuation reports residuals at the requested
 root-sector U. Lieb–Liniger uses a component-scaled dimensionless residual,

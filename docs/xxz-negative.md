@@ -2,14 +2,15 @@
 
 [Model catalogue](models.md) | [Periodic XXZ](xxz.md) | [Open XXZ](xxz-open.md)
 
-This is an implementation checkpoint, **not a newly supported frontend mode**.
-The internal `bethe::xxz::detail::negative_ground_roots` engine in
+The [free-end ground-state API and frontend](xxz-open.md) now support
+`-1<Delta<0`, for either parity of N and every physical Sz sector.
+The `bethe::xxz::detail::negative_ground_roots` engine in
 [xxz_negative.hpp](../include/bethe/xxz_negative.hpp) solves ground-state
 sectors for `-1<Delta<0` on even periodic rings and free-end chains of either
-parity. It works in fp64, long-double, and optional fp128. The existing public
-ground-state functions and executables still require nonnegative Delta.
-Public integration, odd periodic sectors, and global sector selection remain
-part of this extension; excitations and `Delta<=-1` require separate work.
+parity. It works in fp64, long-double, and optional fp128. The periodic
+ground-state API and executable still require nonnegative Delta: their
+integration, odd-ring state classification, and global sector selection
+remain part of this extension. Excitations and `Delta<=-1` require separate work.
 
 The Hamiltonian is unchanged:
 
@@ -101,6 +102,14 @@ interchangeable with the old nonnegative solver's `max|F_i|/N` diagnostic.
 Always check `converged`; an exhausted budget or stalled line search returns
 the last iterate, not a claimed solution. Odd periodic input is rejected.
 
+The public free-end result retains both coordinate arrays and carries
+`GroundResidualConvention::negative_rank_scaled`, including on failure and
+for the polarized vacuum. Its `root_delta` equals the requested Delta; this
+engine uses a direct solve, not coupling continuation. The CLI reports the
+residual convention and appends lambda to the negative-Delta root table.
+Its default ground-state sector remains Sz=0 (even N) or Sz=1/2 (odd N);
+the odd-*periodic* caveat below does not apply to an open chain.
+
 Tests independently check all sectors through N=9 for OBC and even PBC at
 four negative couplings, using spin-basis exact diagonalization. Periodic
 momentum is checked against a joint energy/translation spectrum. Additional
@@ -115,9 +124,16 @@ ferromagnet at Delta=-1. In its symmetric fixed-Sz state,
 energy slope as Delta increases. This distinguishes the sector minimum from
 merely returning the polarized limiting energy.
 
-This checkpoint passes all 393 tests in the GCC 13 Debug/fp128 build and all
+The initial internal-engine checkpoint passed all 393 tests in the GCC 13 Debug/fp128 build and all
 272 in the Clang 20 Release build without MPLAPACK. Sixteen and eleven of
 those cases, respectively, belong to this new engine and odd-ring audit.
+
+Free-end public integration adds typed tests of every returned sector, global
+selection, native-precision energies near both Delta=-1 and Delta=0, residual
+reconstruction, exhausted budgets, and the separation from excitation scans.
+The full suites now contain 445 GCC/fp128 cases and 307 Clang cases. The
+CLI checks also pass in an applications-only build using the published Uni20
+pin, without a sibling checkout or GoogleTest.
 
 ## Why odd rings are still work in progress
 

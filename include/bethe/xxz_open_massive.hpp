@@ -189,6 +189,7 @@ template <uni20::Real Real = double>
   if (!uni20::isfinite(options.residual_tolerance) || options.residual_tolerance <= Real{0})
     throw std::invalid_argument("residual tolerance must be finite and positive");
   State<Real> state;
+  state.residual_convention = open::GroundResidualConvention::massive_regularized;
   state.delta = delta;
   state.sz = sz;
   state.spin_reversed = sz.twice() < 0;

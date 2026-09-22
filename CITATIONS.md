@@ -244,7 +244,7 @@ Phys. Rev. E 95, 032127 (2017).
 Relevant tool modes:
 
 - `bethe-xxx-obc`: Free-end XXX equations: rational limit of Eqs. (11)-(12) and footnote 2; our spin-1/2 normalization differs.
-- `bethe-xxz-obc`: Free-end XXZ equations and boundary reflection phase, Eqs. (11)-(12); our Hamiltonian is divided by four and shifted.
+- `bethe-xxz-obc`: Free-end XXZ equations and boundary reflection phase, Eqs. (11)-(12); our Hamiltonian is divided by four and shifted. Negative-Delta ground states use an algebraically rank-subtracted, rescaled form of these equations.
 
 ### caux-xxx-states
 
