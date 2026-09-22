@@ -119,6 +119,9 @@ The tests run in fp64, long double, and fp128:
   are checked directly at native precision.
 - Vacuum/identity limits, exact callback counts, integer-count overflow,
   and rejection before callbacks for invalid coordinates or work budgets.
+- General [root recovery](polynomial-roots.md) and dressing at
+  `(N,r,p)=(9,3,1),(11,4,1),(11,3,2),(13,4,2),(13,3,3)`, with nonzero
+  vectors and independent twisted/periodic Hamiltonian residuals.
 
 The construction is available for arbitrary finite-state amplitude
 callbacks, but these tests do not establish a nonzero lift for every

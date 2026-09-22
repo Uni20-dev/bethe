@@ -504,6 +504,27 @@
         {"label": "HTML", "url": "https://arxiv.org/html/0911.1881v1"},
         {"label": "Original 1982 paper", "url": "https://doi.org/10.1007/BF01212176"}
       ]
+    },
+    {
+      "id": "bini-robol-2013",
+      "authors": "Dario A. Bini and Leonardo Robol",
+      "title": "Solving secular and polynomial equations: a multiprecision algorithm",
+      "publication": "Author manuscript, May 10, 2013",
+      "year": 2013,
+      "links": [
+        {"label": "Author manuscript", "url": "https://web.dm.unipi.it/robol/assets/pdf/secular-paper.pdf"}
+      ]
+    },
+    {
+      "id": "cameron-graillat-2022",
+      "authors": "Thomas R. Cameron and Stef Graillat",
+      "title": "On a compensated Ehrlich-Aberth method for the accurate computation of all polynomial roots",
+      "publication": "Electronic Transactions on Numerical Analysis 55, 401-423",
+      "year": 2022,
+      "links": [
+        {"label": "DOI", "url": "https://doi.org/10.1553/etna_vol55s401"},
+        {"label": "Open-access article", "url": "https://etna.ricam.oeaw.ac.at/vol.55.2022/pp401-423.dir/pp401-423.pdf"}
+      ]
     }
   ],
   "tools": [

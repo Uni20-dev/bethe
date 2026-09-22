@@ -187,8 +187,15 @@ inline constexpr std::array<Link, 3> links_47{{
   {"HTML", "https://arxiv.org/html/0911.1881v1"},
   {"Original 1982 paper", "https://doi.org/10.1007/BF01212176"},
 }};
+inline constexpr std::array<Link, 1> links_48{{
+  {"Author manuscript", "https://web.dm.unipi.it/robol/assets/pdf/secular-paper.pdf"},
+}};
+inline constexpr std::array<Link, 2> links_49{{
+  {"DOI", "https://doi.org/10.1553/etna_vol55s401"},
+  {"Open-access article", "https://etna.ricam.oeaw.ac.at/vol.55.2022/pp401-423.dir/pp401-423.pdf"},
+}};
 
-inline constexpr std::array<Reference, 48> references{{
+inline constexpr std::array<Reference, 50> references{{
   {"karbach-1998", "Michael Karbach, Kun Hu, and Gerhard Müller", "Introduction to the Bethe ansatz II", "Computers in Physics 12, 565", 1998, links_0},
   {"groha-2017", "Stefan Groha and Fabian H. L. Essler", "Spinon decay in the spin-1/2 Heisenberg chain with weak next nearest neighbour exchange", "J. Phys. A 50, 334002", 2017, links_1},
   {"caux-xxx-spinons", "Jean-Sébastien Caux", "The Bethe Ansatz: XXX spinons", "Online notes", 0, links_2},
@@ -237,6 +244,8 @@ inline constexpr std::array<Reference, 48> references{{
   {"dugave-2015", "M. Dugave, F. Göhmann, K. K. Kozlowski, and J. Suzuki", "On form-factor expansions for the XXZ chain in the massive regime", "J. Stat. Mech. (2015) P05037", 2015, links_45},
   {"caux-xxz-coordinate", "Jean-Sébastien Caux", "The Bethe Ansatz: coordinate wavefunctions and periodic XXZ equations", "Online notes", 0, links_46},
   {"korepin-2009", "Vladimir E. Korepin", "Norm of Bethe Wave Function as a Determinant", "arXiv:0911.1881 (historical account of the 1982 norm formula)", 2009, links_47},
+  {"bini-robol-2013", "Dario A. Bini and Leonardo Robol", "Solving secular and polynomial equations: a multiprecision algorithm", "Author manuscript, May 10, 2013", 2013, links_48},
+  {"cameron-graillat-2022", "Thomas R. Cameron and Stef Graillat", "On a compensated Ehrlich-Aberth method for the accurate computation of all polynomial roots", "Electronic Transactions on Numerical Analysis 55, 401-423", 2022, links_49},
 }};
 
 inline constexpr std::array<Use, 4> uses_xxx_pbc{{

@@ -100,7 +100,8 @@ checks cover three and four roots at N=8,10 and
 The two-finite-root phantom-dressing tests also use this evaluator, with
 independent two-magnon amplitudes and twisted/periodic Hamiltonian checks.
 
-Recovering general finite roots from the continued polynomial with adequate
-accuracy remains a separate step. These tests do not establish a nonzero
-lift of every mixed-phantom branch, prove sector minimality, or broaden the
+An internal [root-recovery routine](polynomial-roots.md) now connects the
+continued polynomial to these amplitudes, with additional direct-Hamiltonian
+checks of regular odd-ring states and mixed-phantom lifts. These tests do not
+establish a nonzero lift of every mixed-phantom branch, prove sector minimality, or broaden the
 public odd-ring ground-state domain.

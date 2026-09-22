@@ -4,7 +4,9 @@
 
 #include "test_support.hpp"
 #include <array>
+#include <bethe/polynomial_roots.hpp>
 #include <bethe/xxz.hpp>
+#include <bethe/xxz_odd_continuation.hpp>
 #include <numeric>
 
 namespace
@@ -137,17 +139,19 @@ Real hamiltonian_residual(unsigned n, unsigned r, Real d, Real energy, std::vect
   using C = std::complex<Real>;
   engine::CoordinateBetheWave<Real> const wave(n, d, v);
   std::vector<C> psi(1U << n);
-  Real amplitude{0}, error{0};
+  Real amplitude{0}, absolute_terms{0}, error{0};
   for (unsigned bits = 0; bits < (1U << n); ++bits)
     if (std::popcount(bits) == int(r))
     {
       std::vector<std::size_t> occupied;
       for (unsigned j = 0; j < n; ++j)
         if (bits & (1U << j)) occupied.push_back(j);
-      psi[bits] = wave.evaluate(occupied).value;
+      auto const result = wave.evaluate(occupied);
+      psi[bits] = result.value;
+      absolute_terms = std::max(absolute_terms, result.absolute_term_sum);
       amplitude = std::max(amplitude, std::abs(psi[bits]));
     }
-  EXPECT_GT(amplitude, Real{1} / Real{1000000});
+  EXPECT_GT(amplitude, Real{64} * uni20::numeric_limits<Real>::epsilon() * absolute_terms);
   for (unsigned bits = 0; bits < (1U << n); ++bits)
     if (std::popcount(bits) == int(r))
     {
@@ -184,6 +188,32 @@ TYPED_TEST(XXZCoordinateWave, RealRootStatesSatisfyDirectSpinHamiltonian)
         // A finite off-shell input remains evaluable but is NOT an eigenstate.
         v[0] *= C{std::cos(Real{1} / Real{10}), std::sin(Real{1} / Real{10})};
         EXPECT_GT(hamiltonian_residual(n, r, d, state.energy, v), Real{1} / Real{1000});
+      }
+}
+
+TYPED_TEST(XXZCoordinateWave, RecoveredContinuedPolynomialsGiveEigenvectors)
+{
+  using Real = TypeParam;
+  using C = std::complex<Real>;
+  Real const eps = uni20::numeric_limits<Real>::epsilon();
+  for (unsigned n : {5, 7, 9, 11})
+    for (unsigned r = 2; r <= n / 2; ++r)
+      for (Real d : {-Real{1} / Real{5}, -Real{7} / Real{10}, -Real{9} / Real{10}, -Real{999} / Real{1000}})
+      {
+        SCOPED_TRACE(::testing::Message() << "N=" << n << " r=" << r << " Delta=" << uni20::format_scalar(d));
+        auto const branch = engine::continue_odd_polynomial(n, d, uni20::from_twice(std::int64_t(n - 2 * r)));
+        ASSERT_TRUE(branch.equations_converged);
+        auto const result = bethe::detail::recover_polynomial_roots<Real>(branch.coefficients);
+        ASSERT_EQ(result.status, bethe::detail::PolynomialRootStatus::resolved)
+            << "residual=" << uni20::format_scalar(result.residual_norm)
+            << " reconstruction=" << uni20::format_scalar(result.reconstruction_error);
+        std::vector<C> v;
+        for (C x : result.roots)
+        {
+          C const z = branch.center + branch.coordinate_scale * x, imaginary{0, 1};
+          v.push_back(-(Real{1} - imaginary * z) / (Real{1} + imaginary * z));
+        }
+        EXPECT_LT(hamiltonian_residual(n, r, d, branch.energy, v), Real{32768} * Real(n) * eps);
       }
 }
 

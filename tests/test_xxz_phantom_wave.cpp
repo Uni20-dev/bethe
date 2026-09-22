@@ -4,6 +4,7 @@
 
 #include "test_support.hpp"
 #include <array>
+#include <bethe/polynomial_roots.hpp>
 #include <bethe/xxz_coordinate_wave.hpp>
 #include <bethe/xxz_odd_continuation.hpp>
 #include <bethe/xxz_spin_helix.hpp>
@@ -250,6 +251,60 @@ TYPED_TEST(XXZPhantomWave, ContinuedTwoFiniteRootStatesLiftNontrivially)
     ASSERT_GT(max_magnitude(output), Real{1} / Real{1000});
     EXPECT_LT(max_magnitude(source_action) / max_magnitude(input), Real{8192} * Real(n) * eps);
     EXPECT_LT(max_magnitude(target_action) / max_magnitude(output), Real{8192} * Real(n) * eps);
+  }
+}
+
+TYPED_TEST(XXZPhantomWave, GeneralRecoveredFiniteRootsLiftNontrivially)
+{
+  using Real = TypeParam;
+  using C = std::complex<Real>;
+  Real const pi = Real{4} * std::atan(Real{1}), eps = uni20::numeric_limits<Real>::epsilon();
+  for (auto const sizes : {std::array<unsigned, 3>{9, 3, 1}, {11, 4, 1}, {11, 3, 2}, {13, 4, 2}, {13, 3, 3}})
+  {
+    auto const [n, r, p] = sizes;
+    auto const m = r + p;
+    SCOPED_TRACE(::testing::Message() << "N=" << n << " r=" << r << " p=" << p);
+    Real const d = p == 1 ? -Real{1} / Real{2} : -std::cos(pi / Real(n - 2 * r));
+    auto const branch = engine::continue_odd_polynomial(n, d, uni20::from_twice(std::int64_t(n - 2 * m)));
+    ASSERT_TRUE(branch.equations_converged);
+    engine::PolynomialBetheSystem<Real> const system(n, m, branch.center, branch.coordinate_scale);
+    auto const reduced = engine::reduce_phantom_polynomial<Real>(system, branch.coefficients, d, p, -1);
+    ASSERT_EQ(reduced.status, engine::PhantomReductionStatus::regular_reduced_equations);
+    auto const recovered = bethe::detail::recover_polynomial_roots<Real>(reduced.finite_coefficients);
+    ASSERT_EQ(recovered.status, bethe::detail::PolynomialRootStatus::resolved);
+    std::vector<C> v;
+    for (C x : recovered.roots)
+    {
+      C const z = branch.center + branch.coordinate_scale * x, imaginary{0, 1};
+      v.push_back(-(Real{1} - imaginary * z) / (Real{1} + imaginary * z));
+    }
+    engine::CoordinateBetheWave<Real> const wave(n, d, v);
+    C const q{d, -std::sqrt(Real{1} + d) * std::sqrt(Real{1} - d)};
+    engine::PhantomDressing<Real> const dressing(n, r, p, q);
+    std::vector<C> input(1U << n), output(1U << n);
+    Real absolute_terms{0};
+    for (unsigned bits = 0; bits < (1U << n); ++bits)
+      if (std::popcount(bits) == int(r))
+      {
+        auto const amplitude = wave.evaluate(occupied_sites(n, bits));
+        input[bits] = amplitude.value;
+        absolute_terms = std::max(absolute_terms, amplitude.absolute_term_sum);
+      }
+    for (unsigned bits = 0; bits < (1U << n); ++bits)
+      if (std::popcount(bits) == int(m))
+        output[bits] =
+            dressing.amplitude(occupied_sites(n, bits), [&](auto selected) { return input[bits_of(selected)]; });
+    ASSERT_GT(max_magnitude(input), Real{64} * eps * absolute_terms);
+    ASSERT_GT(max_magnitude(output), Real{64} * eps * Real(dressing.terms_per_amplitude()) * max_magnitude(input));
+    auto source_action = hamiltonian(n, r, d, reduced.equation_rotation * reduced.equation_rotation, input);
+    auto target_action = hamiltonian(n, m, d, C{1}, output);
+    for (unsigned bits = 0; bits < (1U << n); ++bits)
+    {
+      source_action[bits] -= branch.energy * input[bits];
+      target_action[bits] -= branch.energy * output[bits];
+    }
+    EXPECT_LT(max_magnitude(source_action) / max_magnitude(input), Real{32768} * Real(n) * eps);
+    EXPECT_LT(max_magnitude(target_action) / max_magnitude(output), Real{32768} * Real(n) * eps);
   }
 }
 

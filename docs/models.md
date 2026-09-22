@@ -314,7 +314,10 @@ separate front end rather than forcing this into a chain-shaped CLI.
   amplitudes and exposes the nonzero-lift issue with explicit kernel tests.
   A [finite-root amplitude evaluator](xxz-coordinate-wave.md) supplies its
   input using subset sums, with native-precision direct Hamiltonian checks.
-  General accurate root recovery from the reduced polynomial remains open.
+  [Native root recovery](polynomial-roots.md) now connects the continued and
+  reduced polynomials to explicit vectors, including tested mixed-phantom
+  lifts with three and four finite roots. It reports unresolved clusters
+  instead of treating them as distinct roots.
   **Next:** mixed/singular-state admissibility and sector-minimum tracking,
   then public integration; only subsequently extend excitation classification.
   The broader family is established by [Yang–Yang](../CITATIONS.md#yang-yang-1966), but the

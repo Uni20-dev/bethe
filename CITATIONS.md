@@ -92,6 +92,15 @@ The divided-Horner recurrence, analytic coefficient derivatives, and collision
 regularization are our algebraic implementation. This is a tested equation
 building block, not a complete odd-ring ground-state or complex-string solver.
 
+The internal [polynomial root recovery](docs/polynomial-roots.md) uses
+Ehrlich-Aberth iteration as reviewed in [bini-robol-2013](#bini-robol-2013),
+equation (3), with Gauss-Seidel updates. Native-real error-free transforms
+and compensated complex Horner evaluation follow the numerical strategy
+discussed in [cameron-graillat-2022](#cameron-graillat-2022), Sections 2-4.
+Our fixed-precision implementation and diagnostic stopping rules are not
+MPSolve or a reproduction of the latter paper's validated error bounds.
+It does not perform arbitrary-precision escalation or interval certification.
+
 The massive free-end XXZ ground-state module also follows the reflection
 equations in [mei-2017](#mei-2017). Its distinguished boundary root and
 finite-size deviation are motivated by [grijalva-2019](#grijalva-2019),
@@ -617,5 +626,19 @@ Vladimir E. Korepin. *Norm of Bethe Wave Function as a Determinant*.
 arXiv:0911.1881 (historical account of the 1982 norm formula) (2009).
 
 [arXiv](<https://arxiv.org/abs/0911.1881>), [HTML](<https://arxiv.org/html/0911.1881v1>), [Original 1982 paper](<https://doi.org/10.1007/BF01212176>).
+
+### bini-robol-2013
+
+Dario A. Bini and Leonardo Robol. *Solving secular and polynomial equations: a multiprecision algorithm*.
+Author manuscript, May 10, 2013 (2013).
+
+[Author manuscript](<https://web.dm.unipi.it/robol/assets/pdf/secular-paper.pdf>).
+
+### cameron-graillat-2022
+
+Thomas R. Cameron and Stef Graillat. *On a compensated Ehrlich-Aberth method for the accurate computation of all polynomial roots*.
+Electronic Transactions on Numerical Analysis 55, 401-423 (2022).
+
+[DOI](<https://doi.org/10.1553/etna_vol55s401>), [Open-access article](<https://etna.ricam.oeaw.ac.at/vol.55.2022/pp401-423.dir/pp401-423.pdf>).
 
 <!-- END GENERATED BIBLIOGRAPHY -->
