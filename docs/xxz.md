@@ -13,14 +13,16 @@ labelled by magnetization Sz, not total spin S.
 
 ```text
 H = sum_i (Sx_i Sx_(i+1) + Sy_i Sy_(i+1) + Delta Sz_i Sz_(i+1)),
-J=1, h=0, 0 <= Delta <= 1.
+J=1, h=0, Delta >= 0 (ground states and sector minima).
 ```
 
 The anisotropy is required. This periodic-chain implementation supports
-ground states, magnetization-sector minima, and a restricted finite-real-root
-excitation family, not the complete spectrum or strings. For open boundaries,
+ground states and magnetization-sector minima for every finite Delta>=0.
+For `0<=Delta<=1` it also supports a restricted finite-real-root excitation
+family, not the complete spectrum or strings. For open boundaries,
 use the separate [`bethe-xxz-obc` front end](xxz-open.md).
-Negative Delta and Delta>1 are rejected. The
+That free-end solver still requires `0<=Delta<=1`. Negative Delta is rejected
+by the finite-size solvers. The
 existing analytic thermodynamic `bethe::xxz::spinon_energy` retains its wider
 `-1 < Delta <= 1` domain; it is independent of this finite-size solver.
 
@@ -31,6 +33,8 @@ build/bethe-xxz-pbc 64 --delta 0.5
 build/bethe-xxz-pbc 65 --delta 0.5 --sz -1/2 --roots
 build/bethe-xxz-pbc 16 --delta 0.75 --sectors --precision long-double
 build/bethe-xxz-pbc 4 --delta 0 --format pretty
+build/bethe-xxz-pbc 64 --delta 2 --roots
+build/bethe-xxz-pbc 15 --delta 10 --sectors --precision long-double
 # In a binary128-enabled build:
 build/bethe-xxz-pbc 64 --delta 0.999999999999999999999999 --precision fp128
 ```
@@ -98,6 +102,40 @@ solver delegates to the existing XXX sector solver and returns its coordinate
 `z=2*lambda_XXX`; nearby anisotropies are not snapped to the endpoint. All
 calculations and parameter parsing use the selected real precision.
 
+### Easy-axis ground states: Delta>1
+
+The massive regime has a different real-rapidity contour. Set
+`Delta=cosh(eta)` and store `z=tan(lambda)/tanh(eta/2)`, where
+`-pi/2<lambda<pi/2`. This z again tends to `2*lambda_XXX` as Delta approaches
+one. Unlike the massless contour, it has no finite bound on z. The CLI
+continues to label the stored variable **scaled rapidity z**, not lambda.
+
+The trigonometric Bethe equations are Eq. (1.2) of
+[Dugave et al.](../CITATIONS.md#dugave-2015) at zero twist. Their Hamiltonian
+uses Pauli matrices; our spin-1/2 energy is one quarter of their J=1 energy
+at zero field. Algebraically, define the continuous real scattering phase
+
+```text
+phi_ij = atan2(z_i-z_j, 1+1/Delta+(1-1/Delta)*z_i*z_j),
+F_i    = 2*N*atan(z_i) - 2*pi*I_i - 2*sum_(j!=i) phi_ij,
+E      = (N/4-M)*Delta + sum_i (z_i^2-1)/(z_i^2+1).
+```
+
+The same consecutive ground-state labels and momentum formula above apply.
+In conventional lambda coordinates, `2*phi_ij` is the continuous lift of
+`2*atan(tan(lambda_i-lambda_j)/tanh(eta))`. Keeping the atan2 quadrant matters:
+root differences can exceed pi/2, so replacing it by a principal atan yields
+the wrong logarithmic branch. Dividing both atan2 arguments by Delta and
+collecting the explicit anisotropy term in E avoids avoidable large-Delta
+overflow. Nonrepresentable final energies remain errors.
+
+All `ground_state`, `sector_ground_state`, and `sector_ground_states` entry
+points support this regime, including odd N and spin-reversed sectors.
+General `solve_real`, `real_quantum_number_window`, and excitation APIs still
+reject Delta>1: validating a sector minimum does not classify excited labels.
+The same restriction applies to `--quantum-numbers` and `--excitations`.
+No strings, thermodynamic mode, or spontaneous-symmetry-broken state is implied.
+
 ## Convergence and validation
 
 Convergence uses `max|F|/N` with the same default 32-epsilon tolerance as XXX,
@@ -116,8 +154,18 @@ its momentum against independent bit-basis exact diagonalization through
 N=9, verify the XX free-fermion and exact XXX limits, independently evaluate
 the hyperbolic equations, and exercise native long-double/fp128 precision,
 near-endpoint anisotropies, spin reversal, larger chains, and CLI formatting.
+For Delta>1 the suite additionally checks the original complex trigonometric
+equations (independent of atan2), including a state whose scattering phase
+crosses the principal-atan boundary. Sector ED includes Delta=1.01,2,10;
+larger systems through N=128 and native-precision approach to XXX are tested.
+As Delta tends to infinity, the roots approach
+`lambda_j=pi*(I_j-sum(I)/N)/(N-M)` and `E/Delta -> N/4-M`.
+Tests check this limit in odd/even sectors and exercise finite answers near
+the largest representable anisotropy, as well as explicit overflow errors.
 
 ## Real-root excitations
+
+This section applies only to `0<=Delta<=1`.
 
 ```sh
 build/bethe-xxz-pbc 64 --delta 0.5 --excitations 10

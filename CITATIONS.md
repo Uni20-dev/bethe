@@ -64,6 +64,15 @@ at the infinity threshold. This deliberately restricted family is not a
 complete classification of XXZ solutions. We do not implement the paper's
 correlation functions.
 
+For periodic XXZ at Delta>1, the trigonometric equations follow
+[dugave-2015](#dugave-2015), Eqs. (1.1)-(1.2), at zero twist and field.
+Our spin operators are sigma/2, so our J=1 energy is one quarter of the
+paper's J=1 Pauli energy. We rewrite real rapidities as
+`z=tan(lambda)/tanh(eta/2)`, Delta=cosh(eta), retaining the scattering phase's
+winding with atan2. The consecutive sector-minimum labels are checked against
+finite-chain energy and momentum ED, including odd lengths. This does not
+extend the existing excitation window or implement the paper's form factors.
+
 The free-end XXZ solver uses [mei-2017](#mei-2017), Eqs. (11)-(12),
 with the paper's Hamiltonian divided by four and shifted by `N*Delta/4`.
 The resulting ferromagnetic reference is `(N-1)*Delta/4`. In the massless
@@ -232,7 +241,7 @@ SciPost Phys. 1, 008 (2016).
 
 Relevant tool modes:
 
-- `bethe-xxz-pbc`: Periodic XXZ equations, energy, and momentum, Eqs. (1), (3)-(5); our energy includes the N\*Delta/4 shift.
+- `bethe-xxz-pbc`: Massless periodic XXZ equations, energy, and momentum, Eqs. (1), (3)-(5); our energy includes the N\*Delta/4 shift.
 
 ### lieb-wu-2003
 
@@ -520,5 +529,16 @@ J. Phys. A 39, 1073-1098 (2006).
 Relevant tool modes:
 
 - `bethe-gaudin-yang-pbc`: Hamiltonian and periodic fermion equations (1), (2), (7), (8), (25); even N, odd minority population as in Sec. 5. Weak and strong limits (12), (15)-(16) provide checks. Hard walls, attraction and excitations are not implemented.
+
+### dugave-2015
+
+M. Dugave, F. Göhmann, K. K. Kozlowski, and J. Suzuki. *On form-factor expansions for the XXZ chain in the massive regime*.
+J. Stat. Mech. (2015) P05037 (2015).
+
+[DOI](<https://doi.org/10.1088/1742-5468/2015/05/P05037>), [arXiv v2](<https://arxiv.org/abs/1412.8217v2>).
+
+Relevant tool modes:
+
+- `bethe-xxz-pbc`: Massive periodic XXZ Hamiltonian and trigonometric Bethe equations, Eqs. (1.1)-(1.2), with zero twist and field; Pauli exchange is divided by four. Used for Delta\>1 sector ground states, not form factors, strings or excitations.
 
 <!-- END GENERATED BIBLIOGRAPHY -->

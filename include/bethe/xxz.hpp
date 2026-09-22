@@ -13,11 +13,13 @@ namespace bethe::xxz
 template <uni20::Real Real> using SolverOptions = bethe::SolverOptions<Real>;
 using QuantumNumbers = std::vector<uni20::half_int>;
 
-/// Periodic XXZ finite-real-root state, J=1, h=0, 0 <= Delta <= 1.
+/// Periodic XXZ finite-real-root state, J=1, h=0, Delta >= 0.
+/// Delta>1 currently supports sector ground states, not general excitations.
 /// Not an SU(2) highest-weight/multiplet classification away from Delta=1.
 template <uni20::Real Real> struct RealState
 {
     /// z=tanh(lambda)/tan(gamma/2), Delta=cos(gamma); z=2*lambda_XXX at Delta=1.
+    /// For Delta>1: z=tan(lambda)/tanh(eta/2), Delta=cosh(eta).
     /// This scaled coordinate, not lambda itself, is used at every anisotropy.
     std::vector<Real> rapidities;
     QuantumNumbers quantum_numbers;
@@ -55,6 +57,12 @@ template <uni20::Real Real> void validate_delta(Real delta)
 {
   if (!uni20::isfinite(delta) || delta < Real{0} || delta > Real{1})
     throw std::invalid_argument("finite-chain XXZ solver requires finite Delta in [0,1]");
+}
+
+template <uni20::Real Real> void validate_ground_delta(Real delta)
+{
+  if (!uni20::isfinite(delta) || delta < Real{0})
+    throw std::invalid_argument("periodic XXZ ground states require finite Delta >= 0");
 }
 } // namespace detail
 
@@ -152,24 +160,18 @@ inline std::size_t momentum_index(std::size_t sites, std::span<uni20::half_int c
   return numbers;
 }
 
-/// H=sum_i (Sx_i Sx_{i+1}+Sy_i Sy_{i+1}+Delta Sz_i Sz_{i+1}), periodic.
-/// N=2 counts the bond twice, consistently with the XXX solver.
-/// The normalized logarithmic equation in the stored coordinate is
-/// F_i/N = 2 atan(z_i) - (2*pi*I_i + sum_{j!=i} 2 atan(A_ij))/N,
-/// A_ij = Delta*(z_i-z_j)/[1+Delta-(1-Delta)*z_i*z_j].
-/// The iteration needs no inverse hyperbolic functions. Starts with z=0 unless
-/// supplied with finite, strictly in-branch initial roots (a numerical guess).
-/// Jacobi updates, O(M^2) work per sweep and O(M) storage.
-/// Exhaustion returns a consistent last iterate with converged=false.
-template <uni20::Real Real = double>
-[[nodiscard]] RealState<Real> solve_real(std::size_t sites, Real delta, std::span<uni20::half_int const> numbers,
-                                         SolverOptions<Real> const& options = {},
-                                         std::span<Real const> initial_roots = {})
+namespace detail
+{
+// The caller validates the label family. Massive ground states use the same
+// fixed-point map, but the scattering phase must retain its winding branch.
+template <uni20::Real Real>
+[[nodiscard]] RealState<Real> solve_validated(std::size_t sites, Real delta, std::span<uni20::half_int const> numbers,
+                                              SolverOptions<Real> const& options,
+                                              std::span<Real const> initial_roots = {})
 {
   using std::abs;
   using std::atan;
   using std::tan;
-  detail::validate_quantum_numbers(sites, delta, numbers);
   auto const m = numbers.size();
   if (!uni20::isfinite(options.residual_tolerance) || options.residual_tolerance <= Real{0})
     throw std::invalid_argument("residual tolerance must be finite and positive");
@@ -201,11 +203,13 @@ template <uni20::Real Real = double>
   std::vector<Real> angles(m);
   Real const plus = Real{1} + delta;
   Real const minus = Real{1} - delta;
+  bool const massive = delta > Real{1};
+  Real const inverse = massive ? Real{1} / delta : Real{0};
   if (!initial_roots.empty())
   {
     if (initial_roots.size() != m) throw std::invalid_argument("initial root count must match the quantum numbers");
     for (Real const z : initial_roots)
-      if (!uni20::isfinite(z) || minus * z * z >= plus)
+      if (!uni20::isfinite(z) || (!massive && minus * z * z >= plus))
         throw std::invalid_argument("initial roots must be finite and inside the XXZ real-rapidity branch");
     result.rapidities.assign(initial_roots.begin(), initial_roots.end());
   }
@@ -219,9 +223,20 @@ template <uni20::Real Real = double>
         for (std::size_t j = 0; j < m; ++j)
           if (i != j)
           {
-            Real const denominator = plus - minus * result.rapidities[i] * result.rapidities[j];
-            if (denominator <= Real{0}) throw std::runtime_error("XXZ iterate left the finite real-rapidity branch");
-            phase.add(atan(delta * (result.rapidities[i] - result.rapidities[j]) / denominator));
+            if (massive)
+            {
+              // Divide both atan2 arguments by Delta to avoid overflow at
+              // large anisotropy. A negative denominator is NOT a pole exit.
+              phase.add(
+                  std::atan2(result.rapidities[i] - result.rapidities[j],
+                             Real{1} + inverse + (Real{1} - inverse) * result.rapidities[i] * result.rapidities[j]));
+            }
+            else
+            {
+              Real const denominator = plus - minus * result.rapidities[i] * result.rapidities[j];
+              if (denominator <= Real{0}) throw std::runtime_error("XXZ iterate left the finite real-rapidity branch");
+              phase.add(atan(delta * (result.rapidities[i] - result.rapidities[j]) / denominator));
+            }
           }
       Real const number = static_cast<Real>(result.quantum_numbers[i].twice()) / Real{2};
       angles[i] = (pi * number + phase.value()) / n;
@@ -233,28 +248,57 @@ template <uni20::Real Real = double>
     if (result.converged || result.iterations == options.max_iterations) break;
     for (std::size_t i = 0; i < m; ++i)
     {
+      if (massive && abs(angles[i]) >= pi / Real{2})
+        throw std::runtime_error("XXZ iterate reached the massive rapidity endpoint");
       result.rapidities[i] = tan(angles[i]);
       Real const z = result.rapidities[i];
-      if (!uni20::isfinite(z) || minus * z * z >= plus)
+      if (!uni20::isfinite(z) || (!massive && minus * z * z >= plus))
         throw std::runtime_error("XXZ iterate left the finite real-rapidity branch");
     }
     ++result.iterations;
   }
   bethe::detail::CompensatedSum<Real> magnons;
   for (Real const z : result.rapidities)
-    magnons.add(-(plus - minus * z * z) / (Real{1} + z * z));
-  result.energy = n * delta / Real{4} + magnons.value();
+    if (massive)
+      magnons.add((z * z - Real{1}) / (Real{1} + z * z));
+    else
+      magnons.add(-(plus - minus * z * z) / (Real{1} + z * z));
+  result.energy = massive ? (n / Real{4} - Real(m)) * delta + magnons.value() : n * delta / Real{4} + magnons.value();
   if (!uni20::isfinite(result.energy)) throw std::runtime_error("nonfinite XXZ energy");
   return result;
 }
+} // namespace detail
 
-/// Lowest state in an Sz sector. Negative Sz uses global spin reversal.
+/// H=sum_i (Sx_i Sx_{i+1}+Sy_i Sy_{i+1}+Delta Sz_i Sz_{i+1}), periodic.
+/// N=2 counts the bond twice, consistently with the XXX solver.
+/// Explicit-label solves remain restricted to 0<=Delta<=1; use the ground-state
+/// entry points for Delta>1, whose excitation labels are not classified here.
+/// The normalized logarithmic equation in the stored coordinate is
+/// F_i/N = 2 atan(z_i) - (2*pi*I_i + sum_{j!=i} 2 atan(A_ij))/N,
+/// A_ij = Delta*(z_i-z_j)/[1+Delta-(1-Delta)*z_i*z_j].
+/// The iteration needs no inverse hyperbolic functions. Starts with z=0 unless
+/// supplied with finite, strictly in-branch initial roots (a numerical guess).
+/// Jacobi updates, O(M^2) work per sweep and O(M) storage.
+/// Exhaustion returns a consistent last iterate with converged=false.
+template <uni20::Real Real = double>
+[[nodiscard]] RealState<Real> solve_real(std::size_t sites, Real delta, std::span<uni20::half_int const> numbers,
+                                         SolverOptions<Real> const& options = {},
+                                         std::span<Real const> initial_roots = {})
+{
+  detail::validate_quantum_numbers(sites, delta, numbers);
+  return detail::solve_validated<Real>(sites, delta, numbers, options, initial_roots);
+}
+
+/// Lowest state in an Sz sector for finite Delta>=0. Negative Sz uses spin reversal.
+/// At Delta>1, theta_2/2=atan2(z_i-z_j,1+1/Delta+(1-1/Delta)*z_i*z_j).
 template <uni20::Real Real = double>
 [[nodiscard]] RealState<Real> sector_ground_state(std::size_t sites, Real delta, uni20::half_int sz,
                                                   SolverOptions<Real> const& options = {})
 {
+  detail::validate_ground_delta(delta);
   auto const numbers = xxz::sector_ground_quantum_numbers(sites, sz);
-  auto result = xxz::solve_real<Real>(sites, delta, numbers, options);
+  auto result = delta > Real{1} ? detail::solve_validated<Real>(sites, delta, numbers, options)
+                                : xxz::solve_real<Real>(sites, delta, numbers, options);
   result.sz = sz;
   result.spin_reversed = sz.twice() < 0;
   return result;
@@ -267,7 +311,7 @@ template <uni20::Real Real = double>
                                                                 SolverOptions<Real> const& options = {})
 {
   auto const n = detail::checked_sites(sites);
-  detail::validate_delta(delta);
+  detail::validate_ground_delta(delta);
   std::vector<RealState<Real>> states(sites + 1);
   for (std::size_t m = 0; m <= sites / 2; ++m)
   {

@@ -157,8 +157,12 @@ inline constexpr std::array<Link, 2> links_40{{
   {"DOI", "https://doi.org/10.1088/0305-4470/39/5/005"},
   {"arXiv v2", "https://arxiv.org/abs/cond-mat/0511694v2"},
 }};
+inline constexpr std::array<Link, 2> links_41{{
+  {"DOI", "https://doi.org/10.1088/1742-5468/2015/05/P05037"},
+  {"arXiv v2", "https://arxiv.org/abs/1412.8217v2"},
+}};
 
-inline constexpr std::array<Reference, 41> references{{
+inline constexpr std::array<Reference, 42> references{{
   {"karbach-1998", "Michael Karbach, Kun Hu, and Gerhard Müller", "Introduction to the Bethe ansatz II", "Computers in Physics 12, 565", 1998, links_0},
   {"groha-2017", "Stefan Groha and Fabian H. L. Essler", "Spinon decay in the spin-1/2 Heisenberg chain with weak next nearest neighbour exchange", "J. Phys. A 50, 334002", 2017, links_1},
   {"caux-xxx-spinons", "Jean-Sébastien Caux", "The Bethe Ansatz: XXX spinons", "Online notes", 0, links_2},
@@ -200,6 +204,7 @@ inline constexpr std::array<Reference, 41> references{{
   {"yang-yang-1969", "C. N. Yang and C. P. Yang", "Thermodynamics of a One-Dimensional System of Bosons with Repulsive Delta-Function Interaction", "J. Math. Phys. 10, 1115", 1969, links_38},
   {"doikou-nepomechie-1998", "Anastasia Doikou and Rafael I. Nepomechie", "Bulk and Boundary S Matrices for the SU(N) Chain", "Nucl. Phys. B 521, 547-572", 1998, links_39},
   {"oelkers-2006", "N. Oelkers, M. T. Batchelor, M. Bortz, and X.-W. Guan", "Bethe Ansatz study of one-dimensional Bose and Fermi gases with periodic and hard wall boundary conditions", "J. Phys. A 39, 1073-1098", 2006, links_40},
+  {"dugave-2015", "M. Dugave, F. Göhmann, K. K. Kozlowski, and J. Suzuki", "On form-factor expansions for the XXZ chain in the massive regime", "J. Stat. Mech. (2015) P05037", 2015, links_41},
 }};
 
 inline constexpr std::array<Use, 4> uses_xxx_pbc{{
@@ -212,8 +217,9 @@ inline constexpr std::array<Use, 2> uses_xxx_obc{{
   {&references[4], "Free-end XXX equations: rational limit of Eqs. (11)-(12) and footnote 2; our spin-1/2 normalization differs."},
   {&references[5], "SU(2) and string-classification background, not the boundary equations; scans include only the supported finite-real family."},
 }};
-inline constexpr std::array<Use, 3> uses_xxz_pbc{{
-  {&references[6], "Periodic XXZ equations, energy, and momentum, Eqs. (1), (3)-(5); our energy includes the N*Delta/4 shift."},
+inline constexpr std::array<Use, 4> uses_xxz_pbc{{
+  {&references[6], "Massless periodic XXZ equations, energy, and momentum, Eqs. (1), (3)-(5); our energy includes the N*Delta/4 shift."},
+  {&references[41], "Massive periodic XXZ Hamiltonian and trigonometric Bethe equations, Eqs. (1.1)-(1.2), with zero twist and field; Pauli exchange is divided by four. Used for Delta>1 sector ground states, not form factors, strings or excitations."},
   {&references[0], "XXX limit at Delta=1 and the conventional real-root quantum-number window."},
   {&references[5], "Background for the XXX window used to restrict the XXZ scan; not a complete XXZ state classification."},
 }};

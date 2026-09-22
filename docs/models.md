@@ -57,7 +57,7 @@ paper's correlation functions, thermodynamics, or full spectrum.
 | ID | Model | Status and actual scope | Main missing pieces |
 | --- | --- | --- | --- |
 | `xxx` | Spin-1/2 nearest-neighbor XXX | Implemented (limited): [PBC](xxx.md), [free ends](open-chains.md), sector minima and restricted real-root excitations; periodic one-spinon family | Complex strings, full spectrum, twists/boundary fields |
-| `xxz` | Spin-1/2 nearest-neighbor XXZ | Implemented (limited): [PBC](xxz.md) and [free ends](xxz-open.md), finite chains at `0 <= Delta <= 1`, restricted real-root excitations | Wider anisotropy range, additional root families, twists/boundary fields |
+| `xxz` | Spin-1/2 nearest-neighbor XXZ | Implemented (limited): [PBC](xxz.md) ground states/sectors at `Delta>=0`; PBC restricted excitations and [free ends](xxz-open.md) at `0<=Delta<=1` | Negative anisotropy, massive free ends/excitations, additional root families, twists/boundary fields |
 | `hubbard` | One-band Hubbard, hopping t=1 | Implemented (limited): [PBC](hubbard.md) on even rings with sector restrictions; [free ends](hubbard-open.md) at every physical filling/Sz and either sign of U | Hubbard excitations; remaining PBC shell branches and odd rings |
 | `lieb-liniger` | Continuum contact-interacting bosons | Implemented (limited): [repulsive PBC](lieb-liniger.md), ground state, explicit labels, and bounded excitation scans | Hard walls, attraction, thermodynamics |
 | `su-n` | Fundamental SU(n) permutation chain | Implemented (limited): [SU(3) PBC](su3.md), balanced singlet ground state for L>=3 divisible by three, J=1 | Other populations/lengths, excitations, general n, open boundaries |
@@ -277,13 +277,18 @@ separate front end rather than forcing this into a chain-shaped CLI.
 
 ## Extensions of current models, rather than new solvers
 
-- **Wider XXZ anisotropy:** prioritize `Delta>1` and `-1<Delta<0` as separate
-  branches. The family is established by
-  [Yang–Yang](../CITATIONS.md#yang-yang-1966), but our present real-coordinate
-  domain and excitation window do not extend unchanged. Start with ground
-  states, check continuity toward XXX/XX and the large-anisotropy limit,
-  then classify excitations. Treat `Delta<=-1` and polarized/degenerate limits
-  separately. This belongs in the XXZ module, not a differently named model.
+- **Wider XXZ anisotropy:** the [periodic ground-state/sector path](xxz.md#easy-axis-ground-states-delta1)
+  now includes `Delta>1`, retaining a continuous atan2 scattering phase in
+  scaled real coordinates. The source is [Dugave et al.](../CITATIONS.md#dugave-2015),
+  Eqs. (1.1)-(1.2), with energy normalized from Pauli matrices to spin operators.
+  Tests cover odd/even sector energies and momentum against ED, original
+  trigonometric equations, native precision, continuity to XXX, and Ising limits.
+  **Next:** massive free ends, then `-1<Delta<0` with a separate contour/sector
+  audit; only subsequently extend excitation classification. The broader
+  family is established by [Yang–Yang](../CITATIONS.md#yang-yang-1966), but the
+  old real-coordinate domain and excitation window do not extend unchanged.
+  Treat `Delta<=-1` and polarized/degenerate limits separately. These remain
+  XXZ-module extensions, not differently named models.
 - **Spinless t–V fermions / nearest-neighbor hard-core bosons:** useful physical
   interfaces to XXZ, not independent Bethe engines. Under the usual convention
   the anisotropy is V/(2t), but the hopping-sign gauge, fermionic parity twist

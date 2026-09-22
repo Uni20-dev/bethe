@@ -31,8 +31,8 @@ template <uni20::Real Real> void check_state(std::size_t n, model::RealState<Rea
   Real const pi = Real{4} * atan(Real{1});
   Real const eps = uni20::numeric_limits<Real>::epsilon();
   Real const d = state.delta;
-  Real const gamma = acos(d);
-  Real const scale = tan(gamma / Real{2});
+  Real const gamma = d > Real{1} ? Real{0} : acos(d);
+  Real const scale = d > Real{1} ? std::sqrt((d - Real{1}) / (d + Real{1})) : tan(gamma / Real{2});
   Real residual = Real{0};
   Real energy = Real(n) * d / Real{4};
   Real momentum = Real{0};
@@ -47,7 +47,13 @@ template <uni20::Real Real> void check_state(std::size_t n, model::RealState<Rea
       for (std::size_t j = 0; j < z.size(); ++j)
         if (i != j)
         {
-          if (d == Real{1})
+          if (d > Real{1})
+          {
+            Real const difference = atan(scale * z[i]) - atan(scale * z[j]);
+            Real const t = Real{2} * scale / (Real{1} + scale * scale);
+            f -= Real{2} * std::atan2(sin(difference), t * cos(difference));
+          }
+          else if (d == Real{1})
             f -= Real{2} * atan((z[i] - z[j]) / Real{2});
           else
           {
@@ -361,7 +367,8 @@ TYPED_TEST(XXZ, SectorsAgainstED)
   Real const eps = uni20::numeric_limits<Real>::epsilon();
   Real const pi = Real{4} * atan(Real{1});
 
-  for (Real d : {Real{0}, Real{1} / Real{10}, Real{1} / Real{2}, Real{9} / Real{10}, Real{1}})
+  for (Real d : {Real{0}, Real{1} / Real{10}, Real{1} / Real{2}, Real{9} / Real{10}, Real{1}, Real{101} / Real{100},
+                 Real{2}, Real{10}})
     for (unsigned n = 2; n <= 9; ++n)
     {
       SCOPED_TRACE(::testing::Message() << " d=" << uni20::format_scalar(d));
@@ -428,7 +435,7 @@ TYPED_TEST(XXZ, NativePrecision)
   // precision, parsing beyond double, and both nonsingular endpoint limits.
   for (Real d :
        {Real{0}, Real{1} / Real{2}, Real{3} / Real{4}, uni20::parse_real<Real>("0.1234567890123456789012345678901234"),
-        Real{1024} * eps, Real{1} - Real{1024} * eps, Real{1}})
+        Real{1024} * eps, Real{1} - Real{1024} * eps, Real{1}, Real{1} + Real{1024} * eps, Real{2}, Real{10}})
   {
     SCOPED_TRACE(::testing::Message() << " d=" << uni20::format_scalar(d));
     auto const state = model::ground_state<Real>(4, d);
@@ -445,7 +452,7 @@ TYPED_TEST(XXZ, NativePrecision)
     EXPECT_REAL_NEAR(model::ground_state<Real>(3, d).energy + Real{1} / Real{2} + d / Real{4}, Real{0}, Real{64} * eps)
         << "XXZ N=3 frustrated odd-chain minimum";
     if constexpr (uni20::numeric_limits<Real>::digits > uni20::numeric_limits<double>::digits)
-      if (d == Real{3} / Real{4})
+      if (d == Real{3} / Real{4} || d == Real{2})
       {
         ASSERT_TRUE(abs(static_cast<Real>(static_cast<double>(exact)) - exact) > Real{128} * eps)
             << "XXZ oracle must discriminate double narrowing";
@@ -462,7 +469,7 @@ TYPED_TEST(XXZ, IterationBudgets)
   Real const eps = uni20::numeric_limits<Real>::epsilon();
 
   // Exactly at Delta=1, budget semantics and roots must also match XXX.
-  for (Real d : {Real{0}, Real{1} / Real{2}, Real{1}})
+  for (Real d : {Real{0}, Real{1} / Real{2}, Real{1}, Real{2}, Real{10}})
   {
     SCOPED_TRACE(::testing::Message() << " d=" << uni20::format_scalar(d));
     auto const zero = model::ground_state<Real>(4, d, Options{.max_iterations = 0});
@@ -483,7 +490,7 @@ TYPED_TEST(XXZ, LargeChains)
   using Real = TypeParam;
 
   for (std::size_t n : {16, 65, 128})
-    for (Real d : {Real{0}, Real{1} / Real{2}, Real{99} / Real{100}})
+    for (Real d : {Real{0}, Real{1} / Real{2}, Real{99} / Real{100}, Real{101} / Real{100}, Real{2}, Real{10}})
     {
       SCOPED_TRACE(::testing::Message() << " n=" << n);
       SCOPED_TRACE(::testing::Message() << " d=" << uni20::format_scalar(d));
@@ -499,8 +506,7 @@ TYPED_TEST(XXZ, InvalidInputs)
 
   using Options = model::SolverOptions<Real>;
 
-  for (Real bad :
-       {-Real{1}, Real{2}, uni20::numeric_limits<Real>::infinity(), uni20::numeric_limits<Real>::quiet_NaN()})
+  for (Real bad : {-Real{1}, uni20::numeric_limits<Real>::infinity(), uni20::numeric_limits<Real>::quiet_NaN()})
   {
     SCOPED_TRACE(::testing::Message() << " bad=" << uni20::format_scalar(bad));
     EXPECT_THROW(([&] { (void)model::ground_state<Real>(4, bad); })(), std::invalid_argument);
@@ -516,6 +522,88 @@ TYPED_TEST(XXZ, InvalidInputs)
        {half_int{3}, half_int{-3}, half_int::parse("1/2"), uni20::from_twice(std::numeric_limits<std::int64_t>::min())})
     EXPECT_THROW(([&] { (void)model::sector_ground_state<Real>(4, Real{0}, spin); })(), std::invalid_argument);
   EXPECT_THROW(([&] { (void)model::sector_ground_state<Real>(5, Real{0}, half_int{0}); })(), std::invalid_argument);
+}
+
+TYPED_TEST(XXZ, MassiveRationalEquations)
+{
+  using Real = TypeParam;
+  using Complex = uni20::complex<Real>;
+  Real const eps = uni20::numeric_limits<Real>::epsilon();
+  for (std::size_t n : {7, 8, 16})
+    for (std::size_t m = 1; m <= n / 2; ++m)
+      for (Real d : {Real{101} / Real{100}, Real{2}, Real{10}})
+      {
+        auto const state = model::sector_ground_state(n, d, uni20::from_twice(std::int64_t(n - 2 * m)));
+        ASSERT_TRUE(state.converged);
+        Real const t1 = std::sqrt((d - Real{1}) / (d + Real{1})), t2 = Real{2} * t1 / (Real{1} + t1 * t1);
+        // sin(lambda+i*a)/sin(lambda-i*a), divided by cosh(a).
+        auto const ratio = [](Real lambda, Real t) {
+          return Complex{std::sin(lambda), t * std::cos(lambda)} / Complex{std::sin(lambda), -t * std::cos(lambda)};
+        };
+        std::vector<Real> lambda;
+        for (Real z : state.rapidities)
+          lambda.push_back(std::atan(t1 * z));
+        bool winding = false;
+        for (std::size_t j = 0; j < m; ++j)
+        {
+          Complex lhs{Real{1}, Real{0}}, rhs = lhs;
+          auto const bare = ratio(lambda[j], t1);
+          for (std::size_t i = 0; i < n; ++i)
+            lhs *= bare;
+          for (std::size_t a = 0; a < m; ++a)
+            if (a != j)
+            {
+              Real const difference = lambda[j] - lambda[a];
+              rhs *= ratio(difference, t2);
+              winding = winding || std::cos(difference) < Real{0};
+            }
+          EXPECT_REAL_NEAR(lhs.real(), rhs.real(), Real{256} * Real(n) * eps);
+          EXPECT_REAL_NEAR(lhs.imag(), rhs.imag(), Real{256} * Real(n) * eps);
+        }
+        if (n == 16 && m == 8 && d == Real{10}) EXPECT_TRUE(winding);
+      }
+}
+
+TYPED_TEST(XXZ, IsingLimitAndLargeAnisotropy)
+{
+  using Real = TypeParam;
+  Real const pi = Real{4} * std::atan(Real{1}), eps = uni20::numeric_limits<Real>::epsilon();
+  for (std::size_t n : {7, 8, 16})
+    for (std::size_t m = 1; m <= n / 2; ++m)
+    {
+      Real previous = Real{1};
+      for (Real d : {Real{1000}, Real{10000}, Real{100000}})
+      {
+        auto const state = model::sector_ground_state(n, d, uni20::from_twice(std::int64_t(n - 2 * m)));
+        ASSERT_TRUE(state.converged);
+        Real sum = Real{0};
+        for (auto q : state.quantum_numbers)
+          sum += Real(q.twice()) / Real{2};
+        Real error = Real{0};
+        for (std::size_t j = 0; j < m; ++j)
+        {
+          // At Delta=infinity theta_1=2*lambda and theta_2=2*(lambda-lambda').
+          Real const exact = pi * (Real(state.quantum_numbers[j].twice()) / Real{2} - sum / Real(n)) / Real(n - m);
+          Real const lambda = std::atan(std::sqrt((d - Real{1}) / (d + Real{1})) * state.rapidities[j]);
+          error = std::max(error, std::abs(lambda - exact));
+        }
+        EXPECT_LT(error, previous / Real{4} + Real{128} * eps);
+        previous = error;
+        EXPECT_LT(std::abs(state.energy / d - (Real(n) / Real{4} - Real(m))), Real(m) / d + Real{128} * eps);
+      }
+    }
+  // Avoid overflow in scattering and in N*Delta/4 when the answer is finite.
+  Real const huge = uni20::numeric_limits<Real>::max();
+  auto const ground = model::ground_state(4, huge);
+  ASSERT_TRUE(ground.converged);
+  EXPECT_EQ(ground.energy, -huge);
+  EXPECT_EQ(model::sector_ground_state(4, huge, half_int{1}).energy, -Real{1});
+  EXPECT_EQ(model::sector_ground_state(4, huge, half_int{2}).energy, huge);
+  EXPECT_THROW((void)model::sector_ground_state(5, huge, uni20::from_twice(std::int64_t{5})), std::runtime_error);
+  EXPECT_THROW((void)model::solve_real<Real>(4, Real{2}, model::sector_ground_quantum_numbers(4, half_int{0})),
+               std::invalid_argument);
+  EXPECT_THROW((void)model::real_excitation_count(4, Real{2}, half_int{0}), std::invalid_argument);
+  EXPECT_THROW((void)model::open::ground_state(4, Real{2}), std::invalid_argument);
 }
 
 } // namespace

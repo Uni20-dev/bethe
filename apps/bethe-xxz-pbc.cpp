@@ -19,10 +19,10 @@ using Arguments = bethe::cli::XxzArguments;
 void usage(std::ostream& out)
 {
   out << "Usage: bethe-xxz-pbc N --delta VALUE [options]\n"
-      << "Periodic spin-1/2 XXZ chain, J=1, zero field; 0 <= Delta <= 1.\n"
+      << "Periodic spin-1/2 XXZ chain, J=1, zero field; ground states at finite Delta >= 0.\n"
       << "H=sum_i (Sx_i Sx_(i+1) + Sy_i Sy_(i+1) + Delta Sz_i Sz_(i+1)).\n"
       << "Default: ground state (one Sz=1/2 representative for odd N).\n"
-      << "  --delta VALUE                      required anisotropy in [0,1]\n"
+      << "  --delta VALUE                      required anisotropy >=0 (excitations: [0,1])\n"
       << "  --sz VALUE                         lowest energy in an Sz sector, e.g. -1/2\n"
       << "  --sectors                          lowest energy in every Sz sector\n"
       << "  --excitations COUNT|all             lowest COUNT, or all, states in a restricted real-root family\n"
@@ -36,9 +36,11 @@ void usage(std::ostream& out)
       << "  --format auto|pretty|plain         terminal report or script output (default: auto)\n"
       << "  --help                             show this help\n"
       << "z=tanh(lambda)/tan(gamma/2), Delta=cos(gamma); at Delta=1, z=2*lambda_XXX.\n"
+      << "For Delta>1: z=tan(lambda)/tanh(eta/2), Delta=cosh(eta).\n"
+      << "Delta>1 supports ground states and --sz/--sectors only, not explicit labels or excitations.\n"
       << "Excitation scans include the sector minimum; NOT a complete Sz spectrum.\n"
       << "The finite-real window depends on Delta; strings and infinite rapidities are excluded.\n"
-      << "No OBC or SU(2) multiplet classification; even-N Sz=0 has only one supported state.\n"
+      << "No OBC or SU(2) multiplet classification; the excitation window has one even-N Sz=0 state.\n"
       << "fp128 requires a Uni20 build with MPLAPACK enabled.\n";
   bethe::cli::print_citations(out, bethe::citations::Tool::xxz_pbc);
 }

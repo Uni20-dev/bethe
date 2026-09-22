@@ -26,8 +26,8 @@ and `obc` means open boundaries (currently free ends, with no boundary fields).
   sector minima, real-root excitations, and the odd-chain one-spinon branch.
 - [Free-end XXX](docs/open-chains.md): `bethe-xxx-obc` supports
   ground states, sector minima, and real-root excitations, without lattice momentum.
-- [Periodic XXZ](docs/xxz.md): `bethe-xxz-pbc` supports ground states, sector minima,
-  and an anisotropy-dependent real-root excitation family for `0 <= Delta <= 1`.
+- [Periodic XXZ](docs/xxz.md): `bethe-xxz-pbc` supports ground states and sector minima
+  for `Delta >= 0`, plus restricted real-root excitations for `0 <= Delta <= 1`.
 - [Free-end XXZ](docs/xxz-open.md): `bethe-xxz-obc` provides the corresponding
   open-chain calculations with no boundary fields or lattice momentum.
 - [Periodic Hubbard](docs/hubbard.md): `bethe-hubbard-pbc` gives repulsive
