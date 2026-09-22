@@ -10,8 +10,10 @@ and state-selection details live in the linked guides.
 `bethe-xxx-obc` program described in the [open-chain guide](open-chains.md).
 For anisotropy, use [`bethe-xxz-pbc`](xxz.md) or the free-end
 [`bethe-xxz-obc`](xxz-open.md); both require `--delta`.
-Periodic ground states and sector minima support finite `Delta>=0`; its
-excitation modes and the free-end solver still require `0<=Delta<=1`.
+Both support ground states and sector minima for finite `Delta>=0`;
+their excitation and specified-real-root modes still require `0<=Delta<=1`.
+Massive free-end ground states report an explicit boundary-root coordinate
+where needed; see the [boundary-root guide](xxz-open-massive.md).
 For electrons, [`bethe-hubbard-pbc`](hubbard.md) requires `--u` and supports
 either sign of the interaction on even rings. Select `--particles N` and
 `--sz VALUE`; the defaults remain N=L and Sz=0. See the

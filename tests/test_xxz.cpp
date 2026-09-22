@@ -603,7 +603,7 @@ TYPED_TEST(XXZ, IsingLimitAndLargeAnisotropy)
   EXPECT_THROW((void)model::solve_real<Real>(4, Real{2}, model::sector_ground_quantum_numbers(4, half_int{0})),
                std::invalid_argument);
   EXPECT_THROW((void)model::real_excitation_count(4, Real{2}, half_int{0}), std::invalid_argument);
-  EXPECT_THROW((void)model::open::ground_state(4, Real{2}), std::invalid_argument);
+  EXPECT_TRUE(model::open::ground_state(4, Real{2}).converged);
 }
 
 } // namespace

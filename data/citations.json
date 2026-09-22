@@ -482,7 +482,8 @@
       "id": "xxz_obc",
       "executable": "bethe-xxz-obc",
       "references": [
-        {"id": "mei-2017", "context": "Free-end XXZ equations and boundary reflection phase, Eqs. (11)-(12); our Hamiltonian is divided by four and shifted."}
+        {"id": "mei-2017", "context": "Free-end XXZ equations and boundary reflection phase, Eqs. (11)-(12); our Hamiltonian is divided by four and shifted."},
+        {"id": "grijalva-2019", "context": "Massive open XXZ boundary root and finite-size deviation, Sec. 4.3.2, specialized to zero boundary fields; used for Delta>1 ground states, not boundary correlations or excitation scans."}
       ]
     },
     {

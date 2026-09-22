@@ -5,6 +5,7 @@
 
 #include <bethe/heisenberg_open.hpp>
 #include <bethe/xxz.hpp>
+#include <bethe/xxz_open_massive.hpp>
 
 namespace bethe::xxz::open
 {
@@ -184,6 +185,8 @@ template <uni20::Real Real = double>
 }
 
 /// The sector minimum fills I=1,...,M, M=N/2-|Sz|, for either parity of N.
+/// This returns the full label sequence. A massive even zero-Sz GroundState
+/// stores its final label separately in boundary_root, not quantum_numbers.
 [[nodiscard]] inline QuantumNumbers sector_ground_quantum_numbers(std::size_t sites, uni20::half_int sz)
 {
   auto const m = xxz::detail::sector_roots(sites, sz);
@@ -194,12 +197,26 @@ template <uni20::Real Real = double>
   return numbers;
 }
 
+/// Ground states cover Delta>=0; explicit all-real states and scans remain
+/// restricted to Delta<=1. GroundState carries any massive boundary root.
 template <uni20::Real Real = double>
-[[nodiscard]] RealState<Real> sector_ground_state(std::size_t sites, Real delta, uni20::half_int sz,
-                                                  SolverOptions<Real> const& options = {})
+[[nodiscard]] GroundState<Real> sector_ground_state(std::size_t sites, Real delta, uni20::half_int sz,
+                                                    SolverOptions<Real> const& options = {})
 {
+  if (!uni20::isfinite(delta) || delta < Real{0})
+    throw std::invalid_argument("open XXZ ground states require finite Delta >= 0");
+  if (delta > Real{1}) return massive::sector_ground_state<Real>(sites, delta, sz, options);
   auto const numbers = open::sector_ground_quantum_numbers(sites, sz);
-  auto result = open::solve_real<Real>(sites, delta, numbers, options);
+  auto real = open::solve_real<Real>(sites, delta, numbers, options);
+  GroundState<Real> result;
+  result.rapidities = std::move(real.rapidities);
+  result.quantum_numbers = std::move(real.quantum_numbers);
+  result.delta = result.root_delta = delta;
+  result.energy = real.energy;
+  result.residual_norm = real.residual_norm;
+  result.iterations = real.iterations;
+  result.converged = real.converged;
+  result.status = real.converged ? GroundSolveStatus::converged : GroundSolveStatus::iteration_limit;
   result.sz = sz;
   result.spin_reversed = sz.twice() < 0;
   return result;
@@ -208,12 +225,13 @@ template <uni20::Real Real = double>
 /// One representative per Sz, ordered -N/2,...,N/2. Reuses spin reversal;
 /// retains all roots, O(N^2) storage. These are not SU(2) multiplets.
 template <uni20::Real Real = double>
-[[nodiscard]] std::vector<RealState<Real>> sector_ground_states(std::size_t sites, Real delta,
-                                                                SolverOptions<Real> const& options = {})
+[[nodiscard]] std::vector<GroundState<Real>> sector_ground_states(std::size_t sites, Real delta,
+                                                                  SolverOptions<Real> const& options = {})
 {
   auto const n = xxz::detail::checked_sites(sites);
-  xxz::detail::validate_delta(delta);
-  std::vector<RealState<Real>> states(sites + 1);
+  if (!uni20::isfinite(delta) || delta < Real{0})
+    throw std::invalid_argument("open XXZ ground states require finite Delta >= 0");
+  std::vector<GroundState<Real>> states(sites + 1);
   for (std::size_t m = 0; m <= sites / 2; ++m)
   {
     auto const sz = uni20::from_twice(n - 2 * static_cast<std::int64_t>(m));
@@ -229,7 +247,7 @@ template <uni20::Real Real = double>
 }
 
 template <uni20::Real Real = double>
-[[nodiscard]] RealState<Real> ground_state(std::size_t sites, Real delta, SolverOptions<Real> const& options = {})
+[[nodiscard]] GroundState<Real> ground_state(std::size_t sites, Real delta, SolverOptions<Real> const& options = {})
 {
   return open::sector_ground_state<Real>(sites, delta, uni20::from_twice(static_cast<std::int64_t>(sites % 2)),
                                          options);

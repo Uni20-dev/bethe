@@ -2,6 +2,7 @@
 // Copyright (C) 2026 Ian McCulloch
 #include "exact_spectrum.hpp"
 #include "test_support.hpp"
+#include <bethe/xxz_excitations.hpp>
 #include <bethe/xxz_open.hpp>
 #include <bethe/xxz_open_massive.hpp>
 
@@ -11,6 +12,72 @@ namespace model = bethe::xxz::open::massive;
 using uni20::half_int;
 template <typename Real> class XXZOpenMassive : public ::testing::Test {};
 TYPED_TEST_SUITE(XXZOpenMassive, test_support::RealTypes, test_support::PrecisionNames);
+
+static_assert(!std::is_convertible_v<bethe::xxz::open::GroundState<double>, bethe::xxz::open::RealState<double>>);
+template <typename State> constexpr bool has_momentum = requires(State state) { state.momentum; };
+static_assert(!has_momentum<bethe::xxz::open::GroundState<double>>);
+
+TYPED_TEST(XXZOpenMassive, UnifiedGroundStateAPI)
+{
+  using Real = TypeParam;
+  namespace api = bethe::xxz::open;
+  for (std::size_t n : {5, 6})
+    for (Real d : {Real{0}, Real{1} / Real{2}, Real{1}, Real{11} / Real{10}, Real{2}, Real{4}})
+    {
+      auto const states = api::sector_ground_states(n, d);
+      ASSERT_EQ(states.size(), n + 1);
+      for (std::size_t m = 0; m <= n / 2; ++m)
+      {
+        auto const sz = uni20::from_twice(std::int64_t(n - 2 * m));
+        auto const& state = states[n - m];
+        ASSERT_TRUE(state.converged);
+        EXPECT_EQ(state.status, api::GroundSolveStatus::converged);
+        EXPECT_EQ(state.root_delta, d);
+        EXPECT_EQ(state.sz, sz);
+        EXPECT_EQ(states[m].sz, -sz);
+        EXPECT_EQ(states[m].spin_reversed, m != n - m);
+        EXPECT_EQ(states[m].energy, state.energy);
+        EXPECT_EQ(states[m].rapidities, state.rapidities);
+        EXPECT_EQ(states[m].boundary_root.has_value(), state.boundary_root.has_value());
+        if (d <= Real{1})
+        {
+          auto const labels = api::sector_ground_quantum_numbers(n, sz);
+          auto const real = api::solve_real(n, d, labels);
+          EXPECT_FALSE(state.boundary_root);
+          EXPECT_EQ(state.energy, real.energy);
+          EXPECT_EQ(state.rapidities, real.rapidities);
+          EXPECT_EQ(state.quantum_numbers, real.quantum_numbers);
+          EXPECT_EQ(state.residual_norm, real.residual_norm);
+          EXPECT_EQ(state.iterations, real.iterations);
+        }
+        else
+        {
+          auto const direct = model::sector_ground_state(n, d, sz);
+          EXPECT_EQ(state.energy, direct.energy);
+          EXPECT_EQ(state.rapidities, direct.rapidities);
+          EXPECT_EQ(state.residual_norm, direct.residual_norm);
+          EXPECT_EQ(state.iterations, direct.iterations);
+          if (state.boundary_root)
+          {
+            ASSERT_TRUE(direct.boundary_root);
+            EXPECT_EQ(state.boundary_root->log_distance, direct.boundary_root->log_distance);
+            EXPECT_EQ(state.boundary_root->inverse_square, direct.boundary_root->inverse_square);
+          }
+        }
+      }
+      EXPECT_EQ(api::ground_state(n, d).energy, states[(n + 1) / 2].energy);
+    }
+  auto const stopped = api::ground_state(6, Real{10}, {.max_iterations = 0});
+  EXPECT_FALSE(stopped.converged);
+  EXPECT_EQ(stopped.status, api::GroundSolveStatus::iteration_limit);
+  EXPECT_EQ(stopped.iterations, 0);
+  EXPECT_LT(stopped.root_delta, stopped.delta);
+  EXPECT_GT(stopped.residual_norm, Real{0});
+  // Massive ground support must not silently extend the old real-root window.
+  EXPECT_THROW((void)api::solve_real<Real>(4, Real{2}, {}), std::invalid_argument);
+  EXPECT_THROW((void)api::real_excitations(4, Real{2}, half_int{0}), std::invalid_argument);
+  EXPECT_THROW((void)api::real_quantum_number_window(4, Real{2}, half_int{0}), std::invalid_argument);
+}
 
 TYPED_TEST(XXZOpenMassive, AllSectorsAgainstED)
 {

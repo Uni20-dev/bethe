@@ -228,8 +228,9 @@ inline constexpr std::array<Use, 4> uses_xxz_pbc{{
   {&references[0], "XXX limit at Delta=1 and the conventional real-root quantum-number window."},
   {&references[5], "Background for the XXX window used to restrict the XXZ scan; not a complete XXZ state classification."},
 }};
-inline constexpr std::array<Use, 1> uses_xxz_obc{{
+inline constexpr std::array<Use, 2> uses_xxz_obc{{
   {&references[4], "Free-end XXZ equations and boundary reflection phase, Eqs. (11)-(12); our Hamiltonian is divided by four and shifted."},
+  {&references[41], "Massive open XXZ boundary root and finite-size deviation, Sec. 4.3.2, specialized to zero boundary fields; used for Delta>1 ground states, not boundary correlations or excitation scans."},
 }};
 inline constexpr std::array<Use, 2> uses_hubbard_pbc{{
   {&references[7], "Lieb-Wu ground-state equations and quantum-number parity, Eqs. (1), (11), (14)-(18); t=1 and unshifted U*n_up*n_down."},

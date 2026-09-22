@@ -5,16 +5,15 @@
 The library module `bethe/xxz_open_massive.hpp` implements sector minima at
 `Delta>1`, for either chain parity and either sign of Sz. It uses the same
 spin-1/2 Hamiltonian, J=1 and zero boundary fields as the gapless open solver.
-This is an implementation checkpoint: the existing `bethe-xxz-obc` executable
-and `xxz::open::ground_state` still use the `0<=Delta<=1` path. Integrating the
-new state representation into their reports is the next step, not a new
-executable or a different physical model.
+The existing `bethe-xxz-obc` executable and the three ground-state functions in
+`bethe::xxz::open` select this module for Delta>1. The gapless and exact XXX
+paths are unchanged; no new executable is needed.
 
 ```cpp
-#include <bethe/xxz_open_massive.hpp>
+#include <bethe/xxz_open.hpp>
 
-auto state = bethe::xxz::open::massive::ground_state<long double>(16, 3.0L);
-auto sector = bethe::xxz::open::massive::sector_ground_state(
+auto state = bethe::xxz::open::ground_state<long double>(16, 3.0L);
+auto sector = bethe::xxz::open::sector_ground_state(
     17, 3.0L, uni20::half_int::parse("-1/2"));
 ```
 
@@ -66,7 +65,7 @@ is its crossing through infinity; positive w describes an imaginary z_B.
 Large positive w retains the deviation from the boundary pole even when
 `y` rounds to `-r^2`. Do not reconstruct w from that rounded value.
 
-`State::rapidities` and `quantum_numbers` contain only bulk roots and their
+`GroundState::rapidities` and `quantum_numbers` contain only bulk roots and their
 labels `1,...,M-1` when a boundary root is present, or `1,...,M` otherwise.
 The optional `boundary_root` stores w as `log_distance`, y as
 `inverse_square`, and the last label M. The label tracks continuation from
@@ -151,7 +150,28 @@ It is not an energy-error bound, or a bound on the exponentially small
 ground/first-excited splitting; this solver returns only the ground branch.
 Work is O(M^3) per Newton update, with O(M^2) dense workspace.
 
-## Validation and remaining integration
+## Command-line output
+
+```sh
+build/bethe-xxz-obc 16 --delta 3 --roots --precision long-double
+build/bethe-xxz-obc 5 --delta 2 --sectors --roots --format plain
+```
+
+Plain root output retains `# index rapidity I` for bulk roots and adds a
+separate `# boundary I inverse_square log_distance kind` record when needed.
+Its `kind` describes the returned coordinate (real, imaginary, or infinity),
+not an exact symbolic determination of the finite-chain crossing. Pretty
+output uses separate bulk and boundary tables and retains full-precision
+numeric tokens even on narrow terminals. A boundary-only state is not labeled
+fully polarized.
+
+Massive reports name the regularized residual convention and show `Root Delta`.
+Plain sector tables append `root_delta status` columns, with status codes
+`converged`, `iteration_limit`, or `stalled`. The existing Delta<=1 sector
+table columns are unchanged. A nonconverged calculation exits with status 2;
+invalid requests exit with status 1. Neither output mode invents momentum.
+
+## Validation and remaining scope
 
 Typed tests check every magnetization sector against independent small-chain
 exact diagonalization through N=9, original complex reflection equations,
@@ -162,7 +182,8 @@ XXX without snapping Delta to one, and strong-coupling root limits through
 Delta=10^9. The near-crossing residual test
 specifically detects cancellation that can be hidden by double-precision ED.
 
-Next integrate the explicit boundary coordinate and status into the existing
-open-XXZ frontend and ground-state API, retaining the old all-real API for
-its restricted excitation family. Do not advertise massive excitation scans
-or infer the first-excited splitting from this ground-only solver.
+API tests verify dispatch, spin reversal, and exact preservation of the
+gapless solver's values. CLI tests exercise all precision modes, roots,
+sector tables, narrow-terminal formatting, CPU time, and exhausted budgets.
+The old all-real API retains its restricted excitation family. Massive
+excitation scans and the first-excited splitting remain unimplemented.

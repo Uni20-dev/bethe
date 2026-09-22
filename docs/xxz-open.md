@@ -11,13 +11,14 @@ doubling the periodic chain length would miss that phase.
 
 ```text
 H = sum_(i=0)^(N-2) [Sx_i Sx_(i+1) + Sy_i Sy_(i+1) + Delta Sz_i Sz_(i+1)],
-J=1, h=0, 0 <= Delta <= 1, no boundary fields, N >= 2.
+J=1, h=0, Delta >= 0 (ground states), no boundary fields, N >= 2.
 ```
 
 ```sh
 build/bethe-xxz-obc 64 --delta 0.5
 build/bethe-xxz-obc 65 --delta 0.5 --sz -1/2 --roots
 build/bethe-xxz-obc 16 --delta 0.75 --sectors --precision long-double
+build/bethe-xxz-obc 16 --delta 3 --roots
 # In a binary128-enabled build:
 build/bethe-xxz-obc 64 --delta 0.999999999999999999999999 --precision fp128
 ```
@@ -29,11 +30,21 @@ lattice momentum for free ends, and generic XXZ states are not classified
 by total spin S or SU(2) multiplets. There is no `--spin`, `--spinons`, or
 boundary-selection option.
 
+For `Delta>1`, even zero-magnetization ground states need a distinguished
+boundary root. `--roots` prints its inverse square `y=1/z_B^2` and logarithmic
+distance w separately from the bulk real roots. Negative y means that z_B is
+imaginary; it is not a real rapidity or a failed solve. See the
+[massive boundary-root guide](xxz-open-massive.md) for the coordinate crossing,
+finite-size deviation, residual convention, and continuation diagnostics.
+
 The default arithmetic is fp64; long-double and optional fp128 retain native
 precision in parameters, roots, energies, gaps, and output. See the shared
 [CLI controls](command-line.md) for tolerances, CPU time, and presentation.
 
 ## Real-root excitations
+
+Both excitation scans and specified quantum-number lists still require
+`0<=Delta<=1`; massive ground-state support does not extend that family.
 
 ```sh
 build/bethe-xxz-obc 16 --delta 0.5 --excitations 10 --sz 1
@@ -98,6 +109,7 @@ auto ground = obc::ground_state<long double>(64, 0.5L);
 auto sector = obc::sector_ground_state<long double>(65, 0.5L,
                                                    uni20::half_int::parse("-1/2"));
 auto sectors = obc::sector_ground_states<long double>(16, 0.75L);
+auto massive = obc::ground_state<long double>(16, 3.0L);
 auto scan = obc::real_excitations<long double>(
     16, 0.5L, uni20::half_int{1}, {.count = 10, .max_candidates = 10000});
 auto count = obc::real_excitation_count(8, 0.5L, uni20::half_int{2});
@@ -106,13 +118,26 @@ obc::QuantumNumbers numbers{uni20::half_int{1}, uni20::half_int{3}};
 auto state = obc::solve_real<long double>(8, 0.75L, numbers);
 ```
 
-`obc::RealState<Real>` holds delta, scaled roots, labels, Sz, spin-reversal
-flag, energy, and convergence diagnostics, with **no momentum members**.
+The three ground-state functions return `obc::GroundState<Real>` (or a vector
+of it). Alongside delta, bulk scaled roots and labels, Sz, spin reversal,
+energy, and convergence diagnostics, this includes an optional `boundary_root`,
+`root_delta`, and a `GroundSolveStatus` distinguishing convergence, budget
+exhaustion, and a stalled line search. Bulk arrays exclude the distinguished
+root and its label. At `Delta<=1`, `boundary_root` is empty and all numerical
+results retain the original real-root solver's values.
+
+`solve_real` and excitation scans retain `obc::RealState<Real>` with no boundary
+root. Ground states no longer implicitly convert to `RealState`: code with an
+explicit old return type should use `GroundState` or `auto`, and account for
+`boundary_root` when counting roots. Neither type has **momentum members**.
 `solve_real` also accepts shared `bethe::SolverOptions<Real>` and an optional
 initial-root span. Enumeration, bounded ranking, and convergence bookkeeping
 are shared with the other models. Numerical code has no presentation dependency.
 
 ## Boundary equations and limiting cases
+
+This section describes the all-real solver for `0<=Delta<=1`; the
+[massive equations and regularization](xxz-open-massive.md) are separate.
 
 Use the same scaled coordinate as periodic XXZ:
 `z=tanh(lambda)/tan(gamma/2)`, not the conventional rapidity lambda. Physical
@@ -148,11 +173,6 @@ describe the returned iterate, even on budget exhaustion. Work per update
 is O(M^2), or O(M) at Delta=0, with O(M) state storage. Retaining all sectors
 costs O(N^2) storage. Excitation scans retain
 O(min(COUNT,candidates)*M+N), including their ground reference.
-
-The separate [massive ground-state module](xxz-open-massive.md) now handles
-`Delta>1` in the library, including the continued boundary root. Its CLI and
-unified ground-state API integration are pending; the commands and all-real
-API described above still require `0<=Delta<=1`.
 
 ## Validation
 

@@ -2,49 +2,14 @@
 // Copyright (C) 2026 Ian McCulloch
 #pragma once
 
-#include <bethe/xxz.hpp>
-#include <optional>
+#include <bethe/xxz_open_state.hpp>
 #include <uni20/linalg/ops/linear_solve.hpp>
 
 namespace bethe::xxz::open::massive
 {
-enum class SolveStatus
-{
-  converged,
-  iteration_limit,
-  stalled
-};
-
-/// The last root of an even, zero-magnetization chain. With r=(Delta-1)/(Delta+1),
-/// y=1/z_B^2=r^2*expm1(-log_distance). It passes through y=0 without a singularity.
-/// Negative y means a purely imaginary scaled z_B, not a real bulk rapidity.
-/// log_distance retains exponentially small finite-size deviations from y=-r^2.
-template <uni20::Real Real> struct BoundaryRoot
-{
-    Real log_distance = Real{0};
-    Real inverse_square = Real{0};
-    uni20::half_int quantum_number;
-};
-
-/// Massive free-end XXZ sector minimum, Delta>1, no boundary fields.
-/// A separate state type prevents a complex boundary root being mistaken for
-/// an all-real excitation. The bulk labels exclude the optional boundary label.
-template <uni20::Real Real> struct State
-{
-    std::vector<Real> rapidities;
-    QuantumNumbers quantum_numbers;
-    std::optional<BoundaryRoot<Real>> boundary_root;
-    Real delta = Real{0}, root_delta = Real{0}, energy = Real{0};
-    /// Maximum of the normalized bulk and regularized boundary equations.
-    /// This differs from the gapless solver's logarithmic residual, and is
-    /// neither an energy-error bound nor a bound on the exponentially small gap.
-    Real residual_norm = Real{0};
-    std::size_t iterations = 0;
-    bool converged = false;
-    SolveStatus status = SolveStatus::iteration_limit;
-    uni20::half_int sz;
-    bool spin_reversed = false;
-};
+using SolveStatus = open::GroundSolveStatus;
+template <uni20::Real Real> using BoundaryRoot = open::BoundaryRoot<Real>;
+template <uni20::Real Real> using State = open::GroundState<Real>;
 
 namespace detail
 {

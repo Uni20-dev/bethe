@@ -22,8 +22,9 @@ static_assert(!has_momentum<model::RealState<double>>);
 
 // Independently evaluate the conventional hyperbolic equations, including
 // the boundary reflection phase, and energy from one-magnon wave numbers.
-template <uni20::Real Real> void check_state(std::size_t n, model::RealState<Real> const& state)
+template <typename State> void check_state(std::size_t n, State const& state)
 {
+  using Real = decltype(state.delta);
   using std::abs;
   using std::acos;
   using std::atan;
@@ -382,8 +383,7 @@ TYPED_TEST(XXZOpen, InvalidInputs)
   }
   std::vector<Real> wrong_size(2);
   EXPECT_THROW(([&] { (void)model::solve_real<Real>(4, Real{0}, one, {}, wrong_size); })(), std::invalid_argument);
-  for (Real bad :
-       {-Real{1}, Real{2}, uni20::numeric_limits<Real>::infinity(), uni20::numeric_limits<Real>::quiet_NaN()})
+  for (Real bad : {-Real{1}, uni20::numeric_limits<Real>::infinity(), uni20::numeric_limits<Real>::quiet_NaN()})
   {
     SCOPED_TRACE(::testing::Message() << " bad=" << uni20::format_scalar(bad));
     EXPECT_THROW(([&] { (void)model::ground_state<Real>(4, bad); })(), std::invalid_argument);

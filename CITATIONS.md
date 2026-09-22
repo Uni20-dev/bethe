@@ -77,13 +77,13 @@ winding with atan2. The consecutive sector-minimum labels are checked against
 finite-chain energy and momentum ED, including odd lengths. This does not
 extend the existing excitation window or implement the paper's form factors.
 
-The library-only massive free-end XXZ module also follows the reflection
+The massive free-end XXZ ground-state module also follows the reflection
 equations in [mei-2017](#mei-2017). Its distinguished boundary root and
 finite-size deviation are motivated by [grijalva-2019](#grijalva-2019),
 Sec. 4.3.2; the [module guide](docs/xxz-open-massive.md) derives the implemented
 regularization. This is a ground-state solver, not a boundary correlation
-function, general string solver, or massive excitation scan. The CLI has not
-yet been extended to this module.
+function, general string solver, or massive excitation scan. The existing
+`bethe-xxz-obc` frontend selects it for Delta>1 ground states and sector minima.
 
 The free-end XXZ solver uses [mei-2017](#mei-2017), Eqs. (11)-(12),
 with the paper's Hamiltonian divided by four and shifted by `N*Delta/4`.
@@ -548,6 +548,10 @@ Sebastian Grijalva, Jacopo De Nardis, and Veronique Terras. *Open XXZ chain and 
 SciPost Phys. 7, 023 (2019).
 
 [DOI](<https://doi.org/10.21468/SciPostPhys.7.2.023>), [arXiv v4](<https://arxiv.org/abs/1901.10932v4>).
+
+Relevant tool modes:
+
+- `bethe-xxz-obc`: Massive open XXZ boundary root and finite-size deviation, Sec. 4.3.2, specialized to zero boundary fields; used for Delta\>1 ground states, not boundary correlations or excitation scans.
 
 ### dugave-2015
 

@@ -21,7 +21,9 @@ ground states and magnetization-sector minima for every finite Delta>=0.
 For `0<=Delta<=1` it also supports a restricted finite-real-root excitation
 family, not the complete spectrum or strings. For open boundaries,
 use the separate [`bethe-xxz-obc` front end](xxz-open.md).
-That free-end solver still requires `0<=Delta<=1`. Negative Delta is rejected
+That free-end solver also supports `Delta>=0` ground states, including the
+massive boundary root; its real-root excitation modes require `0<=Delta<=1`.
+Negative Delta is rejected
 by the finite-size solvers. The
 existing analytic thermodynamic `bethe::xxz::spinon_energy` retains its wider
 `-1 < Delta <= 1` domain; it is independent of this finite-size solver.
