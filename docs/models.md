@@ -9,10 +9,11 @@ whose energies would be useful alongside Uni20 and MPToolkit. A model being
 exactly solvable in the literature does not mean this repository solves it,
 or that every boundary condition, coupling, or excited state is covered.
 
-The first new implementations are **repulsive periodic Lieb–Liniger** and
-the **periodic SU(3) balanced-singlet ground state**. The next new family is
-**repulsive Gaudin–Yang**. Extending XXZ's anisotropy range and the existing
-models' boundary/state coverage remain valuable directions as well.
+The first new implementations are **repulsive periodic Lieb–Liniger**,
+the **periodic SU(3) balanced-singlet ground state**, and selected
+**repulsive Gaudin–Yang** ground-state sectors. Next are wider XXZ ground-state
+coverage and the supersymmetric t–J model; extending existing models'
+boundary/state coverage remains valuable as well.
 These priorities and difficulty assessments are our engineering judgments,
 not conclusions of the cited papers or a committed implementation schedule.
 
@@ -60,6 +61,7 @@ paper's correlation functions, thermodynamics, or full spectrum.
 | `hubbard` | One-band Hubbard, hopping t=1 | Implemented (limited): [PBC](hubbard.md) on even rings with sector restrictions; [free ends](hubbard-open.md) at every physical filling/Sz and either sign of U | Hubbard excitations; remaining PBC shell branches and odd rings |
 | `lieb-liniger` | Continuum contact-interacting bosons | Implemented (limited): [repulsive PBC](lieb-liniger.md), ground state, explicit labels, and bounded excitation scans | Hard walls, attraction, thermodynamics |
 | `su-n` | Fundamental SU(n) permutation chain | Implemented (limited): [SU(3) PBC](su3.md), balanced singlet ground state for L>=3 divisible by three, J=1 | Other populations/lengths, excitations, general n, open boundaries |
+| `gaudin-yang` | Equal-mass spin-1/2 continuum delta-interacting fermions | Implemented (limited): [repulsive PBC](gaudin-yang.md), odd populations of both spins; unrestricted free and fully polarized limits | Other periodic shell branches, excitations, attraction, hard walls, thermodynamics |
 
 Analytic thermodynamic XXX/XXZ spinon dispersions are separate existing
 facilities; they do not constitute a general thermodynamic Bethe ansatz
@@ -77,7 +79,7 @@ integrable boundaries in the literature.
 | --- | --- | --- | --- |
 | `lieb-liniger` | Repulsive one-component Bose gas on a ring; ground state and bounded real-root excitation scans | [Implemented (limited)](lieb-liniger.md) | First slice complete |
 | `su-n` | Fundamental SU(3) antiferromagnetic permutation chain, PBC, balanced ground state | [Implemented (limited)](su3.md) | First slice complete |
-| `gaudin-yang` | Equal-mass repulsive spin-1/2 delta-interacting Fermi gas, PBC, selected ground-state sectors | Proposed | Medium |
+| `gaudin-yang` | Equal-mass repulsive spin-1/2 delta-interacting Fermi gas, PBC, selected ground-state sectors | [Implemented (limited)](gaudin-yang.md) | First slice complete |
 | `tj-susy` | Projected t–J chain at J=2t, PBC, selected ground-state sectors | Proposed | Medium–large |
 | `spin-s-tb` | Spin-1 Takhtajan–Babujian chain, PBC ground state with finite-size string deviations | Proposed | Large |
 | `richardson` | Reduced BCS pairing Hamiltonian, specified levels and pair number | Proposed | Medium–large |
@@ -186,9 +188,28 @@ mapping; finite-size paired states need their own treatment. Multicomponent
 fermions add more nesting levels and, for attraction, larger bound complexes;
 see [Lee–Guan–Batchelor](../CITATIONS.md#lee-2011).
 
-**Next decision:** audit the repulsive finite-ring label/sector choices before
-promising arbitrary N and Sz. This is the next new-family target after the
-initial SU(3) implementation.
+**Implemented first slice:** [commit 6b7fc3c](https://github.com/Uni20-dev/bethe/commit/6b7fc3c)
+adds `bethe-gaudin-yang-pbc` and the scalar-templated
+`bethe::gaudin_yang::ground_state(N_up,N_down,ell,c)` API. Interacting
+mixed-spin states require odd populations of both spins; c=0 and full
+polarization use exact free occupations for any particle count. The
+[model guide](gaudin-yang.md) specifies physical units, nested labels,
+free-current degeneracy, spin reversal, and incomplete-continuation diagnostics.
+The explicit equations and sector choice follow
+[Oelkers et al.](../CITATIONS.md#oelkers-2006), especially Eq. (25) and Sec. 5.
+
+Validation includes the original rational equations, an independent
+two-body jump-condition oracle, exact free energies, weak/strong-coupling
+coefficients, the XXX spin-root limit, controlled dilute-Hubbard convergence,
+analytic-Jacobian checks, and fp64/long-double/fp128 precision tests.
+The complete suite at this checkpoint passes 344 GCC Debug tests with fp128
+and 239 Clang Release tests without MPLAPACK; the front end also passes its
+CLI checks against the published Uni20 pin without a sibling-source override.
+
+**Next slice:** other periodic shell branches need a separate finite-ring
+state-selection audit, not just shifted centered labels. Then consider
+charge/spin excitations or hard-wall reflection equations. Attraction still
+requires paired complex roots; no lattice particle-hole shortcut applies.
 
 ### `tj-susy`: a useful strongly correlated lattice benchmark
 
@@ -362,8 +383,9 @@ No language change or giant runtime-switched "all models" solver is needed.
    implementation by implication.
 2. **SU(3) PBC balanced singlet:** first slice complete, with small-chain ED,
    native-precision analytic checks, and documented nested labels.
-   **Gaudin–Yang PBC** is next: finite-ring sector selection and independent
-   continuum checks, with physical and auxiliary labels fully documented.
+   **Gaudin–Yang PBC:** the first odd-population sector slice is also complete,
+   with independent two-body/limiting-case checks, dilute-Hubbard convergence,
+   and documented physical and auxiliary labels.
 3. **Wider XXZ ground-state coverage** and **t–J at J=2t**: extend lattice
    benchmarks while keeping branch/parameter restrictions explicit.
 4. **A focused complex-root project:** start with a small known XXX string
