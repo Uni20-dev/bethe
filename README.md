@@ -21,6 +21,7 @@ then explore magnetization sectors, excitation families, and spinons.
 
 Commands follow `bethe-<model>-<boundary>`: `pbc` means periodic boundaries,
 and `obc` means open boundaries (currently free ends, with no boundary fields).
+Nonspatial models such as Richardson pairing omit the boundary suffix.
 
 - [Periodic XXX](docs/xxx.md): `bethe-xxx-pbc` gives ground states,
   sector minima, real-root excitations, and the odd-chain one-spinon branch.
@@ -53,6 +54,9 @@ and `obc` means open boundaries (currently free ends, with no boundary fields).
 - [Spin-1 Takhtajan–Babujian](docs/takhtajan-babujian.md): `bethe-tb-pbc`
   gives the periodic even-ring singlet ground state of `H=sum[S.S-(S.S)^2]`,
   retaining complex-root finite-size string deviations.
+- [Richardson pairing](docs/richardson.md): `bethe-richardson` gives attractive
+  reduced-BCS ground energies for distinct levels and a specified pair/blocked
+  sector, using regularized variables through pair-root collisions.
 
 The XXX and XXZ models use spin-1/2 operators, J=1, and zero magnetic field.
 Hubbard uses hopping t=1 and the unshifted interaction `U*n_up*n_down`.
@@ -176,6 +180,8 @@ together. Read them in roughly this order, or go straight to your model:
     roots, the XXX limit, and fermionic momentum conventions.
 15. [Spin-1 Takhtajan–Babujian chain](docs/takhtajan-babujian.md) — complex
     two-strings, finite-size deviations, and bilinear–biquadratic normalization.
+16. [Richardson pairing](docs/richardson.md) — single-particle levels, blocking,
+    eigenvalue variables and ground-state continuation through root collisions.
 
 For possible additions, see the [model catalogue and development proposal](docs/models.md):
 known integrable families, literature, implementation restrictions, and suggested priorities.

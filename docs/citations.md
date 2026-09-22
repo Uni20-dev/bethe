@@ -55,6 +55,10 @@ text. Normal calculations keep their existing output and exit-status contract.
 Help lists relevant references for the tool's supported modes, not an assertion
 that every listed method was used in a particular run.
 
+Tool IDs are lowercase C++ identifiers (optionally underscore-separated).
+Executable names use the `bethe-` prefix and hyphen-separated components;
+nonspatial models such as `bethe-richardson` do not need a PBC/OBC suffix.
+
 The generated data is also available to C++ callers independently of the CLI:
 
 ```cpp

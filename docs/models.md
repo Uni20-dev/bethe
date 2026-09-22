@@ -18,6 +18,8 @@ are deferred until needed**, not a prerequisite for other models.
 The supersymmetric t–J chain now has a first periodic ground-state slice.
 The spin-1 Takhtajan–Babujian chain also has an even-ring singlet solver
 retaining finite-size complex-root deviations.
+Richardson pairing now supplies attractive ground energies in specified
+blocked-level sectors, using regular variables through pair-root collisions.
 Extending existing models' boundary/state
 coverage remains valuable as well.
 These priorities and difficulty assessments are our engineering judgments,
@@ -70,6 +72,7 @@ paper's correlation functions, thermodynamics, or full spectrum.
 | `gaudin-yang` | Equal-mass spin-1/2 continuum delta-interacting fermions | Implemented (limited): [repulsive PBC](gaudin-yang.md), odd populations of both spins; unrestricted free and fully polarized limits | Other periodic shell branches, excitations, attraction, hard walls, thermodynamics |
 | `tj-susy` | Projected t–J electrons, J=2t | Implemented (limited): [PBC](tj.md), t=1, doped odd N_up and N_down on either length parity; every no-hole and fully polarized sector | Other doped shell branches, excitations, open boundaries |
 | `spin-s-tb` | Integrable spin-1 bilinear–biquadratic chain | Implemented (limited): [even PBC](takhtajan-babujian.md), singlet ground state of H=sum[S.S-(S.S)^2], with finite two-string deviations | Odd lengths, sectors, excitations, higher spins, open boundaries |
+| `richardson` | Reduced BCS pairing | Implemented (limited): [attractive pairing](richardson.md), distinct doublet levels, fixed pair count and blocked levels, ground energy through root collisions | Repeated levels/higher degeneracies, excitations, pair-root output, repulsive coupling |
 
 Analytic thermodynamic XXX/XXZ spinon dispersions are separate existing
 facilities; they do not constitute a general thermodynamic Bethe ansatz
@@ -90,7 +93,7 @@ integrable boundaries in the literature.
 | `gaudin-yang` | Equal-mass repulsive spin-1/2 delta-interacting Fermi gas, PBC, selected ground-state sectors | [Implemented (limited)](gaudin-yang.md) | First slice complete |
 | `tj-susy` | Projected t–J chain at J=2t, PBC, selected ground-state sectors | [Implemented (limited)](tj.md) | First slice complete |
 | `spin-s-tb` | Spin-1 Takhtajan–Babujian chain, PBC ground state with finite-size string deviations | [Implemented (limited)](takhtajan-babujian.md) | First slice complete |
-| `richardson` | Reduced BCS pairing Hamiltonian, specified levels and pair number | Proposed | Medium–large |
+| `richardson` | Reduced BCS pairing Hamiltonian, specified levels and pair number | [Implemented (limited)](richardson.md) | First slice complete |
 | `gaudin-magnet` | Rational Gaudin/central-spin spectra at specified couplings and magnetization | Watch | Medium–large |
 | `multicomponent-gas` | SU(kappa) fermions or the equal-coupling Bose–Fermi mixture, PBC | Watch | Medium–large |
 | `integrable-ladder` | A specified SU(4)-type ladder with the required four-spin interaction, PBC | Watch | Medium after SU(n) |
@@ -286,18 +289,23 @@ generalizations are surveyed by the model developers in
 [Dukelsky–Pittel–Sierra](../CITATIONS.md#dukelsky-2004).
 This would broaden the library to pairing benchmarks at fixed particle number.
 
-Start with distinct levels, a fixed pair number, and the lowest state in a
-specified blocked-level sector (singly occupied levels do not participate in
-pair scattering). Pair rapidities can become complex and collide with poles
-as coupling varies. Consider regularized or eigenvalue-based equations as
-well as direct root continuation; a naive complex Newton replacement is not
-enough. Check zero coupling, one pair, and exact diagonalization of small
-pairing spaces across root collisions.
+Implemented in [richardson.hpp](../include/bethe/richardson.hpp) and
+`bethe-richardson` for g>=0, distinct ascending single-particle energies,
+one time-reversed doublet per level, and specified pair/blocked sectors.
+The diagonal pair-scattering term is included. The
+[guide](richardson.md) derives the energy convention and regularized
+quadratic equations from [Faribault et al.](../CITATIONS.md#faribault-2011).
 
-**Next decision:** choose the regularized variables and state-tracking rule.
-Inputs are levels, degeneracies, blocked occupations, and coupling; PBC/OBC
-and lattice momentum are not appropriate interface concepts here. Keep a
-separate front end rather than forcing this into a chain-shaped CLI.
+Adaptive ground-state continuation uses a number-constrained rectangular
+QR correction in native precision, with branch-distance and energy-bound
+checks. Tests include all small pair sectors of irregular/clustered levels,
+blocked levels, analytic limits and the exact four-level g=2/3 root collision.
+Incomplete results explicitly retain their reached coupling; they are not
+reported as energies at the requested target.
+
+**Next slice:** optional rapidity recovery, excited occupation seeds, and
+the derivative equations needed for repeated levels/higher degeneracies.
+PBC/OBC and lattice momentum are not appropriate interface concepts here.
 
 ## Extensions of current models, rather than new solvers
 

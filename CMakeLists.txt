@@ -27,7 +27,7 @@ target_include_directories(bethe INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/include"
 target_link_libraries(bethe INTERFACE uni20_core uni20_common uni20_linalg)
 
 if(BETHE_BUILD_APPS)
-  foreach(app IN ITEMS bethe-xxx-pbc bethe-xxx-obc bethe-xxz-pbc bethe-xxz-obc bethe-hubbard-pbc bethe-hubbard-obc bethe-lieb-liniger-pbc bethe-su3-pbc bethe-gaudin-yang-pbc bethe-tj-pbc bethe-tb-pbc)
+  foreach(app IN ITEMS bethe-xxx-pbc bethe-xxx-obc bethe-xxz-pbc bethe-xxz-obc bethe-hubbard-pbc bethe-hubbard-obc bethe-lieb-liniger-pbc bethe-su3-pbc bethe-gaudin-yang-pbc bethe-tj-pbc bethe-tb-pbc bethe-richardson)
     add_executable(${app} apps/${app}.cpp)
     target_link_libraries(${app} PRIVATE bethe::bethe)
     set_target_properties(${app} PROPERTIES CXX_EXTENSIONS OFF)

@@ -65,6 +65,16 @@ class CitationTests(unittest.TestCase):
                 with self.assertRaises(ValueError):
                     generator.validate(self.data)
 
+    def test_nonspatial_model_name(self):
+        self.data["tools"][0].update(id="pairing", executable="bethe-pairing")
+        generator.validate(self.data)
+        self.assertIn("uses_pairing", generator.header(self.data))
+        for name in ("bethe-", "other-pairing", "bethe-pairing/extra"):
+            with self.subTest(name=name):
+                self.data["tools"][0]["executable"] = name
+                with self.assertRaises(ValueError):
+                    generator.validate(self.data)
+
     def test_escaping(self):
         title = 'A "quoted" \\ path with *stars* and [brackets]'
         self.data["references"][0]["title"] = title

@@ -264,6 +264,17 @@
       ]
     },
     {
+      "id": "faribault-2011",
+      "authors": "Alexandre Faribault, Omar El Araby, Christoph Sträter, and Vladimir Gritsev",
+      "title": "Gaudin models solver based on the correspondence between Bethe ansatz and ordinary differential equations",
+      "publication": "Phys. Rev. B 83, 235124",
+      "year": 2011,
+      "links": [
+        {"label": "DOI", "url": "https://doi.org/10.1103/PhysRevB.83.235124"},
+        {"label": "arXiv", "url": "https://arxiv.org/abs/1103.0472"}
+      ]
+    },
+    {
       "id": "faribault-schuricht-2013",
       "authors": "Alexandre Faribault and Dirk Schuricht",
       "title": "Spin decoherence due to a randomly fluctuating spin bath",
@@ -613,6 +624,14 @@
       "references": [
         {"id": "babujian-1982", "context": "Original integrable higher-spin chain family; only the periodic even-length spin-1 singlet ground state is implemented."},
         {"id": "vlijm-caux-2014", "context": "Spin-1 Hamiltonian and complex Bethe equations (1.2)-(1.4), filled two-string sea, and finite-deviation equations (3.8)-(3.11). Our bilinear coefficient is 1, i.e. J=4 in this paper. Equation (3.18) supplies only an initial guess; finite-size deviations are solved, not dropped. No dynamical correlations or excitations are implemented."}
+      ]
+    },
+    {
+      "id": "richardson",
+      "executable": "bethe-richardson",
+      "references": [
+        {"id": "dukelsky-2004", "context": "Reduced BCS pairing model and blocked-level sectors. We support attractive uniform pairing with distinct doubly degenerate single-particle levels, not arbitrary degeneracies or the full Gaudin family."},
+        {"id": "faribault-2011", "context": "Eigenvalue variables (7), quadratic equations in Sec. II, and Richardson equations (32). We use e_i=2*epsilon_i and y_i=g*Lambda(e_i), continue the filled lowest levels from g=0, and include diagonal pair scattering. Energy is sum e_i*y_i-g*M*(L-M+1), plus blocked single-particle energies. No pair-root reconstruction or form factors are implemented."}
       ]
     },
     {

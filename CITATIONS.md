@@ -459,6 +459,21 @@ Rev. Mod. Phys. 76, 643-662 (2004).
 
 [DOI](<https://doi.org/10.1103/RevModPhys.76.643>), [arXiv](<https://arxiv.org/abs/nucl-th/0405011>).
 
+Relevant tool modes:
+
+- `bethe-richardson`: Reduced BCS pairing model and blocked-level sectors. We support attractive uniform pairing with distinct doubly degenerate single-particle levels, not arbitrary degeneracies or the full Gaudin family.
+
+### faribault-2011
+
+Alexandre Faribault, Omar El Araby, Christoph Sträter, and Vladimir Gritsev. *Gaudin models solver based on the correspondence between Bethe ansatz and ordinary differential equations*.
+Phys. Rev. B 83, 235124 (2011).
+
+[DOI](<https://doi.org/10.1103/PhysRevB.83.235124>), [arXiv](<https://arxiv.org/abs/1103.0472>).
+
+Relevant tool modes:
+
+- `bethe-richardson`: Eigenvalue variables (7), quadratic equations in Sec. II, and Richardson equations (32). We use e\_i=2\*epsilon\_i and y\_i=g\*Lambda(e\_i), continue the filled lowest levels from g=0, and include diagonal pair scattering. Energy is sum e\_i\*y\_i-g\*M\*(L-M+1), plus blocked single-particle energies. No pair-root reconstruction or form factors are implemented.
+
 ### faribault-schuricht-2013
 
 Alexandre Faribault and Dirk Schuricht. *Spin decoherence due to a randomly fluctuating spin bath*.

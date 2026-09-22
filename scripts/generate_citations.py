@@ -66,9 +66,10 @@ def validate(data):
         fields(tool, "id executable references")
         line(tool["id"])
         line(tool["executable"])
-        if not re.fullmatch(r"[a-z][a-z0-9]*_[a-z][a-z0-9_]*", tool["id"]) or tool["id"] in tool_ids:
+        if not re.fullmatch(r"[a-z][a-z0-9]*(?:_[a-z][a-z0-9]*)*", tool["id"]) or tool["id"] in tool_ids:
             raise ValueError(f"invalid or duplicate tool ID: {tool['id']}")
-        if not re.fullmatch(r"bethe-[a-z0-9]+(?:-[a-z0-9]+)*-(pbc|obc)", tool["executable"]) or tool["executable"] in executables:
+        # Pairing/Gaudin models need no artificial spatial boundary suffix.
+        if not re.fullmatch(r"bethe-[a-z0-9]+(?:-[a-z0-9]+)*", tool["executable"]) or tool["executable"] in executables:
             raise ValueError(f"invalid or duplicate executable: {tool['executable']}")
         tool_ids.add(tool["id"])
         executables.add(tool["executable"])
