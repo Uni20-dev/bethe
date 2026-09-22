@@ -76,6 +76,17 @@
       ]
     },
     {
+      "id": "kozlowski-2017",
+      "authors": "Karol K. Kozlowski",
+      "title": "On condensation properties of Bethe roots associated with the XXZ chain",
+      "publication": "arXiv:1508.05741v2",
+      "year": 2017,
+      "links": [
+        {"label": "arXiv v2", "url": "https://arxiv.org/abs/1508.05741v2"},
+        {"label": "HTML", "url": "https://arxiv.org/html/1508.05741v2"}
+      ]
+    },
+    {
       "id": "lieb-wu-2003",
       "authors": "Elliott H. Lieb and F. Y. Wu",
       "title": "The one-dimensional Hubbard model: A reminiscence",

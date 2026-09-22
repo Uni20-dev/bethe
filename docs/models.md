@@ -286,9 +286,13 @@ separate front end rather than forcing this into a chain-shaped CLI.
   The [massive free-end module](xxz-open-massive.md) now solves the
   ground-state sectors through the same ground-state API and `bethe-xxz-obc`,
   retaining the finite-size boundary-root deviation explicitly.
-  **Next:** `-1<Delta<0` with a separate contour/sector
-  audit; only subsequently extend excitation classification. The broader
-  family is established by [Yang–Yang](../CITATIONS.md#yang-yang-1966), but the
+  An [internal negative-anisotropy engine](xxz-negative.md) now covers
+  `-1<Delta<0` sector ground roots for even rings and open chains, with
+  rank-subtracted equations scaled to remain discriminating near Delta=-1.
+  It is not yet exposed by the public ground-state API or frontends.
+  **Next:** odd-ring complex-root continuation and global sector selection,
+  then public integration; only subsequently extend excitation classification.
+  The broader family is established by [Yang–Yang](../CITATIONS.md#yang-yang-1966), but the
   old real-coordinate domain and excitation window do not extend unchanged.
   Treat `Delta<=-1` and polarized/degenerate limits separately. These remain
   XXZ-module extensions, not differently named models.

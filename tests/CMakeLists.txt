@@ -30,7 +30,7 @@ function(bethe_discover_tests target)
   )
 endfunction()
 
-foreach(module IN ITEMS heisenberg sectors open excitations xxz xxz_open xxz_open_massive hubbard hubbard_open lieb_liniger su3 gaudin_yang support)
+foreach(module IN ITEMS heisenberg sectors open excitations xxz xxz_open xxz_open_massive xxz_negative hubbard hubbard_open lieb_liniger su3 gaudin_yang support)
   add_executable(bethe_${module}_tests test_${module}.cpp)
   target_link_libraries(bethe_${module}_tests PRIVATE bethe::bethe)
   bethe_discover_tests(bethe_${module}_tests)

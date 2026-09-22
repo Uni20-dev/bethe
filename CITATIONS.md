@@ -77,6 +77,14 @@ winding with atan2. The consecutive sector-minimum labels are checked against
 finite-chain energy and momentum ED, including odd lengths. This does not
 extend the existing excitation window or implement the paper's form factors.
 
+The internal negative-Delta ground-root engine uses the periodic equations
+in [kozlowski-2017](#kozlowski-2017), Eqs. (0.4), (0.7), and the open reflection
+equations of [mei-2017](#mei-2017). Kozlowski explicitly assumes even rings;
+we do not extend that ground-state identification to odd periodic chains.
+The [implementation note](docs/xxz-negative.md) derives the rank-subtracted,
+scaled equations and records the unresolved odd-ring and public-API work.
+This internal checkpoint does not extend the executable help's scope.
+
 The massive free-end XXZ ground-state module also follows the reflection
 equations in [mei-2017](#mei-2017). Its distinguished boundary root and
 finite-size deviation are motivated by [grijalva-2019](#grijalva-2019),
@@ -254,6 +262,13 @@ SciPost Phys. 1, 008 (2016).
 Relevant tool modes:
 
 - `bethe-xxz-pbc`: Massless periodic XXZ equations, energy, and momentum, Eqs. (1), (3)-(5); our energy includes the N\*Delta/4 shift.
+
+### kozlowski-2017
+
+Karol K. Kozlowski. *On condensation properties of Bethe roots associated with the XXZ chain*.
+arXiv:1508.05741v2 (2017).
+
+[arXiv v2](<https://arxiv.org/abs/1508.05741v2>), [HTML](<https://arxiv.org/html/1508.05741v2>).
 
 ### lieb-wu-2003
 
