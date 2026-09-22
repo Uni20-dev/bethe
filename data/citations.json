@@ -427,6 +427,17 @@
       ]
     },
     {
+      "id": "grijalva-2019",
+      "authors": "Sebastian Grijalva, Jacopo De Nardis, and Veronique Terras",
+      "title": "Open XXZ chain and boundary modes at zero temperature",
+      "publication": "SciPost Phys. 7, 023",
+      "year": 2019,
+      "links": [
+        {"label": "DOI", "url": "https://doi.org/10.21468/SciPostPhys.7.2.023"},
+        {"label": "arXiv v4", "url": "https://arxiv.org/abs/1901.10932v4"}
+      ]
+    },
+    {
       "id": "dugave-2015",
       "authors": "M. Dugave, F. Göhmann, K. K. Kozlowski, and J. Suzuki",
       "title": "On form-factor expansions for the XXZ chain in the massive regime",

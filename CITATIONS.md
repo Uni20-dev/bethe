@@ -77,6 +77,14 @@ winding with atan2. The consecutive sector-minimum labels are checked against
 finite-chain energy and momentum ED, including odd lengths. This does not
 extend the existing excitation window or implement the paper's form factors.
 
+The library-only massive free-end XXZ module also follows the reflection
+equations in [mei-2017](#mei-2017). Its distinguished boundary root and
+finite-size deviation are motivated by [grijalva-2019](#grijalva-2019),
+Sec. 4.3.2; the [module guide](docs/xxz-open-massive.md) derives the implemented
+regularization. This is a ground-state solver, not a boundary correlation
+function, general string solver, or massive excitation scan. The CLI has not
+yet been extended to this module.
+
 The free-end XXZ solver uses [mei-2017](#mei-2017), Eqs. (11)-(12),
 with the paper's Hamiltonian divided by four and shifted by `N*Delta/4`.
 The resulting ferromagnetic reference is `(N-1)*Delta/4`. In the massless
@@ -533,6 +541,13 @@ J. Phys. A 39, 1073-1098 (2006).
 Relevant tool modes:
 
 - `bethe-gaudin-yang-pbc`: Hamiltonian and periodic fermion equations (1), (2), (7), (8), (25); even N, odd minority population as in Sec. 5. Weak and strong limits (12), (15)-(16) provide checks. Hard walls, attraction and excitations are not implemented.
+
+### grijalva-2019
+
+Sebastian Grijalva, Jacopo De Nardis, and Veronique Terras. *Open XXZ chain and boundary modes at zero temperature*.
+SciPost Phys. 7, 023 (2019).
+
+[DOI](<https://doi.org/10.21468/SciPostPhys.7.2.023>), [arXiv v4](<https://arxiv.org/abs/1901.10932v4>).
 
 ### dugave-2015
 

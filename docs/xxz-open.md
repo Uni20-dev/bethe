@@ -149,6 +149,11 @@ is O(M^2), or O(M) at Delta=0, with O(M) state storage. Retaining all sectors
 costs O(N^2) storage. Excitation scans retain
 O(min(COUNT,candidates)*M+N), including their ground reference.
 
+The separate [massive ground-state module](xxz-open-massive.md) now handles
+`Delta>1` in the library, including the continued boundary root. Its CLI and
+unified ground-state API integration are pending; the commands and all-real
+API described above still require `0<=Delta<=1`.
+
 ## Validation
 
 Independent small-chain exact diagonalization checks sector minima and every

@@ -45,6 +45,7 @@ editions checked on 2026-09-22, not a claim that no other edition is available.
 | [mei-2017](../CITATIONS.md#mei-2017) | [1609.08045v3](https://arxiv.org/abs/1609.08045v3) | Open XXX/XXZ equations |
 | [vlijm-2016](../CITATIONS.md#vlijm-2016) | [1606.09516v2](https://arxiv.org/abs/1606.09516v2) | Periodic XXZ equations and excited states |
 | [dugave-2015](../CITATIONS.md#dugave-2015) | [1412.8217v2](https://arxiv.org/abs/1412.8217v2) | Massive periodic XXZ equations |
+| [grijalva-2019](../CITATIONS.md#grijalva-2019) | [1901.10932v4](https://arxiv.org/abs/1901.10932v4) | Massive open XXZ boundary roots |
 
 The supplied root-level `0207529v2.pdf` is left untouched and untracked.
 Additional personal reading copies can go in `papers/local/`, which Git ignores.

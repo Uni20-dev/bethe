@@ -57,7 +57,7 @@ paper's correlation functions, thermodynamics, or full spectrum.
 | ID | Model | Status and actual scope | Main missing pieces |
 | --- | --- | --- | --- |
 | `xxx` | Spin-1/2 nearest-neighbor XXX | Implemented (limited): [PBC](xxx.md), [free ends](open-chains.md), sector minima and restricted real-root excitations; periodic one-spinon family | Complex strings, full spectrum, twists/boundary fields |
-| `xxz` | Spin-1/2 nearest-neighbor XXZ | Implemented (limited): [PBC](xxz.md) ground states/sectors at `Delta>=0`; PBC restricted excitations and [free ends](xxz-open.md) at `0<=Delta<=1` | Negative anisotropy, massive free ends/excitations, additional root families, twists/boundary fields |
+| `xxz` | Spin-1/2 nearest-neighbor XXZ | Implemented (limited): [PBC](xxz.md) ground states/sectors at `Delta>=0`; restricted excitations and [free-end CLI](xxz-open.md) at `0<=Delta<=1`; [massive free-end ground-state library](xxz-open-massive.md) | Massive free-end CLI integration, negative anisotropy, massive excitations, additional root families, twists/boundary fields |
 | `hubbard` | One-band Hubbard, hopping t=1 | Implemented (limited): [PBC](hubbard.md) on even rings with sector restrictions; [free ends](hubbard-open.md) at every physical filling/Sz and either sign of U | Hubbard excitations; remaining PBC shell branches and odd rings |
 | `lieb-liniger` | Continuum contact-interacting bosons | Implemented (limited): [repulsive PBC](lieb-liniger.md), ground state, explicit labels, and bounded excitation scans | Hard walls, attraction, thermodynamics |
 | `su-n` | Fundamental SU(n) permutation chain | Implemented (limited): [SU(3) PBC](su3.md), balanced singlet ground state for L>=3 divisible by three, J=1 | Other populations/lengths, excitations, general n, open boundaries |
@@ -283,7 +283,10 @@ separate front end rather than forcing this into a chain-shaped CLI.
   Eqs. (1.1)-(1.2), with energy normalized from Pauli matrices to spin operators.
   Tests cover odd/even sector energies and momentum against ED, original
   trigonometric equations, native precision, continuity to XXX, and Ising limits.
-  **Next:** massive free ends, then `-1<Delta<0` with a separate contour/sector
+  A [massive free-end library module](xxz-open-massive.md) now solves the
+  ground-state sectors, retaining the finite-size boundary-root deviation
+  explicitly; CLI and unified ground-state API integration are pending.
+  **Next:** finish that integration, then `-1<Delta<0` with a separate contour/sector
   audit; only subsequently extend excitation classification. The broader
   family is established by [Yang–Yang](../CITATIONS.md#yang-yang-1966), but the
   old real-coordinate domain and excitation window do not extend unchanged.
