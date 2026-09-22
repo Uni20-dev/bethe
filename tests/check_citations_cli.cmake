@@ -81,6 +81,8 @@ elseif(TOOL MATCHES "hubbard")
   list(APPEND args --u 4)
 elseif(TOOL MATCHES "lieb-liniger")
   list(APPEND args --length 4 --c 1)
+elseif(TOOL MATCHES "su3")
+  set(args 6)
 endif()
 execute_process(COMMAND "${PROGRAM}" ${args}
   RESULT_VARIABLE status OUTPUT_VARIABLE output ERROR_VARIABLE error TIMEOUT 10)

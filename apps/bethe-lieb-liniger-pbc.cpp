@@ -132,28 +132,6 @@ void add_momenta(cli::report_builder& report, model::State<Real> const& state, s
     table.row(j, uni20::to_string_fraction(state.quantum_numbers[j]), uni20::format_real(state.momenta[j]));
 }
 
-void print(cli::report_builder const& report, std::string_view format)
-{
-  if (format == "pretty" || (format == "auto" && terminal::is_a_terminal(stdout)))
-    cli::print_report(report);
-  else
-  {
-    // Stable key/value metadata and unwrapped numeric tables, independent of
-    // terminal width and color settings. All reals were formatted in Real.
-    std::cout << "# " << report.title() << '\n';
-    for (auto const& [key, value] : report.fields())
-      std::cout << key << ": " << value << '\n';
-    auto policy = cli::presentation::plain_policy();
-    policy.wrap_width = std::nullopt;
-    for (auto const& table : report.tables())
-    {
-      cli::report_builder block;
-      block.table("") = table;
-      std::cout << '\n' << cli::presentation::render_plain(block, policy);
-    }
-  }
-}
-
 template <uni20::Real Real> int run(Arguments const& args)
 {
   Real const length = uni20::parse_real<Real>(*args.length), c = uni20::parse_real<Real>(*args.interaction);
@@ -228,7 +206,7 @@ template <uni20::Real Real> int run(Arguments const& args)
   }
   report.status(converged ? cli::semantic_glyph::success : cli::semantic_glyph::warning,
                 converged ? "converged" : "unconverged estimates are not ranked");
-  print(report, args.format);
+  cli::print_report(report, args.format);
   if (!converged) std::cerr << "Lieb-Liniger solve incomplete; consider a larger budget or higher precision.\n";
   return converged ? 0 : 2;
 }

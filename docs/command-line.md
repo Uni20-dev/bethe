@@ -21,6 +21,10 @@ For continuum bosons, [`bethe-lieb-liniger-pbc`](lieb-liniger.md) takes the
 particle count as its positional argument and requires `--length ELL --c C`.
 Its excitation scans also require a finite `--padding P` window; continuum
 momentum is not reduced to a Brillouin zone.
+For three-state sites, [`bethe-su3-pbc`](su3.md) takes L divisible by three
+and selects the balanced SU(3) singlet ground state of `H=sum P`. It reports
+two nested rapidity families; arbitrary sectors and excitations are not yet
+available for this model.
 
 Each program's `--help` (and no-argument usage) includes relevant literature
 references with links and a note on the modes they support. Normal numerical
@@ -103,11 +107,12 @@ are excluded. Both output formats include it, in metadata before scan tables
 resolution; an unavailable or wrapped CPU clock is reported as `unavailable`.
 
 `--max-iterations` defaults to 10000 **per state**;
-zero evaluates only the initial guess (zero roots for the spin-chain solvers).
+zero evaluates only the initial guess (zero roots for the XXX/XXZ solvers).
 Hubbard counts accepted Newton updates across all continuation stages and
 uses a large-U seed; its exact U=0 path needs no updates.
+SU(3) counts accepted Newton updates from a filled-sea density seed.
 Exit status is 0 if all states converged, 2 if any exhausted their budget
-or a Hubbard/Lieb–Liniger line search stalled, and 1 for invalid input or another
+or a Hubbard/Lieb–Liniger/SU(3) line search stalled, and 1 for invalid input or another
 error. A nonconverged result is explicitly marked as an unconverged
 estimate. There is no silent precision fallback. Run `--help` for the options.
 
@@ -120,6 +125,9 @@ their maximum. Even a stopped continuation reports residuals at the requested
 root-sector U. Lieb–Liniger uses a component-scaled dimensionless residual,
 with a weak-coupling scale that resolves roots of order sqrt(c*ell);
 see its [numerical-method guide](lieb-liniger.md#numerical-method-and-precision).
+SU(3) normalizes both nested equation families by L and reports the maximum
+over its independent reflection-reduced equations, as explained in the
+[SU(3) guide](su3.md#numerical-method-and-failure-reporting).
 See the model guides for the equations.
 Increasing precision can help resolve closely spaced levels, but always
 inspect the convergence status before treating an energy as an eigenvalue.

@@ -127,6 +127,18 @@ our numerical choices; see the [model guide](docs/lieb-liniger.md).
 not an implemented thermodynamic dispersion mode. No matrix elements or
 finite-temperature thermodynamics from the cited papers are implemented.
 
+The periodic SU(3) permutation chain follows
+[sutherland-1975](#sutherland-1975), with explicit nested equations, labels,
+and energy checked against [doikou-nepomechie-1998](#doikou-nepomechie-1998),
+Eqs. (2.17)-(2.19) and (2.24)-(2.29). We implement only the all-real,
+filled-sea balanced singlet of Sec. 2.3 for L divisible by three. The reference
+uses `sum(P-1)/2`; our `H=sum P` gives `E=2*E_paper+L`.
+The density-inversion seed, reflection reduction, Jacobian, and damped Newton
+solve are our implementation. The [SU(3) guide](docs/su3.md) derives the
+six-site singlet oracle and the spin-1 ULS energy shift, independently checked
+in color/spin space. No excited strings, scattering matrices, boundary fields,
+or general-rank SU(n) solver are implied by citing this paper.
+
 <!-- BEGIN GENERATED BIBLIOGRAPHY -->
 
 ## Bibliography
@@ -312,6 +324,10 @@ Phys. Rev. B 12, 3795 (1975).
 
 [DOI](<https://doi.org/10.1103/PhysRevB.12.3795>).
 
+Relevant tool modes:
+
+- `bethe-su3-pbc`: Original multicomponent permutation-chain solution; the implementation selects only the fundamental SU(3) periodic balanced ground state.
+
 ### essler-korepin-1992
 
 Fabian H. L. Essler and Vladimir E. Korepin. *Higher conservation laws and algebraic Bethe Ansätze for the supersymmetric t-J model*.
@@ -462,5 +478,16 @@ C. N. Yang and C. P. Yang. *Thermodynamics of a One-Dimensional System of Bosons
 J. Math. Phys. 10, 1115 (1969).
 
 [DOI](<https://doi.org/10.1063/1.1664947>).
+
+### doikou-nepomechie-1998
+
+Anastasia Doikou and Rafael I. Nepomechie. *Bulk and Boundary S Matrices for the SU(N) Chain*.
+Nucl. Phys. B 521, 547-572 (1998).
+
+[DOI](<https://doi.org/10.1016/S0550-3213(98)00239-9>), [arXiv](<https://arxiv.org/abs/hep-th/9803118>).
+
+Relevant tool modes:
+
+- `bethe-su3-pbc`: Nested equations and energy, Eqs. (2.17)-(2.19), logarithmic labels (2.24)-(2.29), and the filled-sea singlet in Sec. 2.3. Our H=sum P gives E=2\*E\_paper+L. No strings, S matrices or boundary fields are implemented.
 
 <!-- END GENERATED BIBLIOGRAPHY -->

@@ -403,6 +403,17 @@
       "links": [
         {"label": "DOI", "url": "https://doi.org/10.1063/1.1664947"}
       ]
+    },
+    {
+      "id": "doikou-nepomechie-1998",
+      "authors": "Anastasia Doikou and Rafael I. Nepomechie",
+      "title": "Bulk and Boundary S Matrices for the SU(N) Chain",
+      "publication": "Nucl. Phys. B 521, 547-572",
+      "year": 1998,
+      "links": [
+        {"label": "DOI", "url": "https://doi.org/10.1016/S0550-3213(98)00239-9"},
+        {"label": "arXiv", "url": "https://arxiv.org/abs/hep-th/9803118"}
+      ]
     }
   ],
   "tools": [
@@ -464,6 +475,14 @@
         {"id": "lieb-liniger-1963", "context": "Repulsive Bose gas on a ring, H=-sum d_j^2+2c sum delta, and its ground state; c>0."},
         {"id": "lieb-1963-excitations", "context": "Excited-state background; we solve finite-volume states in explicit label windows, not a thermodynamic dispersion calculation."},
         {"id": "essler-de-klerk-2023", "context": "Explicit normalization and finite-ring equations, Eqs. (4), (24)-(27); root-density equation (32)-(33) used for validation, not a thermodynamics API. No matrix elements are implemented."}
+      ]
+    },
+    {
+      "id": "su3_pbc",
+      "executable": "bethe-su3-pbc",
+      "references": [
+        {"id": "sutherland-1975", "context": "Original multicomponent permutation-chain solution; the implementation selects only the fundamental SU(3) periodic balanced ground state."},
+        {"id": "doikou-nepomechie-1998", "context": "Nested equations and energy, Eqs. (2.17)-(2.19), logarithmic labels (2.24)-(2.29), and the filled-sea singlet in Sec. 2.3. Our H=sum P gives E=2*E_paper+L. No strings, S matrices or boundary fields are implemented."}
       ]
     }
   ]

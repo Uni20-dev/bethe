@@ -39,6 +39,9 @@ and `obc` means open boundaries (currently free ends, with no boundary fields).
 - [Periodic Lieb–Liniger](docs/lieb-liniger.md): `bethe-lieb-liniger-pbc` gives
   repulsive continuum-boson ground states, specified Bethe states, and
   excitation scans within an explicit finite quantum-number window.
+- [Periodic SU(3)](docs/su3.md): `bethe-su3-pbc` gives the balanced singlet
+  ground state of the permutation chain for lengths divisible by three,
+  also covering the spin-1 ULS point through an energy shift.
 
 The XXX and XXZ models use spin-1/2 operators, J=1, and zero magnetic field.
 Hubbard uses hopping t=1 and the unshifted interaction `U*n_up*n_down`.
@@ -93,6 +96,9 @@ see the [periodic](docs/hubbard.md) and [open-chain](docs/hubbard-open.md) guide
 For continuum bosons, try `build/bethe-lieb-liniger-pbc 4 --length 4 --c 1`.
 Here 4 particles occupy a ring of physical length 4; it is not a four-site chain.
 
+For three-state sites, try `build/bethe-su3-pbc 6 --roots`. This uses
+`H=sum P`, where P swaps adjacent colors; its six-site energy is `-1-sqrt(13)`.
+
 Next, distinguish the lowest state in a magnetization sector from a family
 of excited states:
 
@@ -142,6 +148,8 @@ together. Read them in roughly this order, or go straight to your model:
     standing waves, and unrestricted ground-state sectors.
 11. [Periodic Lieb–Liniger gas](docs/lieb-liniger.md) — continuum units,
     repulsive bosons, weak coupling, and finite excitation windows.
+12. [Periodic SU(3) chain](docs/su3.md) — nested real-root seas, balanced
+    singlets, permutation normalization, and the spin-1 ULS mapping.
 
 For possible additions, see the [model catalogue and development proposal](docs/models.md):
 known integrable families, literature, implementation restrictions, and suggested priorities.

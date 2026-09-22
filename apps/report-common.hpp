@@ -89,6 +89,29 @@ inline void print_report(report_builder const& report)
   }
 }
 
+// Explicit-format front ends share stable key/value metadata and unwrapped
+// numeric tables. Plain output is independent of terminal width and color.
+// All real-valued cells must already have been formatted in their own type.
+inline void print_report(report_builder const& report, std::string_view format)
+{
+  if (format == "pretty" || (format == "auto" && terminal::is_a_terminal(stdout)))
+    print_report(report);
+  else
+  {
+    std::cout << "# " << report.title() << '\n';
+    for (auto const& [key, value] : report.fields())
+      std::cout << key << ": " << value << '\n';
+    auto policy = presentation::plain_policy();
+    policy.wrap_width = std::nullopt;
+    for (auto const& table : report.tables())
+    {
+      report_builder block;
+      block.table("") = table;
+      std::cout << '\n' << presentation::render_plain(block, policy);
+    }
+  }
+}
+
 template <typename State> void add_roots(report_builder& report, State const& state, std::string title)
 {
   if (state.rapidities.empty())

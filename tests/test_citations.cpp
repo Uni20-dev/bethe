@@ -27,8 +27,9 @@ TEST(Citations, RegistryUniqueIdsAndLookup)
 
 TEST(Citations, ToolReferenceSelections)
 {
-  for (auto tool : {refs::Tool::xxx_pbc, refs::Tool::xxx_obc, refs::Tool::xxz_pbc, refs::Tool::xxz_obc,
-                    refs::Tool::hubbard_pbc, refs::Tool::hubbard_obc, refs::Tool::lieb_liniger_pbc})
+  for (auto tool :
+       {refs::Tool::xxx_pbc, refs::Tool::xxx_obc, refs::Tool::xxz_pbc, refs::Tool::xxz_obc, refs::Tool::hubbard_pbc,
+        refs::Tool::hubbard_obc, refs::Tool::lieb_liniger_pbc, refs::Tool::su3_pbc})
   {
     SCOPED_TRACE(static_cast<int>(tool));
     std::set<std::string_view> ids;
