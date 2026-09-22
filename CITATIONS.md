@@ -6,6 +6,10 @@ usage output. Bibliographic metadata and tool selections live in
 below and the C++ registry are generated from it. The provenance notes remain
 hand-written. See [maintaining citations](docs/citations.md).
 
+The [paper archive](papers/README.md) provides selected reference PDFs with
+edition, source, license, and checksum records. Other papers remain linked;
+being cited here does not grant permission to redistribute a copy.
+
 The bibliography also contains literature for the
 [model catalogue and proposals](docs/models.md). Those references do not
 imply implemented methods and are not selected by executable help unless

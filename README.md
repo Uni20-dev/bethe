@@ -169,3 +169,5 @@ is `bethe::bethe`; model guides include C++ examples.
 This is the successor to MPToolkit's `misc/heisenberg-energy.cpp`; no legacy
 copy is kept here. It retains GPL-3.0-or-later licensing and attribution.
 See [COPYING](COPYING) and [References and provenance](CITATIONS.md).
+The [paper archive](papers/README.md) collects redistributable reference PDFs
+and links to other editions; the papers retain their own licenses.

@@ -11,6 +11,12 @@ References used only by the [model catalogue](models.md) follow the same rule:
 add bibliographic records, but no tool selection for an unimplemented model.
 Presence in the registry or bibliography does not imply solver support.
 
+Selected redistributable PDFs live in the [paper archive](../papers/README.md),
+indexed by the same reference IDs. Keep edition, license evidence, and download
+checksums there rather than adding file-management data to the runtime citation
+registry. The archive documents the checks required before adding a PDF;
+personal reading copies belong in the ignored `papers/local/` directory.
+
 The registry deliberately separates three concerns:
 
 - **Reference metadata:** authors, title, publication, year, and source links,
