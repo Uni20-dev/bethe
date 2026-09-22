@@ -135,6 +135,9 @@ together. Read them in roughly this order, or go straight to your model:
 10. [Free-end Hubbard chains](docs/hubbard-open.md) — reflected scattering,
     standing waves, and unrestricted ground-state sectors.
 
+For possible additions, see the [model catalogue and development proposal](docs/models.md):
+known integrable families, literature, implementation restrictions, and suggested priorities.
+
 ## Source and attribution
 
 `include/bethe/` contains the scalar-templated library, `apps/` the thin CLI

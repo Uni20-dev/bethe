@@ -57,8 +57,96 @@ inline constexpr std::array<Link, 1> links_9{{
 inline constexpr std::array<Link, 1> links_10{{
   {"DOI", "https://doi.org/10.1103/PhysRev.125.164"},
 }};
+inline constexpr std::array<Link, 1> links_11{{
+  {"DOI", "https://doi.org/10.1103/PhysRev.130.1605"},
+}};
+inline constexpr std::array<Link, 1> links_12{{
+  {"DOI", "https://doi.org/10.1103/PhysRev.130.1616"},
+}};
+inline constexpr std::array<Link, 1> links_13{{
+  {"DOI", "https://doi.org/10.1103/PhysRevA.4.386"},
+}};
+inline constexpr std::array<Link, 1> links_14{{
+  {"DOI", "https://doi.org/10.1016/0375-9601(67)90193-4"},
+}};
+inline constexpr std::array<Link, 1> links_15{{
+  {"DOI", "https://doi.org/10.1103/PhysRevLett.19.1312"},
+}};
+inline constexpr std::array<Link, 1> links_16{{
+  {"DOI", "https://doi.org/10.1103/PhysRev.168.1920"},
+}};
+inline constexpr std::array<Link, 1> links_17{{
+  {"DOI", "https://doi.org/10.1103/PhysRevB.12.3795"},
+}};
+inline constexpr std::array<Link, 2> links_18{{
+  {"DOI", "https://doi.org/10.1103/PhysRevB.46.9147"},
+  {"arXiv", "https://arxiv.org/abs/hep-th/9207007"},
+}};
+inline constexpr std::array<Link, 1> links_19{{
+  {"DOI", "https://doi.org/10.1016/0375-9601(82)90403-0"},
+}};
+inline constexpr std::array<Link, 2> links_20{{
+  {"DOI", "https://doi.org/10.1088/1742-5468/2014/05/P05009"},
+  {"arXiv", "https://arxiv.org/abs/1401.4450"},
+}};
+inline constexpr std::array<Link, 2> links_21{{
+  {"DOI", "https://doi.org/10.1103/RevModPhys.76.643"},
+  {"arXiv", "https://arxiv.org/abs/nucl-th/0405011"},
+}};
+inline constexpr std::array<Link, 2> links_22{{
+  {"DOI", "https://doi.org/10.1103/PhysRevB.88.085323"},
+  {"arXiv", "https://arxiv.org/abs/1306.2541"},
+}};
+inline constexpr std::array<Link, 1> links_23{{
+  {"arXiv", "https://arxiv.org/abs/1011.0128"},
+}};
+inline constexpr std::array<Link, 2> links_24{{
+  {"DOI", "https://doi.org/10.1103/PhysRevA.73.021602"},
+  {"arXiv", "https://arxiv.org/abs/cond-mat/0505632"},
+}};
+inline constexpr std::array<Link, 2> links_25{{
+  {"DOI", "https://doi.org/10.1103/PhysRevB.60.9236"},
+  {"arXiv", "https://arxiv.org/abs/cond-mat/9901168"},
+}};
+inline constexpr std::array<Link, 1> links_26{{
+  {"arXiv", "https://arxiv.org/abs/solv-int/9710002"},
+}};
+inline constexpr std::array<Link, 1> links_27{{
+  {"DOI", "https://doi.org/10.1016/0003-4916(73)90441-7"},
+}};
+inline constexpr std::array<Link, 1> links_28{{
+  {"DOI", "https://doi.org/10.1103/PhysRevLett.60.635"},
+}};
+inline constexpr std::array<Link, 1> links_29{{
+  {"DOI", "https://doi.org/10.1103/PhysRevLett.60.639"},
+}};
+inline constexpr std::array<Link, 1> links_30{{
+  {"DOI", "https://doi.org/10.1103/PhysRevA.4.2019"},
+}};
+inline constexpr std::array<Link, 1> links_31{{
+  {"DOI", "https://doi.org/10.1103/PhysRevLett.45.379"},
+}};
+inline constexpr std::array<Link, 1> links_32{{
+  {"DOI", "https://doi.org/10.1103/PhysRevLett.69.2313"},
+}};
+inline constexpr std::array<Link, 1> links_33{{
+  {"DOI", "https://doi.org/10.1103/PhysRevA.46.844"},
+}};
+inline constexpr std::array<Link, 1> links_34{{
+  {"DOI", "https://doi.org/10.1103/PhysRev.150.321"},
+}};
+inline constexpr std::array<Link, 1> links_35{{
+  {"DOI", "https://doi.org/10.1103/PhysRevLett.65.243"},
+}};
+inline constexpr std::array<Link, 2> links_36{{
+  {"DOI", "https://doi.org/10.1088/0305-4470/27/18/021"},
+  {"arXiv", "https://arxiv.org/abs/hep-th/9306089"},
+}};
+inline constexpr std::array<Link, 1> links_37{{
+  {"DOI", "https://doi.org/10.1063/1.1664947"},
+}};
 
-inline constexpr std::array<Reference, 11> references{{
+inline constexpr std::array<Reference, 38> references{{
   {"karbach-1998", "Michael Karbach, Kun Hu, and Gerhard Müller", "Introduction to the Bethe ansatz II", "Computers in Physics 12, 565", 1998, links_0},
   {"groha-2017", "Stefan Groha and Fabian H. L. Essler", "Spinon decay in the spin-1/2 Heisenberg chain with weak next nearest neighbour exchange", "J. Phys. A 50, 334002", 2017, links_1},
   {"caux-xxx-spinons", "Jean-Sébastien Caux", "The Bethe Ansatz: XXX spinons", "Online notes", 0, links_2},
@@ -70,6 +158,33 @@ inline constexpr std::array<Reference, 11> references{{
   {"rylands-2022", "Colin Rylands, Bruno Bertini, and Pasquale Calabrese", "Integrable quenches in the Hubbard model", "J. Stat. Mech. 2022, 103103", 2022, links_8},
   {"deguchi-yue-1997", "Tetsuo Deguchi and Ruihong Yue", "Exact solutions of 1-D Hubbard model with open boundary conditions and the conformal dimensions under boundary magnetic fields", "arXiv:cond-mat/9704138", 1997, links_9},
   {"lieb-mattis-1962", "Elliott Lieb and Daniel Mattis", "Theory of Ferromagnetism and the Ordering of Electronic Energy Levels", "Phys. Rev. 125, 164-172", 1962, links_10},
+  {"lieb-liniger-1963", "Elliott H. Lieb and Werner Liniger", "Exact Analysis of an Interacting Bose Gas. I. The General Solution and the Ground State", "Phys. Rev. 130, 1605", 1963, links_11},
+  {"lieb-1963-excitations", "Elliott H. Lieb", "Exact Analysis of an Interacting Bose Gas. II. The Excitation Spectrum", "Phys. Rev. 130, 1616", 1963, links_12},
+  {"gaudin-1971", "M. Gaudin", "Boundary Energy of a Bose Gas in One Dimension", "Phys. Rev. A 4, 386", 1971, links_13},
+  {"gaudin-1967", "M. Gaudin", "Un système à une dimension de fermions en interaction", "Phys. Lett. A 24, 55-56", 1967, links_14},
+  {"yang-1967", "C. N. Yang", "Some Exact Results for the Many-Body Problem in One Dimension with Repulsive Delta-Function Interaction", "Phys. Rev. Lett. 19, 1312", 1967, links_15},
+  {"yang-1968", "C. N. Yang", "S Matrix for the One-Dimensional N-Body Problem with Repulsive or Attractive delta-Function Interaction", "Phys. Rev. 168, 1920", 1968, links_16},
+  {"sutherland-1975", "Bill Sutherland", "Model for a multicomponent quantum system", "Phys. Rev. B 12, 3795", 1975, links_17},
+  {"essler-korepin-1992", "Fabian H. L. Essler and Vladimir E. Korepin", "Higher conservation laws and algebraic Bethe Ansätze for the supersymmetric t-J model", "Phys. Rev. B 46, 9147", 1992, links_18},
+  {"babujian-1982", "H. M. Babujian", "Exact solution of the one-dimensional isotropic Heisenberg chain with arbitrary spins S", "Phys. Lett. A 90, 479-482", 1982, links_19},
+  {"vlijm-caux-2014", "Rogier Vlijm and Jean-Sébastien Caux", "Computation of dynamical correlation functions of the spin-1 Babujan-Takhtajan chain", "J. Stat. Mech. 2014, P05009", 2014, links_20},
+  {"dukelsky-2004", "J. Dukelsky, S. Pittel, and G. Sierra", "Colloquium: Exactly solvable Richardson-Gaudin models for many-body quantum systems", "Rev. Mod. Phys. 76, 643-662", 2004, links_21},
+  {"faribault-schuricht-2013", "Alexandre Faribault and Dirk Schuricht", "Spin decoherence due to a randomly fluctuating spin bath", "Phys. Rev. B 88, 085323", 2013, links_22},
+  {"lee-2011", "J. Y. Lee, X. W. Guan, and M. T. Batchelor", "Yang-Yang method for the thermodynamics of one-dimensional multi-component interacting fermions", "J. Phys. A: Math. Theor. 44, 165002", 2011, links_23},
+  {"imambekov-demler-2006", "Adilet Imambekov and Eugene Demler", "Exactly solvable case of a one-dimensional Bose-Fermi mixture", "Phys. Rev. A 73, 021602(R)", 2006, links_24},
+  {"wang-1999", "Yupeng Wang", "Exact solution of a spin-ladder model", "Phys. Rev. B 60, 9236", 1999, links_25},
+  {"bogoliubov-1997", "N. M. Bogoliubov, A. G. Izergin, and N. A. Kitanine", "Correlation functions for a strongly correlated boson system", "arXiv:solv-int/9710002", 1997, links_26},
+  {"baxter-1973", "R. J. Baxter", "Eight-vertex model in lattice statistics and one-dimensional anisotropic Heisenberg chain. III. Eigenvectors of the transfer matrix and Hamiltonian", "Ann. Phys. 76, 48-71", 1973, links_27},
+  {"haldane-1988", "F. D. M. Haldane", "Exact Jastrow-Gutzwiller resonating-valence-bond ground state of the spin-1/2 antiferromagnetic Heisenberg chain with 1/r^2 exchange", "Phys. Rev. Lett. 60, 635", 1988, links_28},
+  {"shastry-1988", "B. Sriram Shastry", "Exact solution of an S=1/2 Heisenberg antiferromagnetic chain with long-ranged interactions", "Phys. Rev. Lett. 60, 639", 1988, links_29},
+  {"sutherland-1971", "Bill Sutherland", "Exact Results for a Quantum Many-Body Problem in One Dimension", "Phys. Rev. A 4, 2019", 1971, links_30},
+  {"andrei-1980", "N. Andrei", "Diagonalization of the Kondo Hamiltonian", "Phys. Rev. Lett. 45, 379", 1980, links_31},
+  {"destri-de-vega-1992", "C. Destri and H. J. de Vega", "New thermodynamic Bethe ansatz equations without strings", "Phys. Rev. Lett. 69, 2313-2317", 1992, links_32},
+  {"gwa-spohn-1992", "Leh-Hun Gwa and Herbert Spohn", "Bethe solution for the dynamical-scaling exponent of the noisy Burgers equation", "Phys. Rev. A 46, 844", 1992, links_33},
+  {"yang-yang-1966", "C. N. Yang and C. P. Yang", "One-Dimensional Chain of Anisotropic Spin-Spin Interactions. I. Proof of Bethe's Hypothesis for Ground State in a Finite System", "Phys. Rev. 150, 321", 1966, links_34},
+  {"shastry-sutherland-1990", "B. Sriram Shastry and Bill Sutherland", "Twisted boundary conditions and effective mass in Heisenberg-Ising and Hubbard rings", "Phys. Rev. Lett. 65, 243", 1990, links_35},
+  {"de-vega-gonzalez-ruiz-1994", "H. J. de Vega and A. González-Ruiz", "Boundary K-matrices for the XYZ, XXZ and XXX spin chains", "J. Phys. A: Math. Gen. 27, 6129-6138", 1994, links_36},
+  {"yang-yang-1969", "C. N. Yang and C. P. Yang", "Thermodynamics of a One-Dimensional System of Bosons with Repulsive Delta-Function Interaction", "J. Math. Phys. 10, 1115", 1969, links_37},
 }};
 
 inline constexpr std::array<Use, 4> uses_xxx_pbc{{

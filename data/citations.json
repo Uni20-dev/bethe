@@ -115,6 +115,283 @@
       "links": [
         {"label": "DOI", "url": "https://doi.org/10.1103/PhysRev.125.164"}
       ]
+    },
+    {
+      "id": "lieb-liniger-1963",
+      "authors": "Elliott H. Lieb and Werner Liniger",
+      "title": "Exact Analysis of an Interacting Bose Gas. I. The General Solution and the Ground State",
+      "publication": "Phys. Rev. 130, 1605",
+      "year": 1963,
+      "links": [
+        {"label": "DOI", "url": "https://doi.org/10.1103/PhysRev.130.1605"}
+      ]
+    },
+    {
+      "id": "lieb-1963-excitations",
+      "authors": "Elliott H. Lieb",
+      "title": "Exact Analysis of an Interacting Bose Gas. II. The Excitation Spectrum",
+      "publication": "Phys. Rev. 130, 1616",
+      "year": 1963,
+      "links": [
+        {"label": "DOI", "url": "https://doi.org/10.1103/PhysRev.130.1616"}
+      ]
+    },
+    {
+      "id": "gaudin-1971",
+      "authors": "M. Gaudin",
+      "title": "Boundary Energy of a Bose Gas in One Dimension",
+      "publication": "Phys. Rev. A 4, 386",
+      "year": 1971,
+      "links": [
+        {"label": "DOI", "url": "https://doi.org/10.1103/PhysRevA.4.386"}
+      ]
+    },
+    {
+      "id": "gaudin-1967",
+      "authors": "M. Gaudin",
+      "title": "Un système à une dimension de fermions en interaction",
+      "publication": "Phys. Lett. A 24, 55-56",
+      "year": 1967,
+      "links": [
+        {"label": "DOI", "url": "https://doi.org/10.1016/0375-9601(67)90193-4"}
+      ]
+    },
+    {
+      "id": "yang-1967",
+      "authors": "C. N. Yang",
+      "title": "Some Exact Results for the Many-Body Problem in One Dimension with Repulsive Delta-Function Interaction",
+      "publication": "Phys. Rev. Lett. 19, 1312",
+      "year": 1967,
+      "links": [
+        {"label": "DOI", "url": "https://doi.org/10.1103/PhysRevLett.19.1312"}
+      ]
+    },
+    {
+      "id": "yang-1968",
+      "authors": "C. N. Yang",
+      "title": "S Matrix for the One-Dimensional N-Body Problem with Repulsive or Attractive delta-Function Interaction",
+      "publication": "Phys. Rev. 168, 1920",
+      "year": 1968,
+      "links": [
+        {"label": "DOI", "url": "https://doi.org/10.1103/PhysRev.168.1920"}
+      ]
+    },
+    {
+      "id": "sutherland-1975",
+      "authors": "Bill Sutherland",
+      "title": "Model for a multicomponent quantum system",
+      "publication": "Phys. Rev. B 12, 3795",
+      "year": 1975,
+      "links": [
+        {"label": "DOI", "url": "https://doi.org/10.1103/PhysRevB.12.3795"}
+      ]
+    },
+    {
+      "id": "essler-korepin-1992",
+      "authors": "Fabian H. L. Essler and Vladimir E. Korepin",
+      "title": "Higher conservation laws and algebraic Bethe Ansätze for the supersymmetric t-J model",
+      "publication": "Phys. Rev. B 46, 9147",
+      "year": 1992,
+      "links": [
+        {"label": "DOI", "url": "https://doi.org/10.1103/PhysRevB.46.9147"},
+        {"label": "arXiv", "url": "https://arxiv.org/abs/hep-th/9207007"}
+      ]
+    },
+    {
+      "id": "babujian-1982",
+      "authors": "H. M. Babujian",
+      "title": "Exact solution of the one-dimensional isotropic Heisenberg chain with arbitrary spins S",
+      "publication": "Phys. Lett. A 90, 479-482",
+      "year": 1982,
+      "links": [
+        {"label": "DOI", "url": "https://doi.org/10.1016/0375-9601(82)90403-0"}
+      ]
+    },
+    {
+      "id": "vlijm-caux-2014",
+      "authors": "Rogier Vlijm and Jean-Sébastien Caux",
+      "title": "Computation of dynamical correlation functions of the spin-1 Babujan-Takhtajan chain",
+      "publication": "J. Stat. Mech. 2014, P05009",
+      "year": 2014,
+      "links": [
+        {"label": "DOI", "url": "https://doi.org/10.1088/1742-5468/2014/05/P05009"},
+        {"label": "arXiv", "url": "https://arxiv.org/abs/1401.4450"}
+      ]
+    },
+    {
+      "id": "dukelsky-2004",
+      "authors": "J. Dukelsky, S. Pittel, and G. Sierra",
+      "title": "Colloquium: Exactly solvable Richardson-Gaudin models for many-body quantum systems",
+      "publication": "Rev. Mod. Phys. 76, 643-662",
+      "year": 2004,
+      "links": [
+        {"label": "DOI", "url": "https://doi.org/10.1103/RevModPhys.76.643"},
+        {"label": "arXiv", "url": "https://arxiv.org/abs/nucl-th/0405011"}
+      ]
+    },
+    {
+      "id": "faribault-schuricht-2013",
+      "authors": "Alexandre Faribault and Dirk Schuricht",
+      "title": "Spin decoherence due to a randomly fluctuating spin bath",
+      "publication": "Phys. Rev. B 88, 085323",
+      "year": 2013,
+      "links": [
+        {"label": "DOI", "url": "https://doi.org/10.1103/PhysRevB.88.085323"},
+        {"label": "arXiv", "url": "https://arxiv.org/abs/1306.2541"}
+      ]
+    },
+    {
+      "id": "lee-2011",
+      "authors": "J. Y. Lee, X. W. Guan, and M. T. Batchelor",
+      "title": "Yang-Yang method for the thermodynamics of one-dimensional multi-component interacting fermions",
+      "publication": "J. Phys. A: Math. Theor. 44, 165002",
+      "year": 2011,
+      "links": [
+        {"label": "arXiv", "url": "https://arxiv.org/abs/1011.0128"}
+      ]
+    },
+    {
+      "id": "imambekov-demler-2006",
+      "authors": "Adilet Imambekov and Eugene Demler",
+      "title": "Exactly solvable case of a one-dimensional Bose-Fermi mixture",
+      "publication": "Phys. Rev. A 73, 021602(R)",
+      "year": 2006,
+      "links": [
+        {"label": "DOI", "url": "https://doi.org/10.1103/PhysRevA.73.021602"},
+        {"label": "arXiv", "url": "https://arxiv.org/abs/cond-mat/0505632"}
+      ]
+    },
+    {
+      "id": "wang-1999",
+      "authors": "Yupeng Wang",
+      "title": "Exact solution of a spin-ladder model",
+      "publication": "Phys. Rev. B 60, 9236",
+      "year": 1999,
+      "links": [
+        {"label": "DOI", "url": "https://doi.org/10.1103/PhysRevB.60.9236"},
+        {"label": "arXiv", "url": "https://arxiv.org/abs/cond-mat/9901168"}
+      ]
+    },
+    {
+      "id": "bogoliubov-1997",
+      "authors": "N. M. Bogoliubov, A. G. Izergin, and N. A. Kitanine",
+      "title": "Correlation functions for a strongly correlated boson system",
+      "publication": "arXiv:solv-int/9710002",
+      "year": 1997,
+      "links": [
+        {"label": "arXiv", "url": "https://arxiv.org/abs/solv-int/9710002"}
+      ]
+    },
+    {
+      "id": "baxter-1973",
+      "authors": "R. J. Baxter",
+      "title": "Eight-vertex model in lattice statistics and one-dimensional anisotropic Heisenberg chain. III. Eigenvectors of the transfer matrix and Hamiltonian",
+      "publication": "Ann. Phys. 76, 48-71",
+      "year": 1973,
+      "links": [
+        {"label": "DOI", "url": "https://doi.org/10.1016/0003-4916(73)90441-7"}
+      ]
+    },
+    {
+      "id": "haldane-1988",
+      "authors": "F. D. M. Haldane",
+      "title": "Exact Jastrow-Gutzwiller resonating-valence-bond ground state of the spin-1/2 antiferromagnetic Heisenberg chain with 1/r^2 exchange",
+      "publication": "Phys. Rev. Lett. 60, 635",
+      "year": 1988,
+      "links": [
+        {"label": "DOI", "url": "https://doi.org/10.1103/PhysRevLett.60.635"}
+      ]
+    },
+    {
+      "id": "shastry-1988",
+      "authors": "B. Sriram Shastry",
+      "title": "Exact solution of an S=1/2 Heisenberg antiferromagnetic chain with long-ranged interactions",
+      "publication": "Phys. Rev. Lett. 60, 639",
+      "year": 1988,
+      "links": [
+        {"label": "DOI", "url": "https://doi.org/10.1103/PhysRevLett.60.639"}
+      ]
+    },
+    {
+      "id": "sutherland-1971",
+      "authors": "Bill Sutherland",
+      "title": "Exact Results for a Quantum Many-Body Problem in One Dimension",
+      "publication": "Phys. Rev. A 4, 2019",
+      "year": 1971,
+      "links": [
+        {"label": "DOI", "url": "https://doi.org/10.1103/PhysRevA.4.2019"}
+      ]
+    },
+    {
+      "id": "andrei-1980",
+      "authors": "N. Andrei",
+      "title": "Diagonalization of the Kondo Hamiltonian",
+      "publication": "Phys. Rev. Lett. 45, 379",
+      "year": 1980,
+      "links": [
+        {"label": "DOI", "url": "https://doi.org/10.1103/PhysRevLett.45.379"}
+      ]
+    },
+    {
+      "id": "destri-de-vega-1992",
+      "authors": "C. Destri and H. J. de Vega",
+      "title": "New thermodynamic Bethe ansatz equations without strings",
+      "publication": "Phys. Rev. Lett. 69, 2313-2317",
+      "year": 1992,
+      "links": [
+        {"label": "DOI", "url": "https://doi.org/10.1103/PhysRevLett.69.2313"}
+      ]
+    },
+    {
+      "id": "gwa-spohn-1992",
+      "authors": "Leh-Hun Gwa and Herbert Spohn",
+      "title": "Bethe solution for the dynamical-scaling exponent of the noisy Burgers equation",
+      "publication": "Phys. Rev. A 46, 844",
+      "year": 1992,
+      "links": [
+        {"label": "DOI", "url": "https://doi.org/10.1103/PhysRevA.46.844"}
+      ]
+    },
+    {
+      "id": "yang-yang-1966",
+      "authors": "C. N. Yang and C. P. Yang",
+      "title": "One-Dimensional Chain of Anisotropic Spin-Spin Interactions. I. Proof of Bethe's Hypothesis for Ground State in a Finite System",
+      "publication": "Phys. Rev. 150, 321",
+      "year": 1966,
+      "links": [
+        {"label": "DOI", "url": "https://doi.org/10.1103/PhysRev.150.321"}
+      ]
+    },
+    {
+      "id": "shastry-sutherland-1990",
+      "authors": "B. Sriram Shastry and Bill Sutherland",
+      "title": "Twisted boundary conditions and effective mass in Heisenberg-Ising and Hubbard rings",
+      "publication": "Phys. Rev. Lett. 65, 243",
+      "year": 1990,
+      "links": [
+        {"label": "DOI", "url": "https://doi.org/10.1103/PhysRevLett.65.243"}
+      ]
+    },
+    {
+      "id": "de-vega-gonzalez-ruiz-1994",
+      "authors": "H. J. de Vega and A. González-Ruiz",
+      "title": "Boundary K-matrices for the XYZ, XXZ and XXX spin chains",
+      "publication": "J. Phys. A: Math. Gen. 27, 6129-6138",
+      "year": 1994,
+      "links": [
+        {"label": "DOI", "url": "https://doi.org/10.1088/0305-4470/27/18/021"},
+        {"label": "arXiv", "url": "https://arxiv.org/abs/hep-th/9306089"}
+      ]
+    },
+    {
+      "id": "yang-yang-1969",
+      "authors": "C. N. Yang and C. P. Yang",
+      "title": "Thermodynamics of a One-Dimensional System of Bosons with Repulsive Delta-Function Interaction",
+      "publication": "J. Math. Phys. 10, 1115",
+      "year": 1969,
+      "links": [
+        {"label": "DOI", "url": "https://doi.org/10.1063/1.1664947"}
+      ]
     }
   ],
   "tools": [
