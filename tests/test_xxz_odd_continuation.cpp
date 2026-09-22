@@ -27,6 +27,9 @@ TYPED_TEST(XXZOddContinuation, SmallSectorsAgainstED)
         EXPECT_EQ(state.root_delta, d);
         EXPECT_LE(state.residual_norm, bethe::SolverOptions<Real>{}.residual_tolerance);
         EXPECT_LE(state.momentum_error, bethe::SolverOptions<Real>{}.residual_tolerance);
+        auto const upper = engine::OddSectorVariationalBounds<Real>(n, m).evaluate(d).upper_bound();
+        EXPECT_EQ(state.variational_upper_bound, upper);
+        EXPECT_LE(state.energy, upper + Real{1024} * Real(n) * uni20::numeric_limits<Real>::epsilon());
         auto const ed = test_support::exact_spectrum(n, m, 0, true, static_cast<double>(d));
         EXPECT_REAL_NEAR(static_cast<double>(state.energy), ed.front(), 3e-10);
         engine::PolynomialBetheSystem<Real> const system(n, m, state.center, state.coordinate_scale);
@@ -66,6 +69,7 @@ TYPED_TEST(XXZOddContinuation, BudgetsAndRequestedDiagnostics)
     EXPECT_EQ(state.iterations, budget);
     EXPECT_EQ(state.status, engine::PolynomialContinuationStatus::iteration_limit);
     EXPECT_NE(state.root_delta, d);
+    EXPECT_EQ(state.variational_upper_bound, engine::OddSectorVariationalBounds<Real>(7, 3).evaluate(d).upper_bound());
     engine::PolynomialBetheSystem<Real> const system(7, 3, state.center, state.coordinate_scale);
     EXPECT_EQ(state.energy, system.energy(state.coefficients, d));
     EXPECT_EQ(state.residual_norm, system.evaluate(state.coefficients, d).norm);

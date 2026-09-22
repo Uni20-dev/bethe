@@ -321,6 +321,9 @@ separate front end rather than forcing this into a chain-shaped CLI.
   A bounded [nonzero-amplitude diagnostic](xxz-phantom-check.md) now adds
   numerical mixed-phantom witnesses to the sector scan, with propagated
   root-uncertainty estimates and visible work limits.
+  Independent free-sea and projected-helix variational upper bounds now reject
+  continuation energies incompatible with a sector minimum; passing these
+  necessary checks is not a proof of minimality.
   **Next:** mixed/singular-state admissibility and sector-minimum tracking,
   then public integration; only subsequently extend excitation classification.
   The broader family is established by [Yang–Yang](../CITATIONS.md#yang-yang-1966), but the

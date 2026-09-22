@@ -2,6 +2,7 @@
 // Copyright (C) 2026 Ian McCulloch
 #pragma once
 
+#include <bethe/xxz_odd_bounds.hpp>
 #include <bethe/xxz_polynomial.hpp>
 #include <uni20/linalg/ops/linear_solve.hpp>
 
@@ -25,7 +26,9 @@ template <uni20::Real Real> struct OddPolynomialBranch
     Real center = Real{0}, coordinate_scale = Real{1};
     Real energy = Real{0}, residual_norm = Real{0}, momentum_error = Real{0};
     Real reciprocal_condition = Real{1}, correction_norm = Real{0};
+    Real variational_upper_bound = Real{0}; // At requested Delta, even on failure.
     std::size_t iterations = 0, rejected_stages = 0;
+    std::size_t variational_rejections = 0;
     std::size_t momentum_index = 0;
     bool equations_converged = false;
     PolynomialContinuationStatus status = PolynomialContinuationStatus::iteration_limit;
@@ -112,7 +115,8 @@ template <uni20::Real Real> class OddPolynomialCoordinates {
 
 /// Follow the free odd-ring ground-sea polynomial towards -1 < Delta <= 0.
 /// Newton uses M-1 coefficient equations and the exact momentum constraint;
-/// acceptance checks ALL M equations, momentum, and energy continuity/concavity.
+/// acceptance checks ALL M equations, momentum, energy continuity/concavity,
+/// and independent variational upper bounds on the sector minimum.
 /// Every accepted Newton update, including rejected continuation stages,
 /// consumes the one global budget. Failed outputs are NOT eigenstate energies.
 template <uni20::Real Real>
@@ -129,6 +133,8 @@ OddPolynomialBranch<Real> continue_odd_polynomial(std::size_t sites, Real delta,
   if (m && m > elements / m) throw std::length_error("odd XXZ Newton workspace is too large");
   Real const eps = uni20::numeric_limits<Real>::epsilon(), tolerance = options.residual_tolerance;
   OddPolynomialBranch<Real> state;
+  OddSectorVariationalBounds<Real> const variational(sites, m);
+  state.variational_upper_bound = variational.evaluate(delta).upper_bound();
   state.delta = delta;
   state.center = coordinates.center;
   state.momentum_index = coordinates.momentum_index;
@@ -210,6 +216,10 @@ OddPolynomialBranch<Real> continue_odd_polynomial(std::size_t sites, Real delta,
           state.correction_norm <= std::sqrt(tolerance))
       {
         Real const energy = system.energy(c, d);
+        Real const upper_bound = variational.evaluate(d).upper_bound();
+        Real const variational_roundoff =
+            Real{256} * eps * (Real{1} + Real(sites) + std::abs(upper_bound) + std::abs(energy));
+        bool const below_trial = uni20::isfinite(energy) && energy <= upper_bound + variational_roundoff;
         // ||dH/dDelta|| <= N/4 on a ring. Every continuously tracked
         // eigenvalue obeys this bound; it catches some, not all, branch jumps.
         Real const bound =
@@ -227,7 +237,7 @@ OddPolynomialBranch<Real> continue_odd_polynomial(std::size_t sites, Real delta,
               Real{256} * eps * (Real{1} + std::abs(saved_energy) + std::abs(preceding_energy)) * (Real{1} + ratio);
           concave = energy <= upper + roundoff;
         }
-        if (std::abs(energy - saved_energy) <= bound && concave)
+        if (std::abs(energy - saved_energy) <= bound && concave && below_trial)
         {
           if (d != saved_delta)
           {
@@ -243,6 +253,7 @@ OddPolynomialBranch<Real> continue_odd_polynomial(std::size_t sites, Real delta,
         }
         else
         {
+          if (!below_trial) ++state.variational_rejections;
           failure = PolynomialContinuationStatus::branch_rejected;
           numerical_failure = true;
         }

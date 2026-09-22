@@ -86,9 +86,11 @@ A stage is accepted only when:
   with an additional `256*epsilon*(1+|E_old|)` roundoff allowance;
 - after two accepted couplings, the energy lies below the extrapolation of
   the preceding energy secant, with a rounding allowance scaled by the energies
-  and the ratio of successive coupling steps.
+  and the ratio of successive coupling steps;
+- the energy is no greater than either of two independent trial-state
+  Rayleigh quotients, with the arithmetic allowance described below.
 
-The last bound follows from `||dH/dDelta||<=N/4` and is necessary for a
+The energy-change bound follows from `||dH/dDelta||<=N/4` and is necessary for a
 continuously tracked eigenvalue. It can reject some branch jumps but cannot
 certify admissibility. The secant test uses an additional property of a
 **sector minimum**: as a minimum of Rayleigh quotients affine in Delta,
@@ -100,6 +102,64 @@ not a generic excited-state continuation algorithm.
 The reciprocal condition estimate is computed from
 the matrix infinity norm and the inverse obtained with the same factorization
 as the Newton correction. No normal equations are formed.
+
+### Independent variational rejection
+
+`OddSectorVariationalBounds<Real>` in
+[xxz_odd_bounds.hpp](../include/bethe/xxz_odd_bounds.hpp) evaluates two
+explicit trial states without using Bethe equations or continuation history.
+For any nonzero state in the same magnetization sector, its Rayleigh quotient
+is an **upper** bound on the true sector minimum. A candidate above that
+bound cannot be the minimum, even if its equations and momentum are correct.
+Being below the bound is necessary, not sufficient.
+
+Write `R=sin(pi*M/N)/sin(pi/N)` and `c=-cos(pi/N)`. The free-fermion ground
+sea at Delta=0, held fixed as the coupling changes, has expectation
+
+```text
+E_sea(Delta) = c*R + Delta*[N/4 - M + (M*M-R*R)/N].
+```
+
+The first term is the sum of occupied one-particle cosine energies. For the
+second, the density is `rho=M/N`, the nearest-neighbor one-body correlation
+has magnitude `R/N`, and Wick's theorem gives
+`<n_j*n_(j+1)>=rho*rho-(R/N)^2`. This includes the appropriate odd-ring
+free-sea shift, not an even-ring occupation formula.
+
+The [projected spin helix](xxz-spin-helix.md) of pitch `pi+pi/N` has equal
+amplitude magnitude in every configuration in the sector. Set
+`A=M*(N-M)/(N-1)`. Counting unlike neighbors and their exchange phases gives
+
+```text
+E_helix(Delta) = c*A + Delta*(N/4-A).
+```
+
+The trial vector remains valid at **every** coupling, even though it is an
+eigenvector only at its commensurate coupling `Delta=c` (apart from trivial
+sectors). This comparison only requires matching magnetization, not momentum:
+it bounds a minimum in the whole magnetization sector, not a momentum block.
+At Delta=0 the free sea saturates the sector bound; at the all-phantom
+collision the helix expectation is `N*Delta/4`. Neither statement alone
+classifies the spectrum at other couplings.
+
+Each converged continuation stage must satisfy
+
+```text
+E <= min(E_sea,E_helix) + 256*epsilon*(1+N+abs(E)+abs(min(E_sea,E_helix))).
+```
+
+The allowance is a native-precision numerical safeguard, not an
+outward-rounded error certificate. Failure rejects and shortens the step,
+without changing the requested coupling or loosening the equation tolerance.
+`variational_rejections` counts stages rejected by this check;
+`variational_upper_bound` always reports the bound at the **requested** Delta,
+including on failed returns. The state and global-minimum caveats still apply.
+
+Tests independently enumerate the free Slater determinant and helix vector,
+apply the spin Hamiltonian directly, and compare both expectations through
+N=9 in all supported precisions. Small-sector ED checks the bound direction.
+At N=17, M=8, Delta=-0.97, the helix bound excludes the previously observed
+wrong branch by more than 0.15, without relying on the preceding secant or ED.
 
 The coupling step adapts to successful stages and is halved after failures.
 A stage allows at most 24 accepted Newton updates before retrying a smaller
@@ -132,8 +192,8 @@ not Bethe equations; its largest basis has 352716 states. These fp64
 references complement, rather than replace, the native-precision analytic
 checks. Neither NumPy nor SciPy is a build or normal test dependency.
 
-The 17-site regression is deliberately discriminating: without the concavity
-check, an adaptive step from Delta=-0.9156494140625 to -0.96014404296875
+The 17-site regression is deliberately discriminating: before the concavity
+and variational guards, an adaptive step from Delta=-0.9156494140625 to -0.96014404296875
 jumped to another branch. It passed the full residual, momentum, conditioning,
 and Lipschitz checks, but reached approximately -4.02462082373559 at
 Delta=-0.97 instead of the independent sector minimum -4.18131119490746.
