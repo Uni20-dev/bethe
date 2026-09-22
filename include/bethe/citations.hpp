@@ -153,8 +153,12 @@ inline constexpr std::array<Link, 2> links_39{{
   {"DOI", "https://doi.org/10.1016/S0550-3213(98)00239-9"},
   {"arXiv", "https://arxiv.org/abs/hep-th/9803118"},
 }};
+inline constexpr std::array<Link, 2> links_40{{
+  {"DOI", "https://doi.org/10.1088/0305-4470/39/5/005"},
+  {"arXiv v2", "https://arxiv.org/abs/cond-mat/0511694v2"},
+}};
 
-inline constexpr std::array<Reference, 40> references{{
+inline constexpr std::array<Reference, 41> references{{
   {"karbach-1998", "Michael Karbach, Kun Hu, and Gerhard Müller", "Introduction to the Bethe ansatz II", "Computers in Physics 12, 565", 1998, links_0},
   {"groha-2017", "Stefan Groha and Fabian H. L. Essler", "Spinon decay in the spin-1/2 Heisenberg chain with weak next nearest neighbour exchange", "J. Phys. A 50, 334002", 2017, links_1},
   {"caux-xxx-spinons", "Jean-Sébastien Caux", "The Bethe Ansatz: XXX spinons", "Online notes", 0, links_2},
@@ -195,6 +199,7 @@ inline constexpr std::array<Reference, 40> references{{
   {"essler-de-klerk-2023", "F. H. L. Essler and A. J. J. M. de Klerk", "Statistics of matrix elements of local operators in integrable models", "arXiv:2307.12410v1", 2023, links_37},
   {"yang-yang-1969", "C. N. Yang and C. P. Yang", "Thermodynamics of a One-Dimensional System of Bosons with Repulsive Delta-Function Interaction", "J. Math. Phys. 10, 1115", 1969, links_38},
   {"doikou-nepomechie-1998", "Anastasia Doikou and Rafael I. Nepomechie", "Bulk and Boundary S Matrices for the SU(N) Chain", "Nucl. Phys. B 521, 547-572", 1998, links_39},
+  {"oelkers-2006", "N. Oelkers, M. T. Batchelor, M. Bortz, and X.-W. Guan", "Bethe Ansatz study of one-dimensional Bose and Fermi gases with periodic and hard wall boundary conditions", "J. Phys. A 39, 1073-1098", 2006, links_40},
 }};
 
 inline constexpr std::array<Use, 4> uses_xxx_pbc{{
@@ -233,8 +238,13 @@ inline constexpr std::array<Use, 2> uses_su3_pbc{{
   {&references[17], "Original multicomponent permutation-chain solution; the implementation selects only the fundamental SU(3) periodic balanced ground state."},
   {&references[39], "Nested equations and energy, Eqs. (2.17)-(2.19), logarithmic labels (2.24)-(2.29), and the filled-sea singlet in Sec. 2.3. Our H=sum P gives E=2*E_paper+L. No strings, S matrices or boundary fields are implemented."},
 }};
+inline constexpr std::array<Use, 3> uses_gaudin_yang_pbc{{
+  {&references[14], "Original spin-1/2 continuum fermion solution; we implement repulsive periodic ground states in selected sectors, not attraction."},
+  {&references[15], "Original multicomponent delta-gas solution; our implementation has two spin components only."},
+  {&references[40], "Hamiltonian and periodic fermion equations (1), (2), (7), (8), (25); even N, odd minority population as in Sec. 5. Weak and strong limits (12), (15)-(16) provide checks. Hard walls, attraction and excitations are not implemented."},
+}};
 
-enum class Tool { xxx_pbc, xxx_obc, xxz_pbc, xxz_obc, hubbard_pbc, hubbard_obc, lieb_liniger_pbc, su3_pbc };
+enum class Tool { xxx_pbc, xxx_obc, xxz_pbc, xxz_obc, hubbard_pbc, hubbard_obc, lieb_liniger_pbc, su3_pbc, gaudin_yang_pbc };
 
 [[nodiscard]] constexpr std::span<Use const> for_tool(Tool tool)
 {
@@ -248,6 +258,7 @@ enum class Tool { xxx_pbc, xxx_obc, xxz_pbc, xxz_obc, hubbard_pbc, hubbard_obc, 
     case Tool::hubbard_obc: return uses_hubbard_obc;
     case Tool::lieb_liniger_pbc: return uses_lieb_liniger_pbc;
     case Tool::su3_pbc: return uses_su3_pbc;
+    case Tool::gaudin_yang_pbc: return uses_gaudin_yang_pbc;
   }
   throw std::invalid_argument("unknown citation tool");
 }

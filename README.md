@@ -42,6 +42,9 @@ and `obc` means open boundaries (currently free ends, with no boundary fields).
 - [Periodic SU(3)](docs/su3.md): `bethe-su3-pbc` gives the balanced singlet
   ground state of the permutation chain for lengths divisible by three,
   also covering the spin-1 ULS point through an energy shift.
+- [Periodic Gaudin–Yang](docs/gaudin-yang.md): `bethe-gaudin-yang-pbc` gives
+  repulsive continuum-fermion ground states with odd populations of both spins,
+  plus unrestricted free and fully polarized limits.
 
 The XXX and XXZ models use spin-1/2 operators, J=1, and zero magnetic field.
 Hubbard uses hopping t=1 and the unshifted interaction `U*n_up*n_down`.
@@ -150,6 +153,8 @@ together. Read them in roughly this order, or go straight to your model:
     repulsive bosons, weak coupling, and finite excitation windows.
 12. [Periodic SU(3) chain](docs/su3.md) — nested real-root seas, balanced
     singlets, permutation normalization, and the spin-1 ULS mapping.
+13. [Periodic Gaudin–Yang gas](docs/gaudin-yang.md) — continuum fermions,
+    charge/spin roots, sector restrictions, and weak/strong-coupling limits.
 
 For possible additions, see the [model catalogue and development proposal](docs/models.md):
 known integrable families, literature, implementation restrictions, and suggested priorities.

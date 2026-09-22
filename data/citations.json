@@ -414,6 +414,17 @@
         {"label": "DOI", "url": "https://doi.org/10.1016/S0550-3213(98)00239-9"},
         {"label": "arXiv", "url": "https://arxiv.org/abs/hep-th/9803118"}
       ]
+    },
+    {
+      "id": "oelkers-2006",
+      "authors": "N. Oelkers, M. T. Batchelor, M. Bortz, and X.-W. Guan",
+      "title": "Bethe Ansatz study of one-dimensional Bose and Fermi gases with periodic and hard wall boundary conditions",
+      "publication": "J. Phys. A 39, 1073-1098",
+      "year": 2006,
+      "links": [
+        {"label": "DOI", "url": "https://doi.org/10.1088/0305-4470/39/5/005"},
+        {"label": "arXiv v2", "url": "https://arxiv.org/abs/cond-mat/0511694v2"}
+      ]
     }
   ],
   "tools": [
@@ -483,6 +494,15 @@
       "references": [
         {"id": "sutherland-1975", "context": "Original multicomponent permutation-chain solution; the implementation selects only the fundamental SU(3) periodic balanced ground state."},
         {"id": "doikou-nepomechie-1998", "context": "Nested equations and energy, Eqs. (2.17)-(2.19), logarithmic labels (2.24)-(2.29), and the filled-sea singlet in Sec. 2.3. Our H=sum P gives E=2*E_paper+L. No strings, S matrices or boundary fields are implemented."}
+      ]
+    },
+    {
+      "id": "gaudin_yang_pbc",
+      "executable": "bethe-gaudin-yang-pbc",
+      "references": [
+        {"id": "gaudin-1967", "context": "Original spin-1/2 continuum fermion solution; we implement repulsive periodic ground states in selected sectors, not attraction."},
+        {"id": "yang-1967", "context": "Original multicomponent delta-gas solution; our implementation has two spin components only."},
+        {"id": "oelkers-2006", "context": "Hamiltonian and periodic fermion equations (1), (2), (7), (8), (25); even N, odd minority population as in Sec. 5. Weak and strong limits (12), (15)-(16) provide checks. Hard walls, attraction and excitations are not implemented."}
       ]
     }
   ]

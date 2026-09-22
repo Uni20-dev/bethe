@@ -25,6 +25,10 @@ For three-state sites, [`bethe-su3-pbc`](su3.md) takes L divisible by three
 and selects the balanced SU(3) singlet ground state of `H=sum P`. It reports
 two nested rapidity families; arbitrary sectors and excitations are not yet
 available for this model.
+For spin-1/2 continuum fermions, [`bethe-gaudin-yang-pbc`](gaudin-yang.md)
+takes N and requires `--length ELL --c C`. Select the populations with `--sz`;
+interacting mixed-spin sectors require odd populations of both spins. The
+free and fully polarized limits also support other populations.
 
 Each program's `--help` (and no-argument usage) includes relevant literature
 references with links and a note on the modes they support. Normal numerical
@@ -111,8 +115,10 @@ zero evaluates only the initial guess (zero roots for the XXX/XXZ solvers).
 Hubbard counts accepted Newton updates across all continuation stages and
 uses a large-U seed; its exact U=0 path needs no updates.
 SU(3) counts accepted Newton updates from a filled-sea density seed.
+Gaudin–Yang counts accepted updates across its strong-to-weak continuation;
+its exact free path needs no updates.
 Exit status is 0 if all states converged, 2 if any exhausted their budget
-or a Hubbard/Lieb–Liniger/SU(3) line search stalled, and 1 for invalid input or another
+or a Newton line search stalled, and 1 for invalid input or another
 error. A nonconverged result is explicitly marked as an unconverged
 estimate. There is no silent precision fallback. Run `--help` for the options.
 
@@ -128,6 +134,8 @@ see its [numerical-method guide](lieb-liniger.md#numerical-method-and-precision)
 SU(3) normalizes both nested equation families by L and reports the maximum
 over its independent reflection-reduced equations, as explained in the
 [SU(3) guide](su3.md#numerical-method-and-failure-reporting).
+Gaudin–Yang scales weak-coupling charge residuals by their root or sqrt(c*ell)
+and otherwise uses N; see its [diagnostics guide](gaudin-yang.md#numerical-method-and-diagnostics).
 See the model guides for the equations.
 Increasing precision can help resolve closely spaced levels, but always
 inspect the convergence status before treating an energy as an eigenvalue.

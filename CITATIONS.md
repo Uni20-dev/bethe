@@ -139,6 +139,18 @@ six-site singlet oracle and the spin-1 ULS energy shift, independently checked
 in color/spin space. No excited strings, scattering matrices, boundary fields,
 or general-rank SU(n) solver are implied by citing this paper.
 
+The periodic Gaudin–Yang gas follows [gaudin-1967](#gaudin-1967) and
+[yang-1967](#yang-1967), with the explicit Hamiltonian and nested equations
+from [oelkers-2006](#oelkers-2006), Eqs. (1), (2), (7), (8), (25).
+We implement the repulsive even-N, odd-minority filled-sea branch, plus exact
+free gases, using the paper's kinetic units and coupling 2c. Its weak/strong
+limits (12), (15)-(16) supplement the independent two-body jump condition
+and dilute-Hubbard discretization tests. Reflection reduction, scaled spin
+coordinates, continuation, complementary phases, and residual normalization
+are our numerical choices; see the [Gaudin–Yang guide](docs/gaudin-yang.md).
+Other periodic shell branches, attraction, hard walls, excited states, and
+thermodynamic integral equations are not implemented by this tool.
+
 <!-- BEGIN GENERATED BIBLIOGRAPHY -->
 
 ## Bibliography
@@ -303,12 +315,20 @@ Phys. Lett. A 24, 55-56 (1967).
 
 [DOI](<https://doi.org/10.1016/0375-9601(67)90193-4>).
 
+Relevant tool modes:
+
+- `bethe-gaudin-yang-pbc`: Original spin-1/2 continuum fermion solution; we implement repulsive periodic ground states in selected sectors, not attraction.
+
 ### yang-1967
 
 C. N. Yang. *Some Exact Results for the Many-Body Problem in One Dimension with Repulsive Delta-Function Interaction*.
 Phys. Rev. Lett. 19, 1312 (1967).
 
 [DOI](<https://doi.org/10.1103/PhysRevLett.19.1312>).
+
+Relevant tool modes:
+
+- `bethe-gaudin-yang-pbc`: Original multicomponent delta-gas solution; our implementation has two spin components only.
 
 ### yang-1968
 
@@ -489,5 +509,16 @@ Nucl. Phys. B 521, 547-572 (1998).
 Relevant tool modes:
 
 - `bethe-su3-pbc`: Nested equations and energy, Eqs. (2.17)-(2.19), logarithmic labels (2.24)-(2.29), and the filled-sea singlet in Sec. 2.3. Our H=sum P gives E=2\*E\_paper+L. No strings, S matrices or boundary fields are implemented.
+
+### oelkers-2006
+
+N. Oelkers, M. T. Batchelor, M. Bortz, and X.-W. Guan. *Bethe Ansatz study of one-dimensional Bose and Fermi gases with periodic and hard wall boundary conditions*.
+J. Phys. A 39, 1073-1098 (2006).
+
+[DOI](<https://doi.org/10.1088/0305-4470/39/5/005>), [arXiv v2](<https://arxiv.org/abs/cond-mat/0511694v2>).
+
+Relevant tool modes:
+
+- `bethe-gaudin-yang-pbc`: Hamiltonian and periodic fermion equations (1), (2), (7), (8), (25); even N, odd minority population as in Sec. 5. Weak and strong limits (12), (15)-(16) provide checks. Hard walls, attraction and excitations are not implemented.
 
 <!-- END GENERATED BIBLIOGRAPHY -->
