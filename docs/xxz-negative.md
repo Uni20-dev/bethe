@@ -126,6 +126,9 @@ An odd ring is not bipartite. Two issues need explicit handling:
 1. The real-root continuation can encounter colliding roots and require
    complex conjugate pairs. A real-coordinate range change is insufficient;
    regularized complex-root variables or a polynomial formulation are needed.
+   The [polynomial building block](xxz-polynomial.md) now supplies coefficient
+   equations, analytic derivatives, and observables, with exact collision and
+   small-ring continuation tests. It is not yet a production odd-ring solver.
 2. The global minimum need not lie in the smallest-|Sz| sector. An independent
    ED regression for N=5, Delta=-0.9 finds the fully polarized energy -1.125
    below the |Sz|=1/2 sector minimum (approximately -0.9898034892).

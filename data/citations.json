@@ -458,6 +458,17 @@
         {"label": "DOI", "url": "https://doi.org/10.1088/1742-5468/2015/05/P05037"},
         {"label": "arXiv v2", "url": "https://arxiv.org/abs/1412.8217v2"}
       ]
+    },
+    {
+      "id": "caux-xxz-coordinate",
+      "authors": "Jean-Sébastien Caux",
+      "title": "The Bethe Ansatz: coordinate wavefunctions and periodic XXZ equations",
+      "publication": "Online notes",
+      "year": null,
+      "links": [
+        {"label": "General M", "url": "https://integrability.org/c_h_s_m.html"},
+        {"label": "Two-magnon scattering", "url": "https://integrability.org/c_h_s_2.html"}
+      ]
     }
   ],
   "tools": [

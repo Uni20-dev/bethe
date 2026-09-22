@@ -85,6 +85,13 @@ The [implementation note](docs/xxz-negative.md) derives the rank-subtracted,
 scaled equations and records the unresolved odd-ring and public-API work.
 This internal checkpoint does not extend the executable help's scope.
 
+The internal [polynomial XXZ equations](docs/xxz-polynomial.md) start from
+[caux-xxz-coordinate](#caux-xxz-coordinate), Eqs. `xxz.be` and `xxz.e`,
+at zero twist and J=1, restoring the ferromagnetic energy N*Delta/4.
+The divided-Horner recurrence, analytic coefficient derivatives, and collision
+regularization are our algebraic implementation. This is a tested equation
+building block, not a complete odd-ring ground-state or complex-string solver.
+
 The massive free-end XXZ ground-state module also follows the reflection
 equations in [mei-2017](#mei-2017). Its distinguished boundary root and
 finite-size deviation are motivated by [grijalva-2019](#grijalva-2019),
@@ -578,5 +585,12 @@ J. Stat. Mech. (2015) P05037 (2015).
 Relevant tool modes:
 
 - `bethe-xxz-pbc`: Massive periodic XXZ Hamiltonian and trigonometric Bethe equations, Eqs. (1.1)-(1.2), with zero twist and field; Pauli exchange is divided by four. Used for Delta\>1 sector ground states, not form factors, strings or excitations.
+
+### caux-xxz-coordinate
+
+Jean-Sébastien Caux. *The Bethe Ansatz: coordinate wavefunctions and periodic XXZ equations*.
+Online notes.
+
+[General M](<https://integrability.org/c_h_s_m.html>), [Two-magnon scattering](<https://integrability.org/c_h_s_2.html>).
 
 <!-- END GENERATED BIBLIOGRAPHY -->
