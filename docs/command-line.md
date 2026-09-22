@@ -2,7 +2,7 @@
 
 [Back to the overview](../README.md)
 
-The six programs share precision selection, convergence controls, and
+The programs share precision selection, convergence controls, and
 report formatting. The periodic XXX chain is a useful first example; model
 and state-selection details live in the linked guides.
 
@@ -17,6 +17,10 @@ either sign of the interaction on even rings. Select `--particles N` and
 For free ends, [`bethe-hubbard-obc`](hubbard-open.md) supports every physical
 N and Sz, odd or even L, and either sign of U. It defaults to N=L and the
 smallest nonnegative Sz compatible with N (0 or 1/2).
+For continuum bosons, [`bethe-lieb-liniger-pbc`](lieb-liniger.md) takes the
+particle count as its positional argument and requires `--length ELL --c C`.
+Its excitation scans also require a finite `--padding P` window; continuum
+momentum is not reduced to a Brillouin zone.
 
 Each program's `--help` (and no-argument usage) includes relevant literature
 references with links and a note on the modes they support. Normal numerical
@@ -88,14 +92,14 @@ identify their sector, hole, or excitation level.
 
 ## CPU time and convergence
 
-Output includes energy, momentum (periodic chains only), normalized equation
+Output includes energy, momentum (periodic systems only), normalized equation
 residual, convergence status, update count, and solver CPU time in seconds.
 CPU time measures process CPU consumption during state construction and solving,
 not elapsed wall time;
 for scans it covers the whole scan, including the ground reference and energy
 ordering for excitations. Report formatting and output
-are excluded. Both output formats include it, with a `# CPU time:` comment
-before plain scan tables. Very short runs may report zero at the clock's
+are excluded. Both output formats include it, in metadata before scan tables
+(a `# CPU time:` comment for spin-chain plain scans). Very short runs may report zero at the clock's
 resolution; an unavailable or wrapped CPU clock is reported as `unavailable`.
 
 `--max-iterations` defaults to 10000 **per state**;
@@ -103,7 +107,7 @@ zero evaluates only the initial guess (zero roots for the spin-chain solvers).
 Hubbard counts accepted Newton updates across all continuation stages and
 uses a large-U seed; its exact U=0 path needs no updates.
 Exit status is 0 if all states converged, 2 if any exhausted their budget
-or a Hubbard line search stalled, and 1 for invalid input or another
+or a Hubbard/Lieb–Liniger line search stalled, and 1 for invalid input or another
 error. A nonconverged result is explicitly marked as an unconverged
 estimate. There is no silent precision fallback. Run `--help` for the options.
 
@@ -113,7 +117,10 @@ times the selected type's epsilon. Periodic spin-chain solvers normalize by N,
 while the open spin-chain solvers normalize by 2N. Hubbard normalizes both
 equation families by L for periodic rings or 2(L+1) for free ends, and reports
 their maximum. Even a stopped continuation reports residuals at the requested
-root-sector U. See the model guides for the equations.
+root-sector U. Lieb–Liniger uses a component-scaled dimensionless residual,
+with a weak-coupling scale that resolves roots of order sqrt(c*ell);
+see its [numerical-method guide](lieb-liniger.md#numerical-method-and-precision).
+See the model guides for the equations.
 Increasing precision can help resolve closely spaced levels, but always
 inspect the convergence status before treating an energy as an eigenvalue.
 

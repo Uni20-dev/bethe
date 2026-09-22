@@ -56,6 +56,15 @@ class CitationTests(unittest.TestCase):
                 with self.assertRaises(ValueError):
                     generator.validate(data)
 
+    def test_compound_model_names(self):
+        self.data["tools"][0]["executable"] = "bethe-test-compound-pbc"
+        generator.validate(self.data)
+        for name in ("bethe--pbc", "bethe-test--compound-pbc", "bethe-test_pbc", "bethe-test-pbc/extra"):
+            with self.subTest(name=name):
+                self.data["tools"][0]["executable"] = name
+                with self.assertRaises(ValueError):
+                    generator.validate(self.data)
+
     def test_escaping(self):
         title = 'A "quoted" \\ path with *stars* and [brackets]'
         self.data["references"][0]["title"] = title

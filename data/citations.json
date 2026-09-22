@@ -384,6 +384,17 @@
       ]
     },
     {
+      "id": "essler-de-klerk-2023",
+      "authors": "F. H. L. Essler and A. J. J. M. de Klerk",
+      "title": "Statistics of matrix elements of local operators in integrable models",
+      "publication": "arXiv:2307.12410v1",
+      "year": 2023,
+      "links": [
+        {"label": "arXiv", "url": "https://arxiv.org/abs/2307.12410v1"},
+        {"label": "Equations (HTML)", "url": "https://arxiv.org/html/2307.12410v1"}
+      ]
+    },
+    {
       "id": "yang-yang-1969",
       "authors": "C. N. Yang and C. P. Yang",
       "title": "Thermodynamics of a One-Dimensional System of Bosons with Repulsive Delta-Function Interaction",
@@ -444,6 +455,15 @@
         {"id": "deguchi-yue-1997", "context": "Free-end Hubbard energy and nested reflection equations, Eqs. (2.5)-(2.8), (3.1)-(3.2), with all boundary potentials zero; t=1 and unshifted interaction."},
         {"id": "lieb-mattis-1962", "context": "Spin ordering for the nearest-neighbour open chain: the sector minimum has S=|Sz|. No periodic-shell spin-branch selection is required."},
         {"id": "rylands-2022", "context": "Bipartite particle-hole and Shiba transformations, Sec. II; used for physical-to-auxiliary sector mappings, not quench dynamics."}
+      ]
+    },
+    {
+      "id": "lieb_liniger_pbc",
+      "executable": "bethe-lieb-liniger-pbc",
+      "references": [
+        {"id": "lieb-liniger-1963", "context": "Repulsive Bose gas on a ring, H=-sum d_j^2+2c sum delta, and its ground state; c>0."},
+        {"id": "lieb-1963-excitations", "context": "Excited-state background; we solve finite-volume states in explicit label windows, not a thermodynamic dispersion calculation."},
+        {"id": "essler-de-klerk-2023", "context": "Explicit normalization and finite-ring equations, Eqs. (4), (24)-(27); root-density equation (32)-(33) used for validation, not a thermodynamics API. No matrix elements are implemented."}
       ]
     }
   ]

@@ -115,6 +115,18 @@ The Jacobian, continuation scheme, and symmetry-sector bookkeeping are our
 implementation, tested against independent fermionic exact diagonalization.
 We implement neither boundary fields nor the papers' conformal-dimension analysis.
 
+The repulsive periodic Bose gas follows [lieb-liniger-1963](#lieb-liniger-1963).
+The explicit Hamiltonian, logarithmic equations, label parity, energy and
+momentum were cross-checked against [essler-de-klerk-2023](#essler-de-klerk-2023),
+Eqs. (4), (24)-(27). We set hbar^2/(2m)=1 and retain the paper's coupling 2c.
+Its root-density relation (32)-(33), restricted to a filled symmetric interval,
+provides an independent test-only bulk benchmark. The complementary weak-coupling
+equation, scaled residual, Newton implementation, and finite-window scan are
+our numerical choices; see the [model guide](docs/lieb-liniger.md).
+[lieb-1963-excitations](#lieb-1963-excitations) supplies excitation background,
+not an implemented thermodynamic dispersion mode. No matrix elements or
+finite-temperature thermodynamics from the cited papers are implemented.
+
 <!-- BEGIN GENERATED BIBLIOGRAPHY -->
 
 ## Bibliography
@@ -250,12 +262,20 @@ Phys. Rev. 130, 1605 (1963).
 
 [DOI](<https://doi.org/10.1103/PhysRev.130.1605>).
 
+Relevant tool modes:
+
+- `bethe-lieb-liniger-pbc`: Repulsive Bose gas on a ring, H=-sum d\_j^2+2c sum delta, and its ground state; c\>0.
+
 ### lieb-1963-excitations
 
 Elliott H. Lieb. *Exact Analysis of an Interacting Bose Gas. II. The Excitation Spectrum*.
 Phys. Rev. 130, 1616 (1963).
 
 [DOI](<https://doi.org/10.1103/PhysRev.130.1616>).
+
+Relevant tool modes:
+
+- `bethe-lieb-liniger-pbc`: Excited-state background; we solve finite-volume states in explicit label windows, not a thermodynamic dispersion calculation.
 
 ### gaudin-1971
 
@@ -424,6 +444,17 @@ H. J. de Vega and A. González-Ruiz. *Boundary K-matrices for the XYZ, XXZ and X
 J. Phys. A: Math. Gen. 27, 6129-6138 (1994).
 
 [DOI](<https://doi.org/10.1088/0305-4470/27/18/021>), [arXiv](<https://arxiv.org/abs/hep-th/9306089>).
+
+### essler-de-klerk-2023
+
+F. H. L. Essler and A. J. J. M. de Klerk. *Statistics of matrix elements of local operators in integrable models*.
+arXiv:2307.12410v1 (2023).
+
+[arXiv](<https://arxiv.org/abs/2307.12410v1>), [Equations (HTML)](<https://arxiv.org/html/2307.12410v1>).
+
+Relevant tool modes:
+
+- `bethe-lieb-liniger-pbc`: Explicit normalization and finite-ring equations, Eqs. (4), (24)-(27); root-density equation (32)-(33) used for validation, not a thermodynamics API. No matrix elements are implemented.
 
 ### yang-yang-1969
 

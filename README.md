@@ -4,7 +4,7 @@ C++23 tools for finite-system Bethe ansatz calculations, complementing
 [Uni20](https://github.com/Uni20-dev/uni20) and the
 [Matrix Product Toolkit](https://github.com/mptoolkit/mptoolkit).
 
-High precision is a first-class feature: all finite-chain solvers support
+High precision is a first-class feature: all finite-system solvers support
 **fp64**, **long-double** (platform-dependent extended precision), and optional
 **fp128** (binary128, about 34 significant decimal digits) through Uni20/MPLAPACK.
 Parameters, numerical calculations, excitation gaps, and output retain the
@@ -36,6 +36,9 @@ and `obc` means open boundaries (currently free ends, with no boundary fields).
 - [Free-end Hubbard](docs/hubbard-open.md): `bethe-hubbard-obc` gives ground
   states at every physical filling and spin projection, for either sign of U
   and odd or even lengths, without lattice momentum.
+- [Periodic Lieb–Liniger](docs/lieb-liniger.md): `bethe-lieb-liniger-pbc` gives
+  repulsive continuum-boson ground states, specified Bethe states, and
+  excitation scans within an explicit finite quantum-number window.
 
 The XXX and XXZ models use spin-1/2 operators, J=1, and zero magnetic field.
 Hubbard uses hopping t=1 and the unshifted interaction `U*n_up*n_down`.
@@ -87,6 +90,9 @@ For mobile electrons rather than a spin-only chain, try
 charge momenta and spin rapidities. Use `bethe-hubbard-obc` for free ends;
 see the [periodic](docs/hubbard.md) and [open-chain](docs/hubbard-open.md) guides.
 
+For continuum bosons, try `build/bethe-lieb-liniger-pbc 4 --length 4 --c 1`.
+Here 4 particles occupy a ring of physical length 4; it is not a four-site chain.
+
 Next, distinguish the lowest state in a magnetization sector from a family
 of excited states:
 
@@ -134,6 +140,8 @@ together. Read them in roughly this order, or go straight to your model:
    doping, attractive interactions, symmetry mappings, and weak/strong coupling limits.
 10. [Free-end Hubbard chains](docs/hubbard-open.md) — reflected scattering,
     standing waves, and unrestricted ground-state sectors.
+11. [Periodic Lieb–Liniger gas](docs/lieb-liniger.md) — continuum units,
+    repulsive bosons, weak coupling, and finite excitation windows.
 
 For possible additions, see the [model catalogue and development proposal](docs/models.md):
 known integrable families, literature, implementation restrictions, and suggested priorities.

@@ -142,11 +142,15 @@ inline constexpr std::array<Link, 2> links_36{{
   {"DOI", "https://doi.org/10.1088/0305-4470/27/18/021"},
   {"arXiv", "https://arxiv.org/abs/hep-th/9306089"},
 }};
-inline constexpr std::array<Link, 1> links_37{{
+inline constexpr std::array<Link, 2> links_37{{
+  {"arXiv", "https://arxiv.org/abs/2307.12410v1"},
+  {"Equations (HTML)", "https://arxiv.org/html/2307.12410v1"},
+}};
+inline constexpr std::array<Link, 1> links_38{{
   {"DOI", "https://doi.org/10.1063/1.1664947"},
 }};
 
-inline constexpr std::array<Reference, 38> references{{
+inline constexpr std::array<Reference, 39> references{{
   {"karbach-1998", "Michael Karbach, Kun Hu, and Gerhard Müller", "Introduction to the Bethe ansatz II", "Computers in Physics 12, 565", 1998, links_0},
   {"groha-2017", "Stefan Groha and Fabian H. L. Essler", "Spinon decay in the spin-1/2 Heisenberg chain with weak next nearest neighbour exchange", "J. Phys. A 50, 334002", 2017, links_1},
   {"caux-xxx-spinons", "Jean-Sébastien Caux", "The Bethe Ansatz: XXX spinons", "Online notes", 0, links_2},
@@ -184,7 +188,8 @@ inline constexpr std::array<Reference, 38> references{{
   {"yang-yang-1966", "C. N. Yang and C. P. Yang", "One-Dimensional Chain of Anisotropic Spin-Spin Interactions. I. Proof of Bethe's Hypothesis for Ground State in a Finite System", "Phys. Rev. 150, 321", 1966, links_34},
   {"shastry-sutherland-1990", "B. Sriram Shastry and Bill Sutherland", "Twisted boundary conditions and effective mass in Heisenberg-Ising and Hubbard rings", "Phys. Rev. Lett. 65, 243", 1990, links_35},
   {"de-vega-gonzalez-ruiz-1994", "H. J. de Vega and A. González-Ruiz", "Boundary K-matrices for the XYZ, XXZ and XXX spin chains", "J. Phys. A: Math. Gen. 27, 6129-6138", 1994, links_36},
-  {"yang-yang-1969", "C. N. Yang and C. P. Yang", "Thermodynamics of a One-Dimensional System of Bosons with Repulsive Delta-Function Interaction", "J. Math. Phys. 10, 1115", 1969, links_37},
+  {"essler-de-klerk-2023", "F. H. L. Essler and A. J. J. M. de Klerk", "Statistics of matrix elements of local operators in integrable models", "arXiv:2307.12410v1", 2023, links_37},
+  {"yang-yang-1969", "C. N. Yang and C. P. Yang", "Thermodynamics of a One-Dimensional System of Bosons with Repulsive Delta-Function Interaction", "J. Math. Phys. 10, 1115", 1969, links_38},
 }};
 
 inline constexpr std::array<Use, 4> uses_xxx_pbc{{
@@ -214,8 +219,13 @@ inline constexpr std::array<Use, 3> uses_hubbard_obc{{
   {&references[10], "Spin ordering for the nearest-neighbour open chain: the sector minimum has S=|Sz|. No periodic-shell spin-branch selection is required."},
   {&references[8], "Bipartite particle-hole and Shiba transformations, Sec. II; used for physical-to-auxiliary sector mappings, not quench dynamics."},
 }};
+inline constexpr std::array<Use, 3> uses_lieb_liniger_pbc{{
+  {&references[11], "Repulsive Bose gas on a ring, H=-sum d_j^2+2c sum delta, and its ground state; c>0."},
+  {&references[12], "Excited-state background; we solve finite-volume states in explicit label windows, not a thermodynamic dispersion calculation."},
+  {&references[37], "Explicit normalization and finite-ring equations, Eqs. (4), (24)-(27); root-density equation (32)-(33) used for validation, not a thermodynamics API. No matrix elements are implemented."},
+}};
 
-enum class Tool { xxx_pbc, xxx_obc, xxz_pbc, xxz_obc, hubbard_pbc, hubbard_obc };
+enum class Tool { xxx_pbc, xxx_obc, xxz_pbc, xxz_obc, hubbard_pbc, hubbard_obc, lieb_liniger_pbc };
 
 [[nodiscard]] constexpr std::span<Use const> for_tool(Tool tool)
 {
@@ -227,6 +237,7 @@ enum class Tool { xxx_pbc, xxx_obc, xxz_pbc, xxz_obc, hubbard_pbc, hubbard_obc }
     case Tool::xxz_obc: return uses_xxz_obc;
     case Tool::hubbard_pbc: return uses_hubbard_pbc;
     case Tool::hubbard_obc: return uses_hubbard_obc;
+    case Tool::lieb_liniger_pbc: return uses_lieb_liniger_pbc;
   }
   throw std::invalid_argument("unknown citation tool");
 }
