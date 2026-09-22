@@ -20,6 +20,8 @@ The spin-1 Takhtajan–Babujian chain also has an even-ring singlet solver
 retaining finite-size complex-root deviations.
 Richardson pairing now supplies attractive ground energies in specified
 blocked-level sectors, using regular variables through pair-root collisions.
+The rational central-spin model now has fixed-magnetization ground states
+for distinct nonzero couplings, including exactly zero central field.
 Extending existing models' boundary/state
 coverage remains valuable as well.
 These priorities and difficulty assessments are our engineering judgments,
@@ -73,6 +75,7 @@ paper's correlation functions, thermodynamics, or full spectrum.
 | `tj-susy` | Projected t–J electrons, J=2t | Implemented (limited): [PBC](tj.md), t=1, doped odd N_up and N_down on either length parity; every no-hole and fully polarized sector | Other doped shell branches, excitations, open boundaries |
 | `spin-s-tb` | Integrable spin-1 bilinear–biquadratic chain | Implemented (limited): [even PBC](takhtajan-babujian.md), singlet ground state of H=sum[S.S-(S.S)^2], with finite two-string deviations | Odd lengths, sectors, excitations, higher spins, open boundaries |
 | `richardson` | Reduced BCS pairing | Implemented (limited): [attractive pairing](richardson.md), distinct doublet levels, fixed pair count and blocked levels, ground energy through root collisions | Repeated levels/higher degeneracies, excitations, pair-root output, repulsive coupling |
+| `gaudin-magnet` | Rational spin-1/2 central spin | Implemented (limited): [sector minima](central-spin.md), distinct nonzero bath couplings of either sign, central field of either sign or zero | Repeated/zero couplings, higher local spins, excitations, general Gaudin charges |
 
 Analytic thermodynamic XXX/XXZ spinon dispersions are separate existing
 facilities; they do not constitute a general thermodynamic Bethe ansatz
@@ -94,7 +97,7 @@ integrable boundaries in the literature.
 | `tj-susy` | Projected t–J chain at J=2t, PBC, selected ground-state sectors | [Implemented (limited)](tj.md) | First slice complete |
 | `spin-s-tb` | Spin-1 Takhtajan–Babujian chain, PBC ground state with finite-size string deviations | [Implemented (limited)](takhtajan-babujian.md) | First slice complete |
 | `richardson` | Reduced BCS pairing Hamiltonian, specified levels and pair number | [Implemented (limited)](richardson.md) | First slice complete |
-| `gaudin-magnet` | Rational Gaudin/central-spin spectra at specified couplings and magnetization | Watch | Medium–large |
+| `gaudin-magnet` | Rational spin-1/2 central-spin sector ground energies at specified couplings and field | [Implemented (limited)](central-spin.md) | First slice complete |
 | `multicomponent-gas` | SU(kappa) fermions or the equal-coupling Bose–Fermi mixture, PBC | Watch | Medium–large |
 | `integrable-ladder` | A specified SU(4)-type ladder with the required four-spin interaction, PBC | Watch | Medium after SU(n) |
 | `q-boson` | Integrable q-boson hopping/phase model, PBC at fixed particle number | Watch | Medium |
@@ -307,6 +310,33 @@ reported as energies at the requested target.
 the derivative equations needed for repeated levels/higher degeneracies.
 PBC/OBC and lattice momentum are not appropriate interface concepts here.
 
+### `gaudin-magnet`: a central-spin realization
+
+Implemented in [central_spin.hpp](../include/bethe/central_spin.hpp) and
+`bethe-central-spin`: `H=B*S0^z+sum A_j*S0.Sj`, all spins 1/2, distinct
+nonzero A_j of either sign, fixed total Sz, and any finite central field
+including B=0. There are no bath fields/interactions. See the
+[guide](central-spin.md) for the rational Bethe equations, normalization
+and compactified eigenvalue-variable continuation.
+
+This reuses the regularized-equation and native QR machinery developed for
+Richardson, but uses a central-spin-specific high-field ground seed.
+The connected star's sign-gauged exchange matrix gives a noncrossing
+sector-ground branch. Tests compare all small sectors with independent
+spin-basis diagonalization, check the two-spin formula and original
+one- and two-root rational equations, and cover zero-field multiplets, clustered
+couplings, larger baths and all three scalar types. Incomplete solves
+report only a reached-field energy; the infinite-field seed has none.
+The implementation checkpoint passed 747 tests with GCC 13 and fp128,
+511 with Clang 20 Release without MPLAPACK, and the new CLI/citation checks
+in an apps-only build using the published Uni20 pin. An additional 180
+fixed-seed random small-sector checks agreed with independent diagonalization.
+
+**Next slice:** repeated couplings/grouped spins, decoupled zero-coupling
+bath spins, excited high-field seeds or observable matrix elements.
+This does not implement arbitrary Gaudin Hamiltonians or central-spin
+dynamics from the reference paper.
+
 ## Extensions of current models, rather than new solvers
 
 - **Wider XXZ anisotropy:** the [periodic ground-state/sector path](xxz.md#easy-axis-ground-states-delta1)
@@ -402,7 +432,7 @@ initial deliverable, rather than an unqualified claim of model support.
 
 | ID | Literature and integrable restriction | Useful first deliverable / main obstacle |
 | --- | --- | --- |
-| `gaudin-magnet` | Rational Gaudin magnets; a concrete central-spin realization is treated by [Faribault–Schuricht](../CITATIONS.md#faribault-schuricht-2013) | Small-system energies in fixed magnetization sectors; share regularization ideas with Richardson, but specify the exact integrable coupling/field family, not arbitrary spin-bath interactions |
+| `gaudin-magnet` | Rational Gaudin magnets; a concrete central-spin realization is treated by [Faribault–Schuricht](../CITATIONS.md#faribault-schuricht-2013) | [Central-spin sector ground states implemented](central-spin.md); general Gaudin charges, repeated couplings and higher spins remain open, not arbitrary spin-bath interactions |
 | `multicomponent-gas` | Equal-mass SU(kappa) delta fermions, [Lee et al.](../CITATIONS.md#lee-2011); equal-mass Bose–Fermi mixture with equal repulsive Bose–Bose/Bose–Fermi couplings, [Imambekov–Demler](../CITATIONS.md#imambekov-demler-2006) | PBC repulsive ground energies at fixed component counts; more nesting/statistics bookkeeping. A trapped local-density calculation would be an approximation, not an exact trapped BA solution |
 | `integrable-ladder` | [Wang's ladder](../CITATIONS.md#wang-1999), with its required exchange and four-spin terms | Ground energies and rung-sector competition; an application of higher-rank nesting. Not the ordinary two-leg Heisenberg ladder at generic couplings |
 | `q-boson` | Deformed boson hopping and its phase-model limit, [Bogoliubov–Izergin–Kitanine](../CITATIONS.md#bogoliubov-1997) | PBC finite-N energies, checked in a bosonic occupation basis; define the deformed local algebra and coupling limits. Not the standard Bose–Hubbard chain |

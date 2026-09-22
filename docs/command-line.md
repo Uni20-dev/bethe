@@ -46,6 +46,11 @@ For reduced BCS pairing, [`bethe-richardson`](richardson.md) requires
 indices. Levels are single-particle energies; g>=0 is attractive. This is
 not a chain, so no boundary suffix or lattice momentum applies. Use
 `--variables` for regularized eigenvalue variables, not pair rapidities.
+For the rational central-spin model, [`bethe-central-spin`](central-spin.md)
+requires `--couplings A1,A2,... --field B --sz SZ`. All spins are 1/2 and Sz
+includes the central spin. Distinct nonzero couplings and the field can
+have either sign; exactly zero field is supported. This nonspatial model
+also has no boundary suffix; `--variables` prints regularized variables.
 
 Each program's `--help` (and no-argument usage) includes relevant literature
 references with links and a note on the modes they support. Normal numerical

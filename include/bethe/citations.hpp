@@ -304,13 +304,17 @@ inline constexpr std::array<Use, 2> uses_richardson{{
   {&references[24], "Reduced BCS pairing model and blocked-level sectors. We support attractive uniform pairing with distinct doubly degenerate single-particle levels, not arbitrary degeneracies or the full Gaudin family."},
   {&references[25], "Eigenvalue variables (7), quadratic equations in Sec. II, and Richardson equations (32). We use e_i=2*epsilon_i and y_i=g*Lambda(e_i), continue the filled lowest levels from g=0, and include diagonal pair scattering. Energy is sum e_i*y_i-g*M*(L-M+1), plus blocked single-particle energies. No pair-root reconstruction or form factors are implemented."},
 }};
+inline constexpr std::array<Use, 2> uses_central_spin{{
+  {&references[26], "Spin-half central-spin Hamiltonian and all-down-reference Bethe equations, Eqs. (2)-(6), with no bath field: H=B*S0^z+sum A_j*S0.Sj. Only fixed-magnetization ground energies for distinct nonzero couplings are implemented; no dynamics or form factors."},
+  {&references[25], "Quadratic eigenvalue-variable method and central-spin realization, Secs. II and IV.3. We compactify the inverse-field continuation to reach B=0; the seed minimizes the central-spin Hamiltonian, not the Richardson energy."},
+}};
 inline constexpr std::array<Use, 3> uses_gaudin_yang_pbc{{
   {&references[17], "Original spin-1/2 continuum fermion solution; we implement repulsive periodic ground states in selected sectors, not attraction."},
   {&references[18], "Original multicomponent delta-gas solution; our implementation has two spin components only."},
   {&references[44], "Hamiltonian and periodic fermion equations (1), (2), (7), (8), (25); even N, odd minority population as in Sec. 5. Weak and strong limits (12), (15)-(16) provide checks. Hard walls, attraction and excitations are not implemented."},
 }};
 
-enum class Tool { xxx_pbc, xxx_obc, xxz_pbc, xxz_obc, hubbard_pbc, hubbard_obc, lieb_liniger_pbc, su3_pbc, tj_pbc, tb_pbc, richardson, gaudin_yang_pbc };
+enum class Tool { xxx_pbc, xxx_obc, xxz_pbc, xxz_obc, hubbard_pbc, hubbard_obc, lieb_liniger_pbc, su3_pbc, tj_pbc, tb_pbc, richardson, central_spin, gaudin_yang_pbc };
 
 [[nodiscard]] constexpr std::span<Use const> for_tool(Tool tool)
 {
@@ -327,6 +331,7 @@ enum class Tool { xxx_pbc, xxx_obc, xxz_pbc, xxz_obc, hubbard_pbc, hubbard_obc, 
     case Tool::tj_pbc: return uses_tj_pbc;
     case Tool::tb_pbc: return uses_tb_pbc;
     case Tool::richardson: return uses_richardson;
+    case Tool::central_spin: return uses_central_spin;
     case Tool::gaudin_yang_pbc: return uses_gaudin_yang_pbc;
   }
   throw std::invalid_argument("unknown citation tool");

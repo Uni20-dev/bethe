@@ -635,6 +635,14 @@
       ]
     },
     {
+      "id": "central_spin",
+      "executable": "bethe-central-spin",
+      "references": [
+        {"id": "faribault-schuricht-2013", "context": "Spin-half central-spin Hamiltonian and all-down-reference Bethe equations, Eqs. (2)-(6), with no bath field: H=B*S0^z+sum A_j*S0.Sj. Only fixed-magnetization ground energies for distinct nonzero couplings are implemented; no dynamics or form factors."},
+        {"id": "faribault-2011", "context": "Quadratic eigenvalue-variable method and central-spin realization, Secs. II and IV.3. We compactify the inverse-field continuation to reach B=0; the seed minimizes the central-spin Hamiltonian, not the Richardson energy."}
+      ]
+    },
+    {
       "id": "gaudin_yang_pbc",
       "executable": "bethe-gaudin-yang-pbc",
       "references": [

@@ -87,6 +87,8 @@ elseif(TOOL MATCHES "gaudin-yang")
   set(args 6 --length 6 --c 1)
 elseif(TOOL STREQUAL "bethe-richardson")
   set(args --levels 0,1,2,3 --pairs 2 --g 1)
+elseif(TOOL STREQUAL "bethe-central-spin")
+  set(args --couplings 1,0.7,0.3 --field 1 --sz 0)
 endif()
 execute_process(COMMAND "${PROGRAM}" ${args}
   RESULT_VARIABLE status OUTPUT_VARIABLE output ERROR_VARIABLE error TIMEOUT 10)

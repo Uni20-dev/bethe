@@ -473,6 +473,7 @@ Phys. Rev. B 83, 235124 (2011).
 Relevant tool modes:
 
 - `bethe-richardson`: Eigenvalue variables (7), quadratic equations in Sec. II, and Richardson equations (32). We use e\_i=2\*epsilon\_i and y\_i=g\*Lambda(e\_i), continue the filled lowest levels from g=0, and include diagonal pair scattering. Energy is sum e\_i\*y\_i-g\*M\*(L-M+1), plus blocked single-particle energies. No pair-root reconstruction or form factors are implemented.
+- `bethe-central-spin`: Quadratic eigenvalue-variable method and central-spin realization, Secs. II and IV.3. We compactify the inverse-field continuation to reach B=0; the seed minimizes the central-spin Hamiltonian, not the Richardson energy.
 
 ### faribault-schuricht-2013
 
@@ -480,6 +481,10 @@ Alexandre Faribault and Dirk Schuricht. *Spin decoherence due to a randomly fluc
 Phys. Rev. B 88, 085323 (2013).
 
 [DOI](<https://doi.org/10.1103/PhysRevB.88.085323>), [arXiv](<https://arxiv.org/abs/1306.2541>).
+
+Relevant tool modes:
+
+- `bethe-central-spin`: Spin-half central-spin Hamiltonian and all-down-reference Bethe equations, Eqs. (2)-(6), with no bath field: H=B\*S0^z+sum A\_j\*S0.Sj. Only fixed-magnetization ground energies for distinct nonzero couplings are implemented; no dynamics or form factors.
 
 ### lee-2011
 

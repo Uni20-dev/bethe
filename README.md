@@ -57,6 +57,9 @@ Nonspatial models such as Richardson pairing omit the boundary suffix.
 - [Richardson pairing](docs/richardson.md): `bethe-richardson` gives attractive
   reduced-BCS ground energies for distinct levels and a specified pair/blocked
   sector, using regularized variables through pair-root collisions.
+- [Central spin](docs/central-spin.md): `bethe-central-spin` gives fixed-Sz
+  ground energies for distinct nonzero spin-1/2 bath couplings of either
+  sign, with a central field of either sign or exactly zero.
 
 The XXX and XXZ models use spin-1/2 operators, J=1, and zero magnetic field.
 Hubbard uses hopping t=1 and the unshifted interaction `U*n_up*n_down`.
@@ -182,6 +185,8 @@ together. Read them in roughly this order, or go straight to your model:
     two-strings, finite-size deviations, and bilinear–biquadratic normalization.
 16. [Richardson pairing](docs/richardson.md) — single-particle levels, blocking,
     eigenvalue variables and ground-state continuation through root collisions.
+17. [Rational central spin](docs/central-spin.md) — specified bath couplings,
+    magnetization sectors, and field continuation including exactly zero field.
 
 For possible additions, see the [model catalogue and development proposal](docs/models.md):
 known integrable families, literature, implementation restrictions, and suggested priorities.
