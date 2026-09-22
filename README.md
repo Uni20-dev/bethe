@@ -71,6 +71,9 @@ Thermodynamic dispersion tools use `bethe-<model>-dispersion`.
 - [Integrable spin ladder](docs/ladder.md): `bethe-ladder-pbc` gives periodic
   zero-field ground energies and singlet-count sector minima, with the
   required four-spin coupling and either sign of the rung exchange.
+- [Haldane–Shastry ring](docs/haldane-shastry.md): `bethe-haldane-shastry-pbc`
+  gives exact ground/spin-sector energies and motif spectra with Yangian
+  multiplicities, for even and odd inverse-chord-square spin-1/2 rings.
 
 The XXX and XXZ models use spin-1/2 operators, J=1, and zero magnetic field.
 Hubbard uses hopping t=1. Finite-system tools use the unshifted interaction

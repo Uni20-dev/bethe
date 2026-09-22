@@ -161,68 +161,71 @@ inline constexpr std::array<Link, 1> links_39{{
   {"DOI", "https://doi.org/10.1103/PhysRevLett.60.639"},
 }};
 inline constexpr std::array<Link, 1> links_40{{
-  {"DOI", "https://doi.org/10.1103/PhysRevA.4.2019"},
+  {"arXiv", "https://arxiv.org/abs/2606.20168v2"},
 }};
 inline constexpr std::array<Link, 1> links_41{{
-  {"DOI", "https://doi.org/10.1103/PhysRevLett.45.379"},
+  {"DOI", "https://doi.org/10.1103/PhysRevA.4.2019"},
 }};
 inline constexpr std::array<Link, 1> links_42{{
-  {"DOI", "https://doi.org/10.1103/PhysRevLett.69.2313"},
+  {"DOI", "https://doi.org/10.1103/PhysRevLett.45.379"},
 }};
 inline constexpr std::array<Link, 1> links_43{{
-  {"DOI", "https://doi.org/10.1103/PhysRevA.46.844"},
+  {"DOI", "https://doi.org/10.1103/PhysRevLett.69.2313"},
 }};
 inline constexpr std::array<Link, 1> links_44{{
-  {"DOI", "https://doi.org/10.1103/PhysRev.150.321"},
+  {"DOI", "https://doi.org/10.1103/PhysRevA.46.844"},
 }};
 inline constexpr std::array<Link, 1> links_45{{
+  {"DOI", "https://doi.org/10.1103/PhysRev.150.321"},
+}};
+inline constexpr std::array<Link, 1> links_46{{
   {"DOI", "https://doi.org/10.1103/PhysRevLett.65.243"},
 }};
-inline constexpr std::array<Link, 2> links_46{{
+inline constexpr std::array<Link, 2> links_47{{
   {"DOI", "https://doi.org/10.1088/0305-4470/27/18/021"},
   {"arXiv", "https://arxiv.org/abs/hep-th/9306089"},
 }};
-inline constexpr std::array<Link, 2> links_47{{
+inline constexpr std::array<Link, 2> links_48{{
   {"arXiv", "https://arxiv.org/abs/2307.12410v1"},
   {"Equations (HTML)", "https://arxiv.org/html/2307.12410v1"},
 }};
-inline constexpr std::array<Link, 1> links_48{{
+inline constexpr std::array<Link, 1> links_49{{
   {"DOI", "https://doi.org/10.1063/1.1664947"},
 }};
-inline constexpr std::array<Link, 2> links_49{{
+inline constexpr std::array<Link, 2> links_50{{
   {"DOI", "https://doi.org/10.1016/S0550-3213(98)00239-9"},
   {"arXiv", "https://arxiv.org/abs/hep-th/9803118"},
 }};
-inline constexpr std::array<Link, 2> links_50{{
+inline constexpr std::array<Link, 2> links_51{{
   {"DOI", "https://doi.org/10.1088/0305-4470/39/5/005"},
   {"arXiv v2", "https://arxiv.org/abs/cond-mat/0511694v2"},
 }};
-inline constexpr std::array<Link, 2> links_51{{
+inline constexpr std::array<Link, 2> links_52{{
   {"DOI", "https://doi.org/10.21468/SciPostPhys.7.2.023"},
   {"arXiv v4", "https://arxiv.org/abs/1901.10932v4"},
 }};
-inline constexpr std::array<Link, 2> links_52{{
+inline constexpr std::array<Link, 2> links_53{{
   {"DOI", "https://doi.org/10.1088/1742-5468/2015/05/P05037"},
   {"arXiv v2", "https://arxiv.org/abs/1412.8217v2"},
 }};
-inline constexpr std::array<Link, 2> links_53{{
+inline constexpr std::array<Link, 2> links_54{{
   {"General M", "https://integrability.org/c_h_s_m.html"},
   {"Two-magnon scattering", "https://integrability.org/c_h_s_2.html"},
 }};
-inline constexpr std::array<Link, 3> links_54{{
+inline constexpr std::array<Link, 3> links_55{{
   {"arXiv", "https://arxiv.org/abs/0911.1881"},
   {"HTML", "https://arxiv.org/html/0911.1881v1"},
   {"Original 1982 paper", "https://doi.org/10.1007/BF01212176"},
 }};
-inline constexpr std::array<Link, 1> links_55{{
+inline constexpr std::array<Link, 1> links_56{{
   {"Author manuscript", "https://web.dm.unipi.it/robol/assets/pdf/secular-paper.pdf"},
 }};
-inline constexpr std::array<Link, 2> links_56{{
+inline constexpr std::array<Link, 2> links_57{{
   {"DOI", "https://doi.org/10.1553/etna_vol55s401"},
   {"Open-access article", "https://etna.ricam.oeaw.ac.at/vol.55.2022/pp401-423.dir/pp401-423.pdf"},
 }};
 
-inline constexpr std::array<Reference, 57> references{{
+inline constexpr std::array<Reference, 58> references{{
   {"essler-korepin-1999", "Fabian H. L. Essler and Vladimir E. Korepin", "Form factors in the half-filled Hubbard model", "Phys. Rev. B 59, 1734-1738", 1999, links_0},
   {"melzer-1995", "Ezer Melzer", "On the scaling limit of the 1D Hubbard model at half filling", "Nucl. Phys. B 443, 553-564", 1995, links_1},
   {"essler-2010", "Fabian H. L. Essler", "Threshold singularities in the one-dimensional Hubbard model", "Phys. Rev. B 81, 205120", 2010, links_2},
@@ -263,23 +266,24 @@ inline constexpr std::array<Reference, 57> references{{
   {"baxter-1973", "R. J. Baxter", "Eight-vertex model in lattice statistics and one-dimensional anisotropic Heisenberg chain. III. Eigenvectors of the transfer matrix and Hamiltonian", "Ann. Phys. 76, 48-71", 1973, links_37},
   {"haldane-1988", "F. D. M. Haldane", "Exact Jastrow-Gutzwiller resonating-valence-bond ground state of the spin-1/2 antiferromagnetic Heisenberg chain with 1/r^2 exchange", "Phys. Rev. Lett. 60, 635", 1988, links_38},
   {"shastry-1988", "B. Sriram Shastry", "Exact solution of an S=1/2 Heisenberg antiferromagnetic chain with long-ranged interactions", "Phys. Rev. Lett. 60, 639", 1988, links_39},
-  {"sutherland-1971", "Bill Sutherland", "Exact Results for a Quantum Many-Body Problem in One Dimension", "Phys. Rev. A 4, 2019", 1971, links_40},
-  {"andrei-1980", "N. Andrei", "Diagonalization of the Kondo Hamiltonian", "Phys. Rev. Lett. 45, 379", 1980, links_41},
-  {"destri-de-vega-1992", "C. Destri and H. J. de Vega", "New thermodynamic Bethe ansatz equations without strings", "Phys. Rev. Lett. 69, 2313-2317", 1992, links_42},
-  {"gwa-spohn-1992", "Leh-Hun Gwa and Herbert Spohn", "Bethe solution for the dynamical-scaling exponent of the noisy Burgers equation", "Phys. Rev. A 46, 844", 1992, links_43},
-  {"yang-yang-1966", "C. N. Yang and C. P. Yang", "One-Dimensional Chain of Anisotropic Spin-Spin Interactions. I. Proof of Bethe's Hypothesis for Ground State in a Finite System", "Phys. Rev. 150, 321", 1966, links_44},
-  {"shastry-sutherland-1990", "B. Sriram Shastry and Bill Sutherland", "Twisted boundary conditions and effective mass in Heisenberg-Ising and Hubbard rings", "Phys. Rev. Lett. 65, 243", 1990, links_45},
-  {"de-vega-gonzalez-ruiz-1994", "H. J. de Vega and A. González-Ruiz", "Boundary K-matrices for the XYZ, XXZ and XXX spin chains", "J. Phys. A: Math. Gen. 27, 6129-6138", 1994, links_46},
-  {"essler-de-klerk-2023", "F. H. L. Essler and A. J. J. M. de Klerk", "Statistics of matrix elements of local operators in integrable models", "arXiv:2307.12410v1", 2023, links_47},
-  {"yang-yang-1969", "C. N. Yang and C. P. Yang", "Thermodynamics of a One-Dimensional System of Bosons with Repulsive Delta-Function Interaction", "J. Math. Phys. 10, 1115", 1969, links_48},
-  {"doikou-nepomechie-1998", "Anastasia Doikou and Rafael I. Nepomechie", "Bulk and Boundary S Matrices for the SU(N) Chain", "Nucl. Phys. B 521, 547-572", 1998, links_49},
-  {"oelkers-2006", "N. Oelkers, M. T. Batchelor, M. Bortz, and X.-W. Guan", "Bethe Ansatz study of one-dimensional Bose and Fermi gases with periodic and hard wall boundary conditions", "J. Phys. A 39, 1073-1098", 2006, links_50},
-  {"grijalva-2019", "Sebastian Grijalva, Jacopo De Nardis, and Veronique Terras", "Open XXZ chain and boundary modes at zero temperature", "SciPost Phys. 7, 023", 2019, links_51},
-  {"dugave-2015", "M. Dugave, F. Göhmann, K. K. Kozlowski, and J. Suzuki", "On form-factor expansions for the XXZ chain in the massive regime", "J. Stat. Mech. (2015) P05037", 2015, links_52},
-  {"caux-xxz-coordinate", "Jean-Sébastien Caux", "The Bethe Ansatz: coordinate wavefunctions and periodic XXZ equations", "Online notes", 0, links_53},
-  {"korepin-2009", "Vladimir E. Korepin", "Norm of Bethe Wave Function as a Determinant", "arXiv:0911.1881 (historical account of the 1982 norm formula)", 2009, links_54},
-  {"bini-robol-2013", "Dario A. Bini and Leonardo Robol", "Solving secular and polynomial equations: a multiprecision algorithm", "Author manuscript, May 10, 2013", 2013, links_55},
-  {"cameron-graillat-2022", "Thomas R. Cameron and Stef Graillat", "On a compensated Ehrlich-Aberth method for the accurate computation of all polynomial roots", "Electronic Transactions on Numerical Analysis 55, 401-423", 2022, links_56},
+  {"jiang-lamers-miao-2026", "Yunfeng Jiang, Jules Lamers, and Yuan Miao", "Norms, overlaps and Yangian descendants for the Haldane-Shastry spin chain", "arXiv:2606.20168v2", 2026, links_40},
+  {"sutherland-1971", "Bill Sutherland", "Exact Results for a Quantum Many-Body Problem in One Dimension", "Phys. Rev. A 4, 2019", 1971, links_41},
+  {"andrei-1980", "N. Andrei", "Diagonalization of the Kondo Hamiltonian", "Phys. Rev. Lett. 45, 379", 1980, links_42},
+  {"destri-de-vega-1992", "C. Destri and H. J. de Vega", "New thermodynamic Bethe ansatz equations without strings", "Phys. Rev. Lett. 69, 2313-2317", 1992, links_43},
+  {"gwa-spohn-1992", "Leh-Hun Gwa and Herbert Spohn", "Bethe solution for the dynamical-scaling exponent of the noisy Burgers equation", "Phys. Rev. A 46, 844", 1992, links_44},
+  {"yang-yang-1966", "C. N. Yang and C. P. Yang", "One-Dimensional Chain of Anisotropic Spin-Spin Interactions. I. Proof of Bethe's Hypothesis for Ground State in a Finite System", "Phys. Rev. 150, 321", 1966, links_45},
+  {"shastry-sutherland-1990", "B. Sriram Shastry and Bill Sutherland", "Twisted boundary conditions and effective mass in Heisenberg-Ising and Hubbard rings", "Phys. Rev. Lett. 65, 243", 1990, links_46},
+  {"de-vega-gonzalez-ruiz-1994", "H. J. de Vega and A. González-Ruiz", "Boundary K-matrices for the XYZ, XXZ and XXX spin chains", "J. Phys. A: Math. Gen. 27, 6129-6138", 1994, links_47},
+  {"essler-de-klerk-2023", "F. H. L. Essler and A. J. J. M. de Klerk", "Statistics of matrix elements of local operators in integrable models", "arXiv:2307.12410v1", 2023, links_48},
+  {"yang-yang-1969", "C. N. Yang and C. P. Yang", "Thermodynamics of a One-Dimensional System of Bosons with Repulsive Delta-Function Interaction", "J. Math. Phys. 10, 1115", 1969, links_49},
+  {"doikou-nepomechie-1998", "Anastasia Doikou and Rafael I. Nepomechie", "Bulk and Boundary S Matrices for the SU(N) Chain", "Nucl. Phys. B 521, 547-572", 1998, links_50},
+  {"oelkers-2006", "N. Oelkers, M. T. Batchelor, M. Bortz, and X.-W. Guan", "Bethe Ansatz study of one-dimensional Bose and Fermi gases with periodic and hard wall boundary conditions", "J. Phys. A 39, 1073-1098", 2006, links_51},
+  {"grijalva-2019", "Sebastian Grijalva, Jacopo De Nardis, and Veronique Terras", "Open XXZ chain and boundary modes at zero temperature", "SciPost Phys. 7, 023", 2019, links_52},
+  {"dugave-2015", "M. Dugave, F. Göhmann, K. K. Kozlowski, and J. Suzuki", "On form-factor expansions for the XXZ chain in the massive regime", "J. Stat. Mech. (2015) P05037", 2015, links_53},
+  {"caux-xxz-coordinate", "Jean-Sébastien Caux", "The Bethe Ansatz: coordinate wavefunctions and periodic XXZ equations", "Online notes", 0, links_54},
+  {"korepin-2009", "Vladimir E. Korepin", "Norm of Bethe Wave Function as a Determinant", "arXiv:0911.1881 (historical account of the 1982 norm formula)", 2009, links_55},
+  {"bini-robol-2013", "Dario A. Bini and Leonardo Robol", "Solving secular and polynomial equations: a multiprecision algorithm", "Author manuscript, May 10, 2013", 2013, links_56},
+  {"cameron-graillat-2022", "Thomas R. Cameron and Stef Graillat", "On a compensated Ehrlich-Aberth method for the accurate computation of all polynomial roots", "Electronic Transactions on Numerical Analysis 55, 401-423", 2022, links_57},
 }};
 
 inline constexpr std::array<Use, 4> uses_xxx_pbc{{
@@ -295,13 +299,13 @@ inline constexpr std::array<Use, 2> uses_xxx_obc{{
 inline constexpr std::array<Use, 5> uses_xxz_pbc{{
   {&references[10], "Massless periodic XXZ equations, energy, and momentum, Eqs. (1), (3)-(5); our energy includes the N*Delta/4 shift."},
   {&references[13], "Even-ring negative-anisotropy sector ground states: Eqs. (0.4), (0.7), with Pauli exchange divided by four. We use rank-subtracted equations scaled near Delta=-1; the reference explicitly assumes even length and does not justify odd-ring ground-state selection."},
-  {&references[52], "Massive periodic XXZ Hamiltonian and trigonometric Bethe equations, Eqs. (1.1)-(1.2), with zero twist and field; Pauli exchange is divided by four. Used for Delta>1 sector ground states, not form factors, strings or excitations."},
+  {&references[53], "Massive periodic XXZ Hamiltonian and trigonometric Bethe equations, Eqs. (1.1)-(1.2), with zero twist and field; Pauli exchange is divided by four. Used for Delta>1 sector ground states, not form factors, strings or excitations."},
   {&references[4], "XXX limit at Delta=1 and the conventional real-root quantum-number window."},
   {&references[9], "Background for the XXX window used to restrict the XXZ scan; not a complete XXZ state classification."},
 }};
 inline constexpr std::array<Use, 2> uses_xxz_obc{{
   {&references[8], "Free-end XXZ equations and boundary reflection phase, Eqs. (11)-(12); our Hamiltonian is divided by four and shifted. Negative-Delta ground states use an algebraically rank-subtracted, rescaled form of these equations."},
-  {&references[51], "Massive open XXZ boundary root and finite-size deviation, Sec. 4.3.2, specialized to zero boundary fields; used for Delta>1 ground states, not boundary correlations or excitation scans."},
+  {&references[52], "Massive open XXZ boundary root and finite-size deviation, Sec. 4.3.2, specialized to zero boundary fields; used for Delta>1 ground states, not boundary correlations or excitation scans."},
 }};
 inline constexpr std::array<Use, 4> uses_hubbard_dispersion{{
   {&references[0], "Half-filled spinon and holon dispersions, Eqs. (4)-(5), with our U equal to four times the paper's U; no form factors or spectral weights are implemented."},
@@ -321,11 +325,11 @@ inline constexpr std::array<Use, 3> uses_hubbard_obc{{
 inline constexpr std::array<Use, 3> uses_lieb_liniger_pbc{{
   {&references[18], "Repulsive Bose gas on a ring, H=-sum d_j^2+2c sum delta, and its ground state; c>0."},
   {&references[19], "Excited-state background; we solve finite-volume states in explicit label windows, not a thermodynamic dispersion calculation."},
-  {&references[47], "Explicit normalization and finite-ring equations, Eqs. (4), (24)-(27); root-density equation (32)-(33) used for validation, not a thermodynamics API. No matrix elements are implemented."},
+  {&references[48], "Explicit normalization and finite-ring equations, Eqs. (4), (24)-(27); root-density equation (32)-(33) used for validation, not a thermodynamics API. No matrix elements are implemented."},
 }};
 inline constexpr std::array<Use, 2> uses_su3_pbc{{
   {&references[24], "Original multicomponent permutation-chain solution; the implementation selects only the fundamental SU(3) periodic balanced ground state."},
-  {&references[49], "Nested equations and energy, Eqs. (2.17)-(2.19), logarithmic labels (2.24)-(2.29), and the filled-sea singlet in Sec. 2.3. Our H=sum P gives E=2*E_paper+L. No strings, S matrices or boundary fields are implemented."},
+  {&references[50], "Nested equations and energy, Eqs. (2.17)-(2.19), logarithmic labels (2.24)-(2.29), and the filled-sea singlet in Sec. 2.3. Our H=sum P gives E=2*E_paper+L. No strings, S matrices or boundary fields are implemented."},
 }};
 inline constexpr std::array<Use, 2> uses_tj_pbc{{
   {&references[25], "Projected t-J Hamiltonian (1.3)-(1.5), Sutherland BFF equations (3.73), and energy (3.75). We remove the shift 2*N_e-L: E=2*N_h-sum 1/(lambda^2+1/4). Doped mixed-spin coverage is restricted to odd N_up and N_down; J=2t=2."},
@@ -351,13 +355,18 @@ inline constexpr std::array<Use, 2> uses_ladder_pbc{{
   {&references[34], "Permutation-form ladder Hamiltonian (2), rung basis (3), chemical-potential form (4), and three nested rational equations (5). We use spin-1/2 operators, leg coefficient 1, four-spin coefficient 4, and J_r=2*J in (2)/(4), restoring E=E_perm-L/4+J_r*(L/4-N_s). Only zero-field periodic ground states and singlet-count sector minima are implemented."},
   {&references[35], "SU(n) multiplets, Young diagrams and weight spaces. The periodic energy-ordering theorem has a row-parity restriction; we do not assume each population's own highest weight is lowest. Compatible dominant multiplets and displaced packed real seas are compared, not the full excited-state spectrum."},
 }};
+inline constexpr std::array<Use, 3> uses_haldane_shastry_pbc{{
+  {&references[38], "Original periodic spin-1/2 inverse-square chain; we use H=(pi/N)^2 sum_{i<j} S_i.S_j/sin^2(pi*(i-j)/N), J=1."},
+  {&references[39], "Independent exact solution of the long-range antiferromagnet; finite even and odd rings, not nearest-neighbor XXX."},
+  {&references[40], "Motif spectral rules and Yangian multiplicities, Secs. 2.2-2.3. Convert their H=sum(1-P)/(4*sin^2) by H_ours=E_ferro-2*(pi/N)^2*H_theirs. No wavefunctions, norms or overlaps are implemented."},
+}};
 inline constexpr std::array<Use, 3> uses_gaudin_yang_pbc{{
   {&references[21], "Original spin-1/2 continuum fermion solution; we implement repulsive periodic ground states in selected sectors, not attraction."},
   {&references[22], "Original multicomponent delta-gas solution; our implementation has two spin components only."},
-  {&references[50], "Hamiltonian and periodic fermion equations (1), (2), (7), (8), (25); even N, odd minority population as in Sec. 5. Weak and strong limits (12), (15)-(16) provide checks. Hard walls, attraction and excitations are not implemented."},
+  {&references[51], "Hamiltonian and periodic fermion equations (1), (2), (7), (8), (25); even N, odd minority population as in Sec. 5. Weak and strong limits (12), (15)-(16) provide checks. Hard walls, attraction and excitations are not implemented."},
 }};
 
-enum class Tool { xxx_pbc, xxx_obc, xxz_pbc, xxz_obc, hubbard_dispersion, hubbard_pbc, hubbard_obc, lieb_liniger_pbc, su3_pbc, tj_pbc, tb_pbc, richardson, central_spin, sun_fermions_pbc, ladder_pbc, gaudin_yang_pbc };
+enum class Tool { xxx_pbc, xxx_obc, xxz_pbc, xxz_obc, hubbard_dispersion, hubbard_pbc, hubbard_obc, lieb_liniger_pbc, su3_pbc, tj_pbc, tb_pbc, richardson, central_spin, sun_fermions_pbc, ladder_pbc, haldane_shastry_pbc, gaudin_yang_pbc };
 
 [[nodiscard]] constexpr std::span<Use const> for_tool(Tool tool)
 {
@@ -378,6 +387,7 @@ enum class Tool { xxx_pbc, xxx_obc, xxz_pbc, xxz_obc, hubbard_dispersion, hubbar
     case Tool::central_spin: return uses_central_spin;
     case Tool::sun_fermions_pbc: return uses_sun_fermions_pbc;
     case Tool::ladder_pbc: return uses_ladder_pbc;
+    case Tool::haldane_shastry_pbc: return uses_haldane_shastry_pbc;
     case Tool::gaudin_yang_pbc: return uses_gaudin_yang_pbc;
   }
   throw std::invalid_argument("unknown citation tool");

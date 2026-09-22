@@ -602,12 +602,31 @@ Phys. Rev. Lett. 60, 635 (1988).
 
 [DOI](<https://doi.org/10.1103/PhysRevLett.60.635>).
 
+Relevant tool modes:
+
+- `bethe-haldane-shastry-pbc`: Original periodic spin-1/2 inverse-square chain; we use H=(pi/N)^2 sum\_{i\<j} S\_i.S\_j/sin^2(pi\*(i-j)/N), J=1.
+
 ### shastry-1988
 
 B. Sriram Shastry. *Exact solution of an S=1/2 Heisenberg antiferromagnetic chain with long-ranged interactions*.
 Phys. Rev. Lett. 60, 639 (1988).
 
 [DOI](<https://doi.org/10.1103/PhysRevLett.60.639>).
+
+Relevant tool modes:
+
+- `bethe-haldane-shastry-pbc`: Independent exact solution of the long-range antiferromagnet; finite even and odd rings, not nearest-neighbor XXX.
+
+### jiang-lamers-miao-2026
+
+Yunfeng Jiang, Jules Lamers, and Yuan Miao. *Norms, overlaps and Yangian descendants for the Haldane-Shastry spin chain*.
+arXiv:2606.20168v2 (2026).
+
+[arXiv](<https://arxiv.org/abs/2606.20168v2>).
+
+Relevant tool modes:
+
+- `bethe-haldane-shastry-pbc`: Motif spectral rules and Yangian multiplicities, Secs. 2.2-2.3. Convert their H=sum(1-P)/(4\*sin^2) by H\_ours=E\_ferro-2\*(pi/N)^2\*H\_theirs. No wavefunctions, norms or overlaps are implemented.
 
 ### sutherland-1971
 

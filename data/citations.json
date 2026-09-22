@@ -423,6 +423,14 @@
       ]
     },
     {
+      "id": "jiang-lamers-miao-2026",
+      "authors": "Yunfeng Jiang, Jules Lamers, and Yuan Miao",
+      "title": "Norms, overlaps and Yangian descendants for the Haldane-Shastry spin chain",
+      "publication": "arXiv:2606.20168v2",
+      "year": 2026,
+      "links": [{"label": "arXiv", "url": "https://arxiv.org/abs/2606.20168v2"}]
+    },
+    {
       "id": "sutherland-1971",
       "authors": "Bill Sutherland",
       "title": "Exact Results for a Quantum Many-Body Problem in One Dimension",
@@ -731,6 +739,15 @@
       "references": [
         {"id": "wang-1999", "context": "Permutation-form ladder Hamiltonian (2), rung basis (3), chemical-potential form (4), and three nested rational equations (5). We use spin-1/2 operators, leg coefficient 1, four-spin coefficient 4, and J_r=2*J in (2)/(4), restoring E=E_perm-L/4+J_r*(L/4-N_s). Only zero-field periodic ground states and singlet-count sector minima are implemented."},
         {"id": "hakobyan-2004", "context": "SU(n) multiplets, Young diagrams and weight spaces. The periodic energy-ordering theorem has a row-parity restriction; we do not assume each population's own highest weight is lowest. Compatible dominant multiplets and displaced packed real seas are compared, not the full excited-state spectrum."}
+      ]
+    },
+    {
+      "id": "haldane_shastry_pbc",
+      "executable": "bethe-haldane-shastry-pbc",
+      "references": [
+        {"id": "haldane-1988", "context": "Original periodic spin-1/2 inverse-square chain; we use H=(pi/N)^2 sum_{i<j} S_i.S_j/sin^2(pi*(i-j)/N), J=1."},
+        {"id": "shastry-1988", "context": "Independent exact solution of the long-range antiferromagnet; finite even and odd rings, not nearest-neighbor XXX."},
+        {"id": "jiang-lamers-miao-2026", "context": "Motif spectral rules and Yangian multiplicities, Secs. 2.2-2.3. Convert their H=sum(1-P)/(4*sin^2) by H_ours=E_ferro-2*(pi/N)^2*H_theirs. No wavefunctions, norms or overlaps are implemented."}
       ]
     },
     {
