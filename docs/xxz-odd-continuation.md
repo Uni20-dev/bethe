@@ -140,10 +140,9 @@ Delta=-0.97 instead of the independent sector minimum -4.18131119490746.
 The discrepancy occurred in both fp64 and long double; it was a branch-tracking
 failure, not a reason to loosen the energy comparison.
 
-This checkpoint passes the full 433-test GCC 13 Debug suite with fp128 and
-299-test Clang 20 Release suite without MPLAPACK. The new driver contributes
-21 and 14 typed cases respectively. The optional reference generator also
-reproduces all nine sparse-ED energies, with eigenpair residuals below 6e-13.
+The driver tests run in fp64, long double, and optional fp128, under GCC and
+Clang. The optional reference generator reproduces all nine minimal-|Sz|
+sparse-ED energies, with eigenpair residuals below 6e-13.
 
 An independent [quantum-Wronskian diagnostic](xxz-wronskian.md) now checks
 the generic-q coefficient identity, and projected spin-helix tests establish
@@ -153,6 +152,78 @@ separate from this driver: neither result is a blanket admissibility policy.
 Passing these finite-size checks does not establish general sector-minimum
 tracking, particularly at singular or root-of-unity configurations. Larger
 polynomial systems may still become ill-conditioned. Public integration
-needs an explicit physical-state policy and global sector selection: the
+needs an explicit physical-state policy: the
 smallest-|Sz| sector is not always the global ground state on a negative-Delta
-odd ring. These steps remain unfinished, as does excitation classification.
+odd ring. The all-sector candidate comparison below addresses that selection
+mechanism, but does not certify its inputs. Public integration and excitation
+classification remain unfinished.
+
+## Comparing sectors without assuming the answer
+
+The internal `scan_odd_polynomial_sectors<Real>` in
+[xxz_odd_sectors.hpp](../include/bethe/xxz_odd_sectors.hpp) follows every
+spin-reversal-distinct branch, `M=0,...,floor(N/2)`, at the requested coupling.
+It deliberately returns an `OddSectorScan`, not a public `GroundState`.
+The entries are ordered by increasing M, with positive
+`Sz=N/2-M`; the negative-Sz partners have the same energy.
+
+This matters even on five sites. At Delta=-0.9, the polarized sector has
+energy -1.125, below the smallest-|Sz| value of approximately -0.9898034892.
+Selecting `Sz=1/2` unconditionally would return the wrong global candidate.
+The scan compares all sectors instead of assuming a universal phase boundary
+from this or any other finite-size example.
+
+The result keeps three distinct questions visible:
+
+1. `equations_complete`: did every continuation converge, with a finite
+   energy? If not, `lowest_index` is absent. The successful sectors cannot
+   determine a minimum while a failed sector might lie below them.
+2. Each sector's optional `wronskian`: what does the independent
+   [Wronskian test](xxz-wronskian.md) say? It is absent for failed
+   continuations. `wronskians_consistent` summarizes these diagnostics but
+   is not a physical-state certificate; root-of-unity and conditioning
+   limitations still apply.
+3. `lowest_index`: which of the **complete set of numerically followed
+   branches** has the lowest reported energy? This does not prove that the
+   branches are physical or that each is its sector's minimum.
+
+The minimum is chosen by native-precision comparison, without rounding
+energies or discarding a sector because its Wronskian is inconclusive.
+An exactly equal numerical value keeps the earlier entry. `nearby_indices`
+lists values within the reporting band
+
+```text
+128*epsilon*max(N,abs(minimum_energy)).
+```
+
+This band neither changes the selected minimum nor establishes degeneracy
+or an energy-error bound. At the phantom collision, all folded sectors in
+the small-ring tests fall within it; the scan retains their original energies.
+
+The Newton budget applies **per sector**, as in the existing sector APIs.
+The scan's `iterations` sums all accepted updates, including those in rejected
+continuation stages. It finishes the other sectors after a numerical failure
+so the caller receives their diagnostics, but never manufactures a minimum
+from the incomplete set. Changing only the Wronskian tolerance cannot change
+the continuation energies, iteration counts, or selected index.
+
+Tests compare every folded sector and the selected minimum with spin-basis
+ED through N=9, at Delta=0 and four negative couplings. Analytic N=5
+comparisons use the selected native precision, including near Delta=-1.
+Budget tests cover incomplete scans, and root-of-unity tests ensure that
+Wronskian failure is not mislabeled as failed continuation or physical
+inadmissibility.
+
+All folded sectors at N=13 and N=17 are also checked against independent
+sparse-ED references at Delta=-0.7 and -0.99. These cases select smallest
+|Sz| and fully polarized sectors respectively. Regenerate the references with
+
+```sh
+OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 python3 tests/reference_xxz_odd_ed.py \
+    --all-sectors --sites 13 17 --deltas -0.7 -0.99
+```
+
+The largest basis in this scan audit is 24310 states; the observed eigenpair
+residuals are below 8e-13. The existing default reference-generator command
+still checks minimal-|Sz| sectors through N=21. NumPy/SciPy remain optional
+maintainer tools, not solver or normal-test dependencies.

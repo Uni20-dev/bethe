@@ -169,6 +169,9 @@ An odd ring is not bipartite. Two issues need explicit handling:
 2. The global minimum need not lie in the smallest-|Sz| sector. An independent
    ED regression for N=5, Delta=-0.9 finds the fully polarized energy -1.125
    below the |Sz|=1/2 sector minimum (approximately -0.9898034892).
+   The internal [all-sector candidate scan](xxz-odd-continuation.md#comparing-sectors-without-assuming-the-answer)
+   now compares every folded branch and does not select an incomplete
+   minimum. Its result is separate from physical-state validation.
 
 The second observation alone rules out routing all negative couplings through
 the existing `ground_state` wrapper's sector choice. These are not grounds

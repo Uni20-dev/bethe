@@ -300,7 +300,10 @@ separate front end rather than forcing this into a chain-shaped CLI.
   A separate [quantum-Wronskian diagnostic](xxz-wronskian.md) tests generic-q
   consistency; nonzero projected spin helices cover the phantom collision
   without incorrectly applying the finite-root theorem there.
-  **Next:** physical-state admissibility and global sector selection,
+  An [all-sector candidate scan](xxz-odd-continuation.md#comparing-sectors-without-assuming-the-answer)
+  now compares every folded sector and withholds the minimum if any solve
+  fails, with all-sector ED checks through 17 sites at selected couplings.
+  **Next:** physical-state admissibility and sector-minimum tracking,
   then public integration; only subsequently extend excitation classification.
   The broader family is established by [Yang–Yang](../CITATIONS.md#yang-yang-1966), but the
   old real-coordinate domain and excitation window do not extend unchanged.

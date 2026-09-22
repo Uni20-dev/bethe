@@ -155,6 +155,8 @@ restriction, rather than silently accepting a failed factorization.
 The helper is not yet a continuation acceptance gate. Larger-chain error
 amplification, other root-of-unity configurations, finite repeated roots,
 and a precise admissibility policy still need work. Even an admissible
-eigenstate can be an excited state: global sector selection and reliable
-sector-minimum tracking remain separate requirements for public odd-ring
-negative-Delta support.
+eigenstate can be an excited state. The internal
+[all-sector scan](xxz-odd-continuation.md#comparing-sectors-without-assuming-the-answer)
+now compares every followed branch and refuses to select an incomplete
+minimum. Physical-state acceptance and reliable sector-minimum tracking
+remain requirements for public odd-ring negative-Delta support.
