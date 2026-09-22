@@ -209,6 +209,11 @@ endpoint multiplicity, commensurability, and finite twisted equations.
 It is not used to set `state_checks_complete`: nonzero lifting still
 requires separate treatment.
 
+The [coordinate-space dressing map](xxz-phantom-wave.md) now supports that
+treatment when finite-state amplitudes are available. Tests establish the
+Hamiltonian identity and selected nonzero lifts, but also exhibit its
+kernel; it is not an unconditional acceptance rule.
+
 The minimum is chosen by native-precision comparison, without rounding
 energies or discarding a sector because its Wronskian is inconclusive.
 An exactly equal numerical value keeps the earlier entry. `nearby_indices`

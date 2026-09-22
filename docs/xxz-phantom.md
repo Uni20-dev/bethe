@@ -132,7 +132,10 @@ minimal-|Sz| branch at N=5,7,9,13,17,21; p=1 passes the default tolerance.
 Deliberately off-shell finite roots and incorrect commensurability are
 rejected independently of successful endpoint deflation.
 
-General nonzero lifting for r>1, the remaining singular-root families, and
-reliable sector-minimum tracking remain work to do before public odd-ring
-ground-state integration. A regular reduced eigenvector alone is not a
-proof that its singular phantom-dressed limit is nonzero.
+A [general coordinate-space dressing map](xxz-phantom-wave.md) now
+constructs the lifted amplitudes from a finite-state callback. Full
+Hamiltonian-identity tests and nonzero lifts of continued two-finite-root
+states provide additional independent checks. The map also has a genuine
+kernel, exhibited explicitly in the tests. General nonzero lifting, the
+remaining singular-root families, and reliable sector-minimum tracking
+remain work to do before public odd-ring ground-state integration.
