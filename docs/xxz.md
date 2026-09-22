@@ -13,18 +13,20 @@ labelled by magnetization Sz, not total spin S.
 
 ```text
 H = sum_i (Sx_i Sx_(i+1) + Sy_i Sy_(i+1) + Delta Sz_i Sz_(i+1)),
-J=1, h=0, Delta >= 0 (ground states and sector minima).
+J=1, h=0. Ground states/sectors: Delta > -1 for even N, Delta >= 0 for odd N.
 ```
 
 The anisotropy is required. This periodic-chain implementation supports
 ground states and magnetization-sector minima for every finite Delta>=0.
+Even rings additionally support `-1<Delta<0` using rank-subtracted,
+scaled equations. Negative-Delta odd rings remain work in progress;
+they are explicitly rejected rather than assigned the wrong ground sector.
 For `0<=Delta<=1` it also supports a restricted finite-real-root excitation
 family, not the complete spectrum or strings. For open boundaries,
 use the separate [`bethe-xxz-obc` front end](xxz-open.md).
-That free-end solver also supports `Delta>=0` ground states, including the
+That free-end solver supports `Delta>-1` ground states for either parity, including the
 massive boundary root; its real-root excitation modes require `0<=Delta<=1`.
-Negative Delta is rejected
-by the finite-size solvers. The
+Exactly Delta=-1 and lower anisotropies are not included. The
 existing analytic thermodynamic `bethe::xxz::spinon_energy` retains its wider
 `-1 < Delta <= 1` domain; it is independent of this finite-size solver.
 
@@ -36,6 +38,7 @@ build/bethe-xxz-pbc 65 --delta 0.5 --sz -1/2 --roots
 build/bethe-xxz-pbc 16 --delta 0.75 --sectors --precision long-double
 build/bethe-xxz-pbc 4 --delta 0 --format pretty
 build/bethe-xxz-pbc 64 --delta 2 --roots
+build/bethe-xxz-pbc 64 --delta -0.9 --roots
 build/bethe-xxz-pbc 15 --delta 10 --sectors --precision long-double
 # In a binary128-enabled build:
 build/bethe-xxz-pbc 64 --delta 0.999999999999999999999999 --precision fp128
@@ -53,6 +56,13 @@ SU(2) multiplet degeneracies are inferred. `--spin` and `--spinons` are not
 options of this front end; use `--sz` for excitation scans as described below.
 Those scans have their own default sector, distinct from the ground-state default.
 
+For negative Delta, the CLI reports the scaled residual convention explicitly
+and `--roots` prints both z and the native hyperbolic lambda. For even rings,
+the ground-sector labels are symmetric and total momentum is pi for odd M,
+zero for even M, with `M=N/2-|Sz|`. The smallest-|Sz| ground-state rule is
+**not** applied to negative-Delta odd rings: there the global minimum can
+instead be polarized, and conjugate root pairs require a different representation.
+
 ## Library usage
 
 Library usage stays in the same `bethe::bethe` target:
@@ -66,11 +76,23 @@ auto sector = bethe::xxz::sector_ground_state<long double>(65, 0.5L,
 auto sectors = bethe::xxz::sector_ground_states<long double>(16, 0.75L);
 bethe::xxz::SolverOptions<long double> options{.max_iterations = 20000};
 auto precise = bethe::xxz::ground_state<long double>(64, 0.99L, options);
+auto negative = bethe::xxz::ground_state<long double>(64, -0.9L, options);
 ```
 
-`xxz::RealState<Real>` contains `delta`, the scaled roots, Bethe quantum
-numbers, Sz, spin-reversal flag, energy, momentum/index, and convergence
-diagnostics. It is a separate type from XXX states. The common iteration
+Ground-state functions now return `xxz::GroundState<Real>` (or a vector of
+it), distinct from `xxz::RealState<Real>` used by `solve_real` and excitation
+scans. Both retain `delta`, scaled roots, Bethe quantum numbers, Sz,
+spin-reversal flag, energy, momentum/index, and convergence diagnostics.
+Ground results additionally retain `log_rapidities` for negative Delta,
+`GroundSolveStatus` (converged, iteration limit, or stalled), and a
+`GroundResidualConvention` tag (`logarithmic_phase` or `negative_rank_scaled`).
+Do not reconstruct lambda from rounded z values. Nonnegative ground-state
+results preserve all numerical values of the previous solver; their lambda
+array is empty. There is **no implicit conversion** between ground results
+and real excitation states. Code naming the old ground return type should
+use `GroundState` or `auto` and inspect the residual convention.
+
+The common iteration
 options live in `<bethe/solver.hpp>` as `bethe::SolverOptions<Real>`; the
 model-namespace aliases remain available. Numerical code has no CLI or
 presentation dependency.
@@ -140,14 +162,26 @@ No strings, thermodynamic mode, or spontaneous-symmetry-broken state is implied.
 
 ## Convergence and validation
 
-Convergence uses `max|F|/N` with the same default 32-epsilon tolerance as XXX,
+For nonnegative Delta, convergence uses `max|F|/N` with the same default 32-epsilon tolerance as XXX,
 not an energy-error bound. Both residual and energy describe the returned
 iterate, including on budget exhaustion. The solver starts at zero roots
 and performs simultaneous updates. It uses O(M^2) work per sweep (O(M) at
 Delta=0) and O(M) state storage; retaining every sector uses O(N^2) storage.
 Invalid inputs throw `std::invalid_argument`; nonfinite arithmetic or leaving
 the finite real-root branch throws `std::runtime_error`. CLI exit statuses
-remain 0 for convergence, 2 for budget exhaustion, and 1 for errors.
+remain 0 for convergence, 2 for an unconverged result, and 1 for errors.
+
+For `-1<Delta<0` on even rings, Newton solves the rank-subtracted equations
+in lambda, scaled by `s=sqrt((1+Delta)/(1-Delta))` to remain discriminating
+near Delta=-1. The residual tag is `negative_rank_scaled`, meaning the
+equations in the [negative-anisotropy guide](xxz-negative.md), not `max|F|/N`.
+That guide derives the equations from [Kozlowski](../CITATIONS.md#kozlowski-2017),
+whose periodic ground-state identification explicitly assumes even length.
+This path starts from a free-fermion hyperbolic seed, uses O(M^2) workspace
+and O(M^3) work per Newton update, and counts accepted updates against the
+shared iteration budget. A stalled line search is distinguished from budget
+exhaustion in the result and both CLI formats. Energy and residual always
+refer to the returned coordinates at the requested Delta, even on failure.
 
 Normalization checks include `E0(N=2)=-1-Delta/2` (the periodic bond is
 counted twice), `E0(N=3)=-1/2-Delta/4`, and
@@ -164,6 +198,15 @@ As Delta tends to infinity, the roots approach
 `lambda_j=pi*(I_j-sum(I)/N)/(N-M)` and `E/Delta -> N/4-M`.
 Tests check this limit in odd/even sectors and exercise finite answers near
 the largest representable anisotropy, as well as explicit overflow errors.
+
+Negative-Delta API tests compare every even-ring sector through N=8 with
+independent spin-basis energies and joint energy/translation spectra. Native
+two-/four-site formulas, both endpoints, spin reversal, failed iterates, and
+chains through N=64 are checked in all supported precisions. CLI tests preserve
+z/lambda digits in wide and narrow reports. Separate tests ensure the new
+ground result preserves nonnegative solver values exactly and cannot be
+implicitly converted to an excitation state. Negative excitation labels
+and negative odd-ring ground calls remain rejected, including vacua/scans.
 
 ## Real-root excitations
 

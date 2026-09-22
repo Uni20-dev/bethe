@@ -495,6 +495,7 @@
       "executable": "bethe-xxz-pbc",
       "references": [
         {"id": "vlijm-2016", "context": "Massless periodic XXZ equations, energy, and momentum, Eqs. (1), (3)-(5); our energy includes the N*Delta/4 shift."},
+        {"id": "kozlowski-2017", "context": "Even-ring negative-anisotropy sector ground states: Eqs. (0.4), (0.7), with Pauli exchange divided by four. We use rank-subtracted equations scaled near Delta=-1; the reference explicitly assumes even length and does not justify odd-ring ground-state selection."},
         {"id": "dugave-2015", "context": "Massive periodic XXZ Hamiltonian and trigonometric Bethe equations, Eqs. (1.1)-(1.2), with zero twist and field; Pauli exchange is divided by four. Used for Delta>1 sector ground states, not form factors, strings or excitations."},
         {"id": "karbach-1998", "context": "XXX limit at Delta=1 and the conventional real-root quantum-number window."},
         {"id": "caux-xxx-states", "context": "Background for the XXX window used to restrict the XXZ scan; not a complete XXZ state classification."}

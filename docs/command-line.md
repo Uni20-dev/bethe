@@ -116,7 +116,7 @@ resolution; an unavailable or wrapped CPU clock is reported as `unavailable`.
 
 `--max-iterations` defaults to 10000 **per state**;
 zero evaluates only the initial guess. XXX and gapless nonnegative XXZ start
-from zero roots. Negative-Delta open XXZ uses a free-fermion hyperbolic seed,
+from zero roots. Supported negative-Delta XXZ uses a free-fermion hyperbolic seed,
 and massive open XXZ uses coupling continuation; these count accepted Newton
 updates, with one shared budget across any continuation stages.
 Hubbard counts accepted Newton updates across all continuation stages and
@@ -132,7 +132,7 @@ estimate. There is no silent precision fallback. Run `--help` for the options.
 The residual measures how closely the rapidities satisfy the Bethe equations;
 it is not a bound on the error in the energy. The default tolerance is 32
 times the selected type's epsilon. The logarithmic spin-chain solvers normalize
-by N (periodic) or 2N (open). Negative-Delta open XXZ instead uses
+by N (periodic) or 2N (open). Supported negative-Delta XXZ instead uses
 [rank-subtracted, scaled equations](xxz-negative.md); massive open XXZ includes
 a [regularized boundary residual](xxz-open-massive.md) when needed. These
 conventions are explicitly reported and are not interchangeable. Hubbard normalizes both

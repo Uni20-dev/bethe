@@ -14,7 +14,7 @@ represent real roots and conjugate pairs, and the tests follow small-ring
 sector minima through collisions. An internal [adaptive continuation driver](xxz-odd-continuation.md)
 now constrains momentum and monitors conditioning. Physical-state admissibility,
 general large-chain conditioning, and global sector selection still need work.
-The public APIs and frontends remain unchanged.
+This polynomial path is not exposed by the public APIs or frontends.
 
 ## Starting equations and parity
 

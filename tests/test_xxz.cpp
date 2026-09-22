@@ -18,8 +18,9 @@ using uni20::half_int;
 
 // Independent check in the conventional hyperbolic rapidity, not the rational
 // scattering formula used in the implementation. Energy from magnon momenta.
-template <uni20::Real Real> void check_state(std::size_t n, model::RealState<Real> const& state)
+template <typename State> void check_state(std::size_t n, State const& state)
 {
+  using Real = decltype(state.delta);
   using std::abs;
   using std::acos;
   using std::atan;

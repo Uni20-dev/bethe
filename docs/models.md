@@ -57,7 +57,7 @@ paper's correlation functions, thermodynamics, or full spectrum.
 | ID | Model | Status and actual scope | Main missing pieces |
 | --- | --- | --- | --- |
 | `xxx` | Spin-1/2 nearest-neighbor XXX | Implemented (limited): [PBC](xxx.md), [free ends](open-chains.md), sector minima and restricted real-root excitations; periodic one-spinon family | Complex strings, full spectrum, twists/boundary fields |
-| `xxz` | Spin-1/2 nearest-neighbor XXZ | Implemented (limited): [PBC](xxz.md) ground states/sectors at `Delta>=0`, [free ends](xxz-open.md) at `Delta>-1`; restricted excitations at `0<=Delta<=1`; [massive boundary roots](xxz-open-massive.md) | Periodic negative anisotropy, massive/negative excitations, additional root families, twists/boundary fields |
+| `xxz` | Spin-1/2 nearest-neighbor XXZ | Implemented (limited): [PBC](xxz.md) ground states/sectors at `Delta>=0`, also `-1<Delta<0` on even rings; [free ends](xxz-open.md) at `Delta>-1`; restricted excitations at `0<=Delta<=1`; [massive boundary roots](xxz-open-massive.md) | Negative odd rings, massive/negative excitations, additional root families, twists/boundary fields |
 | `hubbard` | One-band Hubbard, hopping t=1 | Implemented (limited): [PBC](hubbard.md) on even rings with sector restrictions; [free ends](hubbard-open.md) at every physical filling/Sz and either sign of U | Hubbard excitations; remaining PBC shell branches and odd rings |
 | `lieb-liniger` | Continuum contact-interacting bosons | Implemented (limited): [repulsive PBC](lieb-liniger.md), ground state, explicit labels, and bounded excitation scans | Hard walls, attraction, thermodynamics |
 | `su-n` | Fundamental SU(n) permutation chain | Implemented (limited): [SU(3) PBC](su3.md), balanced singlet ground state for L>=3 divisible by three, J=1 | Other populations/lengths, excitations, general n, open boundaries |
@@ -289,9 +289,10 @@ separate front end rather than forcing this into a chain-shaped CLI.
   The [negative-anisotropy engine](xxz-negative.md) now covers
   `-1<Delta<0` sector ground roots for even rings and open chains, with
   rank-subtracted equations scaled to remain discriminating near Delta=-1.
-  Its free-end path is exposed through the existing ground-state API and
-  `bethe-xxz-obc`, with explicit hyperbolic coordinates and scaled residuals;
-  periodic integration remains unfinished.
+  Both paths are exposed through the ground-state APIs and existing frontends,
+  with explicit hyperbolic coordinates and scaled residuals. The periodic
+  ground result is distinct from the real-excitation type; negative odd rings
+  remain unfinished.
   The [polynomial equations](xxz-polynomial.md) and an internal
   [momentum-constrained adaptive driver](xxz-odd-continuation.md) now handle
   conjugate-pair formation without extracting roots, with independent

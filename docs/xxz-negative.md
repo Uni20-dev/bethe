@@ -3,14 +3,15 @@
 [Model catalogue](models.md) | [Periodic XXZ](xxz.md) | [Open XXZ](xxz-open.md)
 
 The [free-end ground-state API and frontend](xxz-open.md) now support
-`-1<Delta<0`, for either parity of N and every physical Sz sector.
+`-1<Delta<0`, for either parity of N and every physical Sz sector. The
+[periodic API and frontend](xxz.md) support the same interval on **even rings**.
 The `bethe::xxz::detail::negative_ground_roots` engine in
 [xxz_negative.hpp](../include/bethe/xxz_negative.hpp) solves ground-state
 sectors for `-1<Delta<0` on even periodic rings and free-end chains of either
-parity. It works in fp64, long-double, and optional fp128. The periodic
-ground-state API and executable still require nonnegative Delta: their
-integration, odd-ring state classification, and global sector selection
-remain part of this extension. Excitations and `Delta<=-1` require separate work.
+parity. It works in fp64, long-double, and optional fp128. Negative-Delta odd
+rings are still not public: their physical-state classification and global
+sector selection remain part of this extension. Excitations and `Delta<=-1`
+require separate work.
 
 The Hamiltonian is unchanged:
 
@@ -110,6 +111,13 @@ residual convention and appends lambda to the negative-Delta root table.
 Its default ground-state sector remains Sz=0 (even N) or Sz=1/2 (odd N);
 the odd-*periodic* caveat below does not apply to an open chain.
 
+The periodic result is now a distinct `xxz::GroundState<Real>`, with the
+same two coordinate arrays and its own residual/status tags; real excitation
+states remain `xxz::RealState<Real>`. There is no implicit conversion between
+them. On an even ring, the symmetric labels give momentum zero for even M
+and pi for odd M. All periodic negative-Delta entry points consistently
+reject odd N, including polarized sectors and scans, pending the odd-ring work.
+
 Tests independently check all sectors through N=9 for OBC and even PBC at
 four negative couplings, using spin-basis exact diagonalization. Periodic
 momentum is checked against a joint energy/translation spectrum. Additional
@@ -131,9 +139,16 @@ those cases, respectively, belong to this new engine and odd-ring audit.
 Free-end public integration adds typed tests of every returned sector, global
 selection, native-precision energies near both Delta=-1 and Delta=0, residual
 reconstruction, exhausted budgets, and the separation from excitation scans.
-The full suites now contain 445 GCC/fp128 cases and 307 Clang cases. The
+The free-end checkpoint passed 445 GCC/fp128 cases and 307 Clang cases. The
 CLI checks also pass in an applications-only build using the published Uni20
 pin, without a sibling checkout or GoogleTest.
+
+The even-periodic integration checkpoint passes 457 GCC 13 Debug/fp128 tests
+and 315 Clang 20 Release tests, including its additional typed API/translation
+checks and full-precision CLI cases. The periodic CLI also passes against
+the pinned Uni20 build. Shared XXZ definitions now live below the solvers in
+`xxz_common.hpp`, allowing both real and polynomial engines to remain
+independent of the public ground-state dispatcher.
 
 ## Why odd rings are still work in progress
 

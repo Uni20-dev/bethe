@@ -4,15 +4,13 @@
 #pragma once
 
 #include <bethe/heisenberg.hpp>
-#include <bethe/solver.hpp>
+#include <bethe/xxz_ground_state.hpp>
+#include <bethe/xxz_negative.hpp>
 
 #include <utility>
 
 namespace bethe::xxz
 {
-template <uni20::Real Real> using SolverOptions = bethe::SolverOptions<Real>;
-using QuantumNumbers = std::vector<uni20::half_int>;
-
 /// Periodic XXZ finite-real-root state, J=1, h=0, Delta >= 0.
 /// Delta>1 currently supports sector ground states, not general excitations.
 /// Not an SU(2) highest-weight/multiplet classification away from Delta=1.
@@ -37,32 +35,20 @@ template <uni20::Real Real> struct RealState
 
 namespace detail
 {
-inline std::int64_t checked_sites(std::size_t sites)
-{
-  if (sites < 2 || sites > static_cast<std::size_t>(std::numeric_limits<std::int64_t>::max() / 4))
-    throw std::invalid_argument("XXZ chain requires 2 <= sites <= INT64_MAX/4");
-  return static_cast<std::int64_t>(sites);
-}
-
-inline std::size_t sector_roots(std::size_t sites, uni20::half_int sz)
-{
-  auto const n = checked_sites(sites);
-  auto const twice = sz.twice();
-  if (twice < -n || twice > n || (n - twice) % 2 != 0)
-    throw std::invalid_argument("Sz must lie in [-N/2,N/2] with the same half-integer parity as N/2");
-  return static_cast<std::size_t>((n - (twice < 0 ? -twice : twice)) / 2);
-}
-
 template <uni20::Real Real> void validate_delta(Real delta)
 {
   if (!uni20::isfinite(delta) || delta < Real{0} || delta > Real{1})
     throw std::invalid_argument("finite-chain XXZ solver requires finite Delta in [0,1]");
 }
 
-template <uni20::Real Real> void validate_ground_delta(Real delta)
+template <uni20::Real Real> void validate_ground_delta(std::size_t sites, Real delta)
 {
-  if (!uni20::isfinite(delta) || delta < Real{0})
-    throw std::invalid_argument("periodic XXZ ground states require finite Delta >= 0");
+  checked_sites(sites);
+  if (!uni20::isfinite(delta) || delta <= -Real{1})
+    throw std::invalid_argument("periodic XXZ ground states require finite Delta > -1");
+  if (delta < Real{0} && sites % 2)
+    throw std::invalid_argument("negative-Delta periodic ground states currently require even N; odd-ring state "
+                                "validation and sector selection are not yet public");
 }
 } // namespace detail
 
@@ -132,18 +118,6 @@ void validate_quantum_numbers(std::size_t sites, Real delta, std::span<uni20::ha
   }
 }
 
-inline std::size_t momentum_index(std::size_t sites, std::span<uni20::half_int const> numbers)
-{
-  auto const n = static_cast<std::int64_t>(sites);
-  auto const modulus = 2 * n;
-  std::int64_t index = numbers.size() % 2 == 0 ? 0 : n;
-  for (auto const number : numbers)
-  {
-    index = (index - number.twice()) % modulus;
-    if (index < 0) index += modulus;
-  }
-  return static_cast<std::size_t>(index / 2);
-}
 } // namespace detail
 
 /// Consecutive labels for the supported sector minimum. For odd N, select
@@ -289,30 +263,69 @@ template <uni20::Real Real = double>
   return detail::solve_validated<Real>(sites, delta, numbers, options, initial_roots);
 }
 
-/// Lowest state in an Sz sector for finite Delta>=0. Negative Sz uses spin reversal.
+/// Lowest state in an Sz sector for finite Delta>=0, or -1<Delta<0 on even N.
+/// Negative Sz uses spin reversal. Excitation labels remain restricted to [0,1].
 /// At Delta>1, theta_2/2=atan2(z_i-z_j,1+1/Delta+(1-1/Delta)*z_i*z_j).
 template <uni20::Real Real = double>
-[[nodiscard]] RealState<Real> sector_ground_state(std::size_t sites, Real delta, uni20::half_int sz,
-                                                  SolverOptions<Real> const& options = {})
+[[nodiscard]] GroundState<Real> sector_ground_state(std::size_t sites, Real delta, uni20::half_int sz,
+                                                    SolverOptions<Real> const& options = {})
 {
-  detail::validate_ground_delta(delta);
-  auto const numbers = xxz::sector_ground_quantum_numbers(sites, sz);
-  auto result = delta > Real{1} ? detail::solve_validated<Real>(sites, delta, numbers, options)
-                                : xxz::solve_real<Real>(sites, delta, numbers, options);
+  detail::validate_ground_delta(sites, delta);
+  GroundState<Real> result;
+  result.delta = delta;
   result.sz = sz;
   result.spin_reversed = sz.twice() < 0;
+  if (delta < Real{0})
+  {
+    auto roots = detail::negative_ground_roots<Real>(sites, delta, sz, false, options);
+    result.rapidities = std::move(roots.rapidities);
+    result.log_rapidities = std::move(roots.log_rapidities);
+    result.quantum_numbers = std::move(roots.quantum_numbers);
+    result.energy = roots.energy;
+    result.residual_norm = roots.residual_norm;
+    result.residual_convention = GroundResidualConvention::negative_rank_scaled;
+    result.iterations = roots.iterations;
+    result.converged = roots.converged;
+    switch (roots.status)
+    {
+      case detail::NegativeSolveStatus::converged:
+        result.status = GroundSolveStatus::converged;
+        break;
+      case detail::NegativeSolveStatus::iteration_limit:
+        result.status = GroundSolveStatus::iteration_limit;
+        break;
+      case detail::NegativeSolveStatus::stalled:
+        result.status = GroundSolveStatus::stalled;
+        break;
+    }
+    result.momentum_index = detail::momentum_index(sites, result.quantum_numbers);
+    result.momentum = Real{8} * std::atan(Real{1}) * (Real(result.momentum_index) / Real(sites));
+    return result;
+  }
+  auto const numbers = xxz::sector_ground_quantum_numbers(sites, sz);
+  auto roots = delta > Real{1} ? detail::solve_validated<Real>(sites, delta, numbers, options)
+                               : xxz::solve_real<Real>(sites, delta, numbers, options);
+  result.rapidities = std::move(roots.rapidities);
+  result.quantum_numbers = std::move(roots.quantum_numbers);
+  result.energy = roots.energy;
+  result.residual_norm = roots.residual_norm;
+  result.iterations = roots.iterations;
+  result.converged = roots.converged;
+  result.status = roots.converged ? GroundSolveStatus::converged : GroundSolveStatus::iteration_limit;
+  result.momentum_index = roots.momentum_index;
+  result.momentum = roots.momentum;
   return result;
 }
 
 /// One representative per Sz, ordered -N/2,...,N/2. Reuses spin reversal;
 /// these are not SU(2) multiplets. Retaining all roots uses O(N^2) storage.
 template <uni20::Real Real = double>
-[[nodiscard]] std::vector<RealState<Real>> sector_ground_states(std::size_t sites, Real delta,
-                                                                SolverOptions<Real> const& options = {})
+[[nodiscard]] std::vector<GroundState<Real>> sector_ground_states(std::size_t sites, Real delta,
+                                                                  SolverOptions<Real> const& options = {})
 {
   auto const n = detail::checked_sites(sites);
-  detail::validate_ground_delta(delta);
-  std::vector<RealState<Real>> states(sites + 1);
+  detail::validate_ground_delta(sites, delta);
+  std::vector<GroundState<Real>> states(sites + 1);
   for (std::size_t m = 0; m <= sites / 2; ++m)
   {
     auto const sz = uni20::from_twice(n - 2 * static_cast<std::int64_t>(m));
@@ -328,8 +341,9 @@ template <uni20::Real Real = double>
 }
 
 /// Even N uses Sz=0; odd N returns one Sz=1/2 ground-state representative.
+/// The odd-N rule applies only to Delta>=0: negative odd rings are rejected.
 template <uni20::Real Real = double>
-[[nodiscard]] RealState<Real> ground_state(std::size_t sites, Real delta, SolverOptions<Real> const& options = {})
+[[nodiscard]] GroundState<Real> ground_state(std::size_t sites, Real delta, SolverOptions<Real> const& options = {})
 {
   return xxz::sector_ground_state<Real>(sites, delta, uni20::from_twice(static_cast<std::int64_t>(sites % 2)), options);
 }

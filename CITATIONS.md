@@ -277,6 +277,10 @@ arXiv:1508.05741v2 (2017).
 
 [arXiv v2](<https://arxiv.org/abs/1508.05741v2>), [HTML](<https://arxiv.org/html/1508.05741v2>).
 
+Relevant tool modes:
+
+- `bethe-xxz-pbc`: Even-ring negative-anisotropy sector ground states: Eqs. (0.4), (0.7), with Pauli exchange divided by four. We use rank-subtracted equations scaled near Delta=-1; the reference explicitly assumes even length and does not justify odd-ring ground-state selection.
+
 ### lieb-wu-2003
 
 Elliott H. Lieb and F. Y. Wu. *The one-dimensional Hubbard model: A reminiscence*.

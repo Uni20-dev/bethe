@@ -2,7 +2,7 @@
 // Copyright (C) 2026 Ian McCulloch
 #pragma once
 
-#include <bethe/xxz.hpp>
+#include <bethe/xxz_common.hpp>
 #include <uni20/linalg/ops/linear_solve.hpp>
 
 namespace bethe::xxz::detail

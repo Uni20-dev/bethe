@@ -42,7 +42,11 @@ template <uni20::Real Real = double>
   auto result = bethe::detail::scan_real_combinations<RealExcitationScan<RealState<Real>>>(
       window.slots, m, window.first.twice(), scan,
       [&](QuantumNumbers const& numbers) { return xxz::solve_real<Real>(sites, delta, numbers, solver); },
-      [&] { return xxz::ground_state<Real>(sites, delta, solver); });
+      [&] {
+        auto const numbers =
+            xxz::sector_ground_quantum_numbers(sites, uni20::from_twice(static_cast<std::int64_t>(sites % 2)));
+        return xxz::solve_real<Real>(sites, delta, numbers, solver);
+      });
   result.sz = sz;
   result.delta = delta;
   result.window = window;

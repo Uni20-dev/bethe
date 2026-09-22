@@ -232,8 +232,9 @@ inline constexpr std::array<Use, 2> uses_xxx_obc{{
   {&references[4], "Free-end XXX equations: rational limit of Eqs. (11)-(12) and footnote 2; our spin-1/2 normalization differs."},
   {&references[5], "SU(2) and string-classification background, not the boundary equations; scans include only the supported finite-real family."},
 }};
-inline constexpr std::array<Use, 4> uses_xxz_pbc{{
+inline constexpr std::array<Use, 5> uses_xxz_pbc{{
   {&references[6], "Massless periodic XXZ equations, energy, and momentum, Eqs. (1), (3)-(5); our energy includes the N*Delta/4 shift."},
+  {&references[7], "Even-ring negative-anisotropy sector ground states: Eqs. (0.4), (0.7), with Pauli exchange divided by four. We use rank-subtracted equations scaled near Delta=-1; the reference explicitly assumes even length and does not justify odd-ring ground-state selection."},
   {&references[43], "Massive periodic XXZ Hamiltonian and trigonometric Bethe equations, Eqs. (1.1)-(1.2), with zero twist and field; Pauli exchange is divided by four. Used for Delta>1 sector ground states, not form factors, strings or excitations."},
   {&references[0], "XXX limit at Delta=1 and the conventional real-root quantum-number window."},
   {&references[5], "Background for the XXX window used to restrict the XXZ scan; not a complete XXZ state classification."},
