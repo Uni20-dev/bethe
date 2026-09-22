@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.24)
+cmake_minimum_required(VERSION 3.28)
 project(bethe VERSION 0.1.0 LANGUAGES CXX)
 
 option(BETHE_BUILD_APPS "Build Bethe ansatz command-line programs" ${PROJECT_IS_TOP_LEVEL})
@@ -7,14 +7,13 @@ option(BETHE_BUILD_TESTS "Build Bethe ansatz regression tests" ${PROJECT_IS_TOP_
 # Reuse an enclosing project's Uni20 when present. Otherwise use a reproducible
 # source dependency; FETCHCONTENT_SOURCE_DIR_UNI20 provides the local override.
 if(NOT TARGET uni20_core)
-  # Uni20's directory-local IPO setting does not reach our final link steps.
-  # In particular, Clang LTO archives need a matching LTO-enabled linker.
-  # Keep dependency IPO opt-in; CACHE preserves an explicit caller choice.
+  # Keep dependency IPO opt-in; enabling it requires coordinating the final
+  # application's compiler/linker settings too. Preserve explicit cache choices.
   set(UNI20_ENABLE_LTO OFF CACHE BOOL "Enable LTO/IPO for optimized Uni20 builds")
   include(FetchContent)
   FetchContent_Declare(uni20
     GIT_REPOSITORY https://github.com/Uni20-dev/uni20.git
-    GIT_TAG a13cc911b58a670da48fba637ed1d13fd2d4f717
+    GIT_TAG ef7e8b38f853a109e48c6b1762cab074f076639e
   )
   FetchContent_MakeAvailable(uni20)
   # Keep default builds limited to the components our targets actually link.

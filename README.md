@@ -49,7 +49,7 @@ calculations.
 
 ## Build
 
-You need CMake 3.24+, a C++23 compiler supported by Uni20 (GCC 13+ or Clang 19+),
+You need CMake 3.28+, a C++23 compiler supported by Uni20 (GCC 13+ or Clang 19+),
 and Uni20's numerical dependencies. The default configuration fetches a
 tested Uni20 revision:
 
