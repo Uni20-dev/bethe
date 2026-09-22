@@ -9,10 +9,10 @@ whose energies would be useful alongside Uni20 and MPToolkit. A model being
 exactly solvable in the literature does not mean this repository solves it,
 or that every boundary condition, coupling, or excited state is covered.
 
-The first new family, **repulsive periodic Lieb–Liniger**, is now implemented.
-Next is the **SU(3) permutation chain** if we prioritize lattice benchmarks, or
-**repulsive Gaudin–Yang** if we prioritize continuum gases. Extending XXZ's
-anisotropy range is a valuable parallel direction within an existing model.
+The first new implementations are **repulsive periodic Lieb–Liniger** and
+the **periodic SU(3) balanced-singlet ground state**. The next new family is
+**repulsive Gaudin–Yang**. Extending XXZ's anisotropy range and the existing
+models' boundary/state coverage remain valuable directions as well.
 These priorities and difficulty assessments are our engineering judgments,
 not conclusions of the cited papers or a committed implementation schedule.
 
@@ -59,6 +59,7 @@ paper's correlation functions, thermodynamics, or full spectrum.
 | `xxz` | Spin-1/2 nearest-neighbor XXZ | Implemented (limited): [PBC](xxz.md) and [free ends](xxz-open.md), finite chains at `0 <= Delta <= 1`, restricted real-root excitations | Wider anisotropy range, additional root families, twists/boundary fields |
 | `hubbard` | One-band Hubbard, hopping t=1 | Implemented (limited): [PBC](hubbard.md) on even rings with sector restrictions; [free ends](hubbard-open.md) at every physical filling/Sz and either sign of U | Hubbard excitations; remaining PBC shell branches and odd rings |
 | `lieb-liniger` | Continuum contact-interacting bosons | Implemented (limited): [repulsive PBC](lieb-liniger.md), ground state, explicit labels, and bounded excitation scans | Hard walls, attraction, thermodynamics |
+| `su-n` | Fundamental SU(n) permutation chain | Implemented (limited): [SU(3) PBC](su3.md), balanced singlet ground state for L>=3 divisible by three, J=1 | Other populations/lengths, excitations, general n, open boundaries |
 
 Analytic thermodynamic XXX/XXZ spinon dispersions are separate existing
 facilities; they do not constitute a general thermodynamic Bethe ansatz
@@ -75,7 +76,7 @@ integrable boundaries in the literature.
 | ID | Candidate and first scope | Status | Relative effort |
 | --- | --- | --- | --- |
 | `lieb-liniger` | Repulsive one-component Bose gas on a ring; ground state and bounded real-root excitation scans | [Implemented (limited)](lieb-liniger.md) | First slice complete |
-| `su-n` | Fundamental SU(3) antiferromagnetic permutation chain, PBC, balanced ground state | Proposed | Medium |
+| `su-n` | Fundamental SU(3) antiferromagnetic permutation chain, PBC, balanced ground state | [Implemented (limited)](su3.md) | First slice complete |
 | `gaudin-yang` | Equal-mass repulsive spin-1/2 delta-interacting Fermi gas, PBC, selected ground-state sectors | Proposed | Medium |
 | `tj-susy` | Projected t–J chain at J=2t, PBC, selected ground-state sectors | Proposed | Medium–large |
 | `spin-s-tb` | Spin-1 Takhtajan–Babujian chain, PBC ground state with finite-size string deviations | Proposed | Large |
@@ -139,16 +140,29 @@ Uimin–Lai–Sutherland (ULS) bilinear–biquadratic point, after an explicit
 per-bond energy shift. The identity follows from the two-site total-spin
 eigenvalues; this is not the generic spin-1 Heisenberg chain.
 
-Start with the periodic balanced ground state when L is divisible by three.
-The nested hierarchy has n-1 root families; specifying arbitrary color
-populations or descendants is a later state-selection problem. Validate
-SU(3) small-chain exact diagonalization, the spin-1/permutation identity, and
-the n=2 reduction to XXX with its scale and additive constant.
+Implemented in [su3.hpp](../include/bethe/su3.hpp) and `bethe-su3-pbc`:
+periodic, J=1, balanced singlet for L>=3 divisible by three, with finite real
+roots. The state keeps explicit populations and two separate root/label
+arrays, with M1=2L/3 and M2=L/3. Implementation commit:
+[`3970675`](https://github.com/Uni20-dev/bethe/commit/39706753e542123802714dee014ed1b828d98a8d).
+See the [guide](su3.md) for the equations,
+normalization, ULS conversion, and numerical limits. The equation audit uses
+[Doikou–Nepomechie](../CITATIONS.md#doikou-nepomechie-1998), including the
+filled-sea selection in Sec. 2.3; our energy is twice the paper's plus L.
 
-**Next decision:** adopt explicit color populations and per-level quantum
-numbers. Generalize nested state bookkeeping when this second nested model
-is implemented, rather than baking an arbitrary-rank hierarchy into today's
-Hubbard interface in advance.
+Tests cover three-/six-site analytic roots or energies in every precision,
+independent color-space ED and translation through L=9, original multiplicative
+and logarithmic equations, Jacobians, the SU(2)/XXX reduction, and the spin-1
+permutation identity. Finite chains through L=192 approach the known bulk
+energy density. The implementation checkpoint passed 315 tests with GCC 13
+and fp128, 219 with Clang 20 Release without MPLAPACK, and the new frontend
+and citation checks against the published Uni20 pin in an app-only build.
+
+**Next slice:** audit other color sectors and hole/excitation families,
+including lengths not divisible by three. General n adds n-1 nesting levels;
+complex strings, descendants, twists, and open ends need their own state and
+equation treatment. The two-level SU(3) state does not change the Hubbard API
+or claim an arbitrary-rank solver.
 
 ### `gaudin-yang`: the continuum counterpart of nested Hubbard
 
@@ -173,8 +187,8 @@ fermions add more nesting levels and, for attraction, larger bound complexes;
 see [Lee–Guan–Batchelor](../CITATIONS.md#lee-2011).
 
 **Next decision:** audit the repulsive finite-ring label/sector choices before
-promising arbitrary N and Sz. This is the preferred second model if continuum
-physics has higher priority than SU(3) lattice benchmarks.
+promising arbitrary N and Sz. This is the next new-family target after the
+initial SU(3) implementation.
 
 ### `tj-susy`: a useful strongly correlated lattice benchmark
 
@@ -346,9 +360,10 @@ No language change or giant runtime-switched "all models" solver is needed.
    by finite-window excitations; two-body and limiting-case checks in every
    precision. Hard walls are the next boundary slice, not part of the first
    implementation by implication.
-2. **SU(3) PBC**, or **Gaudin–Yang PBC** if continuum gases are the priority:
-   small-sector ED or independent continuum checks, with physical and
-   auxiliary labels fully documented.
+2. **SU(3) PBC balanced singlet:** first slice complete, with small-chain ED,
+   native-precision analytic checks, and documented nested labels.
+   **Gaudin–Yang PBC** is next: finite-ring sector selection and independent
+   continuum checks, with physical and auxiliary labels fully documented.
 3. **Wider XXZ ground-state coverage** and **t–J at J=2t**: extend lattice
    benchmarks while keeping branch/parameter restrictions explicit.
 4. **A focused complex-root project:** start with a small known XXX string
