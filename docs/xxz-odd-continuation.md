@@ -16,6 +16,11 @@ does not certify a nonzero physical Bethe vector or prove sector minimality.
 Negative-Delta odd rings remain excluded from the public ground-state API;
 even rings and free ends are already supported.
 
+**Development status: deferred until needed.** Retain this implementation
+and its regression tests, but further odd-ring work and public integration
+are not current priorities. The [restart checklist](xxz-negative.md#deferred-odd-ring-work-restart-checklist)
+records the unresolved issues and the recommended first investigation.
+
 ## Coordinates that retain the momentum branch
 
 Let `M=N/2-|Sz|`, folding spin reversal so `M<=floor(N/2)`. Choose one of

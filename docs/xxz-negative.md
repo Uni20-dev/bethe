@@ -9,8 +9,10 @@ The `bethe::xxz::detail::negative_ground_roots` engine in
 [xxz_negative.hpp](../include/bethe/xxz_negative.hpp) solves ground-state
 sectors for `-1<Delta<0` on even periodic rings and free-end chains of either
 parity. It works in fp64, long-double, and optional fp128. Negative-Delta odd
-rings are still not public: their physical-state classification and global
-sector selection remain part of this extension. Excitations and `Delta<=-1`
+rings are still not public. Their remaining physical-state and lowest-state
+selection work is **deferred until a concrete need arises**; see the
+[restart checklist](#deferred-odd-ring-work-restart-checklist). The internal
+implementation and its tests are retained. Excitations and `Delta<=-1`
 require separate work.
 
 The Hamiltonian is unchanged:
@@ -150,7 +152,7 @@ the pinned Uni20 build. Shared XXZ definitions now live below the solvers in
 `xxz_common.hpp`, allowing both real and polynomial engines to remain
 independent of the public ground-state dispatcher.
 
-## Why odd rings are still work in progress
+## Why odd rings are not public
 
 An odd ring is not bipartite. Two issues need explicit handling:
 
@@ -174,8 +176,74 @@ An odd ring is not bipartite. Two issues need explicit handling:
    minimum. Its result is separate from physical-state validation.
 
 The second observation alone rules out routing all negative couplings through
-the existing `ground_state` wrapper's sector choice. These are not grounds
-for silently dropping odd rings from the project: the next work is their
-root/state classification, followed by public integration with honest root
-representation and residual diagnostics. No complete odd-ring phase diagram
+the existing `ground_state` wrapper's sector choice. The internal work is
+retained for a future implementation, but no complete odd-ring phase diagram
 is claimed by the small-system audit.
+
+## Deferred odd-ring work: restart checklist
+
+**Decision:** leave negative-Delta odd periodic ground states unsupported in
+the public API and CLI, and revisit only when those results are needed.
+This does not defer negative-Delta even rings or free ends, which are already
+supported. It does not remove the separate explicit spin-helix API. Other
+models can proceed independently; there is no commitment to an experimental
+odd-ring frontend or to completing every singular-state family first.
+
+### Preserved checkpoint
+
+Through commit `d7fc028`, the internal implementation has polynomial
+continuation, all-sector candidate comparison, regular-state and Wronskian
+diagnostics, explicit helix states, mixed-phantom dressing and bounded
+nonzero-amplitude checks, native-precision root recovery, and independent
+free-sea/helix variational upper bounds. Follow the
+[continuation guide](xxz-odd-continuation.md) for equations, test coverage,
+counterexamples, and links to the individual modules. Existing regression
+tests remain part of the normal suite; deferral is not permission to break
+these components.
+
+### Issues to resolve before public ground-state support
+
+1. **Lowest-state selection within a sector.** The driver follows one
+   free-sea branch at fixed momentum. A physical, converged eigenstate need
+   not be the sector minimum. Continuity, concavity, and variational bounds
+   reject some wrong branches but do not establish that no lower branch or
+   momentum sector was missed. The documented N=17 branch jump is a concrete
+   regression, not evidence of a complete classification.
+2. **A single physical-state acceptance policy.** Regularity, helix matching,
+   and mixed-phantom witnesses cover different cases. Generic-q Wronskian
+   assumptions cannot be applied indiscriminately at roots of unity;
+   repeated roots, exact strings, and other singular limits can remain
+   unresolved. Witness budgets and conditioning limits must remain visible,
+   and an unresolved check must not be interpreted as a zero or absent state.
+3. **Recoverable numerical failures and practical costs.** The continuation
+   and Wronskian code still call Uni20's ordinary dense solve, whose default
+   singular-matrix policy can abort. An expected singularity needs a safe
+   failure path before public exposure, without changing process-global
+   policy. Establish a useful size/precision envelope: polynomial conditioning
+   and exponential subset work in the optional wavefunction checks matter.
+4. **Ground-state versus candidate API semantics.** Keep polynomial
+   coefficients and affine coordinates authoritative; complex-root recovery
+   is optional and may be unresolved. Extend result/status and residual tags
+   rather than squeezing this representation into real-root arrays. Compare
+   every required magnetization sector for a global ground state, retaining
+   failed or unresolved sectors instead of selecting from an incomplete set.
+   The current internal `lowest_index` compares converged branch energies;
+   it is not by itself a public ground-state acceptance flag.
+
+### Where to resume
+
+First specify the actual requested lengths, magnetization sectors, couplings,
+and accuracy. Then audit branch selection over that domain against independent
+spin-basis spectra: dense coupling sweeps on small rings, selected larger
+sparse calculations, momentum competitors, and neighborhoods of known
+collisions. Use the existing `tests/reference_xxz_odd_ed.py` and typed tests
+as the starting point. Cross-check precision and continuation step sensitivity.
+This investigation should determine whether the present branch is adequate or
+whether competing branches or a more systematic Q-system treatment are needed;
+adding another necessary acceptance inequality alone does not settle it.
+
+A future numerical release need not wait for a new general completeness
+theorem. It does need a defensible state-selection method, discriminating
+validation over its stated scope, and honest unresolved/failure behaviour.
+Only after that decision should API/CLI integration and any experimental
+opt-in be designed. Negative-Delta excitation scans remain separate work.

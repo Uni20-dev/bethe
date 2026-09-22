@@ -19,8 +19,10 @@ J=1, h=0. Ground states/sectors: Delta > -1 for even N, Delta >= 0 for odd N.
 The anisotropy is required. This periodic-chain implementation supports
 ground states and magnetization-sector minima for every finite Delta>=0.
 Even rings additionally support `-1<Delta<0` using rank-subtracted,
-scaled equations. Negative-Delta odd rings remain work in progress;
-they are explicitly rejected rather than assigned the wrong ground sector.
+scaled equations. Negative-Delta odd rings are
+[deferred until needed](xxz-negative.md#deferred-odd-ring-work-restart-checklist);
+their internal candidate solver is not exposed through this API or CLI.
+They are explicitly rejected rather than assigned the wrong ground sector.
 For `0<=Delta<=1` it also supports a restricted finite-real-root excitation
 family, not the complete spectrum or strings. For open boundaries,
 use the separate [`bethe-xxz-obc` front end](xxz-open.md).

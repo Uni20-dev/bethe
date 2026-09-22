@@ -11,9 +11,12 @@ or that every boundary condition, coupling, or excited state is covered.
 
 The first new implementations are **repulsive periodic Lieb–Liniger**,
 the **periodic SU(3) balanced-singlet ground state**, and selected
-**repulsive Gaudin–Yang** ground-state sectors. Next are wider XXZ ground-state
-coverage and the supersymmetric t–J model; extending existing models'
-boundary/state coverage remains valuable as well.
+**repulsive Gaudin–Yang** ground-state sectors. Wider XXZ ground-state
+coverage is now public for massive anisotropy and for negative anisotropy
+on even rings and free-end chains. Negative-anisotropy **odd periodic rings
+are deferred until needed**, not a prerequisite for the next new model,
+the supersymmetric t–J chain. Extending existing models' boundary/state
+coverage remains valuable as well.
 These priorities and difficulty assessments are our engineering judgments,
 not conclusions of the cited papers or a committed implementation schedule.
 
@@ -292,7 +295,7 @@ separate front end rather than forcing this into a chain-shaped CLI.
   Both paths are exposed through the ground-state APIs and existing frontends,
   with explicit hyperbolic coordinates and scaled residuals. The periodic
   ground result is distinct from the real-excitation type; negative odd rings
-  remain unfinished.
+  remain internal and are deferred until a concrete calculation needs them.
   The [polynomial equations](xxz-polynomial.md) and an internal
   [momentum-constrained adaptive driver](xxz-odd-continuation.md) now handle
   conjugate-pair formation without extracting roots, with independent
@@ -324,8 +327,12 @@ separate front end rather than forcing this into a chain-shaped CLI.
   Independent free-sea and projected-helix variational upper bounds now reject
   continuation energies incompatible with a sector minimum; passing these
   necessary checks is not a proof of minimality.
-  **Next:** mixed/singular-state admissibility and sector-minimum tracking,
-  then public integration; only subsequently extend excitation classification.
+  **Deferred:** do not extend this internal investigation or expose it as a
+  public ground-state solver without a concrete need. Preserve the code and
+  tests; the [restart checklist](xxz-negative.md#deferred-odd-ring-work-restart-checklist)
+  records the branch-selection, singular-state, numerical-failure, and API
+  issues. This work does not block other models. Negative-Delta excitation
+  classification remains a separate later extension.
   The broader family is established by [Yang–Yang](../CITATIONS.md#yang-yang-1966), but the
   old real-coordinate domain and excitation window do not extend unchanged.
   Treat `Delta<=-1` and polarized/degenerate limits separately. These remain
