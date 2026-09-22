@@ -11,8 +11,9 @@ It accepts `-1<Delta<=0`, including the free-fermion point for initialization.
 
 This is **not yet a production ground-state solver**. The polynomial can
 represent real roots and conjugate pairs, and the tests follow small-ring
-sector minima through collisions. General continuation, numerical conditioning,
-physical-state admissibility, and global sector selection still need work.
+sector minima through collisions. An internal [adaptive continuation driver](xxz-odd-continuation.md)
+now constrains momentum and monitors conditioning. Physical-state admissibility,
+general large-chain conditioning, and global sector selection still need work.
 The public APIs and frontends remain unchanged.
 
 ## Starting equations and parity
@@ -166,11 +167,10 @@ with fp128 and the 285-test Clang 20 Release suite without MPLAPACK. Of these,
 
 ## Remaining implementation work
 
-1. Add adaptive continuation with a shared iteration budget, checks of the
-   intended momentum branch, and explicit diagnostics when conditioning or
-   admissibility prevents certification. Investigate a better-conditioned
-   polynomial basis or factored variables for larger chains; do not accept
-   a small raw coefficient residual as a physical-state certificate.
+1. Extend the [momentum-constrained adaptive driver](xxz-odd-continuation.md)
+   beyond its tested finite-size range, with physical admissibility checks.
+   Its shared iteration budget and conditioning diagnostics are implemented;
+   a small coefficient residual is still not a physical-state certificate.
 2. Establish sector-minimum tracking through singular/root-of-unity cases
    and compare sectors for the global ground state. The existing
    smallest-|Sz| rule is not valid for all negative-coupling odd rings.

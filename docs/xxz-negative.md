@@ -127,8 +127,11 @@ An odd ring is not bipartite. Two issues need explicit handling:
    complex conjugate pairs. A real-coordinate range change is insufficient;
    regularized complex-root variables or a polynomial formulation are needed.
    The [polynomial building block](xxz-polynomial.md) now supplies coefficient
-   equations, analytic derivatives, and observables, with exact collision and
-   small-ring continuation tests. It is not yet a production odd-ring solver.
+   equations, analytic derivatives, and observables. An internal
+   [adaptive odd-ring driver](xxz-odd-continuation.md) now follows these
+   coefficients with momentum, conditioning, and energy-concavity checks;
+   selected sector energies agree with independent spin-basis calculations
+   through 21 sites. It is not yet a production odd-ring solver.
 2. The global minimum need not lie in the smallest-|Sz| sector. An independent
    ED regression for N=5, Delta=-0.9 finds the fully polarized energy -1.125
    below the |Sz|=1/2 sector minimum (approximately -0.9898034892).

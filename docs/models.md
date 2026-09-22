@@ -290,10 +290,11 @@ separate front end rather than forcing this into a chain-shaped CLI.
   `-1<Delta<0` sector ground roots for even rings and open chains, with
   rank-subtracted equations scaled to remain discriminating near Delta=-1.
   It is not yet exposed by the public ground-state API or frontends.
-  A [polynomial-equation building block](xxz-polynomial.md) now handles
-  conjugate-pair formation in small odd-ring tests without extracting roots;
-  its conditioning and physical-state checks still need a production driver.
-  **Next:** odd-ring complex-root continuation and global sector selection,
+  The [polynomial equations](xxz-polynomial.md) and an internal
+  [momentum-constrained adaptive driver](xxz-odd-continuation.md) now handle
+  conjugate-pair formation without extracting roots, with independent
+  spin-basis energy checks through 21 sites at selected couplings.
+  **Next:** physical-state admissibility and global sector selection,
   then public integration; only subsequently extend excitation classification.
   The broader family is established by [Yang–Yang](../CITATIONS.md#yang-yang-1966), but the
   old real-coordinate domain and excitation window do not extend unchanged.

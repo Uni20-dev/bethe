@@ -40,12 +40,17 @@ template <uni20::Real Real> class PolynomialBetheSystem {
     using Jet = PolynomialJet<Real>;
     using Polynomial = std::vector<Jet>;
 
-    PolynomialBetheSystem(std::size_t sites, std::size_t roots) : sites(sites), order(roots)
+    /// Coefficients may instead describe Q(x), with physical z=center+scale*x.
+    /// The default preserves the original physical-z coefficient convention.
+    PolynomialBetheSystem(std::size_t sites, std::size_t roots, Real center = Real{0}, Real scale = Real{1})
+        : sites(sites), order(roots), center(center), coordinate_scale(scale)
     {
       checked_sites(sites);
       if (roots > sites / 2) throw std::invalid_argument("XXZ polynomial degree requires M <= N/2");
       auto const elements = std::size_t(std::numeric_limits<std::ptrdiff_t>::max()) / sizeof(Jet);
       if (roots > elements / 2) throw std::length_error("XXZ polynomial workspace is too large");
+      if (!uni20::isfinite(center) || !uni20::isfinite(scale) || scale <= Real{0})
+        throw std::invalid_argument("XXZ polynomial coordinates require finite center and positive finite scale");
     }
 
     struct Evaluation
@@ -63,7 +68,7 @@ template <uni20::Real Real> class PolynomialBetheSystem {
     {
       validate(coefficients);
       validate_delta(delta);
-      if (jacobian && (jacobian->extent(0) != order || jacobian->extent(1) != order))
+      if (jacobian && (std::size_t(jacobian->extent(0)) != order || std::size_t(jacobian->extent(1)) != order))
         throw std::invalid_argument("XXZ polynomial Jacobian has wrong shape");
       Evaluation out{.residual = std::vector<Real>(order)};
       if (!order) return out;
@@ -135,6 +140,7 @@ template <uni20::Real Real> class PolynomialBetheSystem {
     }
 
     std::size_t sites, order;
+    Real center, coordinate_scale;
 
   private:
     static bool finite(Complex z) { return uni20::isfinite(z.real()) && uni20::isfinite(z.imag()); }
@@ -152,6 +158,7 @@ template <uni20::Real Real> class PolynomialBetheSystem {
 
     std::pair<Complex, Complex> at_i(std::span<Real const> c) const
     {
+      if (center != Real{0} || coordinate_scale != Real{1}) return shifted_at_i(c);
       // Powers of i cycle exactly. Compensated real and imaginary sums avoid
       // repeated Horner cancellation when evaluating the observables.
       bethe::detail::CompensatedSum<Real> qr, qi, dr, di;
@@ -167,6 +174,37 @@ template <uni20::Real Real> class PolynomialBetheSystem {
         }
       }
       Complex const q{qr.value(), qi.value()}, derivative{dr.value(), di.value()};
+      if (!finite(q) || !finite(derivative) || q == Complex{})
+        throw std::runtime_error("XXZ polynomial observable has a pole or nonfinite coefficients");
+      return {q, derivative};
+    }
+
+    std::pair<Complex, Complex> shifted_at_i(std::span<Real const> c) const
+    {
+      // R(z)=scale^M Q((z-center)/scale). Evaluate its reciprocal polynomial
+      // W(t)=1+c[M-1]*t+...+c[0]*t^M, t=scale/(i-center), without large powers
+      // of (i-center)/scale. The returned pair is R(i),R'(i) divided by the
+      // SAME positive scale |i-center|^M, preserving both ratio and phase.
+      Complex const denominator{-center, Real{1}}, t = coordinate_scale / denominator;
+      Complex unit = denominator / std::abs(denominator), phase{1}, power{1};
+      for (std::size_t n = order; n; n >>= 1)
+      {
+        if (n & 1) phase *= unit;
+        unit *= unit;
+      }
+      bethe::detail::CompensatedSum<Real> wr, wi, dr, di;
+      wr.add(Real{1});
+      for (std::size_t j = 1; j <= order; ++j)
+      {
+        power *= t;
+        Complex const value = c[order - j] * power;
+        wr.add(value.real());
+        wi.add(value.imag());
+        dr.add(Real(j) * value.real());
+        di.add(Real(j) * value.imag());
+      }
+      Complex const w{wr.value(), wi.value()}, dw{dr.value(), di.value()};
+      Complex const q = phase * w, derivative = phase * ((Real(order) * w - dw) / denominator);
       if (!finite(q) || !finite(derivative) || q == Complex{})
         throw std::runtime_error("XXZ polynomial observable has a pole or nonfinite coefficients");
       return {q, derivative};
@@ -202,24 +240,29 @@ template <uni20::Real Real> class PolynomialBetheSystem {
       for (std::size_t j = 0; j < order; ++j)
         q[j] = {Complex{c[j]}, Complex{j == column ? Real{1} : Real{0}}};
       z[0] = power[0] = Jet{Complex{1}};
-      Jet const zero{}, one{Complex{1}}, imag{Complex{0, 1}};
+      Jet const zero{}, one{Complex{1}};
       // A=1+Delta-i*Delta*z, B=(1-Delta)*z-i*Delta.
       // K=(B^M Q(A/B)-B^M Q(z))/(A-B*z) is a POLYNOMIAL.
       // Divided Horner recurrence removes the self-scattering factor
       // A-B*z=1+Delta-(1-Delta)*z^2 before imposing divisibility by Q.
       // Leaving that factor in would introduce spurious roots at +/-s.
+      Real const p = Real{1} + delta, v = Real{1} - delta;
+      Jet const a0{Complex{p - v * center * center}};
+      Jet const a1{Complex{-v * center * coordinate_scale, -delta * coordinate_scale}};
+      Jet const b0{Complex{v * center * coordinate_scale, -delta * coordinate_scale}};
+      Jet const b1{Complex{v * coordinate_scale * coordinate_scale}};
       for (std::size_t r = 0; r < order; ++r)
       {
         auto const product = multiply(power, z, q);
-        k = linear(k, Jet{Complex{Real{1} + delta}}, Jet{Complex{0, -delta}}, q);
+        k = linear(k, a0, a1, q);
         for (std::size_t j = 0; j < order; ++j)
           k[j] = k[j] + product[j];
         z = linear(z, zero, one, q);
         z[0] = z[0] + q[order - r - 1];
-        power = linear(power, Jet{Complex{0, -delta}}, Jet{Complex{Real{1} - delta}}, q);
+        power = linear(power, b0, b1, q);
       }
       for (std::size_t j = 0; j < sites; ++j)
-        k = linear(k, one, imag, q);
+        k = linear(k, Jet{Complex{Real{1}, center}}, Jet{Complex{Real{0}, coordinate_scale}}, q);
       return k;
     }
 };
