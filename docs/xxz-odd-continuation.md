@@ -204,6 +204,11 @@ regular check or matches that helix; neither constitutes a sector-minimum
 test. Coupling mismatches are recorded, not rounded away, and failed
 continuations are still never filled in or omitted.
 
+A separate [mixed-phantom reduction](xxz-phantom.md) now checks the
+endpoint multiplicity, commensurability, and finite twisted equations.
+It is not used to set `state_checks_complete`: nonzero lifting still
+requires separate treatment.
+
 The minimum is chosen by native-precision comparison, without rounding
 energies or discarding a sector because its Wronskian is inconclusive.
 An exactly equal numerical value keeps the earlier entry. `nearby_indices`

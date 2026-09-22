@@ -119,6 +119,11 @@ nor an energy error estimate.
 
 ## Observables without root extraction
 
+The optional `evaluate_rotated` path supplies a constant boundary phase
+and its analytic Jacobian for the [mixed-phantom reduction](xxz-phantom.md).
+The ordinary `evaluate` call retains zero twist. This building block is
+not yet a public arbitrary-flux solver.
+
 The same coefficients give
 
 ```text

@@ -308,6 +308,8 @@ separate front end rather than forcing this into a chain-shaped CLI.
   [Projected spin helices](xxz-spin-helix.md) are available as explicit
   eigenstates at commensurate couplings; a separate diagnostic recognizes
   the all-phantom odd-ring collision.
+  The [mixed-phantom reduction](xxz-phantom.md) checks the twisted finite
+  equations after endpoint deflation; general nonzero lifting remains open.
   **Next:** mixed/singular-state admissibility and sector-minimum tracking,
   then public integration; only subsequently extend excitation classification.
   The broader family is established by [Yang–Yang](../CITATIONS.md#yang-yang-1966), but the

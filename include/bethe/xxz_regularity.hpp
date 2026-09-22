@@ -134,10 +134,14 @@ template <uni20::Real Real> Real homogeneous_value_margin(std::span<Real const> 
 template <uni20::Real Real>
 PolynomialRegularity<Real>
 check_regular_polynomial(PolynomialBetheSystem<Real> const& system, std::span<Real const> c, Real delta,
-                         Real residual_tolerance = Real{32} * uni20::numeric_limits<Real>::epsilon())
+                         Real residual_tolerance = Real{32} * uni20::numeric_limits<Real>::epsilon(),
+                         std::complex<Real> rotation = std::complex<Real>{1})
 {
   if (!uni20::isfinite(residual_tolerance) || residual_tolerance <= Real{0})
     throw std::invalid_argument("regularity residual tolerance must be finite and positive");
+  if (!uni20::isfinite(rotation.real()) || !uni20::isfinite(rotation.imag()) ||
+      std::abs(std::abs(rotation) - Real{1}) > Real{64} * uni20::numeric_limits<Real>::epsilon())
+    throw std::invalid_argument("XXZ regularity rotation must be a finite unit complex number");
   auto const m = system.order;
   auto const elements = std::size_t(std::numeric_limits<std::ptrdiff_t>::max()) / sizeof(Real);
   if (m && m > elements / 4 / m) throw std::length_error("XXZ regularity workspace is too large");
@@ -185,7 +189,7 @@ check_regular_polynomial(PolynomialBetheSystem<Real> const& system, std::span<Re
   try
   {
     uni20::DenseMatrix<Real> jac(m, m);
-    auto const f = system.evaluate(c, delta, &jac);
+    auto const f = system.evaluate_rotated(c, delta, rotation, &jac);
     out.residual_norm = f.norm;
     if (f.norm > residual_tolerance)
     {

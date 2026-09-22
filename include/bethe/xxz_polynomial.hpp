@@ -66,14 +66,31 @@ template <uni20::Real Real> class PolynomialBetheSystem {
     Evaluation evaluate(std::span<Real const> coefficients, Real delta,
                         uni20::DenseMatrix<Real>* jacobian = nullptr) const
     {
+      return evaluate_rotated(coefficients, delta, Complex{1}, jacobian);
+    }
+
+    /// Constant boundary phase: use the same parity-selected component of
+    /// rotation*G. With rotation=exp(i*phi/2), the root equations are
+    /// exp(i*N*k_j)=exp(i*phi)*product_(l!=j) S(k_j,k_l).
+    /// This changes equations/Jacobian, not the energy or momentum formulas.
+    /// momentum_defect remains a ZERO-TWIST diagnostic.
+    Evaluation evaluate_rotated(std::span<Real const> coefficients, Real delta, Complex rotation,
+                                uni20::DenseMatrix<Real>* jacobian = nullptr) const
+    {
       validate(coefficients);
       validate_delta(delta);
+      if (!finite(rotation) ||
+          std::abs(std::abs(rotation) - Real{1}) > Real{64} * uni20::numeric_limits<Real>::epsilon())
+        throw std::invalid_argument("XXZ equation rotation must be a finite unit complex number");
       if (jacobian && (std::size_t(jacobian->extent(0)) != order || std::size_t(jacobian->extent(1)) != order))
         throw std::invalid_argument("XXZ polynomial Jacobian has wrong shape");
       Evaluation out{.residual = std::vector<Real>(order)};
       if (!order) return out;
       bool const imaginary = (sites - order - 1) % 2 == 0;
-      auto component = [&](Complex z) { return imaginary ? z.imag() : z.real(); };
+      auto component = [&](Complex z) {
+        if (rotation != Complex{1}) z *= rotation;
+        return imaginary ? z.imag() : z.real();
+      };
       Real scale = Real{0}, maximum = Real{0};
       // One evaluation for values only, or M directional evaluations for the
       // full analytic Jacobian. The derivative includes reduction modulo Q:
@@ -88,10 +105,15 @@ template <uni20::Real Real> class PolynomialBetheSystem {
           if (j == 0)
           {
             out.residual[k] = component(f[k].value);
+            if (!uni20::isfinite(out.residual[k])) throw std::overflow_error("nonfinite rotated XXZ residual");
             maximum = std::max(maximum, std::abs(out.residual[k]));
             scale = std::max(scale, std::abs(f[k].value));
           }
-          if (jacobian) (*jacobian)[k, j] = component(f[k].tangent);
+          if (jacobian)
+          {
+            (*jacobian)[k, j] = component(f[k].tangent);
+            if (!uni20::isfinite((*jacobian)[k, j])) throw std::overflow_error("nonfinite rotated XXZ Jacobian");
+          }
         }
       }
       // Zero can result from a singular/exact-string polynomial, not evidence

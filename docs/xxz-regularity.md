@@ -120,6 +120,11 @@ rank margins stay zero and an unavailable residual stays infinite.
 
 ## Use in the sector scan and tests
 
+An optional final `rotation` argument applies the same criterion to the
+[constant-twist finite-root equations](xxz-phantom.md). It defaults to one;
+the sector scan still uses the periodic, zero-twist check. This extension
+tests the finite reduced state, not its singular phantom dressing.
+
 Each equation-converged entry in the internal all-sector scan now carries
 an optional `regularity` result alongside its Wronskian diagnostic.
 `regular_states_complete` says whether every entry passed this regular

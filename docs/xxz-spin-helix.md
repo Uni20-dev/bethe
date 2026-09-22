@@ -121,7 +121,10 @@ requested tolerance. Continued all-phantom polynomials are recognized in
 every folded sector at N=3,5,7,9,13,17,21, in all three scalar types.
 
 Mixed finite/infinite roots, other singular configurations, and reliable
-sector-minimum tracking remain separate tasks. For example, an odd-ring
+sector-minimum tracking remain separate tasks. A
+[mixed-root reduction](xxz-phantom.md) now checks the finite twisted problem
+and its separate commensurability condition, without treating that as a
+general nonzero-lift test. For example, an odd-ring
 continued state at Delta=-1/2 need not be an all-phantom helix. It must not
 be accepted just because the coupling is a root of unity. General public
 negative-Delta odd-ring ground-state support remains unavailable.
