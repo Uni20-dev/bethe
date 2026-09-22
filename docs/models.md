@@ -16,6 +16,8 @@ coverage is now public for massive anisotropy and for negative anisotropy
 on even rings and free-end chains. Negative-anisotropy **odd periodic rings
 are deferred until needed**, not a prerequisite for other models.
 The supersymmetric t–J chain now has a first periodic ground-state slice.
+The spin-1 Takhtajan–Babujian chain also has an even-ring singlet solver
+retaining finite-size complex-root deviations.
 Extending existing models' boundary/state
 coverage remains valuable as well.
 These priorities and difficulty assessments are our engineering judgments,
@@ -67,6 +69,7 @@ paper's correlation functions, thermodynamics, or full spectrum.
 | `su-n` | Fundamental SU(n) permutation chain | Implemented (limited): [SU(3) PBC](su3.md), balanced singlet ground state for L>=3 divisible by three, J=1 | Other populations/lengths, excitations, general n, open boundaries |
 | `gaudin-yang` | Equal-mass spin-1/2 continuum delta-interacting fermions | Implemented (limited): [repulsive PBC](gaudin-yang.md), odd populations of both spins; unrestricted free and fully polarized limits | Other periodic shell branches, excitations, attraction, hard walls, thermodynamics |
 | `tj-susy` | Projected t–J electrons, J=2t | Implemented (limited): [PBC](tj.md), t=1, doped odd N_up and N_down on either length parity; every no-hole and fully polarized sector | Other doped shell branches, excitations, open boundaries |
+| `spin-s-tb` | Integrable spin-1 bilinear–biquadratic chain | Implemented (limited): [even PBC](takhtajan-babujian.md), singlet ground state of H=sum[S.S-(S.S)^2], with finite two-string deviations | Odd lengths, sectors, excitations, higher spins, open boundaries |
 
 Analytic thermodynamic XXX/XXZ spinon dispersions are separate existing
 facilities; they do not constitute a general thermodynamic Bethe ansatz
@@ -86,7 +89,7 @@ integrable boundaries in the literature.
 | `su-n` | Fundamental SU(3) antiferromagnetic permutation chain, PBC, balanced ground state | [Implemented (limited)](su3.md) | First slice complete |
 | `gaudin-yang` | Equal-mass repulsive spin-1/2 delta-interacting Fermi gas, PBC, selected ground-state sectors | [Implemented (limited)](gaudin-yang.md) | First slice complete |
 | `tj-susy` | Projected t–J chain at J=2t, PBC, selected ground-state sectors | [Implemented (limited)](tj.md) | First slice complete |
-| `spin-s-tb` | Spin-1 Takhtajan–Babujian chain, PBC ground state with finite-size string deviations | Proposed | Large |
+| `spin-s-tb` | Spin-1 Takhtajan–Babujian chain, PBC ground state with finite-size string deviations | [Implemented (limited)](takhtajan-babujian.md) | First slice complete |
 | `richardson` | Reduced BCS pairing Hamiltonian, specified levels and pair number | Proposed | Medium–large |
 | `gaudin-magnet` | Rational Gaudin/central-spin spectra at specified couplings and magnetization | Watch | Medium–large |
 | `multicomponent-gas` | SU(kappa) fermions or the equal-coupling Bose–Fermi mixture, PBC | Watch | Medium–large |
@@ -259,13 +262,21 @@ matter: [Vlijm–Caux](../CITATIONS.md#vlijm-caux-2014) provides a numerical
 starting point. Solving ideal string centers alone must be labelled an
 approximation, not an exact finite-chain energy calculation.
 
-Start with even periodic spin-1 chains, small enough for independent exact
-diagonalization, and check the original complex equations after reconstructing
-the roots. Broader spin, excitations, and open boundaries follow only after
-singular/colliding roots and missing-state diagnostics are under control.
+Implemented in [takhtajan_babujian.hpp](../include/bethe/takhtajan_babujian.hpp)
+and `bethe-tb-pbc`: even L>=4, zero-field singlet, bilinear coefficient 1
+(J=4 in Vlijm–Caux). The filled sea's centres and positive deviations are
+solved together with an analytic Jacobian; ideal strings are not substituted
+for the finite roots. [The guide](takhtajan-babujian.md) records the branch,
+equations, normalization, precision and failure contract.
 
-**Next dependency:** a validated complex-root or regularized string-deviation
-solver. This machinery also benefits missing XXX/XXZ and Hubbard excitations.
+Tests check original complex equations through L=128 in all scalar types,
+independent spin-basis energies and translation at L=4,6,8, native-precision
+E_4=-11-sqrt(41), the Jacobian and incomplete-solve diagnostics.
+
+**Next slice:** broken-string excitations require real and three-string
+roots, singular-solution handling and new label branches. Other spin,
+magnetization, odd lengths and open boundaries are not covered by this
+ground-state implementation.
 
 ### `richardson`: finite pairing spectra without a spatial chain
 

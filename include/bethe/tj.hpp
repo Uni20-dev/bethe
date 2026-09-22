@@ -3,6 +3,7 @@
 #pragma once
 
 #include <array>
+#include <bethe/detail/newton.hpp>
 #include <bethe/heisenberg.hpp>
 
 namespace bethe::tj
@@ -59,47 +60,7 @@ inline QuantumNumbers centered_numbers(std::array<std::size_t, 2> counts)
   return labels;
 }
 
-// A small native-precision partial-pivot solve with a recoverable failure
-// path. Expected singular Newton systems must not invoke a terminal error
-// policy or change Uni20's process-global configuration.
-template <uni20::Real Real> bool newton_step(std::vector<Real> a, std::vector<Real>& b)
-{
-  auto const n = b.size();
-  Real scale{};
-  for (Real v : a)
-  {
-    if (!uni20::isfinite(v)) return false;
-    scale = std::max(scale, std::abs(v));
-  }
-  for (Real v : b)
-    if (!uni20::isfinite(v)) return false;
-  Real const floor = Real{64} * uni20::numeric_limits<Real>::epsilon() * scale;
-  for (std::size_t k = 0; k < n; ++k)
-  {
-    auto p = k;
-    for (std::size_t i = k + 1; i < n; ++i)
-      if (std::abs(a[i * n + k]) > std::abs(a[p * n + k])) p = i;
-    if (!uni20::isfinite(a[p * n + k]) || !(std::abs(a[p * n + k]) > floor)) return false;
-    for (std::size_t j = k; j < n; ++j)
-      std::swap(a[k * n + j], a[p * n + j]);
-    std::swap(b[k], b[p]);
-    for (std::size_t i = k + 1; i < n; ++i)
-    {
-      Real const f = a[i * n + k] / a[k * n + k];
-      for (std::size_t j = k + 1; j < n; ++j)
-        a[i * n + j] -= f * a[k * n + j];
-      b[i] -= f * b[k];
-    }
-  }
-  for (std::size_t i = n; i-- > 0;)
-  {
-    for (std::size_t j = i + 1; j < n; ++j)
-      b[i] -= a[i * n + j] * b[j];
-    b[i] /= a[i * n + i];
-    if (!uni20::isfinite(b[i])) return false;
-  }
-  return true;
-}
+using bethe::detail::newton_step;
 
 /// Sutherland (BFF) equations, Essler-Korepin (3.73), conventional rapidities.
 /// M1=N_h+min(N_up,N_down), M2=N_h; the second level has NO self-scattering.

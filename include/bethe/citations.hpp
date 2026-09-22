@@ -291,13 +291,17 @@ inline constexpr std::array<Use, 2> uses_tj_pbc{{
   {&references[21], "Projected t-J Hamiltonian (1.3)-(1.5), Sutherland BFF equations (3.73), and energy (3.75). We remove the shift 2*N_e-L: E=2*N_h-sum 1/(lambda^2+1/4). Doped mixed-spin coverage is restricted to odd N_up and N_down; J=2t=2."},
   {&references[0], "No-hole reduction to the periodic XXX sector solver: H_tJ=2*H_XXX-L/2. Fermionic translation adds the filled-reference phase (-1)^(L-1)."},
 }};
+inline constexpr std::array<Use, 2> uses_tb_pbc{{
+  {&references[22], "Original integrable higher-spin chain family; only the periodic even-length spin-1 singlet ground state is implemented."},
+  {&references[23], "Spin-1 Hamiltonian and complex Bethe equations (1.2)-(1.4), filled two-string sea, and finite-deviation equations (3.8)-(3.11). Our bilinear coefficient is 1, i.e. J=4 in this paper. Equation (3.18) supplies only an initial guess; finite-size deviations are solved, not dropped. No dynamical correlations or excitations are implemented."},
+}};
 inline constexpr std::array<Use, 3> uses_gaudin_yang_pbc{{
   {&references[17], "Original spin-1/2 continuum fermion solution; we implement repulsive periodic ground states in selected sectors, not attraction."},
   {&references[18], "Original multicomponent delta-gas solution; our implementation has two spin components only."},
   {&references[43], "Hamiltonian and periodic fermion equations (1), (2), (7), (8), (25); even N, odd minority population as in Sec. 5. Weak and strong limits (12), (15)-(16) provide checks. Hard walls, attraction and excitations are not implemented."},
 }};
 
-enum class Tool { xxx_pbc, xxx_obc, xxz_pbc, xxz_obc, hubbard_pbc, hubbard_obc, lieb_liniger_pbc, su3_pbc, tj_pbc, gaudin_yang_pbc };
+enum class Tool { xxx_pbc, xxx_obc, xxz_pbc, xxz_obc, hubbard_pbc, hubbard_obc, lieb_liniger_pbc, su3_pbc, tj_pbc, tb_pbc, gaudin_yang_pbc };
 
 [[nodiscard]] constexpr std::span<Use const> for_tool(Tool tool)
 {
@@ -312,6 +316,7 @@ enum class Tool { xxx_pbc, xxx_obc, xxz_pbc, xxz_obc, hubbard_pbc, hubbard_obc, 
     case Tool::lieb_liniger_pbc: return uses_lieb_liniger_pbc;
     case Tool::su3_pbc: return uses_su3_pbc;
     case Tool::tj_pbc: return uses_tj_pbc;
+    case Tool::tb_pbc: return uses_tb_pbc;
     case Tool::gaudin_yang_pbc: return uses_gaudin_yang_pbc;
   }
   throw std::invalid_argument("unknown citation tool");

@@ -608,6 +608,14 @@
       ]
     },
     {
+      "id": "tb_pbc",
+      "executable": "bethe-tb-pbc",
+      "references": [
+        {"id": "babujian-1982", "context": "Original integrable higher-spin chain family; only the periodic even-length spin-1 singlet ground state is implemented."},
+        {"id": "vlijm-caux-2014", "context": "Spin-1 Hamiltonian and complex Bethe equations (1.2)-(1.4), filled two-string sea, and finite-deviation equations (3.8)-(3.11). Our bilinear coefficient is 1, i.e. J=4 in this paper. Equation (3.18) supplies only an initial guess; finite-size deviations are solved, not dropped. No dynamical correlations or excitations are implemented."}
+      ]
+    },
+    {
       "id": "gaudin_yang_pbc",
       "executable": "bethe-gaudin-yang-pbc",
       "references": [

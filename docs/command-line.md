@@ -37,6 +37,10 @@ For projected lattice electrons, [`bethe-tj-pbc`](tj.md) fixes t=1, J=2 and
 takes L with optional `--particles N --sz VALUE`. It supports doped sectors
 with odd populations of both spins, plus every no-hole or fully polarized
 sector. Defaults are N=L and the smallest nonnegative Sz compatible with N.
+For the spin-1 bilinear–biquadratic TB point,
+[`bethe-tb-pbc`](takhtajan-babujian.md) takes even L>=4 and selects the
+zero-field singlet ground state of `H=sum[S.S-(S.S)^2]`. Its `--roots` report
+retains finite deviations and the real and imaginary parts of each rapidity.
 
 Each program's `--help` (and no-argument usage) includes relevant literature
 references with links and a note on the modes they support. Normal numerical

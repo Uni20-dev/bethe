@@ -50,6 +50,9 @@ and `obc` means open boundaries (currently free ends, with no boundary fields).
 - [Supersymmetric t–J](docs/tj.md): `bethe-tj-pbc` gives periodic sector ground
   states at t=1, J=2 for odd spin populations, plus all no-hole and fully
   polarized sectors, with double occupancy excluded.
+- [Spin-1 Takhtajan–Babujian](docs/takhtajan-babujian.md): `bethe-tb-pbc`
+  gives the periodic even-ring singlet ground state of `H=sum[S.S-(S.S)^2]`,
+  retaining complex-root finite-size string deviations.
 
 The XXX and XXZ models use spin-1/2 operators, J=1, and zero magnetic field.
 Hubbard uses hopping t=1 and the unshifted interaction `U*n_up*n_down`.
@@ -171,6 +174,8 @@ together. Read them in roughly this order, or go straight to your model:
     charge/spin roots, sector restrictions, and weak/strong-coupling limits.
 14. [Supersymmetric t–J chain](docs/tj.md) — projected electrons, nested hole
     roots, the XXX limit, and fermionic momentum conventions.
+15. [Spin-1 Takhtajan–Babujian chain](docs/takhtajan-babujian.md) — complex
+    two-strings, finite-size deviations, and bilinear–biquadratic normalization.
 
 For possible additions, see the [model catalogue and development proposal](docs/models.md):
 known integrable families, literature, implementation restrictions, and suggested priorities.

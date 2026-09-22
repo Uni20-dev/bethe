@@ -437,12 +437,20 @@ Phys. Lett. A 90, 479-482 (1982).
 
 [DOI](<https://doi.org/10.1016/0375-9601(82)90403-0>).
 
+Relevant tool modes:
+
+- `bethe-tb-pbc`: Original integrable higher-spin chain family; only the periodic even-length spin-1 singlet ground state is implemented.
+
 ### vlijm-caux-2014
 
 Rogier Vlijm and Jean-Sébastien Caux. *Computation of dynamical correlation functions of the spin-1 Babujan-Takhtajan chain*.
 J. Stat. Mech. 2014, P05009 (2014).
 
 [DOI](<https://doi.org/10.1088/1742-5468/2014/05/P05009>), [arXiv](<https://arxiv.org/abs/1401.4450>).
+
+Relevant tool modes:
+
+- `bethe-tb-pbc`: Spin-1 Hamiltonian and complex Bethe equations (1.2)-(1.4), filled two-string sea, and finite-deviation equations (3.8)-(3.11). Our bilinear coefficient is 1, i.e. J=4 in this paper. Equation (3.18) supplies only an initial guess; finite-size deviations are solved, not dropped. No dynamical correlations or excitations are implemented.
 
 ### dukelsky-2004
 
