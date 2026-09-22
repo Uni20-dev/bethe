@@ -218,7 +218,7 @@ template <uni20::Real Real> Point<Real> initialize(Branch branch, Real interacti
   out.interaction = interaction;
   out.convention = convention;
   if (branch == Branch::spinon)
-    out.spin = uni20::from_twice(std::int64_t{1});
+    out.spin = uni20::from_twice(1);
   else if (branch == Branch::holon)
     out.delta_particles = -1;
   else if (branch == Branch::antiholon)

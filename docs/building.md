@@ -56,7 +56,7 @@ For binary128, use a separate build directory and add
 `-DUNI20_ENABLE_MPLAPACK=ON`. To use an installed MPLAPACK 3.0+ binary128
 package, add `-DUNI20_USE_SYSTEM_MPLAPACK=ON` and
 `-Dmplapack_DIR=/path/to/lib/cmake/mplapack`; otherwise Uni20 can fetch it.
-See [Uni20's provider setup](https://github.com/Uni20-dev/uni20/blob/ef7e8b38f853a109e48c6b1762cab074f076639e/docs/linalg/mplapack_binary128.md).
+See [Uni20's provider setup](https://github.com/Uni20-dev/uni20/blob/0c037c125705d77e197f108f6d0ee9efb6990eff/docs/linalg/mplapack_binary128.md).
 
 `UNI20_USE_SYSTEM_MPLAPACK=OFF` forces a v3.0.0 source fetch. Alternatively,
 build MPLAPACK v3.0.0 separately and pass its **build directory** as
