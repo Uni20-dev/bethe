@@ -2,9 +2,10 @@
 
 [Back to the overview](../README.md)
 
-For infinite-chain half-filled spinon/holon/antiholon lines, use the separate
-[thermodynamic dispersion tool](hubbard-dispersion.md), which also offers
-symmetric and unshifted interaction conventions.
+For infinite-chain spinon and charge lines at or below half filling, use the
+separate [thermodynamic dispersion tool](hubbard-dispersion.md), including
+[doped dispersions](hubbard-doped.md), both interaction conventions and
+Hamiltonian/Fermi energy references.
 
 The Hubbard model adds mobile charge to the spin-chain problem: an electron
 can hop between sites, while opposite spins pay an interaction energy when

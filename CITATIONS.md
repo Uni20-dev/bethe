@@ -224,6 +224,28 @@ Relevant tool modes:
 
 - `bethe-hubbard-dispersion`: Exact massive-branch K-Bessel series, resummed here into nonoscillatory positive integrals to retain the weak-coupling charge gap; hopping and interaction conventions are converted as documented.
 
+### essler-2010
+
+Fabian H. L. Essler. *Threshold singularities in the one-dimensional Hubbard model*.
+Phys. Rev. B 81, 205120 (2010).
+
+[DOI](<https://doi.org/10.1103/PhysRevB.81.205120>), [arXiv](<https://arxiv.org/abs/1002.1671>).
+
+Relevant tool modes:
+
+- `bethe-hubbard-dispersion`: Doped zero-field density and dressed-energy equations (103)-(106), with dressed momenta from (28)-(29); our mu\_unshifted equals mu+2u in (105), u=U/4. Elementary lines only, not threshold exponents or continuum minimization.
+
+### luo-pu-guan-2024
+
+Jia-Jia Luo, Han Pu, and Xi-Wen Guan. *Exact results of the one-dimensional repulsive Hubbard model*.
+Rep. Prog. Phys. 87, 117601 (2024).
+
+[DOI](<https://doi.org/10.1088/1361-6633/ad7b70>), [arXiv](<https://arxiv.org/abs/2307.00890>).
+
+Relevant tool modes:
+
+- `bethe-hubbard-dispersion`: Real charge particle/hole and spinon excitation interpretation, Sec. II; doped charge-particle is a real-root addition, not the gapped half-filled antiholon or a k-Lambda string.
+
 ### karbach-1998
 
 Michael Karbach, Kun Hu, and Gerhard Müller. *Introduction to the Bethe ansatz II*.

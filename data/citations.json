@@ -24,6 +24,28 @@
       ]
     },
     {
+      "id": "essler-2010",
+      "authors": "Fabian H. L. Essler",
+      "title": "Threshold singularities in the one-dimensional Hubbard model",
+      "publication": "Phys. Rev. B 81, 205120",
+      "year": 2010,
+      "links": [
+        {"label": "DOI", "url": "https://doi.org/10.1103/PhysRevB.81.205120"},
+        {"label": "arXiv", "url": "https://arxiv.org/abs/1002.1671"}
+      ]
+    },
+    {
+      "id": "luo-pu-guan-2024",
+      "authors": "Jia-Jia Luo, Han Pu, and Xi-Wen Guan",
+      "title": "Exact results of the one-dimensional repulsive Hubbard model",
+      "publication": "Rep. Prog. Phys. 87, 117601",
+      "year": 2024,
+      "links": [
+        {"label": "DOI", "url": "https://doi.org/10.1088/1361-6633/ad7b70"},
+        {"label": "arXiv", "url": "https://arxiv.org/abs/2307.00890"}
+      ]
+    },
+    {
       "id": "karbach-1998",
       "authors": "Michael Karbach, Kun Hu, and Gerhard Müller",
       "title": "Introduction to the Bethe ansatz II",
@@ -624,7 +646,9 @@
       "executable": "bethe-hubbard-dispersion",
       "references": [
         {"id": "essler-korepin-1999", "context": "Half-filled spinon and holon dispersions, Eqs. (4)-(5), with our U equal to four times the paper's U; no form factors or spectral weights are implemented."},
-        {"id": "melzer-1995", "context": "Exact massive-branch K-Bessel series, resummed here into nonoscillatory positive integrals to retain the weak-coupling charge gap; hopping and interaction conventions are converted as documented."}
+        {"id": "melzer-1995", "context": "Exact massive-branch K-Bessel series, resummed here into nonoscillatory positive integrals to retain the weak-coupling charge gap; hopping and interaction conventions are converted as documented."},
+        {"id": "essler-2010", "context": "Doped zero-field density and dressed-energy equations (103)-(106), with dressed momenta from (28)-(29); our mu_unshifted equals mu+2u in (105), u=U/4. Elementary lines only, not threshold exponents or continuum minimization."},
+        {"id": "luo-pu-guan-2024", "context": "Real charge particle/hole and spinon excitation interpretation, Sec. II; doped charge-particle is a real-root addition, not the gapped half-filled antiholon or a k-Lambda string."}
       ]
     },
     {

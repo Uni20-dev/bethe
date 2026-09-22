@@ -41,8 +41,9 @@ Thermodynamic dispersion tools use `bethe-<model>-dispersion`.
   states at every physical filling and spin projection, for either sign of U
   and odd or even lengths, without lattice momentum.
 - [Hubbard dispersions](docs/hubbard-dispersion.md): `bethe-hubbard-dispersion`
-  gives half-filled repulsive spinon, holon and antiholon lines, with symmetric
-  (SO(4)) or unshifted interaction conventions for iMPS comparisons.
+  gives half-filled spinon/holon/antiholon lines and [doped spinon/charge lines](docs/hubbard-doped.md)
+  for U>0 at zero field, with symmetric (SO(4)) or unshifted interactions and
+  Hamiltonian or Fermi-level energy references for iMPS comparisons.
 - [Periodic Lieb–Liniger](docs/lieb-liniger.md): `bethe-lieb-liniger-pbc` gives
   repulsive continuum-boson ground states, specified Bethe states, and
   excitation scans within an explicit finite quantum-number window.

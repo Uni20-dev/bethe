@@ -1,10 +1,12 @@
 # Hubbard spinon and charge dispersions
 
 `bethe-hubbard-dispersion` evaluates elementary excitation lines of the infinite,
-half-filled repulsive Hubbard chain at zero field. Unlike the
+repulsive Hubbard chain at zero field, at or below half filling. Unlike the
 [finite-ring](hubbard.md) and [free-end](hubbard-open.md) solvers, it takes no
-length or boundary-condition argument. Currently `U>0`, hopping `t=1`, and half
-filling are required. Doping, attraction, spectral weights, and multiparticle
+length or boundary-condition argument. It requires `U>0`, hopping `t=1`, and
+`0<n<=1`. The default is half filling (`--density 1`), described below.
+For `--density n` with `n<1`, see the [doped dispersion guide](hubbard-doped.md).
+Attraction, nonzero magnetic fields, spectral weights, and multiparticle
 continuum thresholds are not implemented here.
 
 ```sh
@@ -50,7 +52,7 @@ H_symmetric = H_unshifted - U*N/2 + U*L/4.
 ```
 
 `--convention unshifted` matches `U*n_up*n_down` in our finite Hubbard tools.
-For excitation energies above the same half-filled background at fixed length,
+For excitation energies above the same background at fixed length,
 
 ```text
 E_unshifted = E_symmetric + U*DeltaN/2.
@@ -60,6 +62,14 @@ The extensive background cancels. Spinons are unchanged, holons shift down by
 `U/2`, and antiholons up by `U/2`. Negative unshifted removal energies are
 legitimate: half filling is centered at chemical potential `U/2` in that
 Hamiltonian, not at zero chemical potential.
+
+The default `--reference hamiltonian` reports these Hamiltonian differences.
+`--reference fermi` instead reports `E_H-mu_H*DeltaN`, independent of the chosen
+interaction convention. At half filling we choose the middle of the Mott
+plateau: `mu_symmetric=0`, `mu_unshifted=U/2`. Thus the Fermi-referenced energies
+equal the symmetric energies here, including the nonzero charge gap. Both
+chemical potentials appear in the metadata. For doping they are solved from
+the requested density, not fixed at these half-filled values.
 
 ## iMPS comparisons
 
@@ -130,7 +140,10 @@ arguments. Inspect status before increasing a budget or changing precision.
 
 `auto`, `pretty`, and `plain` use Uni20 presentation. `csv`/`tsv` have one header
 row, unwrapped native-precision tokens, empty failed-energy cells, and `#`
-metadata including convention, background, precision and solver CPU time.
+metadata including convention, energy reference, background, precision and
+solver CPU time. `energy` follows the selected convention/reference;
+`symmetric_energy` always means the symmetric **Hamiltonian** difference and
+`fermi_energy` always means the chemical-potential-subtracted energy.
 Citations appear in `--help` and [CITATIONS.md](../CITATIONS.md), not numeric output.
 
 Include `<bethe/hubbard_thermo.hpp>` and use `bethe::hubbard::thermo`:
