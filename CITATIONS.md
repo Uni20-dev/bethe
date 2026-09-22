@@ -635,6 +635,21 @@ Phys. Rev. A 4, 2019 (1971).
 
 [DOI](<https://doi.org/10.1103/PhysRevA.4.2019>).
 
+Relevant tool modes:
+
+- `bethe-sutherland-pbc`: Original trigonometric inverse-square gas. We select periodic scalar bosons with collision behavior |x\_i-x\_j|^lambda, lambda\>=0; the coupling coefficient alone does not fix this domain.
+
+### gurappa-panigrahi-1999
+
+N. Gurappa and Prasanta K. Panigrahi. *Equivalence of the Sutherland Model to Free Particles on a Circle*.
+arXiv:hep-th/9908127v2 (1999).
+
+[arXiv](<https://arxiv.org/abs/hep-th/9908127v2>).
+
+Relevant tool modes:
+
+- `bethe-sutherland-pbc`: Hamiltonian (18), ground energy (19), and the partition spectrum after (23), with beta=lambda and hbar=2m=1. Ascending integer labels include common boosts. Exact energies and momenta only; finite label windows do not claim global spectral completeness.
+
 ### andrei-1980
 
 N. Andrei. *Diagonalization of the Kondo Hamiltonian*.

@@ -441,6 +441,14 @@
       ]
     },
     {
+      "id": "gurappa-panigrahi-1999",
+      "authors": "N. Gurappa and Prasanta K. Panigrahi",
+      "title": "Equivalence of the Sutherland Model to Free Particles on a Circle",
+      "publication": "arXiv:hep-th/9908127v2",
+      "year": 1999,
+      "links": [{"label": "arXiv", "url": "https://arxiv.org/abs/hep-th/9908127v2"}]
+    },
+    {
       "id": "andrei-1980",
       "authors": "N. Andrei",
       "title": "Diagonalization of the Kondo Hamiltonian",
@@ -748,6 +756,14 @@
         {"id": "haldane-1988", "context": "Original periodic spin-1/2 inverse-square chain; we use H=(pi/N)^2 sum_{i<j} S_i.S_j/sin^2(pi*(i-j)/N), J=1."},
         {"id": "shastry-1988", "context": "Independent exact solution of the long-range antiferromagnet; finite even and odd rings, not nearest-neighbor XXX."},
         {"id": "jiang-lamers-miao-2026", "context": "Motif spectral rules and Yangian multiplicities, Secs. 2.2-2.3. Convert their H=sum(1-P)/(4*sin^2) by H_ours=E_ferro-2*(pi/N)^2*H_theirs. No wavefunctions, norms or overlaps are implemented."}
+      ]
+    },
+    {
+      "id": "sutherland_pbc",
+      "executable": "bethe-sutherland-pbc",
+      "references": [
+        {"id": "sutherland-1971", "context": "Original trigonometric inverse-square gas. We select periodic scalar bosons with collision behavior |x_i-x_j|^lambda, lambda>=0; the coupling coefficient alone does not fix this domain."},
+        {"id": "gurappa-panigrahi-1999", "context": "Hamiltonian (18), ground energy (19), and the partition spectrum after (23), with beta=lambda and hbar=2m=1. Ascending integer labels include common boosts. Exact energies and momenta only; finite label windows do not claim global spectral completeness."}
       ]
     },
     {

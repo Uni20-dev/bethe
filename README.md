@@ -74,6 +74,9 @@ Thermodynamic dispersion tools use `bethe-<model>-dispersion`.
 - [Haldane–Shastry ring](docs/haldane-shastry.md): `bethe-haldane-shastry-pbc`
   gives exact ground/spin-sector energies and motif spectra with Yangian
   multiplicities, for even and odd inverse-chord-square spin-1/2 rings.
+- [Sutherland gas](docs/sutherland.md): `bethe-sutherland-pbc` gives exact
+  periodic bosonic ground and excited energies for a specified collision
+  exponent, with explicit integer labels or bounded label-window scans.
 
 The XXX and XXZ models use spin-1/2 operators, J=1, and zero magnetic field.
 Hubbard uses hopping t=1. Finite-system tools use the unshifted interaction
