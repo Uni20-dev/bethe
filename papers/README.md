@@ -8,6 +8,11 @@ complete bibliography remains in [data/citations.json](../data/citations.json);
 entries below use its stable reference IDs. Archiving a paper does not imply
 that all its methods or models are implemented.
 
+For a connected pedagogical account alongside the individual papers, see
+Jean-Sébastien Caux's [The Bethe Ansatz](https://integrability.org/).
+Our [bibliography](../CITATIONS.md) also links the particular sections used
+for equations, spinons, and state classification.
+
 ## Archived PDFs
 
 ### rylands-2022

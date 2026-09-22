@@ -127,6 +127,13 @@ for precision, tolerances, output formats, and exit statuses.
 
 ## Go deeper
 
+For the theory behind the calculations, Jean-Sébastien Caux's
+[The Bethe Ansatz](https://integrability.org/) is an excellent companion:
+pedagogical derivations, integrable models, Bethe equations, and the
+classification of states and excitations. Our guides explain the particular
+conventions and numerical coverage implemented here; [CITATIONS.md](CITATIONS.md)
+links the specific literature and sections used by the code.
+
 The guides keep the examples, equations, numerical conventions, and limitations
 together. Read them in roughly this order, or go straight to your model:
 
