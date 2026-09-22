@@ -63,6 +63,9 @@ Nonspatial models such as Richardson pairing omit the boundary suffix.
 - [SU(n) fermion gas](docs/su-fermions.md): `bethe-sun-fermions-pbc` gives
   repulsive multicomponent continuum ground states when every occupied
   population is odd, plus unrestricted free and single-component limits.
+- [Integrable spin ladder](docs/ladder.md): `bethe-ladder-pbc` gives periodic
+  zero-field ground energies and singlet-count sector minima, with the
+  required four-spin coupling and either sign of the rung exchange.
 
 The XXX and XXZ models use spin-1/2 operators, J=1, and zero magnetic field.
 Hubbard uses hopping t=1 and the unshifted interaction `U*n_up*n_down`.

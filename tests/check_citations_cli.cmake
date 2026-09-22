@@ -91,6 +91,8 @@ elseif(TOOL STREQUAL "bethe-central-spin")
   set(args --couplings 1,0.7,0.3 --field 1 --sz 0)
 elseif(TOOL STREQUAL "bethe-sun-fermions-pbc")
   set(args --populations 3,1,1 --length 5 --c 1)
+elseif(TOOL STREQUAL "bethe-ladder-pbc")
+  set(args 4 --rung 1)
 endif()
 execute_process(COMMAND "${PROGRAM}" ${args}
   RESULT_VARIABLE status OUTPUT_VARIABLE output ERROR_VARIABLE error TIMEOUT 10)

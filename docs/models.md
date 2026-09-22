@@ -79,6 +79,7 @@ paper's correlation functions, thermodynamics, or full spectrum.
 | `richardson` | Reduced BCS pairing | Implemented (limited): [attractive pairing](richardson.md), distinct doublet levels, fixed pair count and blocked levels, ground energy through root collisions | Repeated levels/higher degeneracies, excitations, pair-root output, repulsive coupling |
 | `gaudin-magnet` | Rational spin-1/2 central spin | Implemented (limited): [sector minima](central-spin.md), distinct nonzero bath couplings of either sign, central field of either sign or zero | Repeated/zero couplings, higher local spins, excitations, general Gaudin charges |
 | `multicomponent-gas` | Equal-mass SU(κ) delta fermions | Implemented (limited): [repulsive PBC](su-fermions.md), odd occupied populations, any number of components, unrestricted free/single-component limits | Other periodic shells, attraction, excitations, hard walls, TBA, Bose–Fermi mixtures |
+| `integrable-ladder` | Wang's spin-1/2 ladder with four-spin exchange | Implemented (limited): [zero-field PBC](ladder.md), global and singlet-count sector ground energies, either sign of J_r, leg coefficient 1 and four-spin coefficient 4 | Fields, excitations, open ends, other integrable ladder families |
 
 Analytic thermodynamic XXX/XXZ spinon dispersions are separate existing
 facilities; they do not constitute a general thermodynamic Bethe ansatz
@@ -102,7 +103,7 @@ integrable boundaries in the literature.
 | `richardson` | Reduced BCS pairing Hamiltonian, specified levels and pair number | [Implemented (limited)](richardson.md) | First slice complete |
 | `gaudin-magnet` | Rational spin-1/2 central-spin sector ground energies at specified couplings and field | [Implemented (limited)](central-spin.md) | First slice complete |
 | `multicomponent-gas` | Repulsive SU(kappa) fermions on a ring, fixed odd occupied populations | [Implemented (limited)](su-fermions.md); Bose–Fermi mixture still proposed | Fermion first slice complete |
-| `integrable-ladder` | A specified SU(4)-type ladder with the required four-spin interaction, PBC | Watch | Medium after SU(n) |
+| `integrable-ladder` | Wang's SU(4)-type ladder with its required four-spin interaction, zero-field PBC sector minima | [Implemented (limited)](ladder.md) | First slice complete |
 | `q-boson` | Integrable q-boson hopping/phase model, PBC at fixed particle number | Watch | Medium |
 | `xyz` | Zero-field spin-1/2 XYZ chain, PBC finite-size spectrum | Watch | Large |
 | `haldane-shastry` | Inverse-chord-square spin chain, exact finite-ring levels | Related | Small for energies; larger for state counting |
@@ -369,6 +370,40 @@ in an apps-only build using the published Uni20 pin.
 and the distinct equal-coupling Bose–Fermi mixture. The latter requires
 its own grading/statistics and is not implicitly covered by adding colors.
 
+### `integrable-ladder`: singlet/triplet sector competition
+
+Implemented in [ladder.hpp](../include/bethe/ladder.hpp) and
+`bethe-ladder-pbc`: periodic L>=2 rungs, spin-1/2 leg coefficient 1,
+four-spin coefficient 4, any finite rung exchange J_r, no field.
+The [guide](ladder.md) gives the exact SU(4) permutation identity,
+energy constants, shifted finite-ring labels and state-selection rules.
+The rung coupling is a chemical potential for singlets; all triplet
+populations are minimized within each specified singlet-count sector.
+
+Three nested real seas are solved in native precision for the packed
+ground branches of compatible Young diagrams, including displaced seas
+and SU(4) descendants. This extra bookkeeping is essential: already at
+L=6, the populations 4,1,1,0 have a lower descendant from the 4,2,0,0
+multiplet than their own highest-weight sea. Reports preserve this
+distinction rather than claiming descendant rapidities are finite.
+Incomplete scans retain candidate upper bounds only. The all-singlet
+product for J_r>=4 has a direct analytic ground-state path.
+
+Tests compare all singlet-count sectors through seven rungs against
+independent permutation matrices and small literal spin-basis ladder
+Hamiltonians, as well as the original rational equations, momentum,
+SU(2)/SU(3) reductions and algebraic native-precision regressions.
+This is not a complete excited-state solver or a general nested-Bethe
+completeness proof; budgets cover the entire multiplet scan.
+The implementation checkpoint passed 795 tests with GCC 13 and fp128,
+545 with Clang 20 Release without MPLAPACK, and the new CLI/citation checks
+in an apps-only build using the published Uni20 pin. A 32-rung fp128
+global scan also converged within the default budgets.
+
+**Next slice:** field-dependent triplet populations or explicit excited
+branches, with new finite-ring state-selection checks. The ordinary
+two-leg Heisenberg ladder at generic couplings is not integrable here.
+
 ## Extensions of current models, rather than new solvers
 
 - **Wider XXZ anisotropy:** the [periodic ground-state/sector path](xxz.md#easy-axis-ground-states-delta1)
@@ -466,7 +501,7 @@ initial deliverable, rather than an unqualified claim of model support.
 | --- | --- | --- |
 | `gaudin-magnet` | Rational Gaudin magnets; a concrete central-spin realization is treated by [Faribault–Schuricht](../CITATIONS.md#faribault-schuricht-2013) | [Central-spin sector ground states implemented](central-spin.md); general Gaudin charges, repeated couplings and higher spins remain open, not arbitrary spin-bath interactions |
 | `multicomponent-gas` | Equal-mass SU(kappa) delta fermions, [Lee et al.](../CITATIONS.md#lee-2011); equal-mass Bose–Fermi mixture with equal repulsive Bose–Bose/Bose–Fermi couplings, [Imambekov–Demler](../CITATIONS.md#imambekov-demler-2006) | [Odd-population repulsive fermion sectors implemented](su-fermions.md); other shells and the Bose–Fermi mixture remain open. A trapped local-density calculation would be an approximation, not an exact trapped BA solution |
-| `integrable-ladder` | [Wang's ladder](../CITATIONS.md#wang-1999), with its required exchange and four-spin terms | Ground energies and rung-sector competition; an application of higher-rank nesting. Not the ordinary two-leg Heisenberg ladder at generic couplings |
+| `integrable-ladder` | [Wang's ladder](../CITATIONS.md#wang-1999), with its required exchange and four-spin terms | [Periodic zero-field sector minima implemented](ladder.md); fields and excitations remain open. Not the ordinary two-leg Heisenberg ladder at generic couplings |
 | `q-boson` | Deformed boson hopping and its phase-model limit, [Bogoliubov–Izergin–Kitanine](../CITATIONS.md#bogoliubov-1997) | PBC finite-N energies, checked in a bosonic occupation basis; define the deformed local algebra and coupling limits. Not the standard Bose–Hubbard chain |
 | `xyz` | Zero-field spin-1/2 XYZ / eight-vertex family, [Baxter](../CITATIONS.md#baxter-1973) | Small periodic-chain energies via elliptic/functional equations; Sz is not generally conserved. Native-precision elliptic functions and branch selection are substantial new requirements |
 | `haldane-shastry` | Spin-1/2 inverse-chord-square exchange on a ring, [Haldane](../CITATIONS.md#haldane-1988) and [Shastry](../CITATIONS.md#shastry-1988) | Exact energy and spinon-state enumeration benchmarks; implement the known spectral rules, not artificial Newton roots. Multiplet/motif counting is distinct from the nearest-neighbor XXX problem |

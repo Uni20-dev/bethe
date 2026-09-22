@@ -522,6 +522,21 @@ Phys. Rev. B 60, 9236 (1999).
 
 [DOI](<https://doi.org/10.1103/PhysRevB.60.9236>), [arXiv](<https://arxiv.org/abs/cond-mat/9901168>).
 
+Relevant tool modes:
+
+- `bethe-ladder-pbc`: Permutation-form ladder Hamiltonian (2), rung basis (3), chemical-potential form (4), and three nested rational equations (5). We use spin-1/2 operators, leg coefficient 1, four-spin coefficient 4, and J\_r=2\*J in (2)/(4), restoring E=E\_perm-L/4+J\_r\*(L/4-N\_s). Only zero-field periodic ground states and singlet-count sector minima are implemented.
+
+### hakobyan-2004
+
+Tigran Hakobyan. *The ordering of energy levels for SU(n) symmetric antiferromagnetic chains*.
+Nucl. Phys. B 699, 575-594 (2004).
+
+[DOI](<https://doi.org/10.1016/j.nuclphysb.2004.07.032>), [arXiv](<https://arxiv.org/abs/cond-mat/0403587>).
+
+Relevant tool modes:
+
+- `bethe-ladder-pbc`: SU(n) multiplets, Young diagrams and weight spaces. The periodic energy-ordering theorem has a row-parity restriction; we do not assume each population's own highest weight is lowest. Compatible dominant multiplets and displaced packed real seas are compared, not the full excited-state spectrum.
+
 ### bogoliubov-1997
 
 N. M. Bogoliubov, A. G. Izergin, and N. A. Kitanine. *Correlation functions for a strongly correlated boson system*.

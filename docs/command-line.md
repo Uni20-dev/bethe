@@ -57,6 +57,13 @@ For more than two continuum fermion components,
 population must be odd; free and single-component limits allow any counts.
 `--roots` displays all nested seas, with the physical-to-nesting component
 mapping retained in the report.
+For Wang's integrable ladder, [`bethe-ladder-pbc`](ladder.md) takes the
+number of rungs L>=2 and requires `--rung JR`. The leg coefficient is 1
+and the four-spin coefficient is fixed at 4; this is not an ordinary
+Heisenberg ladder. Use `--singlets NS` for one singlet-count sector or
+`--sectors` for all sector minima; triplet populations are minimized too.
+`--roots` prints the selected state's highest-weight representative and
+retains the distinction between it and a physical SU(4) descendant.
 
 Each program's `--help` (and no-argument usage) includes relevant literature
 references with links and a note on the modes they support. Normal numerical

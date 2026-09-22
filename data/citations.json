@@ -328,6 +328,17 @@
       ]
     },
     {
+      "id": "hakobyan-2004",
+      "authors": "Tigran Hakobyan",
+      "title": "The ordering of energy levels for SU(n) symmetric antiferromagnetic chains",
+      "publication": "Nucl. Phys. B 699, 575-594",
+      "year": 2004,
+      "links": [
+        {"label": "DOI", "url": "https://doi.org/10.1016/j.nuclphysb.2004.07.032"},
+        {"label": "arXiv", "url": "https://arxiv.org/abs/cond-mat/0403587"}
+      ]
+    },
+    {
       "id": "bogoliubov-1997",
       "authors": "N. M. Bogoliubov, A. G. Izergin, and N. A. Kitanine",
       "title": "Correlation functions for a strongly correlated boson system",
@@ -658,6 +669,14 @@
       "references": [
         {"id": "sutherland-1968", "context": "Original multicomponent delta-gas solution. We implement equal-mass repulsive fermions on a periodic ring, not arbitrary mixtures or statistics."},
         {"id": "lee-2011", "context": "Nested finite-size Bethe equations (2)-(3), with c'=c/2, and logarithmic signs from (13)-(19). Our Hamiltonian is -sum d_j^2+2c sum delta with c>=0 and no Zeeman term. Only the centered all-odd occupied-population ground branch is implemented; no strings, TBA or attraction."}
+      ]
+    },
+    {
+      "id": "ladder_pbc",
+      "executable": "bethe-ladder-pbc",
+      "references": [
+        {"id": "wang-1999", "context": "Permutation-form ladder Hamiltonian (2), rung basis (3), chemical-potential form (4), and three nested rational equations (5). We use spin-1/2 operators, leg coefficient 1, four-spin coefficient 4, and J_r=2*J in (2)/(4), restoring E=E_perm-L/4+J_r*(L/4-N_s). Only zero-field periodic ground states and singlet-count sector minima are implemented."},
+        {"id": "hakobyan-2004", "context": "SU(n) multiplets, Young diagrams and weight spaces. The periodic energy-ordering theorem has a row-parity restriction; we do not assume each population's own highest weight is lowest. Compatible dominant multiplets and displaced packed real seas are compared, not the full excited-state spectrum."}
       ]
     },
     {
