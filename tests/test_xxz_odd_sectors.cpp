@@ -19,6 +19,7 @@ TYPED_TEST(XXZOddSectors, EverySectorAndGlobalMinimumAgainstED)
       SCOPED_TRACE(::testing::Message() << "N=" << n << " Delta=" << uni20::format_scalar(d));
       auto const scan = engine::scan_odd_polynomial_sectors(n, d);
       ASSERT_TRUE(scan.equations_complete);
+      EXPECT_TRUE(scan.regular_states_complete);
       ASSERT_TRUE(scan.lowest_index);
       ASSERT_EQ(scan.sectors.size(), n / 2 + 1);
       double lowest = std::numeric_limits<double>::infinity();
@@ -30,6 +31,7 @@ TYPED_TEST(XXZOddSectors, EverySectorAndGlobalMinimumAgainstED)
         EXPECT_EQ(sector.branch.coefficients.size(), m);
         EXPECT_TRUE(sector.branch.equations_converged);
         EXPECT_TRUE(sector.wronskian);
+        EXPECT_TRUE(sector.regularity);
         auto const spectrum = test_support::exact_spectrum(n, m, 0, true, static_cast<double>(d));
         EXPECT_REAL_NEAR(static_cast<double>(sector.branch.energy), spectrum.front(), 3e-10);
         lowest = std::min(lowest, spectrum.front());
@@ -132,6 +134,7 @@ TYPED_TEST(XXZOddSectors, FailedSectorsNeverBecomeAnIncompleteMinimum)
     auto const scan = engine::scan_odd_polynomial_sectors(9, d, {.max_iterations = budget});
     EXPECT_FALSE(scan.equations_complete);
     EXPECT_FALSE(scan.wronskians_consistent);
+    EXPECT_FALSE(scan.regular_states_complete);
     EXPECT_FALSE(scan.lowest_index);
     EXPECT_TRUE(scan.nearby_indices.empty());
     EXPECT_EQ(scan.comparison_band, Real{0});
@@ -142,6 +145,7 @@ TYPED_TEST(XXZOddSectors, FailedSectorsNeverBecomeAnIncompleteMinimum)
       auto const& sector = scan.sectors[m];
       EXPECT_EQ(sector.branch.equations_converged, m <= 1);
       EXPECT_EQ(bool(sector.wronskian), m <= 1);
+      EXPECT_EQ(bool(sector.regularity), m <= 1);
       if (m > 1)
       {
         EXPECT_EQ(sector.branch.status, engine::PolynomialContinuationStatus::iteration_limit);
@@ -165,6 +169,9 @@ TYPED_TEST(XXZOddSectors, AdmissibilityDiagnosticsRemainSeparate)
   EXPECT_FALSE(scan.wronskians_consistent);
   ASSERT_TRUE(scan.sectors.front().wronskian);
   EXPECT_EQ(scan.sectors.front().wronskian->status, engine::WronskianStatus::ill_conditioned);
+  ASSERT_TRUE(scan.sectors.front().regularity);
+  EXPECT_EQ(scan.sectors.front().regularity->status, engine::RegularityStatus::regular_on_shell);
+  EXPECT_FALSE(scan.regular_states_complete);
 
   // Merely changing the independent diagnostic tolerance cannot change the
   // continuation, selected energy, Newton budget, or near-degeneracy report.

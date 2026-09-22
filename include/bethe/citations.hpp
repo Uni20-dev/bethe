@@ -182,8 +182,13 @@ inline constexpr std::array<Link, 2> links_46{{
   {"General M", "https://integrability.org/c_h_s_m.html"},
   {"Two-magnon scattering", "https://integrability.org/c_h_s_2.html"},
 }};
+inline constexpr std::array<Link, 3> links_47{{
+  {"arXiv", "https://arxiv.org/abs/0911.1881"},
+  {"HTML", "https://arxiv.org/html/0911.1881v1"},
+  {"Original 1982 paper", "https://doi.org/10.1007/BF01212176"},
+}};
 
-inline constexpr std::array<Reference, 47> references{{
+inline constexpr std::array<Reference, 48> references{{
   {"karbach-1998", "Michael Karbach, Kun Hu, and Gerhard Müller", "Introduction to the Bethe ansatz II", "Computers in Physics 12, 565", 1998, links_0},
   {"groha-2017", "Stefan Groha and Fabian H. L. Essler", "Spinon decay in the spin-1/2 Heisenberg chain with weak next nearest neighbour exchange", "J. Phys. A 50, 334002", 2017, links_1},
   {"caux-xxx-spinons", "Jean-Sébastien Caux", "The Bethe Ansatz: XXX spinons", "Online notes", 0, links_2},
@@ -231,6 +236,7 @@ inline constexpr std::array<Reference, 47> references{{
   {"grijalva-2019", "Sebastian Grijalva, Jacopo De Nardis, and Veronique Terras", "Open XXZ chain and boundary modes at zero temperature", "SciPost Phys. 7, 023", 2019, links_44},
   {"dugave-2015", "M. Dugave, F. Göhmann, K. K. Kozlowski, and J. Suzuki", "On form-factor expansions for the XXZ chain in the massive regime", "J. Stat. Mech. (2015) P05037", 2015, links_45},
   {"caux-xxz-coordinate", "Jean-Sébastien Caux", "The Bethe Ansatz: coordinate wavefunctions and periodic XXZ equations", "Online notes", 0, links_46},
+  {"korepin-2009", "Vladimir E. Korepin", "Norm of Bethe Wave Function as a Determinant", "arXiv:0911.1881 (historical account of the 1982 norm formula)", 2009, links_47},
 }};
 
 inline constexpr std::array<Use, 4> uses_xxx_pbc{{

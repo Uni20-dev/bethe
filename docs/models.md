@@ -303,7 +303,9 @@ separate front end rather than forcing this into a chain-shaped CLI.
   An [all-sector candidate scan](xxz-odd-continuation.md#comparing-sectors-without-assuming-the-answer)
   now compares every folded sector and withholds the minimum if any solve
   fails, with all-sector ED checks through 17 sites at selected couplings.
-  **Next:** physical-state admissibility and sector-minimum tracking,
+  A [regular-state criterion](xxz-regularity.md) now tests the Gaudin
+  nonzero-vector hypotheses directly in coefficient space.
+  **Next:** exceptional-state admissibility and sector-minimum tracking,
   then public integration; only subsequently extend excitation classification.
   The broader family is established by [Yang–Yang](../CITATIONS.md#yang-yang-1966), but the
   old real-coordinate domain and excitation window do not extend unchanged.

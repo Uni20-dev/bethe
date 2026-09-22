@@ -611,4 +611,11 @@ Online notes.
 
 [General M](<https://integrability.org/c_h_s_m.html>), [Two-magnon scattering](<https://integrability.org/c_h_s_2.html>).
 
+### korepin-2009
+
+Vladimir E. Korepin. *Norm of Bethe Wave Function as a Determinant*.
+arXiv:0911.1881 (historical account of the 1982 norm formula) (2009).
+
+[arXiv](<https://arxiv.org/abs/0911.1881>), [HTML](<https://arxiv.org/html/0911.1881v1>), [Original 1982 paper](<https://doi.org/10.1007/BF01212176>).
+
 <!-- END GENERATED BIBLIOGRAPHY -->

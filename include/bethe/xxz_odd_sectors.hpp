@@ -3,6 +3,7 @@
 #pragma once
 
 #include <bethe/xxz_odd_continuation.hpp>
+#include <bethe/xxz_regularity.hpp>
 #include <bethe/xxz_wronskian.hpp>
 #include <optional>
 
@@ -15,6 +16,7 @@ template <uni20::Real Real> struct OddSectorCandidate
     // Absent if continuation failed. Consistency is separate from equation
     // convergence, and neither flag establishes sector minimality.
     std::optional<WronskianCheck<Real>> wronskian;
+    std::optional<PolynomialRegularity<Real>> regularity;
 };
 
 /// All spin-reversal-distinct odd-ring continuation branches, in increasing
@@ -25,6 +27,7 @@ template <uni20::Real Real> struct OddSectorScan
     std::vector<OddSectorCandidate<Real>> sectors;
     bool equations_complete = false;
     bool wronskians_consistent = false;
+    bool regular_states_complete = false;
     std::size_t iterations = 0;
     // Populated only when EVERY sector's equations converged and its energy
     // is finite. Failed sectors may hide the true minimum: do not skip them.
@@ -57,6 +60,7 @@ OddSectorScan<Real> scan_odd_polynomial_sectors(std::size_t sites, Real delta, S
   out.sectors.reserve(count);
   out.equations_complete = true;
   out.wronskians_consistent = true;
+  out.regular_states_complete = true;
   for (std::size_t m = 0; m < count; ++m)
   {
     OddSectorCandidate<Real> sector;
@@ -71,11 +75,16 @@ OddSectorScan<Real> scan_odd_polynomial_sectors(std::size_t sites, Real delta, S
       sector.wronskian = check_odd_wronskian<Real>(sites, branch.coefficients, delta, branch.center,
                                                    branch.coordinate_scale, wronskian_tolerance);
       out.wronskians_consistent &= sector.wronskian->status == WronskianStatus::consistent;
+      PolynomialBetheSystem<Real> const system(sites, m, branch.center, branch.coordinate_scale);
+      sector.regularity =
+          check_regular_polynomial<Real>(system, branch.coefficients, delta, options.residual_tolerance);
+      out.regular_states_complete &= sector.regularity->status == RegularityStatus::regular_on_shell;
     }
     else
     {
       out.equations_complete = false;
       out.wronskians_consistent = false;
+      out.regular_states_complete = false;
     }
     out.sectors.push_back(std::move(sector));
   }

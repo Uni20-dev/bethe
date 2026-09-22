@@ -103,6 +103,25 @@ template <uni20::Real Real> class PolynomialBetheSystem {
       return out;
     }
 
+    /// Self-scattering-removed K_-(x) modulo Q, without the driving factor.
+    /// Used to test regularity of the pair-scattering factors independently
+    /// of the Bethe residual. Its zeros at roots of Q indicate an exact
+    /// string/singular configuration; numerical smallness is inconclusive.
+    std::vector<Complex> scattering_remainder(std::span<Real const> coefficients, Real delta) const
+    {
+      validate(coefficients);
+      validate_delta(delta);
+      if (!order) return {};
+      auto const result = direction(coefficients, delta, order, false);
+      std::vector<Complex> out(order);
+      for (std::size_t j = 0; j < order; ++j)
+      {
+        if (!finite(result[j].value)) throw std::overflow_error("nonfinite XXZ scattering remainder");
+        out[j] = result[j].value;
+      }
+      return out;
+    }
+
     /// Energy and momentum are rational functions of Q at i, so roots need
     /// not be extracted (an ill-conditioned operation at multiple roots).
     Real energy(std::span<Real const> coefficients, Real delta) const
@@ -234,7 +253,7 @@ template <uni20::Real Real> class PolynomialBetheSystem {
       return out;
     }
 
-    Polynomial direction(std::span<Real const> c, Real delta, std::size_t column) const
+    Polynomial direction(std::span<Real const> c, Real delta, std::size_t column, bool include_driving = true) const
     {
       Polynomial q(order), k(order), z(order), power(order);
       for (std::size_t j = 0; j < order; ++j)
@@ -261,8 +280,9 @@ template <uni20::Real Real> class PolynomialBetheSystem {
         z[0] = z[0] + q[order - r - 1];
         power = linear(power, b0, b1, q);
       }
-      for (std::size_t j = 0; j < sites; ++j)
-        k = linear(k, Jet{Complex{Real{1}, center}}, Jet{Complex{Real{0}, coordinate_scale}}, q);
+      if (include_driving)
+        for (std::size_t j = 0; j < sites; ++j)
+          k = linear(k, Jet{Complex{Real{1}, center}}, Jet{Complex{Real{0}, coordinate_scale}}, q);
       return k;
     }
 };

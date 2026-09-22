@@ -148,6 +148,9 @@ An independent [quantum-Wronskian diagnostic](xxz-wronskian.md) now checks
 the generic-q coefficient identity, and projected spin-helix tests establish
 nonzero eigenvectors at the phantom collision. The diagnostic remains
 separate from this driver: neither result is a blanket admissibility policy.
+The complementary [regular-state criterion](xxz-regularity.md) now tests
+the nonzero factors and full Jacobian required by the Gaudin norm formula
+without extracting roots. Infinite/colliding/string limits remain separate.
 
 Passing these finite-size checks does not establish general sector-minimum
 tracking, particularly at singular or root-of-unity configurations. Larger
@@ -186,6 +189,13 @@ The result keeps three distinct questions visible:
 3. `lowest_index`: which of the **complete set of numerically followed
    branches** has the lowest reported energy? This does not prove that the
    branches are physical or that each is its sector's minimum.
+
+Each converged entry also carries a `regularity` result from the
+[Gaudin-based regular-state test](xxz-regularity.md).
+`regular_states_complete` summarizes those results independently of
+`wronskians_consistent`. In particular, a regular vacuum at a root of unity
+can pass the former while the generic Wronskian is inconclusive. Exceptional
+states require a limiting construction, not automatic rejection.
 
 The minimum is chosen by native-precision comparison, without rounding
 energies or discarding a sector because its Wronskian is inconclusive.

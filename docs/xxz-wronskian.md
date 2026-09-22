@@ -160,3 +160,6 @@ eigenstate can be an excited state. The internal
 now compares every followed branch and refuses to select an incomplete
 minimum. Physical-state acceptance and reliable sector-minimum tracking
 remain requirements for public odd-ring negative-Delta support.
+The [regular-state test](xxz-regularity.md) now provides a complementary
+Gaudin-based criterion that does not require generic q, but still excludes
+infinite rapidities, collisions, and exact strings.
