@@ -113,6 +113,10 @@ magnitude. Local divergence terms telescope on the ring, giving an
 eigenvector with energy `N*Delta_c/4`. The opposite pitch gives its reflected
 partner.
 
+The [spin-helix API and polynomial diagnostic](xxz-spin-helix.md) now
+construct these states explicitly and recognize the continued all-phantom
+polynomial separately from this Wronskian test.
+
 Our collision polynomial has all z roots at `-a=-tan(pi/(2*N))`, so its
 Laurent transform is proportional to `t^M`: an endpoint coefficient
 vanishes. These are infinite conventional rapidities, outside the finite-root

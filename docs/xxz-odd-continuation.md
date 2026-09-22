@@ -197,6 +197,13 @@ Each converged entry also carries a `regularity` result from the
 can pass the former while the generic Wronskian is inconclusive. Exceptional
 states require a limiting construction, not automatic rejection.
 
+The [explicit helix diagnostic](xxz-spin-helix.md) now recognizes the
+all-phantom collision when the regular check is unresolved.
+`state_checks_complete` reports whether every converged sector passes the
+regular check or matches that helix; neither constitutes a sector-minimum
+test. Coupling mismatches are recorded, not rounded away, and failed
+continuations are still never filled in or omitted.
+
 The minimum is chosen by native-precision comparison, without rounding
 energies or discarding a sector because its Wronskian is inconclusive.
 An exactly equal numerical value keeps the earlier entry. `nearby_indices`

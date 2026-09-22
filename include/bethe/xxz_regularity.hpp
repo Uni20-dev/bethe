@@ -102,13 +102,16 @@ Real quotient_multiplication_margin(std::span<Real const> c, std::vector<std::co
   return regularity_pivot_margin(std::move(matrix));
 }
 
-// Relative cancellation in the homogeneous value b^M Q(a/b). Neither the
-// endpoint coordinate nor powers of 1/b need be formed.
+// Homogeneous value b^M Q(a/b), relative to a coefficient magnitude bound
+// on |x|<=max(1,|a/b|). The unit-radius floor matters for Q(x)=x^M near
+// x=0: a small value need not involve cancellation. Neither the endpoint
+// coordinate nor powers of 1/b need be formed.
 template <uni20::Real Real> Real homogeneous_value_margin(std::span<Real const> c, std::complex<Real> a, Real b)
 {
   Real const scale = std::max({std::abs(a.real()), std::abs(a.imag()), b});
   a /= scale;
   b /= scale;
+  Real const radius = std::max(std::abs(a), b);
   std::complex<Real> value{1};
   Real bound = Real{1}, power = Real{1};
   for (std::size_t j = c.size(); j-- > 0;)
@@ -116,7 +119,7 @@ template <uni20::Real Real> Real homogeneous_value_margin(std::span<Real const> 
     power *= b;
     Real const term = c[j] * power;
     value = value * a + term;
-    bound = bound * std::abs(a) + std::abs(term);
+    bound = bound * radius + std::abs(term);
   }
   if (!(bound > Real{0}) || !uni20::isfinite(bound)) return Real{0};
   Real const result = std::abs(value) / bound;

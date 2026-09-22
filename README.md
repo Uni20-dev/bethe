@@ -51,12 +51,14 @@ and `obc` means open boundaries (currently free ends, with no boundary fields).
 The XXX and XXZ models use spin-1/2 operators, J=1, and zero magnetic field.
 Hubbard uses hopping t=1 and the unshifted interaction `U*n_up*n_down`.
 Spin-chain excitation scans cover explicitly supported real-root families, **not complete
-spectra**: `--excitations all` means all states in that family. Complex strings
-and infinite-root descendants are not implemented.
+spectra**: `--excitations all` means all states in that family. General complex-string
+and infinite-root descendant scans are not implemented.
 
 [Analytic thermodynamic spinon dispersions](docs/spinons.md#thermodynamic-dispersion)
 are also available for XXX and gapless XXZ; these are distinct from finite-chain
 calculations.
+An [explicit XXZ spin-helix library API](docs/xxz-spin-helix.md) also provides
+special eigenstates at commensurate couplings; these are not ground-state scans.
 
 ## Build
 

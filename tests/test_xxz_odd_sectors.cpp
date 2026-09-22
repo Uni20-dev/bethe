@@ -20,6 +20,7 @@ TYPED_TEST(XXZOddSectors, EverySectorAndGlobalMinimumAgainstED)
       auto const scan = engine::scan_odd_polynomial_sectors(n, d);
       ASSERT_TRUE(scan.equations_complete);
       EXPECT_TRUE(scan.regular_states_complete);
+      EXPECT_TRUE(scan.state_checks_complete);
       ASSERT_TRUE(scan.lowest_index);
       ASSERT_EQ(scan.sectors.size(), n / 2 + 1);
       double lowest = std::numeric_limits<double>::infinity();
@@ -135,6 +136,7 @@ TYPED_TEST(XXZOddSectors, FailedSectorsNeverBecomeAnIncompleteMinimum)
     EXPECT_FALSE(scan.equations_complete);
     EXPECT_FALSE(scan.wronskians_consistent);
     EXPECT_FALSE(scan.regular_states_complete);
+    EXPECT_FALSE(scan.state_checks_complete);
     EXPECT_FALSE(scan.lowest_index);
     EXPECT_TRUE(scan.nearby_indices.empty());
     EXPECT_EQ(scan.comparison_band, Real{0});
@@ -172,6 +174,7 @@ TYPED_TEST(XXZOddSectors, AdmissibilityDiagnosticsRemainSeparate)
   ASSERT_TRUE(scan.sectors.front().regularity);
   EXPECT_EQ(scan.sectors.front().regularity->status, engine::RegularityStatus::regular_on_shell);
   EXPECT_FALSE(scan.regular_states_complete);
+  EXPECT_FALSE(scan.state_checks_complete);
 
   // Merely changing the independent diagnostic tolerance cannot change the
   // continuation, selected energy, Newton budget, or near-degeneracy report.

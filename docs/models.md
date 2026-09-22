@@ -305,7 +305,10 @@ separate front end rather than forcing this into a chain-shaped CLI.
   fails, with all-sector ED checks through 17 sites at selected couplings.
   A [regular-state criterion](xxz-regularity.md) now tests the Gaudin
   nonzero-vector hypotheses directly in coefficient space.
-  **Next:** exceptional-state admissibility and sector-minimum tracking,
+  [Projected spin helices](xxz-spin-helix.md) are available as explicit
+  eigenstates at commensurate couplings; a separate diagnostic recognizes
+  the all-phantom odd-ring collision.
+  **Next:** mixed/singular-state admissibility and sector-minimum tracking,
   then public integration; only subsequently extend excitation classification.
   The broader family is established by [Yang–Yang](../CITATIONS.md#yang-yang-1966), but the
   old real-coordinate domain and excitation window do not extend unchanged.

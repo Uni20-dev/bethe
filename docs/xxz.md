@@ -30,6 +30,10 @@ Exactly Delta=-1 and lower anisotropies are not included. The
 existing analytic thermodynamic `bethe::xxz::spinon_energy` retains its wider
 `-1 < Delta <= 1` domain; it is independent of this finite-size solver.
 
+A separate [spin-helix library API](xxz-spin-helix.md) constructs explicit
+eigenstates at commensurate couplings on either parity, including the
+isotropic endpoints. These are not general ground-state or excitation scans.
+
 ## Ground states and sectors
 
 ```sh

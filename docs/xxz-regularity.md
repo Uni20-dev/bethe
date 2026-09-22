@@ -43,7 +43,10 @@ Roots at z=+-a therefore require infinite-rapidity limits. The one-particle
 singularities `lambda=+-i*gamma/2`, where `Delta=cos(gamma)`, map to z=+-i.
 Homogeneous Horner evaluation tests F at these points without forming
 large coordinate ratios. Each `*_margin` for a value is its magnitude
-divided by the sum-of-magnitudes Horner bound. Real coefficients make the
+divided by the coefficient-magnitude bound evaluated at
+`max(1,abs(x))`. The unit-radius floor also detects small endpoint values
+without cancellation, such as `F(x)=x^M` near x=0; a cancellation-only
+ratio would misleadingly return one. Real coefficients make the
 two driving values at +-i conjugates, so only one needs evaluation.
 
 The remaining root conditions are checked in the quotient algebra C[x]/F:
@@ -134,7 +137,8 @@ Bethe wavefunction, verifies it is nonzero, and applies the spin Hamiltonian
 directly. This covers both real and conjugate-pair roots. A separate affine
 coordinate check compares K_- against the explicit pair factor above.
 
-Public odd-ring integration still requires a policy for the exceptional
-states this regular criterion excludes, together with sector-minimum
-tracking. In particular, the known phantom spin-helix eigenvectors must not
-be discarded simply because their regular-root norm formula is singular.
+An [explicit spin-helix construction](xxz-spin-helix.md) now handles the
+all-phantom collision separately. Public odd-ring integration still requires
+a policy for the other exceptional states this regular criterion excludes,
+together with sector-minimum tracking. A singular regular-root norm formula
+alone is never a reason to discard a state.

@@ -2,6 +2,7 @@
 // Copyright (C) 2026 Ian McCulloch
 #pragma once
 
+#include <bethe/xxz_helix_check.hpp>
 #include <bethe/xxz_odd_continuation.hpp>
 #include <bethe/xxz_regularity.hpp>
 #include <bethe/xxz_wronskian.hpp>
@@ -17,6 +18,8 @@ template <uni20::Real Real> struct OddSectorCandidate
     // convergence, and neither flag establishes sector minimality.
     std::optional<WronskianCheck<Real>> wronskian;
     std::optional<PolynomialRegularity<Real>> regularity;
+    // Tried only when regularity is unresolved; never changes the branch.
+    std::optional<PolynomialHelixCheck<Real>> helix;
 };
 
 /// All spin-reversal-distinct odd-ring continuation branches, in increasing
@@ -28,6 +31,9 @@ template <uni20::Real Real> struct OddSectorScan
     bool equations_complete = false;
     bool wronskians_consistent = false;
     bool regular_states_complete = false;
+    // Every converged branch passes the regular test OR the explicit-helix
+    // numerical match. Still not a proof of sector/global minimality.
+    bool state_checks_complete = false;
     std::size_t iterations = 0;
     // Populated only when EVERY sector's equations converged and its energy
     // is finite. Failed sectors may hide the true minimum: do not skip them.
@@ -61,6 +67,7 @@ OddSectorScan<Real> scan_odd_polynomial_sectors(std::size_t sites, Real delta, S
   out.equations_complete = true;
   out.wronskians_consistent = true;
   out.regular_states_complete = true;
+  out.state_checks_complete = true;
   for (std::size_t m = 0; m < count; ++m)
   {
     OddSectorCandidate<Real> sector;
@@ -79,12 +86,20 @@ OddSectorScan<Real> scan_odd_polynomial_sectors(std::size_t sites, Real delta, S
       sector.regularity =
           check_regular_polynomial<Real>(system, branch.coefficients, delta, options.residual_tolerance);
       out.regular_states_complete &= sector.regularity->status == RegularityStatus::regular_on_shell;
+      bool resolved = sector.regularity->status == RegularityStatus::regular_on_shell;
+      if (!resolved)
+      {
+        sector.helix = check_helix_polynomial<Real>(system, branch.coefficients, delta, (sites + 1) / 2);
+        resolved = sector.helix->status == HelixMatchStatus::compatible;
+      }
+      out.state_checks_complete &= resolved;
     }
     else
     {
       out.equations_complete = false;
       out.wronskians_consistent = false;
       out.regular_states_complete = false;
+      out.state_checks_complete = false;
     }
     out.sectors.push_back(std::move(sector));
   }

@@ -52,6 +52,20 @@ TYPED_TEST(XXZRegularity, ExceptionalFactorsAreNotCertified)
   EXPECT_LE(result.scattering_margin, Real{64} * uni20::numeric_limits<Real>::epsilon());
 }
 
+TYPED_TEST(XXZRegularity, EndpointResolutionDoesNotRequireCancellation)
+{
+  using Real = TypeParam;
+  Real const eps = uni20::numeric_limits<Real>::epsilon(), d = -Real{7} / Real{10};
+  Real const a = std::sqrt((Real{1} + d) / (Real{1} - d));
+  // Q(x)=x has no cancellation at a tiny x, yet its physical root is
+  // indistinguishable from the infinite-rapidity endpoint at this precision.
+  engine::PolynomialBetheSystem<Real> const system(7, 1, -a + Real{8} * eps);
+  std::vector<Real> const c{Real{0}};
+  auto const result = engine::check_regular_polynomial<Real>(system, c, d);
+  EXPECT_EQ(result.status, engine::RegularityStatus::exceptional_or_unresolved);
+  EXPECT_LT(result.endpoint_margin, Real{64} * eps);
+}
+
 TYPED_TEST(XXZRegularity, LargerRegularBranches)
 {
   using Real = TypeParam;
