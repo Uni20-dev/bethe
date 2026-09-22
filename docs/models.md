@@ -14,8 +14,9 @@ the **periodic SU(3) balanced-singlet ground state**, and selected
 **repulsive Gaudin–Yang** ground-state sectors. Wider XXZ ground-state
 coverage is now public for massive anisotropy and for negative anisotropy
 on even rings and free-end chains. Negative-anisotropy **odd periodic rings
-are deferred until needed**, not a prerequisite for the next new model,
-the supersymmetric t–J chain. Extending existing models' boundary/state
+are deferred until needed**, not a prerequisite for other models.
+The supersymmetric t–J chain now has a first periodic ground-state slice.
+Extending existing models' boundary/state
 coverage remains valuable as well.
 These priorities and difficulty assessments are our engineering judgments,
 not conclusions of the cited papers or a committed implementation schedule.
@@ -65,6 +66,7 @@ paper's correlation functions, thermodynamics, or full spectrum.
 | `lieb-liniger` | Continuum contact-interacting bosons | Implemented (limited): [repulsive PBC](lieb-liniger.md), ground state, explicit labels, and bounded excitation scans | Hard walls, attraction, thermodynamics |
 | `su-n` | Fundamental SU(n) permutation chain | Implemented (limited): [SU(3) PBC](su3.md), balanced singlet ground state for L>=3 divisible by three, J=1 | Other populations/lengths, excitations, general n, open boundaries |
 | `gaudin-yang` | Equal-mass spin-1/2 continuum delta-interacting fermions | Implemented (limited): [repulsive PBC](gaudin-yang.md), odd populations of both spins; unrestricted free and fully polarized limits | Other periodic shell branches, excitations, attraction, hard walls, thermodynamics |
+| `tj-susy` | Projected t–J electrons, J=2t | Implemented (limited): [PBC](tj.md), t=1, doped odd N_up and N_down on either length parity; every no-hole and fully polarized sector | Other doped shell branches, excitations, open boundaries |
 
 Analytic thermodynamic XXX/XXZ spinon dispersions are separate existing
 facilities; they do not constitute a general thermodynamic Bethe ansatz
@@ -83,7 +85,7 @@ integrable boundaries in the literature.
 | `lieb-liniger` | Repulsive one-component Bose gas on a ring; ground state and bounded real-root excitation scans | [Implemented (limited)](lieb-liniger.md) | First slice complete |
 | `su-n` | Fundamental SU(3) antiferromagnetic permutation chain, PBC, balanced ground state | [Implemented (limited)](su3.md) | First slice complete |
 | `gaudin-yang` | Equal-mass repulsive spin-1/2 delta-interacting Fermi gas, PBC, selected ground-state sectors | [Implemented (limited)](gaudin-yang.md) | First slice complete |
-| `tj-susy` | Projected t–J chain at J=2t, PBC, selected ground-state sectors | Proposed | Medium–large |
+| `tj-susy` | Projected t–J chain at J=2t, PBC, selected ground-state sectors | [Implemented (limited)](tj.md) | First slice complete |
 | `spin-s-tb` | Spin-1 Takhtajan–Babujian chain, PBC ground state with finite-size string deviations | Proposed | Large |
 | `richardson` | Reduced BCS pairing Hamiltonian, specified levels and pair number | Proposed | Medium–large |
 | `gaudin-magnet` | Rational Gaudin/central-spin spectra at specified couplings and magnetization | Watch | Medium–large |
@@ -223,17 +225,25 @@ target the supersymmetric **J=2t** point, not arbitrary J/t. Use the explicit
 alternative nested Bethe ansätze in
 [Essler–Korepin](../CITATIONS.md#essler-korepin-1992).
 
-Start with periodic ground states in a specified filling/magnetization
-family. The choice of grading/reference state changes the root description;
-we should choose a numerically suitable formulation and derive its particle
-counts and energy offsets explicitly. Hubbard's quantum-number sea cannot
-simply be copied. Validate the projected Fock-space Hamiltonian, the
-fully polarized free-fermion sector, and the no-hole reduction to XXX with
-the `-J/4` bond shift. Integrable open boundaries exist, but should follow
-as a separate boundary-equation project, not be inferred from the PBC code.
+Implemented in [tj.hpp](../include/bethe/tj.hpp) and `bethe-tj-pbc`, using
+Sutherland's BFF grading: `M1=N_h+min(N_up,N_down)`, `M2=N_h`. The doped
+real-root family requires odd populations of both spins, on odd or even L.
+No-hole states use `H_tJ=2*H_XXX-L/2`; fully polarized states are exact free
+fermions for every particle count. The [guide](tj.md) derives the label
+parities, energy shift, and fermionic translation phase and states the
+unsupported sectors explicitly.
 
-**Next decision:** compare the available gradings on a few small systems
-before choosing the first supported real/complex root family.
+Tests compare energies and momenta with an independent projected Fock-space
+Hamiltonian through L=8, check the original rational equations and analytic
+Jacobian, and retain native precision in analytic limits and solves through
+L=96. Invalid shell branches are rejected, not replaced by a nearby filling
+or spin. There is no mu-mu self-scattering term; SU(3)'s nested equations
+cannot be reused unchanged.
+
+**Next slice:** audit other doped population parities and their real/complex
+root families before extending the public state selector. Excitations and
+integrable open boundaries need separate labels/equations. Arbitrary J/t
+is outside this model's implemented integrable point.
 
 ### `spin-s-tb`: spin-1 first, with genuine complex-root support
 

@@ -213,6 +213,7 @@ Relevant tool modes:
 
 - `bethe-xxx-pbc`: Periodic XXX equations, energy normalization, and sector quantum numbers; Eqs. (6)-(9), (16), Table I.
 - `bethe-xxz-pbc`: XXX limit at Delta=1 and the conventional real-root quantum-number window.
+- `bethe-tj-pbc`: No-hole reduction to the periodic XXX sector solver: H\_tJ=2\*H\_XXX-L/2. Fermionic translation adds the filled-reference phase (-1)^(L-1).
 
 ### groha-2017
 
@@ -424,6 +425,10 @@ Fabian H. L. Essler and Vladimir E. Korepin. *Higher conservation laws and algeb
 Phys. Rev. B 46, 9147 (1992).
 
 [DOI](<https://doi.org/10.1103/PhysRevB.46.9147>), [arXiv](<https://arxiv.org/abs/hep-th/9207007>).
+
+Relevant tool modes:
+
+- `bethe-tj-pbc`: Projected t-J Hamiltonian (1.3)-(1.5), Sutherland BFF equations (3.73), and energy (3.75). We remove the shift 2\*N\_e-L: E=2\*N\_h-sum 1/(lambda^2+1/4). Doped mixed-spin coverage is restricted to odd N\_up and N\_down; J=2t=2.
 
 ### babujian-1982
 

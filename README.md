@@ -47,6 +47,9 @@ and `obc` means open boundaries (currently free ends, with no boundary fields).
 - [Periodic Gaudin–Yang](docs/gaudin-yang.md): `bethe-gaudin-yang-pbc` gives
   repulsive continuum-fermion ground states with odd populations of both spins,
   plus unrestricted free and fully polarized limits.
+- [Supersymmetric t–J](docs/tj.md): `bethe-tj-pbc` gives periodic sector ground
+  states at t=1, J=2 for odd spin populations, plus all no-hole and fully
+  polarized sectors, with double occupancy excluded.
 
 The XXX and XXZ models use spin-1/2 operators, J=1, and zero magnetic field.
 Hubbard uses hopping t=1 and the unshifted interaction `U*n_up*n_down`.
@@ -166,6 +169,8 @@ together. Read them in roughly this order, or go straight to your model:
     singlets, permutation normalization, and the spin-1 ULS mapping.
 13. [Periodic Gaudin–Yang gas](docs/gaudin-yang.md) — continuum fermions,
     charge/spin roots, sector restrictions, and weak/strong-coupling limits.
+14. [Supersymmetric t–J chain](docs/tj.md) — projected electrons, nested hole
+    roots, the XXX limit, and fermionic momentum conventions.
 
 For possible additions, see the [model catalogue and development proposal](docs/models.md):
 known integrable families, literature, implementation restrictions, and suggested priorities.

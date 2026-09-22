@@ -600,6 +600,14 @@
       ]
     },
     {
+      "id": "tj_pbc",
+      "executable": "bethe-tj-pbc",
+      "references": [
+        {"id": "essler-korepin-1992", "context": "Projected t-J Hamiltonian (1.3)-(1.5), Sutherland BFF equations (3.73), and energy (3.75). We remove the shift 2*N_e-L: E=2*N_h-sum 1/(lambda^2+1/4). Doped mixed-spin coverage is restricted to odd N_up and N_down; J=2t=2."},
+        {"id": "karbach-1998", "context": "No-hole reduction to the periodic XXX sector solver: H_tJ=2*H_XXX-L/2. Fermionic translation adds the filled-reference phase (-1)^(L-1)."}
+      ]
+    },
+    {
       "id": "gaudin_yang_pbc",
       "executable": "bethe-gaudin-yang-pbc",
       "references": [

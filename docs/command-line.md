@@ -33,6 +33,10 @@ For spin-1/2 continuum fermions, [`bethe-gaudin-yang-pbc`](gaudin-yang.md)
 takes N and requires `--length ELL --c C`. Select the populations with `--sz`;
 interacting mixed-spin sectors require odd populations of both spins. The
 free and fully polarized limits also support other populations.
+For projected lattice electrons, [`bethe-tj-pbc`](tj.md) fixes t=1, J=2 and
+takes L with optional `--particles N --sz VALUE`. It supports doped sectors
+with odd populations of both spins, plus every no-hole or fully polarized
+sector. Defaults are N=L and the smallest nonnegative Sz compatible with N.
 
 Each program's `--help` (and no-argument usage) includes relevant literature
 references with links and a note on the modes they support. Normal numerical
