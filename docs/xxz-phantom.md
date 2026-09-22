@@ -5,9 +5,10 @@
 The internal `reduce_phantom_polynomial` in
 [xxz_phantom.hpp](../include/bethe/xxz_phantom.hpp) removes a specified
 one-sided cluster of infinite rapidities and checks the remaining, twisted
-finite-root problem. This is a necessary-equation diagnostic, **not yet a
-general nonzero-state lifting test or a ground-state solver**. Its success
-does not make an unresolved entry in the sector scan acceptable.
+finite-root problem. This is a necessary-equation diagnostic, **not a
+nonzero-state lifting test or a ground-state solver**. Reduction alone does
+not make an unresolved entry in the sector scan acceptable; a separate
+[numerical witness](xxz-phantom-check.md) checks the dressed amplitude.
 
 ## The extra condition left by infinite roots
 
@@ -136,6 +137,8 @@ A [general coordinate-space dressing map](xxz-phantom-wave.md) now
 constructs the lifted amplitudes from a finite-state callback. Full
 Hamiltonian-identity tests and nonzero lifts of continued two-finite-root
 states provide additional independent checks. The map also has a genuine
-kernel, exhibited explicitly in the tests. General nonzero lifting, the
+kernel, exhibited explicitly in the tests. A bounded numerical witness
+search now checks amplitudes against uncertainty estimates; it is not a
+proof of general nonzero lifting. The
 remaining singular-root families, and reliable sector-minimum tracking
 remain work to do before public odd-ring ground-state integration.

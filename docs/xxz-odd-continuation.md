@@ -200,19 +200,18 @@ states require a limiting construction, not automatic rejection.
 The [explicit helix diagnostic](xxz-spin-helix.md) now recognizes the
 all-phantom collision when the regular check is unresolved.
 `state_checks_complete` reports whether every converged sector passes the
-regular check or matches that helix; neither constitutes a sector-minimum
+regular check, matches that helix, or has a resolved numerical phantom
+witness; none constitutes a sector-minimum
 test. Coupling mismatches are recorded, not rounded away, and failed
 continuations are still never filled in or omitted.
 
-A separate [mixed-phantom reduction](xxz-phantom.md) now checks the
-endpoint multiplicity, commensurability, and finite twisted equations.
-It is not used to set `state_checks_complete`: nonzero lifting still
-requires separate treatment.
-
-The [coordinate-space dressing map](xxz-phantom-wave.md) now supports that
-treatment when finite-state amplitudes are available. Tests establish the
-Hamiltonian identity and selected nonzero lifts, but also exhibit its
-kernel; it is not an unconditional acceptance rule.
+The [numerical phantom-witness diagnostic](xxz-phantom-check.md) combines
+mixed-root reduction, root recovery, and the coordinate dressing map. It
+requires a dressed amplitude resolved against propagated root uncertainty
+and an arithmetic allowance. Failed attempts and explicit work limits
+remain visible in `phantom_lifts` and `phantom_work_limited`; neither means
+the state vanishes. The map has a kernel, so reduction alone is never
+enough. These numerical witnesses are not rigorous interval certificates.
 
 The minimum is chosen by native-precision comparison, without rounding
 energies or discarding a sector because its Wronskian is inconclusive.
@@ -232,7 +231,8 @@ The scan's `iterations` sums all accepted updates, including those in rejected
 continuation stages. It finishes the other sectors after a numerical failure
 so the caller receives their diagnostics, but never manufactures a minimum
 from the incomplete set. Changing only the Wronskian tolerance cannot change
-the continuation energies, iteration counts, or selected index.
+the continuation energies, iteration counts, or selected index. The same
+is true of changing only the phantom-witness options (the fifth argument).
 
 Tests compare every folded sector and the selected minimum with spin-basis
 ED through N=9, at Delta=0 and four negative couplings. Analytic N=5

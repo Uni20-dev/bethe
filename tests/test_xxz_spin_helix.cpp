@@ -146,12 +146,17 @@ TYPED_TEST(XXZSpinHelix, ContinuedPhantomSectorsAreRecognized)
       ASSERT_TRUE(sector.helix);
       EXPECT_EQ(sector.helix->status, engine::HelixMatchStatus::compatible)
           << "M=" << m << " coefficient error=" << uni20::format_scalar(sector.helix->coefficient_error);
+      EXPECT_TRUE(sector.phantom_lifts.empty()); // The direct helix construction suffices.
       EXPECT_EQ(sector.branch.delta, helix.delta);
       EXPECT_EQ(sector.branch.momentum_index, (m * ((n + 1) / 2)) % n);
     }
   }
   auto const other = engine::scan_odd_polynomial_sectors(7, -Real{1} / Real{2});
-  EXPECT_FALSE(other.state_checks_complete);
+  ASSERT_TRUE(other.sectors.back().helix);
+  EXPECT_EQ(other.sectors.back().helix->status, engine::HelixMatchStatus::different_coupling);
+  ASSERT_FALSE(other.sectors.back().phantom_lifts.empty());
+  EXPECT_EQ(other.sectors.back().phantom_lifts.back().status, engine::PhantomLiftStatus::nonzero_witness);
+  EXPECT_TRUE(other.state_checks_complete); // Resolved by a mixed witness, not a helix match.
   auto const failed = engine::scan_odd_polynomial_sectors(7, -Real{7} / Real{10}, {.max_iterations = 0});
   EXPECT_FALSE(failed.state_checks_complete);
   for (auto const& sector : failed.sectors)

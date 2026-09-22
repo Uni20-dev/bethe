@@ -318,6 +318,9 @@ separate front end rather than forcing this into a chain-shaped CLI.
   reduced polynomials to explicit vectors, including tested mixed-phantom
   lifts with three and four finite roots. It reports unresolved clusters
   instead of treating them as distinct roots.
+  A bounded [nonzero-amplitude diagnostic](xxz-phantom-check.md) now adds
+  numerical mixed-phantom witnesses to the sector scan, with propagated
+  root-uncertainty estimates and visible work limits.
   **Next:** mixed/singular-state admissibility and sector-minimum tracking,
   then public integration; only subsequently extend excitation classification.
   The broader family is established by [Yang–Yang](../CITATIONS.md#yang-yang-1966), but the

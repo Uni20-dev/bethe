@@ -88,6 +88,14 @@ and severe cancellation remain possible: a floating-point zero is not a
 proof that the exact state is zero. Pair scaling does not guarantee that
 all intermediate plane-wave powers are representable.
 
+An optional second argument to `evaluate`, a span of nonnegative momentum
+radii, also returns `input_variation`: a propagated variation envelope at
+the fixed nominal pair normalization. It includes nonlinear product terms
+but excludes arithmetic roundoff and is not an interval certificate. See
+[numerical phantom witnesses](xxz-phantom-check.md) for the formulas and
+their use with recovered-root uncertainty estimates. Omitting the radii
+keeps this extra result zero and leaves the nominal amplitude unchanged.
+
 ## Validation and remaining work
 
 Tests compare the recurrence with all permutations through six particles,

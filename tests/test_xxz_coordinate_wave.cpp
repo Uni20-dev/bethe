@@ -217,6 +217,73 @@ TYPED_TEST(XXZCoordinateWave, RecoveredContinuedPolynomialsGiveEigenvectors)
       }
 }
 
+TYPED_TEST(XXZCoordinateWave, InputVariationEnclosesPerturbedAmplitudes)
+{
+  using Real = TypeParam;
+  using C = std::complex<Real>;
+  Real const eps = uni20::numeric_limits<Real>::epsilon(), delta = -Real{1} / Real{2};
+  for (unsigned r : {2, 3, 4})
+  {
+    std::vector<C> v;
+    std::vector<std::size_t> occupied;
+    for (unsigned j = 0; j < r; ++j)
+    {
+      v.emplace_back(Real(j + 3) / Real{5}, Real(int(j) - 1) / Real{7});
+      occupied.push_back(2 * j);
+    }
+    auto normalization = [&](auto const& factors) {
+      Real result{1};
+      for (unsigned i = 0; i < r; ++i)
+        for (unsigned j = i + 1; j < r; ++j)
+          result *= std::max({Real{1}, std::abs(Real{1} + factors[i] * factors[j] - Real{2} * delta * factors[i]),
+                              std::abs(Real{1} + factors[i] * factors[j] - Real{2} * delta * factors[j])});
+      return result;
+    };
+    engine::CoordinateBetheWave<Real> const wave(12, delta, v);
+    auto const nominal = wave.evaluate(occupied);
+    EXPECT_EQ(nominal.input_variation, Real{0});
+    for (Real radius : {Real{1} / Real{1000000}, Real{1} / Real{20}})
+    {
+      std::vector<Real> radii(r, radius);
+      auto const bounded = wave.evaluate(occupied, radii);
+      EXPECT_TRUE(bounded.value == nominal.value);
+      EXPECT_EQ(bounded.absolute_term_sum, nominal.absolute_term_sum);
+      EXPECT_GT(bounded.input_variation, Real{0});
+      for (unsigned pattern = 0; pattern < (1U << (2 * r)); ++pattern)
+      {
+        auto perturbed = v;
+        for (unsigned j = 0; j < r; ++j)
+        {
+          std::array<C, 4> const directions{C{1}, C{-1}, C{0, 1}, C{0, -1}};
+          perturbed[j] += radius * directions[(pattern >> (2 * j)) & 3U];
+        }
+        // The uncertainty envelope holds the NOMINAL global pair scaling
+        // fixed. Undo the reference's perturbed normalization accordingly.
+        auto const reference = permutations(delta, perturbed, occupied);
+        C const actual = reference.value * (normalization(perturbed) / normalization(v));
+        EXPECT_LE(std::abs(actual - nominal.value),
+                  bounded.input_variation +
+                      Real{1024} * eps * std::max(nominal.absolute_term_sum, reference.absolute_term_sum));
+      }
+    }
+  }
+  // A zero nominal amplitude can have nonzero sensitivity to its inputs.
+  std::array<C, 2> const identical{C{1}, C{1}};
+  auto const cancelled =
+      engine::CoordinateBetheWave<Real>(8, Real{0}, identical)
+          .evaluate(std::array<std::size_t, 2>{0, 1}, std::array<Real, 2>{Real{1} / Real{100}, Real{1} / Real{100}});
+  EXPECT_TRUE(cancelled.value == C{});
+  EXPECT_GT(cancelled.input_variation, Real{1} / Real{100});
+  engine::CoordinateBetheWave<Real> const wave(8, delta, std::array<C, 2>{C{1}, C{0, 1}});
+  std::array<std::size_t, 2> const occupied{0, 3};
+  EXPECT_THROW(wave.evaluate(occupied, std::array<Real, 1>{Real{0}}), std::invalid_argument);
+  EXPECT_THROW(wave.evaluate(occupied, std::array<Real, 2>{-Real{1}, Real{0}}), std::invalid_argument);
+  EXPECT_THROW(wave.evaluate(occupied, std::array<Real, 2>{Real{0}, uni20::numeric_limits<Real>::infinity()}),
+               std::invalid_argument);
+  EXPECT_THROW(wave.evaluate(occupied, std::array<Real, 2>{uni20::numeric_limits<Real>::max(), Real{0}}),
+               std::overflow_error);
+}
+
 TYPED_TEST(XXZCoordinateWave, RejectsInvalidInputsAndExcessWork)
 {
   using Real = TypeParam;

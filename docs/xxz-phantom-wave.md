@@ -125,5 +125,6 @@ The tests run in fp64, long double, and fp128:
 
 The construction is available for arbitrary finite-state amplitude
 callbacks, but these tests do not establish a nonzero lift for every
-continued branch or prove sector minimality. The sector scan's acceptance
-flags and the public solver domains are unchanged.
+continued branch or prove sector minimality. The sector scan now uses a
+separate [numerical witness check](xxz-phantom-check.md), with root-uncertainty
+propagation and explicit budgets. Public solver domains are unchanged.

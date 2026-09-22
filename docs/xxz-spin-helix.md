@@ -106,7 +106,8 @@ The odd-ring sector scan tries winding `(N+1)/2` when its regular-state
 test is unresolved. At `Delta_w=-cos(pi/N)`, this recognizes the followed
 all-phantom branch. Each entry retains the separate `regularity` and
 optional `helix` results; `state_checks_complete` summarizes whether every
-entry passes one of these two numerical checks. It neither changes the
+entry passes one of these checks or has a resolved
+[mixed-phantom numerical witness](xxz-phantom-check.md). It neither changes the
 continued coefficients/energies nor supplies a missing continuation result.
 `regular_states_complete` retains its stricter, regular-case meaning.
 

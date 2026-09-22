@@ -174,7 +174,9 @@ TYPED_TEST(XXZOddSectors, AdmissibilityDiagnosticsRemainSeparate)
   ASSERT_TRUE(scan.sectors.front().regularity);
   EXPECT_EQ(scan.sectors.front().regularity->status, engine::RegularityStatus::regular_on_shell);
   EXPECT_FALSE(scan.regular_states_complete);
-  EXPECT_FALSE(scan.state_checks_complete);
+  EXPECT_TRUE(scan.state_checks_complete);
+  ASSERT_FALSE(scan.sectors.back().phantom_lifts.empty());
+  EXPECT_EQ(scan.sectors.back().phantom_lifts.back().status, engine::PhantomLiftStatus::nonzero_witness);
 
   // Merely changing the independent diagnostic tolerance cannot change the
   // continuation, selected energy, Newton budget, or near-degeneracy report.
@@ -186,6 +188,40 @@ TYPED_TEST(XXZOddSectors, AdmissibilityDiagnosticsRemainSeparate)
   EXPECT_EQ(tight.nearby_indices, loose.nearby_indices);
   for (std::size_t m = 0; m < tight.sectors.size(); ++m)
     EXPECT_EQ(tight.sectors[m].branch.energy, loose.sectors[m].branch.energy);
+}
+
+TYPED_TEST(XXZOddSectors, PhantomWitnessBudgetNeverChangesTheFollowedEnergies)
+{
+  using Real = TypeParam;
+  Real const eps = uni20::numeric_limits<Real>::epsilon();
+  for (unsigned n : {7, 9, 11})
+  {
+    Real const d = -Real{1} / Real{2};
+    auto const enabled = engine::scan_odd_polynomial_sectors(n, d);
+    engine::PhantomLiftOptions<Real> disabled;
+    disabled.max_subset_updates = 0;
+    auto const skipped = engine::scan_odd_polynomial_sectors(n, d, {}, Real{256} * eps, disabled);
+    EXPECT_TRUE(enabled.state_checks_complete);
+    EXPECT_FALSE(skipped.state_checks_complete);
+    EXPECT_TRUE(skipped.sectors.back().phantom_work_limited);
+    EXPECT_TRUE(skipped.sectors.back().phantom_lifts.empty());
+    EXPECT_EQ(enabled.lowest_index, skipped.lowest_index);
+    EXPECT_EQ(enabled.iterations, skipped.iterations);
+    EXPECT_EQ(enabled.nearby_indices, skipped.nearby_indices);
+    for (std::size_t m = 0; m < enabled.sectors.size(); ++m)
+    {
+      EXPECT_EQ(enabled.sectors[m].branch.energy, skipped.sectors[m].branch.energy);
+      EXPECT_TRUE(enabled.sectors[m].branch.coefficients == skipped.sectors[m].branch.coefficients);
+      std::size_t configurations = 0, subsets = 0;
+      for (auto const& attempt : enabled.sectors[m].phantom_lifts)
+      {
+        configurations += attempt.configurations_tested;
+        subsets += attempt.subset_updates;
+      }
+      EXPECT_LE(configurations, 16U);
+      EXPECT_LE(subsets, 1000000U);
+    }
+  }
 }
 
 TYPED_TEST(XXZOddSectors, InvalidInput)

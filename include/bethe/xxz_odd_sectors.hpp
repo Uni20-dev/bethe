@@ -4,6 +4,7 @@
 
 #include <bethe/xxz_helix_check.hpp>
 #include <bethe/xxz_odd_continuation.hpp>
+#include <bethe/xxz_phantom_check.hpp>
 #include <bethe/xxz_regularity.hpp>
 #include <bethe/xxz_wronskian.hpp>
 #include <optional>
@@ -20,6 +21,10 @@ template <uni20::Real Real> struct OddSectorCandidate
     std::optional<PolynomialRegularity<Real>> regularity;
     // Tried only when regularity is unresolved; never changes the branch.
     std::optional<PolynomialHelixCheck<Real>> helix;
+    // Tried after regularity and helix checks. Keep unsuccessful attempts;
+    // absence of a witness never proves the vector is zero.
+    std::vector<PhantomLiftCheck<Real>> phantom_lifts;
+    bool phantom_work_limited = false;
 };
 
 /// All spin-reversal-distinct odd-ring continuation branches, in increasing
@@ -31,8 +36,9 @@ template <uni20::Real Real> struct OddSectorScan
     bool equations_complete = false;
     bool wronskians_consistent = false;
     bool regular_states_complete = false;
-    // Every converged branch passes the regular test OR the explicit-helix
-    // numerical match. Still not a proof of sector/global minimality.
+    // Every converged branch passes the regular test, explicit helix match,
+    // or resolved numerical phantom witness. Not a rigorous state proof or
+    // a proof of sector/global minimality.
     bool state_checks_complete = false;
     std::size_t iterations = 0;
     // Populated only when EVERY sector's equations converged and its energy
@@ -51,12 +57,17 @@ template <uni20::Real Real> struct OddSectorScan
 template <uni20::Real Real>
 OddSectorScan<Real> scan_odd_polynomial_sectors(std::size_t sites, Real delta, SolverOptions<Real> const& options = {},
                                                 Real wronskian_tolerance = Real{256} *
-                                                                           uni20::numeric_limits<Real>::epsilon())
+                                                                           uni20::numeric_limits<Real>::epsilon(),
+                                                PhantomLiftOptions<Real> phantom_options = {})
 {
   auto const n = checked_sites(sites);
   if (sites % 2 == 0) throw std::invalid_argument("odd XXZ sector scan requires odd N");
   if (!uni20::isfinite(wronskian_tolerance) || wronskian_tolerance <= Real{0})
     throw std::invalid_argument("Wronskian tolerance must be finite and positive");
+  for (Real tolerance : {phantom_options.factor_tolerance, phantom_options.residual_tolerance,
+                         phantom_options.amplitude_tolerance, phantom_options.root_options.tolerance})
+    if (!uni20::isfinite(tolerance) || tolerance <= Real{0})
+      throw std::invalid_argument("phantom lift tolerances must be finite and positive");
   auto const count = sites / 2 + 1;
   if (count > std::size_t(std::numeric_limits<std::ptrdiff_t>::max()) / sizeof(OddSectorCandidate<Real>))
     throw std::length_error("odd XXZ sector scan is too large");
@@ -91,6 +102,28 @@ OddSectorScan<Real> scan_odd_polynomial_sectors(std::size_t sites, Real delta, S
       {
         sector.helix = check_helix_polynomial<Real>(system, branch.coefficients, delta, (sites + 1) / 2);
         resolved = sector.helix->status == HelixMatchStatus::compatible;
+      }
+      if (!resolved && m > 1)
+      {
+        // Share amplitude budgets among all (p,chirality) hypotheses for
+        // this sector. Root-iteration limits still apply per hypothesis.
+        auto remaining = phantom_options;
+        for (std::size_t p = 1; p < m && !resolved; ++p)
+          for (int chirality : {-1, 1})
+          {
+            if (!remaining.max_configurations || !remaining.max_subset_updates)
+            {
+              sector.phantom_work_limited = true;
+              break;
+            }
+            auto check = check_phantom_lift<Real>(system, branch.coefficients, delta, p, chirality, remaining);
+            remaining.max_configurations -= check.configurations_tested;
+            remaining.max_subset_updates -= check.subset_updates;
+            sector.phantom_work_limited |= check.status == PhantomLiftStatus::work_limit;
+            resolved = check.status == PhantomLiftStatus::nonzero_witness;
+            sector.phantom_lifts.push_back(std::move(check));
+            if (resolved) break;
+          }
       }
       out.state_checks_complete &= resolved;
     }

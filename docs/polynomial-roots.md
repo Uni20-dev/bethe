@@ -125,5 +125,7 @@ The full connection is also tested, not just polynomial residuals:
 
 These are numerical validations of the selected branches, not a theorem
 that every regular reduced state has a nonzero phantom lift. General
-mixed/singular-state acceptance and sector-minimum tracking remain open;
-public solver domains and automatic scan acceptance are unchanged.
+singular-state coverage and sector-minimum tracking remain open. A bounded
+[numerical phantom-witness check](xxz-phantom-check.md) now uses these roots
+in the internal sector scan; it is not an interval certificate. Public
+solver domains are unchanged.
