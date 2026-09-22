@@ -2,6 +2,10 @@
 
 [Back to the overview](../README.md)
 
+For infinite-chain half-filled spinon/holon/antiholon lines, use the separate
+[thermodynamic dispersion tool](hubbard-dispersion.md), which also offers
+symmetric and unshifted interaction conventions.
+
 The Hubbard model adds mobile charge to the spin-chain problem: an electron
 can hop between sites, while opposite spins pay an interaction energy when
 they occupy the same site. Its nested Bethe ansatz therefore has **two root

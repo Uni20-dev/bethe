@@ -70,7 +70,7 @@ paper's correlation functions, thermodynamics, or full spectrum.
 | --- | --- | --- | --- |
 | `xxx` | Spin-1/2 nearest-neighbor XXX | Implemented (limited): [PBC](xxx.md), [free ends](open-chains.md), sector minima and restricted real-root excitations; periodic one-spinon family | Complex strings, full spectrum, twists/boundary fields |
 | `xxz` | Spin-1/2 nearest-neighbor XXZ | Implemented (limited): [PBC](xxz.md) ground states/sectors at `Delta>=0`, also `-1<Delta<0` on even rings; [free ends](xxz-open.md) at `Delta>-1`; restricted excitations at `0<=Delta<=1`; [massive boundary roots](xxz-open-massive.md) | Negative odd rings, massive/negative excitations, additional root families, twists/boundary fields |
-| `hubbard` | One-band Hubbard, hopping t=1 | Implemented (limited): [PBC](hubbard.md) on even rings with sector restrictions; [free ends](hubbard-open.md) at every physical filling/Sz and either sign of U | Hubbard excitations; remaining PBC shell branches and odd rings |
+| `hubbard` | One-band Hubbard, hopping t=1 | Implemented (limited): [PBC](hubbard.md) and [free-end](hubbard-open.md) ground states; [half-filled thermodynamic spinon/charge lines](hubbard-dispersion.md) for U>0 | Doped dispersions and continuum thresholds; finite-size excitations; remaining PBC shell branches and odd rings |
 | `lieb-liniger` | Continuum contact-interacting bosons | Implemented (limited): [repulsive PBC](lieb-liniger.md), ground state, explicit labels, and bounded excitation scans | Hard walls, attraction, thermodynamics |
 | `su-n` | Fundamental SU(n) permutation chain | Implemented (limited): [SU(3) PBC](su3.md), balanced singlet ground state for L>=3 divisible by three, J=1 | Other populations/lengths, excitations, general n, open boundaries |
 | `gaudin-yang` | Equal-mass spin-1/2 continuum delta-interacting fermions | Implemented (limited): [repulsive PBC](gaudin-yang.md), odd populations of both spins; unrestricted free and fully polarized limits | Other periodic shell branches, excitations, attraction, hard walls, thermodynamics |
@@ -490,6 +490,10 @@ two-leg Heisenberg ladder at generic couplings is not integrable here.
   charge–spin bound states only with appropriate equations. Keep energies
   produced by symmetry mappings distinct from physical attractive roots.
   The [Hubbard guide](hubbard.md) and its literature are the starting point.
+  Half-filled repulsive [thermodynamic elementary lines](hubbard-dispersion.md)
+  are now separate implemented functionality, with both interaction conventions.
+  Doped dressed dispersions and multiparticle threshold minimization remain
+  follow-ups; the elementary holon is not automatically a sector minimum.
 
 ## Wider catalogue: useful, but not the next default targets
 

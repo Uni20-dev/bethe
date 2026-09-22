@@ -2,6 +2,28 @@
   "schema_version": 1,
   "references": [
     {
+      "id": "essler-korepin-1999",
+      "authors": "Fabian H. L. Essler and Vladimir E. Korepin",
+      "title": "Form factors in the half-filled Hubbard model",
+      "publication": "Phys. Rev. B 59, 1734-1738",
+      "year": 1999,
+      "links": [
+        {"label": "DOI", "url": "https://doi.org/10.1103/PhysRevB.59.1734"},
+        {"label": "arXiv", "url": "https://arxiv.org/abs/cond-mat/9808018"}
+      ]
+    },
+    {
+      "id": "melzer-1995",
+      "authors": "Ezer Melzer",
+      "title": "On the scaling limit of the 1D Hubbard model at half filling",
+      "publication": "Nucl. Phys. B 443, 553-564",
+      "year": 1995,
+      "links": [
+        {"label": "DOI", "url": "https://doi.org/10.1016/0550-3213(95)00105-2"},
+        {"label": "arXiv", "url": "https://arxiv.org/abs/cond-mat/9410043"}
+      ]
+    },
+    {
       "id": "karbach-1998",
       "authors": "Michael Karbach, Kun Hu, and Gerhard Müller",
       "title": "Introduction to the Bethe ansatz II",
@@ -595,6 +617,14 @@
       "references": [
         {"id": "mei-2017", "context": "Free-end XXZ equations and boundary reflection phase, Eqs. (11)-(12); our Hamiltonian is divided by four and shifted. Negative-Delta ground states use an algebraically rank-subtracted, rescaled form of these equations."},
         {"id": "grijalva-2019", "context": "Massive open XXZ boundary root and finite-size deviation, Sec. 4.3.2, specialized to zero boundary fields; used for Delta>1 ground states, not boundary correlations or excitation scans."}
+      ]
+    },
+    {
+      "id": "hubbard_dispersion",
+      "executable": "bethe-hubbard-dispersion",
+      "references": [
+        {"id": "essler-korepin-1999", "context": "Half-filled spinon and holon dispersions, Eqs. (4)-(5), with our U equal to four times the paper's U; no form factors or spectral weights are implemented."},
+        {"id": "melzer-1995", "context": "Exact massive-branch K-Bessel series, resummed here into nonoscillatory positive integrals to retain the weak-coupling charge gap; hopping and interaction conventions are converted as documented."}
       ]
     },
     {

@@ -1,10 +1,10 @@
 # Bethe ansatz solvers
 
-C++23 tools for finite-system Bethe ansatz calculations, complementing
+C++23 tools for finite-system and thermodynamic Bethe ansatz calculations, complementing
 [Uni20](https://github.com/Uni20-dev/uni20) and the
 [Matrix Product Toolkit](https://github.com/mptoolkit/mptoolkit).
 
-High precision is a first-class feature: all finite-system solvers support
+High precision is a first-class feature: the solvers support
 **fp64**, **long-double** (platform-dependent extended precision), and optional
 **fp128** (binary128, about 34 significant decimal digits) through Uni20/MPLAPACK.
 Parameters, numerical calculations, excitation gaps, and output retain the
@@ -22,6 +22,7 @@ then explore magnetization sectors, excitation families, and spinons.
 Commands follow `bethe-<model>-<boundary>`: `pbc` means periodic boundaries,
 and `obc` means open boundaries (currently free ends, with no boundary fields).
 Nonspatial models such as Richardson pairing omit the boundary suffix.
+Thermodynamic dispersion tools use `bethe-<model>-dispersion`.
 
 - [Periodic XXX](docs/xxx.md): `bethe-xxx-pbc` gives ground states,
   sector minima, real-root excitations, and the odd-chain one-spinon branch.
@@ -39,6 +40,9 @@ Nonspatial models such as Richardson pairing omit the boundary suffix.
 - [Free-end Hubbard](docs/hubbard-open.md): `bethe-hubbard-obc` gives ground
   states at every physical filling and spin projection, for either sign of U
   and odd or even lengths, without lattice momentum.
+- [Hubbard dispersions](docs/hubbard-dispersion.md): `bethe-hubbard-dispersion`
+  gives half-filled repulsive spinon, holon and antiholon lines, with symmetric
+  (SO(4)) or unshifted interaction conventions for iMPS comparisons.
 - [Periodic Lieb–Liniger](docs/lieb-liniger.md): `bethe-lieb-liniger-pbc` gives
   repulsive continuum-boson ground states, specified Bethe states, and
   excitation scans within an explicit finite quantum-number window.
@@ -68,7 +72,8 @@ Nonspatial models such as Richardson pairing omit the boundary suffix.
   required four-spin coupling and either sign of the rung exchange.
 
 The XXX and XXZ models use spin-1/2 operators, J=1, and zero magnetic field.
-Hubbard uses hopping t=1 and the unshifted interaction `U*n_up*n_down`.
+Hubbard uses hopping t=1. Finite-system tools use the unshifted interaction
+`U*n_up*n_down`; the dispersion tool defaults to the symmetric convention.
 Spin-chain excitation scans cover explicitly supported real-root families, **not complete
 spectra**: `--excitations all` means all states in that family. General complex-string
 and infinite-root descendant scans are not implemented.

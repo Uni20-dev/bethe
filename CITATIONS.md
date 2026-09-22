@@ -202,6 +202,28 @@ thermodynamic integral equations are not implemented by this tool.
 
 Generated from [data/citations.json](data/citations.json); edit the registry, not this section.
 
+### essler-korepin-1999
+
+Fabian H. L. Essler and Vladimir E. Korepin. *Form factors in the half-filled Hubbard model*.
+Phys. Rev. B 59, 1734-1738 (1999).
+
+[DOI](<https://doi.org/10.1103/PhysRevB.59.1734>), [arXiv](<https://arxiv.org/abs/cond-mat/9808018>).
+
+Relevant tool modes:
+
+- `bethe-hubbard-dispersion`: Half-filled spinon and holon dispersions, Eqs. (4)-(5), with our U equal to four times the paper's U; no form factors or spectral weights are implemented.
+
+### melzer-1995
+
+Ezer Melzer. *On the scaling limit of the 1D Hubbard model at half filling*.
+Nucl. Phys. B 443, 553-564 (1995).
+
+[DOI](<https://doi.org/10.1016/0550-3213(95)00105-2>), [arXiv](<https://arxiv.org/abs/cond-mat/9410043>).
+
+Relevant tool modes:
+
+- `bethe-hubbard-dispersion`: Exact massive-branch K-Bessel series, resummed here into nonoscillatory positive integrals to retain the weak-coupling charge gap; hopping and interaction conventions are converted as documented.
+
 ### karbach-1998
 
 Michael Karbach, Kun Hu, and Gerhard Müller. *Introduction to the Bethe ansatz II*.
