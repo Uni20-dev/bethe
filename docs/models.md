@@ -2,14 +2,15 @@
 
 [Overview](../README.md) · [Bibliography](../CITATIONS.md)
 
-Initial literature survey: 2026-09-22. Implementation baseline: `6a414cc`.
+Initial literature survey: 2026-09-22. Original implementation baseline: `6a414cc`;
+the coverage below is updated as each implementation lands.
 This is a living, **non-exhaustive catalogue**, with an emphasis on models
 whose energies would be useful alongside Uni20 and MPToolkit. A model being
 exactly solvable in the literature does not mean this repository solves it,
 or that every boundary condition, coupling, or excited state is covered.
 
-The recommendation is to add **repulsive Lieb–Liniger first**, and then the
-**SU(3) permutation chain** if we prioritize lattice benchmarks, or
+The first new family, **repulsive periodic Lieb–Liniger**, is now implemented.
+Next is the **SU(3) permutation chain** if we prioritize lattice benchmarks, or
 **repulsive Gaudin–Yang** if we prioritize continuum gases. Extending XXZ's
 anisotropy range is a valuable parallel direction within an existing model.
 These priorities and difficulty assessments are our engineering judgments,
@@ -57,6 +58,7 @@ paper's correlation functions, thermodynamics, or full spectrum.
 | `xxx` | Spin-1/2 nearest-neighbor XXX | Implemented (limited): [PBC](xxx.md), [free ends](open-chains.md), sector minima and restricted real-root excitations; periodic one-spinon family | Complex strings, full spectrum, twists/boundary fields |
 | `xxz` | Spin-1/2 nearest-neighbor XXZ | Implemented (limited): [PBC](xxz.md) and [free ends](xxz-open.md), finite chains at `0 <= Delta <= 1`, restricted real-root excitations | Wider anisotropy range, additional root families, twists/boundary fields |
 | `hubbard` | One-band Hubbard, hopping t=1 | Implemented (limited): [PBC](hubbard.md) on even rings with sector restrictions; [free ends](hubbard-open.md) at every physical filling/Sz and either sign of U | Hubbard excitations; remaining PBC shell branches and odd rings |
+| `lieb-liniger` | Continuum contact-interacting bosons | Implemented (limited): [repulsive PBC](lieb-liniger.md), ground state, explicit labels, and bounded excitation scans | Hard walls, attraction, thermodynamics |
 
 Analytic thermodynamic XXX/XXZ spinon dispersions are separate existing
 facilities; they do not constitute a general thermodynamic Bethe ansatz
@@ -65,13 +67,14 @@ family, not the entire Hilbert space.
 
 ## Candidate index
 
-Every first scope in this table is **proposed**, not available on the CLI.
+Only entries marked **Implemented** are available; the other first scopes
+are proposals, not CLI capabilities.
 Boundary conditions shown are starting targets, not a classification of all
 integrable boundaries in the literature.
 
 | ID | Candidate and first scope | Status | Relative effort |
 | --- | --- | --- | --- |
-| `lieb-liniger` | Repulsive one-component Bose gas on a ring; ground state and bounded real-root excitation scans | Proposed | Small–medium |
+| `lieb-liniger` | Repulsive one-component Bose gas on a ring; ground state and bounded real-root excitation scans | [Implemented (limited)](lieb-liniger.md) | First slice complete |
 | `su-n` | Fundamental SU(3) antiferromagnetic permutation chain, PBC, balanced ground state | Proposed | Medium |
 | `gaudin-yang` | Equal-mass repulsive spin-1/2 delta-interacting Fermi gas, PBC, selected ground-state sectors | Proposed | Medium |
 | `tj-susy` | Projected t–J chain at J=2t, PBC, selected ground-state sectors | Proposed | Medium–large |
@@ -99,13 +102,18 @@ The original solution and the two excitation branches are in
 [Lieb–Liniger I](../CITATIONS.md#lieb-liniger-1963) and
 [Lieb II](../CITATIONS.md#lieb-1963-excitations).
 
-Start with a ring of physical length ell, N bosons, c>0, and consecutive
-ground-state labels; then accept explicit labels and bounded particle/hole
-scans. This introduces continuum units without nested spin rapidities and is
-a clean test of shared real-root Newton infrastructure. Use separate names
-for physical length, particle number, and lattice sites; ell is not an integer
-site count. Validate two particles, weak coupling, the impenetrable-boson
-(Tonks–Girardeau) limit, boosts, and convergence to the bulk integral equation.
+Implemented in [lieb_liniger.hpp](../include/bethe/lieb_liniger.hpp) and
+`bethe-lieb-liniger-pbc`: physical length ell, N bosons, c>0, consecutive ground
+labels, explicit labels, and scans over N occupied slots in an N+2P window.
+Implementation commit:
+[`4ba617c`](https://github.com/Uni20-dev/bethe/commit/4ba617c9eaebaea9f25af5fe1f8e2d2ec14e1baf).
+See the [guide](lieb-liniger.md) for units, parity, residual scaling and limits.
+Tests cover two-/three-body analytic values, weak coupling, the
+impenetrable-boson (Tonks–Girardeau) limit, boosts, all three precisions, finite
+windows, and convergence to a separately discretized bulk integral equation.
+The implementation checkpoint passed 285 tests with GCC 13 and fp128 enabled,
+198 with Clang 20 Release without MPLAPACK, and the new CLI suite in an
+app-only build using the published Uni20 pin (no sibling-source override).
 
 Hard walls are a natural second slice with reflected scattering, but require
 their own equations: [Gaudin (1971)](../CITATIONS.md#gaudin-1971).
@@ -113,9 +121,9 @@ Attractive c is a separate bound-state problem, not a sign toggle on a
 real-root solver. Nor does `all` make sense without an energy or quantum-number
 cutoff: even a fixed-N continuum system has infinitely many levels.
 
-**Next decision:** specify units, label parity, and a finite excitation-window
-contract. Recommended first new model; no new linear-algebra backend is
-expected for the repulsive real-root slice.
+**Next slice:** hard-wall reflection equations, or a thermodynamic ground-state
+and type-I/type-II dispersion API. The finite-ring first slice is complete;
+attraction remains a separate bound-state project.
 
 ### `su-n`: permutation chains and the spin-1 ULS point
 
