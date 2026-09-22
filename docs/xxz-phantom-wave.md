@@ -9,6 +9,8 @@ with r finite particles. It consumes a callback for the finite state's
 amplitudes, rather than extracting roots or allocating a full spin basis.
 This is currently an internal construction/validation tool, not a new
 ground-state frontend or an automatic admissibility flag.
+The [finite-root coordinate evaluator](xxz-coordinate-wave.md) can supply
+that callback from momentum factors, without enumerating all permutations.
 
 ## The dressing map
 
@@ -111,9 +113,10 @@ The tests run in fp64, long double, and fp128:
   direct verification that the source is an eigenstate.
 - Continued minimal-|Sz| states at N=7,9,11,13 with two finite roots and
   respectively one, two, three, and four phantom roots. Only in the test,
-  the finite quadratic is solved and a two-magnon coordinate wavefunction
-  is built. Both its twisted Hamiltonian residual and the nonzero dressed
-  vector's periodic residual are checked directly at native precision.
+  the finite quadratic is solved and the subset coordinate evaluator is
+  checked against the explicit two-magnon formula. Both its twisted
+  Hamiltonian residual and the nonzero dressed vector's periodic residual
+  are checked directly at native precision.
 - Vacuum/identity limits, exact callback counts, integer-count overflow,
   and rejection before callbacks for invalid coordinates or work budgets.
 

@@ -312,6 +312,9 @@ separate front end rather than forcing this into a chain-shaped CLI.
   equations after endpoint deflation; general nonzero lifting remains open.
   A [coordinate dressing map](xxz-phantom-wave.md) now constructs lifted
   amplitudes and exposes the nonzero-lift issue with explicit kernel tests.
+  A [finite-root amplitude evaluator](xxz-coordinate-wave.md) supplies its
+  input using subset sums, with native-precision direct Hamiltonian checks.
+  General accurate root recovery from the reduced polynomial remains open.
   **Next:** mixed/singular-state admissibility and sector-minimum tracking,
   then public integration; only subsequently extend excitation classification.
   The broader family is established by [Yang–Yang](../CITATIONS.md#yang-yang-1966), but the

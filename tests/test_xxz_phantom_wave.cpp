@@ -4,6 +4,7 @@
 
 #include "test_support.hpp"
 #include <array>
+#include <bethe/xxz_coordinate_wave.hpp>
 #include <bethe/xxz_odd_continuation.hpp>
 #include <bethe/xxz_spin_helix.hpp>
 #include <bit>
@@ -216,12 +217,17 @@ TYPED_TEST(XXZPhantomWave, ContinuedTwoFiniteRootStatesLiftNontrivially)
     C const v2 = -(Real{1} - imaginary * z2) / (Real{1} + imaginary * z2);
     C const a = Real{1} + v1 * v2 - Real{2} * d * v1;
     C const b = -(Real{1} + v1 * v2 - Real{2} * d * v2);
-    Real const normalization = std::max(std::abs(a), std::abs(b));
-    ASSERT_GT(normalization, Real{64} * eps);
+    Real const normalization = std::max({Real{1}, std::abs(a), std::abs(b)});
+    ASSERT_GT(std::max(std::abs(a), std::abs(b)), Real{64} * eps);
+    engine::CoordinateBetheWave<Real> const finite_wave(n, d, std::array<C, 2>{v1, v2});
     auto finite = [&](std::span<std::size_t const> selected) {
-      return (a * engine::phantom_phase_power(v1, selected[0]) * engine::phantom_phase_power(v2, selected[1]) +
-              b * engine::phantom_phase_power(v2, selected[0]) * engine::phantom_phase_power(v1, selected[1])) /
-             normalization;
+      auto const result = finite_wave.evaluate(selected);
+      C const explicit_wave =
+          (a * engine::phantom_phase_power(v1, selected[0]) * engine::phantom_phase_power(v2, selected[1]) +
+           b * engine::phantom_phase_power(v2, selected[0]) * engine::phantom_phase_power(v1, selected[1])) /
+          normalization;
+      EXPECT_LT(std::abs(result.value - explicit_wave), Real{32} * eps * std::max(Real{1}, result.absolute_term_sum));
+      return result.value;
     };
     C const q{d, -std::sqrt(Real{1} + d) * std::sqrt(Real{1} - d)};
     engine::PhantomDressing<Real> const dressing(n, 2, p, q);
