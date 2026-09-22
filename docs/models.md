@@ -297,6 +297,9 @@ separate front end rather than forcing this into a chain-shaped CLI.
   [momentum-constrained adaptive driver](xxz-odd-continuation.md) now handle
   conjugate-pair formation without extracting roots, with independent
   spin-basis energy checks through 21 sites at selected couplings.
+  A separate [quantum-Wronskian diagnostic](xxz-wronskian.md) tests generic-q
+  consistency; nonzero projected spin helices cover the phantom collision
+  without incorrectly applying the finite-root theorem there.
   **Next:** physical-state admissibility and global sector selection,
   then public integration; only subsequently extend excitation classification.
   The broader family is established by [Yang–Yang](../CITATIONS.md#yang-yang-1966), but the

@@ -13,7 +13,8 @@ fp64, native long double, or MPLAPACK fp128.
 This is an **internal numerical continuation**, not a public ground-state
 solver. `equations_converged` means the numerical checks below passed; it
 does not certify a nonzero physical Bethe vector or prove sector minimality.
-The public XXZ input range is unchanged.
+Negative-Delta odd rings remain excluded from the public ground-state API;
+even rings and free ends are already supported.
 
 ## Coordinates that retain the momentum branch
 
@@ -143,6 +144,11 @@ This checkpoint passes the full 433-test GCC 13 Debug suite with fp128 and
 299-test Clang 20 Release suite without MPLAPACK. The new driver contributes
 21 and 14 typed cases respectively. The optional reference generator also
 reproduces all nine sparse-ED energies, with eigenpair residuals below 6e-13.
+
+An independent [quantum-Wronskian diagnostic](xxz-wronskian.md) now checks
+the generic-q coefficient identity, and projected spin-helix tests establish
+nonzero eigenvectors at the phantom collision. The diagnostic remains
+separate from this driver: neither result is a blanket admissibility policy.
 
 Passing these finite-size checks does not establish general sector-minimum
 tracking, particularly at singular or root-of-unity configurations. Larger

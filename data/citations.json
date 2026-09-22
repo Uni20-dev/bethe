@@ -76,6 +76,29 @@
       ]
     },
     {
+      "id": "bajnok-2020",
+      "authors": "Zoltán Bajnok, Etienne Granet, Jesper Lykke Jacobsen, and Rafael I. Nepomechie",
+      "title": "On Generalized Q-systems",
+      "publication": "JHEP 03 (2020) 177",
+      "year": 2020,
+      "links": [
+        {"label": "arXiv v2", "url": "https://arxiv.org/abs/1910.07805v2"},
+        {"label": "HTML", "url": "https://arxiv.org/html/1910.07805v2"}
+      ]
+    },
+    {
+      "id": "popkov-2021",
+      "authors": "Vladislav Popkov, Xin Zhang, and Andreas Klümper",
+      "title": "Phantom Bethe excitations and spin helix eigenstates in integrable periodic and open spin chains",
+      "publication": "Phys. Rev. B 104, L081410",
+      "year": 2021,
+      "links": [
+        {"label": "DOI", "url": "https://doi.org/10.1103/PhysRevB.104.L081410"},
+        {"label": "arXiv v2", "url": "https://arxiv.org/abs/2102.03295v2"},
+        {"label": "HTML", "url": "https://arxiv.org/html/2102.03295v2"}
+      ]
+    },
+    {
       "id": "kozlowski-2017",
       "authors": "Karol K. Kozlowski",
       "title": "On condensation properties of Bethe roots associated with the XXZ chain",

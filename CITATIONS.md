@@ -270,6 +270,20 @@ Relevant tool modes:
 
 - `bethe-xxz-pbc`: Massless periodic XXZ equations, energy, and momentum, Eqs. (1), (3)-(5); our energy includes the N\*Delta/4 shift.
 
+### bajnok-2020
+
+Zoltán Bajnok, Etienne Granet, Jesper Lykke Jacobsen, and Rafael I. Nepomechie. *On Generalized Q-systems*.
+JHEP 03 (2020) 177 (2020).
+
+[arXiv v2](<https://arxiv.org/abs/1910.07805v2>), [HTML](<https://arxiv.org/html/1910.07805v2>).
+
+### popkov-2021
+
+Vladislav Popkov, Xin Zhang, and Andreas Klümper. *Phantom Bethe excitations and spin helix eigenstates in integrable periodic and open spin chains*.
+Phys. Rev. B 104, L081410 (2021).
+
+[DOI](<https://doi.org/10.1103/PhysRevB.104.L081410>), [arXiv v2](<https://arxiv.org/abs/2102.03295v2>), [HTML](<https://arxiv.org/html/2102.03295v2>).
+
 ### kozlowski-2017
 
 Karol K. Kozlowski. *On condensation properties of Bethe roots associated with the XXZ chain*.
