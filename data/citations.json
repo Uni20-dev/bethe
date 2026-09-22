@@ -286,6 +286,16 @@
       ]
     },
     {
+      "id": "sutherland-1968",
+      "authors": "Bill Sutherland",
+      "title": "Further Results for the Many-Body Problem in One Dimension",
+      "publication": "Phys. Rev. Lett. 20, 98-100",
+      "year": 1968,
+      "links": [
+        {"label": "DOI", "url": "https://doi.org/10.1103/PhysRevLett.20.98"}
+      ]
+    },
+    {
       "id": "lee-2011",
       "authors": "J. Y. Lee, X. W. Guan, and M. T. Batchelor",
       "title": "Yang-Yang method for the thermodynamics of one-dimensional multi-component interacting fermions",
@@ -640,6 +650,14 @@
       "references": [
         {"id": "faribault-schuricht-2013", "context": "Spin-half central-spin Hamiltonian and all-down-reference Bethe equations, Eqs. (2)-(6), with no bath field: H=B*S0^z+sum A_j*S0.Sj. Only fixed-magnetization ground energies for distinct nonzero couplings are implemented; no dynamics or form factors."},
         {"id": "faribault-2011", "context": "Quadratic eigenvalue-variable method and central-spin realization, Secs. II and IV.3. We compactify the inverse-field continuation to reach B=0; the seed minimizes the central-spin Hamiltonian, not the Richardson energy."}
+      ]
+    },
+    {
+      "id": "sun_fermions_pbc",
+      "executable": "bethe-sun-fermions-pbc",
+      "references": [
+        {"id": "sutherland-1968", "context": "Original multicomponent delta-gas solution. We implement equal-mass repulsive fermions on a periodic ring, not arbitrary mixtures or statistics."},
+        {"id": "lee-2011", "context": "Nested finite-size Bethe equations (2)-(3), with c'=c/2, and logarithmic signs from (13)-(19). Our Hamiltonian is -sum d_j^2+2c sum delta with c>=0 and no Zeeman term. Only the centered all-odd occupied-population ground branch is implemented; no strings, TBA or attraction."}
       ]
     },
     {

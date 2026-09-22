@@ -486,12 +486,27 @@ Relevant tool modes:
 
 - `bethe-central-spin`: Spin-half central-spin Hamiltonian and all-down-reference Bethe equations, Eqs. (2)-(6), with no bath field: H=B\*S0^z+sum A\_j\*S0.Sj. Only fixed-magnetization ground energies for distinct nonzero couplings are implemented; no dynamics or form factors.
 
+### sutherland-1968
+
+Bill Sutherland. *Further Results for the Many-Body Problem in One Dimension*.
+Phys. Rev. Lett. 20, 98-100 (1968).
+
+[DOI](<https://doi.org/10.1103/PhysRevLett.20.98>).
+
+Relevant tool modes:
+
+- `bethe-sun-fermions-pbc`: Original multicomponent delta-gas solution. We implement equal-mass repulsive fermions on a periodic ring, not arbitrary mixtures or statistics.
+
 ### lee-2011
 
 J. Y. Lee, X. W. Guan, and M. T. Batchelor. *Yang-Yang method for the thermodynamics of one-dimensional multi-component interacting fermions*.
 J. Phys. A: Math. Theor. 44, 165002 (2011).
 
 [arXiv](<https://arxiv.org/abs/1011.0128>).
+
+Relevant tool modes:
+
+- `bethe-sun-fermions-pbc`: Nested finite-size Bethe equations (2)-(3), with c'=c/2, and logarithmic signs from (13)-(19). Our Hamiltonian is -sum d\_j^2+2c sum delta with c\>=0 and no Zeeman term. Only the centered all-odd occupied-population ground branch is implemented; no strings, TBA or attraction.
 
 ### imambekov-demler-2006
 

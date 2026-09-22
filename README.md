@@ -60,6 +60,9 @@ Nonspatial models such as Richardson pairing omit the boundary suffix.
 - [Central spin](docs/central-spin.md): `bethe-central-spin` gives fixed-Sz
   ground energies for distinct nonzero spin-1/2 bath couplings of either
   sign, with a central field of either sign or exactly zero.
+- [SU(n) fermion gas](docs/su-fermions.md): `bethe-sun-fermions-pbc` gives
+  repulsive multicomponent continuum ground states when every occupied
+  population is odd, plus unrestricted free and single-component limits.
 
 The XXX and XXZ models use spin-1/2 operators, J=1, and zero magnetic field.
 Hubbard uses hopping t=1 and the unshifted interaction `U*n_up*n_down`.
@@ -187,6 +190,8 @@ together. Read them in roughly this order, or go straight to your model:
     eigenvalue variables and ground-state continuation through root collisions.
 17. [Rational central spin](docs/central-spin.md) — specified bath couplings,
     magnetization sectors, and field continuation including exactly zero field.
+18. [SU(n) fermion gas](docs/su-fermions.md) — component populations, arbitrary
+    nesting depth, finite-ring shell restrictions and continuum limits.
 
 For possible additions, see the [model catalogue and development proposal](docs/models.md):
 known integrable families, literature, implementation restrictions, and suggested priorities.

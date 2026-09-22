@@ -51,6 +51,12 @@ requires `--couplings A1,A2,... --field B --sz SZ`. All spins are 1/2 and Sz
 includes the central spin. Distinct nonzero couplings and the field can
 have either sign; exactly zero field is supported. This nonspatial model
 also has no boundary suffix; `--variables` prints regularized variables.
+For more than two continuum fermion components,
+[`bethe-sun-fermions-pbc`](su-fermions.md) takes
+`--populations N1,N2,... --length ELL --c C`. Every occupied interacting
+population must be odd; free and single-component limits allow any counts.
+`--roots` displays all nested seas, with the physical-to-nesting component
+mapping retained in the report.
 
 Each program's `--help` (and no-argument usage) includes relevant literature
 references with links and a note on the modes they support. Normal numerical

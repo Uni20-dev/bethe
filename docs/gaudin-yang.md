@@ -6,6 +6,9 @@ This is the spin-1/2 fermionic counterpart of the [Lieb–Liniger gas](lieb-lini
 The extra spin degree of freedom requires a second, auxiliary set of Bethe
 roots. Charge momenta determine the energy; spin rapidities determine how
 the two spin populations scatter.
+For more components, [SU(n) fermions](su-fermions.md) supplies a separate
+population-list API/frontend with arbitrary nesting depth and the analogous
+odd-population restriction. The two-component frontend here remains available.
 
 ## Units and first calculations
 

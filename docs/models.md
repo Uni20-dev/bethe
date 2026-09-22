@@ -22,6 +22,8 @@ Richardson pairing now supplies attractive ground energies in specified
 blocked-level sectors, using regular variables through pair-root collisions.
 The rational central-spin model now has fixed-magnetization ground states
 for distinct nonzero couplings, including exactly zero central field.
+The multicomponent continuum entry also has a repulsive SU(κ) fermion
+ground-state slice for odd occupied populations, with arbitrary nesting depth.
 Extending existing models' boundary/state
 coverage remains valuable as well.
 These priorities and difficulty assessments are our engineering judgments,
@@ -76,6 +78,7 @@ paper's correlation functions, thermodynamics, or full spectrum.
 | `spin-s-tb` | Integrable spin-1 bilinear–biquadratic chain | Implemented (limited): [even PBC](takhtajan-babujian.md), singlet ground state of H=sum[S.S-(S.S)^2], with finite two-string deviations | Odd lengths, sectors, excitations, higher spins, open boundaries |
 | `richardson` | Reduced BCS pairing | Implemented (limited): [attractive pairing](richardson.md), distinct doublet levels, fixed pair count and blocked levels, ground energy through root collisions | Repeated levels/higher degeneracies, excitations, pair-root output, repulsive coupling |
 | `gaudin-magnet` | Rational spin-1/2 central spin | Implemented (limited): [sector minima](central-spin.md), distinct nonzero bath couplings of either sign, central field of either sign or zero | Repeated/zero couplings, higher local spins, excitations, general Gaudin charges |
+| `multicomponent-gas` | Equal-mass SU(κ) delta fermions | Implemented (limited): [repulsive PBC](su-fermions.md), odd occupied populations, any number of components, unrestricted free/single-component limits | Other periodic shells, attraction, excitations, hard walls, TBA, Bose–Fermi mixtures |
 
 Analytic thermodynamic XXX/XXZ spinon dispersions are separate existing
 facilities; they do not constitute a general thermodynamic Bethe ansatz
@@ -98,7 +101,7 @@ integrable boundaries in the literature.
 | `spin-s-tb` | Spin-1 Takhtajan–Babujian chain, PBC ground state with finite-size string deviations | [Implemented (limited)](takhtajan-babujian.md) | First slice complete |
 | `richardson` | Reduced BCS pairing Hamiltonian, specified levels and pair number | [Implemented (limited)](richardson.md) | First slice complete |
 | `gaudin-magnet` | Rational spin-1/2 central-spin sector ground energies at specified couplings and field | [Implemented (limited)](central-spin.md) | First slice complete |
-| `multicomponent-gas` | SU(kappa) fermions or the equal-coupling Bose–Fermi mixture, PBC | Watch | Medium–large |
+| `multicomponent-gas` | Repulsive SU(kappa) fermions on a ring, fixed odd occupied populations | [Implemented (limited)](su-fermions.md); Bose–Fermi mixture still proposed | Fermion first slice complete |
 | `integrable-ladder` | A specified SU(4)-type ladder with the required four-spin interaction, PBC | Watch | Medium after SU(n) |
 | `q-boson` | Integrable q-boson hopping/phase model, PBC at fixed particle number | Watch | Medium |
 | `xyz` | Zero-field spin-1/2 XYZ chain, PBC finite-size spectrum | Watch | Large |
@@ -318,6 +321,8 @@ nonzero A_j of either sign, fixed total Sz, and any finite central field
 including B=0. There are no bath fields/interactions. See the
 [guide](central-spin.md) for the rational Bethe equations, normalization
 and compactified eigenvalue-variable continuation.
+Implementation checkpoint:
+[`8ff2f52`](https://github.com/Uni20-dev/bethe/commit/8ff2f52).
 
 This reuses the regularized-equation and native QR machinery developed for
 Richardson, but uses a central-spin-specific high-field ground seed.
@@ -336,6 +341,33 @@ fixed-seed random small-sector checks agreed with independent diagonalization.
 bath spins, excited high-field seeds or observable matrix elements.
 This does not implement arbitrary Gaudin Hamiltonians or central-spin
 dynamics from the reference paper.
+
+### `multicomponent-gas`: arbitrary-rank repulsive fermions
+
+Implemented in [su_fermions.hpp](../include/bethe/su_fermions.hpp) and
+`bethe-sun-fermions-pbc` for equal masses, equal positive contact couplings
+`2c delta`, periodic circumference ell, and fixed component populations.
+Every occupied interacting population must be odd; c=0 and single-component
+limits allow arbitrary counts. Empty components are retained as metadata
+but removed from the nested problem. The [guide](su-fermions.md) derives the
+label parity and equations from [Sutherland](../CITATIONS.md#sutherland-1968)
+and [Lee et al.](../CITATIONS.md#lee-2011).
+
+Strong-to-weak continuation solves all real-root seas in native precision,
+with analytic Jacobians and relative weak-cluster residuals at every level.
+Incomplete solves retain only a previously converged coupling, never a
+seed energy or an intermediate energy mislabeled as the requested c.
+Tests include rational equations, the Gaudin–Yang reduction, the one-particle-
+per-component Lieb–Liniger equivalence, free/weak/strong limits, a separate
+plane-wave Hamiltonian for populations 3,1,1, and six-component 30-particle
+sweeps. The spin-chain SU(3) frontend remains a different model.
+The implementation checkpoint passed 774 tests with GCC 13 and fp128,
+530 with Clang 20 Release without MPLAPACK, and the new CLI/citation checks
+in an apps-only build using the published Uni20 pin.
+
+**Next slice:** other finite-ring shell branches, excited seas/strings,
+and the distinct equal-coupling Bose–Fermi mixture. The latter requires
+its own grading/statistics and is not implicitly covered by adding colors.
 
 ## Extensions of current models, rather than new solvers
 
@@ -433,7 +465,7 @@ initial deliverable, rather than an unqualified claim of model support.
 | ID | Literature and integrable restriction | Useful first deliverable / main obstacle |
 | --- | --- | --- |
 | `gaudin-magnet` | Rational Gaudin magnets; a concrete central-spin realization is treated by [Faribault–Schuricht](../CITATIONS.md#faribault-schuricht-2013) | [Central-spin sector ground states implemented](central-spin.md); general Gaudin charges, repeated couplings and higher spins remain open, not arbitrary spin-bath interactions |
-| `multicomponent-gas` | Equal-mass SU(kappa) delta fermions, [Lee et al.](../CITATIONS.md#lee-2011); equal-mass Bose–Fermi mixture with equal repulsive Bose–Bose/Bose–Fermi couplings, [Imambekov–Demler](../CITATIONS.md#imambekov-demler-2006) | PBC repulsive ground energies at fixed component counts; more nesting/statistics bookkeeping. A trapped local-density calculation would be an approximation, not an exact trapped BA solution |
+| `multicomponent-gas` | Equal-mass SU(kappa) delta fermions, [Lee et al.](../CITATIONS.md#lee-2011); equal-mass Bose–Fermi mixture with equal repulsive Bose–Bose/Bose–Fermi couplings, [Imambekov–Demler](../CITATIONS.md#imambekov-demler-2006) | [Odd-population repulsive fermion sectors implemented](su-fermions.md); other shells and the Bose–Fermi mixture remain open. A trapped local-density calculation would be an approximation, not an exact trapped BA solution |
 | `integrable-ladder` | [Wang's ladder](../CITATIONS.md#wang-1999), with its required exchange and four-spin terms | Ground energies and rung-sector competition; an application of higher-rank nesting. Not the ordinary two-leg Heisenberg ladder at generic couplings |
 | `q-boson` | Deformed boson hopping and its phase-model limit, [Bogoliubov–Izergin–Kitanine](../CITATIONS.md#bogoliubov-1997) | PBC finite-N energies, checked in a bosonic occupation basis; define the deformed local algebra and coupling limits. Not the standard Bose–Hubbard chain |
 | `xyz` | Zero-field spin-1/2 XYZ / eight-vertex family, [Baxter](../CITATIONS.md#baxter-1973) | Small periodic-chain energies via elliptic/functional equations; Sz is not generally conserved. Native-precision elliptic functions and branch selection are substantial new requirements |
