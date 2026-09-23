@@ -142,4 +142,62 @@ TEST(DataOutput, NonretainedFutureOnlySinkReportsItsOffset)
   EXPECT_EQ(table.retained_size(), 0u);
   EXPECT_EQ(out.str(), "# First row: 1\ni\n2\n# Rows: 2\n");
 }
+
+struct CaptureStdout
+{
+    std::ostringstream stream;
+    std::streambuf* previous = std::cout.rdbuf(stream.rdbuf());
+    ~CaptureStdout() { std::cout.rdbuf(previous); }
+};
+
+TEST(DataOutput, NamedTablesFormOneDocumentWithoutRetainingRows)
+{
+  CaptureStdout capture;
+  cli::DataOutputOptions options;
+  options.format = "json";
+  options.retain = false;
+  cli::DataOutput output(options, {"states", "roots"});
+  auto states = data::make_data_table("States", {.retain = data::retention::none}, data::data_column<int>("id"));
+  output.write_table("states", states, [](auto& table) { table.append(0); });
+  auto roots = data::make_data_table("Roots", {.retain = data::retention::none}, data::data_column<double>("x"));
+  output.write_table("roots", roots, [](auto& table) { table.append(0.5); });
+  output.finish_document();
+  EXPECT_EQ(states.retained_size(), 0u);
+  EXPECT_EQ(roots.retained_size(), 0u);
+  EXPECT_TRUE(capture.stream.str().starts_with("{\"tables\":{\"states\":"));
+  EXPECT_NE(capture.stream.str().find(",\"roots\":"), std::string::npos);
+  EXPECT_TRUE(capture.stream.str().ends_with("},\"status\":\"complete\"}\n"));
+}
+
+TEST(DataOutput, NamedDocumentAbortClosesHealthySinksAndDoesNotRetryRows)
+{
+  CaptureStdout capture;
+  cli::DataOutputOptions options;
+  options.format = "json";
+  cli::DataOutput output(options, {"states", "roots"});
+  auto table = data::make_data_table("States", {}, data::data_column<int>("id"));
+  table.attach(cli::NamedSink("failed.csv", FailingSink{}));
+  EXPECT_THROW(output.write_table("states", table, [](auto& t) { t.append(42); }), data::data_delivery_error);
+  EXPECT_EQ(table.size(), 1u);
+  EXPECT_NE(capture.stream.str().find("\"rows\":[[42]]"), std::string::npos);
+  EXPECT_EQ(capture.stream.str().find("\"roots\":"), std::string::npos);
+  EXPECT_TRUE(capture.stream.str().ends_with("},\"status\":\"aborted\"}\n"));
+}
+
+TEST(DataOutput, NamedTablesValidateSelectionAndDelivery)
+{
+  cli::DataOutputOptions options;
+  options.quiet = true;
+  options.table = "missing";
+  EXPECT_THROW((cli::DataOutput(options, {"states"})), std::invalid_argument);
+  options.table.clear();
+  EXPECT_THROW((cli::DataOutput(options, {"bad\"name"})), std::logic_error);
+  cli::DataOutput output(options, {"states", "roots"});
+  auto table = data::make_data_table("States", {}, data::data_column<int>("id"));
+  EXPECT_THROW(output.finish_document(), std::logic_error);
+  output.write_table("states", table, [](auto& t) { t.append(0); });
+  EXPECT_THROW(output.attach(table, "states"), std::logic_error);
+  EXPECT_THROW(output.finish_document(), std::logic_error);
+  output.finish_document(true);
+}
 } // namespace

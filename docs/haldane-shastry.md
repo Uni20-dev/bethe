@@ -84,10 +84,13 @@ The explicit size range `2<=N<=1,000,000` keeps energy numerators in signed
 exceeds unsigned 64-bit range is unavailable, not wrapped; its energy remains
 valid. This is separate from scalar rounding of energies and momenta.
 
-`auto`, `pretty`, `plain`, `csv`, and `tsv` are available. Delimited output
+`auto`, `pretty`, `plain`, `csv`, `tsv`, and `json` are available. Delimited output
 has `#` metadata, CPU time and a rectangular table; the motif cell is a
-space-separated list (or `empty`). The command's default/help output includes
-literature references, also collected in [CITATIONS.md](../CITATIONS.md).
+space-separated list (or `empty`). The named `levels` table includes zero-based
+`state_id`; half-integer spins use decimal values such as `0.5` in exports.
+Independent exports, e.g. `--csv levels.csv --json levels.json`, and streaming
+use the shared [output options](output.md). Use `--references` for literature,
+also collected in [CITATIONS.md](../CITATIONS.md).
 
 ## Library and checks
 

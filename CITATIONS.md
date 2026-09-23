@@ -1,7 +1,8 @@
 # References and provenance
 
-Use `bethe-hubbard-dispersion --references` for its relevant literature;
-the other executables still print theirs in `--help` and no-argument usage.
+Use `--references` with `bethe-hubbard-dispersion`, `bethe-haldane-shastry-pbc`
+or `bethe-sutherland-pbc` for relevant literature. The other executables still
+print theirs in `--help` and no-argument usage while their CLI migration proceeds.
 Bibliographic metadata and tool selections live in
 [data/citations.json](data/citations.json); the [bibliography](#bibliography)
 below and the C++ registry are generated from it. The provenance notes remain

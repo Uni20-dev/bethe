@@ -33,7 +33,7 @@ with localcontext() as ctx:
         assert abs(Decimal(data[0]["energy"]) - ref) < tol, data
         data = rows(run("5", "--precision", precision, "--format", "csv")[0])
         assert len(data) == 2 and {r["momentum_index"] for r in data} == {"1", "4"}
-        assert all(r["s_max"] == "1/2" and r["degeneracy"] == "2" for r in data)
+        assert all(r["s_max"] == "0.5" and r["degeneracy"] == "2" for r in data)
 data = rows(run("6", "--levels", "all", "--format", "csv")[0])
 assert len(data) == 13 and sum(int(r["degeneracy"]) for r in data) == 64
 assert len(rows(run("6", "--levels", "3", "--format", "csv")[0])) == 3

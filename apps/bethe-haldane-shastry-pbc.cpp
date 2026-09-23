@@ -1,72 +1,46 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Copyright (C) 2026 Ian McCulloch
-#include "citation-report.hpp"
-#include "report-common.hpp"
-#include <array>
+#include "data-output-options.hpp"
+#include "program-options.hpp"
 #include <bethe/haldane_shastry.hpp>
 
 namespace
 {
 namespace cli = bethe::cli;
+namespace data = cli::data;
 namespace model = bethe::haldane_shastry;
 struct Arguments
 {
     std::size_t sites = 0, max_motifs = 100000;
-    std::optional<std::string_view> motif, levels, sz;
-    std::string_view precision = "fp64", format = "auto";
+    std::optional<std::string> motif, levels, sz;
+    std::string precision = "fp64";
+    cli::DataOutputOptions output;
 };
-void usage(std::ostream& out)
+auto program_info()
 {
-  out << "Usage: bethe-haldane-shastry-pbc N [options]\n"
-      << "Spin-1/2 inverse-chord-square ring, J=1, zero field, 2<=N<=1000000.\n"
-      << "H=(pi/N)^2 sum_{i<j} S_i.S_j / sin^2(pi*(i-j)/N).\n"
-      << "Default: ground multiplet(s), including both odd-ring momenta.\n"
-      << "  --sz VALUE             lowest energy in this Sz sector\n"
-      << "  --motif LIST           explicit positions, e.g. 1,3,5; empty list is allowed\n"
-      << "  --levels COUNT|all     lowest COUNT Yangian multiplets, or every motif\n"
-      << "  --max-motifs COUNT     enumeration budget (100000); preflight refusal, exit 2\n"
-      << "  --precision fp64|long-double|fp128 (fp64; fp128 requires MPLAPACK)\n"
-      << "  --format auto|pretty|plain|csv|tsv (auto)\n"
-      << "  --help                 show this help and references\n"
-      << "Modes --sz, --motif and --levels are mutually exclusive.\n"
-      << "Motifs obey 1<=m<=N-1 and neighboring positions differ by at least 2.\n"
-      << "A row is a Yangian multiplet, not one state or one distinct energy.\n"
-      << "S_max is its largest SU(2) spin; degeneracy counts all spin projections,\n"
-      << "even with --sz. A missing degeneracy means uint64 count overflow.\n"
-      << "Gaps reference the global ground energy. No Newton solves or wavefunctions.\n"
-      << "See docs/haldane-shastry.md for normalization and motif counting.\n";
-  cli::print_citations(out, bethe::citations::Tool::haldane_shastry_pbc);
+  auto info = cli::program_info("bethe-haldane-shastry-pbc", "Spin-1/2 inverse-chord-square ring, J=1, zero field.",
+                                bethe::citations::Tool::haldane_shastry_pbc);
+  info.notes = {"H=(pi/N)^2 sum_{i<j} S_i.S_j/sin^2(pi*(i-j)/N); 2<=N<=1000000. "
+                "Default: ground multiplets, including both odd-ring momenta.",
+                "Motifs obey 1<=m<=N-1; neighboring positions differ by at least 2. A row is a Yangian multiplet, "
+                "not one state or one distinct energy. S_max is its largest SU(2) spin; degeneracy counts all spin "
+                "projections even with --sz. Missing degeneracy means uint64 overflow.",
+                "Gaps reference the global ground energy. No Newton solves or wavefunctions. Table: levels. "
+                "Enumeration-budget refusal publishes no levels and exits 2.",
+                "See docs/haldane-shastry.md and docs/output.md. Use --references for literature and applicability."};
+  info.examples = {{"bethe-haldane-shastry-pbc 8 --levels all --csv levels.csv", "All Yangian multiplets"}};
+  return info;
 }
-Arguments parse(int argc, char** argv)
+void add_options(CLI::App& app, Arguments& a)
 {
-  Arguments a;
-  a.sites = cli::parse_size(argv[1]);
-  for (int i = 2; i < argc; ++i)
-  {
-    std::string_view const option = argv[i];
-    if (option != "--sz" && option != "--motif" && option != "--levels" && option != "--max-motifs" &&
-        option != "--precision" && option != "--format")
-      throw std::invalid_argument("unknown option: " + std::string(option));
-    if (++i == argc) throw std::invalid_argument("missing value for " + std::string(option));
-    std::string_view const value = argv[i];
-    if (option == "--sz")
-      a.sz = value;
-    else if (option == "--motif")
-      a.motif = value;
-    else if (option == "--levels")
-      a.levels = value;
-    else if (option == "--max-motifs")
-      a.max_motifs = cli::parse_size(value);
-    else if (option == "--precision")
-      a.precision = value;
-    else
-      a.format = value;
-  }
-  if (int(a.sz.has_value()) + int(a.motif.has_value()) + int(a.levels.has_value()) > 1)
-    throw std::invalid_argument("--sz, --motif and --levels are mutually exclusive");
-  if (a.format != "auto" && a.format != "plain" && a.format != "pretty" && a.format != "csv" && a.format != "tsv")
-    throw std::invalid_argument("unknown output format: " + std::string(a.format));
-  return a;
+  cli::count_option(app, "N", a.sites, "Number of sites")->required();
+  auto* modes = app.add_option_group("State selection")->require_option(0, 1);
+  cli::text_option(*modes, "--sz", a.sz, "Lowest energy in this exact integer/half-integer Sz sector");
+  cli::text_option(*modes, "--motif", a.motif, "Explicit positions, e.g. 1,3,5; empty list is allowed");
+  cli::text_option(*modes, "--levels", a.levels, "Lowest COUNT Yangian multiplets, or all")->type_name("COUNT|all");
+  cli::count_option(app, "--max-motifs", a.max_motifs, "Enumeration budget; refusal exits 2")->capture_default_str();
+  cli::precision_option(app, a.precision);
+  cli::add_data_output_options(app, a.output, true);
 }
 std::vector<std::size_t> parse_motif(std::string_view text)
 {
@@ -80,7 +54,7 @@ std::vector<std::size_t> parse_motif(std::string_view text)
     text.remove_prefix(comma + 1);
   }
 }
-template <uni20::Real Real> int run(Arguments const& a)
+template <uni20::Real Real> int run(Arguments const& a, int argc, char** argv)
 {
   cli::CpuTimer timer;
   std::vector<model::Level<Real>> levels;
@@ -99,94 +73,57 @@ template <uni20::Real Real> int run(Arguments const& a)
     levels = model::ground_levels<Real>(a.sites);
   auto const cpu = timer.elapsed_text();
   bool const complete = !scan || scan->complete;
-  cli::report_builder report("Haldane-Shastry spin ring");
-  report.field("Hamiltonian", "H=(pi/N)^2 sum_{i<j} S_i.S_j/sin^2(pi*(i-j)/N); J=1")
-      .field("Sites", a.sites)
-      .field("Precision", a.precision)
-      .field("Calculation", a.motif    ? "specified motif"
-                            : a.levels ? "energy-ordered motif spectrum"
-                            : a.sz     ? "Sz-sector minimum"
-                                       : "global ground multiplets")
-      .field("Status", complete ? "exact spectral rules" : "motif budget exceeded; no levels published")
-      .field("Momentum", "P=2*pi*momentum_index/N modulo 2*pi")
-      .field("Degeneracy", "whole Yangian multiplet; S_max is not a unique total spin")
-      .field("CPU time", cpu);
-  if (a.sz) report.field("Selected Sz", *a.sz);
-  if (scan && scan->complete) report.field("Motifs enumerated", scan->total_motifs);
-  bool const separated = a.format == "csv" || a.format == "tsv";
-  char const separator = a.format == "tsv" ? '\t' : ',';
-  if (separated)
-  {
-    for (auto const& [key, value] : report.fields())
-      std::cout << "# " << key << ": " << value << '\n';
-    std::cout << "motif" << separator << "energy" << separator << "gap" << separator << "momentum_index" << separator
-              << "p" << separator << "spinons" << separator << "s_max" << separator << "degeneracy\n";
-  }
-  auto& table = report.table("Yangian multiplets");
-  table.header_separator()
-      .column("Motif")
-      .column("Energy")
-      .column("Gap")
-      .column("Momentum index")
-      .column("P")
-      .column("Spinons")
-      .column("S_max")
-      .column("Degeneracy");
-  for (auto const& s : levels)
-  {
-    std::string motif;
-    for (auto m : s.motif)
-    {
-      if (!motif.empty()) motif += ' ';
-      motif += std::to_string(m);
-    }
-    if (motif.empty()) motif = "empty";
-    std::array<std::string, 8> const cells{motif,
-                                           uni20::format_real(s.energy),
-                                           uni20::format_real(s.gap),
-                                           std::to_string(s.momentum_index),
-                                           uni20::format_real(s.momentum),
-                                           std::to_string(s.spinons),
-                                           uni20::to_string_fraction(s.maximum_spin),
-                                           s.degeneracy ? std::to_string(*s.degeneracy) : ""};
-    if (separated)
-    {
-      for (std::size_t i = 0; i < cells.size(); ++i)
-      {
-        if (i) std::cout << separator;
-        std::cout << cells[i];
-      }
-      std::cout << '\n';
-    }
-    else
-      table.row(cells[0], cells[1], cells[2], cells[3], cells[4], cells[5], cells[6], cells[7]);
-  }
-  if (!separated) cli::print_report(report, a.format);
+  auto metadata = cli::provenance("bethe-haldane-shastry-pbc", argc, argv);
+  metadata.insert({{"Hamiltonian", "H=(pi/N)^2 sum_{i<j} S_i.S_j/sin^2(pi*(i-j)/N); J=1"},
+                   {"Sites", std::to_string(a.sites)},
+                   {"Precision", a.precision},
+                   {"Calculation", a.motif    ? "specified motif"
+                                   : a.levels ? "energy-ordered motif spectrum"
+                                   : a.sz     ? "Sz-sector minimum"
+                                              : "global ground multiplets"},
+                   {"Momentum", "P=2*pi*momentum_index/N modulo 2*pi"},
+                   {"Degeneracy", "whole Yangian multiplet; S_max is not a unique total spin"}});
+  if (a.sz) metadata.emplace("Selected Sz", *a.sz);
+  if (scan && complete) metadata.emplace("Motifs enumerated", std::to_string(scan->total_motifs));
+  auto table = data::make_data_table(
+      "Haldane-Shastry Yangian multiplets",
+      {.retain = a.output.retain ? data::retention::all : data::retention::none, .metadata = std::move(metadata)},
+      data::data_column<std::size_t>("state_id"), data::data_column<std::string>("motif"),
+      data::data_column<Real>("energy").round_trip(), data::data_column<Real>("gap").round_trip(),
+      data::data_column<std::size_t>("momentum_index"), data::data_column<Real>("p").unit("radians").round_trip(),
+      data::data_column<std::size_t>("spinons"), data::data_column<uni20::half_int>("s_max"),
+      data::data_column<std::optional<std::uint64_t>>("degeneracy"));
+  cli::DataOutput output(a.output, {"levels"});
+  output.write_table("levels", table,
+                     [&](auto& table) {
+                       for (std::size_t i = 0; i < levels.size(); ++i)
+                       {
+                         auto const& s = levels[i];
+                         std::string motif;
+                         for (auto m : s.motif)
+                         {
+                           if (!motif.empty()) motif += ' ';
+                           motif += std::to_string(m);
+                         }
+                         if (motif.empty()) motif = "empty";
+                         table.append(i, motif, s.energy, s.gap, s.momentum_index, s.momentum, s.spinons,
+                                      s.maximum_spin, s.degeneracy);
+                       }
+                     },
+                     {{"Status", complete ? "exact spectral rules" : "motif budget exceeded; no levels published"},
+                      {"CPU time", cpu}});
+  output.finish_document();
   if (!complete) std::cerr << "Motif budget exceeded; raise --max-motifs. No lowest levels claimed.\n";
   return complete ? 0 : 2;
 }
 } // namespace
 int main(int argc, char** argv)
 {
-  if (argc == 1)
-  {
-    usage(std::cerr);
-    return 1;
-  }
-  for (int i = 1; i < argc; ++i)
-    if (std::string_view(argv[i]) == "--help")
-    {
-      usage(std::cout);
-      return 0;
-    }
-  try
-  {
-    auto const a = parse(argc, argv);
-    return cli::dispatch_precision(a.precision, [&]<typename Real>() { return run<Real>(a); });
-  }
-  catch (std::exception const& e)
-  {
-    std::cerr << "Error: " << e.what() << '\n';
-    return 1;
-  }
+  Arguments a;
+  return cli::program_main(
+      argc, argv, program_info(), [&](auto& app) { add_options(app, a); },
+      [&](auto&) {
+        a.output.validate();
+        return cli::dispatch_precision(a.precision, [&]<typename Real>() { return run<Real>(a, argc, argv); });
+      });
 }

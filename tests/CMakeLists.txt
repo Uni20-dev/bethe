@@ -58,6 +58,9 @@ endif()
 
 if(BETHE_BUILD_APPS)
   if(Python3_Interpreter_FOUND)
+    add_test(NAME DataOutput.named
+      COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_named_output.py"
+        "$<TARGET_FILE:bethe-sutherland-pbc>")
     add_test(NAME Sutherland.cli
       COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_sutherland_cli.py"
         "$<TARGET_FILE:bethe-sutherland-pbc>" "${UNI20_ENABLE_MPLAPACK}")

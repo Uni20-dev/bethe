@@ -107,11 +107,14 @@ inputs, nonfinite computed results and positive energies/gaps underflowing to
 zero are errors (CLI exit 1), not valid zero energies. As with other numerical
 tools, extreme intermediate arithmetic can exceed the selected scalar range.
 
-Output formats are `auto`, `pretty`, `plain`, `csv`, and `tsv`. Delimited
-tables have `#` metadata, CPU time, and columns
-`labels,energy,gap,momentum_index,p`, plus `pseudomomenta` when requested.
-Vector cells are space-separated. Help and no-argument usage include the
-centralized literature references in [CITATIONS.md](../CITATIONS.md).
+Output formats are `auto`, `pretty`, `plain`, `csv`, `tsv`, and `json`, with
+independent file exports through `--csv FILE`, `--tsv FILE`, and `--json FILE`.
+The primary `states` table has columns `state_id,labels,energy,gap,momentum_index,p`;
+integer label lists remain space-separated. `--pseudomomenta` adds a separate
+typed table `state_id,index,label,k`, joined to states by zero-based `state_id`.
+Use `--table pseudomomenta` to select it for CSV/TSV, or export both tables as
+JSON. See [output conventions](output.md) for metadata, streaming and table selection.
+Use `--references` for centralized literature, also listed in [CITATIONS.md](../CITATIONS.md).
 
 ## Library and validation
 

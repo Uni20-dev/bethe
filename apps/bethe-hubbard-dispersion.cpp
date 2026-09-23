@@ -68,14 +68,14 @@ void add_options(CLI::App& app, Arguments& args)
   auto* sampling = app.add_option_group("Momentum sampling");
   auto* points = options::add_count_option(*sampling, "--points", args.points, "Uniform dressed-momentum grid, >=2")
                      ->capture_default_str();
-  sampling->add_option("--momentum", args.momentum, "One dressed momentum in radians instead of a grid")
+  cli::text_option(*sampling, "--momentum", args.momentum, "One dressed momentum in radians instead of a grid")
       ->type_name("REAL")
       ->excludes(points);
   auto* numerics = app.add_option_group("Numerics");
   numerics->add_option("--precision", args.precision, "Real scalar type; fp128 requires MPLAPACK")
       ->check(CLI::IsMember({"fp64", "long-double", "fp128"}))
       ->capture_default_str();
-  numerics->add_option("--tolerance", args.tolerance, "Target in native precision; see conventions below")
+  cli::text_option(*numerics, "--tolerance", args.tolerance, "Target in native precision; see conventions below")
       ->type_name("REAL")
       ->default_str("256 epsilon (half-filled); 4096 epsilon (doped)");
   options::add_count_option(*numerics, "--max-iterations", args.max_iterations, "Momentum inversion updates")
@@ -346,49 +346,15 @@ template <uni20::Real Real> int run(Arguments const& args, int argc, char** argv
 
 int main(int argc, char** argv)
 {
-  auto const program = program_info();
-  auto help_program = program;
-  help_program.references = {};
   Arguments args;
-  CLI::App app;
-  try
-  {
-    options::configure(app, help_program);
-    cli::add_references_option(app);
-    add_options(app, args);
-    options::parse_result result;
-    try
-    {
-      result = options::parse(app, argc, argv);
-    }
-    catch (cli::ReferencesRequested const&)
-    {
-      uni20::display::emit(cli::references_report(program), uni20::display::stream::out);
-      return 0;
-    }
-    if (result.requested != options::action::run)
-    {
-      uni20::display::emit(options::result_report(app, help_program, result), result.destination);
-      return result.exit_code;
-    }
-    args.quadrature_set = app.count("--max-evaluations") || app.count("--max-levels");
-    args.mesh_set =
-        app.count("--initial-nodes") || app.count("--max-nodes") || app.count("--max-background-iterations");
-    args.output.validate();
-    if (!args.momentum && args.points < 2) throw std::invalid_argument("--points must be at least 2");
-    return cli::dispatch_precision(args.precision, [&]<typename Real>() { return run<Real>(args, argc, argv); });
-  }
-  catch (cli::data::data_delivery_error const& error)
-  {
-    // Include each failed sink's underlying exception, not only the aggregate.
-    cli::print_output_error(std::cerr, error);
-    return 1;
-  }
-  catch (std::exception const& error)
-  {
-    uni20::display::emit(
-        options::result_report(app, program, {.requested = options::action::error, .message = error.what()}),
-        uni20::display::stream::err);
-    return 1;
-  }
+  return cli::program_main(
+      argc, argv, program_info(), [&](auto& app) { add_options(app, args); },
+      [&](auto& app) {
+        args.quadrature_set = app.count("--max-evaluations") || app.count("--max-levels");
+        args.mesh_set =
+            app.count("--initial-nodes") || app.count("--max-nodes") || app.count("--max-background-iterations");
+        args.output.validate();
+        if (!args.momentum && args.points < 2) throw std::invalid_argument("--points must be at least 2");
+        return cli::dispatch_precision(args.precision, [&]<typename Real>() { return run<Real>(args, argc, argv); });
+      });
 }

@@ -1,86 +1,58 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Copyright (C) 2026 Ian McCulloch
-#include "citation-report.hpp"
-#include "report-common.hpp"
+#include "data-output-options.hpp"
+#include "program-options.hpp"
 #include <bethe/sutherland.hpp>
 #include <charconv>
 
 namespace
 {
 namespace cli = bethe::cli;
+namespace data = cli::data;
 namespace model = bethe::sutherland;
 struct Arguments
 {
     std::size_t particles = 0, max_states = 100000;
     std::optional<std::size_t> window;
-    std::optional<std::string_view> length, lambda, labels, levels;
-    std::string_view precision = "fp64", format = "auto";
+    std::optional<std::string> labels, levels;
+    std::string length, lambda, precision = "fp64";
     bool pseudomomenta = false;
+    cli::DataOutputOptions output;
 };
-void usage(std::ostream& out)
+auto program_info()
 {
-  out << "Usage: bethe-sutherland-pbc N --length L --lambda VALUE [options]\n"
-      << "Scalar bosonic trigonometric inverse-square gas on a periodic circle.\n"
-      << "H=-sum d_i^2+2*lambda*(lambda-1)*(pi/L)^2 sum_{i<j} csc^2(pi*(x_i-x_j)/L).\n"
-      << "hbar=2m=1; 1<=N<=1000000, L>0, lambda>=0; default: ground state.\n"
-      << "The collision branch is psi ~ |x_i-x_j|^lambda: lambda=0 is free bosons;\n"
-      << "lambda=1 is hard-core bosons, despite the same zero potential coefficient.\n"
-      << "  --labels LIST          exactly N nondecreasing integers, e.g. -1,0,0,2\n"
-      << "  --levels COUNT|all     lowest COUNT states, or all, WITHIN the label window\n"
-      << "  --window W             explicit scan window -W<=n_j<=W (0<=W<=1000000)\n"
-      << "  --max-states COUNT     enumeration budget (100000); refusal exits 2\n"
-      << "  --pseudomomenta        also display the exact-rule k_j values\n"
-      << "  --precision fp64|long-double|fp128 (fp64; fp128 requires MPLAPACK)\n"
-      << "  --format auto|pretty|plain|csv|tsv (auto)\n"
-      << "  --help                 show this help and references\n"
-      << "--levels requires --window and vice versa; --labels excludes both.\n"
-      << "Labels may repeat and include uniform integer boosts. P is NOT modulo 2*pi.\n"
-      << "A finite window is not the infinite spectrum or a global low-energy guarantee.\n"
-      << "No root solving, wavefunctions, spin or alternative collision domains.\n"
-      << "See docs/sutherland.md for conventions and resource limits.\n";
-  cli::print_citations(out, bethe::citations::Tool::sutherland_pbc);
+  auto info = cli::program_info("bethe-sutherland-pbc", "Scalar bosonic trigonometric inverse-square gas on a circle.",
+                                bethe::citations::Tool::sutherland_pbc);
+  info.notes = {"H=-sum d_i^2+2*lambda*(lambda-1)*(pi/L)^2 sum_{i<j} csc^2(pi*(x_i-x_j)/L). "
+                "hbar=2m=1; 1<=N<=1000000, L>0, lambda>=0; default: ground state.",
+                "Collision branch psi ~ |x_i-x_j|^lambda: lambda=0 is free bosons; lambda=1 is hard-core bosons, "
+                "despite the same zero potential coefficient. Labels may repeat and include uniform integer boosts. "
+                "P is NOT modulo 2*pi.",
+                "A finite label window is not the infinite spectrum or a global low-energy guarantee. "
+                "Enumeration-budget refusal publishes no states and exits 2. No root solving, wavefunctions or spin.",
+                "Tables: states; pseudomomenta with --pseudomomenta (joined by state_id). "
+                "See docs/sutherland.md and docs/output.md. Use --references for literature and applicability."};
+  info.examples = {{"bethe-sutherland-pbc 3 --length 4 --lambda 2 --levels all --window 2 --json spectrum.json",
+                    "All states within a finite label window"}};
+  return info;
 }
-Arguments parse(int argc, char** argv)
+void add_options(CLI::App& app, Arguments& a)
 {
-  Arguments a;
-  a.particles = cli::parse_size(argv[1]);
-  for (int i = 2; i < argc; ++i)
-  {
-    std::string_view const option = argv[i];
-    if (option == "--pseudomomenta")
-    {
-      a.pseudomomenta = true;
-      continue;
-    }
-    if (option != "--length" && option != "--lambda" && option != "--labels" && option != "--levels" &&
-        option != "--window" && option != "--max-states" && option != "--precision" && option != "--format")
-      throw std::invalid_argument("unknown option: " + std::string(option));
-    if (++i == argc) throw std::invalid_argument("missing value for " + std::string(option));
-    std::string_view const value = argv[i];
-    if (option == "--length")
-      a.length = value;
-    else if (option == "--lambda")
-      a.lambda = value;
-    else if (option == "--labels")
-      a.labels = value;
-    else if (option == "--levels")
-      a.levels = value;
-    else if (option == "--window")
-      a.window = cli::parse_size(value);
-    else if (option == "--max-states")
-      a.max_states = cli::parse_size(value);
-    else if (option == "--precision")
-      a.precision = value;
-    else
-      a.format = value;
-  }
-  if (!a.length || !a.lambda) throw std::invalid_argument("--length and --lambda are required");
-  if (a.levels.has_value() != a.window.has_value())
-    throw std::invalid_argument("--levels and --window must be supplied together");
-  if (a.labels && a.levels) throw std::invalid_argument("--labels and --levels are mutually exclusive");
-  if (a.format != "auto" && a.format != "plain" && a.format != "pretty" && a.format != "csv" && a.format != "tsv")
-    throw std::invalid_argument("unknown output format: " + std::string(a.format));
-  return a;
+  cli::count_option(app, "N", a.particles, "Number of particles")->required();
+  app.add_option("--length", a.length, "Circle length L>0")->required()->type_name("REAL");
+  app.add_option("--lambda", a.lambda, "Collision exponent lambda>=0")->required()->type_name("REAL");
+  auto* labels = cli::text_option(app, "--labels", a.labels, "Exactly N nondecreasing integer labels, e.g. -1,0,2");
+  auto* levels = cli::text_option(app, "--levels", a.levels, "Lowest COUNT states, or all, within the label window")
+                     ->type_name("COUNT|all")
+                     ->excludes(labels);
+  auto* window = cli::count_option(app, "--window", a.window, "Scan window -W<=n_j<=W; W<=1000000")
+                     ->needs(levels)
+                     ->excludes(labels);
+  levels->needs(window);
+  cli::count_option(app, "--max-states", a.max_states, "Enumeration budget; refusal exits 2")->capture_default_str();
+  app.add_flag("--pseudomomenta", a.pseudomomenta, "Include exact-rule k_j values in a separate table");
+  cli::precision_option(app, a.precision);
+  cli::add_data_output_options(app, a.output, true);
 }
 std::vector<std::int64_t> parse_labels(std::string_view text)
 {
@@ -98,20 +70,10 @@ std::vector<std::int64_t> parse_labels(std::string_view text)
     text.remove_prefix(comma + 1);
   }
 }
-template <typename Range, typename Format> std::string join(Range const& values, Format format)
-{
-  std::string text;
-  for (auto const& value : values)
-  {
-    if (!text.empty()) text += ' ';
-    text += format(value);
-  }
-  return text;
-}
-template <uni20::Real Real> int run(Arguments const& a)
+template <uni20::Real Real> int run(Arguments const& a, int argc, char** argv)
 {
   cli::CpuTimer timer;
-  Real const length = uni20::parse_real<Real>(*a.length), lambda = uni20::parse_real<Real>(*a.lambda);
+  Real const length = uni20::parse_real<Real>(a.length), lambda = uni20::parse_real<Real>(a.lambda);
   std::vector<model::State<Real>> states;
   std::optional<model::Spectrum<Real>> scan;
   if (a.labels)
@@ -126,88 +88,80 @@ template <uni20::Real Real> int run(Arguments const& a)
     states = {model::ground_state(a.particles, length, lambda)};
   auto const cpu = timer.elapsed_text();
   bool const complete = !scan || scan->complete;
-  cli::report_builder report("Sutherland gas on a circle");
-  report.field("Hamiltonian", "H=-sum d_i^2+2*lambda*(lambda-1)*(pi/L)^2 sum_{i<j} csc^2(pi*(x_i-x_j)/L)")
-      .field("Units", "hbar=2m=1")
-      .field("Statistics/domain", "periodic bosons; collision branch |x_i-x_j|^lambda")
-      .field("Particles", a.particles)
-      .field("Length", uni20::format_real(length))
-      .field("Lambda", uni20::format_real(lambda))
-      .field("Precision", a.precision)
-      .field("Calculation", a.labels   ? "specified integer labels"
-                            : a.levels ? "label-window spectrum"
-                                       : "ground state")
-      .field("Status", complete ? "exact spectral rules" : "state budget exceeded; no levels published")
-      .field("Momentum", "P=2*pi*momentum_index/L; not reduced modulo 2*pi")
-      .field("CPU time", cpu);
-  if (!states.empty()) report.field("Ground energy", uni20::format_real(states.front().ground_energy));
+  auto metadata = cli::provenance("bethe-sutherland-pbc", argc, argv);
+  metadata.insert({{"Hamiltonian", "H=-sum d_i^2+2*lambda*(lambda-1)*(pi/L)^2 sum_{i<j} csc^2(pi*(x_i-x_j)/L)"},
+                   {"Units", "hbar=2m=1"},
+                   {"Statistics/domain", "periodic bosons; collision branch |x_i-x_j|^lambda"},
+                   {"Particles", std::to_string(a.particles)},
+                   {"Length", uni20::format_real(length)},
+                   {"Lambda", uni20::format_real(lambda)},
+                   {"Precision", a.precision},
+                   {"Calculation", a.labels   ? "specified integer labels"
+                                   : a.levels ? "label-window spectrum"
+                                              : "ground state"},
+                   {"Momentum", "P=2*pi*momentum_index/L; not reduced modulo 2*pi"}});
+  if (!states.empty()) metadata.emplace("Ground energy", uni20::format_real(states.front().ground_energy));
   if (scan)
   {
-    report.field("Label window", "[-" + std::to_string(*a.window) + "," + std::to_string(*a.window) + "]")
-        .field("Coverage", "window only; no global low-energy completeness claimed");
-    if (complete) report.field("States enumerated", scan->total_states);
+    metadata.emplace("Label window", "[-" + std::to_string(*a.window) + "," + std::to_string(*a.window) + "]");
+    metadata.emplace("Coverage", "window only; no global low-energy completeness claimed");
+    if (complete) metadata.emplace("States enumerated", std::to_string(scan->total_states));
   }
-  bool const separated = a.format == "csv" || a.format == "tsv";
-  char const separator = a.format == "tsv" ? '\t' : ',';
-  if (separated)
+  data::data_table_options table_options{.retain = a.output.retain ? data::retention::all : data::retention::none,
+                                         .metadata = metadata};
+  auto table = data::make_data_table(
+      "Sutherland states", table_options, data::data_column<std::size_t>("state_id"),
+      data::data_column<std::string>("labels"), data::data_column<Real>("energy").round_trip(),
+      data::data_column<Real>("gap").round_trip(), data::data_column<std::int64_t>("momentum_index"),
+      data::data_column<Real>("p").round_trip());
+  std::vector<std::string> names{"states"};
+  if (a.pseudomomenta) names.push_back("pseudomomenta");
+  cli::DataOutput output(a.output, names);
+  data::table_metadata summary{
+      {"Status", complete ? "exact spectral rules" : "state budget exceeded; no levels published"}, {"CPU time", cpu}};
+  output.write_table(
+      "states", table,
+      [&](auto& table) {
+        for (std::size_t i = 0; i < states.size(); ++i)
+        {
+          auto const& s = states[i];
+          std::string labels;
+          for (auto n : s.labels)
+          {
+            if (!labels.empty()) labels += ' ';
+            labels += std::to_string(n);
+          }
+          table.append(i, labels, s.energy, s.gap, s.momentum_index, s.momentum);
+        }
+      },
+      summary);
+  if (a.pseudomomenta)
   {
-    for (auto const& [key, value] : report.fields())
-      std::cout << "# " << key << ": " << value << '\n';
-    std::cout << "labels" << separator << "energy" << separator << "gap" << separator << "momentum_index" << separator
-              << "p";
-    if (a.pseudomomenta) std::cout << separator << "pseudomomenta";
-    std::cout << '\n';
+    auto roots =
+        data::make_data_table("Sutherland pseudomomenta", table_options, data::data_column<std::size_t>("state_id"),
+                              data::data_column<std::size_t>("index"), data::data_column<std::int64_t>("label"),
+                              data::data_column<Real>("k").round_trip());
+    output.write_table(
+        "pseudomomenta", roots,
+        [&](auto& table) {
+          for (std::size_t i = 0; i < states.size(); ++i)
+            for (std::size_t j = 0; j < states[i].pseudomomenta.size(); ++j)
+              table.append(i, j, states[i].labels[j], states[i].pseudomomenta[j]);
+        },
+        summary);
   }
-  auto& table = report.table("States");
-  table.header_separator().column("Labels").column("Energy").column("Gap").column("Momentum index").column("P");
-  if (a.pseudomomenta) table.column("Pseudomomenta");
-  for (auto const& s : states)
-  {
-    std::vector<std::string> cells{join(s.labels, [](auto n) { return std::to_string(n); }),
-                                   uni20::format_real(s.energy), uni20::format_real(s.gap),
-                                   std::to_string(s.momentum_index), uni20::format_real(s.momentum)};
-    if (a.pseudomomenta) cells.push_back(join(s.pseudomomenta, [](Real k) { return uni20::format_real(k); }));
-    if (separated)
-    {
-      for (std::size_t i = 0; i < cells.size(); ++i)
-      {
-        if (i) std::cout << separator;
-        std::cout << cells[i];
-      }
-      std::cout << '\n';
-    }
-    else if (a.pseudomomenta)
-      table.row(cells[0], cells[1], cells[2], cells[3], cells[4], cells[5]);
-    else
-      table.row(cells[0], cells[1], cells[2], cells[3], cells[4]);
-  }
-  if (!separated) cli::print_report(report, a.format);
-  if (!complete)
-    std::cerr << "State budget exceeded; raise --max-states or narrow --window. No lowest levels claimed.\n";
+  output.finish_document();
+  if (!complete) std::cerr << "State budget exceeded; raise --max-states. No lowest levels claimed.\n";
   return complete ? 0 : 2;
 }
 } // namespace
 int main(int argc, char** argv)
 {
-  if (argc == 1)
-  {
-    usage(std::cerr);
-    return 1;
-  }
-  for (int i = 1; i < argc; ++i)
-    if (std::string_view(argv[i]) == "--help")
-    {
-      usage(std::cout);
-      return 0;
-    }
-  try
-  {
-    auto const a = parse(argc, argv);
-    return cli::dispatch_precision(a.precision, [&]<typename Real>() { return run<Real>(a); });
-  }
-  catch (std::exception const& e)
-  {
-    std::cerr << "Error: " << e.what() << '\n';
-    return 1;
-  }
+  Arguments a;
+  return cli::program_main(
+      argc, argv, program_info(), [&](auto& app) { add_options(app, a); },
+      [&](auto&) {
+        a.output.validate();
+        return cli::dispatch_precision(a.precision, [&]<typename Real>() { return run<Real>(a, argc, argv); });
+      });
 }

@@ -61,6 +61,8 @@ if(BETHE_BUILD_APPS)
     set_target_properties(${app} PROPERTIES CXX_EXTENSIONS OFF)
   endforeach()
   target_link_libraries(bethe-hubbard-dispersion PRIVATE bethe_cli)
+  target_link_libraries(bethe-haldane-shastry-pbc PRIVATE bethe_cli)
+  target_link_libraries(bethe-sutherland-pbc PRIVATE bethe_cli)
 endif()
 
 if(BETHE_BUILD_TESTS)

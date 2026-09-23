@@ -16,11 +16,13 @@ namespace data = uni20::presentation;
 struct DataFile
 {
     std::string format, path;
+    std::string table;
 };
 struct DataOutputOptions
 {
     std::string format = "auto";
     std::vector<DataFile> files;
+    std::string table;
     bool quiet = false, preamble = true, force = false, stream = false, retain = true;
 
     bool human() const { return format == "auto" || format == "pretty" || format == "plain"; }
@@ -206,9 +208,28 @@ inline void print_output_error(std::ostream& out, std::exception const& error)
 // plain-screen router used for explicitly requested human streaming.
 class DataOutput {
   public:
-    explicit DataOutput(DataOutputOptions options) : options_(std::move(options))
+    explicit DataOutput(DataOutputOptions options, std::vector<std::string> tables = {})
+        : options_(std::move(options)), tables_(std::move(tables)), json_files_(options_.files.size())
     {
       options_.validate();
+      if (!tables_.empty())
+      {
+        for (auto const& name : tables_)
+        {
+          if (name.empty() || name.find_first_not_of("abcdefghijklmnopqrstuvwxyz0123456789_") != std::string::npos)
+            throw std::logic_error("invalid output table identifier: " + name);
+          if (std::count(tables_.begin(), tables_.end(), name) != 1)
+            throw std::logic_error("duplicate output table identifier: " + name);
+        }
+        if (options_.table.empty()) options_.table = tables_.front();
+        auto check = [&](std::string const& name) {
+          if (std::find(tables_.begin(), tables_.end(), name) == tables_.end())
+            throw std::invalid_argument("output table is unavailable in this calculation: " + name);
+        };
+        check(options_.table);
+        for (auto const& file : options_.files)
+          if (!file.table.empty()) check(file.table);
+      }
       this->check_paths(); // Reject collisions/existing files before opening any target.
       for (auto const& file : options_.files)
       {
@@ -219,17 +240,46 @@ class DataOutput {
         files_.push_back(std::move(stream));
       }
     }
-    template <typename Table> void attach(Table& table)
+    ~DataOutput()
     {
+      // Also cover failures between tables (e.g. allocating an auxiliary schema).
+      if (!tables_.empty() && !document_finished_) try
+        {
+          finish_document(true);
+        }
+        catch (std::exception const& error)
+        {
+          print_output_error(std::cerr, error);
+        }
+    }
+    template <typename Table> void attach(Table& table, std::string name = {})
+    {
+      if (!tables_.empty())
+      {
+        if (document_finished_) throw std::logic_error("output document is already finished");
+        if (!active_table_.empty()) throw std::logic_error("finish the current output table before attaching another");
+        if (std::find(tables_.begin(), tables_.end(), name) == tables_.end() ||
+            std::find(delivered_.begin(), delivered_.end(), name) != delivered_.end())
+          throw std::logic_error("unknown or duplicate output table: " + name);
+        active_table_ = name;
+        delivered_.push_back(name);
+      }
       // Files first, so they receive the accepted row even if the screen fails.
       for (std::size_t i = 0; i < files_.size(); ++i)
-        this->attach_stream(table, *files_[i], options_.files[i].format, options_.files[i].path);
+      {
+        auto const& file = options_.files[i];
+        if (tables_.empty() || file.format == "json" || name == (file.table.empty() ? options_.table : file.table))
+          this->attach_stream(table, *files_[i], file.format, file.path, name, json_files_[i]);
+      }
       if (options_.quiet) return;
       if (!options_.human())
-        this->attach_stream(table, std::cout, options_.format, "stdout");
+      {
+        if (tables_.empty() || options_.format == "json" || name == options_.table)
+          this->attach_stream(table, std::cout, options_.format, "stdout", name, json_stdout_);
+      }
       else if (options_.stream)
       {
-        if (options_.format == "plain")
+        if (options_.format == "plain" && !plain_router_)
           plain_router_.emplace([](uni20::display::event const& event) {
             auto policy = data::plain_policy();
             policy.wrap_width = std::nullopt;
@@ -253,7 +303,8 @@ class DataOutput {
       {
         failure = std::current_exception();
       }
-      this->close_files(failure);
+      active_table_.clear();
+      if (tables_.empty()) this->close_files(failure);
       if (!failure && !options_.quiet && options_.human() && !options_.stream)
       {
         report_builder report(table.title());
@@ -267,6 +318,51 @@ class DataOutput {
         if (!std::cout) throw std::ios_base::failure("stdout write/flush failed");
       }
       if (failure) std::rethrow_exception(failure);
+    }
+    void finish_document(bool aborted = false)
+    {
+      if (tables_.empty()) throw std::logic_error("not a multi-table output document");
+      if (document_finished_) return;
+      if (!aborted && (!active_table_.empty() || delivered_.size() != tables_.size()))
+        throw std::logic_error("not all output tables were finished");
+      document_finished_ = true;
+      std::exception_ptr failure;
+      auto close_json = [&](std::ostream& stream, JsonDocument& state, std::string const& destination) {
+        if (!state.started || state.closed || state.failed) return;
+        state.closed = true;
+        stream << "},\"status\":\"" << (aborted ? "aborted" : "complete") << "\"}\n";
+        stream.flush();
+        if (!stream && !failure)
+          failure = std::make_exception_ptr(std::runtime_error(destination + ": JSON document finalization failed"));
+      };
+      for (std::size_t i = 0; i < files_.size(); ++i)
+        close_json(*files_[i], json_files_[i], options_.files[i].path);
+      close_json(std::cout, json_stdout_, "stdout");
+      this->close_files(failure);
+      if (failure) std::rethrow_exception(failure);
+    }
+    template <typename Table, typename Fill>
+    void write_table(std::string name, Table& table, Fill&& fill, data::table_metadata summary = {})
+    {
+      try
+      {
+        attach(table, std::move(name));
+        fill(table);
+        finish(table, std::move(summary));
+      }
+      catch (...)
+      {
+        abort(table, {{"Status", "aborted"}});
+        try
+        {
+          finish_document(true);
+        }
+        catch (std::exception const& error)
+        {
+          print_output_error(std::cerr, error);
+        }
+        throw;
+      }
     }
     template <typename Table> void abort(Table& table, data::table_metadata summary) noexcept
     {
@@ -283,7 +379,8 @@ class DataOutput {
       catch (...)
       {}
       std::exception_ptr failure;
-      this->close_files(failure);
+      active_table_.clear();
+      if (tables_.empty()) this->close_files(failure);
       if (failure)
       {
         try
@@ -300,10 +397,62 @@ class DataOutput {
     }
 
   private:
-    template <typename Table>
-    void attach_stream(Table& table, std::ostream& out, std::string_view format, std::string const& name)
+    struct JsonDocument
     {
-      if (format == "json")
+        bool started = false, failed = false, closed = false;
+    };
+    // Each named table is an ordinary Uni20 JSON table, enclosed in a single
+    // document. A failed destination is quarantined, not retried or repaired.
+    class DocumentSink {
+      public:
+        DocumentSink(std::ostream& out, std::string name, JsonDocument& document)
+            : out_(out), name_(std::move(name)), document_(document), sink_(data::json_sink(out))
+        {}
+        template <typename Schema>
+        void begin(std::string const& title, Schema const& schema, data::table_metadata const& metadata,
+                   data::data_sink_start start)
+        {
+          guarded([&] {
+            out_ << (document_.started ? "," : "{\"tables\":{") << '"' << name_ << "\":";
+            document_.started = true;
+            sink_.begin(title, schema, metadata, start);
+          });
+        }
+        template <typename Schema, typename Row> void row(Schema const& schema, Row const& row)
+        {
+          guarded([&] { sink_.row(schema, row); });
+        }
+        void finish(data::table_metadata const& summary)
+        {
+          guarded([&] { sink_.finish(summary); });
+        }
+
+      private:
+        template <typename Function> void guarded(Function&& function)
+        {
+          if (document_.failed) throw std::runtime_error("JSON destination previously failed");
+          try
+          {
+            function();
+          }
+          catch (...)
+          {
+            document_.failed = true;
+            throw;
+          }
+        }
+        std::ostream& out_;
+        std::string name_;
+        JsonDocument& document_;
+        decltype(data::json_sink(std::declval<std::ostream&>())) sink_;
+    };
+    template <typename Table>
+    void attach_stream(Table& table, std::ostream& out, std::string_view format, std::string const& name,
+                       std::string const& table_name, JsonDocument& document)
+    {
+      if (format == "json" && !tables_.empty())
+        table.attach(NamedSink(name, DocumentSink(out, table_name, document)));
+      else if (format == "json")
         table.attach(NamedSink(name, data::json_sink(out)));
       else if (format == "csv")
         table.attach(NamedSink(name, CommentedSink(out, data::csv_sink(out), options_.preamble)));
@@ -362,6 +511,11 @@ class DataOutput {
       }
     }
     DataOutputOptions options_;
+    std::vector<std::string> tables_, delivered_;
+    std::string active_table_;
+    std::vector<JsonDocument> json_files_;
+    JsonDocument json_stdout_;
+    bool document_finished_ = false;
     std::vector<std::unique_ptr<std::ofstream>> files_;
     std::optional<uni20::display::scoped_sink> plain_router_;
 };

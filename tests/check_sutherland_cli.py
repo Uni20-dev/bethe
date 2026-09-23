@@ -40,7 +40,9 @@ with localcontext() as ctx:
         assert excited["momentum_index"] == "1"
         assert abs(Decimal(excited["gap"]) - 3 * pi * pi / 4) < tol, excited
         assert abs(Decimal(excited["p"]) - pi / 2) < tol
-        ks = [Decimal(k) for k in excited["pseudomomenta"].split()]
+        roots = rows(run(*base, "--labels", "0,1", "--pseudomomenta", "--table", "pseudomomenta")[0])
+        assert [r["state_id"] for r in roots] == ["0", "0"]
+        ks = [Decimal(r["k"]) for r in roots]
         assert len(ks) == 2 and abs(ks[0] + pi / 2) < tol and abs(ks[1] - pi) < tol
         if precision == "fp128":
             length = "4.000000000000000000000000002"

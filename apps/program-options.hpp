@@ -3,6 +3,7 @@
 #pragma once
 
 #include "bethe-build-info.hpp"
+#include "data-output.hpp"
 #include <bethe/citations.hpp>
 #include <uni20/cli/cli.hpp>
 
@@ -64,5 +65,77 @@ inline uni20::presentation::program_info program_info(std::string name, std::str
             }
             return references;
           }};
+}
+
+// One informational/error lifecycle for every executable. Registration callbacks
+// only bind arguments; validation, solvers and output files belong in run().
+template <typename Register, typename Run>
+int program_main(int argc, char** argv, uni20::presentation::program_info const& program, Register&& register_options,
+                 Run&& run)
+{
+  namespace options = uni20::cli;
+  auto help_program = program;
+  help_program.references = {};
+  CLI::App app;
+  try
+  {
+    options::configure(app, help_program);
+    add_references_option(app);
+    register_options(app);
+    options::parse_result result;
+    try
+    {
+      result = options::parse(app, argc, argv);
+    }
+    catch (ReferencesRequested const&)
+    {
+      uni20::display::emit(references_report(program), uni20::display::stream::out);
+      return 0;
+    }
+    if (result.requested != options::action::run)
+    {
+      uni20::display::emit(options::result_report(app, help_program, result), result.destination);
+      return result.exit_code;
+    }
+    return run(app);
+  }
+  catch (data::data_delivery_error const& error)
+  {
+    print_output_error(std::cerr, error);
+  }
+  catch (std::exception const& error)
+  {
+    uni20::display::emit(
+        options::result_report(app, help_program, {.requested = options::action::error, .message = error.what()}),
+        uni20::display::stream::err);
+  }
+  return 1;
+}
+
+inline CLI::Option* count_option(CLI::App& app, std::string names, std::optional<std::size_t>& value,
+                                 std::string description)
+{
+  return app
+      .add_option_function<std::string>(
+          names, [&value](std::string const& token) { value = parse_size(token); }, std::move(description))
+      ->type_name("COUNT");
+}
+// CLI11's generic optional binding treats an empty token as disengaged. Here
+// presence is meaningful (an empty motif/quantum-number list is a valid state).
+inline CLI::Option* text_option(CLI::App& app, std::string names, std::optional<std::string>& value,
+                                std::string description)
+{
+  return app.add_option_function<std::string>(
+      names, [&value](std::string const& token) { value = token; }, std::move(description));
+}
+inline CLI::Option* count_option(CLI::App& app, std::string names, std::size_t& value, std::string description)
+{
+  return uni20::cli::add_count_option(app, std::move(names), value, std::move(description));
+}
+inline void precision_option(CLI::App& app, std::string& precision)
+{
+  app.add_option("--precision", precision, "Real scalar type; fp128 requires MPLAPACK")
+      ->check(CLI::IsMember({"fp64", "long-double", "fp128"}))
+      ->capture_default_str();
 }
 } // namespace bethe::cli
