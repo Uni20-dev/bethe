@@ -74,15 +74,15 @@ Heisenberg ladder. Use `--singlets NS` for one singlet-count sector or
 retains the distinction between it and a physical SU(4) descendant.
 
 Relevant literature references include links and a note on the modes they
-support. `bethe-hubbard-dispersion --references` displays its bibliography;
-the other frontends still include theirs in `--help` and no-argument usage.
+support. Every frontend's `--references` option displays its bibliography;
+ordinary help and no-argument usage omit it.
 Normal numerical output contains no bibliography. [CITATIONS.md](../CITATIONS.md)
 gives the full bibliography and explains the conventions used here.
 
 ### Uni20 help and option parsing
 
-`bethe-hubbard-dispersion` is the first frontend using Uni20's shared CLI and
-presentation module. `--help` (or `-h`) now shows a styled program banner,
+All frontends use Uni20's shared CLI and presentation module.
+`--help` (or `-h`) shows a styled program banner,
 grouped options with their actual defaults and constraints, examples, and
 conventions. Literature and applicability are available separately through
 `--references`, which needs no model parameters and does not calculate. Color and
@@ -103,9 +103,12 @@ be an error.
 If both `--help` and `--references` are given, ordinary help takes precedence.
 Invalid arguments produce a concise stderr diagnostic rather than full help.
 
-The other frontends retain their existing parsers for now. The
-[Hubbard dispersion guide](hubbard-dispersion.md) and [output guide](output.md)
-describe the pilot's numerical and file-output conventions, which are unchanged.
+Existing positional arguments and scientific option names remain available;
+options may also precede positional arguments. Integer counts and half-integers
+are parsed exactly, with negative counts, trailing junk and overflow rejected.
+An explicitly empty list remains distinct from an omitted option.
+The [output guide](output.md) tracks the separate typed-table/export migration;
+not every frontend offers file exports yet.
 
 ## Choose a calculation
 

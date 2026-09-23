@@ -5,6 +5,7 @@
 #include "bethe-build-info.hpp"
 #include "data-output.hpp"
 #include <bethe/citations.hpp>
+#include <limits>
 #include <uni20/cli/cli.hpp>
 
 namespace bethe::cli
@@ -137,5 +138,63 @@ inline void precision_option(CLI::App& app, std::string& precision)
   app.add_option("--precision", precision, "Real scalar type; fp128 requires MPLAPACK")
       ->check(CLI::IsMember({"fp64", "long-double", "fp128"}))
       ->capture_default_str();
+}
+
+inline CLI::Option* option(CLI::App& app, std::string names, bool& value, std::string description)
+{
+  return app.add_flag(std::move(names), value, std::move(description));
+}
+inline CLI::Option* option(CLI::App& app, std::string names, std::string& value, std::string description)
+{
+  return app.add_option(std::move(names), value, std::move(description));
+}
+inline CLI::Option* option(CLI::App& app, std::string names, std::optional<std::string>& value, std::string description)
+{
+  return text_option(app, std::move(names), value, std::move(description));
+}
+inline CLI::Option* option(CLI::App& app, std::string names, std::size_t& value, std::string description)
+{
+  return count_option(app, std::move(names), value, std::move(description));
+}
+inline CLI::Option* option(CLI::App& app, std::string names, std::optional<std::size_t>& value, std::string description)
+{
+  return count_option(app, std::move(names), value, std::move(description));
+}
+inline CLI::Option* option(CLI::App& app, std::string names, uni20::half_int& value, std::string description)
+{
+  return uni20::cli::add_half_int_option(app, std::move(names), value, std::move(description));
+}
+inline CLI::Option* option(CLI::App& app, std::string names, std::optional<uni20::half_int>& value,
+                           std::string description)
+{
+  return app
+      .add_option_function<std::string>(
+          names, [&value](std::string const& token) { value = uni20::half_int::parse(token); }, std::move(description))
+      ->type_name("HALF_INT");
+}
+inline CLI::Option* option(CLI::App& app, std::string names, std::optional<std::vector<uni20::half_int>>& value,
+                           std::string description)
+{
+  return app
+      .add_option_function<std::string>(
+          names,
+          [&value](std::string const& token) {
+            value = token == "none" ? std::vector<uni20::half_int>{} : parse_quantum_numbers(token);
+          },
+          std::move(description))
+      ->type_name("LIST");
+}
+inline CLI::Option* all_count_option(CLI::App& app, std::string names, std::optional<std::size_t>& value,
+                                     std::string description)
+{
+  return app
+      .add_option_function<std::string>(
+          names,
+          [&value](std::string const& token) {
+            // The numerical scan checks its candidate budget before clamping this sentinel.
+            value = token == "all" ? std::numeric_limits<std::size_t>::max() : parse_size(token);
+          },
+          std::move(description))
+      ->type_name("COUNT|all");
 }
 } // namespace bethe::cli

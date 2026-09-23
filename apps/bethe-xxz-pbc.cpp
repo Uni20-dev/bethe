@@ -3,8 +3,8 @@
 
 #include <bethe/xxz_excitations.hpp>
 
-#include "citation-report.hpp"
 #include "excitation-report.hpp"
+#include "program-options.hpp"
 #include "xxz-cli.hpp"
 #include "xxz-ground-report.hpp"
 
@@ -19,36 +19,24 @@ using output::print_roots;
 
 using Arguments = bethe::cli::XxzArguments;
 
-void usage(std::ostream& out)
+auto program_info()
 {
-  out << "Usage: bethe-xxz-pbc N --delta VALUE [options]\n"
-      << "Periodic spin-1/2 XXZ chain, J=1, zero field; ground states at finite Delta >= 0,\n"
-      << "and -1 < Delta < 0 on even rings. Negative-Delta odd rings are not yet supported.\n"
-      << "H=sum_i (Sx_i Sx_(i+1) + Sy_i Sy_(i+1) + Delta Sz_i Sz_(i+1)).\n"
-      << "Default: ground state (one Sz=1/2 representative for odd N).\n"
-      << "  --delta VALUE                      required: >-1 for even N, >=0 for odd N (excitations: [0,1])\n"
-      << "  --sz VALUE                         lowest energy in an Sz sector, e.g. -1/2\n"
-      << "  --sectors                          lowest energy in every Sz sector\n"
-      << "  --excitations COUNT|all             lowest COUNT, or all, states in a restricted real-root family\n"
-      << "                                     --sz selects sector (default: 1 even N, 1/2 odd N)\n"
-      << "  --max-candidates COUNT             exhaustive scan limit (default: 10000)\n"
-      << "  --quantum-numbers I1,I2,...         specified real-root state; use none for vacuum\n"
-      << "  --precision fp64|long-double|fp128  (default: fp64)\n"
-      << "  --tolerance VALUE                  residual in the reported convention (default: 32*epsilon)\n"
-      << "  --max-iterations COUNT             update budget (default: 10000)\n"
-      << "  --roots                            print scaled rapidities z and quantum numbers\n"
-      << "  --format auto|pretty|plain         terminal report or script output (default: auto)\n"
-      << "  --help                             show this help\n"
-      << "z=tanh(lambda)/tan(gamma/2), Delta=cos(gamma); at Delta=1, z=2*lambda_XXX.\n"
-      << "For -1<Delta<0, --roots also prints lambda; residuals use rank-subtracted equations divided by N*s,\n"
-      << "where s=sqrt((1+Delta)/(1-Delta)). Ground states and --sz/--sectors only, even N.\n"
-      << "For Delta>1: z=tan(lambda)/tanh(eta/2), Delta=cosh(eta).\n"
-      << "Delta>1 supports ground states and --sz/--sectors only, not explicit labels or excitations.\n"
-      << "Excitation scans include the sector minimum; NOT a complete Sz spectrum.\n"
-      << "The finite-real window depends on Delta; strings and infinite rapidities are excluded.\n"
-      << "No OBC or SU(2) multiplet classification; the excitation window has one even-N Sz=0 state.\n"
-      << "fp128 requires a Uni20 build with MPLAPACK enabled.\n";
-  bethe::cli::print_citations(out, bethe::citations::Tool::xxz_pbc);
+  auto info = bethe::cli::program_info(
+      "bethe-xxz-pbc", "Periodic spin-1/2 XXZ chain, J=1, zero field; ground states at finite Delta >= 0,",
+      bethe::citations::Tool::xxz_pbc);
+  info.notes = {"and -1 < Delta < 0 on even rings. Negative-Delta odd rings are not yet supported.",
+                "H=sum_i (Sx_i Sx_(i+1) + Sy_i Sy_(i+1) + Delta Sz_i Sz_(i+1)).",
+                "Default: ground state (one Sz=1/2 representative for odd N).",
+                "z=tanh(lambda)/tan(gamma/2), Delta=cos(gamma); at Delta=1, z=2*lambda_XXX.",
+                "For -1<Delta<0, --roots also prints lambda; residuals use rank-subtracted equations divided by N*s,",
+                "where s=sqrt((1+Delta)/(1-Delta)). Ground states and --sz/--sectors only, even N.",
+                "For Delta>1: z=tan(lambda)/tanh(eta/2), Delta=cosh(eta).",
+                "Delta>1 supports ground states and --sz/--sectors only, not explicit labels or excitations.",
+                "Excitation scans include the sector minimum; NOT a complete Sz spectrum.",
+                "The finite-real window depends on Delta; strings and infinite rapidities are excluded.",
+                "No OBC or SU(2) multiplet classification; the excitation window has one even-N Sz=0 state.",
+                "Use --references for literature and applicability; see CITATIONS.md."};
+  return info;
 }
 
 template <uni20::Real Real> int run(Arguments const& args)
@@ -162,24 +150,11 @@ template <uni20::Real Real> int run(Arguments const& args)
 
 int main(int argc, char** argv)
 {
-  if (argc == 2 && std::string_view(argv[1]) == "--help")
-  {
-    usage(std::cout);
-    return 0;
-  }
-  if (argc < 2)
-  {
-    usage(std::cerr);
-    return 1;
-  }
-  try
-  {
-    auto const args = bethe::cli::parse_xxz_arguments(argc, argv);
-    return bethe::cli::dispatch_precision(args.precision, [&]<uni20::Real Real> { return run<Real>(args); });
-  }
-  catch (std::exception const& error)
-  {
-    std::cerr << "bethe-xxz-pbc: " << error.what() << '\n';
-    return 1;
-  }
+  Arguments args;
+  return bethe::cli::program_main(
+      argc, argv, program_info(), [&](auto& app) { bethe::cli::add_xxz_options(app, args); },
+      [&](auto&) {
+        bethe::cli::validate_xxz_arguments(args);
+        return bethe::cli::dispatch_precision(args.precision, [&]<uni20::Real Real> { return run<Real>(args); });
+      });
 }

@@ -41,8 +41,8 @@ The polarized sectors instead have `E=sum A_j/4 +/- B/2`. An empty list,
 `--couplings ''`, represents an isolated central spin and requires Sz=+/-1/2.
 
 The report uses Uni20 presentation, retains the selected fp64/long-double/fp128
-precision, and includes CPU time. `--help` and no-argument usage include
-references from the shared citation registry. There is no excitation scan,
+precision, and includes CPU time. `--references` displays literature from
+the shared citation registry separately from help. There is no excitation scan,
 rapidity output, wavefunction, form factor or dynamics API yet.
 
 ## Equations and conventions

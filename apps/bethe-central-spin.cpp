@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Copyright (C) 2026 Ian McCulloch
-#include "citation-report.hpp"
+#include "program-options.hpp"
 #include "report-common.hpp"
 #include <bethe/central_spin.hpp>
 
@@ -10,73 +10,52 @@ namespace model = bethe::central_spin;
 namespace cli = bethe::cli;
 struct Arguments
 {
-    std::optional<std::string_view> couplings, field, tolerance;
+    std::optional<std::string> couplings, field, tolerance;
     std::optional<uni20::half_int> sz;
-    std::string_view precision = "fp64", format = "auto";
+    std::string precision = "fp64", format = "auto";
     std::size_t max_iterations = 10000, max_stages = 10000;
     bool variables = false;
 };
-void usage(std::ostream& out)
+auto program_info()
 {
-  out << "Usage: bethe-central-spin --couplings A1,A2,... --field B --sz SZ [options]\n"
-      << "Rational Gaudin central-spin ground state in a specified total-Sz sector.\n"
-      << "H=B*S0^z+sum_j A_j*S0.Sj; central and bath spins are all 1/2.\n"
-      << "  --couplings LIST                   distinct nonzero real bath couplings (either sign)\n"
-      << "  --field VALUE                      central field, either sign or exactly zero\n"
-      << "  --sz VALUE                         required total magnetization, including the central spin\n"
-      << "  --variables                        print compactified eigenvalue variables (not occupations)\n"
-      << "  --precision fp64|long-double|fp128  (default: fp64; fp128 requires MPLAPACK)\n"
-      << "  --tolerance VALUE                  polynomial backward residual (default: 32 epsilon)\n"
-      << "  --max-iterations COUNT             attempted Newton corrections, including retries\n"
-      << "  --max-stages COUNT                 attempted continuation stages (default: 10000)\n"
-      << "  --format auto|pretty|plain         (default: auto)\n"
-      << "  --help                             show this help and references\n"
-      << "Default Newton budget: 10000. A zero budget leaves the infinite-field seed, with no energy.\n"
-      << "Incomplete solves report energy only at the REACHED field, not the requested field.\n"
-      << "An empty coupling list describes an isolated central spin. Coupling order is immaterial.\n"
-      << "Repeated/zero couplings, bath interactions, excitations and rapidity reconstruction are not implemented.\n"
-      << "No PBC/OBC or lattice momentum applies; a sector minimum is not necessarily the global minimum.\n"
-      << "See docs/central-spin.md for conventions, state selection and continuation controls.\n";
-  cli::print_citations(out, bethe::citations::Tool::central_spin);
+  auto info = bethe::cli::program_info("bethe-central-spin",
+                                       "Rational Gaudin central-spin ground state in a specified total-Sz sector.",
+                                       bethe::citations::Tool::central_spin);
+  info.notes = {
+      "H=B*S0^z+sum_j A_j*S0.Sj; central and bath spins are all 1/2.",
+      "Default Newton budget: 10000. A zero budget leaves the infinite-field seed, with no energy.",
+      "Incomplete solves report energy only at the REACHED field, not the requested field.",
+      "An empty coupling list describes an isolated central spin. Coupling order is immaterial.",
+      "Repeated/zero couplings, bath interactions, excitations and rapidity reconstruction are not implemented.",
+      "No PBC/OBC or lattice momentum applies; a sector minimum is not necessarily the global minimum.",
+      "See docs/central-spin.md for conventions, state selection and continuation controls.",
+      "Use --references for literature and applicability; see CITATIONS.md."};
+  return info;
 }
-Arguments parse(int argc, char** argv)
+void add_options(CLI::App& app, Arguments& args)
 {
-  Arguments out;
-  for (int i = 1; i < argc; ++i)
-  {
-    std::string_view const option = argv[i];
-    if (option == "--variables")
-    {
-      out.variables = true;
-      continue;
-    }
-    if (option != "--couplings" && option != "--field" && option != "--sz" && option != "--precision" &&
-        option != "--format" && option != "--tolerance" && option != "--max-iterations" && option != "--max-stages")
-      throw std::invalid_argument("unknown option: " + std::string(option));
-    if (++i == argc) throw std::invalid_argument("missing value for " + std::string(option));
-    std::string_view const value = argv[i];
-    if (option == "--couplings")
-      out.couplings = value;
-    else if (option == "--field")
-      out.field = value;
-    else if (option == "--sz")
-      out.sz = uni20::half_int::parse(value);
-    else if (option == "--precision")
-      out.precision = value;
-    else if (option == "--format")
-      out.format = value;
-    else if (option == "--tolerance")
-      out.tolerance = value;
-    else if (option == "--max-iterations")
-      out.max_iterations = cli::parse_size(value);
-    else
-      out.max_stages = cli::parse_size(value);
-  }
-  if (!out.couplings || !out.field || !out.sz)
+  bethe::cli::option(app, "--couplings", args.couplings, "distinct nonzero real bath couplings (either sign)")
+      ->required();
+  bethe::cli::option(app, "--field", args.field, "central field, either sign or exactly zero")->required();
+  bethe::cli::option(app, "--sz", args.sz, "required total magnetization, including the central spin")->required();
+  bethe::cli::option(app, "--variables", args.variables, "print compactified eigenvalue variables (not occupations)");
+  bethe::cli::option(app, "--max-stages", args.max_stages, "attempted continuation stages (default: 10000)")
+      ->capture_default_str();
+  bethe::cli::option(app, "--tolerance", args.tolerance, "polynomial backward residual (default: 32 epsilon)");
+  bethe::cli::option(app, "--max-iterations", args.max_iterations, "attempted Newton corrections, including retries")
+      ->capture_default_str();
+  bethe::cli::precision_option(app, args.precision);
+  app.add_option("--format", args.format, "Stdout layout")
+      ->check(CLI::IsMember({"auto", "pretty", "plain"}))
+      ->capture_default_str();
+}
+
+void validate(Arguments const& args)
+{
+  if (!args.couplings || !args.field || !args.sz)
     throw std::invalid_argument("--couplings, --field and --sz are required");
-  if (out.format != "auto" && out.format != "pretty" && out.format != "plain")
-    throw std::invalid_argument("unknown output format: " + std::string(out.format));
-  return out;
+  if (args.format != "auto" && args.format != "pretty" && args.format != "plain")
+    throw std::invalid_argument("unknown output format: " + std::string(args.format));
 }
 char const* status(model::SolveStatus value)
 {
@@ -98,7 +77,7 @@ char const* status(model::SolveStatus value)
 template <uni20::Real Real> int run(Arguments const& args)
 {
   std::vector<Real> a;
-  auto list = *args.couplings;
+  std::string_view list = *args.couplings;
   while (!list.empty())
   {
     auto const comma = list.find(',');
@@ -158,24 +137,11 @@ template <uni20::Real Real> int run(Arguments const& args)
 } // namespace
 int main(int argc, char** argv)
 {
-  if (argc == 2 && std::string_view(argv[1]) == "--help")
-  {
-    usage(std::cout);
-    return 0;
-  }
-  if (argc < 2)
-  {
-    usage(std::cerr);
-    return 1;
-  }
-  try
-  {
-    auto const args = parse(argc, argv);
-    return cli::dispatch_precision(args.precision, [&]<uni20::Real Real> { return run<Real>(args); });
-  }
-  catch (std::exception const& error)
-  {
-    std::cerr << "bethe-central-spin: " << error.what() << '\n';
-    return 1;
-  }
+  Arguments args;
+  return bethe::cli::program_main(
+      argc, argv, program_info(), [&](auto& app) { add_options(app, args); },
+      [&](auto&) {
+        validate(args);
+        return bethe::cli::dispatch_precision(args.precision, [&]<uni20::Real Real> { return run<Real>(args); });
+      });
 }

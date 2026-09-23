@@ -16,7 +16,7 @@ namespace data = uni20::presentation;
 struct DataFile
 {
     std::string format, path;
-    std::string table;
+    std::string table = {};
 };
 struct DataOutputOptions
 {

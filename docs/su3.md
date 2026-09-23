@@ -36,7 +36,7 @@ The six-site result is `E=-1-sqrt(13)`, approximately -4.605551275463989.
 The report includes populations, both root counts, total and per-site energy,
 momentum, residuals for each equation family, Newton updates, and solver CPU
 time. `--roots` prints two tables with exact integer/half-integer labels.
-Run `--help` for controls and the relevant literature; normal calculation
+Run `--help` for controls and `--references` for relevant literature; normal calculation
 output does not repeat the bibliography.
 
 ## Why two sets of roots?

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Copyright (C) 2026 Ian McCulloch
-#include "citation-report.hpp"
 #include "hubbard-report.hpp"
+#include "program-options.hpp"
 #include <bethe/hubbard.hpp>
 
 namespace
@@ -9,79 +9,55 @@ namespace
 namespace model = bethe::hubbard;
 struct Arguments
 {
-    std::size_t sites;
+    std::size_t sites = 0;
     std::optional<std::size_t> particles;
     uni20::half_int sz{0};
-    std::optional<std::string_view> interaction, tolerance;
-    std::string_view precision = "fp64", format = "auto";
+    std::optional<std::string> interaction, tolerance;
+    std::string precision = "fp64", format = "auto";
     std::size_t max_iterations = 10000;
     bool roots = false;
 };
-void usage(std::ostream& out)
+auto program_info()
 {
-  out << "Usage: bethe-hubbard-pbc L --u VALUE [options]\n"
-      << "Periodic Hubbard sector ground state, t=1, either sign of U.\n"
-      << "H=-sum_(j,sigma)(c^dagger_(j,sigma)c_(j+1,sigma)+h.c.)+U sum_j n_up n_down.\n"
-      << "Even L>=2; supported sector families are listed below.\n"
-      << "  --u VALUE                          required finite interaction\n"
-      << "  --particles COUNT                  0 <= N <= 2L (default: L)\n"
-      << "  --sz VALUE                         integer or half-integer spin projection (default: 0)\n"
-      << "  --precision fp64|long-double|fp128  (default: fp64)\n"
-      << "  --tolerance VALUE                  max normalized charge/spin residual (default: 32 epsilon)\n"
-      << "  --max-iterations COUNT             total Newton update budget, including continuation\n"
-      << "  --roots                            print charge momenta k and spin rapidities Lambda\n"
-      << "  --format auto|pretty|plain         terminal report or script output (default: auto)\n"
-      << "  --help                             show this help\n"
-      << "The interaction is U*n_up*n_down, not the particle-hole-shifted convention.\n"
-      << "L=2 counts the periodic hopping bond twice. U=0 uses exact free fermions.\n"
-      << "Repulsive root sectors: half filling with any Sz, doped odd N_up and N_down,\n"
-      << "or a single spin species. Above half filling uses particle-hole symmetry.\n"
-      << "Attractive U uses the Shiba mapping; all balanced even-N sectors are supported.\n"
-      << "Other sectors work only if their mapped repulsive sector is supported. U=0 is unrestricted.\n"
-      << "Other interacting shell parities, excitations and odd rings are not implemented here.\n"
-      << "For free ends and unrestricted sectors, use bethe-hubbard-obc.\n"
-      << "Mapped roots and residuals explicitly describe the auxiliary sector, not attractive roots.\n"
-      << "Residuals use the final root-sector U and are not energy-error bounds.\n"
-      << "fp128 requires a Uni20 build with MPLAPACK enabled.\n";
-  bethe::cli::print_citations(out, bethe::citations::Tool::hubbard_pbc);
+  auto info =
+      bethe::cli::program_info("bethe-hubbard-pbc", "Periodic Hubbard sector ground state, t=1, either sign of U.",
+                               bethe::citations::Tool::hubbard_pbc);
+  info.notes = {"H=-sum_(j,sigma)(c^dagger_(j,sigma)c_(j+1,sigma)+h.c.)+U sum_j n_up n_down.",
+                "Even L>=2; supported sector families are listed below.",
+                "The interaction is U*n_up*n_down, not the particle-hole-shifted convention.",
+                "L=2 counts the periodic hopping bond twice. U=0 uses exact free fermions.",
+                "Repulsive root sectors: half filling with any Sz, doped odd N_up and N_down,",
+                "or a single spin species. Above half filling uses particle-hole symmetry.",
+                "Attractive U uses the Shiba mapping; all balanced even-N sectors are supported.",
+                "Other sectors work only if their mapped repulsive sector is supported. U=0 is unrestricted.",
+                "Other interacting shell parities, excitations and odd rings are not implemented here.",
+                "For free ends and unrestricted sectors, use bethe-hubbard-obc.",
+                "Mapped roots and residuals explicitly describe the auxiliary sector, not attractive roots.",
+                "Residuals use the final root-sector U and are not energy-error bounds.",
+                "Use --references for literature and applicability; see CITATIONS.md."};
+  return info;
 }
-Arguments parse(int argc, char** argv)
+void add_options(CLI::App& app, Arguments& args)
 {
-  Arguments result{.sites = bethe::cli::parse_size(argv[1]),
-                   .particles = std::nullopt,
-                   .interaction = std::nullopt,
-                   .tolerance = std::nullopt};
-  for (int i = 2; i < argc; ++i)
-  {
-    std::string_view const option = argv[i];
-    if (option == "--roots")
-      result.roots = true;
-    else if (option == "--u" || option == "--particles" || option == "--sz" || option == "--precision" ||
-             option == "--format" || option == "--tolerance" || option == "--max-iterations")
-    {
-      if (++i == argc) throw std::invalid_argument("missing value for " + std::string(option));
-      if (option == "--u")
-        result.interaction = argv[i];
-      else if (option == "--precision")
-        result.precision = argv[i];
-      else if (option == "--format")
-        result.format = argv[i];
-      else if (option == "--tolerance")
-        result.tolerance = argv[i];
-      else if (option == "--max-iterations")
-        result.max_iterations = bethe::cli::parse_size(argv[i]);
-      else if (option == "--particles")
-        result.particles = bethe::cli::parse_size(argv[i]);
-      else
-        result.sz = uni20::half_int::parse(argv[i]);
-    }
-    else
-      throw std::invalid_argument("unknown option: " + std::string(option));
-  }
-  if (!result.interaction) throw std::invalid_argument("--u VALUE is required");
-  if (result.format != "auto" && result.format != "pretty" && result.format != "plain")
-    throw std::invalid_argument("unknown output format: " + std::string(result.format));
-  return result;
+  bethe::cli::option(app, "L", args.sites, "Number of sites or rungs")->required();
+  bethe::cli::option(app, "--u", args.interaction, "required finite interaction")->required();
+  bethe::cli::option(app, "--particles", args.particles, "0 <= N <= 2L (default: L)");
+  bethe::cli::option(app, "--sz", args.sz, "integer or half-integer spin projection (default: 0)");
+  bethe::cli::option(app, "--roots", args.roots, "print charge momenta k and spin rapidities Lambda");
+  bethe::cli::option(app, "--tolerance", args.tolerance, "max normalized charge/spin residual (default: 32 epsilon)");
+  bethe::cli::option(app, "--max-iterations", args.max_iterations, "total Newton update budget, including continuation")
+      ->capture_default_str();
+  bethe::cli::precision_option(app, args.precision);
+  app.add_option("--format", args.format, "Stdout layout")
+      ->check(CLI::IsMember({"auto", "pretty", "plain"}))
+      ->capture_default_str();
+}
+
+void validate(Arguments const& args)
+{
+  if (!args.interaction) throw std::invalid_argument("--u VALUE is required");
+  if (args.format != "auto" && args.format != "pretty" && args.format != "plain")
+    throw std::invalid_argument("unknown output format: " + std::string(args.format));
 }
 template <uni20::Real Real> int run(Arguments const& args)
 {
@@ -99,24 +75,11 @@ template <uni20::Real Real> int run(Arguments const& args)
 } // namespace
 int main(int argc, char** argv)
 {
-  if (argc == 2 && std::string_view(argv[1]) == "--help")
-  {
-    usage(std::cout);
-    return 0;
-  }
-  if (argc < 2)
-  {
-    usage(std::cerr);
-    return 1;
-  }
-  try
-  {
-    auto const args = parse(argc, argv);
-    return bethe::cli::dispatch_precision(args.precision, [&]<uni20::Real Real> { return run<Real>(args); });
-  }
-  catch (std::exception const& error)
-  {
-    std::cerr << "bethe-hubbard-pbc: " << error.what() << '\n';
-    return 1;
-  }
+  Arguments args;
+  return bethe::cli::program_main(
+      argc, argv, program_info(), [&](auto& app) { add_options(app, args); },
+      [&](auto&) {
+        validate(args);
+        return bethe::cli::dispatch_precision(args.precision, [&]<uni20::Real Real> { return run<Real>(args); });
+      });
 }

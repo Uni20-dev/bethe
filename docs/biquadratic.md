@@ -228,4 +228,4 @@ The original spectral mapping is due to
 [Barber–Batchelor](../CITATIONS.md#barber-batchelor-1989). For the open-chain
 normalization and real-root equations see Albertini above; for TL modules
 and multiplicities see [Aufgebauer–Klümper](../CITATIONS.md#aufgebauer-klumper-2010),
-Secs. 2.3 and 3. All three references also appear in executable help.
+Secs. 2.3 and 3. All three references also appear with `--references`.

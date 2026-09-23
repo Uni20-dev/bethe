@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Copyright (C) 2026 Ian McCulloch
-#include "citation-report.hpp"
+#include "program-options.hpp"
 #include "report-common.hpp"
 #include <bethe/richardson.hpp>
 
@@ -10,76 +10,50 @@ namespace model = bethe::richardson;
 namespace cli = bethe::cli;
 struct Arguments
 {
-    std::optional<std::string_view> levels, g, tolerance;
+    std::optional<std::string> levels, g, tolerance;
     std::optional<std::size_t> pairs;
-    std::string_view blocked, precision = "fp64", format = "auto";
+    std::string blocked, precision = "fp64", format = "auto";
     std::size_t max_iterations = 10000, max_stages = 10000;
     bool variables = false;
 };
-void usage(std::ostream& out)
+auto program_info()
 {
-  out << "Usage: bethe-richardson --levels E0,E1,... --pairs M --g G [options]\n"
-      << "Reduced BCS ground state in a specified blocked-level sector.\n"
-      << "H=sum_i epsilon_i*(n_up+n_down)-g*sum_ij b_i^dagger*b_j, including i=j.\n"
-      << "Distinct ascending single-particle energies; each level is a time-reversed doublet.\n"
-      << "  --levels LIST                      required comma-separated single-particle energies\n"
-      << "  --pairs COUNT                      required pair count in unblocked levels\n"
-      << "  --g VALUE                          required finite g>=0 (attractive pairing)\n"
-      << "  --blocked INDICES                  singly occupied levels, zero-based (default: none)\n"
-      << "  --variables                        print regularized eigenvalue variables (not occupations)\n"
-      << "  --precision fp64|long-double|fp128  (default: fp64; fp128 requires MPLAPACK)\n"
-      << "  --tolerance VALUE                  polynomial backward residual (default: 32 epsilon)\n"
-      << "  --max-iterations COUNT             attempted Newton corrections, including retries\n"
-      << "  --max-stages COUNT                 attempted continuation stages (default: 10000)\n"
-      << "  --format auto|pretty|plain         (default: auto)\n"
-      << "  --help                             show this help and references\n"
-      << "Default Newton budget: 10000; zero budget returns the zero-coupling seed.\n"
-      << "Incomplete solves report energy at the REACHED g, not the requested g.\n"
-      << "Repeated levels, higher degeneracies, repulsive g<0 and excitations are not implemented.\n"
-      << "Pair rapidities are not reconstructed; no lattice momentum or PBC/OBC applies.\n"
-      << "See docs/richardson.md for energy shifts, blocking and continuation controls.\n";
-  cli::print_citations(out, bethe::citations::Tool::richardson);
+  auto info =
+      bethe::cli::program_info("bethe-richardson", "Reduced BCS ground state in a specified blocked-level sector.",
+                               bethe::citations::Tool::richardson);
+  info.notes = {"H=sum_i epsilon_i*(n_up+n_down)-g*sum_ij b_i^dagger*b_j, including i=j.",
+                "Distinct ascending single-particle energies; each level is a time-reversed doublet.",
+                "Default Newton budget: 10000; zero budget returns the zero-coupling seed.",
+                "Incomplete solves report energy at the REACHED g, not the requested g.",
+                "Repeated levels, higher degeneracies, repulsive g<0 and excitations are not implemented.",
+                "Pair rapidities are not reconstructed; no lattice momentum or PBC/OBC applies.",
+                "See docs/richardson.md for energy shifts, blocking and continuation controls.",
+                "Use --references for literature and applicability; see CITATIONS.md."};
+  return info;
 }
-Arguments parse(int argc, char** argv)
+void add_options(CLI::App& app, Arguments& args)
 {
-  Arguments out;
-  for (int i = 1; i < argc; ++i)
-  {
-    std::string_view const option = argv[i];
-    if (option == "--variables")
-    {
-      out.variables = true;
-      continue;
-    }
-    if (option != "--levels" && option != "--pairs" && option != "--g" && option != "--blocked" &&
-        option != "--precision" && option != "--format" && option != "--tolerance" && option != "--max-iterations" &&
-        option != "--max-stages")
-      throw std::invalid_argument("unknown option: " + std::string(option));
-    if (++i == argc) throw std::invalid_argument("missing value for " + std::string(option));
-    std::string_view const value = argv[i];
-    if (option == "--levels")
-      out.levels = value;
-    else if (option == "--pairs")
-      out.pairs = cli::parse_size(value);
-    else if (option == "--g")
-      out.g = value;
-    else if (option == "--blocked")
-      out.blocked = value;
-    else if (option == "--precision")
-      out.precision = value;
-    else if (option == "--format")
-      out.format = value;
-    else if (option == "--tolerance")
-      out.tolerance = value;
-    else if (option == "--max-iterations")
-      out.max_iterations = cli::parse_size(value);
-    else
-      out.max_stages = cli::parse_size(value);
-  }
-  if (!out.levels || !out.pairs || !out.g) throw std::invalid_argument("--levels, --pairs and --g are required");
-  if (out.format != "auto" && out.format != "pretty" && out.format != "plain")
-    throw std::invalid_argument("unknown output format: " + std::string(out.format));
-  return out;
+  bethe::cli::option(app, "--levels", args.levels, "required comma-separated single-particle energies")->required();
+  bethe::cli::option(app, "--pairs", args.pairs, "required pair count in unblocked levels")->required();
+  bethe::cli::option(app, "--g", args.g, "required finite g>=0 (attractive pairing)")->required();
+  bethe::cli::option(app, "--blocked", args.blocked, "singly occupied levels, zero-based (default: none)");
+  bethe::cli::option(app, "--variables", args.variables, "print regularized eigenvalue variables (not occupations)");
+  bethe::cli::option(app, "--max-stages", args.max_stages, "attempted continuation stages (default: 10000)")
+      ->capture_default_str();
+  bethe::cli::option(app, "--tolerance", args.tolerance, "polynomial backward residual (default: 32 epsilon)");
+  bethe::cli::option(app, "--max-iterations", args.max_iterations, "attempted Newton corrections, including retries")
+      ->capture_default_str();
+  bethe::cli::precision_option(app, args.precision);
+  app.add_option("--format", args.format, "Stdout layout")
+      ->check(CLI::IsMember({"auto", "pretty", "plain"}))
+      ->capture_default_str();
+}
+
+void validate(Arguments const& args)
+{
+  if (!args.levels || !args.pairs || !args.g) throw std::invalid_argument("--levels, --pairs and --g are required");
+  if (args.format != "auto" && args.format != "pretty" && args.format != "plain")
+    throw std::invalid_argument("unknown output format: " + std::string(args.format));
 }
 template <typename Function> void each_item(std::string_view list, Function function)
 {
@@ -173,24 +147,11 @@ template <uni20::Real Real> int run(Arguments const& args)
 } // namespace
 int main(int argc, char** argv)
 {
-  if (argc == 2 && std::string_view(argv[1]) == "--help")
-  {
-    usage(std::cout);
-    return 0;
-  }
-  if (argc < 2)
-  {
-    usage(std::cerr);
-    return 1;
-  }
-  try
-  {
-    auto const args = parse(argc, argv);
-    return cli::dispatch_precision(args.precision, [&]<uni20::Real Real> { return run<Real>(args); });
-  }
-  catch (std::exception const& error)
-  {
-    std::cerr << "bethe-richardson: " << error.what() << '\n';
-    return 1;
-  }
+  Arguments args;
+  return bethe::cli::program_main(
+      argc, argv, program_info(), [&](auto& app) { add_options(app, args); },
+      [&](auto&) {
+        validate(args);
+        return bethe::cli::dispatch_precision(args.precision, [&]<uni20::Real Real> { return run<Real>(args); });
+      });
 }

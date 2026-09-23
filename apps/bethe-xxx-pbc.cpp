@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Copyright (C) 2026 Ian McCulloch
 
-#include "citation-report.hpp"
 #include "heisenberg-cli.hpp"
 #include "heisenberg-report.hpp"
+#include "program-options.hpp"
 
 #include <iostream>
 #include <optional>
@@ -21,37 +21,51 @@ using bethe::cli::print_roots;
 
 struct Arguments
 {
-    std::size_t sites;
-    std::string_view precision = "fp64";
-    std::optional<std::string_view> tolerance = std::nullopt;
+    std::size_t sites = 0;
+    std::string precision = "fp64";
+    std::optional<std::string> tolerance = std::nullopt;
     std::size_t max_iterations = 10000;
     bool print_roots = false;
     std::optional<uni20::half_int> sz = std::nullopt;
-    std::optional<std::string_view> quantum_numbers = std::nullopt;
+    std::optional<std::string> quantum_numbers = std::nullopt;
     bool sectors = false;
     bool spinons = false;
     bethe::cli::ExcitationArguments excitations = {};
-    std::string_view format = "auto";
+    std::string format = "auto";
 };
 
-void usage(std::ostream& out)
+auto program_info()
 {
-  out << "Usage: bethe-xxx-pbc N [options]\n"
-      << "Periodic spin-1/2 Heisenberg chain, J=1, zero field.\n"
-      << "Default: ground state (one representative for odd N). Modes:\n"
-      << "  --sz VALUE                         lowest energy in an Sz sector, e.g. 1/2\n"
-      << "  --sectors                          lowest energy in every Sz sector\n"
-      << "  --spinons                          odd-N one-spinon branch (Sz=1/2)\n"
-      << "  --quantum-numbers I0,I1,...         specified finite real-root state\n";
-  bethe::cli::excitation_usage(out);
-  out << "  --precision fp64|long-double|fp128  (default: fp64)\n"
-      << "  --tolerance VALUE                  normalized equation residual\n"
-      << "  --max-iterations COUNT             update budget (default: 10000)\n"
-      << "  --roots                            print the rapidities\n"
-      << "  --format auto|pretty|plain         terminal report or script output (default: auto)\n"
-      << "  --help                             show this help\n"
-      << "fp128 requires a Uni20 build with MPLAPACK enabled.\n";
-  bethe::cli::print_citations(out, bethe::citations::Tool::xxx_pbc);
+  auto info = bethe::cli::program_info("bethe-xxx-pbc", "Periodic spin-1/2 Heisenberg chain, J=1, zero field.",
+                                       bethe::citations::Tool::xxx_pbc);
+  info.notes = {"Default: ground state (one representative for odd N).",
+                "Excitations enumerate a restricted finite-real highest-weight family including the sector minimum, "
+                "NOT a complete spectrum. "
+                "The total spin defaults to 1 for even N, 1/2 for odd N. Strings and infinite roots are excluded.",
+                "--spinons selects the odd-N one-spinon branch at Sz=1/2. Lattice momentum is modulo 2*pi.",
+                "Use --references for literature and applicability; see docs/xxx.md."};
+  return info;
+}
+void add_options(CLI::App& app, Arguments& args)
+{
+  namespace cli = bethe::cli;
+  cli::count_option(app, "N", args.sites, "Number of sites")->required();
+  cli::option(app, "--sz", args.sz, "Lowest energy in an Sz sector");
+  cli::option(app, "--quantum-numbers", args.quantum_numbers, "Explicit finite-real labels; empty list for vacuum");
+  cli::option(app, "--sectors", args.sectors, "Lowest energy in every Sz sector");
+  cli::option(app, "--spinons", args.spinons, "Odd-N one-spinon branch (Sz=1/2)");
+  cli::all_count_option(app, "--excitations", args.excitations.count,
+                        "Lowest COUNT, or all, multiplets in the supported family");
+  cli::option(app, "--spin", args.excitations.spin, "Total spin for the excitation scan")->needs("--excitations");
+  cli::option(app, "--max-candidates", args.excitations.max_candidates, "Exhaustive scan limit (default: 10000)")
+      ->needs("--excitations");
+  cli::option(app, "--roots", args.print_roots, "Print rapidities and exact labels");
+  cli::text_option(app, "--tolerance", args.tolerance, "Normalized equation residual in native precision");
+  cli::count_option(app, "--max-iterations", args.max_iterations, "Update budget")->capture_default_str();
+  cli::precision_option(app, args.precision);
+  app.add_option("--format", args.format, "Stdout layout")
+      ->check(CLI::IsMember({"auto", "pretty", "plain"}))
+      ->capture_default_str();
 }
 
 template <uni20::Real Real> int run(Arguments const& args)
@@ -143,63 +157,19 @@ template <uni20::Real Real> int run(Arguments const& args)
 
 int main(int argc, char** argv)
 {
-  if (argc == 2 && std::string_view(argv[1]) == "--help")
-  {
-    usage(std::cout);
-    return 0;
-  }
-  if (argc < 2)
-  {
-    usage(std::cerr);
-    return 1;
-  }
-  try
-  {
-    Arguments args{.sites = parse_size(argv[1])};
-    for (int i = 2; i < argc; ++i)
-    {
-      std::string_view const option = argv[i];
-      if (option == "--roots")
-        args.print_roots = true;
-      else if (option == "--sectors")
-        args.sectors = true;
-      else if (option == "--spinons")
-        args.spinons = true;
-      else if (option == "--precision" || option == "--tolerance" || option == "--max-iterations" || option == "--sz" ||
-               option == "--quantum-numbers" || option == "--format" || option == "--excitations" ||
-               option == "--spin" || option == "--max-candidates")
-      {
-        if (++i == argc) throw std::invalid_argument("missing value for " + std::string(option));
-        if (option == "--precision")
-          args.precision = argv[i];
-        else if (option == "--format")
-          args.format = argv[i];
-        else if (option == "--tolerance")
-          args.tolerance = argv[i];
-        else if (option == "--sz")
-          args.sz = uni20::half_int::parse(argv[i]);
-        else if (option == "--quantum-numbers")
-          args.quantum_numbers = argv[i];
-        else if (!args.excitations.parse(option, argv[i]))
-          args.max_iterations = parse_size(argv[i]);
-      }
-      else
-        throw std::invalid_argument("unknown option: " + std::string(option));
-    }
-    args.excitations.validate();
-    if (static_cast<int>(args.sz.has_value()) + static_cast<int>(args.quantum_numbers.has_value()) +
-            static_cast<int>(args.sectors) + static_cast<int>(args.spinons) +
-            static_cast<int>(args.excitations.count.has_value()) >
-        1)
-      throw std::invalid_argument(
-          "--sz, --sectors, --spinons, --quantum-numbers and --excitations are mutually exclusive");
-    if (args.format != "auto" && args.format != "pretty" && args.format != "plain")
-      throw std::invalid_argument("unknown output format: " + std::string(args.format));
-    return bethe::cli::dispatch_precision(args.precision, [&]<uni20::Real Real> { return run<Real>(args); });
-  }
-  catch (std::exception const& error)
-  {
-    std::cerr << "bethe-xxx-pbc: " << error.what() << '\n';
-    return 1;
-  }
+  Arguments args;
+  return bethe::cli::program_main(
+      argc, argv, program_info(), [&](auto& app) { add_options(app, args); },
+      [&](auto&) {
+        args.excitations.validate();
+        if (static_cast<int>(args.sz.has_value()) + static_cast<int>(args.quantum_numbers.has_value()) +
+                static_cast<int>(args.sectors) + static_cast<int>(args.spinons) +
+                static_cast<int>(args.excitations.count.has_value()) >
+            1)
+          throw std::invalid_argument(
+              "--sz, --sectors, --spinons, --quantum-numbers and --excitations are mutually exclusive");
+        if (args.format != "auto" && args.format != "pretty" && args.format != "plain")
+          throw std::invalid_argument("unknown output format: " + std::string(args.format));
+        return bethe::cli::dispatch_precision(args.precision, [&]<uni20::Real Real> { return run<Real>(args); });
+      });
 }

@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Copyright (C) 2026 Ian McCulloch
-#include "citation-report.hpp"
+#include "program-options.hpp"
 #include "report-common.hpp"
 #include <bethe/ladder.hpp>
 
@@ -12,76 +12,51 @@ struct Arguments
 {
     std::size_t rungs = 0, max_iterations = 10000, max_branches = 10000;
     std::optional<std::size_t> singlets;
-    std::optional<std::string_view> rung, tolerance;
-    std::string_view precision = "fp64", format = "auto";
+    std::optional<std::string> rung, tolerance;
+    std::string precision = "fp64", format = "auto";
     bool sectors = false, roots = false;
 };
-void usage(std::ostream& out)
+auto program_info()
 {
-  out << "Usage: bethe-ladder-pbc L --rung JR [options]\n"
-      << "Wang's integrable spin-1/2 ladder, L>=2 periodic rungs, zero field.\n"
-      << "H=sum[S.S_next+T.T_next+4(S.S_next)(T.T_next)]+JR*sum S.T.\n"
-      << "This is NOT the ordinary two-leg Heisenberg ladder. JR may have either sign.\n"
-      << "  --singlets NS                      fixed singlet-count sector minimum\n"
-      << "  --sectors                          all singlet-count sector minima\n"
-      << "                                     (mutually exclusive; default: global minimum)\n"
-      << "  --precision fp64|long-double|fp128  (default: fp64; fp128 requires MPLAPACK)\n"
-      << "  --tolerance VALUE                  max Bethe residual divided by L\n"
-      << "                                     (default: 32 epsilon; not an energy-error bound)\n"
-      << "  --max-iterations COUNT             total attempted Newton corrections (10000)\n"
-      << "  --max-branches COUNT               total highest-weight sea branches (10000)\n"
-      << "  --roots                            highest-weight roots/labels for selected state\n"
-      << "  --format auto|pretty|plain         (default: auto)\n"
-      << "  --help                             show this help and references\n"
-      << "Sector minima include compatible SU(4) descendants; triplet populations\n"
-      << "are minimized too, not fixed Sz. --sectors --roots prints the best state.\n"
-      << "No excitations, fields, arbitrary four-spin couplings or open ends.\n"
-      << "An incomplete scan reports only a candidate upper bound, never a minimum.\n"
-      << "See docs/ladder.md for normalization, finite-ring labels and scan cost.\n";
-  cli::print_citations(out, bethe::citations::Tool::ladder_pbc);
+  auto info = bethe::cli::program_info("bethe-ladder-pbc",
+                                       "Wang's integrable spin-1/2 ladder, L>=2 periodic rungs, zero field.",
+                                       bethe::citations::Tool::ladder_pbc);
+  info.notes = {"H=sum[S.S_next+T.T_next+4(S.S_next)(T.T_next)]+JR*sum S.T.",
+                "This is NOT the ordinary two-leg Heisenberg ladder. JR may have either sign.",
+                "Sector minima include compatible SU(4) descendants; triplet populations",
+                "are minimized too, not fixed Sz. --sectors --roots prints the best state.",
+                "No excitations, fields, arbitrary four-spin couplings or open ends.",
+                "An incomplete scan reports only a candidate upper bound, never a minimum.",
+                "See docs/ladder.md for normalization, finite-ring labels and scan cost.",
+                "Use --references for literature and applicability; see CITATIONS.md."};
+  return info;
 }
-Arguments parse(int argc, char** argv)
+void add_options(CLI::App& app, Arguments& args)
 {
-  Arguments args;
-  args.rungs = cli::parse_size(argv[1]);
-  for (int i = 2; i < argc; ++i)
-  {
-    std::string_view const option = argv[i];
-    if (option == "--sectors")
-    {
-      args.sectors = true;
-      continue;
-    }
-    if (option == "--roots")
-    {
-      args.roots = true;
-      continue;
-    }
-    if (option != "--rung" && option != "--singlets" && option != "--precision" && option != "--format" &&
-        option != "--tolerance" && option != "--max-iterations" && option != "--max-branches")
-      throw std::invalid_argument("unknown option: " + std::string(option));
-    if (++i == argc) throw std::invalid_argument("missing value for " + std::string(option));
-    std::string_view const value = argv[i];
-    if (option == "--rung")
-      args.rung = value;
-    else if (option == "--singlets")
-      args.singlets = cli::parse_size(value);
-    else if (option == "--precision")
-      args.precision = value;
-    else if (option == "--format")
-      args.format = value;
-    else if (option == "--tolerance")
-      args.tolerance = value;
-    else if (option == "--max-iterations")
-      args.max_iterations = cli::parse_size(value);
-    else
-      args.max_branches = cli::parse_size(value);
-  }
+  bethe::cli::option(app, "L", args.rungs, "Number of sites or rungs")->required();
+  bethe::cli::option(app, "--rung", args.rung, "Rung coupling, either sign")->required();
+  bethe::cli::option(app, "--singlets", args.singlets, "fixed singlet-count sector minimum");
+  bethe::cli::option(app, "--sectors", args.sectors,
+                     "all singlet-count sector minima (mutually exclusive; default: global minimum)");
+  bethe::cli::option(app, "--max-branches", args.max_branches, "total highest-weight sea branches (10000)")
+      ->capture_default_str();
+  bethe::cli::option(app, "--roots", args.roots, "highest-weight roots/labels for selected state");
+  bethe::cli::option(app, "--tolerance", args.tolerance,
+                     "max Bethe residual divided by L (default: 32 epsilon; not an energy-error bound)");
+  bethe::cli::option(app, "--max-iterations", args.max_iterations, "total attempted Newton corrections (10000)")
+      ->capture_default_str();
+  bethe::cli::precision_option(app, args.precision);
+  app.add_option("--format", args.format, "Stdout layout")
+      ->check(CLI::IsMember({"auto", "pretty", "plain"}))
+      ->capture_default_str();
+}
+
+void validate(Arguments const& args)
+{
   if (!args.rung) throw std::invalid_argument("--rung is required");
   if (args.sectors && args.singlets) throw std::invalid_argument("--sectors and --singlets are mutually exclusive");
   if (args.format != "auto" && args.format != "plain" && args.format != "pretty")
     throw std::invalid_argument("unknown output format: " + std::string(args.format));
-  return args;
 }
 char const* status(model::SolveStatus value)
 {
@@ -190,24 +165,11 @@ template <uni20::Real Real> int run(Arguments const& args)
 } // namespace
 int main(int argc, char** argv)
 {
-  if (argc == 2 && std::string_view(argv[1]) == "--help")
-  {
-    usage(std::cout);
-    return 0;
-  }
-  if (argc < 2)
-  {
-    usage(std::cerr);
-    return 1;
-  }
-  try
-  {
-    auto const args = parse(argc, argv);
-    return cli::dispatch_precision(args.precision, [&]<uni20::Real Real> { return run<Real>(args); });
-  }
-  catch (std::exception const& error)
-  {
-    std::cerr << "bethe-ladder-pbc: " << error.what() << '\n';
-    return 1;
-  }
+  Arguments args;
+  return bethe::cli::program_main(
+      argc, argv, program_info(), [&](auto& app) { add_options(app, args); },
+      [&](auto&) {
+        validate(args);
+        return bethe::cli::dispatch_precision(args.precision, [&]<uni20::Real Real> { return run<Real>(args); });
+      });
 }

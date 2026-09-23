@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Copyright (C) 2026 Ian McCulloch
-#include "citation-report.hpp"
+#include "program-options.hpp"
 #include "report-common.hpp"
 #include <bethe/su3.hpp>
 
@@ -11,59 +11,43 @@ namespace cli = bethe::cli;
 struct Arguments
 {
     std::size_t sites = 0, max_iterations = 10000;
-    std::optional<std::string_view> tolerance;
-    std::string_view precision = "fp64", format = "auto";
+    std::optional<std::string> tolerance;
+    std::string precision = "fp64", format = "auto";
     bool roots = false;
 };
 
-void usage(std::ostream& out)
+auto program_info()
 {
-  out << "Usage: bethe-su3-pbc L [options]\n"
-      << "Fundamental SU(3) permutation chain, periodic: H=sum_j P_(j,j+1), J=1.\n"
-      << "Balanced singlet ground state only: L>=3 divisible by 3.\n"
-      << "Each color has L/3 sites; nested real-root counts are M1=2L/3 and M2=L/3.\n"
-      << "  --precision fp64|long-double|fp128  (default: fp64; fp128 requires MPLAPACK)\n"
-      << "  --tolerance VALUE                  max equation residual divided by L\n"
-      << "                                     (default: 32 epsilon; not an energy-error bound)\n"
-      << "  --max-iterations COUNT             accepted Newton updates (default: 10000)\n"
-      << "  --roots                            print both root families and exact I,J labels\n"
-      << "  --format auto|pretty|plain         (default: auto)\n"
-      << "  --help                             show this help and references\n"
-      << "E=L-sum_j 1/(lambda_j^2+1/4). Momentum is 0 in the supported singlet.\n"
-      << "Roots use conventional lambda,mu, not the XXX front end's z=2*lambda.\n"
-      << "Other color sectors, excitations, complex strings, twists and open ends\n"
-      << "are not implemented. See docs/su3.md, including the spin-1 ULS mapping.\n";
-  cli::print_citations(out, bethe::citations::Tool::su3_pbc);
+  auto info = bethe::cli::program_info("bethe-su3-pbc",
+                                       "Fundamental SU(3) permutation chain, periodic: H=sum_j P_(j,j+1), J=1.",
+                                       bethe::citations::Tool::su3_pbc);
+  info.notes = {"Balanced singlet ground state only: L>=3 divisible by 3.",
+                "Each color has L/3 sites; nested real-root counts are M1=2L/3 and M2=L/3.",
+                "E=L-sum_j 1/(lambda_j^2+1/4). Momentum is 0 in the supported singlet.",
+                "Roots use conventional lambda,mu, not the XXX front end's z=2*lambda.",
+                "Other color sectors, excitations, complex strings, twists and open ends",
+                "are not implemented. See docs/su3.md, including the spin-1 ULS mapping.",
+                "Use --references for literature and applicability; see CITATIONS.md."};
+  return info;
+}
+void add_options(CLI::App& app, Arguments& args)
+{
+  bethe::cli::option(app, "L", args.sites, "Number of sites or rungs")->required();
+  bethe::cli::option(app, "--roots", args.roots, "print both root families and exact I,J labels");
+  bethe::cli::option(app, "--tolerance", args.tolerance,
+                     "max equation residual divided by L (default: 32 epsilon; not an energy-error bound)");
+  bethe::cli::option(app, "--max-iterations", args.max_iterations, "accepted Newton updates (default: 10000)")
+      ->capture_default_str();
+  bethe::cli::precision_option(app, args.precision);
+  app.add_option("--format", args.format, "Stdout layout")
+      ->check(CLI::IsMember({"auto", "pretty", "plain"}))
+      ->capture_default_str();
 }
 
-Arguments parse(int argc, char** argv)
+void validate(Arguments const& args)
 {
-  Arguments result;
-  result.sites = cli::parse_size(argv[1]);
-  for (int i = 2; i < argc; ++i)
-  {
-    std::string_view const option = argv[i];
-    if (option == "--roots")
-    {
-      result.roots = true;
-      continue;
-    }
-    if (option != "--precision" && option != "--format" && option != "--tolerance" && option != "--max-iterations")
-      throw std::invalid_argument("unknown option: " + std::string(option));
-    if (++i == argc) throw std::invalid_argument("missing value for " + std::string(option));
-    std::string_view const value = argv[i];
-    if (option == "--precision")
-      result.precision = value;
-    else if (option == "--format")
-      result.format = value;
-    else if (option == "--tolerance")
-      result.tolerance = value;
-    else
-      result.max_iterations = cli::parse_size(value);
-  }
-  if (result.format != "auto" && result.format != "plain" && result.format != "pretty")
-    throw std::invalid_argument("unknown output format: " + std::string(result.format));
-  return result;
+  if (args.format != "auto" && args.format != "plain" && args.format != "pretty")
+    throw std::invalid_argument("unknown output format: " + std::string(args.format));
 }
 
 char const* status(model::SolveStatus value)
@@ -131,24 +115,11 @@ template <uni20::Real Real> int run(Arguments const& args)
 
 int main(int argc, char** argv)
 {
-  if (argc == 2 && std::string_view(argv[1]) == "--help")
-  {
-    usage(std::cout);
-    return 0;
-  }
-  if (argc < 2)
-  {
-    usage(std::cerr);
-    return 1;
-  }
-  try
-  {
-    auto const args = parse(argc, argv);
-    return cli::dispatch_precision(args.precision, [&]<uni20::Real Real> { return run<Real>(args); });
-  }
-  catch (std::exception const& error)
-  {
-    std::cerr << "bethe-su3-pbc: " << error.what() << '\n';
-    return 1;
-  }
+  Arguments args;
+  return bethe::cli::program_main(
+      argc, argv, program_info(), [&](auto& app) { add_options(app, args); },
+      [&](auto&) {
+        validate(args);
+        return bethe::cli::dispatch_precision(args.precision, [&]<uni20::Real Real> { return run<Real>(args); });
+      });
 }

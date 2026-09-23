@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Copyright (C) 2026 Ian McCulloch
-#include "citation-report.hpp"
 #include "excitation-report.hpp"
+#include "program-options.hpp"
 #include <bethe/biquadratic.hpp>
 
 namespace
@@ -13,76 +13,48 @@ struct Arguments
     std::size_t sites = 0, max_iterations = 10000;
     std::optional<std::size_t> through_lines, excitations, max_candidates;
     std::optional<bethe::xxz::QuantumNumbers> numbers;
-    std::optional<std::string_view> tolerance;
-    std::string_view precision = "fp64", format = "auto";
+    std::optional<std::string> tolerance;
+    std::string precision = "fp64", format = "auto";
     bool roots = false, sectors = false;
 };
-void usage(std::ostream& out)
+auto program_info()
 {
-  out << "Usage: bethe-biquadratic-obc N [options]\n"
-      << "Spin-1 pure biquadratic chain, free ends: H=-sum_i (S_i.S_(i+1))^2.\n"
-      << "Unique singlet ground state; even N>=2, coefficient -1.\n"
-      << "TL loop weight 3; reference XXZ Delta=3/2 with opposite end fields.\n"
-      << "  --through-lines ELL                lowest level in an even TL module, 0<=ELL<=N\n"
-      << "  --sectors                          lowest level in every TL module\n"
-      << "  --excitations COUNT|all             lowest COUNT, or all, supported real-root levels\n"
-      << "                                     default ELL=2; includes module minimum\n"
-      << "  --max-candidates COUNT             exhaustive scan limit (default: 10000)\n"
-      << "  --quantum-numbers I1,I2,...         explicit integer labels; none for vacuum\n"
-      << "  --precision fp64|long-double|fp128  (default: fp64; fp128 requires MPLAPACK)\n"
-      << "  --tolerance VALUE                  max logarithmic residual divided by 2*N\n"
-      << "                                     (default: 32 epsilon; not an energy-error bound)\n"
-      << "  --max-iterations COUNT             accepted Newton updates (default: 10000)\n"
-      << "  --roots                            print reference XXZ rapidities and labels\n"
-      << "  --format auto|pretty|plain         (default: auto)\n"
-      << "  --help                             show this help and references\n"
-      << "Real-root scans are NOT complete spectra: complex-root levels are excluded.\n"
-      << "Multiplicity counts physical states per TL eigenvector, not SU(2) multiplets.\n"
-      << "TL through-lines are not physical spin; no odd chains or lattice momentum.\n"
-      << "This is not the TB point, ULS point, or zero-boundary-field XXZ chain.\n"
-      << "See docs/biquadratic.md for the TL mapping and representation multiplicities.\n";
-  cli::print_citations(out, bethe::citations::Tool::biquadratic_obc);
+  auto info = bethe::cli::program_info("bethe-biquadratic-obc",
+                                       "Spin-1 pure biquadratic chain, free ends: H=-sum_i (S_i.S_(i+1))^2.",
+                                       bethe::citations::Tool::biquadratic_obc);
+  info.notes = {"Unique singlet ground state; even N>=2, coefficient -1.",
+                "TL loop weight 3; reference XXZ Delta=3/2 with opposite end fields.",
+                "Real-root scans are NOT complete spectra: complex-root levels are excluded.",
+                "Multiplicity counts physical states per TL eigenvector, not SU(2) multiplets.",
+                "TL through-lines are not physical spin; no odd chains or lattice momentum.",
+                "This is not the TB point, ULS point, or zero-boundary-field XXZ chain.",
+                "See docs/biquadratic.md for the TL mapping and representation multiplicities.",
+                "Use --references for literature and applicability; see CITATIONS.md."};
+  return info;
 }
-Arguments parse(int argc, char** argv)
+void add_options(CLI::App& app, Arguments& args)
 {
-  Arguments args;
-  args.sites = cli::parse_size(argv[1]);
-  for (int i = 2; i < argc; ++i)
-  {
-    std::string_view const option = argv[i];
-    if (option == "--roots")
-    {
-      args.roots = true;
-      continue;
-    }
-    if (option == "--sectors")
-    {
-      args.sectors = true;
-      continue;
-    }
-    if (option != "--precision" && option != "--format" && option != "--tolerance" && option != "--max-iterations" &&
-        option != "--through-lines" && option != "--excitations" && option != "--max-candidates" &&
-        option != "--quantum-numbers")
-      throw std::invalid_argument("unknown option: " + std::string(option));
-    if (++i == argc) throw std::invalid_argument("missing value for " + std::string(option));
-    std::string_view const value = argv[i];
-    if (option == "--precision")
-      args.precision = value;
-    else if (option == "--format")
-      args.format = value;
-    else if (option == "--tolerance")
-      args.tolerance = value;
-    else if (option == "--through-lines")
-      args.through_lines = cli::parse_size(value);
-    else if (option == "--excitations")
-      args.excitations = value == "all" ? std::numeric_limits<std::size_t>::max() : cli::parse_size(value);
-    else if (option == "--max-candidates")
-      args.max_candidates = cli::parse_size(value);
-    else if (option == "--quantum-numbers")
-      args.numbers = value == "none" ? bethe::xxz::QuantumNumbers{} : cli::parse_quantum_numbers(value);
-    else
-      args.max_iterations = cli::parse_size(value);
-  }
+  bethe::cli::option(app, "N", args.sites, "Number of particles or sites")->required();
+  bethe::cli::option(app, "--through-lines", args.through_lines, "lowest level in an even TL module, 0<=ELL<=N");
+  bethe::cli::option(app, "--sectors", args.sectors, "lowest level in every TL module");
+  bethe::cli::all_count_option(
+      app, "--excitations", args.excitations,
+      "lowest COUNT, or all, supported real-root levels default ELL=2; includes module minimum");
+  bethe::cli::option(app, "--max-candidates", args.max_candidates, "exhaustive scan limit (default: 10000)");
+  bethe::cli::option(app, "--quantum-numbers", args.numbers, "explicit integer labels; none for vacuum");
+  bethe::cli::option(app, "--roots", args.roots, "print reference XXZ rapidities and labels");
+  bethe::cli::option(app, "--tolerance", args.tolerance,
+                     "max logarithmic residual divided by 2*N (default: 32 epsilon; not an energy-error bound)");
+  bethe::cli::option(app, "--max-iterations", args.max_iterations, "accepted Newton updates (default: 10000)")
+      ->capture_default_str();
+  bethe::cli::precision_option(app, args.precision);
+  app.add_option("--format", args.format, "Stdout layout")
+      ->check(CLI::IsMember({"auto", "pretty", "plain"}))
+      ->capture_default_str();
+}
+
+void validate(Arguments const& args)
+{
   if (args.format != "auto" && args.format != "plain" && args.format != "pretty")
     throw std::invalid_argument("unknown output format: " + std::string(args.format));
   if (args.sectors && (args.through_lines || args.excitations || args.numbers))
@@ -92,7 +64,6 @@ Arguments parse(int argc, char** argv)
     throw std::invalid_argument(
         "--quantum-numbers determines the TL module; cannot combine with --through-lines or --excitations");
   if (args.max_candidates && !args.excitations) throw std::invalid_argument("--max-candidates requires --excitations");
-  return args;
 }
 char const* status(bethe::xxz::quantum_group::SolveStatus value)
 {
@@ -269,24 +240,11 @@ template <uni20::Real Real> int run(Arguments const& args)
 } // namespace
 int main(int argc, char** argv)
 {
-  if (argc == 2 && std::string_view(argv[1]) == "--help")
-  {
-    usage(std::cout);
-    return 0;
-  }
-  if (argc < 2)
-  {
-    usage(std::cerr);
-    return 1;
-  }
-  try
-  {
-    auto const args = parse(argc, argv);
-    return cli::dispatch_precision(args.precision, [&]<uni20::Real Real> { return run<Real>(args); });
-  }
-  catch (std::exception const& error)
-  {
-    std::cerr << "bethe-biquadratic-obc: " << error.what() << '\n';
-    return 1;
-  }
+  Arguments args;
+  return bethe::cli::program_main(
+      argc, argv, program_info(), [&](auto& app) { add_options(app, args); },
+      [&](auto&) {
+        validate(args);
+        return bethe::cli::dispatch_precision(args.precision, [&]<uni20::Real Real> { return run<Real>(args); });
+      });
 }

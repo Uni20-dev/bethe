@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Copyright (C) 2026 Ian McCulloch
-#include "citation-report.hpp"
+#include "program-options.hpp"
 #include "report-common.hpp"
 #include <bethe/lieb_liniger.hpp>
 
@@ -11,91 +11,63 @@ namespace cli = bethe::cli;
 struct Arguments
 {
     std::size_t particles = 0;
-    std::optional<std::string_view> length, interaction, numbers, tolerance;
+    std::optional<std::string> length, interaction, numbers, tolerance;
     std::optional<std::size_t> count, padding, max_candidates;
     std::size_t max_iterations = 10000;
-    std::string_view precision = "fp64", format = "auto";
+    std::string precision = "fp64", format = "auto";
     bool roots = false;
 };
 
-void usage(std::ostream& out)
+auto program_info()
 {
-  out << "Usage: bethe-lieb-liniger-pbc N --length ELL --c C [options]\n"
-      << "Repulsive continuum bosons on a ring: N>=0, finite ELL>0 and C>0.\n"
-      << "H=-sum_j d_j^2 + 2c sum_(i<j) delta(x_i-x_j), hbar^2/(2m)=1.\n"
-      << "ELL is a physical length, not a lattice site count. E=sum(k_j^2).\n"
-      << "  --length ELL                       required ring circumference\n"
-      << "  --c C                              required repulsive coupling (inverse length)\n"
-      << "  --quantum-numbers I1,I2,...         explicit sorted labels (default: ground state)\n"
-      << "                                     integers for odd N, half-odd integers for even N\n"
-      << "                                     use none for the N=0 vacuum\n"
-      << "  --excitations COUNT|all             retain lowest converged states in a finite window\n"
-      << "  --padding P                        REQUIRED for scans: P extra slots at EACH edge\n"
-      << "                                     choose N labels from N+2P slots; P=0 is ground only\n"
-      << "  --max-candidates COUNT              reject larger windows before solving (default: 10000)\n"
-      << "  --precision fp64|long-double|fp128  (default: fp64; fp128 requires MPLAPACK)\n"
-      << "  --tolerance VALUE                  dimensionless component-scaled residual\n"
-      << "                                     (default: 32 epsilon; not an energy-error bound)\n"
-      << "  --max-iterations COUNT             Newton updates per state (default: 10000)\n"
-      << "  --roots                            print physical momenta k and labels I\n"
-      << "  --format auto|pretty|plain         (default: auto)\n"
-      << "  --help                             show this help and references\n"
-      << "Scans include the ground state; all means the entire specified window,\n"
-      << "not the infinite continuum spectrum. COUNT does not reduce solve count.\n"
-      << "Momentum P=2*pi*sum(I)/ELL is signed, with no Brillouin-zone reduction.\n"
-      << "Attraction, c=0, c=infinity, hard walls, and thermodynamics are not implemented.\n"
-      << "See docs/lieb-liniger.md for equations, residual scaling, and numerical limits.\n";
-  cli::print_citations(out, bethe::citations::Tool::lieb_liniger_pbc);
+  auto info = bethe::cli::program_info("bethe-lieb-liniger-pbc",
+                                       "Repulsive continuum bosons on a ring: N>=0, finite ELL>0 and C>0.",
+                                       bethe::citations::Tool::lieb_liniger_pbc);
+  info.notes = {"H=-sum_j d_j^2 + 2c sum_(i<j) delta(x_i-x_j), hbar^2/(2m)=1.",
+                "ELL is a physical length, not a lattice site count. E=sum(k_j^2).",
+                "Scans include the ground state; all means the entire specified window,",
+                "not the infinite continuum spectrum. COUNT does not reduce solve count.",
+                "Momentum P=2*pi*sum(I)/ELL is signed, with no Brillouin-zone reduction.",
+                "Attraction, c=0, c=infinity, hard walls, and thermodynamics are not implemented.",
+                "See docs/lieb-liniger.md for equations, residual scaling, and numerical limits.",
+                "Use --references for literature and applicability; see CITATIONS.md."};
+  return info;
+}
+void add_options(CLI::App& app, Arguments& args)
+{
+  bethe::cli::option(app, "N", args.particles, "Number of particles or sites")->required();
+  bethe::cli::option(app, "--length", args.length, "required ring circumference")->required();
+  bethe::cli::option(app, "--c", args.interaction, "required repulsive coupling (inverse length)")->required();
+  bethe::cli::option(app, "--quantum-numbers", args.numbers,
+                     "explicit sorted labels (default: ground state) integers for odd N, half-odd integers for even N "
+                     "use none for the N=0 vacuum");
+  bethe::cli::all_count_option(app, "--excitations", args.count, "retain lowest converged states in a finite window");
+  bethe::cli::option(
+      app, "--padding", args.padding,
+      "REQUIRED for scans: P extra slots at EACH edge choose N labels from N+2P slots; P=0 is ground only");
+  bethe::cli::option(app, "--max-candidates", args.max_candidates,
+                     "reject larger windows before solving (default: 10000)");
+  bethe::cli::option(app, "--roots", args.roots, "print physical momenta k and labels I");
+  bethe::cli::option(app, "--tolerance", args.tolerance,
+                     "dimensionless component-scaled residual (default: 32 epsilon; not an energy-error bound)");
+  bethe::cli::option(app, "--max-iterations", args.max_iterations, "Newton updates per state (default: 10000)")
+      ->capture_default_str();
+  bethe::cli::precision_option(app, args.precision);
+  app.add_option("--format", args.format, "Stdout layout")
+      ->check(CLI::IsMember({"auto", "pretty", "plain"}))
+      ->capture_default_str();
 }
 
-Arguments parse(int argc, char** argv)
+void validate(Arguments const& args)
 {
-  Arguments result;
-  result.particles = cli::parse_size(argv[1]);
-  for (int i = 2; i < argc; ++i)
-  {
-    std::string_view const option = argv[i];
-    if (option == "--roots")
-    {
-      result.roots = true;
-      continue;
-    }
-    if (option != "--length" && option != "--c" && option != "--quantum-numbers" && option != "--excitations" &&
-        option != "--padding" && option != "--max-candidates" && option != "--precision" && option != "--format" &&
-        option != "--tolerance" && option != "--max-iterations")
-      throw std::invalid_argument("unknown option: " + std::string(option));
-    if (++i == argc) throw std::invalid_argument("missing value for " + std::string(option));
-    std::string_view const value = argv[i];
-    if (option == "--length")
-      result.length = value;
-    else if (option == "--c")
-      result.interaction = value;
-    else if (option == "--quantum-numbers")
-      result.numbers = value;
-    else if (option == "--precision")
-      result.precision = value;
-    else if (option == "--format")
-      result.format = value;
-    else if (option == "--tolerance")
-      result.tolerance = value;
-    else if (option == "--padding")
-      result.padding = cli::parse_size(value);
-    else if (option == "--max-candidates")
-      result.max_candidates = cli::parse_size(value);
-    else if (option == "--max-iterations")
-      result.max_iterations = cli::parse_size(value);
-    else
-      result.count = value == "all" ? std::numeric_limits<std::size_t>::max() : cli::parse_size(value);
-  }
-  if (!result.length || !result.interaction) throw std::invalid_argument("--length ELL and --c C are required");
-  if (result.count && !result.padding) throw std::invalid_argument("--excitations requires an explicit --padding P");
-  if (!result.count && (result.padding || result.max_candidates))
+  if (!args.length || !args.interaction) throw std::invalid_argument("--length ELL and --c C are required");
+  if (args.count && !args.padding) throw std::invalid_argument("--excitations requires an explicit --padding P");
+  if (!args.count && (args.padding || args.max_candidates))
     throw std::invalid_argument("--padding and --max-candidates require --excitations");
-  if (result.count && result.numbers)
+  if (args.count && args.numbers)
     throw std::invalid_argument("--quantum-numbers cannot be combined with --excitations");
-  if (result.format != "auto" && result.format != "plain" && result.format != "pretty")
-    throw std::invalid_argument("unknown output format: " + std::string(result.format));
-  return result;
+  if (args.format != "auto" && args.format != "plain" && args.format != "pretty")
+    throw std::invalid_argument("unknown output format: " + std::string(args.format));
 }
 
 char const* status(model::SolveStatus value)
@@ -214,24 +186,11 @@ template <uni20::Real Real> int run(Arguments const& args)
 
 int main(int argc, char** argv)
 {
-  if (argc == 2 && std::string_view(argv[1]) == "--help")
-  {
-    usage(std::cout);
-    return 0;
-  }
-  if (argc < 2)
-  {
-    usage(std::cerr);
-    return 1;
-  }
-  try
-  {
-    auto const args = parse(argc, argv);
-    return cli::dispatch_precision(args.precision, [&]<uni20::Real Real> { return run<Real>(args); });
-  }
-  catch (std::exception const& error)
-  {
-    std::cerr << "bethe-lieb-liniger-pbc: " << error.what() << '\n';
-    return 1;
-  }
+  Arguments args;
+  return bethe::cli::program_main(
+      argc, argv, program_info(), [&](auto& app) { add_options(app, args); },
+      [&](auto&) {
+        validate(args);
+        return bethe::cli::dispatch_precision(args.precision, [&]<uni20::Real Real> { return run<Real>(args); });
+      });
 }

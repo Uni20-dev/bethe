@@ -128,10 +128,10 @@ numerical API and any future Python bindings.
 Generic CLI, precision dispatch, and report rendering live in
 `apps/cli-common.hpp`, `apps/report-common.hpp`, and `apps/excitation-report.hpp`;
 model-specific arguments and report metadata stay in their respective front ends.
-The Hubbard dispersion frontend is the first Uni20 CLI integration:
-`apps/program-options.hpp` supplies Bethe identity and citation adapters, and
-`apps/data-output-options.hpp` declares the shared export flags. Only migrated
-frontends link the private `bethe_cli` helper target; numerical headers and
+`apps/program-options.hpp` supplies the shared parse/information/error lifecycle,
+exact option adapters, Bethe identity and citations. `apps/data-output-options.hpp`
+declares the shared export flags for typed-table frontends. All executables
+link the private `bethe_cli` helper target; numerical headers and
 the existing data-output unit tests remain parser-independent.
 The repository's `.clang-format` is copied from Uni20; use `clang-format -i`
 on changed C++ files to apply the shared style.

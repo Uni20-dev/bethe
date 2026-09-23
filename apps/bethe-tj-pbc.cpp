@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Copyright (C) 2026 Ian McCulloch
-#include "citation-report.hpp"
+#include "program-options.hpp"
 #include "report-common.hpp"
 #include <bethe/tj.hpp>
 
@@ -13,66 +13,46 @@ struct Arguments
     std::size_t sites = 0, max_iterations = 10000;
     std::optional<std::size_t> particles;
     std::optional<uni20::half_int> sz;
-    std::optional<std::string_view> tolerance;
-    std::string_view precision = "fp64", format = "auto";
+    std::optional<std::string> tolerance;
+    std::string precision = "fp64", format = "auto";
     bool roots = false;
 };
-void usage(std::ostream& out)
+auto program_info()
 {
-  out << "Usage: bethe-tj-pbc L [options]\n"
-      << "Supersymmetric periodic t-J sector ground state, t=1, J=2, L>=3.\n"
-      << "H=-sum(projected hopping+h.c.)+2 sum(S_i.S_j-n_i*n_j/4).\n"
-      << "No double occupancy and no chemical-potential energy shift.\n"
-      << "Doped mixed-spin sectors require odd N_up AND odd N_down.\n"
-      << "No-hole sectors and fully polarized free fermions allow all populations.\n"
-      << "  --particles COUNT                  0 <= N <= L (default: L)\n"
-      << "  --sz VALUE                         spin projection (default: 0 for even N, 1/2 for odd N)\n"
-      << "  --precision fp64|long-double|fp128  (default: fp64; fp128 requires MPLAPACK)\n"
-      << "  --tolerance VALUE                  max logarithmic residual divided by L\n"
-      << "                                     (default: 32 epsilon; not an energy-error bound)\n"
-      << "  --max-iterations COUNT             accepted updates (default: 10000)\n"
-      << "  --roots                            print nested rapidities/labels or free modes\n"
-      << "  --format auto|pretty|plain         (default: auto)\n"
-      << "  --help                             show this help and references\n"
-      << "Nested roots use Sutherland lambda,mu; E=2*N_h-sum 1/(lambda^2+1/4).\n"
-      << "Momentum includes fermionic translation signs, also in the no-hole limit.\n"
-      << "Other doped shell parities, excitations, open ends, and J!=2t are not implemented.\n"
-      << "See docs/tj.md for the supported branches and conventions.\n";
-  cli::print_citations(out, bethe::citations::Tool::tj_pbc);
+  auto info =
+      bethe::cli::program_info("bethe-tj-pbc", "Supersymmetric periodic t-J sector ground state, t=1, J=2, L>=3.",
+                               bethe::citations::Tool::tj_pbc);
+  info.notes = {"H=-sum(projected hopping+h.c.)+2 sum(S_i.S_j-n_i*n_j/4).",
+                "No double occupancy and no chemical-potential energy shift.",
+                "Doped mixed-spin sectors require odd N_up AND odd N_down.",
+                "No-hole sectors and fully polarized free fermions allow all populations.",
+                "Nested roots use Sutherland lambda,mu; E=2*N_h-sum 1/(lambda^2+1/4).",
+                "Momentum includes fermionic translation signs, also in the no-hole limit.",
+                "Other doped shell parities, excitations, open ends, and J!=2t are not implemented.",
+                "See docs/tj.md for the supported branches and conventions.",
+                "Use --references for literature and applicability; see CITATIONS.md."};
+  return info;
 }
-Arguments parse(int argc, char** argv)
+void add_options(CLI::App& app, Arguments& args)
 {
-  Arguments args;
-  args.sites = cli::parse_size(argv[1]);
-  for (int i = 2; i < argc; ++i)
-  {
-    std::string_view const option = argv[i];
-    if (option == "--roots")
-    {
-      args.roots = true;
-      continue;
-    }
-    if (option != "--particles" && option != "--sz" && option != "--precision" && option != "--format" &&
-        option != "--tolerance" && option != "--max-iterations")
-      throw std::invalid_argument("unknown option: " + std::string(option));
-    if (++i == argc) throw std::invalid_argument("missing value for " + std::string(option));
-    std::string_view const value = argv[i];
-    if (option == "--particles")
-      args.particles = cli::parse_size(value);
-    else if (option == "--sz")
-      args.sz = uni20::half_int::parse(value);
-    else if (option == "--precision")
-      args.precision = value;
-    else if (option == "--format")
-      args.format = value;
-    else if (option == "--tolerance")
-      args.tolerance = value;
-    else
-      args.max_iterations = cli::parse_size(value);
-  }
+  bethe::cli::option(app, "L", args.sites, "Number of sites or rungs")->required();
+  bethe::cli::option(app, "--particles", args.particles, "0 <= N <= L (default: L)");
+  bethe::cli::option(app, "--sz", args.sz, "spin projection (default: 0 for even N, 1/2 for odd N)");
+  bethe::cli::option(app, "--roots", args.roots, "print nested rapidities/labels or free modes");
+  bethe::cli::option(app, "--tolerance", args.tolerance,
+                     "max logarithmic residual divided by L (default: 32 epsilon; not an energy-error bound)");
+  bethe::cli::option(app, "--max-iterations", args.max_iterations, "accepted updates (default: 10000)")
+      ->capture_default_str();
+  bethe::cli::precision_option(app, args.precision);
+  app.add_option("--format", args.format, "Stdout layout")
+      ->check(CLI::IsMember({"auto", "pretty", "plain"}))
+      ->capture_default_str();
+}
+
+void validate(Arguments const& args)
+{
   if (args.format != "auto" && args.format != "pretty" && args.format != "plain")
     throw std::invalid_argument("unknown output format: " + std::string(args.format));
-  return args;
 }
 char const* status(model::SolveStatus value)
 {
@@ -160,24 +140,11 @@ template <uni20::Real Real> int run(Arguments const& args)
 } // namespace
 int main(int argc, char** argv)
 {
-  if (argc == 2 && std::string_view(argv[1]) == "--help")
-  {
-    usage(std::cout);
-    return 0;
-  }
-  if (argc < 2)
-  {
-    usage(std::cerr);
-    return 1;
-  }
-  try
-  {
-    auto const args = parse(argc, argv);
-    return cli::dispatch_precision(args.precision, [&]<uni20::Real Real> { return run<Real>(args); });
-  }
-  catch (std::exception const& error)
-  {
-    std::cerr << "bethe-tj-pbc: " << error.what() << '\n';
-    return 1;
-  }
+  Arguments args;
+  return bethe::cli::program_main(
+      argc, argv, program_info(), [&](auto& app) { add_options(app, args); },
+      [&](auto&) {
+        validate(args);
+        return bethe::cli::dispatch_precision(args.precision, [&]<uni20::Real Real> { return run<Real>(args); });
+      });
 }

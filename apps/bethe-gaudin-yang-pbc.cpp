@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Copyright (C) 2026 Ian McCulloch
-#include "citation-report.hpp"
+#include "program-options.hpp"
 #include "report-common.hpp"
 #include <bethe/gaudin_yang.hpp>
 
@@ -11,72 +11,49 @@ namespace cli = bethe::cli;
 struct Arguments
 {
     std::size_t particles = 0, max_iterations = 10000;
-    std::optional<std::string_view> length, interaction, tolerance;
+    std::optional<std::string> length, interaction, tolerance;
     std::optional<uni20::half_int> sz;
-    std::string_view precision = "fp64", format = "auto";
+    std::string precision = "fp64", format = "auto";
     bool roots = false;
 };
 
-void usage(std::ostream& out)
+auto program_info()
 {
-  out << "Usage: bethe-gaudin-yang-pbc N --length ELL --c C [options]\n"
-      << "Repulsive spin-1/2 continuum fermions on a ring; finite ELL>0 and C>=0.\n"
-      << "H=-sum_j d_j^2 + 2c sum_(i<j) delta(x_i-x_j), hbar^2/(2m)=1.\n"
-      << "Interacting mixed-spin ground states require odd N_up AND odd N_down.\n"
-      << "At c=0 or full polarization any particle count is supported, including vacuum.\n"
-      << "  --length ELL                       required physical circumference\n"
-      << "  --c C                              required coupling (inverse length)\n"
-      << "  --sz VALUE                         spin projection (default: 0 even N, 1/2 odd N)\n"
-      << "  --precision fp64|long-double|fp128  (default: fp64; fp128 requires MPLAPACK)\n"
-      << "  --tolerance VALUE                  component-scaled equation residual\n"
-      << "                                     (default: 32 epsilon; not an energy-error bound)\n"
-      << "  --max-iterations COUNT             accepted Newton updates (default: 10000)\n"
-      << "  --roots                            print momenta and spin rapidities, or free modes\n"
-      << "  --format auto|pretty|plain         (default: auto)\n"
-      << "  --help                             show this help and references\n"
-      << "E=sum(k_j^2); P is signed with no Brillouin-zone reduction.\n"
-      << "Free even-population seas select the positive-current degenerate representative.\n"
-      << "Other interacting shell branches, excitations, attraction and open ends\n"
-      << "are not implemented. See docs/gaudin-yang.md for conventions and limits.\n";
-  cli::print_citations(out, bethe::citations::Tool::gaudin_yang_pbc);
+  auto info = bethe::cli::program_info("bethe-gaudin-yang-pbc",
+                                       "Repulsive spin-1/2 continuum fermions on a ring; finite ELL>0 and C>=0.",
+                                       bethe::citations::Tool::gaudin_yang_pbc);
+  info.notes = {"H=-sum_j d_j^2 + 2c sum_(i<j) delta(x_i-x_j), hbar^2/(2m)=1.",
+                "Interacting mixed-spin ground states require odd N_up AND odd N_down.",
+                "At c=0 or full polarization any particle count is supported, including vacuum.",
+                "E=sum(k_j^2); P is signed with no Brillouin-zone reduction.",
+                "Free even-population seas select the positive-current degenerate representative.",
+                "Other interacting shell branches, excitations, attraction and open ends",
+                "are not implemented. See docs/gaudin-yang.md for conventions and limits.",
+                "Use --references for literature and applicability; see CITATIONS.md."};
+  return info;
+}
+void add_options(CLI::App& app, Arguments& args)
+{
+  bethe::cli::option(app, "N", args.particles, "Number of particles or sites")->required();
+  bethe::cli::option(app, "--length", args.length, "required physical circumference")->required();
+  bethe::cli::option(app, "--c", args.interaction, "required coupling (inverse length)")->required();
+  bethe::cli::option(app, "--sz", args.sz, "spin projection (default: 0 even N, 1/2 odd N)");
+  bethe::cli::option(app, "--roots", args.roots, "print momenta and spin rapidities, or free modes");
+  bethe::cli::option(app, "--tolerance", args.tolerance,
+                     "component-scaled equation residual (default: 32 epsilon; not an energy-error bound)");
+  bethe::cli::option(app, "--max-iterations", args.max_iterations, "accepted Newton updates (default: 10000)")
+      ->capture_default_str();
+  bethe::cli::precision_option(app, args.precision);
+  app.add_option("--format", args.format, "Stdout layout")
+      ->check(CLI::IsMember({"auto", "pretty", "plain"}))
+      ->capture_default_str();
 }
 
-Arguments parse(int argc, char** argv)
+void validate(Arguments const& args)
 {
-  Arguments result;
-  result.particles = cli::parse_size(argv[1]);
-  for (int i = 2; i < argc; ++i)
-  {
-    std::string_view const option = argv[i];
-    if (option == "--roots")
-    {
-      result.roots = true;
-      continue;
-    }
-    if (option != "--length" && option != "--c" && option != "--sz" && option != "--precision" &&
-        option != "--format" && option != "--tolerance" && option != "--max-iterations")
-      throw std::invalid_argument("unknown option: " + std::string(option));
-    if (++i == argc) throw std::invalid_argument("missing value for " + std::string(option));
-    std::string_view const value = argv[i];
-    if (option == "--length")
-      result.length = value;
-    else if (option == "--c")
-      result.interaction = value;
-    else if (option == "--sz")
-      result.sz = uni20::half_int::parse(value);
-    else if (option == "--precision")
-      result.precision = value;
-    else if (option == "--format")
-      result.format = value;
-    else if (option == "--tolerance")
-      result.tolerance = value;
-    else
-      result.max_iterations = cli::parse_size(value);
-  }
-  if (!result.length || !result.interaction) throw std::invalid_argument("--length ELL and --c C are required");
-  if (result.format != "auto" && result.format != "plain" && result.format != "pretty")
-    throw std::invalid_argument("unknown output format: " + std::string(result.format));
-  return result;
+  if (!args.length || !args.interaction) throw std::invalid_argument("--length ELL and --c C are required");
+  if (args.format != "auto" && args.format != "plain" && args.format != "pretty")
+    throw std::invalid_argument("unknown output format: " + std::string(args.format));
 }
 
 char const* status(model::SolveStatus value)
@@ -167,24 +144,11 @@ template <uni20::Real Real> int run(Arguments const& args)
 
 int main(int argc, char** argv)
 {
-  if (argc == 2 && std::string_view(argv[1]) == "--help")
-  {
-    usage(std::cout);
-    return 0;
-  }
-  if (argc < 2)
-  {
-    usage(std::cerr);
-    return 1;
-  }
-  try
-  {
-    auto const args = parse(argc, argv);
-    return cli::dispatch_precision(args.precision, [&]<uni20::Real Real> { return run<Real>(args); });
-  }
-  catch (std::exception const& error)
-  {
-    std::cerr << "bethe-gaudin-yang-pbc: " << error.what() << '\n';
-    return 1;
-  }
+  Arguments args;
+  return bethe::cli::program_main(
+      argc, argv, program_info(), [&](auto& app) { add_options(app, args); },
+      [&](auto&) {
+        validate(args);
+        return bethe::cli::dispatch_precision(args.precision, [&]<uni20::Real Real> { return run<Real>(args); });
+      });
 }

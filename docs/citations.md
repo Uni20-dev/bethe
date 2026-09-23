@@ -50,10 +50,9 @@ runs the freshness check and generator regression tests; otherwise CMake
 reports that those maintainer checks are skipped. CLI citation tests still run.
 
 Each front end selects its references with a typed tool ID.
-`bethe-hubbard-dispersion --references` displays its Uni20-rendered bibliography
+Every executable's `--references` option displays its Uni20-rendered bibliography
 on stdout and exits successfully without model parameters or output files;
-its ordinary help and no-argument usage only point to that option. The other
-frontends still include their citations in `--help` and no-argument usage.
+ordinary help and no-argument usage only point to that option.
 Normal calculations keep their existing output and exit-status contract.
 The bibliography lists references for the tool's supported modes, not an
 assertion that every listed method was used in a particular run.

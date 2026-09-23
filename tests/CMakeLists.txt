@@ -78,6 +78,11 @@ if(BETHE_BUILD_APPS)
         "$<TARGET_FILE:bethe-hubbard-dispersion>" "${UNI20_ENABLE_MPLAPACK}")
   endif()
   foreach(app IN ITEMS bethe-xxx-pbc bethe-xxx-obc bethe-xxz-pbc bethe-xxz-obc bethe-hubbard-pbc bethe-hubbard-obc bethe-hubbard-dispersion bethe-lieb-liniger-pbc bethe-su3-pbc bethe-gaudin-yang-pbc bethe-tj-pbc bethe-tb-pbc bethe-biquadratic-obc bethe-richardson bethe-central-spin bethe-sun-fermions-pbc bethe-ladder-pbc bethe-haldane-shastry-pbc bethe-sutherland-pbc)
+    if(Python3_Interpreter_FOUND)
+      add_test(NAME Arguments.${app}.cli
+        COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_shared_arguments.py"
+          "$<TARGET_FILE:${app}>")
+    endif()
     add_test(NAME Citations.${app}.cli
       COMMAND "${CMAKE_COMMAND}" "-DPROGRAM=$<TARGET_FILE:${app}>" "-DTOOL=${app}"
         -P "${CMAKE_CURRENT_SOURCE_DIR}/check_citations_cli.cmake")
