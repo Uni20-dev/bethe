@@ -45,8 +45,11 @@ of [barber-batchelor-1989](#barber-batchelor-1989). Its reference XXZ equations
 and normalization follow [albertini-2000](#albertini-2000), Eqs. (2)–(10): our
 reference Hamiltonian is half Eq. (3), after a staggered rotation of the xy
 exchange, so `E_b=2*E_ref-7*(N-1)/4`. The opposite XXZ end fields are essential;
-the physical spin-1 model has free ends. We implement the even-chain singlet's
-real-root sea, not the odd-chain spinon band. The TL module/multiplicity
+the physical spin-1 model has free ends. We implement even-chain TL module
+minima and real-root label scans in `1<=I<=N-M`, including the global singlet,
+not complex-root levels or the odd-chain spinon band. Finite regular Bethe
+states are assigned ell=N-2M without counting auxiliary descendants again.
+The TL module/multiplicity
 separation follows [aufgebauer-klumper-2010](#aufgebauer-klumper-2010),
 Secs. 2.3 and 3, specialized to generic singlet-projector spin-chain
 representations. It does not implement periodic twists, full-spectrum Bethe
@@ -224,7 +227,7 @@ Phys. Rev. B 40, 4621-4626 (1989).
 
 Relevant tool modes:
 
-- `bethe-biquadratic-obc`: Original free-end spin-1 biquadratic/TL spectral correspondence. Only even-chain singlet ground states of H=-sum (S.S)^2 are implemented.
+- `bethe-biquadratic-obc`: Original free-end spin-1 biquadratic/TL spectral correspondence. Even-chain ground states, TL module minima and restricted real-root excitations of H=-sum (S.S)^2, with representation multiplicities.
 
 ### albertini-2000
 
@@ -235,7 +238,7 @@ arXiv:cond-mat/0012439 (2000).
 
 Relevant tool modes:
 
-- `bethe-biquadratic-obc`: Hamiltonians and energy shift (2)-(5), real-root Bethe equations (6)-(10), and the even-chain filled sea. Our spin-half reference is half of (3), after a staggered rotation. The odd-chain spinon band is not implemented.
+- `bethe-biquadratic-obc`: Hamiltonians and energy shift (2)-(5), real-root Bethe equations (6)-(10), and integer-label window 1\<=I\<=N-M. Our spin-half reference is half of (3), after a staggered rotation. Complex-root levels and the odd-chain spinon band are not implemented.
 
 ### aufgebauer-klumper-2010
 

@@ -44,36 +44,42 @@ TYPED_TEST(TemperleyLieb, NativePrecisionOriginalBetheEquations)
   Real const eps = uni20::numeric_limits<Real>::epsilon(), pi = Real{4} * std::atan(Real{1});
   for (std::size_t n : {4, 8, 32, 128})
     for (Real delta : {Real{101} / Real{100}, Real{3} / Real{2}, Real{4}})
-    {
-      SCOPED_TRACE(::testing::Message() << "N=" << n << " Delta=" << uni20::format_real(delta));
-      auto const s = qg::ground_state(n, delta);
-      ASSERT_TRUE(s.converged) << int(s.status) << " " << uni20::format_real(s.residual_norm);
-      EXPECT_LE(s.residual_norm, Real{32} * eps);
-      ASSERT_EQ(s.rapidities.size(), n / 2);
-      Real const eta = std::acosh(delta);
-      auto ratio = [&](Real alpha, Real width) {
-        return std::sinh(C{width, alpha / Real{2}}) / std::sinh(C{width, -alpha / Real{2}});
-      };
-      Real energy = Real(n - 1) * delta / Real{4};
-      for (std::size_t i = 0; i < n / 2; ++i)
+      for (std::size_t ell : {0, 2, 4})
       {
-        Real const a = s.rapidities[i];
-        EXPECT_GT(a, Real{0});
-        EXPECT_LT(a, pi);
-        if (i) EXPECT_GT(a, s.rapidities[i - 1]);
-        EXPECT_EQ(s.quantum_numbers[i], uni20::half_int(std::int64_t(i + 1)));
-        C lhs{Real{1}, Real{0}}, rhs{Real{1}, Real{0}};
-        auto const drive = ratio(a, eta / Real{2});
-        for (std::size_t k = 0; k < 2 * n; ++k)
-          lhs *= drive;
-        for (std::size_t j = 0; j < n / 2; ++j)
-          if (i != j) rhs *= ratio(a - s.rapidities[j], eta) * ratio(a + s.rapidities[j], eta);
-        EXPECT_REAL_NEAR(lhs.real(), rhs.real(), Real{512} * Real(n) * eps);
-        EXPECT_REAL_NEAR(lhs.imag(), rhs.imag(), Real{512} * Real(n) * eps);
-        energy -= (delta * delta - Real{1}) / (delta - std::cos(a));
+        SCOPED_TRACE(::testing::Message() << "N=" << n << " Delta=" << uni20::format_real(delta) << " ell=" << ell);
+        auto const m = (n - ell) / 2;
+        auto labels = qg::detail::consecutive(m);
+        // Ground state at ell=0; nontrivial high-label excited configurations otherwise.
+        for (auto& label : labels)
+          label += uni20::half_int(std::int64_t(ell));
+        auto const s = qg::solve_real<Real>(n, delta, labels);
+        ASSERT_TRUE(s.converged) << int(s.status) << " " << uni20::format_real(s.residual_norm);
+        EXPECT_LE(s.residual_norm, Real{32} * eps);
+        ASSERT_EQ(s.rapidities.size(), m);
+        Real const eta = std::acosh(delta);
+        auto ratio = [&](Real alpha, Real width) {
+          return std::sinh(C{width, alpha / Real{2}}) / std::sinh(C{width, -alpha / Real{2}});
+        };
+        Real energy = Real(n - 1) * delta / Real{4};
+        for (std::size_t i = 0; i < m; ++i)
+        {
+          Real const a = s.rapidities[i];
+          EXPECT_GT(a, Real{0});
+          EXPECT_LT(a, pi);
+          if (i) EXPECT_GT(a, s.rapidities[i - 1]);
+          EXPECT_EQ(s.quantum_numbers[i], labels[i]);
+          C lhs{Real{1}, Real{0}}, rhs{Real{1}, Real{0}};
+          auto const drive = ratio(a, eta / Real{2});
+          for (std::size_t k = 0; k < 2 * n; ++k)
+            lhs *= drive;
+          for (std::size_t j = 0; j < m; ++j)
+            if (i != j) rhs *= ratio(a - s.rapidities[j], eta) * ratio(a + s.rapidities[j], eta);
+          EXPECT_REAL_NEAR(lhs.real(), rhs.real(), Real{512} * Real(n) * eps);
+          EXPECT_REAL_NEAR(lhs.imag(), rhs.imag(), Real{512} * Real(n) * eps);
+          energy -= (delta * delta - Real{1}) / (delta - std::cos(a));
+        }
+        EXPECT_REAL_NEAR(energy, s.energy, Real{4096} * Real(n) * eps);
       }
-      EXPECT_REAL_NEAR(energy, s.energy, Real{4096} * Real(n) * eps);
-    }
 }
 
 TYPED_TEST(TemperleyLieb, AnalyticJacobian)
@@ -197,5 +203,130 @@ TEST(TemperleyLiebED, GenericLoopWeightGroundStates)
       ASSERT_TRUE(s.converged);
       EXPECT_NEAR(s.energy, bethe::test::quantum_group_xxz_ed(n, n / 2, delta).front(), 3e-11);
     }
+}
+
+TYPED_TEST(TemperleyLieb, ExcitationNativePrecisionAndWeights)
+{
+  using Real = TypeParam;
+  Real const eps = uni20::numeric_limits<Real>::epsilon();
+  auto const scan = bethe::biquadratic::real_excitations<Real>(4, 2, {.count = 100});
+  ASSERT_TRUE(scan.converged());
+  ASSERT_EQ(scan.candidate_count, 3);
+  ASSERT_EQ(scan.levels.size(), 3);
+  EXPECT_EQ(scan.ground_state.through_lines, 0);
+  EXPECT_EQ(scan.ground_state.multiplicity, 1);
+  Real const root2 = std::sqrt(Real{2});
+  std::array<Real, 3> const energies{-Real{6} - root2, -Real{6}, -Real{6} + root2};
+  Real const e0 = -(Real{15} + std::sqrt(Real{17})) / Real{2};
+  for (std::size_t j = 0; j < 3; ++j)
+  {
+    auto const& level = scan.levels[j];
+    EXPECT_EQ(level.state.through_lines, 2);
+    EXPECT_EQ(level.state.multiplicity, 8);
+    EXPECT_REAL_NEAR(level.state.energy, energies[j], Real{128} * eps);
+    ASSERT_TRUE(level.gap);
+    EXPECT_REAL_NEAR(*level.gap, energies[j] - e0, Real{256} * eps);
+    EXPECT_EQ(level.state.reference.quantum_numbers, qg::QuantumNumbers({uni20::half_int(std::int64_t(j + 1))}));
+  }
+  if constexpr (uni20::numeric_limits<Real>::digits > 53)
+    EXPECT_GT(std::abs(Real(double(energies[0])) - energies[0]), Real{128} * eps);
+  auto const vacuum = bethe::biquadratic::sector_ground_state<Real>(4, 4);
+  EXPECT_TRUE(vacuum.reference.converged);
+  EXPECT_EQ(vacuum.reference.iterations, 0);
+  EXPECT_EQ(vacuum.energy, -Real{3});
+  EXPECT_EQ(vacuum.multiplicity, 55);
+  auto const overflow = bethe::biquadratic::sector_ground_state<Real>(46, 46);
+  EXPECT_TRUE(overflow.reference.converged);
+  EXPECT_FALSE(overflow.multiplicity);
+  EXPECT_EQ(overflow.energy, -Real{45});
+}
+
+TYPED_TEST(TemperleyLieb, ExcitationScanContracts)
+{
+  using Real = TypeParam;
+  namespace bq = bethe::biquadratic;
+  EXPECT_EQ(bq::real_excitation_count(8, 2), 10);
+  EXPECT_EQ(bq::real_excitation_count(8, 0), 1);
+  EXPECT_EQ(bq::real_excitation_count(8, 8), 1);
+  EXPECT_THROW((void)bq::real_excitations<Real>(8, 2, {.count = 0}), std::invalid_argument);
+  EXPECT_THROW((void)bq::real_excitations<Real>(8, 2, {.max_candidates = 9}), std::length_error);
+  EXPECT_THROW((void)bq::real_excitations<Real>(1000000000000000000ULL, 2), std::length_error);
+  EXPECT_THROW((void)bq::real_excitation_count(128, 64), std::length_error);
+  for (std::size_t ell : {1, 3, 10})
+  {
+    EXPECT_THROW((void)bq::real_excitations<Real>(8, ell), std::invalid_argument);
+    EXPECT_THROW((void)bq::sector_ground_state<Real>(8, ell), std::invalid_argument);
+  }
+  for (auto const& raw : std::vector<std::vector<int>>{{0}, {1, 1}, {2, 1}, {1, 4}, {1, 2, 3}, {4}})
+  {
+    qg::QuantumNumbers labels;
+    for (int i : raw)
+      labels.emplace_back(i);
+    EXPECT_THROW((void)bq::solve_real<Real>(4, labels), std::invalid_argument);
+  }
+  EXPECT_THROW((void)bq::solve_real<Real>(4, qg::QuantumNumbers{uni20::from_twice(std::int64_t{1})}),
+               std::invalid_argument);
+  auto const all = bq::real_excitations<Real>(8, 2, {.count = 100});
+  auto const two = bq::real_excitations<Real>(8, 2, {.count = 2});
+  ASSERT_TRUE(all.converged());
+  ASSERT_TRUE(two.converged());
+  ASSERT_EQ(all.levels.size(), 10);
+  ASSERT_EQ(two.levels.size(), 2);
+  EXPECT_EQ(two.candidate_count, 10);
+  for (std::size_t j = 0; j < 2; ++j)
+  {
+    EXPECT_EQ(two.levels[j].state.energy, all.levels[j].state.energy);
+    EXPECT_EQ(two.levels[j].state.reference.quantum_numbers, all.levels[j].state.reference.quantum_numbers);
+  }
+  auto const failed = bq::real_excitations<Real>(8, 2, {}, {.max_iterations = 0});
+  EXPECT_FALSE(failed.converged());
+  EXPECT_FALSE(failed.family_converged());
+  EXPECT_EQ(failed.converged_count, 0);
+  EXPECT_TRUE(failed.levels.empty());
+  ASSERT_TRUE(failed.first_unconverged);
+  EXPECT_EQ(failed.first_unconverged->multiplicity, 8);
+  auto const no_ground = bq::real_excitations<Real>(8, 8, {}, {.max_iterations = 0});
+  EXPECT_FALSE(no_ground.converged());
+  EXPECT_TRUE(no_ground.family_converged());
+  ASSERT_EQ(no_ground.levels.size(), 1);
+  EXPECT_FALSE(no_ground.levels[0].gap);
+}
+
+TEST(TemperleyLiebED, AllRealFamiliesBelongToTheirModules)
+{
+  namespace bq = bethe::biquadratic;
+  for (unsigned n : {2, 4, 6, 8, 10})
+    for (unsigned ell = 0; ell <= n; ell += 2)
+    {
+      SCOPED_TRACE(::testing::Message() << "N=" << n << " ell=" << ell);
+      auto const module = bethe::test::quantum_group_module_ed(n, ell, 1.5);
+      auto available = module;
+      auto const scan = bq::real_excitations(n, ell, {.count = 10000});
+      ASSERT_TRUE(scan.converged());
+      EXPECT_EQ(scan.levels.size(), bq::real_excitation_count(n, ell));
+      auto const minimum = bq::sector_ground_state(n, ell);
+      ASSERT_TRUE(minimum.reference.converged);
+      EXPECT_NEAR(minimum.energy, 2 * module.front() - 1.75 * (n - 1), 4e-11);
+      EXPECT_EQ(minimum.energy, scan.levels.front().state.energy);
+      for (auto const& level : scan.levels)
+      {
+        auto const found = std::find_if(available.begin(), available.end(), [&](double e) {
+          return std::abs(2 * e - 1.75 * (n - 1) - level.state.energy) < 4e-11;
+        });
+        ASSERT_NE(found, available.end()); // Also excludes duplicate/descendant solutions.
+        available.erase(found);
+        EXPECT_EQ(level.state.through_lines, ell);
+        EXPECT_EQ(level.state.multiplicity, tl::spin_chain_multiplicity(3, ell));
+      }
+      if (ell == n || ell == n - 2) EXPECT_TRUE(available.empty()); // Complete zero-/one-root modules.
+      if (n == 4 && ell == 0) EXPECT_EQ(available.size(), 1);       // Explicitly missing complex-root singlet.
+    }
+  auto const physical = bethe::test::biquadratic_ed(4);
+  auto const scan = bq::real_excitations(4, 2);
+  for (auto const& level : scan.levels)
+    EXPECT_EQ(std::count_if(physical.begin(), physical.end(),
+                            [&](double e) { return std::abs(e - level.state.energy) < 1e-10; }),
+              8);
+  EXPECT_NEAR(scan.levels.front().state.energy, physical[1], 1e-11); // First excited energy, eightfold.
 }
 } // namespace

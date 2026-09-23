@@ -7,6 +7,7 @@
 
 namespace bethe::xxz::quantum_group
 {
+using xxz::QuantumNumbers;
 enum class SolveStatus
 {
   converged,
@@ -15,10 +16,10 @@ enum class SolveStatus
   stalled
 };
 
-/// Even-chain ground state of the quantum-group-invariant open XXZ chain.
+/// Positive finite-real-root state of the quantum-group-invariant open XXZ chain.
 /// H=sum(sx*sx+sy*sy+Delta*sz*sz)+sqrt(Delta^2-1)/2*(sz_1-sz_N).
 /// Spin-half operators, Delta>1. NOT the zero-boundary-field open XXZ model.
-template <uni20::Real Real> struct GroundState
+template <uni20::Real Real> struct RealState
 {
     std::size_t sites = 0;
     Real delta{};
@@ -32,16 +33,42 @@ template <uni20::Real Real> struct GroundState
     bool converged = false;
     SolveStatus status = SolveStatus::iteration_limit;
 };
+template <uni20::Real Real> using GroundState = RealState<Real>;
 
 namespace detail
 {
+inline std::size_t sector_roots(std::size_t sites, std::size_t through_lines)
+{
+  xxz::detail::checked_sites(sites);
+  if (sites % 2) throw std::invalid_argument("quantum-group XXZ solver currently requires even sites");
+  if (through_lines > sites || through_lines % 2)
+    throw std::invalid_argument("TL through-lines must be even and lie in [0,N]");
+  return (sites - through_lines) / 2;
+}
+
+template <uni20::Real Real> void check_matrix_size(std::size_t m)
+{
+  auto const elements = std::size_t(std::numeric_limits<std::ptrdiff_t>::max()) / sizeof(Real);
+  if (m && m > elements / m) throw std::length_error("quantum-group XXZ Newton matrix is too large");
+}
+
+inline QuantumNumbers consecutive(std::size_t m)
+{
+  QuantumNumbers numbers;
+  numbers.reserve(m);
+  for (std::size_t i = 0; i < m; ++i)
+    numbers.emplace_back(std::int64_t(i + 1));
+  return numbers;
+}
+
 template <uni20::Real Real> class GroundSystem {
   public:
-    GroundSystem(std::size_t sites, Real delta)
-        : sites(sites), order(sites / 2), pi(Real{4} * std::atan(Real{1})),
-          t(std::sqrt(((delta - Real{1}) / delta) / (Real{1} + Real{1} / delta))),
+    GroundSystem(std::size_t sites, Real delta, std::span<uni20::half_int const> numbers)
+        : sites(sites), order(numbers.size()), numbers(numbers.begin(), numbers.end()),
+          pi(Real{4} * std::atan(Real{1})), t(std::sqrt(((delta - Real{1}) / delta) / (Real{1} + Real{1} / delta))),
           tau(std::sqrt(((delta - Real{1}) / delta) * (Real{1} + Real{1} / delta)))
     {}
+    GroundSystem(std::size_t sites, Real delta) : GroundSystem(sites, delta, consecutive(sites / 2)) {}
 
     std::vector<Real> seed() const
     {
@@ -49,7 +76,7 @@ template <uni20::Real Real> class GroundSystem {
       // The Ising-limit sea is too spread out near Delta=1 on longer chains.
       std::vector<Real> x(order);
       for (std::size_t j = 0; j < order; ++j)
-        x[j] = pi * Real(j + 1) / (Real{2} * Real(sites));
+        x[j] = pi * Real(numbers[j].twice() / 2) / (Real{2} * Real(sites));
       return x;
     }
 
@@ -83,7 +110,7 @@ template <uni20::Real Real> class GroundSystem {
       for (std::size_t i = 0; i < order; ++i)
       {
         bethe::detail::CompensatedSum<Real> sum, diagonal;
-        sum.add(Real{2} * x[i] - pi * Real(i + 1) / Real(sites));
+        sum.add(Real{2} * x[i] - pi * Real(numbers[i].twice() / 2) / Real(sites));
         diagonal.add(Real{2});
         for (std::size_t j = 0; j < order; ++j)
           if (i != j)
@@ -110,30 +137,38 @@ template <uni20::Real Real> class GroundSystem {
     }
 
     std::size_t sites, order;
+    QuantumNumbers numbers;
     Real pi, t, tau;
 };
 } // namespace detail
 
-/// Filled sea I=1,...,N/2, even N>=2 and finite Delta>1.
+/// Even N>=2, finite Delta>1, M<=N/2 ordered integer labels 1<=I<=N-M.
+/// This is the positive finite-real family, NOT the complete TL module spectrum.
+/// Its regular Bethe states belong to the module with ell=N-2*M through-lines.
 /// Damped analytic-Jacobian Newton solve: O(N^2) storage, O(N^3) per update.
 /// Residual is max|2N*Theta_1-sum(Theta_2^-+Theta_2^+)-2pi*I|/(2N).
 /// A zero budget evaluates the seed; failed solves retain consistent roots/energy/residual.
 template <uni20::Real Real = double>
-[[nodiscard]] GroundState<Real> ground_state(std::size_t sites, Real delta, SolverOptions<Real> const& options = {})
+[[nodiscard]] RealState<Real> solve_real(std::size_t sites, Real delta, std::span<uni20::half_int const> numbers,
+                                         SolverOptions<Real> const& options = {})
 {
-  xxz::detail::checked_sites(sites);
-  if (sites % 2) throw std::invalid_argument("quantum-group XXZ ground state currently requires even sites");
+  (void)detail::sector_roots(sites, 0);
   if (!uni20::isfinite(delta) || delta <= Real{1})
-    throw std::invalid_argument("quantum-group XXZ ground state requires finite Delta > 1");
+    throw std::invalid_argument("quantum-group XXZ solver requires finite Delta > 1");
   if (!uni20::isfinite(options.residual_tolerance) || options.residual_tolerance <= Real{0})
     throw std::invalid_argument("residual tolerance must be finite and positive");
-  auto const m = sites / 2;
-  auto const elements = std::size_t(std::numeric_limits<std::ptrdiff_t>::max()) / sizeof(Real);
-  if (m > elements / m) throw std::length_error("quantum-group XXZ Newton matrix is too large");
-  detail::GroundSystem<Real> const system(sites, delta);
-  GroundState<Real> state;
+  auto const m = numbers.size();
+  if (m > sites / 2) throw std::invalid_argument("quantum-group XXZ real states require M <= N/2");
+  for (std::size_t i = 0; i < m; ++i)
+    if (numbers[i].twice() % 2 || numbers[i].twice() <= 0 || numbers[i].twice() > 2 * std::int64_t(sites - m) ||
+        (i && numbers[i] <= numbers[i - 1]))
+      throw std::invalid_argument("quantum-group XXZ labels must be increasing integers in [1,N-M]");
+  detail::check_matrix_size<Real>(m);
+  detail::GroundSystem<Real> const system(sites, delta, numbers);
+  RealState<Real> state;
   state.sites = sites;
   state.delta = delta;
+  state.quantum_numbers.assign(numbers.begin(), numbers.end());
   auto x = system.seed();
   std::vector<Real> jacobian, step(m);
   for (;;)
@@ -186,11 +221,27 @@ template <uni20::Real Real = double>
   for (std::size_t i = 0; i < m; ++i)
   {
     state.rapidities.push_back(system.alpha(state.angles[i]));
-    state.quantum_numbers.emplace_back(std::int64_t(i + 1));
     energy.add(-std::cos(Real{2} * state.angles[i]));
   }
   state.energy = energy.value();
   if (!uni20::isfinite(state.energy)) throw std::overflow_error("quantum-group XXZ energy overflow");
   return state;
+}
+
+/// Lowest state in the even-chain TL module ell=through_lines: I=1,...,(N-ell)/2.
+/// ell/2 is auxiliary quantum-group spin, NOT the physical spin-1 total spin.
+template <uni20::Real Real = double>
+[[nodiscard]] RealState<Real> sector_ground_state(std::size_t sites, Real delta, std::size_t through_lines,
+                                                  SolverOptions<Real> const& options = {})
+{
+  auto const m = detail::sector_roots(sites, through_lines);
+  detail::check_matrix_size<Real>(m);
+  return solve_real<Real>(sites, delta, detail::consecutive(m), options);
+}
+
+template <uni20::Real Real = double>
+[[nodiscard]] GroundState<Real> ground_state(std::size_t sites, Real delta, SolverOptions<Real> const& options = {})
+{
+  return sector_ground_state(sites, delta, 0, options);
 }
 } // namespace bethe::xxz::quantum_group

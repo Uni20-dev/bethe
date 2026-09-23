@@ -2,8 +2,9 @@
 
 [Overview](../README.md) · [Model catalogue](models.md) · [Precision and CLI controls](command-line.md)
 
-`bethe-biquadratic-obc` calculates the unique singlet ground state of the
-**even-length, free-end** spin-1 pure biquadratic chain, N>=2:
+`bethe-biquadratic-obc` calculates the singlet ground state, TL module minima,
+and restricted real-root excitations of the **even-length, free-end** spin-1
+pure biquadratic chain, N>=2:
 
 ```text
 H_b = -sum_(i=1)^(N-1) (S_i.S_(i+1))^2.
@@ -26,6 +27,54 @@ Two useful checks are `E(2)=-4` and
 The report includes physical, TL, and reference XXZ energies, convergence
 diagnostics, and CPU time. `--roots` prints the auxiliary XXZ rapidities
 and integer labels. There is no lattice momentum for these open chains.
+
+## Excited levels and their multiplicities
+
+```sh
+# Lowest energy in each TL module (not each physical-spin sector):
+build/bethe-biquadratic-obc 16 --sectors
+build/bethe-biquadratic-obc 16 --through-lines 2
+# Lowest 10 supported real-root levels in ell=2, including its minimum:
+build/bethe-biquadratic-obc 16 --excitations 10
+build/bethe-biquadratic-obc 16 --through-lines 4 --excitations all
+# A specific Bethe level (its root count determines ell):
+build/bethe-biquadratic-obc 8 --quantum-numbers 1,2,5 --roots
+```
+
+Each numerical level carries a TL through-line label ell and a **multiplicity
+per TL eigenvector**. For even ell=0,2,4,6,... these multiplicities are
+1,8,55,377,... in the spin-1 chain. In particular, the ell=2 multiplicity
+space is one spin-1 triplet plus one spin-2 quintuplet, not eight multiplets
+and not a single spin-1 multiplet. The code reports the total multiplicity;
+it does not yet decompose general ell into physical SU(2) spins.
+Coincident levels are not numerically merged: sum their weights if a genuine
+degeneracy has been established. A decimal energy tolerance alone is not a
+reliable criterion for doing so.
+
+`--excitations` defaults to ell=2; use `--through-lines` to select any even
+ell in [0,N]. Gaps are relative to the **global singlet ground state**, not
+the selected module's minimum. COUNT limits retained levels, not work: every
+candidate in the selected family is solved before energy ordering. The
+`--max-candidates` guard (default 10000) checks the combinatorial count before
+allocating roots or solving a reference state. Failed candidates are excluded,
+reported, and cause exit status 2; a failed ground reference makes gaps
+unavailable even if some candidate levels converge.
+
+**`all` does not mean the complete spectrum.** For M=(N-ell)/2 roots the
+family consists of increasing integer labels selected from 1,...,N-M,
+giving `choose(N-M,M)` candidates. Complex-root levels are missing. For
+example, N=4, ell=0 has two TL eigenvalues, but only its ground state is in
+this real-root family. The other singlet energy `(-15+sqrt(17))/2` is not
+returned. By contrast, the zero- and one-root modules are complete here:
+for N=4, ell=2 the three energies are `-6-sqrt(2), -6, -6+sqrt(2)`, each
+with multiplicity 8. The first has gap `2.147339250435735226109016203...`.
+
+`--sectors`, `--excitations`, and `--quantum-numbers` are separate modes.
+Explicit labels determine ell and cannot be combined with `--through-lines`;
+use `--quantum-numbers none` for the zero-root ell=N level. Multiplicities
+use checked uint64 arithmetic: ell>=46 at d=3 is reported as
+`overflow (>uint64)`, never wrapped, rounded, or silently replaced by 1.
+Energy calculations can still converge when this integer count is unavailable.
 
 ## The algebra connects spectra, not physical spin labels
 
@@ -78,8 +127,9 @@ to a finite even open chain. Its ends select the dimer pattern.
 ## Bethe equations and numerical branch
 
 Following [Albertini](../CITATIONS.md#albertini-2000), Eqs. (6)–(10), set
-`Delta=cosh(eta)`. The even ground state has M=N/2 real roots in (0,pi)
-and consecutive labels `I_i=i`, i=1,...,M:
+`Delta=cosh(eta)`. A module with ell through-lines uses M=(N-ell)/2 real
+roots in (0,pi). Its lowest state has consecutive labels `I_i=i`,
+i=1,...,M; other supported states leave holes in the label window:
 
 ```text
 Theta(alpha;w) = 2*atan2(sin(alpha/2), tanh(w)*cos(alpha/2)),
@@ -88,6 +138,13 @@ Theta(alpha;w) = 2*atan2(sin(alpha/2), tanh(w)*cos(alpha/2)),
   = 2*pi*I_i,
 E_ref = (N-1)*Delta/4 - sum_i (Delta^2-1)/(Delta-cos(alpha_i)).
 ```
+
+Sending the largest root to pi gives `I=N-M+1`, but that endpoint has a
+vanishing Bethe wavefunction and is excluded. Thus `1<=I_1<...<I_M<=N-M`.
+The finite regular roots select quantum-group highest weights, so the
+corresponding TL module is ell=N-2M: counting every auxiliary XXZ Sz sector
+again would duplicate descendants. Its full module dimension is
+`choose(N,M)-choose(N,M-1)`, generally larger than the real-family count.
 
 The reflected sum must retain its phase branch when alpha_i+alpha_j>pi.
 The solver uses `x_i=Theta(alpha_i;eta/2)/2` in (0,pi/2), with
@@ -116,6 +173,10 @@ invalid input; it never silently changes precision or relaxes the tolerance.
 #include <bethe/biquadratic.hpp>
 auto state = bethe::biquadratic::ground_state<long double>(64);
 if (!state.reference.converged) { /* state.energy is an incomplete estimate */ }
+auto sector = bethe::biquadratic::sector_ground_state<long double>(64, 2);
+auto levels = bethe::biquadratic::real_excitations<long double>(16, 2, {.count=10});
+if (!levels.converged()) { /* failed candidates and/or reference; inspect diagnostics */ }
+// Each level has state.energy, state.through_lines, state.multiplicity and optional gap.
 
 // The generic even, zero-through-line TL ground state, lambda>2:
 auto tl = bethe::temperley_lieb::open_ground_state(64, 3.0L);
@@ -134,8 +195,11 @@ The three layers have separate responsibilities:
 
 All numerical layers retain fp64, native long double, or enabled fp128.
 The multiplicity helper uses checked integer arithmetic, not floating point.
-It supports general ell, but the numerical solver currently supplies only
-the **even ell=0 ground state**, not the other modules' energies.
+`sector_ground_state`, `solve_real`, and `real_excitations` are available in
+both the TL and physical biquadratic layers. TL calls additionally take a
+loop weight; their energies do not include the physical spin-1 shift. The
+generic TL layer leaves representation multiplicities to its caller.
+The `GroundState`/`OpenGroundState` type aliases retain the original ground API.
 
 ## Validation and future slices
 
@@ -147,12 +211,18 @@ omitted. This validates the spectral mapping; it does not make a full-spectrum
 Bethe solver available. Further tests check the original multiplicative Bethe
 equations, the analytic Jacobian, exact two-/four-site energies in each native
 precision, longer chains through N=128, and CLI/failure contracts.
+Excitation tests isolate TL modules by subtracting adjacent auxiliary Sz
+spectra, and match every returned real-root level for N=2,4,...,10 without
+reusing an ED eigenvalue. They verify module minima, eightfold physical
+degeneracies, exact one-root energies and gaps at native precision, candidate
+limits, failed-reference behavior, and the missing complex-root singlet.
 
 Odd free-end chains need their own one-domain-wall/spinon branch. Their
 low-lying states describe motion of that defect, not just a factor-two
 choice of dimer pattern. Periodic chains require sector-dependent XXZ twists
 and periodic representation bookkeeping. Neither is enabled here, nor are
-excitations, physical-spin sector scans, general boundary fields, or thermodynamics.
+complex-root excitations, physical-spin sector scans, general boundary fields,
+or thermodynamics.
 
 The original spectral mapping is due to
 [Barber–Batchelor](../CITATIONS.md#barber-batchelor-1989). For the open-chain

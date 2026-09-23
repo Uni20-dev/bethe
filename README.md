@@ -61,9 +61,9 @@ Thermodynamic dispersion tools use `bethe-<model>-dispersion`.
   gives the periodic even-ring singlet ground state of `H=sum[S.S-(S.S)^2]`,
   retaining complex-root finite-size string deviations.
 - [Free-end spin-1 biquadratic](docs/biquadratic.md): `bethe-biquadratic-obc`
-  gives even-chain singlet ground energies of `H=-sum(S.S)^2` through a
-  Temperley–Lieb layer, with representation multiplicities kept separate
-  from the auxiliary XXZ equations and end fields.
+  gives even-chain ground energies, TL module minima and restricted real-root
+  excitations of `H=-sum(S.S)^2`, with physical representation multiplicities
+  kept separate from the auxiliary XXZ equations and spin labels.
 - [Richardson pairing](docs/richardson.md): `bethe-richardson` gives attractive
   reduced-BCS ground energies for distinct levels and a specified pair/blocked
   sector, using regularized variables through pair-root collisions.

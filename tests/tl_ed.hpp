@@ -89,4 +89,20 @@ inline std::vector<double> quantum_group_xxz_ed(unsigned n, unsigned down, doubl
   }
   return tl_ed_eigenvalues(std::move(h));
 }
+
+// Isolate one irreducible TL module by removing the adjacent Sz spectrum.
+inline std::vector<double> quantum_group_module_ed(unsigned n, unsigned ell, double delta)
+{
+  if (ell > n || (n - ell) % 2) throw std::invalid_argument("invalid ED TL module");
+  auto const m = (n - ell) / 2;
+  auto result = quantum_group_xxz_ed(n, m, delta);
+  if (m)
+    for (double e : quantum_group_xxz_ed(n, m - 1, delta))
+    {
+      auto const found = std::find_if(result.begin(), result.end(), [e](double f) { return std::abs(e - f) < 1e-10; });
+      if (found == result.end()) throw std::runtime_error("ED module subtraction failed");
+      result.erase(found);
+    }
+  return result;
+}
 } // namespace bethe::test

@@ -303,8 +303,8 @@ inline constexpr std::array<Reference, 62> references{{
 }};
 
 inline constexpr std::array<Use, 3> uses_biquadratic_obc{{
-  {&references[0], "Original free-end spin-1 biquadratic/TL spectral correspondence. Only even-chain singlet ground states of H=-sum (S.S)^2 are implemented."},
-  {&references[1], "Hamiltonians and energy shift (2)-(5), real-root Bethe equations (6)-(10), and the even-chain filled sea. Our spin-half reference is half of (3), after a staggered rotation. The odd-chain spinon band is not implemented."},
+  {&references[0], "Original free-end spin-1 biquadratic/TL spectral correspondence. Even-chain ground states, TL module minima and restricted real-root excitations of H=-sum (S.S)^2, with representation multiplicities."},
+  {&references[1], "Hamiltonians and energy shift (2)-(5), real-root Bethe equations (6)-(10), and integer-label window 1<=I<=N-M. Our spin-half reference is half of (3), after a staggered rotation. Complex-root levels and the odd-chain spinon band are not implemented."},
   {&references[2], "TL loop weight and quantum-group XXZ end fields, Sec. 2.3; open spin-chain module multiplicities, Sec. 3, especially (48)-(55). Periodic twists, physical-spin decomposition, full Bethe spectra, and thermodynamics are not implemented."},
 }};
 inline constexpr std::array<Use, 4> uses_xxx_pbc{{
