@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Copyright (C) 2026 Ian McCulloch
 #include "program-options.hpp"
-#include "report-common.hpp"
+#include "result-output.hpp"
 #include <bethe/su_fermions.hpp>
 
 namespace
@@ -11,7 +11,8 @@ namespace cli = bethe::cli;
 struct Arguments
 {
     std::optional<std::string> populations, length, c, tolerance;
-    std::string precision = "fp64", format = "auto";
+    std::string precision = "fp64";
+    cli::DataOutputOptions output;
     std::size_t max_iterations = 10000, max_stages = 10000;
     bool roots = false;
 };
@@ -44,17 +45,14 @@ void add_options(CLI::App& app, Arguments& args)
   bethe::cli::option(app, "--max-iterations", args.max_iterations, "attempted Newton corrections (default: 10000)")
       ->capture_default_str();
   bethe::cli::precision_option(app, args.precision);
-  app.add_option("--format", args.format, "Stdout layout")
-      ->check(CLI::IsMember({"auto", "pretty", "plain"}))
-      ->capture_default_str();
+  cli::add_data_output_options(app, args.output, true);
 }
 
 void validate(Arguments const& args)
 {
   if (!args.populations || !args.length || !args.c)
     throw std::invalid_argument("--populations, --length and --c are required");
-  if (args.format != "auto" && args.format != "pretty" && args.format != "plain")
-    throw std::invalid_argument("unknown output format: " + std::string(args.format));
+  args.output.validate();
 }
 char const* status(model::SolveStatus value)
 {
@@ -73,7 +71,7 @@ char const* status(model::SolveStatus value)
   }
   return "unknown";
 }
-template <uni20::Real Real> int run(Arguments const& args)
+template <uni20::Real Real> int run(Arguments const& args, int argc, char** argv)
 {
   std::vector<std::size_t> pop;
   std::string_view list = *args.populations;
@@ -122,38 +120,65 @@ template <uni20::Real Real> int run(Arguments const& args)
       .field("Newton corrections", state.iterations)
       .field("Continuation stages", state.stages)
       .field("CPU time", cpu_time);
-  auto& components = report.table("Physical components (original input order)");
-  components.header_separator().column("Component").column("Particles").column("Nesting rank");
-  for (std::size_t a = 0; a < pop.size(); ++a)
-  {
-    auto const it = std::find(state.component_order.begin(), state.component_order.end(), a);
-    components.row(a, pop[a],
-                   it == state.component_order.end() ? "empty" : std::to_string(it - state.component_order.begin()));
-  }
+  std::vector<std::string> tables{"states", "components"};
+  if (args.roots) tables.push_back(state.free ? "free_modes" : "roots");
+  cli::ResultOutput output(report, args.output, "bethe-sun-fermions-pbc", argc, argv, tables);
+  output.table(
+      "states", "State",
+      [&](auto& table) {
+        table.append(0, state.energy, c, state.reached_interaction,
+                     state.energy ? std::optional{state.momentum_index} : std::nullopt,
+                     state.energy ? std::optional{state.momentum} : std::nullopt,
+                     state.energy ? std::optional{state.residual_norm} : std::nullopt,
+                     state.energy ? std::optional{state.target_residual_norm} : std::nullopt, state.iterations,
+                     state.stages, state.converged, std::string(status(state.status)));
+      },
+      cli::column<std::size_t>("state_id"), cli::column<std::optional<Real>>("energy", "Energy"),
+      cli::column<Real>("requested_c"), cli::column<std::optional<Real>>("reached_c"),
+      cli::column<std::optional<std::int64_t>>("momentum_index"), cli::column<std::optional<Real>>("p", "P"),
+      cli::column<std::optional<Real>>("residual"), cli::column<std::optional<Real>>("target_residual"),
+      cli::column<std::size_t>("iterations"), cli::column<std::size_t>("stages"), cli::column<bool>("converged"),
+      cli::column<std::string>("status"));
+  output.table(
+      "components", "Physical components (original input order)",
+      [&](auto& table) {
+        for (std::size_t a = 0; a < pop.size(); ++a)
+        {
+          auto it = std::find(state.component_order.begin(), state.component_order.end(), a);
+          table.append(0, a, pop[a],
+                       it == state.component_order.end()
+                           ? std::nullopt
+                           : std::optional<std::size_t>(it - state.component_order.begin()));
+        }
+      },
+      cli::column<std::size_t>("state_id"), cli::column<std::size_t>("component", "Component"),
+      cli::column<std::size_t>("particles", "Particles"),
+      cli::column<std::optional<std::size_t>>("nesting_rank", "Nesting rank"));
   if (args.roots && state.free)
   {
     Real const pi = Real{4} * std::atan(Real{1});
-    for (std::size_t a = 0; a < pop.size(); ++a)
-    {
-      auto& table = report.table("Free modes: component " + std::to_string(a));
-      table.header_separator().column("Mode").column("k", cli::table_alignment::decimal);
-      for (auto mode : state.free_modes[a])
-        table.row(mode, uni20::format_real(Real{2} * pi * Real(mode) / length));
-    }
+    output.table(
+        "free_modes", "Free modes (original component order)",
+        [&](auto& table) {
+          for (std::size_t a = 0; a < pop.size(); ++a)
+            for (auto mode : state.free_modes[a])
+              table.append(0, a, mode, Real{2} * pi * Real(mode) / length);
+        },
+        cli::column<std::size_t>("state_id"), cli::column<std::size_t>("component", "Component"),
+        cli::column<std::int64_t>("mode", "Mode"), cli::column<Real>("k"));
   }
   else if (args.roots)
-    for (std::size_t a = 0; a < state.rapidities.size(); ++a)
-    {
-      auto& table = report.table(a ? "Spin rapidities: level " + std::to_string(a) : "Charge momenta: level 0");
-      table.header_separator()
-          .column("Index")
-          .column(a ? "J" : "I")
-          .column(a ? "lambda" : "k", cli::table_alignment::decimal);
-      for (std::size_t j = 0; j < state.rapidities[a].size(); ++j)
-        table.row(j, uni20::to_string_fraction(state.quantum_numbers[a][j]),
-                  uni20::format_real(state.rapidities[a][j]));
-    }
-  cli::print_report(report, args.format);
+    output.table(
+        "roots", "Nested rapidities (level 0: charge; higher levels: spin)",
+        [&](auto& table) {
+          for (std::size_t a = 0; a < state.rapidities.size(); ++a)
+            for (std::size_t j = 0; j < state.rapidities[a].size(); ++j)
+              table.append(0, a, j, state.quantum_numbers[a][j], state.rapidities[a][j]);
+        },
+        cli::column<std::size_t>("state_id"), cli::column<std::size_t>("level", "Level"),
+        cli::column<std::size_t>("index", "Index"), cli::column<uni20::half_int>("quantum_number", "I / J"),
+        cli::column<Real>("rapidity", "k / lambda"));
+  output.finish();
   if (!state.converged) std::cerr << "SU fermion solve incomplete: no energy at the requested coupling is claimed.\n";
   return state.converged ? 0 : 2;
 }
@@ -165,6 +190,7 @@ int main(int argc, char** argv)
       argc, argv, program_info(), [&](auto& app) { add_options(app, args); },
       [&](auto&) {
         validate(args);
-        return bethe::cli::dispatch_precision(args.precision, [&]<uni20::Real Real> { return run<Real>(args); });
+        return bethe::cli::dispatch_precision(args.precision,
+                                              [&]<uni20::Real Real> { return run<Real>(args, argc, argv); });
       });
 }

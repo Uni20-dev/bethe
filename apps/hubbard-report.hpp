@@ -1,14 +1,15 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Copyright (C) 2026 Ian McCulloch
 #pragma once
-#include "report-common.hpp"
+#include "result-output.hpp"
 #include <bethe/hubbard_common.hpp>
 
 namespace bethe::cli
 {
 template <uni20::Real Real, typename State>
-int print_hubbard_state(State const& state, uni20::half_int sz, std::string_view precision, std::string_view format,
-                        Real tolerance, std::string_view cpu_time, bool roots)
+int print_hubbard_state(State const& state, uni20::half_int sz, std::string_view precision,
+                        DataOutputOptions const& output_options, Real tolerance, std::string_view cpu_time, bool roots,
+                        int argc, char** argv)
 {
   constexpr bool periodic = requires { state.momentum_index; };
   auto const model_description =
@@ -27,114 +28,105 @@ int print_hubbard_state(State const& state, uni20::half_int sz, std::string_view
     mapping = "none";
   else
     mapping.resize(mapping.size() - 2);
-  bool const pretty = format == "pretty" || (format == "auto" && terminal::is_a_terminal(stdout));
-  if (pretty)
+  bethe::cli::report_builder report(periodic ? "Hubbard (periodic) - sector ground state"
+                                             : "Hubbard (free ends) - sector ground state");
+  report.status(state.converged ? semantic_glyph::success : semantic_glyph::warning, status)
+      .field("Status", status)
+      .field("Model", model_description)
+      .field("Sites", state.sites)
+      .field("Particles", state.particles)
+      .field("Down spins", state.down_spins)
+      .field("Sz", uni20::to_string_fraction(sz))
+      .field("U", uni20::format_real(state.interaction))
+      .field("Precision", precision)
+      .field("Method", method)
+      .field("Symmetry mapping", mapping)
+      .field("Residual tolerance", uni20::format_real(tolerance))
+      .field("CPU time", cpu_time)
+      .field("Iterations", state.iterations)
+      .field("Completed continuation stages", state.continuation_steps)
+      .field("Charge residual", uni20::format_real(state.charge_residual))
+      .field("Spin residual", uni20::format_real(state.spin_residual))
+      .field("Residual norm", uni20::format_real(state.residual_norm));
+  if constexpr (periodic)
+    report.field("Momentum index", state.momentum_index).field("Momentum P", uni20::format_real(state.momentum));
+  report.field("Total energy", uni20::format_real(state.energy))
+      .field("Energy per site", uni20::format_real(state.energy / Real(state.sites)));
+  if (state.auxiliary_roots())
   {
-    using bethe::cli::semantic_glyph;
-    using bethe::cli::table_alignment;
-    bethe::cli::report_builder report(periodic ? "Hubbard (periodic) - sector ground state"
-                                               : "Hubbard (free ends) - sector ground state");
-    report.status(state.converged ? semantic_glyph::success : semantic_glyph::warning, status)
-        .field("Model", model_description)
-        .field("Sites", state.sites)
-        .field("Particles", state.particles)
-        .field("Down spins", state.down_spins)
-        .field("Sz", uni20::to_string_fraction(sz))
-        .field("U", uni20::format_real(state.interaction))
-        .field("Precision", precision)
-        .field("Method", method)
-        .field("Symmetry mapping", mapping)
-        .field("Residual tolerance", uni20::format_real(tolerance))
-        .field("CPU time", cpu_time)
-        .field("Iterations", state.iterations)
-        .field("Completed continuation stages", state.continuation_steps)
-        .field("Charge residual", uni20::format_real(state.charge_residual))
-        .field("Spin residual", uni20::format_real(state.spin_residual))
-        .field("Residual norm", uni20::format_real(state.residual_norm));
-    if constexpr (periodic)
-      report.field("Momentum index", state.momentum_index).field("Momentum P", uni20::format_real(state.momentum));
-    report.field("Total energy", uni20::format_real(state.energy))
-        .field("Energy per site", uni20::format_real(state.energy / Real(state.sites)));
-    if (state.auxiliary_roots())
-    {
-      report.field("Roots and residuals", "auxiliary sector (not physical-sector Bethe roots)")
-          .field("Root particles", state.root_particles)
-          .field("Root down spins", state.root_down_spins)
-          .field("Root U", uni20::format_real(state.root_interaction))
-          .field("Energy offset", uni20::format_real(state.energy_offset));
-      if constexpr (periodic) report.field("Momentum index offset", state.momentum_offset);
-    }
-    if (roots)
-    {
-      auto& charge =
-          report.table(std::string(state.auxiliary_roots() ? "Auxiliary: " : "") +
-                       (state.free_fermion ? "Free-fermion occupied momenta (no Bethe labels)"
-                                           : (periodic ? "Charge momenta" : "Charge wave numbers (standing waves)")));
-      charge.header_separator().column("Index").column("k", table_alignment::decimal);
-      if (!state.free_fermion) charge.column("I");
-      for (std::size_t j = 0; j < state.charge_momenta.size(); ++j)
-        if (state.free_fermion)
-          charge.row(j, uni20::format_real(state.charge_momenta[j]));
+    report.field("Roots and residuals", "auxiliary sector (not physical-sector Bethe roots)")
+        .field("Root particles", state.root_particles)
+        .field("Root down spins", state.root_down_spins)
+        .field("Root U", uni20::format_real(state.root_interaction))
+        .field("Energy offset", uni20::format_real(state.energy_offset));
+    if constexpr (periodic) report.field("Momentum index offset", state.momentum_offset);
+  }
+  std::vector<std::string> names{"states"};
+  if (roots)
+  {
+    names.push_back(state.free_fermion ? "free_modes" : "charge_roots");
+    if (!state.free_fermion) names.push_back("spin_roots");
+  }
+  ResultOutput output(report, output_options, periodic ? "bethe-hubbard-pbc" : "bethe-hubbard-obc", argc, argv, names);
+  auto const state_columns = std::tuple{
+      column<std::size_t>("state_id"),   column<uni20::half_int>("sz", "Sz"), column<Real>("energy", "Energy"),
+      column<Real>("charge_residual"),   column<Real>("spin_residual"),       column<Real>("residual"),
+      column<std::size_t>("iterations"), column<std::size_t>("stages"),       column<bool>("auxiliary_roots"),
+      column<bool>("converged"),         column<std::string>("status")};
+  std::apply(
+      [&](auto... columns) {
+        if constexpr (periodic)
+          output.table(
+              "states", "State",
+              [&](auto& table) {
+                table.append(0, sz, state.energy, state.charge_residual, state.spin_residual, state.residual_norm,
+                             state.iterations, state.continuation_steps, state.auxiliary_roots(), state.converged,
+                             std::string(status), state.momentum_index, state.momentum);
+              },
+              columns..., column<std::size_t>("momentum_index"), column<Real>("p", "P"));
         else
-          charge.row(j, uni20::format_real(state.charge_momenta[j]),
-                     uni20::to_string_fraction(state.quantum_numbers.charge[j]));
-      if (!state.free_fermion)
-      {
-        auto& spin = report.table(std::string(state.auxiliary_roots() ? "Auxiliary: " : "") +
-                                  "Spin rapidities (conventional Lambda)");
-        spin.header_separator().column("Index").column("Lambda", table_alignment::decimal).column("J");
-        for (std::size_t a = 0; a < state.spin_rapidities.size(); ++a)
-          spin.row(a, uni20::format_real(state.spin_rapidities[a]),
-                   uni20::to_string_fraction(state.quantum_numbers.spin[a]));
-      }
-    }
-    bethe::cli::print_report(report);
-  }
-  else
+          output.table(
+              "states", "State",
+              [&](auto& table) {
+                table.append(0, sz, state.energy, state.charge_residual, state.spin_residual, state.residual_norm,
+                             state.iterations, state.continuation_steps, state.auxiliary_roots(), state.converged,
+                             std::string(status));
+              },
+              columns...);
+      },
+      state_columns);
+  if (roots)
   {
-    std::cout << "Sites: " << state.sites << "\nModel: " << model_description << '\n'
-              << "Particles: " << state.particles << "\nDown spins: " << state.down_spins
-              << "\nSz: " << uni20::to_string_fraction(sz) << '\n'
-              << "U: " << uni20::format_real(state.interaction) << "\nPrecision: " << precision << '\n'
-              << "Method: " << method << "\nSymmetry mapping: " << mapping
-              << "\nResidual tolerance: " << uni20::format_real(tolerance) << '\n'
-              << "Status: " << status << "\nIterations: " << state.iterations << "\nCPU time: " << cpu_time << '\n'
-              << "Completed continuation stages: " << state.continuation_steps << '\n'
-              << "Charge residual: " << uni20::format_real(state.charge_residual) << '\n'
-              << "Spin residual: " << uni20::format_real(state.spin_residual) << '\n'
-              << "Residual norm: " << uni20::format_real(state.residual_norm) << '\n';
-    if constexpr (periodic)
-      std::cout << "Momentum index: " << state.momentum_index << "\nMomentum: " << uni20::format_real(state.momentum)
-                << '\n';
-    std::cout << "Total energy: " << uni20::format_real(state.energy) << '\n'
-              << "Energy per site: " << uni20::format_real(state.energy / Real(state.sites)) << '\n';
-    if (state.auxiliary_roots())
+    std::string const prefix = state.auxiliary_roots() ? "Auxiliary: " : "";
+    if (state.free_fermion)
+      output.table(
+          "free_modes", prefix + "Free-fermion occupied momenta (no Bethe labels)",
+          [&](auto& table) {
+            for (std::size_t j = 0; j < state.charge_momenta.size(); ++j)
+              table.append(0, j, state.charge_momenta[j]);
+          },
+          column<std::size_t>("state_id"), column<std::size_t>("index", "Index"), column<Real>("k"));
+    else
     {
-      std::cout << "Roots and residuals: auxiliary sector (not physical-sector Bethe roots)\n"
-                << "Root particles: " << state.root_particles << "\nRoot down spins: " << state.root_down_spins
-                << "\nRoot U: " << uni20::format_real(state.root_interaction)
-                << "\nEnergy offset: " << uni20::format_real(state.energy_offset) << '\n';
-      if constexpr (periodic) std::cout << "Momentum index offset: " << state.momentum_offset << '\n';
-    }
-    if (roots)
-    {
-      if (state.auxiliary_roots()) std::cout << "# Auxiliary-sector roots/occupations follow\n";
-      std::cout << (state.free_fermion ? "# index k (free-fermion occupations; no Bethe labels)\n" : "# index k I\n");
-      for (std::size_t j = 0; j < state.charge_momenta.size(); ++j)
-      {
-        std::cout << j << ' ' << uni20::format_real(state.charge_momenta[j]);
-        if (!state.free_fermion) std::cout << ' ' << state.quantum_numbers.charge[j];
-        std::cout << '\n';
-      }
-      if (!state.free_fermion)
-      {
-        std::cout << "# index Lambda J\n";
-        for (std::size_t a = 0; a < state.spin_rapidities.size(); ++a)
-          std::cout << a << ' ' << uni20::format_real(state.spin_rapidities[a]) << ' ' << state.quantum_numbers.spin[a]
-                    << '\n';
-      }
+      output.table(
+          "charge_roots", prefix + (periodic ? "Charge momenta" : "Charge wave numbers (standing waves)"),
+          [&](auto& table) {
+            for (std::size_t j = 0; j < state.charge_momenta.size(); ++j)
+              table.append(0, j, state.charge_momenta[j], state.quantum_numbers.charge[j]);
+          },
+          column<std::size_t>("state_id"), column<std::size_t>("index", "Index"), column<Real>("k"),
+          column<uni20::half_int>("quantum_number", "I"));
+      output.table(
+          "spin_roots", prefix + "Spin rapidities (conventional Lambda)",
+          [&](auto& table) {
+            for (std::size_t j = 0; j < state.spin_rapidities.size(); ++j)
+              table.append(0, j, state.spin_rapidities[j], state.quantum_numbers.spin[j]);
+          },
+          column<std::size_t>("state_id"), column<std::size_t>("index", "Index"), column<Real>("rapidity", "Lambda"),
+          column<uni20::half_int>("quantum_number", "J"));
     }
   }
+  output.finish();
   if (!state.converged) std::cerr << "Hubbard solve: " << status << "; consider a larger budget or higher precision.\n";
   return state.converged ? 0 : 2;
 }

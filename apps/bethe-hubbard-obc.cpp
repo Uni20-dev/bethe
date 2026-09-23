@@ -6,6 +6,7 @@
 
 namespace
 {
+namespace cli = bethe::cli;
 namespace model = bethe::hubbard::open;
 struct Arguments
 {
@@ -13,7 +14,8 @@ struct Arguments
     std::optional<std::size_t> particles;
     std::optional<uni20::half_int> sz;
     std::optional<std::string> interaction, tolerance;
-    std::string precision = "fp64", format = "auto";
+    std::string precision = "fp64";
+    cli::DataOutputOptions output;
     std::size_t max_iterations = 10000;
     bool roots = false;
 };
@@ -47,18 +49,15 @@ void add_options(CLI::App& app, Arguments& args)
   bethe::cli::option(app, "--max-iterations", args.max_iterations, "total Newton update budget, including continuation")
       ->capture_default_str();
   bethe::cli::precision_option(app, args.precision);
-  app.add_option("--format", args.format, "Stdout layout")
-      ->check(CLI::IsMember({"auto", "pretty", "plain"}))
-      ->capture_default_str();
+  cli::add_data_output_options(app, args.output, true);
 }
 
 void validate(Arguments const& args)
 {
   if (!args.interaction) throw std::invalid_argument("--u VALUE is required");
-  if (args.format != "auto" && args.format != "pretty" && args.format != "plain")
-    throw std::invalid_argument("unknown output format: " + std::string(args.format));
+  args.output.validate();
 }
-template <uni20::Real Real> int run(Arguments const& args)
+template <uni20::Real Real> int run(Arguments const& args, int argc, char** argv)
 {
   Real const interaction = uni20::parse_real<Real>(*args.interaction);
   auto const particles = args.particles.value_or(args.sites);
@@ -69,8 +68,8 @@ template <uni20::Real Real> int run(Arguments const& args)
   bethe::cli::CpuTimer const timer;
   auto const state = model::sector_ground_state<Real>(args.sites, particles, sz, interaction, options);
   auto const cpu_time = timer.elapsed_text();
-  return bethe::cli::print_hubbard_state(state, sz, args.precision, args.format, options.residual_tolerance, cpu_time,
-                                         args.roots);
+  return bethe::cli::print_hubbard_state(state, sz, args.precision, args.output, options.residual_tolerance, cpu_time,
+                                         args.roots, argc, argv);
 }
 } // namespace
 int main(int argc, char** argv)
@@ -80,6 +79,7 @@ int main(int argc, char** argv)
       argc, argv, program_info(), [&](auto& app) { add_options(app, args); },
       [&](auto&) {
         validate(args);
-        return bethe::cli::dispatch_precision(args.precision, [&]<uni20::Real Real> { return run<Real>(args); });
+        return bethe::cli::dispatch_precision(args.precision,
+                                              [&]<uni20::Real Real> { return run<Real>(args, argc, argv); });
       });
 }

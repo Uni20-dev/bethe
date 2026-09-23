@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Copyright (C) 2026 Ian McCulloch
 #include "program-options.hpp"
-#include "report-common.hpp"
+#include "result-output.hpp"
 #include <bethe/ladder.hpp>
 
 namespace
@@ -13,7 +13,8 @@ struct Arguments
     std::size_t rungs = 0, max_iterations = 10000, max_branches = 10000;
     std::optional<std::size_t> singlets;
     std::optional<std::string> rung, tolerance;
-    std::string precision = "fp64", format = "auto";
+    std::string precision = "fp64";
+    cli::DataOutputOptions output;
     bool sectors = false, roots = false;
 };
 auto program_info()
@@ -46,17 +47,14 @@ void add_options(CLI::App& app, Arguments& args)
   bethe::cli::option(app, "--max-iterations", args.max_iterations, "total attempted Newton corrections (10000)")
       ->capture_default_str();
   bethe::cli::precision_option(app, args.precision);
-  app.add_option("--format", args.format, "Stdout layout")
-      ->check(CLI::IsMember({"auto", "pretty", "plain"}))
-      ->capture_default_str();
+  cli::add_data_output_options(app, args.output, true);
 }
 
 void validate(Arguments const& args)
 {
   if (!args.rung) throw std::invalid_argument("--rung is required");
   if (args.sectors && args.singlets) throw std::invalid_argument("--sectors and --singlets are mutually exclusive");
-  if (args.format != "auto" && args.format != "plain" && args.format != "pretty")
-    throw std::invalid_argument("unknown output format: " + std::string(args.format));
+  args.output.validate();
 }
 char const* status(model::SolveStatus value)
 {
@@ -80,7 +78,7 @@ std::string shape_text(model::detail::Shape const& shape)
   return fmt::format("{}, {}, {}, {}", shape[0], shape[1], shape[2], shape[3]);
 }
 
-template <uni20::Real Real> int run(Arguments const& args)
+template <uni20::Real Real> int run(Arguments const& args, int argc, char** argv)
 {
   Real const rung = uni20::parse_real<Real>(*args.rung);
   model::SolverOptions<Real> options;
@@ -134,31 +132,64 @@ template <uni20::Real Real> int run(Arguments const& args)
       .field("Sea branches attempted", state.branches)
       .field("Newton corrections", state.iterations)
       .field("CPU time", cpu_time);
-  if (scan)
-  {
-    auto& table = report.table(scan->complete ? "Singlet-sector minima"
-                                              : "Singlet-sector candidate upper bounds (scan incomplete)");
-    table.header_separator()
-        .column("N_s")
-        .column("Energy", cli::table_alignment::decimal)
-        .column("Highest-weight rows")
-        .column("Descendant")
-        .column("Momentum index");
-    for (auto const& s : scan->sectors)
-      table.row(s.singlets, s.energy ? uni20::format_real(*s.energy) : "unavailable",
-                s.energy ? shape_text(s.highest_weight.shape) : "-", s.energy ? (s.descendant ? "yes" : "no") : "-",
-                s.energy ? std::to_string(s.highest_weight.momentum_index) : "-");
-  }
-  if (args.roots && state.energy)
-    for (std::size_t a = 0; a < state.highest_weight.rapidities.size(); ++a)
-    {
-      auto& table = report.table(fmt::format("Highest-weight rapidities: level {}", a + 1));
-      table.header_separator().column("Index").column("Bethe label").column("Rapidity", cli::table_alignment::decimal);
-      for (std::size_t j = 0; j < state.highest_weight.rapidities[a].size(); ++j)
-        table.row(j, uni20::to_string_fraction(state.highest_weight.labels[a][j]),
-                  uni20::format_real(state.highest_weight.rapidities[a][j]));
-    }
-  cli::print_report(report, args.format);
+  std::vector<std::string> tables{"states", "representations"};
+  if (args.roots) tables.push_back("roots");
+  cli::ResultOutput output(report, args.output, "bethe-ladder-pbc", argc, argv, tables);
+  // Scan rows retain their sector identity; roots below belong only to the selected row.
+  auto const selected_id = scan ? state.singlets : std::size_t{0};
+  auto for_states = [&](auto&& append) {
+    if (scan)
+      for (std::size_t j = 0; j < scan->sectors.size(); ++j)
+        append(j, scan->sectors[j]);
+    else
+      append(std::size_t{0}, state);
+  };
+  output.table(
+      "states",
+      scan ? (scan->complete ? "Singlet-sector minima" : "Singlet-sector candidate upper bounds (scan incomplete)")
+           : "State",
+      [&](auto& table) {
+        for_states([&](std::size_t id, auto const& s) {
+          table.append(id, s.singlets, s.energy, id == selected_id,
+                       s.energy ? std::optional{s.descendant} : std::nullopt,
+                       s.energy ? std::optional{s.highest_weight.momentum_index} : std::nullopt,
+                       s.energy ? std::optional{s.highest_weight.residual} : std::nullopt, s.iterations, s.branches,
+                       s.tableaux, s.converged, std::string(status(s.status)));
+        });
+      },
+      cli::column<std::size_t>("state_id"), cli::column<std::size_t>("singlets", "N_s"),
+      cli::column<std::optional<Real>>("energy", "Energy"), cli::column<bool>("selected"),
+      cli::column<std::optional<bool>>("descendant", "Descendant"),
+      cli::column<std::optional<std::size_t>>("momentum_index", "Momentum index"),
+      cli::column<std::optional<Real>>("residual"), cli::column<std::size_t>("iterations"),
+      cli::column<std::size_t>("branches"), cli::column<std::size_t>("tableaux"), cli::column<bool>("converged"),
+      cli::column<std::string>("status"));
+  output.table(
+      "representations", "Physical populations and highest-weight rows",
+      [&](auto& table) {
+        for_states([&](std::size_t id, auto const& s) {
+          if (s.energy)
+            for (std::size_t a = 0; a < 4; ++a)
+              table.append(id, a, s.populations[a], s.highest_weight.shape[a]);
+        });
+      },
+      cli::column<std::size_t>("state_id"), cli::column<std::size_t>("component", "Component (s,t+,t0,t-)"),
+      cli::column<std::size_t>("population", "Physical population"),
+      cli::column<std::size_t>("highest_weight", "Highest-weight row"));
+  if (args.roots)
+    output.table(
+        "roots", "Highest-weight rapidities (selected state)",
+        [&](auto& table) {
+          if (state.energy)
+            for (std::size_t a = 0; a < state.highest_weight.rapidities.size(); ++a)
+              for (std::size_t j = 0; j < state.highest_weight.rapidities[a].size(); ++j)
+                table.append(selected_id, a + 1, j, state.highest_weight.labels[a][j],
+                             state.highest_weight.rapidities[a][j]);
+        },
+        cli::column<std::size_t>("state_id"), cli::column<std::size_t>("level", "Level"),
+        cli::column<std::size_t>("index", "Index"), cli::column<uni20::half_int>("quantum_number", "Bethe label"),
+        cli::column<Real>("rapidity", "Rapidity"));
+  output.finish();
   if (!state.converged) std::cerr << "Ladder scan incomplete: candidate energies are not certified sector minima.\n";
   return state.converged ? 0 : 2;
 }
@@ -170,6 +201,7 @@ int main(int argc, char** argv)
       argc, argv, program_info(), [&](auto& app) { add_options(app, args); },
       [&](auto&) {
         validate(args);
-        return bethe::cli::dispatch_precision(args.precision, [&]<uni20::Real Real> { return run<Real>(args); });
+        return bethe::cli::dispatch_precision(args.precision,
+                                              [&]<uni20::Real Real> { return run<Real>(args, argc, argv); });
       });
 }

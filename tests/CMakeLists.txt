@@ -61,7 +61,10 @@ if(BETHE_BUILD_APPS)
     add_test(NAME DataOutput.models
       COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_model_tables.py"
         "${UNI20_ENABLE_MPLAPACK}" "$<TARGET_FILE:bethe-su3-pbc>" "$<TARGET_FILE:bethe-tb-pbc>"
-        "$<TARGET_FILE:bethe-richardson>" "$<TARGET_FILE:bethe-central-spin>")
+        "$<TARGET_FILE:bethe-richardson>" "$<TARGET_FILE:bethe-central-spin>"
+        "$<TARGET_FILE:bethe-gaudin-yang-pbc>" "$<TARGET_FILE:bethe-tj-pbc>"
+        "$<TARGET_FILE:bethe-sun-fermions-pbc>" "$<TARGET_FILE:bethe-ladder-pbc>"
+        "$<TARGET_FILE:bethe-hubbard-pbc>" "$<TARGET_FILE:bethe-hubbard-obc>")
     add_test(NAME DataOutput.named
       COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_named_output.py"
         "$<TARGET_FILE:bethe-sutherland-pbc>")

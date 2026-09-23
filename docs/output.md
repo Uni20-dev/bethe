@@ -2,7 +2,9 @@
 
 At present these options are implemented by `bethe-hubbard-dispersion`,
 `bethe-haldane-shastry-pbc`, `bethe-sutherland-pbc`, `bethe-su3-pbc`,
-`bethe-tb-pbc`, `bethe-richardson` and `bethe-central-spin`. Other
+`bethe-tb-pbc`, `bethe-richardson`, `bethe-central-spin`, `bethe-gaudin-yang-pbc`,
+`bethe-tj-pbc`, `bethe-sun-fermions-pbc`, `bethe-ladder-pbc` and both finite
+Hubbard frontends. Other
 frontends retain their existing output options; they can migrate to the same
 shared adapter without changing their numerical libraries.
 
@@ -48,6 +50,24 @@ Additional migrated models use these tables:
 | `bethe-tb-pbc` | `states` | `strings`, `roots` with `--roots`; complex roots have separate real/imaginary columns |
 | `bethe-richardson` | `states` | `variables` with `--variables`; blocked levels have null eigenvalue variables |
 | `bethe-central-spin` | `states` | `variables` with `--variables`; null coupling identifies the central spin |
+| `bethe-gaudin-yang-pbc` | `states` | `charge_roots`, `spin_roots`, or `free_up`, `free_down` with `--roots` |
+| `bethe-tj-pbc` | `states` | `first_roots`, `second_roots`, or `free_modes` with `--roots` |
+| `bethe-sun-fermions-pbc` | `states` | always `components`; `roots` or `free_modes` with `--roots` |
+| `bethe-ladder-pbc` | `states` | always `representations`; selected-state `roots` with `--roots` |
+| `bethe-hubbard-pbc`, `bethe-hubbard-obc` | `states` | `charge_roots`, `spin_roots`, or `free_modes` with `--roots` |
+
+SU(n) component indices preserve input order; `nesting_rank` is null for an
+empty component. Root level zero contains charge momenta; higher levels contain
+spin rapidities. Energies and momenta are null if no coupling stage converged,
+and otherwise belong to `reached_c`. Gaudin–Yang retains unconverged root
+estimates and reports `root_c`; its residuals are evaluated at the requested c.
+
+Ladder `states` marks the selected row. Only that row has roots when scanning
+sectors; `representations` distinguishes physical populations from SU(4)
+highest-weight rows. An incomplete scan energy is a candidate upper bound,
+not a certified minimum. Hubbard exports identify auxiliary-sector roots after
+symmetry mappings; free modes have no Bethe labels. The open-chain state table
+deliberately has no momentum column: standing-wave k is not lattice momentum.
 
 Richardson energies belong to `reached_g`, not necessarily `requested_g`.
 Central-spin energies similarly belong to `reached_field`; both energy and

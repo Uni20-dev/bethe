@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Copyright (C) 2026 Ian McCulloch
 #include "program-options.hpp"
-#include "report-common.hpp"
+#include "result-output.hpp"
 #include <bethe/gaudin_yang.hpp>
 
 namespace
@@ -13,7 +13,8 @@ struct Arguments
     std::size_t particles = 0, max_iterations = 10000;
     std::optional<std::string> length, interaction, tolerance;
     std::optional<uni20::half_int> sz;
-    std::string precision = "fp64", format = "auto";
+    std::string precision = "fp64";
+    cli::DataOutputOptions output;
     bool roots = false;
 };
 
@@ -44,16 +45,13 @@ void add_options(CLI::App& app, Arguments& args)
   bethe::cli::option(app, "--max-iterations", args.max_iterations, "accepted Newton updates (default: 10000)")
       ->capture_default_str();
   bethe::cli::precision_option(app, args.precision);
-  app.add_option("--format", args.format, "Stdout layout")
-      ->check(CLI::IsMember({"auto", "pretty", "plain"}))
-      ->capture_default_str();
+  cli::add_data_output_options(app, args.output, true);
 }
 
 void validate(Arguments const& args)
 {
   if (!args.length || !args.interaction) throw std::invalid_argument("--length ELL and --c C are required");
-  if (args.format != "auto" && args.format != "plain" && args.format != "pretty")
-    throw std::invalid_argument("unknown output format: " + std::string(args.format));
+  args.output.validate();
 }
 
 char const* status(model::SolveStatus value)
@@ -70,7 +68,7 @@ char const* status(model::SolveStatus value)
   return "unknown";
 }
 
-template <uni20::Real Real> int run(Arguments const& args)
+template <uni20::Real Real> int run(Arguments const& args, int argc, char** argv)
 {
   if (args.particles > std::size_t(std::numeric_limits<std::int64_t>::max() / 4))
     throw std::invalid_argument("Gaudin-Yang particle count exceeds the quantum-number range");
@@ -112,30 +110,59 @@ template <uni20::Real Real> int run(Arguments const& args)
   if (!state.free)
     report.field("Reference spin", state.spin_reversed ? "down (spin reversed)" : "up")
         .field("Spin roots", state.spin_rapidities.size());
+  std::vector<std::string> tables{"states"};
+  if (args.roots)
+  {
+    if (state.free)
+      tables.insert(tables.end(), {"free_up", "free_down"});
+    else
+      tables.insert(tables.end(), {"charge_roots", "spin_roots"});
+  }
+  cli::ResultOutput output(report, args.output, "bethe-gaudin-yang-pbc", argc, argv, tables);
+  output.table(
+      "states", "State",
+      [&](auto& table) {
+        table.append(0, sz, state.energy, state.momentum_index, state.momentum, state.charge_residual,
+                     state.spin_residual, state.residual_norm, state.root_interaction, state.iterations,
+                     state.converged, std::string(status(state.status)));
+      },
+      cli::column<std::size_t>("state_id"), cli::column<uni20::half_int>("sz", "Sz"),
+      cli::column<Real>("energy", "Energy"), cli::column<std::int64_t>("momentum_index"), cli::column<Real>("p", "P"),
+      cli::column<Real>("charge_residual"), cli::column<Real>("spin_residual"), cli::column<Real>("residual"),
+      cli::column<Real>("root_c"), cli::column<std::size_t>("iterations"), cli::column<bool>("converged"),
+      cli::column<std::string>("status"));
   if (args.roots && state.free)
   {
     Real const pi = Real{4} * std::atan(Real{1});
-    for (std::size_t species = 0; species < 2; ++species)
-    {
-      auto& table = report.table(species ? "Free down-spin modes" : "Free up-spin modes");
-      table.header_separator().column("Mode").column("k", cli::table_alignment::decimal);
-      for (auto mode : state.free_modes[species])
-        table.row(mode, uni20::format_real(Real{2} * pi * Real(mode) / length));
-    }
+    for (std::size_t a = 0; a < 2; ++a)
+      output.table(
+          a ? "free_down" : "free_up", a ? "Free down-spin modes" : "Free up-spin modes",
+          [&](auto& table) {
+            for (auto mode : state.free_modes[a])
+              table.append(0, mode, Real{2} * pi * Real(mode) / length);
+          },
+          cli::column<std::size_t>("state_id"), cli::column<std::int64_t>("mode", "Mode"), cli::column<Real>("k"));
   }
   else if (args.roots)
   {
-    auto& charges = report.table("Charge momenta");
-    charges.header_separator().column("Index").column("I").column("k", cli::table_alignment::decimal);
-    for (std::size_t j = 0; j < state.momenta.size(); ++j)
-      charges.row(j, uni20::to_string_fraction(state.quantum_numbers.charge[j]), uni20::format_real(state.momenta[j]));
-    auto& spins = report.table("Spin rapidities");
-    spins.header_separator().column("Index").column("J").column("lambda", cli::table_alignment::decimal);
-    for (std::size_t a = 0; a < state.spin_rapidities.size(); ++a)
-      spins.row(a, uni20::to_string_fraction(state.quantum_numbers.spin[a]),
-                uni20::format_real(state.spin_rapidities[a]));
+    output.table(
+        "charge_roots", "Charge momenta",
+        [&](auto& table) {
+          for (std::size_t j = 0; j < state.momenta.size(); ++j)
+            table.append(0, j, state.quantum_numbers.charge[j], state.momenta[j]);
+        },
+        cli::column<std::size_t>("state_id"), cli::column<std::size_t>("index", "Index"),
+        cli::column<uni20::half_int>("quantum_number", "I"), cli::column<Real>("k"));
+    output.table(
+        "spin_roots", "Spin rapidities",
+        [&](auto& table) {
+          for (std::size_t j = 0; j < state.spin_rapidities.size(); ++j)
+            table.append(0, j, state.quantum_numbers.spin[j], state.spin_rapidities[j]);
+        },
+        cli::column<std::size_t>("state_id"), cli::column<std::size_t>("index", "Index"),
+        cli::column<uni20::half_int>("quantum_number", "J"), cli::column<Real>("rapidity", "lambda"));
   }
-  cli::print_report(report, args.format);
+  output.finish();
   if (!state.converged)
     std::cerr << "Gaudin-Yang solve incomplete; residuals use requested c, not the intermediate coupling.\n";
   return state.converged ? 0 : 2;
@@ -149,6 +176,7 @@ int main(int argc, char** argv)
       argc, argv, program_info(), [&](auto& app) { add_options(app, args); },
       [&](auto&) {
         validate(args);
-        return bethe::cli::dispatch_precision(args.precision, [&]<uni20::Real Real> { return run<Real>(args); });
+        return bethe::cli::dispatch_precision(args.precision,
+                                              [&]<uni20::Real Real> { return run<Real>(args, argc, argv); });
       });
 }
