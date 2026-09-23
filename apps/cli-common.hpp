@@ -76,17 +76,10 @@ inline std::vector<uni20::half_int> parse_quantum_numbers(std::string_view text)
   }
 }
 
-template <typename State> void print_roots(State const& state)
-{
-  std::cout << "# index rapidity I\n";
-  for (std::size_t i = 0; i < state.rapidities.size(); ++i)
-    std::cout << i << ' ' << uni20::format_real(state.rapidities[i]) << ' ' << state.quantum_numbers[i] << '\n';
-}
-
 inline int finish(bool converged)
 {
   if (!converged)
-    std::cerr << "The iteration budget was exhausted; each nonconverged energy is an unconverged estimate.\n";
+    std::cerr << "The calculation did not converge; each nonconverged energy is an unconverged estimate.\n";
   return converged ? 0 : 2;
 }
 } // namespace bethe::cli

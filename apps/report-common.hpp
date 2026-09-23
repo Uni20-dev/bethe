@@ -16,21 +16,15 @@
 #include <variant>
 #include <vector>
 
-// Presentation belongs to the front end, not the numerical library. Pass all
-// real-valued cells through format_real before handing them to the renderer:
-// this retains max_digits10 for the selected type, including binary128.
+// Presentation belongs to the front end, not the numerical library. Typed data
+// tables supply their native-precision cell text; scalar overview fields use
+// format_real without narrowing through double.
 namespace bethe::cli
 {
 namespace presentation = uni20::presentation;
 using presentation::report_builder;
 using presentation::semantic_glyph;
 using presentation::table_alignment;
-
-inline auto convergence_status(bool converged)
-{
-  return converged ? presentation::style("Green")(semantic_glyph::success, "converged")
-                   : presentation::style("Yellow;Bold")(semantic_glyph::warning, "unconverged estimate");
-}
 
 // Our tables have one labeled column per cell, with no spans or separator rows.
 // Prefer vertical records when a table would exceed the terminal width. Never
@@ -112,76 +106,12 @@ inline void print_report(report_builder const& report, std::string_view format)
   }
 }
 
-template <typename State> void add_roots(report_builder& report, State const& state, std::string title)
-{
-  if (state.rapidities.empty())
-  {
-    report.table(std::move(title) + " (none; fully polarized)");
-    return;
-  }
-  auto& table = report.table(std::move(title));
-  table.header_separator().column("Index").column("I").column("Rapidity", table_alignment::decimal);
-  for (std::size_t i = 0; i < state.rapidities.size(); ++i)
-    table.row(i, uni20::to_string_fraction(state.quantum_numbers[i]), uni20::format_real(state.rapidities[i]));
-}
-
-template <uni20::Real Real, typename State>
-bool print_state_report(report_builder report, std::size_t sites, State const& state, bool roots)
-{
-  constexpr bool periodic = requires { state.momentum; };
-  report
-      .status(state.converged ? semantic_glyph::success : semantic_glyph::warning,
-              state.converged ? "converged" : "iteration limit reached; unconverged estimate")
-      .field("Sz", uni20::to_string_fraction(state.sz))
-      .field("Reference vacuum", state.spin_reversed ? "all down (spin reversed)" : "all up");
-  if constexpr (periodic)
-    report.field("Momentum index", state.momentum_index).field("Momentum P", uni20::format_real(state.momentum));
-  report.field("Iterations", state.iterations)
-      .field("Residual norm", uni20::format_real(state.residual_norm))
-      .field("Total energy", uni20::format_real(state.energy))
-      .field("Energy per site", uni20::format_real(state.energy / static_cast<Real>(sites)));
-  if (roots) add_roots(report, state, "Rapidities");
-  print_report(report);
-  return state.converged;
-}
-
 inline void add_scan_status(report_builder& report, std::size_t converged, std::size_t total)
 {
   bool const all = converged == total;
   report.status(all ? semantic_glyph::success : semantic_glyph::warning,
                 std::to_string(converged) + "/" + std::to_string(total) + " states converged" +
                     (all ? "" : "; remaining energies are unconverged estimates"));
-}
-
-template <typename State> bool print_sector_report(report_builder report, std::vector<State> const& states, bool roots)
-{
-  constexpr bool periodic = requires(State state) { state.momentum; };
-  if constexpr (periodic) report.field("Momentum convention", "P = 2*pi*momentum_index/N (mod 2*pi)");
-  auto& energies = report.table(periodic ? "Sector energies and momenta" : "Sector energies");
-  energies.header_separator().column("Sz");
-  if constexpr (periodic) energies.column("Momentum index").column("P", table_alignment::decimal);
-  energies.column("Energy", table_alignment::decimal);
-  auto& diagnostics = report.table("Convergence");
-  diagnostics.header_separator()
-      .column("Sz")
-      .column("Residual")
-      .column("Iterations")
-      .column("Status", table_alignment::left);
-  std::size_t converged = 0;
-  for (auto const& state : states)
-  {
-    auto const sz = uni20::to_string_fraction(state.sz);
-    if constexpr (periodic)
-      energies.row(sz, state.momentum_index, uni20::format_real(state.momentum), uni20::format_real(state.energy));
-    else
-      energies.row(sz, uni20::format_real(state.energy));
-    diagnostics.row(sz, uni20::format_real(state.residual_norm), state.iterations, convergence_status(state.converged));
-    converged += state.converged;
-    if (roots) add_roots(report, state, "Rapidities: Sz=" + sz + (state.spin_reversed ? " (spin reversed)" : ""));
-  }
-  add_scan_status(report, converged, states.size());
-  print_report(report);
-  return converged == states.size();
 }
 
 } // namespace bethe::cli

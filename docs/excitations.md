@@ -48,9 +48,11 @@ Reports give S, absolute energy, `gap=E-E0` relative to the **global ground
 state of the same finite chain**, quantum numbers, and convergence diagnostics.
 Periodic reports additionally give lattice momentum; open reports do not.
 Gaps retain the selected arithmetic precision, including fp128. Tiny negative
-gaps due to roundoff are not clamped. Optional root blocks identify each level.
-In plain output, S and I use exact fractions, the I column is comma-separated,
-and `-` denotes an empty set of quantum numbers.
+gaps due to roundoff are not clamped. Root and quantum-number tables link to
+levels by zero-based `state_id`; half-integers are decimal values. An empty
+quantum-number set has no rows for that state. The ground reference and first
+failed candidate have separate tables and distinct IDs, so neither is confused
+with a ranked level. See [result tables and exports](output.md).
 
 ## What the family leaves out
 

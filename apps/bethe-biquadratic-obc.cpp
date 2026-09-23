@@ -2,6 +2,7 @@
 // Copyright (C) 2026 Ian McCulloch
 #include "excitation-report.hpp"
 #include "program-options.hpp"
+#include "result-output.hpp"
 #include <bethe/biquadratic.hpp>
 
 namespace
@@ -14,7 +15,8 @@ struct Arguments
     std::optional<std::size_t> through_lines, excitations, max_candidates;
     std::optional<bethe::xxz::QuantumNumbers> numbers;
     std::optional<std::string> tolerance;
-    std::string precision = "fp64", format = "auto";
+    std::string precision = "fp64";
+    cli::DataOutputOptions output;
     bool roots = false, sectors = false;
 };
 auto program_info()
@@ -48,15 +50,12 @@ void add_options(CLI::App& app, Arguments& args)
   bethe::cli::option(app, "--max-iterations", args.max_iterations, "accepted Newton updates (default: 10000)")
       ->capture_default_str();
   bethe::cli::precision_option(app, args.precision);
-  app.add_option("--format", args.format, "Stdout layout")
-      ->check(CLI::IsMember({"auto", "pretty", "plain"}))
-      ->capture_default_str();
+  cli::add_data_output_options(app, args.output, true);
 }
 
 void validate(Arguments const& args)
 {
-  if (args.format != "auto" && args.format != "plain" && args.format != "pretty")
-    throw std::invalid_argument("unknown output format: " + std::string(args.format));
+  args.output.validate();
   if (args.sectors && (args.through_lines || args.excitations || args.numbers))
     throw std::invalid_argument(
         "--sectors cannot be combined with --through-lines, --excitations or --quantum-numbers");
@@ -86,17 +85,74 @@ std::string multiplicity_text(std::optional<std::uint64_t> value)
   return value ? std::to_string(*value) : "overflow (>uint64)";
 }
 
-template <typename Reference> void add_roots(cli::report_builder& report, Reference const& reference, std::string title)
+template <uni20::Real Real>
+void write_output(cli::report_builder const& report, Arguments const& args, int argc, char** argv,
+                  std::vector<model::State<Real> const*> const& states, std::vector<std::optional<Real>> const& gaps,
+                  model::State<Real> const* reference = nullptr, model::State<Real> const* failed = nullptr)
 {
-  auto& table = report.table(std::move(title));
-  table.header_separator()
-      .column("Index")
-      .column("I")
-      .column("alpha", cli::table_alignment::decimal)
-      .column("x=Theta_1/2", cli::table_alignment::decimal);
-  for (std::size_t j = 0; j < reference.rapidities.size(); ++j)
-    table.row(j, uni20::to_string(reference.quantum_numbers[j]), uni20::format_real(reference.rapidities[j]),
-              uni20::format_real(reference.angles[j]));
+  std::vector<std::string> names{"states", "quantum_numbers"};
+  if (reference) names.push_back("reference");
+  if (failed) names.push_back("failed");
+  if (args.roots) names.push_back("roots");
+  cli::ResultOutput output(report, args.output, "bethe-biquadratic-obc", argc, argv, names);
+  auto write_states = [&](std::string name, std::string title, auto const& rows, std::size_t offset, bool ranked) {
+    output.table(
+        name, title,
+        [&](auto& table) {
+          for (std::size_t i = 0; i < rows.size(); ++i)
+          {
+            auto const& s = *rows[i];
+            auto const& r = s.reference;
+            table.append(offset + i, s.through_lines, s.multiplicity, s.energy, ranked ? gaps[i] : std::nullopt,
+                         s.tl_energy, r.energy, r.residual_norm, r.iterations, r.converged,
+                         std::string(status(r.status)));
+          }
+        },
+        cli::column<std::size_t>("state_id"), cli::column<std::size_t>("through_lines", "Through-lines"),
+        cli::column<std::optional<std::uint64_t>>("multiplicity", "Multiplicity"),
+        cli::column<Real>("energy", "Energy"), cli::column<std::optional<Real>>("gap", "E-E0"),
+        cli::column<Real>("tl_energy"), cli::column<Real>("reference_energy"),
+        cli::column<Real>("residual", "Residual"), cli::column<std::size_t>("iterations", "Iterations"),
+        cli::column<bool>("converged"), cli::column<std::string>("status", "Status"));
+  };
+  write_states("states",
+               args.excitations ? "Real-root TL levels (module minimum included)"
+               : args.sectors   ? "TL module minima"
+                                : "State",
+               states, 0, true);
+  auto all = states;
+  if (reference)
+  {
+    write_states("reference", "Ground reference", std::vector{reference}, all.size(), false);
+    all.push_back(reference);
+  }
+  if (failed)
+  {
+    write_states("failed", "First failed state (unranked estimate)", std::vector{failed}, all.size(), false);
+    all.push_back(failed);
+  }
+  output.table(
+      "quantum_numbers", "Reference quantum numbers (not physical spin-1 labels)",
+      [&](auto& table) {
+        for (std::size_t i = 0; i < all.size(); ++i)
+          for (std::size_t j = 0; j < all[i]->reference.quantum_numbers.size(); ++j)
+            table.append(i, j, all[i]->reference.quantum_numbers[j]);
+      },
+      cli::column<std::size_t>("state_id"), cli::column<std::size_t>("index", "Index"),
+      cli::column<uni20::half_int>("quantum_number", "I"));
+  if (args.roots)
+    output.table(
+        "roots", "Reference XXZ roots (not physical spin-1 quantum numbers)",
+        [&](auto& table) {
+          for (std::size_t i = 0; i < all.size(); ++i)
+            for (std::size_t j = 0; j < all[i]->reference.rapidities.size(); ++j)
+              table.append(i, j, all[i]->reference.quantum_numbers[j], all[i]->reference.rapidities[j],
+                           all[i]->reference.angles[j]);
+        },
+        cli::column<std::size_t>("state_id"), cli::column<std::size_t>("index", "Index"),
+        cli::column<uni20::half_int>("quantum_number", "I"), cli::column<Real>("rapidity", "alpha"),
+        cli::column<Real>("angle", "x=Theta_1/2"));
+  output.finish();
 }
 
 template <uni20::Real Real> auto preamble(Arguments const& args, bethe::SolverOptions<Real> const& options)
@@ -113,16 +169,13 @@ template <uni20::Real Real> auto preamble(Arguments const& args, bethe::SolverOp
   return report;
 }
 
-int finish(cli::report_builder const& report, Arguments const& args, bool converged)
+int finish(bool converged)
 {
-  cli::print_report(report, args.format);
-  std::cout.flush();
-  if (!std::cout) throw std::ios_base::failure("output flush failed");
   if (!converged) std::cerr << "Biquadratic solve incomplete; consider a larger budget or higher precision.\n";
   return converged ? 0 : 2;
 }
 
-template <uni20::Real Real> int run(Arguments const& args)
+template <uni20::Real Real> int run(Arguments const& args, int argc, char** argv)
 {
   bethe::SolverOptions<Real> options;
   options.max_iterations = args.max_iterations;
@@ -159,23 +212,16 @@ template <uni20::Real Real> int run(Arguments const& args)
       report.field("First failed I", cli::quantum_number_text(scan.first_unconverged->reference.quantum_numbers))
           .field("First failed status", status(scan.first_unconverged->reference.status))
           .field("First failed residual", uni20::format_real(scan.first_unconverged->reference.residual_norm));
-    auto& levels = report.table("Real-root TL levels (module minimum included)");
-    levels.header_separator().column("Level").column("Multiplicity").column("Energy").column("E-E0");
-    auto& diagnostics = report.table("Convergence and reference quantum numbers");
-    diagnostics.header_separator().column("Level").column("Residual").column("Iterations").column("I");
-    for (std::size_t j = 0; j < scan.levels.size(); ++j)
+    std::vector<model::State<Real> const*> states;
+    std::vector<std::optional<Real>> gaps;
+    for (auto const& level : scan.levels)
     {
-      auto const& level = scan.levels[j];
-      auto const& r = level.state.reference;
-      levels.row(j + 1, multiplicity_text(level.state.multiplicity), uni20::format_real(level.state.energy),
-                 level.gap ? uni20::format_real(*level.gap) : "unavailable");
-      diagnostics.row(j + 1, uni20::format_real(r.residual_norm), r.iterations,
-                      cli::quantum_number_text(r.quantum_numbers));
+      states.push_back(&level.state);
+      gaps.push_back(level.gap);
     }
-    if (args.roots)
-      for (std::size_t j = 0; j < scan.levels.size(); ++j)
-        add_roots(report, scan.levels[j].state.reference, "Reference XXZ roots: level=" + std::to_string(j + 1));
-    return finish(report, args, scan.converged());
+    write_output(report, args, argc, argv, states, gaps, &ground,
+                 scan.first_unconverged ? &*scan.first_unconverged : nullptr);
+    return finish(scan.converged());
   }
   if (args.sectors)
   {
@@ -192,23 +238,17 @@ template <uni20::Real Real> int run(Arguments const& args)
         .field("Multiplicity meaning", "physical states per TL eigenvector, not SU(2) multiplets")
         .field("Status", converged ? "converged" : "incomplete; unconverged estimates")
         .field("CPU time", cpu_time);
-    auto& levels = report.table("TL module minima");
-    levels.header_separator().column("Through-lines").column("Multiplicity").column("Energy").column("E-E0");
-    auto& diagnostics = report.table("Convergence by TL module");
-    diagnostics.header_separator().column("Through-lines").column("Residual").column("Iterations").column("Status");
+    std::vector<model::State<Real> const*> rows;
+    std::vector<std::optional<Real>> gaps;
     for (auto const& state : states)
     {
-      auto const& r = state.reference;
-      auto const gap = r.converged && states.front().reference.converged
-                           ? uni20::format_real(Real{2} * (r.energy - states.front().reference.energy))
-                           : "unavailable";
-      levels.row(state.through_lines, multiplicity_text(state.multiplicity), uni20::format_real(state.energy), gap);
-      diagnostics.row(state.through_lines, uni20::format_real(r.residual_norm), r.iterations, status(r.status));
+      rows.push_back(&state);
+      gaps.push_back(state.reference.converged && states.front().reference.converged
+                         ? std::optional<Real>{Real{2} * (state.reference.energy - states.front().reference.energy)}
+                         : std::nullopt);
     }
-    if (args.roots)
-      for (auto const& state : states)
-        add_roots(report, state.reference, "Reference XXZ roots: through-lines=" + std::to_string(state.through_lines));
-    return finish(report, args, converged);
+    write_output(report, args, argc, argv, rows, gaps);
+    return finish(converged);
   }
   auto const state = args.numbers
                          ? model::solve_real<Real>(args.sites, *args.numbers, options)
@@ -234,8 +274,8 @@ template <uni20::Real Real> int run(Arguments const& args)
       .field("CPU time", cpu_time);
   if (state.through_lines == 0) report.field("Total spin", 0);
   if (state.through_lines != 0) report.field("Multiplicity meaning", "physical states, not a physical-spin label");
-  if (args.roots) add_roots(report, reference, "Reference XXZ roots (not physical spin-1 quantum numbers)");
-  return finish(report, args, reference.converged);
+  write_output<Real>(report, args, argc, argv, {&state}, {std::nullopt});
+  return finish(reference.converged);
 }
 } // namespace
 int main(int argc, char** argv)
@@ -245,6 +285,7 @@ int main(int argc, char** argv)
       argc, argv, program_info(), [&](auto& app) { add_options(app, args); },
       [&](auto&) {
         validate(args);
-        return bethe::cli::dispatch_precision(args.precision, [&]<uni20::Real Real> { return run<Real>(args); });
+        return bethe::cli::dispatch_precision(args.precision,
+                                              [&]<uni20::Real Real> { return run<Real>(args, argc, argv); });
       });
 }

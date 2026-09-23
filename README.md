@@ -160,7 +160,9 @@ The default arithmetic is fp64. Select `--precision long-double` or, in an
 enabled build, `--precision fp128` for higher precision. Add `--roots` to inspect
 rapidities and quantum numbers.
 Reports are formatted on a terminal and plain when redirected; `--format plain`
-makes that choice explicit. Always check convergence: the equation residual
+makes that choice explicit. Every frontend can also save CSV, TSV, and JSON
+with provenance and native-precision values; see the [output guide](docs/output.md).
+Always check convergence: the equation residual
 is not an energy-error bound. See [CLI controls and diagnostics](docs/command-line.md)
 for precision, tolerances, output formats, and exit statuses.
 

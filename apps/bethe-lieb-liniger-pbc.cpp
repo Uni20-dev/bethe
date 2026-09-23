@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Copyright (C) 2026 Ian McCulloch
 #include "program-options.hpp"
-#include "report-common.hpp"
+#include "result-output.hpp"
 #include <bethe/lieb_liniger.hpp>
 
 namespace
@@ -14,7 +14,8 @@ struct Arguments
     std::optional<std::string> length, interaction, numbers, tolerance;
     std::optional<std::size_t> count, padding, max_candidates;
     std::size_t max_iterations = 10000;
-    std::string precision = "fp64", format = "auto";
+    std::string precision = "fp64";
+    cli::DataOutputOptions output;
     bool roots = false;
 };
 
@@ -53,9 +54,7 @@ void add_options(CLI::App& app, Arguments& args)
   bethe::cli::option(app, "--max-iterations", args.max_iterations, "Newton updates per state (default: 10000)")
       ->capture_default_str();
   bethe::cli::precision_option(app, args.precision);
-  app.add_option("--format", args.format, "Stdout layout")
-      ->check(CLI::IsMember({"auto", "pretty", "plain"}))
-      ->capture_default_str();
+  cli::add_data_output_options(app, args.output, true);
 }
 
 void validate(Arguments const& args)
@@ -66,8 +65,7 @@ void validate(Arguments const& args)
     throw std::invalid_argument("--padding and --max-candidates require --excitations");
   if (args.count && args.numbers)
     throw std::invalid_argument("--quantum-numbers cannot be combined with --excitations");
-  if (args.format != "auto" && args.format != "plain" && args.format != "pretty")
-    throw std::invalid_argument("unknown output format: " + std::string(args.format));
+  args.output.validate();
 }
 
 char const* status(model::SolveStatus value)
@@ -96,15 +94,58 @@ void add_state(cli::report_builder& report, model::State<Real> const& state, std
 }
 
 template <uni20::Real Real>
-void add_momenta(cli::report_builder& report, model::State<Real> const& state, std::string title)
+void write_output(cli::report_builder report, Arguments const& args, int argc, char** argv,
+                  std::vector<model::State<Real> const*> const& states, std::vector<std::optional<Real>> const& gaps,
+                  model::State<Real> const* reference = nullptr, model::State<Real> const* failed = nullptr)
 {
-  auto& table = report.table(std::move(title) + (state.particles ? "" : " (vacuum; no roots)"));
-  table.header_separator().column("Index").column("I").column("k", cli::table_alignment::decimal);
-  for (std::size_t j = 0; j < state.particles; ++j)
-    table.row(j, uni20::to_string_fraction(state.quantum_numbers[j]), uni20::format_real(state.momenta[j]));
+  std::vector<std::string> names{"states"};
+  if (reference) names.push_back("reference");
+  if (failed) names.push_back("failed");
+  if (args.roots) names.push_back("roots");
+  cli::ResultOutput output(report, args.output, "bethe-lieb-liniger-pbc", argc, argv, names);
+  auto write_states = [&](std::string name, std::string title, auto const& rows, std::size_t offset, bool ranked) {
+    output.table(
+        name, title,
+        [&](auto& table) {
+          for (std::size_t i = 0; i < rows.size(); ++i)
+          {
+            auto const& s = *rows[i];
+            table.append(offset + i, s.energy, ranked ? gaps[i] : std::nullopt, s.momentum_index, s.momentum,
+                         s.residual_norm, s.iterations, s.converged, std::string(status(s.status)));
+          }
+        },
+        cli::column<std::size_t>("state_id"), cli::column<Real>("energy", "Energy"),
+        cli::column<std::optional<Real>>("gap", "Gap"), cli::column<std::int64_t>("momentum_index", "Q"),
+        cli::column<Real>("p", "P"), cli::column<Real>("residual", "Residual"),
+        cli::column<std::size_t>("iterations", "Iterations"), cli::column<bool>("converged"),
+        cli::column<std::string>("status", "Status"));
+  };
+  write_states("states", reference ? "Converged levels (ranked only within this window)" : "State", states, 0, true);
+  std::vector<model::State<Real> const*> all = states;
+  if (reference)
+  {
+    write_states("reference", "Ground reference", std::vector{reference}, all.size(), false);
+    all.push_back(reference);
+  }
+  if (failed)
+  {
+    write_states("failed", "First failed state (unranked estimate)", std::vector{failed}, all.size(), false);
+    all.push_back(failed);
+  }
+  if (args.roots)
+    output.table(
+        "roots", args.particles ? "Physical momenta" : "Physical momenta (vacuum; no roots)",
+        [&](auto& table) {
+          for (std::size_t i = 0; i < all.size(); ++i)
+            for (std::size_t j = 0; j < all[i]->momenta.size(); ++j)
+              table.append(i, j, all[i]->quantum_numbers[j], all[i]->momenta[j]);
+        },
+        cli::column<std::size_t>("state_id"), cli::column<std::size_t>("index", "Index"),
+        cli::column<uni20::half_int>("quantum_number", "I"), cli::column<Real>("k"));
+  output.finish();
 }
 
-template <uni20::Real Real> int run(Arguments const& args)
+template <uni20::Real Real> int run(Arguments const& args, int argc, char** argv)
 {
   Real const length = uni20::parse_real<Real>(*args.length), c = uni20::parse_real<Real>(*args.interaction);
   model::SolverOptions<Real> options;
@@ -136,28 +177,18 @@ template <uni20::Real Real> int run(Arguments const& args)
                converged ? "converged within the specified window" : "incomplete scan; failed states excluded")
         .field("CPU time", cpu_time);
     add_state(report, scan.ground_state, "Ground ");
-    auto& table = report.table("Converged levels (ranked only within this window)");
-    table.header_separator()
-        .column("Rank")
-        .column("Q")
-        .column("P")
-        .column("Energy")
-        .column("Gap")
-        .column("Residual")
-        .column("Iterations");
-    for (std::size_t j = 0; j < scan.levels.size(); ++j)
+    if (scan.first_unconverged) add_state(report, *scan.first_unconverged, "First failed ");
+    report.status(converged ? cli::semantic_glyph::success : cli::semantic_glyph::warning,
+                  converged ? "converged" : "unconverged estimates are not ranked");
+    std::vector<model::State<Real> const*> states;
+    std::vector<std::optional<Real>> gaps;
+    for (auto const& level : scan.levels)
     {
-      auto const& level = scan.levels[j];
-      table.row(j, level.state.momentum_index, uni20::format_real(level.state.momentum),
-                uni20::format_real(level.state.energy), level.gap ? uni20::format_real(*level.gap) : "unavailable",
-                uni20::format_real(level.state.residual_norm), level.state.iterations);
-      if (args.roots) add_momenta(report, level.state, "Momenta: rank " + std::to_string(j));
+      states.push_back(&level.state);
+      gaps.push_back(level.gap);
     }
-    if (scan.first_unconverged)
-    {
-      add_state(report, *scan.first_unconverged, "First failed ");
-      if (args.roots) add_momenta(report, *scan.first_unconverged, "First failed momenta (estimate)");
-    }
+    write_output(report, args, argc, argv, states, gaps, &scan.ground_state,
+                 scan.first_unconverged ? &*scan.first_unconverged : nullptr);
   }
   else
   {
@@ -174,11 +205,11 @@ template <uni20::Real Real> int run(Arguments const& args)
     converged = state.converged;
     report.field("Calculation", args.numbers ? "specified Bethe state" : "ground state").field("CPU time", cpu_time);
     add_state(report, state);
-    if (args.roots) add_momenta(report, state, "Physical momenta");
+    report.status(converged ? cli::semantic_glyph::success : cli::semantic_glyph::warning,
+                  converged ? "converged" : "unconverged estimate");
+    write_output<Real>(report, args, argc, argv, {&state}, {std::nullopt});
   }
-  report.status(converged ? cli::semantic_glyph::success : cli::semantic_glyph::warning,
-                converged ? "converged" : "unconverged estimates are not ranked");
-  cli::print_report(report, args.format);
+
   if (!converged) std::cerr << "Lieb-Liniger solve incomplete; consider a larger budget or higher precision.\n";
   return converged ? 0 : 2;
 }
@@ -191,6 +222,7 @@ int main(int argc, char** argv)
       argc, argv, program_info(), [&](auto& app) { add_options(app, args); },
       [&](auto&) {
         validate(args);
-        return bethe::cli::dispatch_precision(args.precision, [&]<uni20::Real Real> { return run<Real>(args); });
+        return bethe::cli::dispatch_precision(args.precision,
+                                              [&]<uni20::Real Real> { return run<Real>(args, argc, argv); });
       });
 }

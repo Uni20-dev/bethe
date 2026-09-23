@@ -75,7 +75,7 @@ check_cli(1 "strictly increasing integers" 3 --length 1 --c 1 --quantum-numbers 
 check_cli(1 "count must equal N" 2 --length 1 --c 1 --quantum-numbers none)
 check_cli(1 "invalid real value" 2 --length 1junk --c 1)
 check_cli(1 "not in {fp64,long-double,fp128}" 2 --length 1 --c 1 --precision fp16)
-check_cli(1 "not in {auto,pretty,plain}" 2 --length 1 --c 1 --format json)
+check_cli(1 "not in {auto,pretty,plain,csv,tsv,json}" 2 --length 1 --c 1 --format invalid)
 check_cli(1 "not expected" 2 --length 1 --c 1 --bogus)
 
 set(precisions fp64 long-double)

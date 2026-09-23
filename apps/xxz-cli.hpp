@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Copyright (C) 2026 Ian McCulloch
 #pragma once
+#include "data-output-options.hpp"
 #include "program-options.hpp"
 #include <limits>
 #include <optional>
@@ -20,7 +21,7 @@ struct XxzArguments
     std::optional<std::size_t> max_candidates = std::nullopt;
     std::optional<std::vector<uni20::half_int>> quantum_numbers = std::nullopt;
     bool print_roots = false;
-    std::string format = "auto";
+    DataOutputOptions output;
 };
 
 inline void add_xxz_options(CLI::App& app, XxzArguments& args)
@@ -42,9 +43,7 @@ inline void add_xxz_options(CLI::App& app, XxzArguments& args)
   text_option(app, "--tolerance", args.tolerance, "Residual in the reported convention; default: 32 epsilon");
   count_option(app, "--max-iterations", args.max_iterations, "Update budget")->capture_default_str();
   precision_option(app, args.precision);
-  app.add_option("--format", args.format, "Stdout layout")
-      ->check(CLI::IsMember({"auto", "pretty", "plain"}))
-      ->capture_default_str();
+  add_data_output_options(app, args.output, true);
 }
 inline void validate_xxz_arguments(XxzArguments const& args)
 {
@@ -56,7 +55,6 @@ inline void validate_xxz_arguments(XxzArguments const& args)
     throw std::invalid_argument("--quantum-numbers is mutually exclusive with --sectors and --sz");
   if (args.max_candidates && !args.excitation_count)
     throw std::invalid_argument("--max-candidates requires --excitations COUNT|all");
-  if (args.format != "auto" && args.format != "pretty" && args.format != "plain")
-    throw std::invalid_argument("unknown output format: " + std::string(args.format));
+  args.output.validate();
 }
 } // namespace bethe::cli

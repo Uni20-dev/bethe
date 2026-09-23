@@ -16,8 +16,6 @@ namespace
 using bethe::cli::CpuTimer;
 using bethe::cli::finish;
 using bethe::cli::parse_quantum_numbers;
-using bethe::cli::parse_size;
-using bethe::cli::print_roots;
 
 struct Arguments
 {
@@ -31,7 +29,7 @@ struct Arguments
     bool sectors = false;
     bool spinons = false;
     bethe::cli::ExcitationArguments excitations = {};
-    std::string format = "auto";
+    bethe::cli::DataOutputOptions output;
 };
 
 auto program_info()
@@ -63,95 +61,57 @@ void add_options(CLI::App& app, Arguments& args)
   cli::text_option(app, "--tolerance", args.tolerance, "Normalized equation residual in native precision");
   cli::count_option(app, "--max-iterations", args.max_iterations, "Update budget")->capture_default_str();
   cli::precision_option(app, args.precision);
-  app.add_option("--format", args.format, "Stdout layout")
-      ->check(CLI::IsMember({"auto", "pretty", "plain"}))
-      ->capture_default_str();
+  cli::add_data_output_options(app, args.output, true);
 }
 
-template <uni20::Real Real> int run(Arguments const& args)
+template <uni20::Real Real> int run(Arguments const& args, int argc, char** argv)
 {
-  bethe::heisenberg::SolverOptions<Real> options;
+  namespace cli = bethe::cli;
+  namespace model = bethe::heisenberg;
+  model::SolverOptions<Real> options;
   options.max_iterations = args.max_iterations;
   if (args.tolerance) options.residual_tolerance = uni20::parse_real<Real>(*args.tolerance);
-  bool const pretty = args.format == "pretty" || (args.format == "auto" && terminal::is_a_terminal(stdout));
-  if (!pretty)
-    std::cout << "Sites: " << args.sites << '\n'
-              << "Precision: " << args.precision << '\n'
-              << "Residual tolerance: " << uni20::format_real(options.residual_tolerance) << '\n';
   CpuTimer const timer;
+  auto header = [&](std::string_view mode, std::string_view cpu_time) {
+    return cli::report_header(args.sites, args.precision, options, mode, cpu_time, true);
+  };
   if (args.excitations.count)
   {
-    auto const scan = bethe::heisenberg::real_excitations<Real>(args.sites, args.excitations.selected_spin(args.sites),
-                                                                args.excitations.options(), options);
+    auto const scan = model::real_excitations<Real>(args.sites, args.excitations.selected_spin(args.sites),
+                                                    args.excitations.options(), options);
     auto const cpu_time = timer.elapsed_text();
-    return finish(
-        bethe::cli::print_excitations(args.sites, args.precision, options, scan, args.print_roots, cpu_time, pretty));
+    return finish(cli::print_excitation_report(
+        header("real-root excitations", cpu_time), scan,
+        {.family = "restricted real-root highest-weight multiplets; NOT a complete spectrum",
+         .sector_label = "S",
+         .sector = scan.spin,
+         .multiplet_size = scan.spin.twice() + 1},
+        args.print_roots, args.output, "bethe-xxx-pbc", argc, argv));
   }
   if (args.sectors)
   {
-    auto const states = bethe::heisenberg::sector_ground_states<Real>(args.sites, options);
+    auto const states = model::sector_ground_states<Real>(args.sites, options);
     auto const cpu_time = timer.elapsed_text();
-    if (pretty)
-      return finish(bethe::cli::print_sectors(args.sites, args.precision, options, states, args.print_roots, cpu_time));
-    std::cout << "# CPU time: " << cpu_time << '\n' << "# Sz momentum_index P energy residual iterations converged\n";
-    bool converged = true;
-    for (auto const& state : states)
-    {
-      std::cout << state.sz << ' ' << state.momentum_index << ' ' << uni20::format_real(state.momentum) << ' '
-                << uni20::format_real(state.energy) << ' ' << uni20::format_real(state.residual_norm) << ' '
-                << state.iterations << ' ' << state.converged << '\n';
-      if (args.print_roots) print_roots(state);
-      converged = converged && state.converged;
-    }
-    return finish(converged);
+    return finish(cli::spin_sectors<Real>(header("sector minima", cpu_time), states, args.print_roots, args.output,
+                                          "bethe-xxx-pbc", argc, argv));
   }
   if (args.spinons)
   {
-    auto const branch = bethe::heisenberg::one_spinon_branch<Real>(args.sites, options);
+    auto const branch = model::one_spinon_branch<Real>(args.sites, options);
     auto const cpu_time = timer.elapsed_text();
-    if (pretty)
-      return finish(bethe::cli::print_spinons(args.sites, args.precision, options, branch, args.print_roots, cpu_time));
-    std::cout << "# CPU time: " << cpu_time << '\n'
-              << "# Sz=1/2; k=pi/2-2*pi*I_h/N; bulk reference e_inf=1/4-log(2)\n"
-              << "# hole k momentum_index P energy E_minus_N_e_inf epsilon_inf residual iterations converged\n";
-    bool converged = true;
-    for (auto const& point : branch)
-    {
-      auto const& state = point.state;
-      std::cout << point.hole << ' ' << uni20::format_real(point.spinon_momentum) << ' ' << state.momentum_index << ' '
-                << uni20::format_real(state.momentum) << ' ' << uni20::format_real(state.energy) << ' '
-                << uni20::format_real(point.bulk_subtracted_energy) << ' '
-                << uni20::format_real(bethe::heisenberg::spinon_energy(point.spinon_momentum)) << ' '
-                << uni20::format_real(state.residual_norm) << ' ' << state.iterations << ' ' << state.converged << '\n';
-      if (args.print_roots) print_roots(state);
-      converged = converged && state.converged;
-    }
-    return finish(converged);
+    return finish(cli::print_spinons(args.sites, args.precision, options, branch, args.print_roots, cpu_time,
+                                     args.output, argc, argv));
   }
-  auto const result =
-      args.quantum_numbers
-          ? bethe::heisenberg::solve_real<Real>(args.sites, parse_quantum_numbers(*args.quantum_numbers), options)
-      : args.sz ? bethe::heisenberg::sector_ground_state<Real>(args.sites, *args.sz, options)
-                : bethe::heisenberg::ground_state<Real>(args.sites, options);
+  auto const state = args.quantum_numbers
+                         ? model::solve_real<Real>(args.sites, parse_quantum_numbers(*args.quantum_numbers), options)
+                     : args.sz ? model::sector_ground_state<Real>(args.sites, *args.sz, options)
+                               : model::ground_state<Real>(args.sites, options);
   auto const cpu_time = timer.elapsed_text();
-  if (pretty)
-    return finish(bethe::cli::print_state(args.sites, args.precision, options, result,
-                                          args.quantum_numbers ? "specified real-root state"
-                                          : args.sz            ? "sector minimum"
-                                                               : "ground state",
-                                          args.print_roots, cpu_time));
-  std::cout << "Sz: " << result.sz << '\n'
-            << "Spin-reversed reference: " << result.spin_reversed << '\n'
-            << "Momentum index: " << result.momentum_index << '\n'
-            << "Momentum: " << uni20::format_real(result.momentum) << '\n'
-            << "Status: " << (result.converged ? "converged" : "iteration limit reached") << '\n'
-            << "Iterations: " << result.iterations << '\n'
-            << "CPU time: " << cpu_time << '\n'
-            << "Residual norm: " << uni20::format_real(result.residual_norm) << '\n'
-            << "Total energy: " << uni20::format_real(result.energy) << '\n'
-            << "Energy per site: " << uni20::format_real(result.energy / static_cast<Real>(args.sites)) << '\n';
-  if (args.print_roots) print_roots(result);
-  return finish(result.converged);
+  return finish(cli::spin_state<Real>(header(args.quantum_numbers ? "specified real-root state"
+                                             : args.sz            ? "sector minimum"
+                                                                  : "ground state",
+                                             cpu_time),
+                                      args.sites, state, args.print_roots, args.output, "bethe-xxx-pbc", argc, argv));
 }
 } // namespace
 
@@ -168,8 +128,8 @@ int main(int argc, char** argv)
             1)
           throw std::invalid_argument(
               "--sz, --sectors, --spinons, --quantum-numbers and --excitations are mutually exclusive");
-        if (args.format != "auto" && args.format != "pretty" && args.format != "plain")
-          throw std::invalid_argument("unknown output format: " + std::string(args.format));
-        return bethe::cli::dispatch_precision(args.precision, [&]<uni20::Real Real> { return run<Real>(args); });
+        args.output.validate();
+        return bethe::cli::dispatch_precision(args.precision,
+                                              [&]<uni20::Real Real> { return run<Real>(args, argc, argv); });
       });
 }

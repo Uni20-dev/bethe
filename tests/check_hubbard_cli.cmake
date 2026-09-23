@@ -116,10 +116,8 @@ foreach(precision IN LISTS precisions)
   foreach(u IN ITEMS 0 4 -4)
     check_cli(0 "Total energy:" 6 --u ${u} --roots --precision ${precision} --format plain)
     set(plain "${output}")
-    # Pretty labels are exact fractions, plain labels are decimals. Compare all
-    # floating fields and root values after removing the small half-integer labels.
-    string(REGEX REPLACE " -?[0-9]+\\.5\n" "\n" values "${output}")
-    string(REGEX MATCHALL "-?[0-9]+\\.[0-9]+([eE][+-]?[0-9]+)?" tokens "${values}")
+    # Native half-integer labels and root values retain the same decimal tokens.
+    string(REGEX MATCHALL "-?[0-9]+\\.[0-9]+([eE][+-]?[0-9]+)?" tokens "${output}")
     foreach(width IN ITEMS 200 35)
       set(ENV{COLUMNS} ${width})
       check_cli(0 "Hubbard (periodic)" 6 --u ${u} --roots --precision ${precision} --format pretty)

@@ -64,7 +64,16 @@ if(BETHE_BUILD_APPS)
         "$<TARGET_FILE:bethe-richardson>" "$<TARGET_FILE:bethe-central-spin>"
         "$<TARGET_FILE:bethe-gaudin-yang-pbc>" "$<TARGET_FILE:bethe-tj-pbc>"
         "$<TARGET_FILE:bethe-sun-fermions-pbc>" "$<TARGET_FILE:bethe-ladder-pbc>"
-        "$<TARGET_FILE:bethe-hubbard-pbc>" "$<TARGET_FILE:bethe-hubbard-obc>")
+        "$<TARGET_FILE:bethe-hubbard-pbc>" "$<TARGET_FILE:bethe-hubbard-obc>"
+        "$<TARGET_FILE:bethe-xxx-pbc>" "$<TARGET_FILE:bethe-xxx-obc>"
+        "$<TARGET_FILE:bethe-xxz-pbc>" "$<TARGET_FILE:bethe-xxz-obc>"
+        "$<TARGET_FILE:bethe-lieb-liniger-pbc>" "$<TARGET_FILE:bethe-biquadratic-obc>")
+    add_test(NAME DataOutput.spectra
+      COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_spectrum_tables.py"
+        "${UNI20_ENABLE_MPLAPACK}"
+        "$<TARGET_FILE:bethe-xxx-pbc>" "$<TARGET_FILE:bethe-xxx-obc>"
+        "$<TARGET_FILE:bethe-xxz-pbc>" "$<TARGET_FILE:bethe-xxz-obc>"
+        "$<TARGET_FILE:bethe-lieb-liniger-pbc>" "$<TARGET_FILE:bethe-biquadratic-obc>")
     add_test(NAME DataOutput.named
       COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_named_output.py"
         "$<TARGET_FILE:bethe-sutherland-pbc>")

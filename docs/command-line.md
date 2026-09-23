@@ -107,8 +107,8 @@ Existing positional arguments and scientific option names remain available;
 options may also precede positional arguments. Integer counts and half-integers
 are parsed exactly, with negative counts, trailing junk and overflow rejected.
 An explicitly empty list remains distinct from an omitted option.
-The [output guide](output.md) tracks the separate typed-table/export migration;
-not every frontend offers file exports yet.
+All frontends support typed tables and file exports; see the
+[output guide](output.md) for table names, metadata, and numeric encoding.
 
 ## Choose a calculation
 
@@ -158,11 +158,12 @@ For setup details and the supported MPLAPACK configuration, see
 ## Read and save the report
 
 Output uses Uni20's presentation layer on terminals: aligned fields and tables,
-exact fractional quantum-number labels, and semantic convergence markers.
-`--format auto` (the default) selects this report on a terminal and the existing
-plain, whitespace-separated output when redirected. Use `--format pretty` to
-save a formatted report or `--format plain` to request script-oriented output
-explicitly. Both retain the selected type's full round-trip precision, including
+decimal half-integer labels, and semantic convergence markers.
+`--format auto` (the default) selects this report on a terminal and a plain
+human-readable report when redirected. Use `--format pretty` to save a formatted
+report, or `--format csv|tsv|json` for scripts. Add repeatable `--csv FILE`,
+`--tsv FILE` or `--json FILE` exports independently of screen output.
+All retain the selected type's full round-trip precision, including
 binary128; no displayed values are narrowed to `double`.
 
 The pretty report honors `UNI20_COLOR`, `NO_COLOR`, `UNI20_GLYPHS`, and
@@ -170,8 +171,9 @@ The pretty report honors `UNI20_COLOR`, `NO_COLOR`, `UNI20_GLYPHS`, and
 ASCII table rules and status markers without ANSI color. Terminal width (or
 `COLUMNS`) selects aligned tables or labeled records; numeric strings are never
 split or truncated, so a single long value can still exceed a very narrow
-terminal. Scans separate energies from convergence diagnostics, and root tables
-identify their sector, hole, or excitation level.
+terminal. Root and auxiliary rows link to state records through `state_id`;
+excitation scans keep the ground reference and failed estimates separate
+from ranked levels. See the [table schemas](output.md#named-tables).
 
 ## CPU time and convergence
 
@@ -181,8 +183,8 @@ CPU time measures process CPU consumption during state construction and solving,
 not elapsed wall time;
 for scans it covers the whole scan, including the ground reference and energy
 ordering for excitations. Report formatting and output
-are excluded. Both output formats include it, in metadata before scan tables
-(a `# CPU time:` comment for spin-chain plain scans). Very short runs may report zero at the clock's
+are excluded. Human reports include it once; exports carry it in the table
+summary (trailing comments for CSV/TSV). Very short runs may report zero at the clock's
 resolution; an unavailable or wrapped CPU clock is reported as `unavailable`.
 
 `--max-iterations` defaults to 10000 **per state**;

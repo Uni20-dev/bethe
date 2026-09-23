@@ -1,12 +1,7 @@
 # Result tables and file exports
 
-At present these options are implemented by `bethe-hubbard-dispersion`,
-`bethe-haldane-shastry-pbc`, `bethe-sutherland-pbc`, `bethe-su3-pbc`,
-`bethe-tb-pbc`, `bethe-richardson`, `bethe-central-spin`, `bethe-gaudin-yang-pbc`,
-`bethe-tj-pbc`, `bethe-sun-fermions-pbc`, `bethe-ladder-pbc` and both finite
-Hubbard frontends. Other
-frontends retain their existing output options; they can migrate to the same
-shared adapter without changing their numerical libraries.
+All 19 frontends share these options. Their numerical libraries remain
+independent of command-line parsing and output sinks.
 
 One calculation produces typed Uni20 data tables. Screen output and file
 exports are independent views of those same values:
@@ -36,13 +31,13 @@ export at an input, source file or other valuable data with `--force`.
 
 ## Named tables
 
-The newer frontends use a named-table document: Haldane–Shastry has `levels`;
+All except Hubbard dispersion use a named-table document: Haldane–Shastry has `levels`;
 Sutherland has `states` and, with `--pseudomomenta`, `pseudomomenta`.
-The zero-based `state_id` links auxiliary rows to the primary table. Sutherland's
+The zero-based `state_id` links auxiliary rows to state records. Sutherland's
 old space-separated pseudomomenta cell is replaced by typed `state_id,index,label,k`
 rows; this avoids parsing numeric lists out of strings.
 
-Additional migrated models use these tables:
+The remaining models use these tables:
 
 | Frontend | Primary table | Optional auxiliary tables |
 | --- | --- | --- |
@@ -55,6 +50,30 @@ Additional migrated models use these tables:
 | `bethe-sun-fermions-pbc` | `states` | always `components`; `roots` or `free_modes` with `--roots` |
 | `bethe-ladder-pbc` | `states` | always `representations`; selected-state `roots` with `--roots` |
 | `bethe-hubbard-pbc`, `bethe-hubbard-obc` | `states` | `charge_roots`, `spin_roots`, or `free_modes` with `--roots` |
+| `bethe-xxx-pbc`, `bethe-xxx-obc` | `states` | `roots` with `--roots`; periodic `--spinons` also has `spinons` |
+| `bethe-xxz-pbc`, `bethe-xxz-obc` | `states` | `roots` with `--roots`; open ground-state modes also have `boundary_roots` |
+| `bethe-lieb-liniger-pbc` | `states` | `roots` with `--roots` |
+| `bethe-biquadratic-obc` | `states` | always `quantum_numbers`; `roots` with `--roots` |
+
+Excitation scans additionally write `reference` (the ground state used for gaps)
+and, if a candidate fails, `failed` (the first unranked estimate). State IDs are
+unique across these tables: ranked states come first, then the reference, then
+the failed candidate. Root rows may refer to any of them. XXX/XXZ scans also
+write a `quantum_numbers` table, preserving exact labels even without `--roots`.
+`state_id` is zero-based, replacing the old spin-chain one-based display level.
+
+Failed candidates never enter ranked `states`; a failed reference leaves their
+`gap` values null. Sector scans still retain unconverged estimates with explicit
+status. Biquadratic `through_lines` is a TL module label, **not** physical spin;
+its nullable integer `multiplicity` is null on overflow, not zero.
+
+XXZ `roots.lambda` is populated only for negative anisotropy; do not reconstruct
+it from rounded scaled rapidities. Massive open XXZ boundary coordinates live
+in `boundary_roots`, never in the bulk `roots` table. Its `inverse_square`,
+`log_distance`, and `kind` retain the real/imaginary/infinite-root distinction.
+`root_delta` records the reached continuation stage; energy and residual still
+refer to the requested Delta. An empty boundary table means no distinguished
+boundary root, not a failed solve.
 
 SU(n) component indices preserve input order; `nesting_rank` is null for an
 empty component. Root level zero contains charge momenta; higher levels contain
@@ -85,6 +104,10 @@ Each table has the Uni20 schema described below. The document status records
 output completion, **not** numerical convergence or spectral completeness;
 inspect the individual table summaries and the command's exit status.
 Hubbard dispersion retains its existing single-table JSON shape.
+
+The human-readable layout has changed from the old hand-written whitespace
+rows and interleaved root blocks. For scripts, use CSV/TSV or JSON and select
+columns by their schema identifiers, rather than parsing the screen report.
 
 CSV/TSV always contain exactly one rectangular table. By default `--csv FILE`,
 `--tsv FILE` and delimited stdout select the primary table. `--table NAME` changes
@@ -180,11 +203,14 @@ table API with a retention option, not a separate streaming data model.
 Spectral scans still retain and sort their solver results before delivering rows;
 `--no-retain` does not remove that solver storage or make sorted levels available early.
 At the C++ level Uni20 also supports attaching sinks later and replaying
-retained rows; the current CLI attaches all requested sinks before point solves.
+retained rows. The dispersion frontend attaches sinks before point solves;
+finite-state and spectral frontends finish solving before delivering their tables.
 
-Exit 0 means successful computation and output. Exit 2 means some points did
-not converge: their rows still appear, with missing energies and diagnostic
-statuses. Exit 1 means invalid arguments, a runtime error, or a required output
+Exit 0 means successful computation and output. Exit 2 means incomplete
+numerical results: failed dispersion points have missing energies, finite
+solves can retain labelled estimates, and excitation scans exclude failed
+candidates from ranked levels. Inspect the model-specific status and reference
+tables. Exit 1 means invalid arguments, a runtime error, or a required output
 failure. Invalid scientific arguments are checked before opening exports.
 For the exact-rule models, exit 2 instead means enumeration exceeded its budget;
 no partial selection is presented as the lowest spectrum.
@@ -203,6 +229,8 @@ exit status as well as the data summary.
 `apps/data-output.hpp` owns output configuration, streams, provenance and the
 commented CSV/TSV adapters. `apps/data-output-options.hpp` declares the CLI flags
 using Uni20/CLI11, without opening files during parsing. Uni20 owns typed columns,
-retention/replay, numeric encoding and sinks. Hubbard-specific column schemas and
-physical metadata stay in its frontend; solvers in `include/bethe/` do not depend on output policy.
+retention/replay, numeric encoding and sinks. `apps/result-output.hpp` adapts a
+model overview and several native tables to one output document. Model-specific
+schemas and physical metadata stay in the frontends; solvers in `include/bethe/`
+do not depend on output policy.
 This division leaves the numerical API usable by future Python bindings.

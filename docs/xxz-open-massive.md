@@ -157,8 +157,9 @@ build/bethe-xxz-obc 16 --delta 3 --roots --precision long-double
 build/bethe-xxz-obc 5 --delta 2 --sectors --roots --format plain
 ```
 
-Plain root output retains `# index rapidity I` for bulk roots and adds a
-separate `# boundary I inverse_square log_distance kind` record when needed.
+`--roots` writes bulk `roots` and separate `boundary_roots` tables, linked to
+`states` by `state_id`. The boundary schema includes `quantum_number`,
+`inverse_square`, `log_distance`, and `kind`.
 Its `kind` describes the returned coordinate (real, imaginary, or infinity),
 not an exact symbolic determination of the finite-chain crossing. Pretty
 output uses separate bulk and boundary tables and retains full-precision
@@ -166,9 +167,10 @@ numeric tokens even on narrow terminals. A boundary-only state is not labeled
 fully polarized.
 
 Massive reports name the regularized residual convention and show `Root Delta`.
-Plain sector tables append `root_delta status` columns, with status codes
-`converged`, `iteration_limit`, or `stalled`. The existing Delta<=1 sector
-table columns are unchanged. A nonconverged calculation exits with status 2;
+The typed state table includes `root_delta`, `converged`, and descriptive
+`status` columns, distinguishing iteration limits from stalled line searches.
+CSV/TSV and JSON exports preserve these diagnostics and native-precision
+coordinates; see [output schemas](output.md). A nonconverged calculation exits with status 2;
 invalid requests exit with status 1. Neither output mode invents momentum.
 
 ## Validation and remaining scope

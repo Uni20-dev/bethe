@@ -11,6 +11,12 @@ import tempfile
 
 fp128, *programs = sys.argv[1:]
 cases = {
+    "bethe-xxx-pbc": (["6", "--roots"], {"states", "roots"}),
+    "bethe-xxx-obc": (["6", "--roots"], {"states", "roots"}),
+    "bethe-xxz-pbc": (["6", "--delta", "0.5", "--roots"], {"states", "roots"}),
+    "bethe-xxz-obc": (["6", "--delta", "0.5", "--roots"], {"states", "roots", "boundary_roots"}),
+    "bethe-lieb-liniger-pbc": (["4", "--length", "4", "--c", "1", "--roots"], {"states", "roots"}),
+    "bethe-biquadratic-obc": (["4", "--roots"], {"states", "roots", "quantum_numbers"}),
     "bethe-hubbard-pbc": (["6", "--u", "4", "--roots"], {"states", "charge_roots", "spin_roots"}),
     "bethe-hubbard-obc": (["5", "--u", "4", "--roots"], {"states", "charge_roots", "spin_roots"}),
     "bethe-gaudin-yang-pbc": (["6", "--length", "6", "--c", "1", "--roots"], {"states", "charge_roots", "spin_roots"}),
