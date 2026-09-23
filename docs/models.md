@@ -18,6 +18,8 @@ are deferred until needed**, not a prerequisite for other models.
 The supersymmetric t–J chain now has a first periodic ground-state slice.
 The spin-1 Takhtajan–Babujian chain also has an even-ring singlet solver
 retaining finite-size complex-root deviations.
+The pure spin-1 biquadratic chain now has an even, free-end singlet solver
+through a Temperley–Lieb layer with separate representation multiplicities.
 Richardson pairing now supplies attractive ground energies in specified
 blocked-level sectors, using regular variables through pair-root collisions.
 The rational central-spin model now has fixed-magnetization ground states
@@ -76,6 +78,7 @@ paper's correlation functions, thermodynamics, or full spectrum.
 | `gaudin-yang` | Equal-mass spin-1/2 continuum delta-interacting fermions | Implemented (limited): [repulsive PBC](gaudin-yang.md), odd populations of both spins; unrestricted free and fully polarized limits | Other periodic shell branches, excitations, attraction, hard walls, thermodynamics |
 | `tj-susy` | Projected t–J electrons, J=2t | Implemented (limited): [PBC](tj.md), t=1, doped odd N_up and N_down on either length parity; every no-hole and fully polarized sector | Other doped shell branches, excitations, open boundaries |
 | `spin-s-tb` | Integrable spin-1 bilinear–biquadratic chain | Implemented (limited): [even PBC](takhtajan-babujian.md), singlet ground state of H=sum[S.S-(S.S)^2], with finite two-string deviations | Odd lengths, sectors, excitations, higher spins, open boundaries |
+| `temperley-lieb` | TL singlet-projector chains; spin-1 pure biquadratic model | Implemented (limited): [even free ends](biquadratic.md), singlet ground state of H=-sum(S.S)^2; generic lambda>2 even TL ground API and exact spin-chain multiplicity helper | Odd-chain spinon branch, excitations, physical-spin decomposition, PBC twists, other representations |
 | `richardson` | Reduced BCS pairing | Implemented (limited): [attractive pairing](richardson.md), distinct doublet levels, fixed pair count and blocked levels, ground energy through root collisions | Repeated levels/higher degeneracies, excitations, pair-root output, repulsive coupling |
 | `gaudin-magnet` | Rational spin-1/2 central spin | Implemented (limited): [sector minima](central-spin.md), distinct nonzero bath couplings of either sign, central field of either sign or zero | Repeated/zero couplings, higher local spins, excitations, general Gaudin charges |
 | `multicomponent-gas` | Equal-mass SU(κ) delta fermions | Implemented (limited): [repulsive PBC](su-fermions.md), odd occupied populations, any number of components, unrestricted free/single-component limits | Other periodic shells, attraction, excitations, hard walls, TBA, Bose–Fermi mixtures |
@@ -100,6 +103,7 @@ integrable boundaries in the literature.
 | `gaudin-yang` | Equal-mass repulsive spin-1/2 delta-interacting Fermi gas, PBC, selected ground-state sectors | [Implemented (limited)](gaudin-yang.md) | First slice complete |
 | `tj-susy` | Projected t–J chain at J=2t, PBC, selected ground-state sectors | [Implemented (limited)](tj.md) | First slice complete |
 | `spin-s-tb` | Spin-1 Takhtajan–Babujian chain, PBC ground state with finite-size string deviations | [Implemented (limited)](takhtajan-babujian.md) | First slice complete |
+| `temperley-lieb` | Spin-1 pure biquadratic even free-end ground state, via the TL algebra | [Implemented (limited)](biquadratic.md) | First slice complete |
 | `richardson` | Reduced BCS pairing Hamiltonian, specified levels and pair number | [Implemented (limited)](richardson.md) | First slice complete |
 | `gaudin-magnet` | Rational spin-1/2 central-spin sector ground energies at specified couplings and field | [Implemented (limited)](central-spin.md) | First slice complete |
 | `multicomponent-gas` | Repulsive SU(kappa) fermions on a ring, fixed odd occupied populations | [Implemented (limited)](su-fermions.md); Bose–Fermi mixture still proposed | Fermion first slice complete |
@@ -287,6 +291,35 @@ E_4=-11-sqrt(41), the Jacobian and incomplete-solve diagnostics.
 roots, singular-solution handling and new label branches. Other spin,
 magnetization, odd lengths and open boundaries are not covered by this
 ground-state implementation.
+
+### `temperley-lieb`: shared energies, different representation multiplicities
+
+The spin-1 pure biquadratic chain `H=-sum(S.S)^2` realizes the open TL
+algebra at loop weight 3, with `e_i=(S_i.S_(i+1))^2-1`. The corresponding
+spin-1/2 XXZ representation has Delta=3/2 **and opposite end fields**:
+ordinary zero-field `bethe-xxz-obc` is not the reference Hamiltonian.
+The physical energy is `2*E_ref-7*(N-1)/4` in our spin-half exchange-1
+normalization. Within a TL module the energies agree after this mapping,
+but representation multiplicities and physical spin labels do not.
+
+Implemented in [temperley_lieb.hpp](../include/bethe/temperley_lieb.hpp),
+[biquadratic.hpp](../include/bethe/biquadratic.hpp), and `bethe-biquadratic-obc`:
+even N>=2, free-end singlet ground state only. The lower TL layer supports
+the even zero-through-line ground state at general lambda>2 and a checked
+integer multiplicity helper for singlet-projector spin-chain representations.
+See the [guide](biquadratic.md) for the Bethe equations, energy shifts,
+precision contract, and full small-chain ED spectral checks.
+
+Literature: [Barber–Batchelor](../CITATIONS.md#barber-batchelor-1989),
+[Albertini](../CITATIONS.md#albertini-2000), and
+[Aufgebauer–Klümper](../CITATIONS.md#aufgebauer-klumper-2010).
+
+**Next slice:** lowest states in additional TL modules, with an explicit
+distinction between module multiplicities and physical SU(2) multiplets.
+Odd free-end chains require a one-spinon/domain-wall branch, not a doubled
+dimer ground state. PBC requires twisted XXZ references and different
+representation bookkeeping; general TL, RSOS and boundary-algebra models
+are not automatically covered by this first spin-chain implementation.
 
 ### `richardson`: finite pairing spectra without a spatial chain
 

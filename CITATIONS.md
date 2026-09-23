@@ -40,6 +40,19 @@ by P=pi*M+pi/2-k modulo 2*pi. The bulk reference energy is J*(1/4-log(2)).
 Research using these tools should acknowledge the Matrix Product Toolkit and
 Uni20 where relevant, and cite the methods used in the calculation.
 
+The free-end spin-1 pure biquadratic solver implements the spectral mapping
+of [barber-batchelor-1989](#barber-batchelor-1989). Its reference XXZ equations
+and normalization follow [albertini-2000](#albertini-2000), Eqs. (2)–(10): our
+reference Hamiltonian is half Eq. (3), after a staggered rotation of the xy
+exchange, so `E_b=2*E_ref-7*(N-1)/4`. The opposite XXZ end fields are essential;
+the physical spin-1 model has free ends. We implement the even-chain singlet's
+real-root sea, not the odd-chain spinon band. The TL module/multiplicity
+separation follows [aufgebauer-klumper-2010](#aufgebauer-klumper-2010),
+Secs. 2.3 and 3, specialized to generic singlet-projector spin-chain
+representations. It does not implement periodic twists, full-spectrum Bethe
+enumeration, physical-spin decomposition, or thermodynamics. See the
+[biquadratic/TL guide](docs/biquadratic.md) for the explicit conventions.
+
 The free-end XXX equations follow the rational limit of Eqs. (11)-(12) and
 footnote 2 in [mei-2017](#mei-2017).
 Our rapidity is `z=2*lambda`; our spin-1/2 Hamiltonian is the paper's XXX
@@ -201,6 +214,39 @@ thermodynamic integral equations are not implemented by this tool.
 ## Bibliography
 
 Generated from [data/citations.json](data/citations.json); edit the registry, not this section.
+
+### barber-batchelor-1989
+
+Michael N. Barber and Murray T. Batchelor. *Spectrum of the biquadratic spin-1 antiferromagnetic chain*.
+Phys. Rev. B 40, 4621-4626 (1989).
+
+[DOI](<https://doi.org/10.1103/PhysRevB.40.4621>).
+
+Relevant tool modes:
+
+- `bethe-biquadratic-obc`: Original free-end spin-1 biquadratic/TL spectral correspondence. Only even-chain singlet ground states of H=-sum (S.S)^2 are implemented.
+
+### albertini-2000
+
+Giuseppe Albertini. *Is the purely biquadratic spin 1 chain always massive?*.
+arXiv:cond-mat/0012439 (2000).
+
+[arXiv](<https://arxiv.org/abs/cond-mat/0012439>).
+
+Relevant tool modes:
+
+- `bethe-biquadratic-obc`: Hamiltonians and energy shift (2)-(5), real-root Bethe equations (6)-(10), and the even-chain filled sea. Our spin-half reference is half of (3), after a staggered rotation. The odd-chain spinon band is not implemented.
+
+### aufgebauer-klumper-2010
+
+Britta Aufgebauer and Andreas Klümper. *Quantum spin chains of Temperley-Lieb type: periodic boundary conditions, spectral multiplicities and finite temperature*.
+J. Stat. Mech. 2010, P05018 (2010).
+
+[arXiv](<https://arxiv.org/abs/1003.1932>).
+
+Relevant tool modes:
+
+- `bethe-biquadratic-obc`: TL loop weight and quantum-group XXZ end fields, Sec. 2.3; open spin-chain module multiplicities, Sec. 3, especially (48)-(55). Periodic twists, physical-spin decomposition, full Bethe spectra, and thermodynamics are not implemented.
 
 ### essler-korepin-1999
 

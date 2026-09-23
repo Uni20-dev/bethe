@@ -41,6 +41,11 @@ For the spin-1 bilinear–biquadratic TB point,
 [`bethe-tb-pbc`](takhtajan-babujian.md) takes even L>=4 and selects the
 zero-field singlet ground state of `H=sum[S.S-(S.S)^2]`. Its `--roots` report
 retains finite deviations and the real and imaginary parts of each rapidity.
+For the pure spin-1 biquadratic chain,
+[`bethe-biquadratic-obc`](biquadratic.md) takes even N>=2 and selects the
+free-end singlet ground state of `H=-sum(S.S)^2`. Its `--roots` output belongs
+to the auxiliary XXZ model with opposite end fields, not the physical spin-1
+chain. It does not yet offer sector or excitation scans.
 For reduced BCS pairing, [`bethe-richardson`](richardson.md) requires
 `--levels E0,E1,... --pairs M --g G`, with optional zero-based `--blocked`
 indices. Levels are single-particle energies; g>=0 is attractive. This is
