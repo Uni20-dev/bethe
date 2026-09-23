@@ -53,7 +53,7 @@ The remaining models use these tables:
 | `bethe-xxx-pbc`, `bethe-xxx-obc` | `states` | `roots` with `--roots`; periodic `--spinons` also has `spinons` |
 | `bethe-xxz-pbc`, `bethe-xxz-obc` | `states` | `roots` with `--roots`; open ground-state modes also have `boundary_roots` |
 | `bethe-lieb-liniger-pbc` | `states` | `roots` with `--roots` |
-| `bethe-biquadratic-obc` | `states` | always `quantum_numbers`; `roots` with `--roots` |
+| `bethe-biquadratic-obc` | `states` | real modes: `quantum_numbers`; Q-system modes: `reference`, `q_coefficients`; `roots` with `--roots` |
 
 Excitation scans additionally write `reference` (the ground state used for gaps)
 and, if a candidate fails, `failed` (the first unranked estimate). State IDs are
@@ -66,6 +66,10 @@ Failed candidates never enter ranked `states`; a failed reference leaves their
 `gap` values null. Sector scans still retain unconverged estimates with explicit
 status. Biquadratic `through_lines` is a TL module label, **not** physical spin;
 its nullable integer `multiplicity` is null on overflow, not zero.
+Its Q-system searches report count-matched numerical completeness separately
+from document completion. Incomplete `--q-spectrum` rows are sorted discoveries,
+not guaranteed lowest levels; a failed `--q-seed` row is an unverified estimate
+with no gap. Q-system root columns use `x=cosh(2u)`, not the real solver's alpha.
 
 XXZ `roots.lambda` is populated only for negative anisotropy; do not reconstruct
 it from rounded scaled rapidities. Massive open XXZ boundary coordinates live

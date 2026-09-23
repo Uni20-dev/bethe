@@ -302,10 +302,11 @@ inline constexpr std::array<Reference, 62> references{{
   {"cameron-graillat-2022", "Thomas R. Cameron and Stef Graillat", "On a compensated Ehrlich-Aberth method for the accurate computation of all polynomial roots", "Electronic Transactions on Numerical Analysis 55, 401-423", 2022, links_61},
 }};
 
-inline constexpr std::array<Use, 3> uses_biquadratic_obc{{
+inline constexpr std::array<Use, 4> uses_biquadratic_obc{{
   {&references[0], "Original free-end spin-1 biquadratic/TL spectral correspondence. Even-chain ground states, TL module minima and restricted real-root excitations of H=-sum (S.S)^2, with representation multiplicities."},
-  {&references[1], "Hamiltonians and energy shift (2)-(5), real-root Bethe equations (6)-(10), and integer-label window 1<=I<=N-M. Our spin-half reference is half of (3), after a staggered rotation. Complex-root levels and the odd-chain spinon band are not implemented."},
-  {&references[2], "TL loop weight and quantum-group XXZ end fields, Sec. 2.3; open spin-chain module multiplicities, Sec. 3, especially (48)-(55). Periodic twists, physical-spin decomposition, full Bethe spectra, and thermodynamics are not implemented."},
+  {&references[1], "Hamiltonians and energy shift (2)-(5), real-root Bethe equations (6)-(10), and integer-label window 1<=I<=N-M. Our spin-half reference is half of (3), after a staggered rotation. The odd-chain spinon band is not implemented."},
+  {&references[2], "TL loop weight and quantum-group XXZ end fields, Sec. 2.3; open spin-chain module multiplicities, Sec. 3, especially (48)-(55). Periodic twists, physical-spin decomposition and thermodynamics are not implemented."},
+  {&references[14], "Open quantum-group-invariant XXZ Q-system, Sec. 5: Wronskian (5.17), Bethe equations (5.12), and admissibility conditions. Used for selected complex-root levels and bounded small-chain module searches; numerical diagnostics are not rigorous completeness certificates."},
 }};
 inline constexpr std::array<Use, 4> uses_xxx_pbc{{
   {&references[7], "Periodic XXX equations, energy normalization, and sector quantum numbers; Eqs. (6)-(9), (16), Table I."},

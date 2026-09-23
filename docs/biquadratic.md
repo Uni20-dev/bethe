@@ -4,7 +4,8 @@
 
 `bethe-biquadratic-obc` calculates the singlet ground state, TL module minima,
 and restricted real-root excitations of the **even-length, free-end** spin-1
-pure biquadratic chain, N>=2:
+pure biquadratic chain, N>=2. A separate Q-system mode also handles complex-root
+levels and bounded small-chain spectrum searches:
 
 ```text
 H_b = -sum_(i=1)^(N-1) (S_i.S_(i+1))^2.
@@ -65,7 +66,7 @@ family consists of increasing integer labels selected from 1,...,N-M,
 giving `choose(N-M,M)` candidates. Complex-root levels are missing. For
 example, N=4, ell=0 has two TL eigenvalues, but only its ground state is in
 this real-root family. The other singlet energy `(-15+sqrt(17))/2` is not
-returned. By contrast, the zero- and one-root modules are complete here:
+returned by `--excitations`; use the Q-system mode below. By contrast, the zero- and one-root modules are complete here:
 for N=4, ell=2 the three energies are `-6-sqrt(2), -6, -6+sqrt(2)`, each
 with multiplicity 8. The first has gap `2.147339250435735226109016203...`.
 
@@ -75,6 +76,46 @@ use `--quantum-numbers none` for the zero-root ell=N level. Multiplicities
 use checked uint64 arithmetic: ell>=46 at d=3 is reported as
 `overflow (>uint64)`, never wrapped, rounded, or silently replaced by 1.
 Energy calculations can still converge when this integer count is unavailable.
+
+## Including complex roots
+
+```sh
+# Both four-site singlets, including the complex-root level:
+build/bethe-biquadratic-obc 4 --q-spectrum --roots
+# Search all nine levels of the six-site ell=2 module (multiplicity 8 each):
+build/bethe-biquadratic-obc 6 --q-spectrum --through-lines 2
+# Eight-site singlets benefit from both extra attempts and extra precision:
+build/bethe-biquadratic-obc 8 --q-spectrum --max-attempts 12000 --precision long-double
+# One selected branch, using a monic polynomial seed rather than real labels:
+build/bethe-biquadratic-obc 4 --q-seed 1.5,-1.3333333333333333 --roots
+# Typed exports use the same Uni20 table/output machinery:
+build/bethe-biquadratic-obc 4 --q-spectrum --roots --json levels.json
+```
+
+`--q-spectrum` searches one TL module, default ell=0, including real and complex
+roots. It is restricted to **N<=8** and uses a deterministic multistart search,
+not exact diagonalization. `--max-attempts` bounds the work (default 4000).
+Completeness is checked numerically against `choose(N,M)-choose(N,M-1)`;
+it is not a rigorous certificate. If any levels remain missing, the program
+returns exit 2 and explicitly labels the results as incomplete discoveries,
+**not necessarily the lowest levels**. Higher precision can resolve strings
+that fp64 cannot; a larger search budget only helps with state discovery.
+
+`--q-seed c0,c1,...` selects one branch of
+`Q(x)=x^M+c[M-1]*x^(M-1)+...+c[0]`, with `x=cosh(2u)=cos(alpha)`.
+Its degree determines ell, so do not supply `--through-lines`; `none` selects
+the vacuum. This is an expert interface, not an excitation rank or string
+label. It allows N<=32, but that resource cap does not guarantee convergence
+or accurate root recovery at every size. The Q-system modes do not combine
+with the real-label modes or `--sectors`.
+
+The physical energy shift and multiplicity are unchanged. Gaps still use the
+global ground reference. Named tables are `states`, `reference`,
+`q_coefficients`, and (with `--roots`) `roots`; complex values have separate
+real/imaginary columns, and unavailable diagnostics are null. A failed selected
+solve is retained as an explicitly unverified estimate, with no gap.
+See [the Q-system guide](xxz-open-qsystem.md) for equations, native-precision
+checks, API usage and the remaining large-chain work.
 
 ## The algebra connects spectra, not physical spin labels
 
@@ -207,25 +248,28 @@ Tests build the physical spin-1 bond matrix and square it independently.
 For N=2,4,6 they reconstruct its **entire ED spectrum** from independently
 diagonalized XXZ sectors and TL multiplicities. They also verify the unique
 ground state and explicitly detect the wrong answer when end fields are
-omitted. This validates the spectral mapping; it does not make a full-spectrum
-Bethe solver available. Further tests check the original multiplicative Bethe
+omitted. Further tests check the original multiplicative Bethe
 equations, the analytic Jacobian, exact two-/four-site energies in each native
 precision, longer chains through N=128, and CLI/failure contracts.
 Excitation tests isolate TL modules by subtracting adjacent auxiliary Sz
 spectra, and match every returned real-root level for N=2,4,...,10 without
 reusing an ED eigenvalue. They verify module minima, eightfold physical
 degeneracies, exact one-root energies and gaps at native precision, candidate
-limits, failed-reference behavior, and the missing complex-root singlet.
+limits, failed-reference behavior, and the singlet missing from the real-root family.
+The separate Q-system tests recover that singlet and reconstruct the full
+physical N=2,4,6 spectrum from Bethe solutions with their TL multiplicities.
 
 Odd free-end chains need their own one-domain-wall/spinon branch. Their
 low-lying states describe motion of that defect, not just a factor-two
 choice of dimer pattern. Periodic chains require sector-dependent XXZ twists
 and periodic representation bookkeeping. Neither is enabled here, nor are
-complex-root excitations, physical-spin sector scans, general boundary fields,
+large-chain complex-root enumeration, physical-spin sector scans, general boundary fields,
 or thermodynamics.
 
 The original spectral mapping is due to
 [Barber–Batchelor](../CITATIONS.md#barber-batchelor-1989). For the open-chain
 normalization and real-root equations see Albertini above; for TL modules
 and multiplicities see [Aufgebauer–Klümper](../CITATIONS.md#aufgebauer-klumper-2010),
-Secs. 2.3 and 3. All three references also appear with `--references`.
+Secs. 2.3 and 3. The Q-system uses
+[Bajnok et al.](../CITATIONS.md#bajnok-2020), Sec. 5. These references also
+appear with `--references`.

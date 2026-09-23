@@ -239,7 +239,7 @@ arXiv:cond-mat/0012439 (2000).
 
 Relevant tool modes:
 
-- `bethe-biquadratic-obc`: Hamiltonians and energy shift (2)-(5), real-root Bethe equations (6)-(10), and integer-label window 1\<=I\<=N-M. Our spin-half reference is half of (3), after a staggered rotation. Complex-root levels and the odd-chain spinon band are not implemented.
+- `bethe-biquadratic-obc`: Hamiltonians and energy shift (2)-(5), real-root Bethe equations (6)-(10), and integer-label window 1\<=I\<=N-M. Our spin-half reference is half of (3), after a staggered rotation. The odd-chain spinon band is not implemented.
 
 ### aufgebauer-klumper-2010
 
@@ -250,7 +250,7 @@ J. Stat. Mech. 2010, P05018 (2010).
 
 Relevant tool modes:
 
-- `bethe-biquadratic-obc`: TL loop weight and quantum-group XXZ end fields, Sec. 2.3; open spin-chain module multiplicities, Sec. 3, especially (48)-(55). Periodic twists, physical-spin decomposition, full Bethe spectra, and thermodynamics are not implemented.
+- `bethe-biquadratic-obc`: TL loop weight and quantum-group XXZ end fields, Sec. 2.3; open spin-chain module multiplicities, Sec. 3, especially (48)-(55). Periodic twists, physical-spin decomposition and thermodynamics are not implemented.
 
 ### essler-korepin-1999
 
@@ -380,6 +380,10 @@ Zoltán Bajnok, Etienne Granet, Jesper Lykke Jacobsen, and Rafael I. Nepomechie.
 JHEP 03 (2020) 177 (2020).
 
 [arXiv v2](<https://arxiv.org/abs/1910.07805v2>), [HTML](<https://arxiv.org/html/1910.07805v2>).
+
+Relevant tool modes:
+
+- `bethe-biquadratic-obc`: Open quantum-group-invariant XXZ Q-system, Sec. 5: Wronskian (5.17), Bethe equations (5.12), and admissibility conditions. Used for selected complex-root levels and bounded small-chain module searches; numerical diagnostics are not rigorous completeness certificates.
 
 ### popkov-2021
 

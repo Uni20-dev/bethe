@@ -19,7 +19,8 @@ The supersymmetric t–J chain now has a first periodic ground-state slice.
 The spin-1 Takhtajan–Babujian chain also has an even-ring singlet solver
 retaining finite-size complex-root deviations.
 The pure spin-1 biquadratic chain now has even, free-end ground states,
-TL module minima and restricted real-root excitations with physical multiplicities.
+TL module minima and restricted real-root excitations with physical multiplicities,
+plus selected complex-root levels and bounded small-chain Q-system searches.
 Richardson pairing now supplies attractive ground energies in specified
 blocked-level sectors, using regular variables through pair-root collisions.
 The rational central-spin model now has fixed-magnetization ground states
@@ -78,7 +79,7 @@ paper's correlation functions, thermodynamics, or full spectrum.
 | `gaudin-yang` | Equal-mass spin-1/2 continuum delta-interacting fermions | Implemented (limited): [repulsive PBC](gaudin-yang.md), odd populations of both spins; unrestricted free and fully polarized limits | Other periodic shell branches, excitations, attraction, hard walls, thermodynamics |
 | `tj-susy` | Projected t–J electrons, J=2t | Implemented (limited): [PBC](tj.md), t=1, doped odd N_up and N_down on either length parity; every no-hole and fully polarized sector | Other doped shell branches, excitations, open boundaries |
 | `spin-s-tb` | Integrable spin-1 bilinear–biquadratic chain | Implemented (limited): [even PBC](takhtajan-babujian.md), singlet ground state of H=sum[S.S-(S.S)^2], with finite two-string deviations | Odd lengths, sectors, excitations, higher spins, open boundaries |
-| `temperley-lieb` | TL singlet-projector chains; spin-1 pure biquadratic model | Implemented (limited): [even free ends](biquadratic.md), ground state, module minima and restricted real-root excitations of H=-sum(S.S)^2 with multiplicities; generic lambda>2 TL API | Complex-root levels, odd-chain spinon branch, physical-spin decomposition, PBC twists, other representations |
+| `temperley-lieb` | TL singlet-projector chains; spin-1 pure biquadratic model | Implemented (limited): [even free ends](biquadratic.md), ground state, module minima, real-root excitations and small-chain Q-system spectra with multiplicities; generic lambda>2 TL API | Large-chain complex-root enumeration, odd-chain spinon branch, physical-spin decomposition, PBC twists, other representations |
 | `richardson` | Reduced BCS pairing | Implemented (limited): [attractive pairing](richardson.md), distinct doublet levels, fixed pair count and blocked levels, ground energy through root collisions | Repeated levels/higher degeneracies, excitations, pair-root output, repulsive coupling |
 | `gaudin-magnet` | Rational spin-1/2 central spin | Implemented (limited): [sector minima](central-spin.md), distinct nonzero bath couplings of either sign, central field of either sign or zero | Repeated/zero couplings, higher local spins, excitations, general Gaudin charges |
 | `multicomponent-gas` | Equal-mass SU(κ) delta fermions | Implemented (limited): [repulsive PBC](su-fermions.md), odd occupied populations, any number of components, unrestricted free/single-component limits | Other periodic shells, attraction, excitations, hard walls, TBA, Bose–Fermi mixtures |
@@ -308,8 +309,11 @@ even N>=2, free-end ground state, TL module minima and restricted real-root
 excitations. `--through-lines` selects a module, `--sectors` lists minima,
 and `--excitations COUNT|all` enumerates the supported label family (default
 ell=2). Each level carries the spin-1 representation multiplicity, while
-gaps refer to the global singlet ground state. Complex-root levels are absent;
-`all` never denotes the full module spectrum. The lower TL layer supports
+gaps refer to the global singlet ground state. Here `all` never denotes the
+full module spectrum. A separate [Q-system solver](xxz-open-qsystem.md) adds
+selected complex-root levels (`--q-seed`) and bounded small-chain module
+searches (`--q-spectrum`, N<=8); missing/unverified levels produce an
+explicitly incomplete result, not a lowest-level guarantee. The lower TL layer supports
 the same real-root slice at general lambda>2 and a checked integer multiplicity
 helper for singlet-projector spin-chain representations.
 See the [guide](biquadratic.md) for the Bethe equations, energy shifts,
