@@ -5,6 +5,7 @@
 #include <bethe/polynomial_roots.hpp>
 #include <bethe/real_excitations.hpp>
 #include <bethe/xxz_quantum_group.hpp>
+#include <numeric>
 
 namespace bethe::xxz::quantum_group::qsystem
 {
@@ -20,10 +21,12 @@ template <uni20::Real Real> class System {
       if (roots > sites / 2) throw std::invalid_argument("open Q-system requires M <= N/2");
       if (!uni20::isfinite(delta) || delta <= Real{1})
         throw std::invalid_argument("open Q-system requires finite Delta > 1");
-      // This coefficient formulation is a small-system/selected-state engine.
-      // Bound its O(N^3) cached polynomial basis before allocating anything.
-      if (sites > 32) throw std::length_error("open Q-system currently supports N <= 32");
       degree = sites - order + 1;
+      // No empirical site cutoff. Check addressable storage before forming
+      // products or allocating the O(N^3) basis and recurrence workspace.
+      auto const capacity = std::vector<Real>{}.max_size();
+      if (degree + 1 > capacity / (order + 2) / (sites + 1))
+        throw std::length_error("open Q-system polynomial workspace is too large");
       Real const s2 = (delta - Real{1}) * (delta + Real{1});
       // B_ij=[x_+^i x_-^j-x_-^i x_+^j]/(2 sinh(eta) sqrt(x^2-1)),
       // x_+ + x_-=2 Delta x, x_+ x_-=x^2+sinh(eta)^2.
@@ -192,7 +195,7 @@ template <uni20::Real Real> void check_roots(State<Real>& state)
   using C = std::complex<Real>;
   auto const m = state.coefficients.size();
   Real const eps = uni20::numeric_limits<Real>::epsilon();
-  state.roots = bethe::detail::recover_polynomial_roots<Real>(state.coefficients);
+  state.roots = bethe::detail::recover_polynomial_roots<Real>(state.coefficients, {.max_degree = m});
   if (state.roots.status != bethe::detail::PolynomialRootStatus::resolved)
   {
     state.status = Status::unresolved_roots;
@@ -354,15 +357,49 @@ struct SearchOptions
     std::size_t max_attempts = 4000;
 };
 
+/// Exact TL dimension C(N,M)-C(N,M-1), or nullopt if it exceeds size_t.
+/// Cancel factorials BEFORE multiplying: the individual binomials can overflow
+/// even when their difference fits. Work is bounded independently of huge N.
+inline std::optional<std::size_t> module_dimension(std::size_t sites, std::size_t through_lines)
+{
+  auto const m = quantum_group::detail::sector_roots(sites, through_lines);
+  if (!m) return 1;
+  // The minimal dimension at fixed M is Catalan(M); already too large here.
+  if (m >= std::numeric_limits<std::size_t>::digits) return std::nullopt;
+  std::vector<std::size_t> factors{sites - 2 * m + 1};
+  for (std::size_t j = 2; j <= m; ++j)
+    factors.push_back(sites - m + j);
+  for (std::size_t divisor = 2; divisor <= m; ++divisor)
+  {
+    auto remainder = divisor;
+    for (auto& factor : factors)
+    {
+      auto const common = std::gcd(factor, remainder);
+      factor /= common;
+      remainder /= common;
+      if (remainder == 1) break;
+    }
+  }
+  std::size_t result = 1;
+  for (auto factor : factors)
+  {
+    if (result > std::numeric_limits<std::size_t>::max() / factor) return std::nullopt;
+    result *= factor;
+  }
+  return result;
+}
+
 template <uni20::Real Real> struct Spectrum
 {
     std::vector<State<Real>> states;
-    std::size_t expected_count = 0, attempts = 0, failed_attempts = 0;
+    std::optional<std::size_t> expected_count;
+    std::size_t attempts = 0, failed_attempts = 0;
     /// Count-matched NUMERICAL completeness, not a rigorous completeness proof.
-    bool complete() const { return states.size() == expected_count; }
+    bool complete() const { return expected_count && states.size() == *expected_count; }
 };
 
-/// Bounded deterministic multistart search of one small TL module, N<=8.
+/// Budgeted deterministic multistart search of one TL module. No site cutoff;
+/// complete-spectrum regression coverage is N<=8, not a scalability promise.
 /// Failed attempts and duplicates consume the budget. Returned levels are
 /// sorted discoveries, NOT guaranteed lowest levels unless complete().
 /// No ED seeds, random-device state, hidden precision changes or energy merging.
@@ -371,13 +408,14 @@ template <uni20::Real Real = double>
                                       SearchOptions const& search = {}, SolverOptions<Real> const& options = {})
 {
   auto const m = quantum_group::detail::sector_roots(sites, through_lines);
-  if (sites > 8) throw std::length_error("open Q-system spectrum search currently requires N <= 8");
+  if (!uni20::isfinite(delta) || delta <= Real{1})
+    throw std::invalid_argument("open Q-system requires finite Delta > 1");
   if (!uni20::isfinite(options.residual_tolerance) || options.residual_tolerance <= Real{0})
     throw std::invalid_argument("open Q-system tolerance must be finite and positive");
-  System<Real> const system(sites, m, delta);
   Spectrum<Real> out;
-  out.expected_count =
-      bethe::detail::bounded_binomial(sites, m, 256) - (m ? bethe::detail::bounded_binomial(sites, m - 1, 256) : 0);
+  out.expected_count = module_dimension(sites, through_lines);
+  if (!search.max_attempts) return out; // No polynomial workspace for a zero-work request.
+  System<Real> const system(sites, m, delta);
   // Deliberately conservative polynomial deduplication, independent of energy
   // ties. Close/ill-conditioned roots may leave the search incomplete.
   Real const merge = Real{32} * std::sqrt(uni20::numeric_limits<Real>::epsilon());

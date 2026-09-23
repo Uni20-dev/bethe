@@ -85,16 +85,18 @@ unresolved root or exceptional configuration is never rescued by silently
 switching precision or relaxing the user's coefficient tolerance. The caller
 can explicitly rerun in higher precision.
 
-The initial implementation limits a selected solve to N<=32 to bound the
-cached O(N^3) polynomial basis. Conditioning can become limiting much earlier;
-this cap is not a promised working size. It is not yet a replacement for the
-real solver on long chains. Continuation can reuse a converged Q at a nearby
-Delta, but automated adaptive continuation and large-chain string labels are
-future work.
+There is no site cutoff. The CLI warns beyond the N=8 spectrum-validation
+range: the cached polynomial basis takes O(N^3) storage, and conditioning can
+become limiting well before memory does. Attempt and iteration budgets bound
+the search, not its wall time or memory footprint. Allocation-size overflow
+is rejected before constructing the workspace. This method is not a scalable
+long-chain excitation solver; use the separate [two-string singlet solver](xxz-open-two-string.md)
+for that targeted branch. Continuation can reuse a converged Q at a
+nearby Delta; automated adaptive continuation remains future work.
 
 ## State discovery versus solving a state
 
-`spectrum()` is deliberately restricted to N<=8. It samples deterministic
+`spectrum()` samples deterministic
 coefficient seeds and polynomials built from real roots and conjugate pairs.
 It uses neither ED seeds nor stored eigenvalues. All attempts, including
 failures and duplicate solutions, consume `max_attempts`. A zero budget
@@ -102,7 +104,10 @@ returns no discoveries. Different precisions can follow different basins.
 
 Solutions are deduplicated by their Q coefficients, not by energy, and sorted
 only after discovery. The target dimension is
-`choose(N,M)-choose(N,M-1)`. Matching it is a **numerical completeness check**;
+`choose(N,M)-choose(N,M-1)`. The count is optional: integer overflow leaves
+it unavailable, never wrapped or approximate, and disables a completeness
+claim. A zero attempt budget returns before allocating the polynomial basis.
+Matching the count is a **numerical completeness check**;
 close solutions may be conservatively merged and leave a search incomplete.
 An incomplete set does not establish the lowest k energies, even if sorted.
 

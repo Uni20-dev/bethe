@@ -53,7 +53,7 @@ The remaining models use these tables:
 | `bethe-xxx-pbc`, `bethe-xxx-obc` | `states` | `roots` with `--roots`; periodic `--spinons` also has `spinons` |
 | `bethe-xxz-pbc`, `bethe-xxz-obc` | `states` | `roots` with `--roots`; open ground-state modes also have `boundary_roots` |
 | `bethe-lieb-liniger-pbc` | `states` | `roots` with `--roots` |
-| `bethe-biquadratic-obc` | `states` | real modes: `quantum_numbers`; Q-system modes: `reference`, `q_coefficients`; `roots` with `--roots` |
+| `bethe-biquadratic-obc` | `states` | real modes: `quantum_numbers`; Q-system: `reference`, `q_coefficients`; two-string singlet: `reference`, `string`; `roots` with `--roots` |
 
 Excitation scans additionally write `reference` (the ground state used for gaps)
 and, if a candidate fails, `failed` (the first unranked estimate). State IDs are
@@ -70,6 +70,10 @@ Its Q-system searches report count-matched numerical completeness separately
 from document completion. Incomplete `--q-spectrum` rows are sorted discoveries,
 not guaranteed lowest levels; a failed `--q-seed` row is an unverified estimate
 with no gap. Q-system root columns use `x=cosh(2u)`, not the real solver's alpha.
+The targeted `--singlet-excitation` mode retains `string.log_deviation=L=-log(d)`;
+its rounded complex roots cannot always resolve d. The optional `deviation`
+column is null on underflow. Failed targeted estimates remain visible with
+`converged=false` and null gap, never as ranked eigenvalues.
 
 XXZ `roots.lambda` is populated only for negative anisotropy; do not reconstruct
 it from rounded scaled rapidities. Massive open XXZ boundary coordinates live

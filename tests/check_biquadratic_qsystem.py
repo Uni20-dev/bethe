@@ -74,10 +74,21 @@ assert all(r["multiplicity"] == "8" for r in records(module["states"]))
 for args in (["4", "--q-spectrum", "--excitations", "all"], ["4", "--q-spectrum", "--sectors"],
              ["4", "--q-spectrum", "--quantum-numbers", "1,2"], ["4", "--q-seed", "1,2", "--through-lines", "0"],
              ["4", "--q-seed", "1,2", "--q-spectrum"], ["4", "--max-attempts", "2"],
-             ["10", "--q-spectrum"], ["34", "--q-seed", "none"], ["4", "--q-seed", "1,,2"],
+             ["4", "--q-seed", "1,,2"],
              ["4", "--q-seed", "nan"], ["4", "--q-spectrum", "--through-lines", "1"],
              ["4", "--q-spectrum", "--max-attempts", "-1"]):
     run(args, 1)
+
+for args in (["12", "--q-spectrum", "--max-attempts", "0"],
+             ["74", "--q-spectrum", "--max-attempts", "0"], ["34", "--q-seed", "none"]):
+    p = subprocess.run([program, *args, "--format", "json"], text=True, capture_output=True, timeout=60)
+    assert p.returncode == (2 if "--q-spectrum" in args else 0), p.stderr
+    assert "Warning:" in p.stderr and "experimental" in p.stderr
+    doc = json.loads(p.stdout)["tables"]["states"]
+    assert "experimental" in doc["metadata"]["Q-system validation"]
+    if "--q-spectrum" in args:
+        expected = "132" if args[0] == "12" else "overflow (>size_t); completeness unavailable"
+        assert doc["metadata"]["Expected module dimension"] == expected and not records(doc)
 
 with tempfile.TemporaryDirectory(prefix="bethe-qsystem-") as folder:
     root = Path(folder)

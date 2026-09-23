@@ -5,6 +5,7 @@
 #include "result-output.hpp"
 #include <bethe/biquadratic.hpp>
 #include <bethe/biquadratic_qsystem.hpp>
+#include <bethe/biquadratic_two_string.hpp>
 
 namespace
 {
@@ -21,7 +22,7 @@ struct Arguments
     std::string precision = "fp64";
     cli::DataOutputOptions output;
     bool roots = false, sectors = false;
-    bool q_spectrum = false;
+    bool q_spectrum = false, singlet_excitation = false;
 };
 auto program_info()
 {
@@ -31,8 +32,10 @@ auto program_info()
   info.notes = {"Unique singlet ground state; even N>=2, coefficient -1.",
                 "TL loop weight 3; reference XXZ Delta=3/2 with opposite end fields.",
                 "Real-root scans are NOT complete spectra: complex-root levels are excluded.",
-                "--q-spectrum searches real and complex levels of one small TL module (N<=8).",
-                "--q-seed selects a polynomial branch (N<=32), not necessarily a low-lying state.",
+                "--q-spectrum searches real and complex levels of one TL module; validated through N=8.",
+                "Q-system modes have no site cutoff; larger sizes are experimental and may be costly or unresolved.",
+                "--q-seed selects a polynomial branch, not necessarily a low-lying state.",
+                "--singlet-excitation targets one two-string singlet above a real sea, including on long chains.",
                 "Multiplicity counts physical states per TL eigenvector, not SU(2) multiplets.",
                 "TL through-lines are not physical spin; no odd chains or lattice momentum.",
                 "This is not the TB point, ULS point, or zero-boundary-field XXZ chain.",
@@ -51,10 +54,12 @@ void add_options(CLI::App& app, Arguments& args)
   bethe::cli::option(app, "--max-candidates", args.max_candidates, "exhaustive scan limit (default: 10000)");
   bethe::cli::option(app, "--quantum-numbers", args.numbers, "explicit integer labels; none for vacuum");
   bethe::cli::option(app, "--q-spectrum", args.q_spectrum,
-                     "bounded Q-system search including complex roots; N<=8, default ELL=0");
+                     "budgeted Q-system search including complex roots; default ELL=0; larger N is experimental");
   bethe::cli::option(app, "--q-seed", args.q_seed,
                      "selected Q-system branch: c0,c1,... for monic Q(x), x=cosh(2u); none for vacuum");
   bethe::cli::option(app, "--max-attempts", args.max_attempts, "Q-system seed budget (default: 4000)");
+  bethe::cli::option(app, "--singlet-excitation", args.singlet_excitation,
+                     "target the low-lying complex-root singlet (one two-string); even N>=4; not a spectrum scan");
   bethe::cli::option(app, "--roots", args.roots, "print reference roots (real labels or complex coordinates)");
   bethe::cli::option(
       app, "--tolerance", args.tolerance,
@@ -68,6 +73,9 @@ void add_options(CLI::App& app, Arguments& args)
 void validate(Arguments const& args)
 {
   args.output.validate();
+  if (args.singlet_excitation && (args.q_seed || args.q_spectrum || args.sectors || args.excitations || args.numbers ||
+                                  args.through_lines || args.max_candidates || args.max_attempts))
+    throw std::invalid_argument("--singlet-excitation cannot combine with other state selections or scan budgets");
   if ((args.q_seed || args.q_spectrum) && (args.sectors || args.excitations || args.numbers || args.max_candidates))
     throw std::invalid_argument("Q-system modes cannot be combined with real-root selection or --sectors");
   if (args.q_seed && (args.q_spectrum || args.through_lines))
@@ -141,6 +149,9 @@ int run_qsystem(Arguments const& args, int argc, char** argv, bethe::SolverOptio
                 cli::report_builder report)
 {
   cli::CpuTimer const timer;
+  if (args.sites > 8)
+    std::cerr << "Warning: Q-system spectrum validation covers N<=8. Larger chains are experimental; "
+                 "memory, search cost and string conditioning may prevent convergence or completeness.\n";
   std::vector<model::qsystem::State<Real>> states;
   bool complete = false;
   if (args.q_seed)
@@ -154,8 +165,9 @@ int run_qsystem(Arguments const& args, int argc, char** argv, bethe::SolverOptio
     auto scan = model::qsystem::spectrum<Real>(args.sites, args.through_lines.value_or(0),
                                                {.max_attempts = args.max_attempts.value_or(4000)}, options);
     complete = scan.complete();
-    report.field("Calculation", "small-chain Q-system spectrum search (real and complex roots)")
-        .field("Expected module dimension", scan.expected_count)
+    report.field("Calculation", "Q-system spectrum search (real and complex roots)")
+        .field("Expected module dimension", scan.expected_count ? std::to_string(*scan.expected_count)
+                                                                : "overflow (>size_t); completeness unavailable")
         .field("Discovered levels", scan.states.size())
         .field("Attempts", scan.attempts)
         .field("Attempt budget", args.max_attempts.value_or(4000))
@@ -167,6 +179,9 @@ int run_qsystem(Arguments const& args, int argc, char** argv, bethe::SolverOptio
   auto const ground = model::ground_state<Real>(args.sites, options);
   complete = complete && ground.reference.converged;
   report.field("TL through-lines", args.q_seed ? states.front().through_lines : args.through_lines.value_or(0))
+      .field("Q-system validation", args.sites <= 8
+                                        ? "within small-chain regression range"
+                                        : "experimental beyond N=8; no completeness or convergence guarantee")
       .field("Residual convention", "Q-system Wronskian coefficient backward error; not an energy-error bound")
       .field("Root coordinate", "x=cosh(2u)=cos(alpha); Bajnok u, alpha=-2iu")
       .field("Multiplicity meaning", "physical states per TL eigenvector, not SU(2) multiplets")
@@ -245,6 +260,80 @@ int run_qsystem(Arguments const& args, int argc, char** argv, bethe::SolverOptio
         cli::column<std::optional<Real>>("u_real"), cli::column<std::optional<Real>>("u_imag"));
   output.finish();
   if (!complete) std::cerr << "Q-system calculation incomplete or unverified; no lowest-level guarantee.\n";
+  return complete ? 0 : 2;
+}
+
+template <uni20::Real Real>
+int run_singlet(Arguments const& args, int argc, char** argv, bethe::SolverOptions<Real> const& options,
+                cli::report_builder report)
+{
+  cli::CpuTimer const timer;
+  auto const state = model::two_string::singlet<Real>(args.sites, options);
+  auto const ground = model::ground_state<Real>(args.sites, options);
+  auto const& r = state.reference;
+  bool const complete = r.converged && ground.reference.converged;
+  Real const eta = std::acosh(r.delta), d = std::exp(-r.log_deviation);
+  std::optional<Real> gap;
+  if (complete) gap = Real{2} * (r.energy - ground.reference.energy);
+  report.field("Calculation", "selected complex-root singlet excitation")
+      .field("Family", "one positive-deviation two-string; real I=1,...,N/2-2; string label 1")
+      .field("Ordering", "targeted branch, not an exhaustive search or a global first-excitation guarantee")
+      .field("TL through-lines", 0)
+      .field("Multiplicity meaning", "one physical singlet per TL eigenvector")
+      .field("Residual convention", "max phase/log-modulus equation residual divided by 2N; not an energy-error bound")
+      .field("String coordinate", "u=(eta+d)/2 +/- i*a/2; d=exp(-L)>0; L is authoritative")
+      .field("String deviation", eta + d == eta ? "unresolved in rounded u; retained by L=-log(d)"
+                                                : "resolved in rounded u; L=-log(d) also retained")
+      .field("Gap reference",
+             ground.reference.converged ? "E-E0; global singlet ground state" : "unavailable; ground solve failed")
+      .field("Status", complete ? "converged" : "incomplete; unconverged estimate")
+      .field("CPU time", timer.elapsed_text());
+  std::vector<std::string> names{"states", "reference", "string"};
+  if (args.roots) names.push_back("roots");
+  cli::ResultOutput output(report, args.output, "bethe-biquadratic-obc", argc, argv, names);
+  output.table(
+      "states", "Selected two-string singlet",
+      [&](auto& table) {
+        table.append(std::size_t{0}, state.through_lines, state.multiplicity, state.energy, gap, state.tl_energy,
+                     r.energy, r.residual_norm, r.phase_residual, r.modulus_residual, r.iterations, r.converged,
+                     std::string(status(r.status)));
+      },
+      cli::column<std::size_t>("state_id"), cli::column<std::size_t>("through_lines"),
+      cli::column<std::uint64_t>("multiplicity"), cli::column<Real>("energy", "Energy"),
+      cli::column<std::optional<Real>>("gap", "E-E0"), cli::column<Real>("tl_energy"),
+      cli::column<Real>("reference_energy"), cli::column<Real>("residual"), cli::column<Real>("phase_residual"),
+      cli::column<Real>("modulus_residual"), cli::column<std::size_t>("iterations"), cli::column<bool>("converged"),
+      cli::column<std::string>("status", "Status"));
+  output.table(
+      "reference", "Global ground reference",
+      [&](auto& table) {
+        table.append(std::size_t{1}, ground.energy, ground.reference.residual_norm, ground.reference.converged,
+                     std::string(status(ground.reference.status)));
+      },
+      cli::column<std::size_t>("state_id"), cli::column<Real>("energy", "Energy"), cli::column<Real>("residual"),
+      cli::column<bool>("converged"), cli::column<std::string>("status", "Status"));
+  output.table(
+      "string", "Two-string parameters (L remains valid below root-coordinate resolution)",
+      [&](auto& table) {
+        table.append(std::size_t{0}, r.center, r.log_deviation, d > Real{0} ? std::optional<Real>{d} : std::nullopt);
+      },
+      cli::column<std::size_t>("state_id"), cli::column<Real>("center", "a"),
+      cli::column<Real>("log_deviation", "L=-log(d)"),
+      cli::column<std::optional<Real>>("deviation", "d (null if underflow)"));
+  if (args.roots)
+    output.table(
+        "roots", "Reference roots (rounded u; use L for the string deviation)",
+        [&](auto& table) {
+          for (std::size_t j = 0; j < r.rapidities.size(); ++j)
+            table.append(std::size_t{0}, j, std::string("real sea"), Real{0}, r.rapidities[j] / Real{2});
+          for (std::size_t j = 0; j < 2; ++j)
+            table.append(std::size_t{0}, r.rapidities.size() + j, std::string("two-string"), (eta + d) / Real{2},
+                         (j ? -r.center : r.center) / Real{2});
+        },
+        cli::column<std::size_t>("state_id"), cli::column<std::size_t>("index"), cli::column<std::string>("kind"),
+        cli::column<Real>("u_real"), cli::column<Real>("u_imag"));
+  output.finish();
+  if (!complete) std::cerr << "Two-string singlet or ground reference unconverged; no verified gap.\n";
   return complete ? 0 : 2;
 }
 
@@ -345,6 +434,7 @@ template <uni20::Real Real> int run(Arguments const& args, int argc, char** argv
   if (args.tolerance) options.residual_tolerance = uni20::parse_real<Real>(*args.tolerance);
   auto report = preamble(args, options);
   if (args.q_seed || args.q_spectrum) return run_qsystem(args, argc, argv, options, std::move(report));
+  if (args.singlet_excitation) return run_singlet(args, argc, argv, options, std::move(report));
   cli::CpuTimer const timer;
   if (args.excitations)
   {

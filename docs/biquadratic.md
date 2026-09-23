@@ -5,7 +5,8 @@
 `bethe-biquadratic-obc` calculates the singlet ground state, TL module minima,
 and restricted real-root excitations of the **even-length, free-end** spin-1
 pure biquadratic chain, N>=2. A separate Q-system mode also handles complex-root
-levels and bounded small-chain spectrum searches:
+levels and budgeted spectrum searches; `--singlet-excitation` separately
+targets a low-lying complex-root singlet on long chains. The Hamiltonian is
 
 ```text
 H_b = -sum_(i=1)^(N-1) (S_i.S_(i+1))^2.
@@ -93,7 +94,7 @@ build/bethe-biquadratic-obc 4 --q-spectrum --roots --json levels.json
 ```
 
 `--q-spectrum` searches one TL module, default ell=0, including real and complex
-roots. It is restricted to **N<=8** and uses a deterministic multistart search,
+roots. It uses a deterministic multistart search, validated through **N=8**,
 not exact diagonalization. `--max-attempts` bounds the work (default 4000).
 Completeness is checked numerically against `choose(N,M)-choose(N,M-1)`;
 it is not a rigorous certificate. If any levels remain missing, the program
@@ -105,7 +106,8 @@ that fp64 cannot; a larger search budget only helps with state discovery.
 `Q(x)=x^M+c[M-1]*x^(M-1)+...+c[0]`, with `x=cosh(2u)=cos(alpha)`.
 Its degree determines ell, so do not supply `--through-lines`; `none` selects
 the vacuum. This is an expert interface, not an excitation rank or string
-label. It allows N<=32, but that resource cap does not guarantee convergence
+label. Neither Q-system mode has a site cutoff; larger chains are experimental.
+Removing the cutoff does not guarantee convergence
 or accurate root recovery at every size. The Q-system modes do not combine
 with the real-label modes or `--sectors`.
 
@@ -116,6 +118,23 @@ real/imaginary columns, and unavailable diagnostics are null. A failed selected
 solve is retained as an explicitly unverified estimate, with no gap.
 See [the Q-system guide](xxz-open-qsystem.md) for equations, native-precision
 checks, API usage and the remaining large-chain work.
+
+## A complex-root singlet on long chains
+
+```sh
+build/bethe-biquadratic-obc 128 --singlet-excitation
+build/bethe-biquadratic-obc 512 --singlet-excitation --precision long-double --roots
+```
+
+This separate solver targets one positive-deviation two-string above a real
+sea in ell=0, with physical multiplicity one. It reproduces the lowest
+excited singlet in the small-chain tests and follows that branch to long
+chains, without an exhaustive spectrum or global first-excitation claim.
+The deviation is retained logarithmically even when rounded roots look like
+an exact string. It supports the same native precisions and typed exports;
+see [the two-string guide](xxz-open-two-string.md) for equations, budgets,
+output coordinates and scope. This mode does not combine with other state
+selection or scan options.
 
 ## The algebra connects spectra, not physical spin labels
 
@@ -258,6 +277,9 @@ degeneracies, exact one-root energies and gaps at native precision, candidate
 limits, failed-reference behavior, and the singlet missing from the real-root family.
 The separate Q-system tests recover that singlet and reconstruct the full
 physical N=2,4,6 spectrum from Bethe solutions with their TL multiplicities.
+The targeted two-string solver is checked against the lowest excited singlet
+through N=10 and against the original complex equations on chains through
+N=512, retaining native precision and the logarithmic deviation.
 
 Odd free-end chains need their own one-domain-wall/spinon branch. Their
 low-lying states describe motion of that defect, not just a factor-two
@@ -270,6 +292,6 @@ The original spectral mapping is due to
 [Barber–Batchelor](../CITATIONS.md#barber-batchelor-1989). For the open-chain
 normalization and real-root equations see Albertini above; for TL modules
 and multiplicities see [Aufgebauer–Klümper](../CITATIONS.md#aufgebauer-klumper-2010),
-Secs. 2.3 and 3. The Q-system uses
+Secs. 2.3 and 3. The Q-system and regularized two-string solver use
 [Bajnok et al.](../CITATIONS.md#bajnok-2020), Sec. 5. These references also
 appear with `--references`.

@@ -34,8 +34,9 @@ template <uni20::Real Real = double>
 template <uni20::Real Real> struct Spectrum
 {
     std::vector<State<Real>> states;
-    std::size_t expected_count = 0, attempts = 0, failed_attempts = 0;
-    bool complete() const { return states.size() == expected_count; }
+    std::optional<std::size_t> expected_count;
+    std::size_t attempts = 0, failed_attempts = 0;
+    bool complete() const { return expected_count && states.size() == *expected_count; }
 };
 
 template <uni20::Real Real = double>

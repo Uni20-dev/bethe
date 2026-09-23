@@ -90,9 +90,7 @@ TYPED_TEST(OpenQSystem, InvalidInputsBudgetsAndAdmissibility)
   std::vector<R> const seed{R{3} / R{2}, -R{4} / R{3}};
   for (std::size_t n : {0, 1, 3, 5})
     EXPECT_THROW((void)qs::solve<R>(n, R{3} / R{2}, seed), std::invalid_argument);
-  EXPECT_THROW((void)qs::solve<R>(34, R{3} / R{2}, seed), std::length_error);
   EXPECT_THROW((void)qs::solve<R>(2, R{3} / R{2}, seed), std::invalid_argument);
-  EXPECT_THROW((void)qs::spectrum<R>(10, R{3} / R{2}, 0), std::length_error);
   EXPECT_THROW((void)qs::spectrum<R>(4, R{3} / R{2}, 1), std::invalid_argument);
   for (R value : {R{0}, -R{1}, uni20::numeric_limits<R>::infinity(), uni20::numeric_limits<R>::quiet_NaN()})
   {
@@ -142,6 +140,36 @@ TYPED_TEST(OpenQSystem, InvalidInputsBudgetsAndAdmissibility)
   auto const vacuum = qs::solve<R>(4, R{3} / R{2}, std::vector<R>{});
   ASSERT_TRUE(vacuum.converged);
   EXPECT_EQ(*vacuum.energy, R{9} / R{8});
+  auto const larger = qs::solve<R>(34, R{3} / R{2}, std::vector<R>{});
+  ASSERT_TRUE(larger.converged);
+  EXPECT_EQ(*larger.energy, R{99} / R{8});
+  auto const budgeted = qs::spectrum<R>(12, R{3} / R{2}, 0, {.max_attempts = 0});
+  EXPECT_EQ(budgeted.expected_count, 132);
+  EXPECT_FALSE(budgeted.complete());
+  auto const overflow = qs::spectrum<R>(74, R{3} / R{2}, 0, {.max_attempts = 0});
+  EXPECT_FALSE(overflow.expected_count);
+  EXPECT_FALSE(overflow.complete());
+  EXPECT_EQ(overflow.attempts, 0);
+  EXPECT_THROW((void)qs::System<R>(1000000000000000000ULL, 0, R{3} / R{2}), std::length_error);
+}
+
+TEST(OpenQSystemSearch, ModuleDimensionWithoutBinomialOverflow)
+{
+  EXPECT_EQ(qs::module_dimension(10, 0), 42);
+  EXPECT_EQ(qs::module_dimension(1000, 1000), 1);
+  EXPECT_EQ(qs::module_dimension(1000, 998), 999);
+  if constexpr (std::numeric_limits<std::size_t>::digits == 64)
+  {
+    EXPECT_EQ(qs::module_dimension(70, 0), 3116285494907301262ULL);
+    EXPECT_EQ(qs::module_dimension(72, 0), 11959798385860453492ULL);
+    EXPECT_FALSE(qs::module_dimension(74, 0));
+  }
+  auto const found = qs::spectrum<double>(10, 1.5, 8, {.max_attempts = 4000}, {.max_iterations = 100});
+  ASSERT_TRUE(found.complete());
+  EXPECT_EQ(found.states.size(), 9);
+  auto const exact = bethe::test::quantum_group_module_ed(10, 8, 1.5);
+  for (std::size_t i = 0; i < exact.size(); ++i)
+    EXPECT_NEAR(*found.states[i].energy, exact[i], 1e-10);
 }
 
 TEST(OpenQSystemSearch, SmallModuleSpectra)
@@ -153,7 +181,7 @@ TEST(OpenQSystemSearch, SmallModuleSpectra)
       auto const found = qs::spectrum<double>(n, 1.5, ell, {.max_attempts = 12000}, {.max_iterations = 100});
       auto const exact = bethe::test::quantum_group_module_ed(n, ell, 1.5);
       EXPECT_EQ(found.expected_count, exact.size());
-      if (n <= 6) ASSERT_TRUE(found.complete()) << found.states.size() << "/" << found.expected_count;
+      if (n <= 6) ASSERT_TRUE(found.complete()) << found.states.size() << "/" << found.expected_count.value_or(0);
       auto available = exact;
       for (auto const& state : found.states)
       {
@@ -165,7 +193,7 @@ TEST(OpenQSystemSearch, SmallModuleSpectra)
       if (n == 8 && uni20::numeric_limits<long double>::digits > 53)
       {
         auto const higher = qs::spectrum<long double>(n, 1.5L, ell, {.max_attempts = 12000}, {.max_iterations = 100});
-        ASSERT_TRUE(higher.complete()) << higher.states.size() << "/" << higher.expected_count;
+        ASSERT_TRUE(higher.complete()) << higher.states.size() << "/" << higher.expected_count.value_or(0);
         for (std::size_t i = 0; i < exact.size(); ++i)
           EXPECT_NEAR(double(*higher.states[i].energy), exact[i], 1e-10);
       }

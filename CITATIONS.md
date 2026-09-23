@@ -383,7 +383,7 @@ JHEP 03 (2020) 177 (2020).
 
 Relevant tool modes:
 
-- `bethe-biquadratic-obc`: Open quantum-group-invariant XXZ Q-system, Sec. 5: Wronskian (5.17), Bethe equations (5.12), and admissibility conditions. Used for selected complex-root levels and bounded small-chain module searches; numerical diagnostics are not rigorous completeness certificates.
+- `bethe-biquadratic-obc`: Open quantum-group-invariant XXZ Q-system, Sec. 5: Wronskian (5.17), Bethe equations (5.12), and admissibility conditions. Used for Q-system module searches (validated through N=8; larger sizes experimental) and a separately regularized one-two-string singlet branch on long chains. Neither numerical completeness nor long-chain energy ordering is rigorously certified.
 
 ### popkov-2021
 
