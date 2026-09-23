@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Copyright (C) 2026 Ian McCulloch
 #include "program-options.hpp"
-#include "report-common.hpp"
+#include "result-output.hpp"
 #include <bethe/su3.hpp>
 
 namespace
@@ -12,7 +12,8 @@ struct Arguments
 {
     std::size_t sites = 0, max_iterations = 10000;
     std::optional<std::string> tolerance;
-    std::string precision = "fp64", format = "auto";
+    std::string precision = "fp64";
+    cli::DataOutputOptions output;
     bool roots = false;
 };
 
@@ -28,6 +29,7 @@ auto program_info()
                 "Other color sectors, excitations, complex strings, twists and open ends",
                 "are not implemented. See docs/su3.md, including the spin-1 ULS mapping.",
                 "Use --references for literature and applicability; see CITATIONS.md."};
+  info.notes.push_back("Tables: states; first_roots and second_roots with --roots. See docs/output.md for file exports.");
   return info;
 }
 void add_options(CLI::App& app, Arguments& args)
@@ -39,16 +41,10 @@ void add_options(CLI::App& app, Arguments& args)
   bethe::cli::option(app, "--max-iterations", args.max_iterations, "accepted Newton updates (default: 10000)")
       ->capture_default_str();
   bethe::cli::precision_option(app, args.precision);
-  app.add_option("--format", args.format, "Stdout layout")
-      ->check(CLI::IsMember({"auto", "pretty", "plain"}))
-      ->capture_default_str();
+  cli::add_data_output_options(app, args.output, true);
 }
 
-void validate(Arguments const& args)
-{
-  if (args.format != "auto" && args.format != "plain" && args.format != "pretty")
-    throw std::invalid_argument("unknown output format: " + std::string(args.format));
-}
+void validate(Arguments const& args) { args.output.validate(); }
 
 char const* status(model::SolveStatus value)
 {
@@ -64,7 +60,7 @@ char const* status(model::SolveStatus value)
   return "unknown";
 }
 
-template <uni20::Real Real> int run(Arguments const& args)
+template <uni20::Real Real> int run(Arguments const& args, int argc, char** argv)
 {
   model::SolverOptions<Real> options;
   options.max_iterations = args.max_iterations;
@@ -93,21 +89,35 @@ template <uni20::Real Real> int run(Arguments const& args)
       .field("Residual norm", uni20::format_real(state.residual_norm))
       .field("Iterations", state.iterations)
       .field("CPU time", cpu_time);
+  using cli::column;
+  std::vector<std::string> names{"states"};
   if (args.roots)
   {
-    for (std::size_t a = 0; a < 2; ++a)
-    {
-      auto& table = report.table(a == 0 ? "First-level rapidities" : "Second-level rapidities");
-      table.header_separator()
-          .column("Index")
-          .column(a == 0 ? "I" : "J")
-          .column(a == 0 ? "lambda" : "mu", cli::table_alignment::decimal);
-      for (std::size_t j = 0; j < state.rapidities[a].size(); ++j)
-        table.row(j, uni20::to_string_fraction(state.quantum_numbers[a][j]),
-                  uni20::format_real(state.rapidities[a][j]));
-    }
+    names.push_back("first_roots");
+    names.push_back("second_roots");
   }
-  cli::print_report(report, args.format);
+  cli::ResultOutput output(report, args.output, "bethe-su3-pbc", argc, argv, names);
+  output.table(
+      "states", "State",
+      [&](auto& t) {
+        t.append(0, state.energy, state.momentum_index, state.momentum, state.level_residuals[0],
+                 state.level_residuals[1], state.residual_norm, state.iterations, state.converged,
+                 status(state.status));
+      },
+      column<std::size_t>("state_id"), column<Real>("energy"), column<std::size_t>("momentum_index"), column<Real>("p"),
+      column<Real>("first_residual"), column<Real>("second_residual"), column<Real>("residual"),
+      column<std::size_t>("iterations"), column<bool>("converged"), column<std::string>("status"));
+  if (args.roots)
+    for (std::size_t a = 0; a < 2; ++a)
+      output.table(
+          a ? "second_roots" : "first_roots", a ? "Second-level rapidities" : "First-level rapidities",
+          [&](auto& t) {
+            for (std::size_t j = 0; j < state.rapidities[a].size(); ++j)
+              t.append(0, j, state.quantum_numbers[a][j], state.rapidities[a][j]);
+          },
+          column<std::size_t>("state_id"), column<std::size_t>("index"),
+          column<uni20::half_int>("quantum_number", a ? "J" : "I"), column<Real>("rapidity", a ? "mu" : "lambda"));
+  output.finish();
   if (!state.converged) std::cerr << "SU(3) solve incomplete; consider a larger budget or higher precision.\n";
   return state.converged ? 0 : 2;
 }
@@ -120,6 +130,7 @@ int main(int argc, char** argv)
       argc, argv, program_info(), [&](auto& app) { add_options(app, args); },
       [&](auto&) {
         validate(args);
-        return bethe::cli::dispatch_precision(args.precision, [&]<uni20::Real Real> { return run<Real>(args); });
+        return bethe::cli::dispatch_precision(args.precision,
+                                              [&]<uni20::Real Real> { return run<Real>(args, argc, argv); });
       });
 }

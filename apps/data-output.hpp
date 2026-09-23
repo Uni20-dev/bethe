@@ -252,6 +252,9 @@ class DataOutput {
           print_output_error(std::cerr, error);
         }
     }
+    // Keep a compact, model-authored human overview. Export metadata still
+    // carries the complete provenance on every independently readable table.
+    void overview(report_builder report) { overview_ = std::move(report); }
     template <typename Table> void attach(Table& table, std::string name = {})
     {
       if (!tables_.empty())
@@ -308,10 +311,18 @@ class DataOutput {
       if (!failure && !options_.quiet && options_.human() && !options_.stream)
       {
         report_builder report(table.title());
-        for (auto const& [key, value] : table.metadata())
-          report.field(key, value);
-        for (auto const& [key, value] : *table.summary())
-          report.field(key, value);
+        if (overview_)
+        {
+          if (!overview_printed_) report = *overview_;
+          overview_printed_ = true;
+        }
+        else
+        {
+          for (auto const& [key, value] : table.metadata())
+            report.field(key, value);
+          for (auto const& [key, value] : *table.summary())
+            report.field(key, value);
+        }
         report.table("") = data::to_report_table(table);
         print_report(report, options_.format);
         std::cout.flush();
@@ -516,6 +527,8 @@ class DataOutput {
     std::vector<JsonDocument> json_files_;
     JsonDocument json_stdout_;
     bool document_finished_ = false;
+    std::optional<report_builder> overview_;
+    bool overview_printed_ = false;
     std::vector<std::unique_ptr<std::ofstream>> files_;
     std::optional<uni20::display::scoped_sink> plain_router_;
 };

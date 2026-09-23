@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Copyright (C) 2026 Ian McCulloch
 #include "program-options.hpp"
-#include "report-common.hpp"
+#include "result-output.hpp"
 #include <bethe/central_spin.hpp>
 
 namespace
@@ -12,7 +12,8 @@ struct Arguments
 {
     std::optional<std::string> couplings, field, tolerance;
     std::optional<uni20::half_int> sz;
-    std::string precision = "fp64", format = "auto";
+    std::string precision = "fp64";
+    cli::DataOutputOptions output;
     std::size_t max_iterations = 10000, max_stages = 10000;
     bool variables = false;
 };
@@ -30,6 +31,7 @@ auto program_info()
       "No PBC/OBC or lattice momentum applies; a sector minimum is not necessarily the global minimum.",
       "See docs/central-spin.md for conventions, state selection and continuation controls.",
       "Use --references for literature and applicability; see CITATIONS.md."};
+  info.notes.push_back("Tables: states; variables with --variables. Null energy/reached_field means no finite-field stage was reached.");
   return info;
 }
 void add_options(CLI::App& app, Arguments& args)
@@ -45,17 +47,14 @@ void add_options(CLI::App& app, Arguments& args)
   bethe::cli::option(app, "--max-iterations", args.max_iterations, "attempted Newton corrections, including retries")
       ->capture_default_str();
   bethe::cli::precision_option(app, args.precision);
-  app.add_option("--format", args.format, "Stdout layout")
-      ->check(CLI::IsMember({"auto", "pretty", "plain"}))
-      ->capture_default_str();
+  cli::add_data_output_options(app, args.output, true);
 }
 
 void validate(Arguments const& args)
 {
   if (!args.couplings || !args.field || !args.sz)
     throw std::invalid_argument("--couplings, --field and --sz are required");
-  if (args.format != "auto" && args.format != "pretty" && args.format != "plain")
-    throw std::invalid_argument("unknown output format: " + std::string(args.format));
+  args.output.validate();
 }
 char const* status(model::SolveStatus value)
 {
@@ -74,7 +73,7 @@ char const* status(model::SolveStatus value)
   }
   return "unknown";
 }
-template <uni20::Real Real> int run(Arguments const& args)
+template <uni20::Real Real> int run(Arguments const& args, int argc, char** argv)
 {
   std::vector<Real> a;
   std::string_view list = *args.couplings;
@@ -119,18 +118,33 @@ template <uni20::Real Real> int run(Arguments const& args)
       .field("Continuation stages", state.stages)
       .field("Rejected stages", state.rejected_stages)
       .field("CPU time", cpu_time);
+  using cli::column;
+  std::vector<std::string> names{"states"};
+  if (args.variables) names.push_back("variables");
+  cli::ResultOutput output(report, args.output, "bethe-central-spin", argc, argv, names);
+  output.table(
+      "states", "State",
+      [&](auto& t) {
+        t.append(0, state.sz, state.energy, state.field, state.reached_field, state.residual_norm, state.number_error,
+                 state.iterations, state.stages, state.rejected_stages, state.converged, status(state.status));
+      },
+      column<std::size_t>("state_id"), column<uni20::half_int>("sz"), column<std::optional<Real>>("energy"),
+      column<Real>("requested_field"), column<std::optional<Real>>("reached_field"), column<Real>("residual"),
+      column<Real>("number_error"), column<std::size_t>("iterations"), column<std::size_t>("stages"),
+      column<std::size_t>("rejected_stages"), column<bool>("converged"), column<std::string>("status"));
   if (args.variables)
-  {
-    auto& table = report.table("Eigenvalue variables (not occupations; spin-reversed frame if B<0)");
-    table.header_separator()
-        .column("Spin")
-        .column("Coupling A", cli::table_alignment::decimal)
-        .column("v", cli::table_alignment::decimal);
-    for (std::size_t j = 0; j <= a.size(); ++j)
-      table.row(j, j ? uni20::format_real(a[j - 1]) : "central",
-                state.eigenvalue_variables.empty() ? "analytic" : uni20::format_real(state.eigenvalue_variables[j]));
-  }
-  cli::print_report(report, args.format);
+    output.table(
+        "variables", "Eigenvalue variables (not occupations; spin-reversed frame if B<0)",
+        [&](auto& t) {
+          for (std::size_t j = 0; j <= a.size(); ++j)
+            t.append(0, j, j ? std::optional<Real>{a[j - 1]} : std::nullopt,
+                     state.eigenvalue_variables.empty() ? std::nullopt
+                                                        : std::optional<Real>{state.eigenvalue_variables[j]});
+        },
+        column<std::size_t>("state_id"), column<std::size_t>("spin"),
+        column<std::optional<Real>>("coupling").description("Null identifies the central spin"),
+        column<std::optional<Real>>("v").description("Null for an analytic state; not an occupation"));
+  output.finish();
   if (!state.converged) std::cerr << "Central-spin solve incomplete: no energy at the requested field is claimed.\n";
   return state.converged ? 0 : 2;
 }
@@ -142,6 +156,7 @@ int main(int argc, char** argv)
       argc, argv, program_info(), [&](auto& app) { add_options(app, args); },
       [&](auto&) {
         validate(args);
-        return bethe::cli::dispatch_precision(args.precision, [&]<uni20::Real Real> { return run<Real>(args); });
+        return bethe::cli::dispatch_precision(args.precision,
+                                              [&]<uni20::Real Real> { return run<Real>(args, argc, argv); });
       });
 }

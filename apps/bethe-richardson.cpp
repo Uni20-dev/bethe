@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Copyright (C) 2026 Ian McCulloch
 #include "program-options.hpp"
-#include "report-common.hpp"
+#include "result-output.hpp"
 #include <bethe/richardson.hpp>
 
 namespace
@@ -12,7 +12,8 @@ struct Arguments
 {
     std::optional<std::string> levels, g, tolerance;
     std::optional<std::size_t> pairs;
-    std::string blocked, precision = "fp64", format = "auto";
+    std::string blocked, precision = "fp64";
+    cli::DataOutputOptions output;
     std::size_t max_iterations = 10000, max_stages = 10000;
     bool variables = false;
 };
@@ -29,6 +30,7 @@ auto program_info()
                 "Pair rapidities are not reconstructed; no lattice momentum or PBC/OBC applies.",
                 "See docs/richardson.md for energy shifts, blocking and continuation controls.",
                 "Use --references for literature and applicability; see CITATIONS.md."};
+  info.notes.push_back("Tables: states; variables with --variables. Exported energy belongs to reached_g, not necessarily requested_g.");
   return info;
 }
 void add_options(CLI::App& app, Arguments& args)
@@ -44,16 +46,13 @@ void add_options(CLI::App& app, Arguments& args)
   bethe::cli::option(app, "--max-iterations", args.max_iterations, "attempted Newton corrections, including retries")
       ->capture_default_str();
   bethe::cli::precision_option(app, args.precision);
-  app.add_option("--format", args.format, "Stdout layout")
-      ->check(CLI::IsMember({"auto", "pretty", "plain"}))
-      ->capture_default_str();
+  cli::add_data_output_options(app, args.output, true);
 }
 
 void validate(Arguments const& args)
 {
   if (!args.levels || !args.pairs || !args.g) throw std::invalid_argument("--levels, --pairs and --g are required");
-  if (args.format != "auto" && args.format != "pretty" && args.format != "plain")
-    throw std::invalid_argument("unknown output format: " + std::string(args.format));
+  args.output.validate();
 }
 template <typename Function> void each_item(std::string_view list, Function function)
 {
@@ -85,7 +84,7 @@ char const* status(model::SolveStatus value)
   }
   return "unknown";
 }
-template <uni20::Real Real> int run(Arguments const& args)
+template <uni20::Real Real> int run(Arguments const& args, int argc, char** argv)
 {
   std::vector<Real> levels;
   each_item(*args.levels, [&](auto value) { levels.push_back(uni20::parse_real<Real>(value)); });
@@ -122,23 +121,37 @@ template <uni20::Real Real> int run(Arguments const& args)
       .field("Continuation stages", state.stages)
       .field("Rejected stages", state.rejected_stages)
       .field("CPU time", cpu_time);
+  using cli::column;
+  std::vector<std::string> names{"states"};
+  if (args.variables) names.push_back("variables");
+  cli::ResultOutput output(report, args.output, "bethe-richardson", argc, argv, names);
+  output.table(
+      "states", "State",
+      [&](auto& t) {
+        t.append(0, state.energy, state.coupling, state.reached_coupling, state.residual_norm,
+                 state.target_residual_norm, state.particle_number_error, state.iterations, state.stages,
+                 state.rejected_stages, state.converged, status(state.status));
+      },
+      column<std::size_t>("state_id"), column<Real>("energy"), column<Real>("requested_g"), column<Real>("reached_g"),
+      column<Real>("residual"), column<Real>("target_residual"), column<Real>("pair_number_error"),
+      column<std::size_t>("iterations"), column<std::size_t>("stages"), column<std::size_t>("rejected_stages"),
+      column<bool>("converged"), column<std::string>("status"));
   if (args.variables)
-  {
-    auto& table = report.table("Level data and eigenvalue variables (not occupations)");
-    table.header_separator()
-        .column("Index")
-        .column("epsilon", cli::table_alignment::decimal)
-        .column("Blocked")
-        .column("y", cli::table_alignment::decimal);
-    std::size_t active = 0;
-    for (std::size_t i = 0; i < levels.size(); ++i)
-    {
-      bool const is_active = active < state.active.size() && state.active[active] == i;
-      table.row(i, uni20::format_real(levels[i]), is_active ? "no" : "yes",
-                is_active ? uni20::format_real(state.eigenvalue_variables[active++]) : "-");
-    }
-  }
-  cli::print_report(report, args.format);
+    output.table(
+        "variables", "Level data and eigenvalue variables (not occupations)",
+        [&](auto& t) {
+          std::size_t active = 0;
+          for (std::size_t i = 0; i < levels.size(); ++i)
+          {
+            bool const is_active = active < state.active.size() && state.active[active] == i;
+            std::optional<Real> y;
+            if (is_active) y = state.eigenvalue_variables[active++];
+            t.append(0, i, levels[i], !is_active, y);
+          }
+        },
+        column<std::size_t>("state_id"), column<std::size_t>("index"), column<Real>("epsilon"), column<bool>("blocked"),
+        column<std::optional<Real>>("y").description("Null for a blocked level; not an occupation"));
+  output.finish();
   if (!state.converged)
     std::cerr
         << "Richardson solve incomplete: the reported energy is at the reached coupling, not the requested one.\n";
@@ -152,6 +165,7 @@ int main(int argc, char** argv)
       argc, argv, program_info(), [&](auto& app) { add_options(app, args); },
       [&](auto&) {
         validate(args);
-        return bethe::cli::dispatch_precision(args.precision, [&]<uni20::Real Real> { return run<Real>(args); });
+        return bethe::cli::dispatch_precision(args.precision,
+                                              [&]<uni20::Real Real> { return run<Real>(args, argc, argv); });
       });
 }

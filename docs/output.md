@@ -1,7 +1,8 @@
 # Result tables and file exports
 
 At present these options are implemented by `bethe-hubbard-dispersion`,
-`bethe-haldane-shastry-pbc` and `bethe-sutherland-pbc`. Other
+`bethe-haldane-shastry-pbc`, `bethe-sutherland-pbc`, `bethe-su3-pbc`,
+`bethe-tb-pbc`, `bethe-richardson` and `bethe-central-spin`. Other
 frontends retain their existing output options; they can migrate to the same
 shared adapter without changing their numerical libraries.
 
@@ -38,6 +39,25 @@ Sutherland has `states` and, with `--pseudomomenta`, `pseudomomenta`.
 The zero-based `state_id` links auxiliary rows to the primary table. Sutherland's
 old space-separated pseudomomenta cell is replaced by typed `state_id,index,label,k`
 rows; this avoids parsing numeric lists out of strings.
+
+Additional migrated models use these tables:
+
+| Frontend | Primary table | Optional auxiliary tables |
+| --- | --- | --- |
+| `bethe-su3-pbc` | `states` | `first_roots`, `second_roots` with `--roots` |
+| `bethe-tb-pbc` | `states` | `strings`, `roots` with `--roots`; complex roots have separate real/imaginary columns |
+| `bethe-richardson` | `states` | `variables` with `--variables`; blocked levels have null eigenvalue variables |
+| `bethe-central-spin` | `states` | `variables` with `--variables`; null coupling identifies the central spin |
+
+Richardson energies belong to `reached_g`, not necessarily `requested_g`.
+Central-spin energies similarly belong to `reached_field`; both energy and
+reached field are null if no finite-field stage was reached. A null central-spin
+variable denotes an analytic state, not a missing occupation. These are
+eigenvalue variables, not occupations or Bethe rapidities.
+
+The final human report keeps the model's compact overview once, followed by
+its tables. Each exported table independently carries full provenance and
+physical metadata so a selected auxiliary CSV file remains interpretable.
 
 Human output shows all requested tables. JSON stores them in a single object:
 `{"tables":{"states":{...},"pseudomomenta":{...}},"status":"complete"}`.
