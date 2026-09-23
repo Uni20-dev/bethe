@@ -9,6 +9,10 @@ need the extra precision.
 CMake 3.28+, a C++23 compiler supported by Uni20 (GCC 13+ or Clang 19+),
 and Uni20's numerical dependencies are required. Uni20 is pinned to a tested
 commit and fetched automatically unless a parent already supplies `uni20_core`.
+The current pin is the published data-table implementation at `395eb6d`
+([Uni20 PR52](https://github.com/Uni20-dev/uni20/pull/52)), including decimal
+half-integer encoding and intact numerical tokens in streaming output. Local
+overrides must provide these APIs too.
 
 ## Build the pinned version
 
@@ -56,7 +60,7 @@ For binary128, use a separate build directory and add
 `-DUNI20_ENABLE_MPLAPACK=ON`. To use an installed MPLAPACK 3.0+ binary128
 package, add `-DUNI20_USE_SYSTEM_MPLAPACK=ON` and
 `-Dmplapack_DIR=/path/to/lib/cmake/mplapack`; otherwise Uni20 can fetch it.
-See [Uni20's provider setup](https://github.com/Uni20-dev/uni20/blob/0c037c125705d77e197f108f6d0ee9efb6990eff/docs/linalg/mplapack_binary128.md).
+See [Uni20's provider setup](https://github.com/Uni20-dev/uni20/blob/395eb6ddba10eec51daa929d688a40263807ed12/docs/linalg/mplapack_binary128.md).
 
 `UNI20_USE_SYSTEM_MPLAPACK=OFF` forces a v3.0.0 source fetch. Alternatively,
 build MPLAPACK v3.0.0 separately and pass its **build directory** as

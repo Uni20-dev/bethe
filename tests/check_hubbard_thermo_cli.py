@@ -44,7 +44,7 @@ with localcontext() as context:
         tolerance = Decimal("1e-31" if precision == "fp128" else "1e-13")
         assert abs(Decimal(data[1]["energy"]) - reference) < tolerance, data[1]
         for r in data:
-            assert r["spin"] == ("1/2" if r["branch"] == "spinon" else "0"), r
+            assert r["spin"] == ("0.5" if r["branch"] == "spinon" else "0"), r
             assert int(r["delta_n"]) == {"spinon": 0, "holon": -1, "antiholon": 1}[r["branch"]]
         symmetric = rows(run(*base, "--momentum", "1")[0])
         unshifted_out, _ = run(*base, "--momentum", "1", "--convention", "unshifted")
@@ -67,7 +67,7 @@ with localcontext() as context:
         for i, r in enumerate(doped):
             assert r["status"] == "converged" and r["energy"] == r["fermi_energy"], r
             assert "energy_mesh_error" in r and "energy_quad_error" not in r
-            assert r["spin"] == ("1/2" if r["branch"] == "spinon" else "0")
+            assert r["spin"] == ("0.5" if r["branch"] == "spinon" else "0")
             assert int(r["delta_n"]) == {"spinon": 0, "holon": -1, "charge-particle": 1}[r["branch"]]
             assert abs(Decimal(r["symmetric_energy"]) - Decimal(r["fermi_energy"]) - mu * int(r["delta_n"])) < tolerance
             if i % 3 != 1:

@@ -13,7 +13,7 @@ if(NOT TARGET uni20_core)
   include(FetchContent)
   FetchContent_Declare(uni20
     GIT_REPOSITORY https://github.com/Uni20-dev/uni20.git
-    GIT_TAG 0c037c125705d77e197f108f6d0ee9efb6990eff
+    GIT_TAG 395eb6ddba10eec51daa929d688a40263807ed12
   )
   FetchContent_MakeAvailable(uni20)
   # Keep default builds limited to the components our targets actually link.
@@ -26,12 +26,31 @@ target_compile_features(bethe INTERFACE cxx_std_23)
 target_include_directories(bethe INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/include")
 target_link_libraries(bethe INTERFACE uni20_core uni20_common uni20_linalg)
 
+if(BETHE_BUILD_APPS OR BETHE_BUILD_TESTS)
+  # Inspect the actual dependency checkout, including source overrides. Refresh
+  # before each build; the script changes the header only when its contents change.
+  get_target_property(bethe_uni20_source uni20_common SOURCE_DIR)
+  set(bethe_generated_dir "${CMAKE_CURRENT_BINARY_DIR}/generated")
+  add_custom_target(bethe_build_info
+    COMMAND "${CMAKE_COMMAND}" "-DBETHE_SOURCE=${PROJECT_SOURCE_DIR}"
+      "-DUNI20_SOURCE=${bethe_uni20_source}" "-DBETHE_VERSION=${PROJECT_VERSION}"
+      "-DOUTPUT=${bethe_generated_dir}/bethe-build-info.hpp"
+      -P "${PROJECT_SOURCE_DIR}/cmake/WriteBuildInfo.cmake"
+    BYPRODUCTS "${bethe_generated_dir}/bethe-build-info.hpp"
+    VERBATIM)
+  add_library(bethe_cli_output INTERFACE)
+  target_link_libraries(bethe_cli_output INTERFACE bethe::bethe)
+  target_include_directories(bethe_cli_output INTERFACE "${PROJECT_SOURCE_DIR}/apps" "${bethe_generated_dir}")
+  add_dependencies(bethe_cli_output bethe_build_info)
+endif()
+
 if(BETHE_BUILD_APPS)
   foreach(app IN ITEMS bethe-xxx-pbc bethe-xxx-obc bethe-xxz-pbc bethe-xxz-obc bethe-hubbard-pbc bethe-hubbard-obc bethe-hubbard-dispersion bethe-lieb-liniger-pbc bethe-su3-pbc bethe-gaudin-yang-pbc bethe-tj-pbc bethe-tb-pbc bethe-richardson bethe-central-spin bethe-sun-fermions-pbc bethe-ladder-pbc bethe-haldane-shastry-pbc bethe-sutherland-pbc)
     add_executable(${app} apps/${app}.cpp)
     target_link_libraries(${app} PRIVATE bethe::bethe)
     set_target_properties(${app} PROPERTIES CXX_EXTENSIONS OFF)
   endforeach()
+  target_link_libraries(bethe-hubbard-dispersion PRIVATE bethe_cli_output)
 endif()
 
 if(BETHE_BUILD_TESTS)

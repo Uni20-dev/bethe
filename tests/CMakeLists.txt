@@ -36,6 +36,10 @@ foreach(module IN ITEMS heisenberg sectors open excitations xxz xxz_open xxz_ope
   bethe_discover_tests(bethe_${module}_tests)
 endforeach()
 
+add_executable(bethe_output_tests test_output.cpp)
+target_link_libraries(bethe_output_tests PRIVATE bethe_cli_output)
+bethe_discover_tests(bethe_output_tests)
+
 add_executable(bethe_citation_tests test_citations.cpp)
 # The citation data API is deliberately standard-library-only.
 target_compile_features(bethe_citation_tests PRIVATE cxx_std_23)
@@ -62,6 +66,9 @@ if(BETHE_BUILD_APPS)
         "$<TARGET_FILE:bethe-haldane-shastry-pbc>" "${UNI20_ENABLE_MPLAPACK}")
     add_test(NAME HubbardThermo.cli
       COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_hubbard_thermo_cli.py"
+        "$<TARGET_FILE:bethe-hubbard-dispersion>" "${UNI20_ENABLE_MPLAPACK}")
+    add_test(NAME DataOutput.cli
+      COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_data_output_cli.py"
         "$<TARGET_FILE:bethe-hubbard-dispersion>" "${UNI20_ENABLE_MPLAPACK}")
   endif()
   foreach(app IN ITEMS bethe-xxx-pbc bethe-xxx-obc bethe-xxz-pbc bethe-xxz-obc bethe-hubbard-pbc bethe-hubbard-obc bethe-hubbard-dispersion bethe-lieb-liniger-pbc bethe-su3-pbc bethe-gaudin-yang-pbc bethe-tj-pbc bethe-tb-pbc bethe-richardson bethe-central-spin bethe-sun-fermions-pbc bethe-ladder-pbc bethe-haldane-shastry-pbc bethe-sutherland-pbc)

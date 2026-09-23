@@ -134,14 +134,23 @@ endpoint distances below the scalar's representable range are not promised.
 `quadrature_limit`, `momentum_limit`, or `precision_limit` mark failed points:
 their energies are omitted, never replaced with a claimed converged zero.
 Exit status is 0 for complete success, 2 for failed points, and 1 for invalid
-arguments. Inspect status before increasing a budget or changing precision.
+arguments, runtime errors or output failures. Inspect status before increasing
+a budget or changing precision.
 
 ## Output and C++ API
 
-`auto`, `pretty`, and `plain` use Uni20 presentation. `csv`/`tsv` have one header
-row, unwrapped native-precision tokens, empty failed-energy cells, and `#`
-metadata including convention, energy reference, background, precision and
-solver CPU time. `energy` follows the selected convention/reference;
+`auto`, `pretty`, and `plain` use Uni20 presentation. Add `--csv FILE`,
+`--tsv FILE` or `--json FILE` to export alongside the screen report, or use
+`--quiet` for files only. `--format` selects stdout, including machine formats.
+The [output guide](output.md) explains streaming, memory retention, provenance,
+overwrite protection, and precision-preserving JSON.
+
+CSV/TSV have one header row, unwrapped native-precision tokens, decimal spins
+(`0.5`), empty failed-energy cells, and initial `#` metadata. Status and solver
+CPU time are **trailing** comments. `--no-preamble` produces strict CSV/TSV.
+JSON has typed column metadata, decimal strings for real values, numerical
+half-integers, and `null` for missing values.
+`energy` follows the selected convention/reference;
 `symmetric_energy` always means the symmetric **Hamiltonian** difference and
 `fermi_energy` always means the chemical-potential-subtracted energy.
 Citations appear in `--help` and [CITATIONS.md](../CITATIONS.md), not numeric output.
