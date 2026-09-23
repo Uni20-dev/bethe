@@ -23,8 +23,9 @@ endpoints `-pi` and `pi` are the same point in the Brillouin zone. `--momentum`
 instead selects one point in radians. With `--branch all` it must belong to
 every selected branch.
 
-Use `--help` or `-h` for Uni20-rendered options, examples and references;
-`--version` and `--build-info` report the compiled application and dependency
+Use `--help` or `-h` for Uni20-rendered options and examples, and `--references`
+for the literature and its applicability. `--version` and `--build-info`
+report the compiled application and dependency
 identity without calculating or opening files. This frontend accepts both
 `--u 4` and `--u=4`, rejects repeated scalar options, and retains repeatable
 file-export options. See [shared CLI behavior](command-line.md#uni20-help-and-option-parsing).
@@ -159,7 +160,7 @@ half-integers, and `null` for missing values.
 `energy` follows the selected convention/reference;
 `symmetric_energy` always means the symmetric **Hamiltonian** difference and
 `fermi_energy` always means the chemical-potential-subtracted energy.
-Citations appear in `--help` and [CITATIONS.md](../CITATIONS.md), not numeric output.
+Citations appear in `--references` and [CITATIONS.md](../CITATIONS.md), not ordinary help or numeric output.
 
 Include `<bethe/hubbard_thermo.hpp>` and use `bethe::hubbard::thermo`:
 

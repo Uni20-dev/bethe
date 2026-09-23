@@ -73,17 +73,19 @@ Heisenberg ladder. Use `--singlets NS` for one singlet-count sector or
 `--roots` prints the selected state's highest-weight representative and
 retains the distinction between it and a physical SU(4) descendant.
 
-Each program's `--help` (and no-argument usage) includes relevant literature
-references with links and a note on the modes they support. Normal numerical
-output is unchanged. [CITATIONS.md](../CITATIONS.md) gives the full bibliography
-and explains the conventions used here.
+Relevant literature references include links and a note on the modes they
+support. `bethe-hubbard-dispersion --references` displays its bibliography;
+the other frontends still include theirs in `--help` and no-argument usage.
+Normal numerical output contains no bibliography. [CITATIONS.md](../CITATIONS.md)
+gives the full bibliography and explains the conventions used here.
 
 ### Uni20 help and option parsing
 
 `bethe-hubbard-dispersion` is the first frontend using Uni20's shared CLI and
 presentation module. `--help` (or `-h`) now shows a styled program banner,
-grouped options with their actual defaults and constraints, examples,
-conventions, and the same application-owned literature references. Color and
+grouped options with their actual defaults and constraints, examples, and
+conventions. Literature and applicability are available separately through
+`--references`, which needs no model parameters and does not calculate. Color and
 width follow Uni20's terminal policy; redirected help is plain by default.
 `--version` gives the Bethe version/revision and `--build-info` adds Uni20's
 configured compiler and dependency information. Neither includes a bibliography
@@ -91,11 +93,14 @@ or starts a calculation. No arguments still print help to stderr and exit 1.
 
 Both `--u 4` and `--u=4` are accepted. Scalar options reject duplicate
 occurrences; `--csv`, `--tsv`, and `--json` remain repeatable, with one path per
-occurrence. A value such as `--csv=--help` is a filename, not a help request.
+occurrence. A value such as `--csv=--help` or `--csv=--references` is a filename,
+not an information request.
 Real-valued parameters remain strings until precision selection, so putting
-`--precision fp128` last cannot lose digits. Help/version/build information is
-handled before required-option and value validation, without opening exports;
-a missing value detected while gathering arguments can still be an error.
+`--precision fp128` last cannot lose digits. Help/version/build information and
+references are handled before required-option and value validation, without
+opening exports; a missing value detected while gathering arguments can still
+be an error.
+If both `--help` and `--references` are given, ordinary help takes precedence.
 Invalid arguments produce a concise stderr diagnostic rather than full help.
 
 The other frontends retain their existing parsers for now. The

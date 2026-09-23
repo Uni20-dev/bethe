@@ -1,7 +1,8 @@
 # References and provenance
 
-Each executable prints its relevant references in `--help` and no-argument
-usage output. Bibliographic metadata and tool selections live in
+Use `bethe-hubbard-dispersion --references` for its relevant literature;
+the other executables still print theirs in `--help` and no-argument usage.
+Bibliographic metadata and tool selections live in
 [data/citations.json](data/citations.json); the [bibliography](#bibliography)
 below and the C++ registry are generated from it. The provenance notes remain
 hand-written. See [maintaining citations](docs/citations.md).

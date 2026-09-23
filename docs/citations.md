@@ -49,11 +49,14 @@ and fails if either generated output is stale. With Python available, CTest
 runs the freshness check and generator regression tests; otherwise CMake
 reports that those maintainer checks are skipped. CLI citation tests still run.
 
-Each front end calls the shared help renderer with a typed tool ID. Citations
-appear with `--help` and in no-argument usage, on the same stream as the usage
-text. Normal calculations keep their existing output and exit-status contract.
-Help lists relevant references for the tool's supported modes, not an assertion
-that every listed method was used in a particular run.
+Each front end selects its references with a typed tool ID.
+`bethe-hubbard-dispersion --references` displays its Uni20-rendered bibliography
+on stdout and exits successfully without model parameters or output files;
+its ordinary help and no-argument usage only point to that option. The other
+frontends still include their citations in `--help` and no-argument usage.
+Normal calculations keep their existing output and exit-status contract.
+The bibliography lists references for the tool's supported modes, not an
+assertion that every listed method was used in a particular run.
 
 Tool IDs are lowercase C++ identifiers (optionally underscore-separated).
 Executable names use the `bethe-` prefix and hyphen-separated components;

@@ -8,6 +8,31 @@
 
 namespace bethe::cli
 {
+// A separate informational request: let it escape Uni20's ordinary parse-error
+// handling, just as help/version stop parsing before model validation and I/O.
+struct ReferencesRequested
+{};
+
+inline void add_references_option(CLI::App& app)
+{
+  app.get_help_ptr()->description("Show command-line help");
+  app.add_flag_callback(
+         "--references", [] { throw ReferencesRequested{}; }, "Show literature references and their applicability")
+      ->group("Program")
+      ->configurable(false)
+      ->callback_priority(CLI::CallbackPriority::First);
+}
+
+inline uni20::presentation::report_builder references_report(uni20::presentation::program_info const& program)
+{
+  // Reuse Uni20's bibliography rendering without the option listing, examples,
+  // or model notes. The normal help document has no reference provider.
+  auto references = program;
+  references.examples.clear();
+  references.notes.clear();
+  return uni20::presentation::help_report(references, program.name + " --references", {});
+}
+
 // Identity and literature stay application-owned; Uni20 owns parsing and rendering.
 inline uni20::presentation::program_info program_info(std::string name, std::string description, citations::Tool tool)
 {

@@ -46,7 +46,7 @@ auto program_info()
       "CSV/TSV have # metadata and empty energies on failure (exit 2). JSON uses null. "
       "See docs/output.md for export and overwrite rules.",
       "See docs/hubbard-dispersion.md for iMPS momentum conventions and errors. "
-      "Cite references relevant to the modes used; see CITATIONS.md for conventions and provenance."};
+      "Use --references for literature and applicability; see CITATIONS.md for conventions and provenance."};
   return info;
 }
 void add_options(CLI::App& app, Arguments& args)
@@ -347,16 +347,28 @@ template <uni20::Real Real> int run(Arguments const& args, int argc, char** argv
 int main(int argc, char** argv)
 {
   auto const program = program_info();
+  auto help_program = program;
+  help_program.references = {};
   Arguments args;
   CLI::App app;
   try
   {
-    options::configure(app, program);
+    options::configure(app, help_program);
+    cli::add_references_option(app);
     add_options(app, args);
-    auto const result = options::parse(app, argc, argv);
+    options::parse_result result;
+    try
+    {
+      result = options::parse(app, argc, argv);
+    }
+    catch (cli::ReferencesRequested const&)
+    {
+      uni20::display::emit(cli::references_report(program), uni20::display::stream::out);
+      return 0;
+    }
     if (result.requested != options::action::run)
     {
-      uni20::display::emit(options::result_report(app, program, result), result.destination);
+      uni20::display::emit(options::result_report(app, help_program, result), result.destination);
       return result.exit_code;
     }
     args.quadrature_set = app.count("--max-evaluations") || app.count("--max-levels");

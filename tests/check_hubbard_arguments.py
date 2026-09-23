@@ -27,10 +27,17 @@ help_text = run("--help").stdout
 assert run("-h").stdout == help_text
 empty = run(status=1)
 assert not empty.stdout and empty.stderr == help_text
-for text in ("bethe-hubbard-dispersion", "Copyright", "GPL-3.0-or-later", "References",
+for text in ("bethe-hubbard-dispersion", "Copyright", "GPL-3.0-or-later", "--references",
              "Examples", "default: 33", "--u REAL", "required", "--momentum", "excludes: --points",
              "--csv FILE", "--no-preamble", "--no-retain", "fp128", "MPLAPACK", "CITATIONS.md"):
     assert text in help_text, (text, help_text)
+references = run("--references").stdout
+assert "\nReferences\n" in references and "Used for:" in references
+assert "\nReferences\n" not in help_text and "Used for:" not in help_text
+assert "\nExamples\n" not in references and "--max-evaluations" not in references
+# Ordinary help wins when both information flags are supplied, independent of order.
+assert run("--references", "--help").stdout == help_text
+assert run("--help", "--references").stdout == help_text
 version = run("--version").stdout
 assert re.fullmatch(r"bethe-hubbard-dispersion \d+\.\d+\.\d+ \([^\n]+\)", version.strip()), version
 build = run("--build-info").stdout
@@ -44,7 +51,15 @@ for width in (40, 16):
         assert token in narrow, narrow
     assert "--u=4.000000000000000001" in narrow
 assert "\x1b[" in run("--help", UNI20_COLOR="always").stdout
+assert "\x1b[" in run("--references", UNI20_COLOR="always").stdout
+assert "https://arxiv.org/abs/cond-mat/9808018" in run("--references", COLUMNS="16").stdout
 assert "\x1b" not in help_text
+
+if Path("/dev/full").exists():
+    with open("/dev/full", "w") as full:
+        failed = subprocess.run([program, "--references"], stdout=full, stderr=subprocess.PIPE,
+                                text=True, timeout=10)
+    assert failed.returncode == 1 and failed.stderr, (failed.returncode, failed.stderr)
 
 with tempfile.TemporaryDirectory(prefix="bethe-arguments-") as directory:
     root = Path(directory)
@@ -53,13 +68,14 @@ with tempfile.TemporaryDirectory(prefix="bethe-arguments-") as directory:
     existing.write_text("sentinel")
     # Information takes precedence over required parameters, invalid option values,
     # solver setup, and destructive --force output requests.
-    for info in ("--help", "-h", "--version", "--build-info"):
+    for info in ("--help", "-h", "--version", "--build-info", "--references"):
         result = run("--csv", existing, "--json", absent, "--force", "--precision=invalid",
                      "--max-nodes=-1", "--density=nan", info)
         assert result.stdout and existing.read_text() == "sentinel" and not absent.exists()
 
     # Errors have a concise stderr report, never a bibliography or partial output.
     for args in (("--unknown",), ("--u",), ("--points=2",), ("--u=--help",), ("--", "--help"),
+                 ("--u=--references",), ("--", "--references"),
                  ("--u=0",), ("--u=nan",), ("--u=4", "--density=0"),
                  ("--u=4", "--precision=invalid"), ("--u=4", "--points=-1"),
                  ("--u=4", "--points=18446744073709551616"), ("--u=4", "--points=2x"),
@@ -85,6 +101,8 @@ with tempfile.TemporaryDirectory(prefix="bethe-arguments-") as directory:
     # A literal help token in an option value is a filename, not an information request.
     run("--u=4", "--branch=spinon", "--points=2", "--quiet", "--no-retain", "--csv=--help", cwd=root)
     assert (root / "--help").read_text().startswith("# ")
+    run("--u=4", "--branch=spinon", "--points=2", "--quiet", "--csv=--references", cwd=root)
+    assert (root / "--references").read_text().startswith("# ")
     run("--u=4", "--branch=spinon", "--points=2", "--quiet", "--csv=strict.csv",
         "--no-preamble", cwd=root)
     assert (root / "strict.csv").read_text().startswith("branch,p,")
