@@ -23,6 +23,12 @@ endpoints `-pi` and `pi` are the same point in the Brillouin zone. `--momentum`
 instead selects one point in radians. With `--branch all` it must belong to
 every selected branch.
 
+Use `--help` or `-h` for Uni20-rendered options, examples and references;
+`--version` and `--build-info` report the compiled application and dependency
+identity without calculating or opening files. This frontend accepts both
+`--u 4` and `--u=4`, rejects repeated scalar options, and retains repeatable
+file-export options. See [shared CLI behavior](command-line.md#uni20-help-and-option-parsing).
+
 ## Which excitation?
 
 | Branch | Particle change | Total spin | Momentum interval |

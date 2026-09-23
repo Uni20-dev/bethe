@@ -18,7 +18,9 @@ if fp128.upper() in ("ON", "TRUE", "1"):
 
 
 def run(*args, status=0, **kwargs):
-    result = subprocess.run([program, "--u", "4", *map(str, args)], text=True,
+    # Tests of invalid U must reach scientific validation, not duplicate-option rejection.
+    interaction = [] if args[:1] == ("--u",) else ["--u", "4"]
+    result = subprocess.run([program, *interaction, *map(str, args)], text=True,
                             stdout=kwargs.pop("stdout", subprocess.PIPE),
                             stderr=subprocess.PIPE, timeout=60, **kwargs)
     assert result.returncode == status, (args, result.returncode, result.stdout, result.stderr)

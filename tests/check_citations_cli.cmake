@@ -21,9 +21,12 @@ if(NOT selected_ids)
   message(FATAL_ERROR "No citation mapping for ${TOOL}")
 endif()
 
-execute_process(COMMAND "${PROGRAM}" --help
+# Citation identity is independent of layout. Keep full fields on one line here;
+# narrow and colored help have separate frontend regression tests.
+set(help_command "${CMAKE_COMMAND}" -E env UNI20_COLOR=never COLUMNS=4096 "${PROGRAM}")
+execute_process(COMMAND ${help_command} --help
   RESULT_VARIABLE status OUTPUT_VARIABLE output ERROR_VARIABLE error TIMEOUT 10)
-if(NOT status EQUAL 0 OR NOT error STREQUAL "" OR NOT output MATCHES "\nReferences:\n")
+if(NOT status EQUAL 0 OR NOT error STREQUAL "" OR NOT output MATCHES "\nReferences:?\n")
   message(FATAL_ERROR "Missing citation help for ${TOOL}: ${status}\n${output}\n${error}")
 endif()
 set(help "${output}")
@@ -68,7 +71,7 @@ foreach(use RANGE ${last_use})
 endforeach()
 
 # No-argument usage retains its stderr/exit-1 contract and the same citations.
-execute_process(COMMAND "${PROGRAM}"
+execute_process(COMMAND ${help_command}
   RESULT_VARIABLE status OUTPUT_VARIABLE output ERROR_VARIABLE error TIMEOUT 10)
 if(NOT status EQUAL 1 OR NOT output STREQUAL "" OR NOT error STREQUAL help)
   message(FATAL_ERROR "No-argument usage differs from --help for ${TOOL}\n${output}\n${error}")

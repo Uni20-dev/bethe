@@ -9,10 +9,11 @@ need the extra precision.
 CMake 3.28+, a C++23 compiler supported by Uni20 (GCC 13+ or Clang 19+),
 and Uni20's numerical dependencies are required. Uni20 is pinned to a tested
 commit and fetched automatically unless a parent already supplies `uni20_core`.
-The current pin is the published data-table implementation at `395eb6d`
-([Uni20 PR52](https://github.com/Uni20-dev/uni20/pull/52)), including decimal
-half-integer encoding and intact numerical tokens in streaming output. Local
-overrides must provide these APIs too.
+The current pin is the merged CLI/presentation implementation at `2da3358`
+([Uni20 PR54](https://github.com/Uni20-dev/uni20/pull/54)), including the typed
+data-table APIs, exact CLI conversions, and token-preserving help. Local
+overrides must provide these APIs too. Application builds also enable Uni20's
+optional CLI11 dependency; library-only builds do not require it.
 
 ## Build the pinned version
 
@@ -60,7 +61,7 @@ For binary128, use a separate build directory and add
 `-DUNI20_ENABLE_MPLAPACK=ON`. To use an installed MPLAPACK 3.0+ binary128
 package, add `-DUNI20_USE_SYSTEM_MPLAPACK=ON` and
 `-Dmplapack_DIR=/path/to/lib/cmake/mplapack`; otherwise Uni20 can fetch it.
-See [Uni20's provider setup](https://github.com/Uni20-dev/uni20/blob/395eb6ddba10eec51daa929d688a40263807ed12/docs/linalg/mplapack_binary128.md).
+See [Uni20's provider setup](https://github.com/Uni20-dev/uni20/blob/2da3358aaab23c2817e69d1efdcdd80a76fc3baa/docs/linalg/mplapack_binary128.md).
 
 `UNI20_USE_SYSTEM_MPLAPACK=OFF` forces a v3.0.0 source fetch. Alternatively,
 build MPLAPACK v3.0.0 separately and pass its **build directory** as
@@ -108,6 +109,11 @@ cases concurrently with `ctest --parallel`.
 `BETHE_BUILD_APPS` and `BETHE_BUILD_TESTS` default to `ON` standalone and
 `OFF` when embedded. No Python bindings or installed CMake package are provided
 yet. Use `add_subdirectory`/FetchContent and link `bethe::bethe` in a parent.
+The public numerical target does not link `uni20_cli` or CLI11. If a parent
+already provides Uni20 and enables Bethe's applications, it must create
+`uni20_cli` by enabling `UNI20_BUILD_CLI=ON` **before** adding Uni20.
+An existing standalone cache with `UNI20_BUILD_CLI=OFF` likewise needs
+`-DUNI20_BUILD_CLI=ON` when applications are enabled.
 
 ## Source layout and development
 
@@ -122,6 +128,11 @@ numerical API and any future Python bindings.
 Generic CLI, precision dispatch, and report rendering live in
 `apps/cli-common.hpp`, `apps/report-common.hpp`, and `apps/excitation-report.hpp`;
 model-specific arguments and report metadata stay in their respective front ends.
+The Hubbard dispersion frontend is the first Uni20 CLI integration:
+`apps/program-options.hpp` supplies Bethe identity and citation adapters, and
+`apps/data-output-options.hpp` declares the shared export flags. Only migrated
+frontends link the private `bethe_cli` helper target; numerical headers and
+the existing data-output unit tests remain parser-independent.
 The repository's `.clang-format` is copied from Uni20; use `clang-format -i`
 on changed C++ files to apply the shared style.
 

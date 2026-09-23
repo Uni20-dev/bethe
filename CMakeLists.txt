@@ -10,10 +10,13 @@ if(NOT TARGET uni20_core)
   # Keep dependency IPO opt-in; enabling it requires coordinating the final
   # application's compiler/linker settings too. Preserve explicit cache choices.
   set(UNI20_ENABLE_LTO OFF CACHE BOOL "Enable LTO/IPO for optimized Uni20 builds")
+  if(BETHE_BUILD_APPS)
+    set(UNI20_BUILD_CLI ON CACHE BOOL "Build Uni20 command-line application helpers")
+  endif()
   include(FetchContent)
   FetchContent_Declare(uni20
     GIT_REPOSITORY https://github.com/Uni20-dev/uni20.git
-    GIT_TAG 395eb6ddba10eec51daa929d688a40263807ed12
+    GIT_TAG 2da3358aaab23c2817e69d1efdcdd80a76fc3baa
   )
   FetchContent_MakeAvailable(uni20)
   # Keep default builds limited to the components our targets actually link.
@@ -45,12 +48,19 @@ if(BETHE_BUILD_APPS OR BETHE_BUILD_TESTS)
 endif()
 
 if(BETHE_BUILD_APPS)
+  if(NOT TARGET uni20_cli)
+    message(FATAL_ERROR
+      "Bethe applications require uni20_cli. Enable UNI20_BUILD_CLI=ON before configuring Uni20, "
+      "or use BETHE_BUILD_APPS=OFF for a library-only build.")
+  endif()
+  add_library(bethe_cli INTERFACE)
+  target_link_libraries(bethe_cli INTERFACE bethe_cli_output uni20_cli)
   foreach(app IN ITEMS bethe-xxx-pbc bethe-xxx-obc bethe-xxz-pbc bethe-xxz-obc bethe-hubbard-pbc bethe-hubbard-obc bethe-hubbard-dispersion bethe-lieb-liniger-pbc bethe-su3-pbc bethe-gaudin-yang-pbc bethe-tj-pbc bethe-tb-pbc bethe-biquadratic-obc bethe-richardson bethe-central-spin bethe-sun-fermions-pbc bethe-ladder-pbc bethe-haldane-shastry-pbc bethe-sutherland-pbc)
     add_executable(${app} apps/${app}.cpp)
     target_link_libraries(${app} PRIVATE bethe::bethe)
     set_target_properties(${app} PROPERTIES CXX_EXTENSIONS OFF)
   endforeach()
-  target_link_libraries(bethe-hubbard-dispersion PRIVATE bethe_cli_output)
+  target_link_libraries(bethe-hubbard-dispersion PRIVATE bethe_cli)
 endif()
 
 if(BETHE_BUILD_TESTS)

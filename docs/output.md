@@ -124,8 +124,9 @@ exit status as well as the data summary.
 
 ## Implementation boundary
 
-`apps/data-output.hpp` owns CLI output options, streams, provenance and the
-commented CSV/TSV adapters. Uni20 owns typed columns, retention/replay, numeric
-encoding and sinks. Hubbard-specific column schemas and physical metadata stay
-in its frontend; solvers in `include/bethe/` do not depend on output policy.
+`apps/data-output.hpp` owns output configuration, streams, provenance and the
+commented CSV/TSV adapters. `apps/data-output-options.hpp` declares the CLI flags
+using Uni20/CLI11, without opening files during parsing. Uni20 owns typed columns,
+retention/replay, numeric encoding and sinks. Hubbard-specific column schemas and
+physical metadata stay in its frontend; solvers in `include/bethe/` do not depend on output policy.
 This division leaves the numerical API usable by future Python bindings.

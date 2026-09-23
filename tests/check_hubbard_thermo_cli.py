@@ -115,7 +115,8 @@ for args in (("--u", "0"), ("--u", "-1"), ("--u", "nan"), ("--branch", "unknown"
              ("--convention", "unknown"), ("--points", "1"), ("--points", "3", "--momentum", "1"),
              ("--momentum", "-1", "--branch", "spinon"), ("--momentum", "4"),
              ("--max-levels", "25"), ("--tolerance", "0"), ("--format", "unknown")):
-    run("--u", "4", *args, status=1)
+    interaction = () if args[:1] == ("--u",) else ("--u", "4")
+    run(*interaction, *args, status=1)
 for args in (("--density", "0"), ("--density", "1.1"), ("--density", "nan"),
              ("--reference", "unknown"), ("--branch", "charge-particle"),
              ("--density", "0.5", "--branch", "antiholon"),

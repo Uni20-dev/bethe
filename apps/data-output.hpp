@@ -19,36 +19,10 @@ struct DataFile
 };
 struct DataOutputOptions
 {
-    std::string_view format = "auto";
+    std::string format = "auto";
     std::vector<DataFile> files;
     bool quiet = false, preamble = true, force = false, stream = false, retain = true;
 
-    // Return false for model-specific flags. Shared flags are consumed here.
-    bool parse(int& i, int argc, char** argv)
-    {
-      std::string_view const flag = argv[i];
-      if (flag == "--quiet")
-        quiet = true;
-      else if (flag == "--no-preamble")
-        preamble = false;
-      else if (flag == "--force")
-        force = true;
-      else if (flag == "--stream")
-        stream = true;
-      else if (flag == "--no-retain")
-        retain = false;
-      else if (flag == "--format" || flag == "--csv" || flag == "--tsv" || flag == "--json")
-      {
-        if (++i == argc) throw std::invalid_argument("missing value for " + std::string(flag));
-        if (flag == "--format")
-          format = argv[i];
-        else
-          files.push_back({std::string(flag.substr(2)), argv[i]});
-      }
-      else
-        return false;
-      return true;
-    }
     bool human() const { return format == "auto" || format == "pretty" || format == "plain"; }
     void validate() const
     {
@@ -61,19 +35,6 @@ struct DataOutputOptions
           throw std::invalid_argument("unknown export format: " + file.format);
     }
 };
-inline void data_output_usage(std::ostream& out)
-{
-  out << "  --format auto|pretty|plain|csv|tsv|json (stdout; default auto)\n"
-      << "  --csv FILE / --tsv FILE / --json FILE  additional exports (repeatable)\n"
-      << "  --quiet                          suppress stdout, not files or warnings\n"
-      << "  --no-preamble                    omit CSV/TSV # metadata and summary\n"
-      << "  --force                          permit replacing existing regular files\n"
-      << "  --stream                         display human-readable rows as computed\n"
-      << "  --no-retain                      discard table rows after delivery\n"
-      << "Files and machine stdout stream rows; human stdout is a final report unless\n"
-      << "--stream is set. --no-retain requires live output or --quiet.\n";
-}
-
 // Quote argv for POSIX shells, including empty arguments and literal apostrophes.
 inline std::string quote_argument(std::string_view value)
 {

@@ -1,134 +1,98 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Copyright (C) 2026 Ian McCulloch
-#include "citation-report.hpp"
-#include "data-output.hpp"
+#include "data-output-options.hpp"
+#include "program-options.hpp"
 #include <bethe/hubbard_doped.hpp>
 
 namespace
 {
 namespace cli = bethe::cli;
+namespace options = uni20::cli;
 namespace model = bethe::hubbard::thermo;
 struct Arguments
 {
-    std::optional<std::string_view> u, momentum, tolerance;
-    std::string_view density = "1", reference = "hamiltonian";
-    std::string_view branch = "all", convention = "symmetric", precision = "fp64";
+    std::string u;
+    std::optional<std::string> momentum, tolerance;
+    std::string density = "1", reference = "hamiltonian";
+    std::string branch = "all", convention = "symmetric", precision = "fp64";
     cli::DataOutputOptions output;
     std::size_t points = 33, max_evaluations = 1000000, max_levels = 12, max_iterations = 160;
     std::size_t initial_nodes = 16, max_nodes = 256, max_background_iterations = 64;
     bool quadrature_set = false, mesh_set = false;
-    bool points_set = false;
 };
-void usage(std::ostream& out)
+auto program_info()
 {
-  out << "Usage: bethe-hubbard-dispersion --u U [options]\n"
-      << "Zero-field Hubbard thermodynamic elementary lines; U>0, t=1.\n"
-      << "  --density N/L                    0<n<=1 (default: 1, half filling)\n"
-      << "  --branch spinon|holon|antiholon|charge-particle|all (all)\n"
-      << "                                     antiholon: n=1 only; charge-particle: n<1 only\n"
-      << "  --convention symmetric|unshifted  (default: symmetric, SO(4))\n"
-      << "  --reference hamiltonian|fermi     DeltaE or DeltaE-mu*DeltaN (hamiltonian)\n"
-      << "  --points COUNT                   uniform dressed-momentum grid, >=2 (33)\n"
-      << "  --momentum P                     one dressed momentum in radians instead\n"
-      << "  --precision fp64|long-double|fp128 (fp64; fp128 requires MPLAPACK)\n"
-      << "  --tolerance VALUE                half-filled relative target (256 epsilon)\n"
-      << "  --max-evaluations COUNT           quadrature samples per point (1000000)\n"
-      << "  --max-levels COUNT                quadrature refinement levels, <=24 (12)\n"
-      << "  --max-iterations COUNT            momentum inversion updates (160)\n"
-      << "  --initial-nodes COUNT             doped positive-half quadrature order (16)\n"
-      << "  --max-nodes COUNT                 doped mesh limit, <=512 (256)\n"
-      << "  --max-background-iterations COUNT doped density solves across all meshes (64)\n"
-      << "Doped tolerance: 4096 epsilon; absolute background / max(1,|E|) point energy.\n"
-      << "--max-evaluations/--max-levels apply only at half filling.\n"
-      << "  --help                           show this help and references\n"
-      << "At half filling: spinon p in [0,pi], DeltaN=0, S=1/2; holon/antiholon\n"
-      << "p in [-pi,pi], DeltaN=-1/+1, S=0; symmetric lines differ by a pi momentum shift.\n"
-      << "H_sym=H_unshifted-U*N/2+U*L/4; excitation E_unshifted=E_sym+U*DeltaN/2.\n"
-      << "These are elementary lines, not multiparticle continuum thresholds.\n"
-      << "Doped unwrapped p intervals: spinon [0,pi*n], holon [-pi*n/2,3*pi*n/2],\n"
-      << "charge-particle [pi*n/2,2*pi-3*pi*n/2]. Particle is a real-root addition,\n"
-      << "not the gapped half-filled antiholon. All are gapless in the Fermi reference.\n"
-      << "No n>1, attractive U, finite-size levels or spectral weights here.\n"
-      << "CSV/TSV have # metadata and empty energies on failure (exit 2). JSON uses null.\n"
-      << "See docs/hubbard-dispersion.md for iMPS momentum conventions and errors.\n";
-  cli::data_output_usage(out);
-  cli::print_citations(out, bethe::citations::Tool::hubbard_dispersion);
+  auto info =
+      cli::program_info("bethe-hubbard-dispersion", "Zero-field Hubbard thermodynamic elementary lines; U>0, t=1.",
+                        bethe::citations::Tool::hubbard_dispersion);
+  info.examples = {{"bethe-hubbard-dispersion --u 4 --branch spinon --points 33", "Half-filled spinon line"},
+                   {"bethe-hubbard-dispersion --u 4 --density 0.75 --reference fermi --csv doped.csv",
+                    "Doped lines with a screen report and CSV export"},
+                   {"bethe-hubbard-dispersion --u=4.000000000000000001 --precision=long-double --format=json",
+                    "Native-precision tokens and machine-readable stdout"}};
+  info.notes = {
+      "At half filling: spinon p in [0,pi], DeltaN=0, S=1/2; holon/antiholon p in [-pi,pi], DeltaN=-1/+1, S=0. "
+      "Symmetric charge lines differ by a pi momentum shift.",
+      "H_sym=H_unshifted-U*N/2+U*L/4; excitation E_unshifted=E_sym+U*DeltaN/2.",
+      "These are elementary lines, not multiparticle continuum thresholds. No n>1, attractive U, finite-size levels "
+      "or spectral weights here.",
+      "Doped unwrapped p intervals: spinon [0,pi*n], holon [-pi*n/2,3*pi*n/2], charge-particle "
+      "[pi*n/2,2*pi-3*pi*n/2]. The particle is a real-root addition, not the gapped half-filled antiholon. "
+      "All doped lines are gapless in the Fermi reference.",
+      "Default tolerance: 256 epsilon at half filling (relative target); 4096 epsilon when doped "
+      "(absolute background / max(1,|E|) point energy), evaluated in the selected precision.",
+      "fp128 requires a build with MPLAPACK. Files and machine stdout stream rows; human stdout is a final report "
+      "unless --stream is set. --no-retain requires live output or --quiet.",
+      "CSV/TSV have # metadata and empty energies on failure (exit 2). JSON uses null. "
+      "See docs/output.md for export and overwrite rules.",
+      "See docs/hubbard-dispersion.md for iMPS momentum conventions and errors. "
+      "Cite references relevant to the modes used; see CITATIONS.md for conventions and provenance."};
+  return info;
 }
-Arguments parse(int argc, char** argv)
+void add_options(CLI::App& app, Arguments& args)
 {
-  Arguments args;
-  for (int i = 1; i < argc; ++i)
-  {
-    if (args.output.parse(i, argc, argv)) continue;
-    std::string_view const option = argv[i];
-    if (option != "--u" && option != "--branch" && option != "--convention" && option != "--points" &&
-        option != "--momentum" && option != "--precision" && option != "--tolerance" && option != "--max-evaluations" &&
-        option != "--max-levels" && option != "--max-iterations" && option != "--density" && option != "--reference" &&
-        option != "--initial-nodes" && option != "--max-nodes" && option != "--max-background-iterations")
-      throw std::invalid_argument("unknown option: " + std::string(option));
-    if (++i == argc) throw std::invalid_argument("missing value for " + std::string(option));
-    std::string_view const value = argv[i];
-    if (option == "--u")
-      args.u = value;
-    else if (option == "--density")
-      args.density = value;
-    else if (option == "--reference")
-      args.reference = value;
-    else if (option == "--branch")
-      args.branch = value;
-    else if (option == "--convention")
-      args.convention = value;
-    else if (option == "--momentum")
-      args.momentum = value;
-    else if (option == "--precision")
-      args.precision = value;
-    else if (option == "--tolerance")
-      args.tolerance = value;
-    else if (option == "--points")
-    {
-      args.points = cli::parse_size(value);
-      args.points_set = true;
-    }
-    else if (option == "--max-evaluations")
-    {
-      args.max_evaluations = cli::parse_size(value);
-      args.quadrature_set = true;
-    }
-    else if (option == "--max-levels")
-    {
-      args.max_levels = cli::parse_size(value);
-      args.quadrature_set = true;
-    }
-    else if (option == "--initial-nodes")
-    {
-      args.initial_nodes = cli::parse_size(value);
-      args.mesh_set = true;
-    }
-    else if (option == "--max-nodes")
-    {
-      args.max_nodes = cli::parse_size(value);
-      args.mesh_set = true;
-    }
-    else if (option == "--max-background-iterations")
-    {
-      args.max_background_iterations = cli::parse_size(value);
-      args.mesh_set = true;
-    }
-    else
-      args.max_iterations = cli::parse_size(value);
-  }
-  if (!args.u) throw std::invalid_argument("--u is required");
-  if (args.branch != "spinon" && args.branch != "holon" && args.branch != "antiholon" && args.branch != "all" &&
-      args.branch != "charge-particle")
-    throw std::invalid_argument("unknown branch: " + std::string(args.branch));
-  if (args.convention != "symmetric" && args.convention != "unshifted")
-    throw std::invalid_argument("unknown energy convention: " + std::string(args.convention));
-  if (args.reference != "hamiltonian" && args.reference != "fermi")
-    throw std::invalid_argument("unknown energy reference: " + std::string(args.reference));
-  args.output.validate();
-  if (args.momentum && args.points_set) throw std::invalid_argument("--points and --momentum are mutually exclusive");
-  if (!args.momentum && args.points < 2) throw std::invalid_argument("--points must be at least 2");
-  return args;
+  auto* physics = app.add_option_group("Model");
+  physics->add_option("--u", args.u, "Repulsive interaction U>0, in hopping units")->required()->type_name("REAL");
+  physics->add_option("--density", args.density, "Particles per site, 0<n<=1; 1 is half filling")
+      ->type_name("REAL")
+      ->capture_default_str();
+  physics->add_option("--branch", args.branch, "antiholon: n=1 only; charge-particle: n<1 only")
+      ->check(CLI::IsMember({"spinon", "holon", "antiholon", "charge-particle", "all"}))
+      ->capture_default_str();
+  physics->add_option("--convention", args.convention, "Interaction convention; symmetric is SO(4)")
+      ->check(CLI::IsMember({"symmetric", "unshifted"}))
+      ->capture_default_str();
+  physics->add_option("--reference", args.reference, "Hamiltonian DeltaE or Fermi DeltaE-mu*DeltaN")
+      ->check(CLI::IsMember({"hamiltonian", "fermi"}))
+      ->capture_default_str();
+  auto* sampling = app.add_option_group("Momentum sampling");
+  auto* points = options::add_count_option(*sampling, "--points", args.points, "Uniform dressed-momentum grid, >=2")
+                     ->capture_default_str();
+  sampling->add_option("--momentum", args.momentum, "One dressed momentum in radians instead of a grid")
+      ->type_name("REAL")
+      ->excludes(points);
+  auto* numerics = app.add_option_group("Numerics");
+  numerics->add_option("--precision", args.precision, "Real scalar type; fp128 requires MPLAPACK")
+      ->check(CLI::IsMember({"fp64", "long-double", "fp128"}))
+      ->capture_default_str();
+  numerics->add_option("--tolerance", args.tolerance, "Target in native precision; see conventions below")
+      ->type_name("REAL")
+      ->default_str("256 epsilon (half-filled); 4096 epsilon (doped)");
+  options::add_count_option(*numerics, "--max-iterations", args.max_iterations, "Momentum inversion updates")
+      ->capture_default_str();
+  auto* quadrature = app.add_option_group("Half-filled quadrature", "These controls apply only at density=1.");
+  options::add_count_option(*quadrature, "--max-evaluations", args.max_evaluations, "Quadrature samples per point")
+      ->capture_default_str();
+  options::add_count_option(*quadrature, "--max-levels", args.max_levels, "Refinement levels, <=24")
+      ->capture_default_str();
+  auto* mesh = app.add_option_group("Doped mesh", "These controls require density<1.");
+  options::add_count_option(*mesh, "--initial-nodes", args.initial_nodes, "Positive-half quadrature order")
+      ->capture_default_str();
+  options::add_count_option(*mesh, "--max-nodes", args.max_nodes, "Mesh limit, <=512")->capture_default_str();
+  options::add_count_option(*mesh, "--max-background-iterations", args.max_background_iterations,
+                            "Density solves across all meshes")
+      ->capture_default_str();
+  cli::add_data_output_options(app, args.output);
 }
 char const* name(model::Branch b)
 {
@@ -192,7 +156,7 @@ char const* name(model::DopedStatus s)
 }
 template <uni20::Real Real> int run(Arguments const& args, int argc, char** argv)
 {
-  Real const u = uni20::parse_real<Real>(*args.u), pi = Real{4} * std::atan(Real{1});
+  Real const u = uni20::parse_real<Real>(args.u), pi = Real{4} * std::atan(Real{1});
   Real const density = uni20::parse_real<Real>(args.density);
   if (!uni20::isfinite(density) || density <= Real{0} || density > Real{1})
     throw std::invalid_argument("density must be in (0,1]");
@@ -382,25 +346,37 @@ template <uni20::Real Real> int run(Arguments const& args, int argc, char** argv
 
 int main(int argc, char** argv)
 {
-  if (argc == 1)
-  {
-    usage(std::cerr);
-    return 1;
-  }
-  for (int i = 1; i < argc; ++i)
-    if (std::string_view(argv[i]) == "--help")
-    {
-      usage(std::cout);
-      return 0;
-    }
+  auto const program = program_info();
+  Arguments args;
+  CLI::App app;
   try
   {
-    auto const args = parse(argc, argv);
+    options::configure(app, program);
+    add_options(app, args);
+    auto const result = options::parse(app, argc, argv);
+    if (result.requested != options::action::run)
+    {
+      uni20::display::emit(options::result_report(app, program, result), result.destination);
+      return result.exit_code;
+    }
+    args.quadrature_set = app.count("--max-evaluations") || app.count("--max-levels");
+    args.mesh_set =
+        app.count("--initial-nodes") || app.count("--max-nodes") || app.count("--max-background-iterations");
+    args.output.validate();
+    if (!args.momentum && args.points < 2) throw std::invalid_argument("--points must be at least 2");
     return cli::dispatch_precision(args.precision, [&]<typename Real>() { return run<Real>(args, argc, argv); });
+  }
+  catch (cli::data::data_delivery_error const& error)
+  {
+    // Include each failed sink's underlying exception, not only the aggregate.
+    cli::print_output_error(std::cerr, error);
+    return 1;
   }
   catch (std::exception const& error)
   {
-    cli::print_output_error(std::cerr, error);
+    uni20::display::emit(
+        options::result_report(app, program, {.requested = options::action::error, .message = error.what()}),
+        uni20::display::stream::err);
     return 1;
   }
 }
