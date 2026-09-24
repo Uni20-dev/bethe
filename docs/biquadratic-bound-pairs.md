@@ -127,5 +127,7 @@ or fail to converge; no general-anisotropy completeness claim is made.
 Validation covers independent ED on N=4,...,10, both deviation signs in the
 original complex equations, analytic Jacobians and native-precision exact
 values. Long-chain tests reach N=100000, including deviation underflow.
-The next extensions are multi-defect droplets and scattering branches,
-physical-spin resolution, and operator-dependent spectral weights.
+The [three-defect droplet family](biquadratic-bound-triples.md) reuses the
+same logarithmic-string Newton driver and CLI reporting machinery. Remaining
+extensions include larger droplets and scattering branches, physical-spin
+resolution, and operator-dependent spectral weights.

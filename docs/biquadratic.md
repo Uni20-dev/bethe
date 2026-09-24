@@ -4,7 +4,8 @@
 
 For the opposite sign, `--ferromagnetic`, see
 [ferromagnetic excitations](biquadratic-ferromagnetic.md): an exact one-defect
-band, sign-aware real-root scans and complex-root Q-system levels. The
+band, targeted two-/three-defect bound droplets, sign-aware real-root scans
+and complex-root Q-system levels. The
 conventions and default modes below describe the antiferromagnetic sign.
 
 `bethe-biquadratic-obc` calculates the singlet ground state, TL module minima,

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Copyright (C) 2026 Ian McCulloch
 #pragma once
-#include <bethe/xxz_quantum_group.hpp>
+#include <bethe/detail/open_string_solver.hpp>
 #include <utility>
 
 namespace bethe::xxz::quantum_group::two_string
@@ -34,18 +34,11 @@ template <uni20::Real Real> class System {
         : sites(n), order(roots), sea(order - 2), string_label(label), deviation_sign(sign), eta(std::acosh(delta)),
           pi(Real{4} * std::atan(Real{1}))
     {}
-    struct Function
-    {
-        Real value, angle, width;
-    };
+    using Function = quantum_group::detail::StringPhase<Real>;
     // Theta(beta;w) and its two derivatives, without coth(w) near w=0.
     static Function phase(Real beta, Real w, bool complement = false)
     {
-      Real const s = std::sin(beta / Real{2}), c = std::cos(beta / Real{2}), t = std::tanh(w);
-      Real const den = s * s + t * t * c * c;
-      Real const da = t / den, dw = -Real{2} * s * c * (Real{1} - t * t) / den;
-      if (complement) return {Real{2} * std::atan2(t * c, s), -da, -dw};
-      return {Real{2} * std::atan2(s, t * c), da, dw};
+      return quantum_group::detail::string_phase(beta, w, complement);
     }
     // log|sinh(w+i*beta/2)| and derivatives. Widths here are O(eta), not L.
     static Function log_sinh(Real beta, Real w)
@@ -183,6 +176,11 @@ template <uni20::Real Real> class System {
     {
       return energy_sum(x, delta, Real(sites - 1) * delta / Real{4});
     }
+    std::vector<Real> coordinate_scales(std::span<Real const> x) const
+    {
+      if (sea) return {};
+      return {std::min(x[0], pi - x[0]), Real{2} * Real(sites)};
+    }
     std::size_t sites, order, sea, string_label;
     int deviation_sign;
     Real eta, pi;
@@ -192,90 +190,16 @@ template <uni20::Real Real>
 State<Real> solve(System<Real> const& system, Real delta, SolverOptions<Real> const& options)
 {
   if (!uni20::isfinite(delta) || delta <= Real{1}) throw std::invalid_argument("two-string requires finite Delta>1");
-  if (!uni20::isfinite(options.residual_tolerance) || options.residual_tolerance <= Real{0})
-    throw std::invalid_argument("residual tolerance must be finite and positive");
-  quantum_group::detail::check_matrix_size<Real>(system.order);
-  auto x = system.seed();
-  if (!system.physical(x)) throw std::overflow_error("two-string seed is not resolvable at the selected precision");
+  auto const iteration = quantum_group::detail::solve_log_string<Real>(system, options);
+  auto const& x = iteration.x;
   State<Real> state;
   state.sites = system.sites;
   state.delta = delta;
   state.string_label = system.string_label;
   state.deviation_sign = system.deviation_sign;
-  std::vector<Real> jac, step(system.order);
-  bool ideal = true;
-  for (;;)
-  {
-    auto evaluation = system.evaluate(x, &jac, ideal);
-    if (ideal && evaluation.norm <= std::sqrt(uni20::numeric_limits<Real>::epsilon()))
-    {
-      ideal = false;
-      evaluation = system.evaluate(x, &jac);
-    }
-    if (!ideal && evaluation.norm <= options.residual_tolerance)
-    {
-      state.converged = true;
-      state.status = SolveStatus::converged;
-      break;
-    }
-    if (state.iterations == options.max_iterations) break;
-    for (std::size_t i = 0; i < system.order; ++i)
-      step[i] = -evaluation.residual[i];
-    // Empty-sea coordinates have very different natural scales: the center
-    // can be O(1/N), while L is O(N log N). Equilibrate this 2x2 correction
-    // so the common pivot test does not mistake units for rank loss. Keep
-    // acceptance and all published residuals in the original equation units.
-    Real const center_scale = std::min(x[0], system.pi - x[0]);
-    Real const log_scale = Real{2} * Real(system.sites);
-    if (system.sea == 0)
-      for (std::size_t i = 0; i < 2; ++i)
-      {
-        jac[2 * i] *= center_scale;
-        jac[2 * i + 1] *= log_scale;
-        Real const row_scale = std::max(std::abs(jac[2 * i]), std::abs(jac[2 * i + 1]));
-        if (row_scale > Real{0})
-        {
-          jac[2 * i] /= row_scale;
-          jac[2 * i + 1] /= row_scale;
-          step[i] /= row_scale;
-        }
-      }
-    if (!bethe::detail::newton_step(jac, step))
-    {
-      state.status = SolveStatus::singular_jacobian;
-      break;
-    }
-    if (system.sea == 0)
-    {
-      step[0] *= center_scale;
-      step[1] *= log_scale;
-    }
-    auto trial = x;
-    Real damping{1};
-    bool accepted = false;
-    for (int backtrack = 0; backtrack <= uni20::numeric_limits<Real>::digits; ++backtrack)
-    {
-      for (std::size_t i = 0; i < system.order; ++i)
-        trial[i] = x[i] + damping * step[i];
-      if (system.physical(trial))
-      {
-        auto const norm = system.evaluate(trial, nullptr, ideal).norm;
-        if (norm < (Real{1} - damping / Real{10000}) * evaluation.norm)
-        {
-          accepted = true;
-          break;
-        }
-      }
-      damping /= Real{2};
-    }
-    if (!accepted)
-    {
-      state.status = SolveStatus::stalled;
-      break;
-    }
-    x = std::move(trial);
-    ++state.iterations;
-  }
+  state.iterations = iteration.iterations;
+  state.converged = iteration.converged;
+  state.status = iteration.status;
   auto const final = system.evaluate(x); // Always finite-deviation diagnostics, including failed initialization.
   state.residual_norm = final.norm;
   state.phase_residual = final.phase_norm;

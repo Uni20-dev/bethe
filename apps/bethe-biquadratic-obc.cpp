@@ -16,7 +16,7 @@ struct Arguments
 {
     std::size_t sites = 0, max_iterations = 10000;
     std::optional<std::size_t> through_lines, excitations, max_candidates;
-    std::optional<std::size_t> bound_pairs;
+    std::optional<std::size_t> bound_pairs, bound_triples;
     std::optional<bethe::xxz::QuantumNumbers> numbers;
     std::optional<std::string> tolerance;
     std::optional<std::string> q_seed;
@@ -37,6 +37,7 @@ auto program_info()
       "--ferromagnetic reverses the sign: H=+sum (S.S)^2; gaps use the exact degenerate ground space.",
       "--ferromagnetic --one-defect gives the complete ell=N-2 band analytically, including odd N.",
       "--ferromagnetic --bound-pairs COUNT|all targets two-string modes in ell=N-4 on odd/even chains.",
+      "--ferromagnetic --bound-triples COUNT|all targets three-string droplets in ell=N-6 on odd/even chains.",
       "Ferromagnetic real-root scans exclude complex-root levels; NOT general module minima.",
       "TL loop weight 3; reference XXZ Delta=3/2 with opposite end fields.",
       "Real-root scans are NOT complete spectra: complex-root levels are excluded.",
@@ -60,6 +61,9 @@ void add_options(CLI::App& app, Arguments& args)
   bethe::cli::all_count_option(
       app, "--bound-pairs", args.bound_pairs,
       "ferro: first COUNT, or all N-3, targeted two-string modes; NOT full two-defect spectrum");
+  bethe::cli::all_count_option(
+      app, "--bound-triples", args.bound_triples,
+      "ferro: first COUNT, or all N-5, targeted three-string modes; NOT full three-defect spectrum");
   bethe::cli::option(app, "--through-lines", args.through_lines,
                      "select TL module; standalone ferro minima require ELL=N or N-2");
   bethe::cli::option(app, "--sectors", args.sectors, "AF: lowest level in every TL module");
@@ -67,7 +71,7 @@ void add_options(CLI::App& app, Arguments& args)
       app, "--excitations", args.excitations,
       "lowest COUNT, or all, supported real-root levels; default ELL=2 (ferro: N-2); excludes complex roots");
   bethe::cli::option(app, "--max-candidates", args.max_candidates,
-                     "real-family scan / analytic band / bound-pair row limit (default: 10000)");
+                     "real-family scan / analytic band / bound-cluster row limit (default: 10000)");
   bethe::cli::option(app, "--quantum-numbers", args.numbers, "explicit integer labels; none for vacuum");
   bethe::cli::option(
       app, "--q-spectrum", args.q_spectrum,
@@ -90,14 +94,18 @@ void add_options(CLI::App& app, Arguments& args)
 void validate(Arguments const& args)
 {
   args.output.validate();
-  if (args.bound_pairs)
+  if (args.bound_pairs || args.bound_triples)
   {
-    if (!args.ferromagnetic) throw std::invalid_argument("--bound-pairs requires --ferromagnetic");
-    if (args.sites < 4) throw std::invalid_argument("--bound-pairs requires N>=4");
-    if (*args.bound_pairs == 0) throw std::invalid_argument("--bound-pairs requires a positive count or all");
+    std::string const option = args.bound_pairs ? "--bound-pairs" : "--bound-triples";
+    std::size_t const defects = args.bound_pairs ? 2 : 3;
+    if (!args.ferromagnetic) throw std::invalid_argument(option + " requires --ferromagnetic");
+    if (args.sites < 2 * defects) throw std::invalid_argument(option + " requires N>=" + std::to_string(2 * defects));
+    if ((args.bound_pairs ? *args.bound_pairs : *args.bound_triples) == 0)
+      throw std::invalid_argument(option + " requires a positive count or all");
     if (args.one_defect || args.q_seed || args.q_spectrum || args.sectors || args.excitations || args.numbers ||
-        args.through_lines || args.singlet_excitation || args.max_attempts)
-      throw std::invalid_argument("--bound-pairs determines ell=N-4; cannot combine with other state selections");
+        args.through_lines || args.singlet_excitation || args.max_attempts || (args.bound_pairs && args.bound_triples))
+      throw std::invalid_argument(option + " determines ell=N-" + std::to_string(2 * defects) +
+                                  "; cannot combine with other state selections");
   }
   if (args.one_defect && !args.ferromagnetic) throw std::invalid_argument("--one-defect requires --ferromagnetic");
   if (args.one_defect && (args.q_seed || args.q_spectrum || args.sectors || args.excitations || args.numbers ||
@@ -109,7 +117,8 @@ void validate(Arguments const& args)
     if (args.sectors || args.singlet_excitation)
       throw std::invalid_argument(
           "ferromagnetic --sectors and --singlet-excitation are not implemented; use --q-spectrum --through-lines ELL");
-    bool const analytic = !args.numbers && !args.excitations && !args.q_seed && !args.q_spectrum && !args.bound_pairs;
+    bool const analytic = !args.numbers && !args.excitations && !args.q_seed && !args.q_spectrum && !args.bound_pairs &&
+                          !args.bound_triples;
     if (analytic && args.through_lines && *args.through_lines != args.sites && *args.through_lines != args.sites - 2)
       throw std::invalid_argument(
           "ferromagnetic module minima are analytic only for ELL=N or N-2; use --q-spectrum --through-lines ELL");
@@ -131,8 +140,9 @@ void validate(Arguments const& args)
   if (args.numbers && (args.through_lines || args.excitations))
     throw std::invalid_argument(
         "--quantum-numbers determines the TL module; cannot combine with --through-lines or --excitations");
-  if (args.max_candidates && !args.excitations && !args.one_defect && !args.bound_pairs)
-    throw std::invalid_argument("--max-candidates requires --excitations, --one-defect or --bound-pairs");
+  if (args.max_candidates && !args.excitations && !args.one_defect && !args.bound_pairs && !args.bound_triples)
+    throw std::invalid_argument(
+        "--max-candidates requires --excitations, --one-defect, --bound-pairs or --bound-triples");
 }
 char const* status(bethe::xxz::quantum_group::SolveStatus value)
 {
@@ -549,44 +559,63 @@ template <uni20::Real Real> int run_ferro_analytic(Arguments const& args, cli::R
   return 0;
 }
 
-template <uni20::Real Real>
-int run_bound_pairs(Arguments const& args, bethe::SolverOptions<Real> const& options, cli::RunReport report)
+template <uni20::Real Real, std::size_t Defects>
+int run_bound_clusters(Arguments const& args, std::size_t requested, bethe::SolverOptions<Real> const& options,
+                       cli::RunReport report)
 {
+  static_assert(Defects == 2 || Defects == 3);
   auto computation = report.context().computation();
-  auto const count = std::min(*args.bound_pairs, args.sites - 3);
+  auto const available = args.sites - (2 * Defects - 1), count = std::min(requested, available);
   if (count > args.max_candidates.value_or(10000))
-    throw std::length_error("bound-pair rows exceed max_candidates; raise --max-candidates");
+    throw std::length_error("bound-cluster rows exceed max_candidates; raise --max-candidates");
   auto const ground = model::ferromagnetic::ground_space<Real>(args.sites);
-  std::vector<model::ferromagnetic::BoundPairState<Real>> states;
+  auto solve = [&](std::size_t mode) {
+    if constexpr (Defects == 2)
+      return model::ferromagnetic::bound_pair<Real>(args.sites, mode, options);
+    else
+      return model::ferromagnetic::bound_triple<Real>(args.sites, mode, options);
+  };
+  std::vector<decltype(solve(1))> states;
   states.reserve(count);
   bool complete = true;
   for (std::size_t mode = 1; mode <= count; ++mode)
   {
-    states.push_back(model::ferromagnetic::bound_pair<Real>(args.sites, mode, options));
+    states.push_back(solve(mode));
     complete = complete && states.back().reference.converged;
   }
   computation.finish();
-  report.field("calculation", "Calculation", "targeted two-defect bound-pair modes")
-      .field("family", "Family", "one two-string, no real sea; J=N-2-mode, sign(d)=(-1)^(mode+1)")
-      .field("coverage", "Coverage", "selected two-string family only; NOT the full two-defect or excited spectrum")
+  report
+      .field("calculation", "Calculation",
+             Defects == 2 ? "targeted two-defect bound-pair modes" : "targeted three-defect bound-triple modes")
+      .field("family", "Family",
+             Defects == 2 ? "one two-string, no real sea; J=N-2-mode, sign(d)=(-1)^(mode+1)"
+                          : "one three-string, no real sea; J=N-4-mode, complex deviation z=exp(-L+i*phi)")
+      .field("coverage", "Coverage",
+             Defects == 2 ? "selected two-string family only; NOT the full two-defect or excited spectrum"
+                          : "selected three-string family only; NOT the full three-defect or excited spectrum")
       .field("ordering", "Ordering", "mode order from the low-energy branch edge; not a global excitation rank")
-      .field("tl_through_lines", "TL through-lines", args.sites - 4)
-      .field("tl_defects", "TL singlet insertions M", 2)
-      .field("available_modes", "Available two-string labels", args.sites - 3)
+      .field("tl_through_lines", "TL through-lines", args.sites - 2 * Defects)
+      .field("tl_defects", "TL singlet insertions M", int(Defects))
+      .field("available_modes", Defects == 2 ? "Available two-string labels" : "Available three-string labels",
+             available)
       .field("selected_modes", "Selected modes", count)
       .field("residual_convention", "Residual convention",
              "max phase/log-modulus residual divided by 2N; not an energy-error bound")
-      .field("string_coordinate", "String coordinate", "u=(eta+d)/2 +/- i*a/2; d=sign*exp(-L); L is authoritative")
+      .field("string_coordinate", "String coordinate",
+             Defects == 2 ? "u=(eta+d)/2 +/- i*a/2; d=sign*exp(-L); L is authoritative"
+                          : "u0=i*a/2; u+/-=eta+Re(z) +/- i*(a/2+Im(z)); L and phi are authoritative")
       .field("wave_number", "Wave number", "mode and string center are branch coordinates, not lattice momentum")
       .field("multiplicity_meaning", "Multiplicity meaning", "physical states per TL eigenvector, not SU(2) multiplets")
       .field("gap_reference", "Gap reference", "E-(N-1); exact degenerate ferro ground space")
-      .field("bulk_pair_threshold", "Bulk bound-pair threshold", Real{5} / Real{3})
+      .field(Defects == 2 ? "bulk_pair_threshold" : "bulk_triple_threshold",
+             Defects == 2 ? "Bulk bound-pair threshold" : "Bulk bound-triple threshold",
+             Defects == 2 ? Real{5} / Real{3} : Real{2})
       .result(complete, complete ? "converged targeted branches" : "incomplete; unconverged estimates");
   std::vector<std::string> names{"states", "reference", "string"};
   if (args.roots) names.push_back("roots");
   cli::ResultOutput output(report, args.output, names);
   output.table(
-      "states", "Two-defect bound-pair modes",
+      "states", Defects == 2 ? "Two-defect bound-pair modes" : "Three-defect bound-triple modes",
       [&](auto& table) {
         for (std::size_t i = 0; i < states.size(); ++i)
         {
@@ -609,37 +638,69 @@ int run_bound_pairs(Arguments const& args, bethe::SolverOptions<Real> const& opt
       [&](auto& table) { table.append(states.size(), ground.through_lines, ground.energy, ground.multiplicity); },
       cli::column<std::size_t>("state_id"), cli::column<std::size_t>("through_lines"),
       cli::column<Real>("energy", "Energy"), cli::column<std::optional<std::uint64_t>>("multiplicity"));
-  output.table(
-      "string", "Signed two-string parameters (L is authoritative even on underflow)",
-      [&](auto& table) {
-        for (std::size_t i = 0; i < states.size(); ++i)
-        {
-          auto const& r = states[i].reference;
-          Real const d = Real(r.deviation_sign) * std::exp(-r.log_deviation);
-          table.append(i, r.string_label, r.center, r.deviation_sign, r.log_deviation,
-                       d != Real{0} ? std::optional<Real>{d} : std::nullopt);
-        }
-      },
-      cli::column<std::size_t>("state_id"), cli::column<std::size_t>("string_label", "J"),
-      cli::column<Real>("center", "a"), cli::column<int>("deviation_sign", "sign(d)"),
-      cli::column<Real>("log_deviation", "L=-log|d|"),
-      cli::column<std::optional<Real>>("deviation", "d (null if underflow)"));
-  if (args.roots)
+  if constexpr (Defects == 2)
     output.table(
-        "roots", "Reference pair roots (rounded u; use sign and L for deviation)",
+        "string", "Signed two-string parameters (L is authoritative even on underflow)",
         [&](auto& table) {
           for (std::size_t i = 0; i < states.size(); ++i)
           {
             auto const& r = states[i].reference;
-            Real const width = std::acosh(r.delta) + Real(r.deviation_sign) * std::exp(-r.log_deviation);
-            for (std::size_t j = 0; j < 2; ++j)
-              table.append(i, j, width / Real{2}, (j ? -r.center : r.center) / Real{2});
+            Real const d = Real(r.deviation_sign) * std::exp(-r.log_deviation);
+            table.append(i, r.string_label, r.center, r.deviation_sign, r.log_deviation,
+                         d != Real{0} ? std::optional<Real>{d} : std::nullopt);
+          }
+        },
+        cli::column<std::size_t>("state_id"), cli::column<std::size_t>("string_label", "J"),
+        cli::column<Real>("center", "a"), cli::column<int>("deviation_sign", "sign(d)"),
+        cli::column<Real>("log_deviation", "L=-log|d|"),
+        cli::column<std::optional<Real>>("deviation", "d (null if underflow)"));
+  else
+    output.table(
+        "string", "Complex three-string parameters (L and phi are authoritative even on underflow)",
+        [&](auto& table) {
+          for (std::size_t i = 0; i < states.size(); ++i)
+          {
+            auto const& r = states[i].reference;
+            Real const magnitude = std::exp(-r.log_deviation);
+            table.append(
+                i, r.string_label, r.center, r.log_deviation, r.deviation_phase,
+                magnitude != Real{0} ? std::optional<Real>{magnitude * std::cos(r.deviation_phase)} : std::nullopt,
+                magnitude != Real{0} ? std::optional<Real>{magnitude * std::sin(r.deviation_phase)} : std::nullopt);
+          }
+        },
+        cli::column<std::size_t>("state_id"), cli::column<std::size_t>("string_label", "J"),
+        cli::column<Real>("center", "a"), cli::column<Real>("log_deviation", "L=-log|z|"),
+        cli::column<Real>("deviation_phase", "phi (radians)"),
+        cli::column<std::optional<Real>>("deviation_real", "Re(z) (null if underflow)"),
+        cli::column<std::optional<Real>>("deviation_imag", "Im(z) (null if underflow)"));
+  if (args.roots)
+    output.table(
+        "roots", "Reference cluster roots (rounded u; string parameters retain the deviation)",
+        [&](auto& table) {
+          for (std::size_t i = 0; i < states.size(); ++i)
+          {
+            auto const& r = states[i].reference;
+            if constexpr (Defects == 2)
+            {
+              Real const width = std::acosh(r.delta) + Real(r.deviation_sign) * std::exp(-r.log_deviation);
+              for (std::size_t j = 0; j < 2; ++j)
+                table.append(i, j, width / Real{2}, (j ? -r.center : r.center) / Real{2});
+            }
+            else
+            {
+              Real const magnitude = std::exp(-r.log_deviation);
+              Real const real = std::acosh(r.delta) + magnitude * std::cos(r.deviation_phase);
+              Real const imag = r.center / Real{2} + magnitude * std::sin(r.deviation_phase);
+              table.append(i, 0, Real{0}, r.center / Real{2});
+              table.append(i, 1, real, imag);
+              table.append(i, 2, real, -imag);
+            }
           }
         },
         cli::column<std::size_t>("state_id"), cli::column<std::size_t>("index"), cli::column<Real>("u_real"),
         cli::column<Real>("u_imag"));
   output.finish();
-  if (!complete) std::cerr << "Bound-pair calculation incomplete; unconverged modes have no verified gap.\n";
+  if (!complete) std::cerr << "Bound-cluster calculation incomplete; unconverged modes have no verified gap.\n";
   return complete ? 0 : 2;
 }
 
@@ -660,7 +721,8 @@ template <uni20::Real Real> int run(Arguments const& args, int argc, char** argv
   auto report = preamble(context, args, options);
   if (args.q_seed || args.q_spectrum) return run_qsystem(args, options, std::move(report));
   if (args.singlet_excitation) return run_singlet(args, options, std::move(report));
-  if (args.bound_pairs) return run_bound_pairs(args, options, std::move(report));
+  if (args.bound_pairs) return run_bound_clusters<Real, 2>(args, *args.bound_pairs, options, std::move(report));
+  if (args.bound_triples) return run_bound_clusters<Real, 3>(args, *args.bound_triples, options, std::move(report));
   if (args.ferromagnetic && !args.excitations && !args.numbers)
     return run_ferro_analytic<Real>(args, std::move(report));
   auto computation = context.computation();

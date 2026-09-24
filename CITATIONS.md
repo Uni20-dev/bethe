@@ -404,7 +404,7 @@ JHEP 03 (2020) 177 (2020).
 
 Relevant tool modes:
 
-- `bethe-biquadratic-obc`: Open quantum-group-invariant XXZ Q-system, Sec. 5: Wronskian (5.17), Bethe equations (5.12), and admissibility conditions. Used for Q-system module searches (validated through N=8; larger sizes experimental), the regularized AF two-string singlet, and signed empty-sea two-string ferro branches on odd/even long chains. Neither numerical completeness nor long-chain energy ordering is rigorously certified.
+- `bethe-biquadratic-obc`: Open quantum-group-invariant XXZ Q-system, Sec. 5: Wronskian (5.17), Bethe equations (5.12), and admissibility conditions. Used for Q-system module searches (validated through N=8; larger sizes experimental), the regularized AF two-string singlet, and empty-sea two-/three-string ferro branches on odd/even long chains. Two-strings retain signed real deviations; three-strings retain complex deviations. Neither numerical completeness nor long-chain energy ordering is rigorously certified.
 
 ### popkov-2021
 
@@ -888,6 +888,6 @@ Ann. Henri Poincare 8, 165-201 (2007).
 
 Relevant tool modes:
 
-- `bethe-biquadratic-obc`: Droplet interpretation and thermodynamic module-edge limit, Theorem 2.1; rescaling by 2\*Delta=3 gives a two-defect threshold 5/3. Finite-chain bound-pair modes solve the original Bethe equations with signed finite deviations, not a bulk/ideal-string substitution. No form factors or physical-spin decomposition are implemented.
+- `bethe-biquadratic-obc`: Droplet interpretation and thermodynamic module-edge limit, Theorem 2.1; rescaling by 2\*Delta=3 gives thresholds 5/3 for two defects and 2 for three. Finite-chain pair/triple modes solve the original Bethe equations with finite deviations, not a bulk/ideal-string substitution. No form factors or physical-spin decomposition are implemented.
 
 <!-- END GENERATED BIBLIOGRAPHY -->
