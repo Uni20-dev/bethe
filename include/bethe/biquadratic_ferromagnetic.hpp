@@ -4,6 +4,7 @@
 
 #include <bethe/biquadratic_qsystem.hpp>
 #include <bethe/xxz_open_three_string.hpp>
+#include <bethe/xxz_open_triple_defect.hpp>
 #include <bethe/xxz_open_two_pairs.hpp>
 #include <bethe/xxz_open_two_string.hpp>
 
@@ -174,6 +175,8 @@ template <uni20::Real Real> using BoundPairState = BoundClusterState<Real, xxz::
 template <uni20::Real Real> using PairDefectState = ClusterState<Real, xxz::quantum_group::two_string::State<Real>>;
 template <uni20::Real Real> using TwoPairsState = ClusterState<Real, xxz::quantum_group::two_pairs::State<Real>>;
 template <uni20::Real Real>
+using TripleDefectState = ClusterState<Real, xxz::quantum_group::triple_defect::State<Real>>;
+template <uni20::Real Real>
 using BoundTripleState = BoundClusterState<Real, xxz::quantum_group::three_string::State<Real>>;
 
 namespace detail
@@ -246,6 +249,16 @@ template <uni20::Real Real = double>
 {
   return detail::from_cluster<Real>(
       xxz::quantum_group::two_pairs::solve<Real>(sites, Real{3} / Real{2}, labels, options), 4, 0);
+}
+
+/// One bound triple plus one real root, ell=N-8; labels are not energy ranks.
+template <uni20::Real Real = double>
+[[nodiscard]] TripleDefectState<Real> triple_defect(std::size_t sites, std::size_t real_label, std::size_t string_label,
+                                                    SolverOptions<Real> const& options = {})
+{
+  return detail::from_cluster<Real>(
+      xxz::quantum_group::triple_defect::solve<Real>(sites, Real{3} / Real{2}, real_label, string_label, options), 4,
+      0);
 }
 
 namespace qsystem

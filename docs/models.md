@@ -351,6 +351,9 @@ validated as ED subsets, not full spectra.
 A [two-bound-pair solver and CLI scans](biquadratic-two-pairs.md) add another
 four-defect subset, retaining both signed logarithmic deviations and sharing
 the single-pair equations, energy mapping and Newton driver.
+A [three-string plus real-root library solver](biquadratic-triple-defect.md)
+reuses the isolated triple and a general external-scattering kernel;
+the four-string droplet remains the missing four-defect topology.
 
 Literature: [Barber–Batchelor](../CITATIONS.md#barber-batchelor-1989),
 [Albertini](../CITATIONS.md#albertini-2000), and

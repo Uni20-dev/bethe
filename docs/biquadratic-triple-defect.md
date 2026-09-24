@@ -1,0 +1,121 @@
+# A bound triple scattering with a single defect
+
+[Ferromagnetic overview](biquadratic-ferromagnetic.md) · [Isolated triples](biquadratic-bound-triples.md) · [Two pairs](biquadratic-two-pairs.md)
+
+A three-string plus one real root is another four-defect family, in the
+TL module `ell=N-8`. The selected-state library API accepts odd/even N>=8:
+
+```cpp
+#include <bethe/biquadratic_ferromagnetic.hpp>
+namespace ferro = bethe::biquadratic::ferromagnetic;
+auto state = ferro::triple_defect<long double>(128, 125, 121);
+if (state.reference.converged) {
+    auto gap = state.tl_energy; // E-(N-1), evaluated directly
+    auto alpha = state.reference.rapidity;
+    auto a = state.reference.center;
+    auto L = state.reference.log_deviation;
+    auto phi = state.reference.deviation_phase;
+}
+```
+
+The labels are `1<=I<=N-3` for the real root and `1<=J<=N-7` for the
+triple. They are neither momenta nor energy ranks. The corner
+`(I,J)=(N-3,N-7)` approaches gap **3 = 2+1**, the separated triple-plus-single
+threshold, not the minimum of the full four-defect module. These are TL
+singlet insertions, not physical spin flips; no SU(2) decomposition or
+spectral weights are implied. CLI integration is a separate next step.
+
+## Reusing the isolated triple
+
+The reference is still quantum-group XXZ at Delta=3/2 with opposite end
+fields, not the zero-end-field chain. Let eta=acosh(Delta). Its roots are
+
+```text
+u0 = i*a/2,
+u+ = eta + i*a/2 + z,       u- = conjugate(u+),
+v  = i*alpha/2,            z = exp(-L+i*phi).
+```
+
+We retain the isolated triple's three regularized equations and analytic
+Jacobian. Only the external scattering is new. Define the logarithm of
+the direct and reflected factors in
+[Bajnok et al., Eq. (5.12)](../CITATIONS.md#bajnok-2020):
+
+```text
+T(u,v) = log sinh(u-v+eta) - log sinh(u-v-eta)
+       + log sinh(u+v+eta) - log sinh(u+v-eta).
+```
+
+The shared `detail/open_string_scattering.hpp` evaluates T and its two
+analytic complex derivatives. It is only for nonsingular external
+factors; the triple's singular internal factor is still evaluated using
+L and phi, never by subtracting rounded roots.
+
+To choose the continuous product-phase branch, put
+
+```text
+F(a,alpha) = sum_{sign=+1,-1} [Theta(a+sign*alpha;eta)
+                              + Theta(a+sign*alpha;2eta)],
+lift(raw,target) = target + wrap(raw-target).
+```
+
+Theta and wrap have the same definitions as in the isolated-triple guide.
+Our coupled residuals subtract
+
+```text
+lift(Im[T(u0,v)+2T(u+,v)], F(a,alpha))/(2N)  from the product phase,
+Re[T(u+,v)]/(2N)                           from the outer-root modulus,
+Im[T(u+,v)]                                inside the wrapped outer-root phase.
+```
+
+The fourth equation is
+
+```text
+Theta(alpha;eta/2)
+  - {2*pi*I + lift(Im[T(v,u0)+T(v,u+)+T(v,u-)], F(alpha,a))}/(2N) = 0.
+```
+
+The ideal fused phase fixes a multiple of 2pi only; it does not replace
+finite-deviation scattering. Its derivative cancels inside/outside the
+local lift, so the Jacobian uses derivatives of the original factors.
+Both sides of `alpha=a` are tested. The actual coincident-root point is
+excluded, and the inherited triple domain requires `|z|<eta/4`.
+
+A linear initial triple center and a bare-phase real-root seed start the
+solve. During initialization, the two center equations use the analytically
+fused phase F, while L and phi use the isolated triple equations. This avoids
+the removable external-factor poles at `alpha=a` in the ideal limit.
+The finite stage then restores **all** coupled equations above; convergence
+is never accepted using the initializer alone. The common Newton driver
+uses one iteration budget and the requested native precision throughout.
+It solves four real unknowns, independent of N. Failed iterates retain
+consistent diagnostics and estimates, not verified energies.
+
+The lower API is
+`bethe::xxz::quantum_group::triple_defect::solve(N,Delta,I,J,options)`.
+Finite Delta>1 is accepted, but neither convergence nor branch existence
+is guaranteed for every parameter or near unresolved root collisions.
+
+## Coverage and validation
+
+At Delta=3/2, combining the four-real-root, pair-plus-two-real-root,
+two-pair, and triple-plus-real-root families matches independent module ED
+as a multiset at N=8,9,10. The last family contributes `(N-3)*(N-7)` levels:
+
+| N | Previously covered | Triple + real root | Module dimension | Remaining |
+| ---: | ---: | ---: | ---: | ---: |
+| 8 | 8 | 5 | 14 | 1 |
+| 9 | 28 | 12 | 42 | 2 |
+| 10 | 66 | 21 | 90 | 3 |
+
+The remaining counts agree with the expected four-string droplet family;
+that family still needs implementation and independent validation. This
+small-chain counting is not a general completeness proof.
+
+Additional tests check the original outer-, central-, and real-root
+equations, every Jacobian column, iteration-budget failures, and the
+threshold through N=100000 in fp64, long double, and enabled fp128. L and
+phi remain meaningful even when exp(-L) underflows.
+All selected labels at N=8,...,10 also match distinct ED levels at
+Delta=1.25, 2 and 3. The initializer's Jacobian is checked even at coincident
+ideal centers, while the final solver rejects coincident physical roots.

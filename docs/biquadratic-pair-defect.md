@@ -236,7 +236,8 @@ ED levels for N=8,...,10 (6, 20 and 45 candidates respectively). The ten
 pair-plus-three-real-root candidates at N=10 also match ED. These are
 **subsets**, not complete four- or five-defect spectra. A separate
 [two-pair solver and CLI scans](biquadratic-two-pairs.md) cover another four-defect
-family; three-strings with real roots and larger droplets remain missing.
+family. A selected [triple-plus-one-real-root solver](biquadratic-triple-defect.md)
+covers another; triples with more real roots and larger droplets remain missing.
 Independent original-equation checks cover r=2,3,4, both deviation signs,
 odd/even chains and all supported precisions. High-label branches approach
 the separated-cluster threshold `5/3+r`, checked up to N=100000. This

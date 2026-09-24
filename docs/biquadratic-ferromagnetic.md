@@ -205,8 +205,9 @@ are also available. One pair with several real roots is supported through
 selected labels or `--pair-defects ... --real-defects R` scans.
 A [two-bound-pair solver and CLI scans](biquadratic-two-pairs.md)
 are also available (`--two-pairs J1,J2` or `--two-pair-states COUNT|all`,
-with optional `--pair-window WIDTH`). Next are three-strings with real
-roots and larger droplets.
+with optional `--pair-window WIDTH`). A selected-state
+[triple-plus-real-root library solver](biquadratic-triple-defect.md) adds
+another four-defect family. Next are its CLI integration and larger droplets.
 Other open work is
 physical-spin decomposition, state-dependent spectral weights/form factors,
 and periodic twists with genuine momentum labels. Energies and multiplicities

@@ -125,8 +125,9 @@ families also matches ED **as a multiset**, so these are distinct subsets:
 | 10 | 15 | 45 | 6 | 90 | 24 |
 
 This is finite-size numerical evidence, **not** a general completeness
-proof. A three-string plus a real root and a four-string droplet remain
-separate targets. Tests additionally check the original complex equations
+proof. A [three-string plus a real root](biquadratic-triple-defect.md) is now
+available separately; a four-string droplet remains a target.
+Tests additionally check the original complex equations
 for both deviation parities, every analytic Jacobian column in ideal and
 finite-deviation modes, failure diagnostics, and the 10/3 threshold through
 N=100000, where both deviations underflow but their logarithms remain finite.
