@@ -52,7 +52,8 @@ fixed local singlet bonds in an eigenstate.
 Without state-selection options, `--ferromagnetic` reports only the exact
 ground-space reference and the positive spectral gap. `--through-lines N-2`
 alone selects the exact first positive level. For ell=N-4, use the targeted
-`--bound-pairs` family, or `--bound-triples` for ell=N-6; other nontrivial
+`--bound-pairs` family, `--bound-triples` for ell=N-6, or `--bound-quartets`
+for ell=N-8. These select bound branches, not a general module-minimum search; other nontrivial
 module minima still require a Q-system investigation. `--sectors` and the AF-specific
 `--singlet-excitation` are rejected with this sign, not silently reinterpreted.
 
@@ -199,7 +200,7 @@ auto two_pairs = ferro::two_bound_pairs<long double>(128, {121, 122});
 // Inspect real.converged() and complex.complete() before interpreting coverage.
 ```
 
-Targeted two- and three-defect bound families are now available on long chains.
+Targeted two-, three-, and four-defect bound families are available on long chains.
 Real-root scattering windows and [pair-plus-defect states and CLI scans](biquadratic-pair-defect.md)
 are also available. One pair with several real roots is supported through
 selected labels or `--pair-defects ... --real-defects R` scans.
@@ -209,9 +210,10 @@ with optional `--pair-window WIDTH`). A selected-state
 [triple-plus-real-root solver and CLI scans](biquadratic-triple-defect.md) add
 another four-defect family (`--triple-defect I,J` or `--triple-defects COUNT|all`
 with optional `--mixed-window WIDTH`). A selected-state
-[bound-quartet library solver](biquadratic-bound-quartets.md) completes the
+[bound-quartet solver and CLI](biquadratic-bound-quartets.md) completes the
 five four-defect topologies, jointly checked against complete module ED
-through N=10. Next are quartet CLI integration and higher-defect families.
+through N=10. Use `--bound-quartets COUNT|all` for the selected four-string
+family. Higher-defect families remain open work.
 Other open work is
 physical-spin decomposition, state-dependent spectral weights/form factors,
 and periodic twists with genuine momentum labels. Energies and multiplicities

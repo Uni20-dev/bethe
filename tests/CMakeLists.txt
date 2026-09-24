@@ -90,6 +90,9 @@ if(BETHE_BUILD_APPS)
     add_test(NAME BiquadraticBoundTriple.cli
       COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_biquadratic_bound_cluster.py"
         "$<TARGET_FILE:bethe-biquadratic-obc>" "${UNI20_ENABLE_MPLAPACK}" 3)
+    add_test(NAME BiquadraticBoundQuartet.cli
+      COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_biquadratic_bound_cluster.py"
+        "$<TARGET_FILE:bethe-biquadratic-obc>" "${UNI20_ENABLE_MPLAPACK}" 4)
     add_test(NAME BiquadraticFerro.cli
       COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_biquadratic_ferromagnetic.py"
         "$<TARGET_FILE:bethe-biquadratic-obc>" "${UNI20_ENABLE_MPLAPACK}")

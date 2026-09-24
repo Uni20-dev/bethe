@@ -22,10 +22,32 @@ if (state.reference.converged) {
 
 `mode=1,...,N-7` selects the four-string branch, not a rank in the full
 module or excitation spectrum. The module is `ell=N-8`; these are TL
-singlet insertions, not four physical spin flips. CLI integration is a
-separate next step. The lower API is
+singlet insertions, not four physical spin flips. The lower API is
 `bethe::xxz::quantum_group::four_string::bound_quartet(N,Delta,mode,options)`
 for finite Delta>1, with no blanket convergence or branch-existence guarantee.
+
+## Command line and output
+
+```sh
+bethe-biquadratic-obc 128 --ferromagnetic --bound-quartets 4
+bethe-biquadratic-obc 9 --ferromagnetic --bound-quartets all --roots
+bethe-biquadratic-obc 128 --ferromagnetic --bound-quartets 4 --precision fp128 --json quartets.json
+```
+
+`COUNT` selects the first modes, capped at the available `N-7`; `all`
+means all quartet labels, **not all four-defect excitations**. The usual
+`--max-candidates` limit applies. This selection cannot be combined with
+other state families or an explicit through-line sector.
+
+The shared bound-cluster frontend writes `states`, the exact ground-space
+`reference`, and `string` tables; `--roots` adds the four reconstructed roots
+per state. The string table preserves both logarithmic deviations, the inner
+sign and the outer phase. Underflowed deviation components are null, not a
+claim of an exact ideal string. JSON/CSV/TSV exports and `--no-retain`
+streaming use the same tables as the pair and triple frontends. For example,
+`--csv-table string=quartets.string.csv` exports the string parameters.
+Failed solves return exit status 2, keep diagnostic estimates, and leave
+the verified `gap` null.
 
 ## Two deviations, four real unknowns
 

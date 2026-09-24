@@ -70,6 +70,7 @@ Thermodynamic dispersion tools use `bethe-<model>-dispersion`.
   The [ferromagnetic sign](docs/biquadratic-ferromagnetic.md) adds an exact
   one-defect band, [long-chain two-defect bound pairs](docs/biquadratic-bound-pairs.md),
   [three-defect droplets](docs/biquadratic-bound-triples.md),
+  [four-defect droplets](docs/biquadratic-bound-quartets.md),
   [real-root scattering windows](docs/biquadratic-scattering.md),
   [mixed pair-plus-defect scans](docs/biquadratic-pair-defect.md), and sign-aware real/complex-root levels.
 - [Richardson pairing](docs/richardson.md): `bethe-richardson` gives attractive
