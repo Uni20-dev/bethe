@@ -890,4 +890,11 @@ Relevant tool modes:
 
 - `bethe-biquadratic-obc`: Droplet interpretation and thermodynamic module-edge limit, Theorem 2.1; rescaling by 2\*Delta=3 gives thresholds 5/3 for two defects and 2 for three. Finite-chain pair/triple modes solve the original Bethe equations with finite deviations, not a bulk/ideal-string substitution. No form factors or physical-spin decomposition are implemented.
 
+### reichert-2019
+
+Benjamin Reichert, Grigori E. Astrakharchik, Aleksandra Petkovic, and Zoran Ristivojevic. *Exact Results for the Boundary Energy of One-Dimensional Bosons*.
+Phys. Rev. Lett. 123, 250602 (2019).
+
+[DOI](<https://doi.org/10.1103/PhysRevLett.123.250602>), [arXiv](<https://arxiv.org/abs/1908.08172>).
+
 <!-- END GENERATED BIBLIOGRAPHY -->

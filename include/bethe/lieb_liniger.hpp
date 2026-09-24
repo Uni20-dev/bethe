@@ -2,6 +2,7 @@
 // Copyright (C) 2026 Ian McCulloch
 #pragma once
 
+#include <bethe/detail/continuum_newton.hpp>
 #include <bethe/real_excitations.hpp>
 #include <bethe/solver.hpp>
 #include <cmath>
@@ -111,17 +112,7 @@ template <uni20::Real Real> struct System
       return true;
     }
     // g/(g*g+d*d), avoiding overflow/underflow from the squares.
-    Real kernel(Real d) const
-    {
-      using std::abs;
-      if (abs(d) > g)
-      {
-        Real const ratio = g / d;
-        return (ratio / d) / (Real{1} + ratio * ratio);
-      }
-      Real const ratio = d / g;
-      return (Real{1} / g) / (Real{1} + ratio * ratio);
-    }
+    Real kernel(Real d) const { return bethe::detail::rational_scattering_kernel(d, g); }
     struct Evaluation
     {
         std::vector<Real> residual;
@@ -218,41 +209,7 @@ State<Real> solve_real(Real length, Real c, QuantumNumbers const& numbers, Solve
   result.momentum = (Real{2} * system.pi * Real(momentum_index)) / length;
   if (!uni20::isfinite(result.momentum)) throw std::overflow_error("Lieb-Liniger total momentum overflow");
   auto const n = q.size();
-  uni20::DenseMatrix<Real> jacobian(n, n), step(n, 1);
-  for (;;)
-  {
-    auto const evaluation = system.evaluate(q, &jacobian);
-    if (evaluation.norm <= options.residual_tolerance) break;
-    if (result.iterations == options.max_iterations) break;
-    for (std::size_t j = 0; j < n; ++j)
-      step[j, 0] = -evaluation.residual[j];
-    uni20::linalg::solve_inplace(jacobian, step);
-    bool accepted = false;
-    auto trial = q;
-    Real damping = Real{1};
-    for (int backtrack = 0; backtrack <= uni20::numeric_limits<Real>::digits; ++backtrack)
-    {
-      for (std::size_t j = 0; j < n; ++j)
-        trial[j] = q[j] + damping * step[j, 0];
-      if (system.physical(trial))
-      {
-        auto const norm = system.evaluate(trial).norm;
-        if (norm <= options.residual_tolerance || norm < (Real{1} - damping / Real{10000}) * evaluation.norm)
-        {
-          accepted = true;
-          break;
-        }
-      }
-      damping /= Real{2};
-    }
-    if (!accepted)
-    {
-      result.status = SolveStatus::stalled;
-      break;
-    }
-    q = std::move(trial);
-    ++result.iterations;
-  }
+  result.iterations = bethe::detail::continuum_newton(system, q, options);
   result.momenta.resize(n);
   bethe::detail::CompensatedSum<Real> energy;
   bool nonzero = false;

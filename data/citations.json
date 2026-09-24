@@ -679,6 +679,17 @@
         {"label": "DOI", "url": "https://doi.org/10.1007/s00023-006-0304-6"},
         {"label": "arXiv", "url": "https://arxiv.org/abs/math-ph/0508049"}
       ]
+    },
+    {
+      "id": "reichert-2019",
+      "authors": "Benjamin Reichert, Grigori E. Astrakharchik, Aleksandra Petkovic, and Zoran Ristivojevic",
+      "title": "Exact Results for the Boundary Energy of One-Dimensional Bosons",
+      "publication": "Phys. Rev. Lett. 123, 250602",
+      "year": 2019,
+      "links": [
+        {"label": "DOI", "url": "https://doi.org/10.1103/PhysRevLett.123.250602"},
+        {"label": "arXiv", "url": "https://arxiv.org/abs/1908.08172"}
+      ]
     }
   ],
   "tools": [

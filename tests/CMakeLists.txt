@@ -36,6 +36,10 @@ foreach(module IN ITEMS heisenberg sectors open excitations xxz xxz_open xxz_ope
   bethe_discover_tests(bethe_${module}_tests)
 endforeach()
 
+add_executable(bethe_lieb_liniger_open_tests test_lieb_liniger_open.cpp)
+target_link_libraries(bethe_lieb_liniger_open_tests PRIVATE bethe::bethe)
+bethe_discover_tests(bethe_lieb_liniger_open_tests)
+
 add_executable(bethe_biquadratic_pair_defect_tests test_biquadratic_pair_defect.cpp)
 target_link_libraries(bethe_biquadratic_pair_defect_tests PRIVATE bethe::bethe)
 bethe_discover_tests(bethe_biquadratic_pair_defect_tests)

@@ -78,7 +78,7 @@ paper's correlation functions, thermodynamics, or full spectrum.
 | `xxx` | Spin-1/2 nearest-neighbor XXX | Implemented (limited): [PBC](xxx.md), [free ends](open-chains.md), sector minima and restricted real-root excitations; periodic one-spinon family | Complex strings, full spectrum, twists/boundary fields |
 | `xxz` | Spin-1/2 nearest-neighbor XXZ | Implemented (limited): [PBC](xxz.md) ground states/sectors at `Delta>=0`, also `-1<Delta<0` on even rings; [free ends](xxz-open.md) at `Delta>-1`; restricted excitations at `0<=Delta<=1`; [massive boundary roots](xxz-open-massive.md) | Negative odd rings, massive/negative excitations, additional root families, twists/boundary fields |
 | `hubbard` | One-band Hubbard, hopping t=1 | Implemented (limited): [PBC](hubbard.md) and [free-end](hubbard-open.md) ground states; [half-filled](hubbard-dispersion.md) and [doped](hubbard-doped.md) thermodynamic spinon/charge lines for U>0, zero field | Continuum thresholds, finite-field/string dispersions; finite-size excitations; remaining PBC shell branches and odd rings |
-| `lieb-liniger` | Continuum contact-interacting bosons | Implemented (limited): [repulsive PBC](lieb-liniger.md), ground state, explicit labels, and bounded excitation scans | Hard walls, attraction, thermodynamics |
+| `lieb-liniger` | Continuum contact-interacting bosons | Implemented (limited): [repulsive PBC](lieb-liniger.md) and [hard-wall library](lieb-liniger-open.md), ground states, explicit labels, and bounded excitation scans | Hard-wall CLI, attraction, thermodynamics |
 | `su-n` | Fundamental SU(n) permutation chain | Implemented (limited): [SU(3) PBC](su3.md), balanced singlet ground state for L>=3 divisible by three, J=1 | Other populations/lengths, excitations, general n, open boundaries |
 | `gaudin-yang` | Equal-mass spin-1/2 continuum delta-interacting fermions | Implemented (limited): [repulsive PBC](gaudin-yang.md), odd populations of both spins; unrestricted free and fully polarized limits | Other periodic shell branches, excitations, attraction, hard walls, thermodynamics |
 | `tj-susy` | Projected t–J electrons, J=2t | Implemented (limited): [PBC](tj.md), t=1, doped odd N_up and N_down on either length parity; every no-hole and fully polarized sector | Other doped shell branches, excitations, open boundaries |
@@ -145,13 +145,15 @@ The implementation checkpoint passed 285 tests with GCC 13 and fp128 enabled,
 198 with Clang 20 Release without MPLAPACK, and the new CLI suite in an
 app-only build using the published Uni20 pin (no sibling-source override).
 
-Hard walls are a natural second slice with reflected scattering, but require
-their own equations: [Gaudin (1971)](../CITATIONS.md#gaudin-1971).
+The [hard-wall library](lieb-liniger-open.md) now adds ground states, selected
+positive-integer labels and finite-window scans using reflected scattering.
+It shares Newton iteration and rational kernels with the ring, but owns its
+boundary equations: [Gaudin (1971)](../CITATIONS.md#gaudin-1971).
 Attractive c is a separate bound-state problem, not a sign toggle on a
 real-root solver. Nor does `all` make sense without an energy or quantum-number
 cutoff: even a fixed-N continuum system has infinitely many levels.
 
-**Next slice:** hard-wall reflection equations, or a thermodynamic ground-state
+**Next slice:** hard-wall CLI integration, then a thermodynamic ground-state
 and type-I/type-II dispersion API. The finite-ring first slice is complete;
 attraction remains a separate bound-state project.
 
