@@ -5,8 +5,9 @@
 The bound branches are only part of the excitation structure. Two singlet
 defects can also scatter rather than bind; three can scatter independently,
 or form a pair plus a separate defect. The **positive finite-real-root
-family** describes the unbound branch. Mixed pair-plus-real-root families
-need additional complex-string equations and are not included here.
+family** describes the unbound branch. A separate
+[pair-plus-real-root library API](biquadratic-pair-defect.md) uses the
+complex-string equations; it is not included in the real-root CLI scan.
 
 The existing `--excitations` scan handles the full supported real family.
 For a few defects on a long chain, the number of label combinations can be
@@ -131,5 +132,6 @@ original complex equations, and every odd-chain real family through N=9
 against module ED. For N=4,...,10, the union of the **full** two-real-root
 family and the targeted bound-pair family reproduces the entire two-defect
 module, eigenvalue by eigenvalue. This finite validation is not a proof of
-arbitrary-N Bethe completeness, and it does not extend to three defects:
-mixed-string scattering states are then an additional family.
+arbitrary-N Bethe completeness. Three defects also need the
+[mixed pair-plus-defect family](biquadratic-pair-defect.md); including it
+reproduces the complete three-defect module in tests for N=6,...,10.

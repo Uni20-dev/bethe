@@ -191,12 +191,15 @@ auto complex = ferro::qsystem::spectrum<long double>(6, 2);
 auto pair = ferro::bound_pair<long double>(128, 1);
 auto triple = ferro::bound_triple<long double>(128, 1);
 auto scattering = ferro::real_excitations_window<long double>(129, 125, 8);
+auto mixed = ferro::pair_defect<long double>(128, 125, 123);
 // Inspect real.converged() and complex.complete() before interpreting coverage.
 ```
 
 Targeted two- and three-defect bound families are now available on long chains.
-Real-root scattering windows are also available. Next are mixed-string
-scattering branches and larger droplets. Other open work is
+Real-root scattering windows and a selected-state
+[pair-plus-defect library API](biquadratic-pair-defect.md) are also available.
+Next are CLI scans for that mixed branch, more general mixed strings and
+larger droplets. Other open work is
 physical-spin decomposition, state-dependent spectral weights/form factors,
 and periodic twists with genuine momentum labels. Energies and multiplicities
 alone do not determine which branches an operator or a chosen iMPS ground

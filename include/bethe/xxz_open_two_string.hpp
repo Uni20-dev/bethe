@@ -23,6 +23,8 @@ template <uni20::Real Real> struct State
     int deviation_sign = 1;
     /// E_ref-(N-1)*Delta/4, evaluated without subtracting extensive energies.
     Real energy_shift{};
+    /// Integer labels for the real roots; empty for an isolated bound pair.
+    std::vector<std::size_t> real_labels;
 };
 
 namespace detail
@@ -33,7 +35,20 @@ template <uni20::Real Real> class System {
     System(std::size_t n, Real delta, std::size_t roots, std::size_t label, int sign)
         : sites(n), order(roots), sea(order - 2), string_label(label), deviation_sign(sign), eta(std::acosh(delta)),
           pi(Real{4} * std::atan(Real{1}))
-    {}
+    {
+      quantum_group::detail::check_matrix_size<Real>(order);
+      real_labels.resize(sea);
+      for (std::size_t i = 0; i < sea; ++i)
+        real_labels[i] = i + 1;
+    }
+    System(std::size_t n, Real delta, std::size_t real_label, std::size_t pair_label)
+        : System(n, delta, 3, pair_label, (n - pair_label) % 2 ? 1 : -1)
+    {
+      // The product phase discards the sign of the singular reflected factor;
+      // the unsquared pair equation requires sign(d)=(-1)^(N-J-1).
+      real_labels[0] = real_label;
+      selected_pair_defect = true;
+    }
     using Function = quantum_group::detail::StringPhase<Real>;
     // Theta(beta;w) and its two derivatives, without coth(w) near w=0.
     static Function phase(Real beta, Real w, bool complement = false)
@@ -67,8 +82,11 @@ template <uni20::Real Real> class System {
     {
       std::vector<Real> x(order);
       for (std::size_t i = 0; i < sea; ++i)
-        x[i] = Real{2} * std::atan(std::tanh(eta / Real{2}) * std::tan(pi * Real(i + 1) / (Real{2} * Real(sites))));
-      x[sea] = sea ? pi / Real{2} : pi * (Real(string_label) / Real(sites - 2));
+        x[i] = Real{2} *
+               std::atan(std::tanh(eta / Real{2}) * std::tan(pi * Real(real_labels[i]) / (Real{2} * Real(sites))));
+      x[sea] = selected_pair_defect ? pi * (Real(string_label) / Real(sites - 4))
+               : sea                ? pi / Real{2}
+                                    : pi * (Real(string_label) / Real(sites - 2));
       x[sea + 1] = Real{8} + std::abs(std::log(eta));
       // Solve the ideal-string modulus equation for L at the bare sea seed.
       x[sea + 1] += Real{2} * Real(sites) * evaluate(x, nullptr, true).residual.back();
@@ -96,7 +114,7 @@ template <uni20::Real Real> class System {
       {
         auto drive = phase(x[i], eta / Real{2});
         bethe::detail::CompensatedSum<Real> f;
-        f.add(drive.value - Real{2} * pi * Real(i + 1) * scale);
+        f.add(drive.value - Real{2} * pi * Real(real_labels[i]) * scale);
         add(i, i, Real{2} * Real(sites) * drive.angle);
         for (std::size_t j = 0; j < sea; ++j)
           if (i != j)
@@ -178,12 +196,15 @@ template <uni20::Real Real> class System {
     }
     std::vector<Real> coordinate_scales(std::span<Real const> x) const
     {
+      if (selected_pair_defect) return {std::min(x[0], pi - x[0]), std::min(x[1], pi - x[1]), Real{2} * Real(sites)};
       if (sea) return {};
       return {std::min(x[0], pi - x[0]), Real{2} * Real(sites)};
     }
     std::size_t sites, order, sea, string_label;
     int deviation_sign;
     Real eta, pi;
+    std::vector<std::size_t> real_labels;
+    bool selected_pair_defect = false;
 };
 
 template <uni20::Real Real>
@@ -197,6 +218,7 @@ State<Real> solve(System<Real> const& system, Real delta, SolverOptions<Real> co
   state.delta = delta;
   state.string_label = system.string_label;
   state.deviation_sign = system.deviation_sign;
+  state.real_labels = system.real_labels;
   state.iterations = iteration.iterations;
   state.converged = iteration.converged;
   state.status = iteration.status;
@@ -209,7 +231,8 @@ State<Real> solve(System<Real> const& system, Real delta, SolverOptions<Real> co
   state.rapidities.assign(x.begin(), x.begin() + system.sea);
   state.energy = system.energy(x, delta);
   state.energy_shift = system.energy_shift(x, delta);
-  if (!uni20::isfinite(state.energy)) throw std::overflow_error("two-string energy overflow");
+  if (!uni20::isfinite(state.energy) || !uni20::isfinite(state.energy_shift))
+    throw std::overflow_error("two-string energy overflow");
   return state;
 }
 } // namespace detail
@@ -240,5 +263,22 @@ template <uni20::Real Real = double>
   auto const label = sites - 2 - mode;
   auto const sign = mode % 2 ? 1 : -1;
   return detail::solve(detail::System<Real>(sites, delta, 2, label, sign), delta, options);
+}
+
+/// Selected two-string plus one real root, ell=N-6, odd/even N>=6.
+/// 1<=real_label<=N-3, 1<=pair_label<=N-5. These are logarithmic Bethe labels,
+/// not energy ranks or momenta. Failure/collapse at other Delta is reported by
+/// the solver; no full-spectrum completeness or convergence guarantee.
+template <uni20::Real Real = double>
+[[nodiscard]] State<Real> pair_defect(std::size_t sites, Real delta, std::size_t real_label, std::size_t pair_label,
+                                      SolverOptions<Real> const& options = {})
+{
+  (void)xxz::detail::checked_sites(sites);
+  if (sites < 6) throw std::invalid_argument("pair plus defect requires N>=6");
+  if (real_label == 0 || real_label > sites - 3)
+    throw std::invalid_argument("pair-defect real label requires 1<=I<=N-3");
+  if (pair_label == 0 || pair_label > sites - 5)
+    throw std::invalid_argument("pair-defect string label requires 1<=J<=N-5");
+  return detail::solve(detail::System<Real>(sites, delta, real_label, pair_label), delta, options);
 }
 } // namespace bethe::xxz::quantum_group::two_string

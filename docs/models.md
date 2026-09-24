@@ -340,7 +340,10 @@ driver and reporting code. Neither enumerates the scattering spectrum.
 [Real-root scattering windows](biquadratic-scattering.md) reuse the existing
 equations with a bounded high-label range, avoiding a chain-length-sized
 enumeration. Direct gaps also preserve ordering when total energies round
-to the same value. Mixed pair-plus-real-root scattering remains future work.
+to the same value. A selected-state [pair-plus-real-root library API](biquadratic-pair-defect.md)
+reuses the two-string solver; combined with the other two three-defect
+families, it reproduces the entire ell=N-6 module spectrum for N=6,...,10.
+Mixed-branch CLI scans remain the next integration step.
 
 Literature: [Barber–Batchelor](../CITATIONS.md#barber-batchelor-1989),
 [Albertini](../CITATIONS.md#albertini-2000), and

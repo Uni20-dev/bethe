@@ -160,14 +160,17 @@ real_excitations_window(std::size_t sites, std::size_t through_lines, std::size_
   return detail::real_scan<Real>(sites, through_lines, width, scan, solver);
 }
 
-template <uni20::Real Real, typename Reference> struct BoundClusterState
+template <uni20::Real Real, typename Reference> struct ClusterState
 {
+    /// mode is zero for mixed clusters; labels live in reference instead.
     std::size_t sites{}, through_lines{}, mode{};
     Real energy{}, tl_energy{}; // tl_energy=E-E0; an estimate unless reference.converged.
     std::optional<std::uint64_t> multiplicity;
     Reference reference;
 };
+template <uni20::Real Real, typename Reference> using BoundClusterState = ClusterState<Real, Reference>;
 template <uni20::Real Real> using BoundPairState = BoundClusterState<Real, xxz::quantum_group::two_string::State<Real>>;
+template <uni20::Real Real> using PairDefectState = ClusterState<Real, xxz::quantum_group::two_string::State<Real>>;
 template <uni20::Real Real>
 using BoundTripleState = BoundClusterState<Real, xxz::quantum_group::three_string::State<Real>>;
 
@@ -207,6 +210,18 @@ template <uni20::Real Real = double>
 {
   return detail::from_cluster<Real>(
       xxz::quantum_group::three_string::bound_triple<Real>(sites, Real{3} / Real{2}, mode, options), 3, mode);
+}
+
+/// Selected bound pair plus one unbound defect, ell=N-6, odd/even N>=6.
+/// Labels I=1,...,N-3 and J=1,...,N-5 are not energy ranks or physical momenta.
+/// The direct TL energy is the gap above the entire degenerate ground space.
+template <uni20::Real Real = double>
+[[nodiscard]] PairDefectState<Real> pair_defect(std::size_t sites, std::size_t real_label, std::size_t pair_label,
+                                                SolverOptions<Real> const& options = {})
+{
+  return detail::from_cluster<Real>(
+      xxz::quantum_group::two_string::pair_defect<Real>(sites, Real{3} / Real{2}, real_label, pair_label, options), 3,
+      0);
 }
 
 namespace qsystem
