@@ -4,6 +4,7 @@
 
 #include <bethe/biquadratic_qsystem.hpp>
 #include <bethe/xxz_open_three_string.hpp>
+#include <bethe/xxz_open_two_pairs.hpp>
 #include <bethe/xxz_open_two_string.hpp>
 
 namespace bethe::biquadratic::ferromagnetic
@@ -171,6 +172,7 @@ template <uni20::Real Real, typename Reference> struct ClusterState
 template <uni20::Real Real, typename Reference> using BoundClusterState = ClusterState<Real, Reference>;
 template <uni20::Real Real> using BoundPairState = BoundClusterState<Real, xxz::quantum_group::two_string::State<Real>>;
 template <uni20::Real Real> using PairDefectState = ClusterState<Real, xxz::quantum_group::two_string::State<Real>>;
+template <uni20::Real Real> using TwoPairsState = ClusterState<Real, xxz::quantum_group::two_pairs::State<Real>>;
 template <uni20::Real Real>
 using BoundTripleState = BoundClusterState<Real, xxz::quantum_group::three_string::State<Real>>;
 
@@ -234,6 +236,16 @@ template <uni20::Real Real = double>
   return detail::from_cluster<Real>(
       xxz::quantum_group::two_string::pair_with_real_roots<Real>(sites, Real{3} / Real{2}, labels, pair_label, options),
       labels.size() + 2, 0);
+}
+
+/// Two scattering bound pairs, ell=N-8, with ordered labels 1<=J1<J2<=N-6.
+/// Selected branch only; no full-module completeness or energy-rank claim.
+template <uni20::Real Real = double>
+[[nodiscard]] TwoPairsState<Real> two_bound_pairs(std::size_t sites, std::array<std::size_t, 2> labels,
+                                                  SolverOptions<Real> const& options = {})
+{
+  return detail::from_cluster<Real>(
+      xxz::quantum_group::two_pairs::solve<Real>(sites, Real{3} / Real{2}, labels, options), 4, 0);
 }
 
 namespace qsystem

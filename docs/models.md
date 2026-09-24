@@ -348,6 +348,9 @@ with candidate budgets and explicit partial-convergence reporting.
 The library and CLI extend to one pair plus several selected real roots,
 with shared budgeted combination scans; four-/five-defect examples are
 validated as ED subsets, not full spectra.
+A [two-bound-pair library solver](biquadratic-two-pairs.md) adds another
+four-defect subset, retaining both signed logarithmic deviations and sharing
+the single-pair equations, energy mapping and Newton driver.
 
 Literature: [Barber–Batchelor](../CITATIONS.md#barber-batchelor-1989),
 [Albertini](../CITATIONS.md#albertini-2000), and

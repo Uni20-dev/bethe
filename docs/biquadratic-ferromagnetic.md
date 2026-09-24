@@ -195,6 +195,7 @@ auto triple = ferro::bound_triple<long double>(128, 1);
 auto scattering = ferro::real_excitations_window<long double>(129, 125, 8);
 auto mixed = ferro::pair_defect<long double>(128, 125, 123);
 auto pair_two_real = ferro::pair_with_real_roots<long double>(128, std::vector<std::size_t>{123, 124}, 121);
+auto two_pairs = ferro::two_bound_pairs<long double>(128, {121, 122});
 // Inspect real.converged() and complex.complete() before interpreting coverage.
 ```
 
@@ -202,7 +203,9 @@ Targeted two- and three-defect bound families are now available on long chains.
 Real-root scattering windows and [pair-plus-defect states and CLI scans](biquadratic-pair-defect.md)
 are also available. One pair with several real roots is supported through
 selected labels or `--pair-defects ... --real-defects R` scans.
-Next are multiple bound strings and larger droplets.
+A selected-state [two-bound-pair library solver](biquadratic-two-pairs.md)
+is also available. Next are its CLI integration, three-strings with real
+roots, and larger droplets.
 Other open work is
 physical-spin decomposition, state-dependent spectral weights/form factors,
 and periodic twists with genuine momentum labels. Energies and multiplicities
