@@ -92,6 +92,43 @@ for precision in precisions:
     assert rows(pole["states"])[0]["energy"] is None
     no_retain = tables([*base, "--one-defect", "--no-retain"])
     assert all(no_retain[name]["rows"] == table["rows"] for name, table in band.items())
+    # The selected high-label window reuses the real-family scan and tables.
+    for n in (9, 128, 129):
+        scan_args = [str(n), "--ferromagnetic", "--through-lines", str(n-4),
+                     "--excitations", "all", "--real-window", "4", "--precision", precision, "--roots"]
+        scan = tables(scan_args)
+        levels = rows(scan["states"])
+        assert len(levels) == 6 and all(r["converged"] for r in levels)
+        gaps = [Decimal(r["gap"]) for r in levels]
+        assert gaps == sorted(gaps) and all(r["gap"] == r["tl_energy"] for r in levels)
+        for table in scan.values():
+            md = table["metadata"]
+            assert "selected real-root scattering window" in md["Coverage"]
+            assert "NOT a global excitation ranking" in md["Ordering"]
+            assert int(md["First allowed I"]) == n-5 and int(md["Last allowed I"]) == n-2
+            assert int(md["Candidates"]) == 6 and int(md["Real-label window width"]) == 4
+        labels = rows(scan["quantum_numbers"])
+        assert len(labels) == 12 and all(n-5 <= int(r["quantum_number"]) <= n-2 for r in labels)
+        assert len(rows(scan["roots"])) == 12
+        assert Decimal(rows(scan["reference"])[0]["energy"]) == n-1
+        streamed = tables([*scan_args, "--no-retain"])
+        assert all(streamed[name]["rows"] == table["rows"] for name, table in scan.items())
+    full_args = ["8", "--ferromagnetic", "--through-lines", "4", "--excitations", "all", "--precision", precision]
+    full, window = tables(full_args), tables([*full_args, "--real-window", "6"])
+    assert all(full[name]["rows"] == table["rows"] for name, table in window.items())
+    failed_window = tables(["129", "--ferromagnetic", "--through-lines", "125", "--excitations", "all",
+                            "--real-window", "4", "--max-iterations", "0", "--precision", precision, "--roots"], 2)
+    assert not rows(failed_window["states"]) and len(rows(failed_window["failed"])) == 1
+    assert rows(failed_window["failed"])[0]["gap"] is None
+    assert rows(failed_window["reference"])[0]["converged"]
+    # The total-energy offset cannot be used to rank these resolved gaps.
+    large = tables(["100000000", "--ferromagnetic", "--excitations", "all", "--real-window", "4",
+                    "--precision", precision])
+    gaps = [Decimal(r["gap"]) for r in rows(large["states"])]
+    assert gaps == sorted(gaps) and len(set(gaps)) == 4
+    assert [int(r["quantum_number"]) for r in rows(large["quantum_numbers"])] == list(range(99999999, 99999995, -1))
+    if precision != "fp128":
+        assert len({r["energy"] for r in rows(large["states"])}) == 1
 
 for n in (2, 3, 5, 64, 129):
     band = rows(tables([str(n), "--ferromagnetic", "--one-defect"])["states"])
@@ -116,10 +153,21 @@ for args in (["4", "--one-defect"], ["0", "--ferromagnetic"], ["1", "--ferromagn
              ["4", "--ferromagnetic", "--one-defect", "--max-candidates", "2"],
              ["4", "--ferromagnetic", "--one-defect", "--max-candidates", "0"],
              ["4", "--ferromagnetic", "--tolerance", "nan"],
-             ["5", "--ferromagnetic", "--quantum-numbers", "1"],
-             ["5", "--ferromagnetic", "--q-spectrum"],
-             ["5", "--ferromagnetic", "--excitations", "all"]):
+             ["5", "--ferromagnetic", "--q-spectrum"]):
     run(args, 1)
+
+for args in (["8", "--real-window", "4"], ["8", "--ferromagnetic", "--real-window", "4"],
+             ["8", "--excitations", "all", "--real-window", "4"],
+             ["8", "--ferromagnetic", "--excitations", "all", "--through-lines", "8", "--real-window", "4"],
+             ["9", "--ferromagnetic", "--excitations", "all", "--through-lines", "4", "--real-window", "4"]):
+    run(args, 1)
+window_base = ["8", "--ferromagnetic", "--excitations", "all", "--through-lines", "4"]
+for width in ("0", "1", "7"):
+    run([*window_base, "--real-window", width], 1)
+run([*window_base, "--real-window", "4", "--max-candidates", "5"], 1)
+assert len(rows(tables([*window_base, "--real-window", "4", "--max-candidates", "6"])["states"])) == 6
+assert len(rows(tables(["5", "--ferromagnetic", "--excitations", "all"])["states"])) == 4
+assert len(rows(tables(["5", "--ferromagnetic", "--quantum-numbers", "3"])["states"])) == 1
 
 with tempfile.TemporaryDirectory(prefix="bethe-ferro-") as folder:
     root = Path(folder)
@@ -132,7 +180,21 @@ with tempfile.TemporaryDirectory(prefix="bethe-ferro-") as folder:
         assert any(line.startswith("#") for line in content)
         records = list(csv.reader((line for line in content if line and not line.startswith("#")), delimiter=delimiter))
         assert len(records) == count+1
+    # Same reusable exports for scattering states, including label/root IDs.
+    exports = ["--json", str(root / "scattering.json")]
+    for ext in ("csv", "tsv"):
+        for name in ("states", "reference", "quantum_numbers", "roots"):
+            exports += [f"--{ext}-table", f"{name}={root / f'scattering.{name}.{ext}'}"]
+    run(["129", "--ferromagnetic", "--through-lines", "125", "--excitations", "all", "--real-window", "4",
+         "--roots", *exports])
+    assert len(json.loads((root / "scattering.json").read_text())["tables"]["states"]["rows"]) == 6
+    for ext, delimiter in (("csv", ","), ("tsv", "\t")):
+        for name, count in (("states", 6), ("reference", 1), ("quantum_numbers", 12), ("roots", 12)):
+            lines = (root / f"scattering.{name}.{ext}").read_text().splitlines()
+            data = list(csv.DictReader((s for s in lines if not s.startswith("#")), delimiter=delimiter))
+            assert len(data) == count
 
 assert "--ferromagnetic" in run(["--help"]) and "--one-defect" in run(["--help"])
+assert "--real-window" in run(["--help"])
 assert "[koma-nachtergaele-1997]" in run(["--references"])
 assert "[zhou-2025-biquadratic]" in run(["--references"])

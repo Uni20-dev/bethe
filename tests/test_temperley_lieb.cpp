@@ -131,7 +131,10 @@ TYPED_TEST(TemperleyLieb, InvalidInputsAndBudgetDiagnostics)
     EXPECT_EQ(r.iterations, budget);
     qg::detail::GroundSystem<Real> const system(8, Real{3} / Real{2});
     EXPECT_EQ(r.residual_norm, system.evaluate(r.angles).norm);
-    EXPECT_EQ(s.energy, Real{2} * r.energy - Real{49} / Real{4});
+    test_support::expect_exact(s.energy, Real{2} * r.energy_shift - Real{7},
+                               "direct TL contribution at failed iterate");
+    EXPECT_REAL_NEAR(s.energy, Real{2} * r.energy - Real{49} / Real{4},
+                     Real{128} * uni20::numeric_limits<Real>::epsilon());
   }
   Real const eps = uni20::numeric_limits<Real>::epsilon();
   auto const strict =

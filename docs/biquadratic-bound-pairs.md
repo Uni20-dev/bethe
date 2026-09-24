@@ -128,6 +128,7 @@ Validation covers independent ED on N=4,...,10, both deviation signs in the
 original complex equations, analytic Jacobians and native-precision exact
 values. Long-chain tests reach N=100000, including deviation underflow.
 The [three-defect droplet family](biquadratic-bound-triples.md) reuses the
-same logarithmic-string Newton driver and CLI reporting machinery. Remaining
-extensions include larger droplets and scattering branches, physical-spin
+same logarithmic-string Newton driver and CLI reporting machinery.
+[Real-root scattering windows](biquadratic-scattering.md) cover the unbound
+family. Remaining extensions include larger droplets and mixed-string scattering, physical-spin
 resolution, and operator-dependent spectral weights.

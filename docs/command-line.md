@@ -48,7 +48,14 @@ selects a TL module, `--sectors` lists module minima, and `--excitations COUNT|a
 scans the restricted real-root family (default through-lines=2). The output
 includes physical multiplicities, not a decomposition into SU(2) multiplets.
 Its `--roots` output belongs to the auxiliary XXZ model with opposite end
-fields, not the physical spin-1 chain. Complex-root levels are not yet included.
+fields, not the physical spin-1 chain. The [Q-system](xxz-open-qsystem.md)
+and [two-string singlet](xxz-open-two-string.md) modes include selected complex roots.
+With `--ferromagnetic`, the [excitation tools](biquadratic-ferromagnetic.md)
+also offer an analytic one-defect band and targeted bound pairs/triples.
+Ferro real-root scans accept odd/even N; `--real-window WIDTH` restricts
+`--excitations` to a [high-label scattering window](biquadratic-scattering.md).
+Explicit `--quantum-numbers` also accepts odd N; AF ground/sector and Q-system
+modes retain their even-N restriction.
 For reduced BCS pairing, [`bethe-richardson`](richardson.md) requires
 `--levels E0,E1,... --pairs M --g G`, with optional zero-based `--blocked`
 indices. Levels are single-particle energies; g>=0 is attractive. This is

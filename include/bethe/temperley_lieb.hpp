@@ -38,7 +38,7 @@ namespace bethe::temperley_lieb
   return current;
 }
 
-/// An even-chain finite-real-root level of H_TL=-sum e_i,
+/// A finite-real-root level of H_TL=-sum e_i,
 /// e_i^2=loop_weight*e_i, loop_weight>2. Representation multiplicities are
 /// separate from this spectral problem; no physical spin or momentum is inferred.
 template <uni20::Real Real> struct OpenState
@@ -60,7 +60,7 @@ template <uni20::Real Real> void validate_loop_weight(Real loop_weight)
 template <uni20::Real Real>
 OpenState<Real> from_reference(xxz::quantum_group::RealState<Real> reference, Real loop_weight)
 {
-  Real const energy = Real{2} * reference.energy - Real(reference.sites - 1) * (loop_weight / Real{4});
+  Real const energy = Real{2} * reference.energy_shift;
   if (!uni20::isfinite(energy)) throw std::overflow_error("TL energy overflow");
   auto const ell = reference.sites - 2 * reference.quantum_numbers.size();
   return {.loop_weight = loop_weight, .energy = energy, .through_lines = ell, .reference = std::move(reference)};

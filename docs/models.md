@@ -23,8 +23,8 @@ TL module minima and restricted real-root excitations with physical multipliciti
 plus selected complex-root levels, budgeted Q-system searches and a targeted
 long-chain two-string singlet branch.
 The ferromagnetic sign adds an exact odd/even one-defect band and positive
-gap, targeted odd/even long-chain two-/three-defect bound droplets, plus sign-aware
-even-chain real-root scans and Q-system discoveries.
+gap, targeted odd/even long-chain two-/three-defect bound droplets and real-root
+scattering windows, plus sign-aware even-chain Q-system discoveries.
 Richardson pairing now supplies attractive ground energies in specified
 blocked-level sectors, using regular variables through pair-root collisions.
 The rational central-spin model now has fixed-magnetization ground states
@@ -83,7 +83,7 @@ paper's correlation functions, thermodynamics, or full spectrum.
 | `gaudin-yang` | Equal-mass spin-1/2 continuum delta-interacting fermions | Implemented (limited): [repulsive PBC](gaudin-yang.md), odd populations of both spins; unrestricted free and fully polarized limits | Other periodic shell branches, excitations, attraction, hard walls, thermodynamics |
 | `tj-susy` | Projected t–J electrons, J=2t | Implemented (limited): [PBC](tj.md), t=1, doped odd N_up and N_down on either length parity; every no-hole and fully polarized sector | Other doped shell branches, excitations, open boundaries |
 | `spin-s-tb` | Integrable spin-1 bilinear–biquadratic chain | Implemented (limited): [even PBC](takhtajan-babujian.md), singlet ground state of H=sum[S.S-(S.S)^2], with finite two-string deviations | Odd lengths, sectors, excitations, higher spins, open boundaries |
-| `temperley-lieb` | TL singlet-projector chains; spin-1 pure biquadratic model | Implemented (limited): [even free ends](biquadratic.md), AF ground state, module minima, real-root excitations, Q-system searches and targeted two-string singlet; [ferro one-defect band](biquadratic-ferromagnetic.md), [bound pairs](biquadratic-bound-pairs.md) and [three-defect droplets](biquadratic-bound-triples.md) (odd/even), sign-aware real/Q-system levels; representation multiplicities and generic lambda>2 TL API | Scattering branches and larger droplets, other complex-root families, singlet ranks, odd-chain AF spinon branch, physical-spin decomposition, PBC twists, other representations |
+| `temperley-lieb` | TL singlet-projector chains; spin-1 pure biquadratic model | Implemented (limited): [even free ends](biquadratic.md), AF ground state, module minima, real-root excitations, Q-system searches and targeted two-string singlet; [ferro one-defect band](biquadratic-ferromagnetic.md), [bound pairs](biquadratic-bound-pairs.md), [three-defect droplets](biquadratic-bound-triples.md) and [real-root scattering windows](biquadratic-scattering.md) (odd/even), sign-aware Q-system levels; representation multiplicities and generic lambda>2 TL API | Mixed-string scattering and larger droplets, other complex-root families, singlet ranks, odd-chain AF spinon branch, physical-spin decomposition, PBC twists, other representations |
 | `richardson` | Reduced BCS pairing | Implemented (limited): [attractive pairing](richardson.md), distinct doublet levels, fixed pair count and blocked levels, ground energy through root collisions | Repeated levels/higher degeneracies, excitations, pair-root output, repulsive coupling |
 | `gaudin-magnet` | Rational spin-1/2 central spin | Implemented (limited): [sector minima](central-spin.md), distinct nonzero bath couplings of either sign, central field of either sign or zero | Repeated/zero couplings, higher local spins, excitations, general Gaudin charges |
 | `multicomponent-gas` | Equal-mass SU(κ) delta fermions | Implemented (limited): [repulsive PBC](su-fermions.md), odd occupied populations, any number of components, unrestricted free/single-component limits | Other periodic shells, attraction, excitations, hard walls, TBA, Bose–Fermi mixtures |
@@ -337,6 +337,10 @@ two-string family directly on odd/even long chains, retaining both signs of
 the finite deviation. The [three-string solver](biquadratic-bound-triples.md)
 adds ell=N-6 droplets with a complex finite-size deviation, sharing the Newton
 driver and reporting code. Neither enumerates the scattering spectrum.
+[Real-root scattering windows](biquadratic-scattering.md) reuse the existing
+equations with a bounded high-label range, avoiding a chain-length-sized
+enumeration. Direct gaps also preserve ordering when total energies round
+to the same value. Mixed pair-plus-real-root scattering remains future work.
 
 Literature: [Barber–Batchelor](../CITATIONS.md#barber-batchelor-1989),
 [Albertini](../CITATIONS.md#albertini-2000), and

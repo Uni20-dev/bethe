@@ -27,6 +27,8 @@ build/bethe-biquadratic-obc 65 --ferromagnetic --one-defect --json band.json
 build/bethe-biquadratic-obc 128 --ferromagnetic --bound-pairs 8
 # Three-defect droplets, not all three-defect states:
 build/bethe-biquadratic-obc 128 --ferromagnetic --bound-triples 8
+# Real-root scattering near the two-defect low-energy edge:
+build/bethe-biquadratic-obc 129 --ferromagnetic --through-lines 125 --excitations all --real-window 8
 # Small two-defect module, including complex-root states:
 build/bethe-biquadratic-obc 6 --ferromagnetic --q-spectrum --through-lines 2 --roots
 # Compare it with the restricted real-root family in the same module:
@@ -99,7 +101,7 @@ They are not the positive-energy band tabulated here.
 
 The full band has N-1 rows. `--max-candidates` bounds its allocation (default
 10000); raise it explicitly for larger bands. Analytic modes accept odd and
-even N>=2. `--roots` is not available in analytic modes; on even chains use
+even N>=2. `--roots` is not available in analytic modes; use
 `--excitations all --roots` for the equivalent one-root Bethe family.
 
 ## Why one band is not the full low-energy spectrum
@@ -141,6 +143,12 @@ droplets in ell=N-6, with a complex finite-size deviation.
 approaches E-E0=2, below 3 for three separated defects and 8/3 for a
 separated pair plus one defect. Neither targeted family enumerates scattering.
 
+[Real-root scattering windows](biquadratic-scattering.md) select the high-I
+edge of the existing real family with `--real-window WIDTH`. They make
+few-defect long-chain scans practical without enumerating every combination.
+`all` then means all combinations within the chosen window, not all
+excited states; mixed string-plus-real-root branches remain excluded.
+
 ## Ordering, references, and coverage
 
 Sign reversal leaves the auxiliary XXZ equations and roots unchanged.
@@ -162,8 +170,9 @@ Q-system searches include complex roots, retaining the existing budget,
 admissibility and numerical completeness checks. Validation covers even
 N<=8; larger systems are experimental. An incomplete search is a set of
 discoveries, **not necessarily the lowest levels**, even after sorting.
-Real-root and Q-system modes still require even N. The targeted pair/triple
-solvers, exact analytic band and ground space do not share that restriction.
+Selected real roots and ferro real-family/window scans accept odd/even N,
+as do the targeted pair/triple solvers, analytic band and ground space.
+Q-system modes and AF ground/sector helpers still require even N.
 
 Multiplicities use checked uint64 arithmetic, becoming unavailable on overflow
 rather than approximate. This does not invalidate an energy or gap.
@@ -181,11 +190,13 @@ auto real = ferro::real_excitations<long double>(6, 2, {.count=10});
 auto complex = ferro::qsystem::spectrum<long double>(6, 2);
 auto pair = ferro::bound_pair<long double>(128, 1);
 auto triple = ferro::bound_triple<long double>(128, 1);
+auto scattering = ferro::real_excitations_window<long double>(129, 125, 8);
 // Inspect real.converged() and complex.complete() before interpreting coverage.
 ```
 
 Targeted two- and three-defect bound families are now available on long chains.
-Next are scattering branches and larger droplets. Other open work is
+Real-root scattering windows are also available. Next are mixed-string
+scattering branches and larger droplets. Other open work is
 physical-spin decomposition, state-dependent spectral weights/form factors,
 and periodic twists with genuine momentum labels. Energies and multiplicities
 alone do not determine which branches an operator or a chosen iMPS ground

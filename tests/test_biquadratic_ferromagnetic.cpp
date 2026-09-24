@@ -53,7 +53,7 @@ TYPED_TEST(BiquadraticFerro, RealScansReverseBeforeTruncationAndKeepAuxiliaryCon
 {
   using R = TypeParam;
   R const eps = uni20::numeric_limits<R>::epsilon();
-  for (std::size_t n : {4, 8, 16})
+  for (std::size_t n : {4, 5, 8, 9, 16})
   {
     auto const all = ferro::real_excitations<R>(n, n - 2, {.count = 100});
     auto const one = ferro::real_excitations<R>(n, n - 2, {.count = 1});
@@ -137,7 +137,7 @@ TYPED_TEST(BiquadraticFerro, InvalidInputsAndPartialResults)
   for (std::size_t j : {0, 4, 5})
     EXPECT_THROW((void)ferro::one_defect_level<R>(4, j), std::invalid_argument);
   EXPECT_FALSE(ferro::ground_space<R>(46).multiplicity);
-  EXPECT_THROW((void)ferro::real_excitations<R>(5, 3), std::invalid_argument);
+  EXPECT_THROW((void)ferro::real_excitations<R>(5, 2), std::invalid_argument);
   EXPECT_THROW((void)ferro::real_excitations<R>(8, 2, {.count = 1, .max_candidates = 9}), std::length_error);
   EXPECT_THROW((void)ferro::real_excitations<R>(8, 2, {.count = 0}), std::invalid_argument);
   auto const failed = ferro::real_excitations<R>(8, 2, {}, {.max_iterations = 0});

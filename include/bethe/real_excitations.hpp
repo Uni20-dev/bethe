@@ -57,6 +57,11 @@ enum class EnergyOrder
   descending
 };
 
+struct StateEnergy
+{
+    template <typename State> auto operator()(State const& state) const { return state.energy; }
+};
+
 inline std::size_t bounded_binomial(std::size_t slots, std::size_t m, std::size_t limit)
 {
   if (m > slots) return 0;
@@ -76,9 +81,10 @@ inline std::size_t bounded_binomial(std::size_t slots, std::size_t m, std::size_
   return count;
 }
 
-template <typename Result, typename Solve, typename Ground>
+template <typename Result, typename Solve, typename Ground, typename Energy = StateEnergy>
 Result scan_real_combinations(std::size_t slots, std::size_t m, std::int64_t first, RealExcitationOptions const& scan,
-                              Solve&& solve, Ground&& ground, EnergyOrder order = EnergyOrder::ascending)
+                              Solve&& solve, Ground&& ground, EnergyOrder order = EnergyOrder::ascending,
+                              Energy energy = {})
 {
   if (scan.count == 0 || scan.max_candidates == 0)
     throw std::invalid_argument("excitation count and max_candidates must be positive");
@@ -93,10 +99,12 @@ Result scan_real_combinations(std::size_t slots, std::size_t m, std::int64_t fir
     numbers[i] = uni20::from_twice(first + 2 * static_cast<std::int64_t>(i));
 
   // A bounded max heap avoids retaining roots for every solved candidate.
-  auto less = [order](auto const& left, auto const& right) {
-    if (left.state.energy != right.state.energy)
-      return order == EnergyOrder::ascending ? left.state.energy < right.state.energy
-                                             : left.state.energy > right.state.energy;
+  // An optional energy projection keeps small gaps and level ordering from
+  // being lost to a shared extensive offset. Other models keep their existing
+  // total-energy convention through the default projection.
+  auto less = [order, &energy](auto const& left, auto const& right) {
+    auto const a = energy(left.state), b = energy(right.state);
+    if (a != b) return order == EnergyOrder::ascending ? a < b : a > b;
     return left.state.quantum_numbers < right.state.quantum_numbers;
   };
   auto const keep = std::min(scan.count, result.candidate_count);
@@ -108,7 +116,7 @@ Result scan_real_combinations(std::size_t slots, std::size_t m, std::int64_t fir
     {
       ++result.converged_count;
       RealExcitation<State> level{.state = std::move(state), .gap = std::nullopt};
-      if (result.ground_state.converged) level.gap = level.state.energy - result.ground_state.energy;
+      if (result.ground_state.converged) level.gap = energy(level.state) - energy(result.ground_state);
       if (result.levels.size() < keep)
       {
         result.levels.push_back(std::move(level));

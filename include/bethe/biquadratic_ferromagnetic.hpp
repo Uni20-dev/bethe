@@ -91,7 +91,7 @@ template <uni20::Real Real = double>
           .multiplicity = temperley_lieb::spin_chain_multiplicity(3, sites - 2)};
 }
 
-/// Selected even-chain Bethe eigenstate; no lowest-state claim.
+/// Selected odd/even-chain Bethe eigenstate; no lowest-state claim.
 /// tl_energy=+sum e_i=E-E0; publish a gap only if reference.converged.
 template <uni20::Real Real = double>
 [[nodiscard]] State<Real> solve_real(std::size_t sites, std::span<uni20::half_int const> numbers,
@@ -100,20 +100,33 @@ template <uni20::Real Real = double>
   return detail::reverse(biquadratic::solve_real<Real>(sites, numbers, options));
 }
 
-/// Restricted finite-real family, ordered in FERROMAGNETIC energy before truncation.
-/// Generally excludes module minima involving complex roots. The vacuum is the
-/// exact global ground reference, even when the numerical iteration budget is zero.
+namespace detail
+{
+// Shared scan for the complete positive-real family or a selected high-label
+// window. Bethe equations and the bounded combination heap remain model-independent.
 template <uni20::Real Real = double>
-[[nodiscard]] RealExcitationScan<Real> real_excitations(std::size_t sites, std::size_t through_lines,
-                                                        RealExcitationOptions const& scan = {},
-                                                        SolverOptions<Real> const& solver = {})
+RealExcitationScan<Real> real_scan(std::size_t sites, std::size_t through_lines, std::optional<std::size_t> window,
+                                   RealExcitationOptions const& scan, SolverOptions<Real> const& solver)
 {
   namespace qg = xxz::quantum_group;
-  auto const m = qg::detail::sector_roots(sites, through_lines);
+  auto const m = qg::detail::real_sector_roots(sites, through_lines);
+  auto slots = sites - m;
+  std::int64_t first = 2;
+  if (window)
+  {
+    if (m == 0 || *window < m || *window > slots)
+      throw std::invalid_argument("real-root label window requires 1<=M<=width<=N-M");
+    first = 2 * std::int64_t(slots - *window + 1);
+    slots = *window;
+  }
+  // A window of exactly M labels has only one candidate, even for enormous
+  // M. Validate its Newton dimensions before the scanner allocates labels.
+  qg::detail::check_matrix_size<Real>(m);
   Real const delta = Real{3} / Real{2};
   auto input = bethe::detail::scan_real_combinations<bethe::RealExcitationScan<qg::RealState<Real>>>(
-      sites - m, m, 2, scan, [&](auto const& numbers) { return qg::solve_real<Real>(sites, delta, numbers, solver); },
-      [&] { return qg::solve_real<Real>(sites, delta, {}, solver); }, bethe::detail::EnergyOrder::descending);
+      slots, m, first, scan, [&](auto const& numbers) { return qg::solve_real<Real>(sites, delta, numbers, solver); },
+      [&] { return qg::solve_real<Real>(sites, delta, {}, solver); }, bethe::detail::EnergyOrder::descending,
+      [](auto const& state) { return state.energy_shift; });
   return temperley_lieb::detail::map_real_scan(
       std::move(input),
       [](auto state) {
@@ -121,6 +134,30 @@ template <uni20::Real Real = double>
             biquadratic::detail::from_tl(temperley_lieb::detail::from_reference(std::move(state), Real{3})));
       },
       -Real{2});
+}
+} // namespace detail
+
+/// Restricted finite-real family, ordered in FERROMAGNETIC energy before truncation.
+/// Odd/even N; excludes complex-root module minima. The vacuum is the exact
+/// global ground reference, even when the numerical iteration budget is zero.
+template <uni20::Real Real = double>
+[[nodiscard]] RealExcitationScan<Real> real_excitations(std::size_t sites, std::size_t through_lines,
+                                                        RealExcitationOptions const& scan = {},
+                                                        SolverOptions<Real> const& solver = {})
+{
+  return detail::real_scan<Real>(sites, through_lines, std::nullopt, scan, solver);
+}
+
+/// Scan M-tuples in the HIGHEST width integer labels, I=N-M-width+1,...,N-M.
+/// A low-energy scattering window, NOT a complete sector or globally ranked list.
+/// Work scales with choose(width,M), not choose(N-M,M). Gaps and ordering use
+/// direct reference energy shifts, independently of the extensive total energy.
+template <uni20::Real Real = double>
+[[nodiscard]] RealExcitationScan<Real>
+real_excitations_window(std::size_t sites, std::size_t through_lines, std::size_t width,
+                        RealExcitationOptions const& scan = {}, SolverOptions<Real> const& solver = {})
+{
+  return detail::real_scan<Real>(sites, through_lines, width, scan, solver);
 }
 
 template <uni20::Real Real, typename Reference> struct BoundClusterState

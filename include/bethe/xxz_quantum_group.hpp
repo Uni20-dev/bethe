@@ -32,11 +32,21 @@ template <uni20::Real Real> struct RealState
     std::size_t iterations = 0;
     bool converged = false;
     SolveStatus status = SolveStatus::iteration_limit;
+    /// E-(N-1)*Delta/4, evaluated directly rather than subtracting extensive energies.
+    Real energy_shift{};
 };
 template <uni20::Real Real> using GroundState = RealState<Real>;
 
 namespace detail
 {
+inline std::size_t real_sector_roots(std::size_t sites, std::size_t through_lines)
+{
+  xxz::detail::checked_sites(sites);
+  if (through_lines > sites || (sites - through_lines) % 2)
+    throw std::invalid_argument("TL through-lines must lie in [0,N] with the same parity as N");
+  return (sites - through_lines) / 2;
+}
+
 inline std::size_t sector_roots(std::size_t sites, std::size_t through_lines)
 {
   xxz::detail::checked_sites(sites);
@@ -142,17 +152,17 @@ template <uni20::Real Real> class GroundSystem {
 };
 } // namespace detail
 
-/// Even N>=2, finite Delta>1, M<=N/2 ordered integer labels 1<=I<=N-M.
+/// Odd/even N>=2, finite Delta>1, M<=floor(N/2), integer labels 1<=I<=N-M.
 /// This is the positive finite-real family, NOT the complete TL module spectrum.
 /// Its regular Bethe states belong to the module with ell=N-2*M through-lines.
-/// Damped analytic-Jacobian Newton solve: O(N^2) storage, O(N^3) per update.
+/// Damped analytic-Jacobian Newton solve: O(M^2) storage, O(M^3) per update.
 /// Residual is max|2N*Theta_1-sum(Theta_2^-+Theta_2^+)-2pi*I|/(2N).
 /// A zero budget evaluates the seed; failed solves retain consistent roots/energy/residual.
 template <uni20::Real Real = double>
 [[nodiscard]] RealState<Real> solve_real(std::size_t sites, Real delta, std::span<uni20::half_int const> numbers,
                                          SolverOptions<Real> const& options = {})
 {
-  (void)detail::sector_roots(sites, 0);
+  xxz::detail::checked_sites(sites);
   if (!uni20::isfinite(delta) || delta <= Real{1})
     throw std::invalid_argument("quantum-group XXZ solver requires finite Delta > 1");
   if (!uni20::isfinite(options.residual_tolerance) || options.residual_tolerance <= Real{0})
@@ -170,6 +180,7 @@ template <uni20::Real Real = double>
   state.delta = delta;
   state.quantum_numbers.assign(numbers.begin(), numbers.end());
   auto x = system.seed();
+  if (!system.physical(x)) throw std::overflow_error("real-root seed is not resolvable at the selected precision");
   std::vector<Real> jacobian, step(m);
   for (;;)
   {
@@ -216,15 +227,20 @@ template <uni20::Real Real = double>
     ++state.iterations;
   }
   state.angles = std::move(x);
-  bethe::detail::CompensatedSum<Real> energy;
+  bethe::detail::CompensatedSum<Real> energy, shift;
   energy.add((Real(sites - 1) / Real{4} - Real(m)) * delta);
   for (std::size_t i = 0; i < m; ++i)
   {
     state.rapidities.push_back(system.alpha(state.angles[i]));
     energy.add(-std::cos(Real{2} * state.angles[i]));
+    Real const c = std::cos(state.angles[i]);
+    shift.add(-(delta - Real{1}));
+    shift.add(-Real{2} * c * c);
   }
   state.energy = energy.value();
-  if (!uni20::isfinite(state.energy)) throw std::overflow_error("quantum-group XXZ energy overflow");
+  state.energy_shift = shift.value();
+  if (!uni20::isfinite(state.energy) || !uni20::isfinite(state.energy_shift))
+    throw std::overflow_error("quantum-group XXZ energy overflow");
   return state;
 }
 

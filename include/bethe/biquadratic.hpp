@@ -12,7 +12,8 @@ enum class Exchange
   ferromagnetic
 };
 
-/// Even free-end spin-1 chain. Default API: H=-sum (S_i.S_(i+1))^2.
+/// Free-end spin-1 chain. Default API: H=-sum (S_i.S_(i+1))^2.
+/// Selected real-root states allow odd/even N; ground-state helpers require even N.
 /// The ferromagnetic API reverses physical and TL energies, not the XXZ reference.
 /// TL labels are NOT physical spin. The AF ell=0 ground state is a unique singlet.
 /// Check reference.converged before interpreting energy as an eigenvalue.

@@ -5,7 +5,8 @@
 For the opposite sign, `--ferromagnetic`, see
 [ferromagnetic excitations](biquadratic-ferromagnetic.md): an exact one-defect
 band, targeted two-/three-defect bound droplets, sign-aware real-root scans
-and complex-root Q-system levels. The
+and complex-root Q-system levels. [Real-root scattering windows](biquadratic-scattering.md)
+select a manageable high-label subset on long odd/even chains. The
 conventions and default modes below describe the antiferromagnetic sign.
 
 `bethe-biquadratic-obc` calculates the singlet ground state, TL module minima,
@@ -215,9 +216,13 @@ again would duplicate descendants. Its full module dimension is
 The reflected sum must retain its phase branch when alpha_i+alpha_j>pi.
 The solver uses `x_i=Theta(alpha_i;eta/2)/2` in (0,pi/2), with
 `alpha_i=2*atan2(tanh(eta/2)*sin(x_i),cos(x_i))`. In this coordinate the
-energy contribution is simply `-(Delta+cos(2*x_i))`, avoiding cancellation
-in the rapidity energy formula near Delta=1. No complex boundary root is
-needed for this reference model's even ground state.
+energy contribution is `-(Delta+cos(2*x_i))`. Its direct excitation shift is
+accumulated as `-[(Delta-1)+2*cos(x_i)^2]`, avoiding cancellation near Delta=1
+and the ferromagnetic low-energy edge. The TL adapter uses this direct shift,
+not a difference of extensive total energies. No complex boundary root is
+needed for this reference model's even ground state. Specified real-root
+states (`--quantum-numbers`) also accept odd N; this does not enable the
+odd-chain AF ground/sector or one-spinon-band helpers.
 
 Newton iteration uses an analytic Jacobian and a line search preserving
 strictly ordered interior roots. The seed is the bare driving phase

@@ -69,7 +69,8 @@ Thermodynamic dispersion tools use `bethe-<model>-dispersion`.
   supplies the low-lying complex-root singlet on long chains (`--singlet-excitation`).
   The [ferromagnetic sign](docs/biquadratic-ferromagnetic.md) adds an exact
   one-defect band, [long-chain two-defect bound pairs](docs/biquadratic-bound-pairs.md),
-  [three-defect droplets](docs/biquadratic-bound-triples.md), and sign-aware real/complex-root levels.
+  [three-defect droplets](docs/biquadratic-bound-triples.md),
+  [real-root scattering windows](docs/biquadratic-scattering.md), and sign-aware real/complex-root levels.
 - [Richardson pairing](docs/richardson.md): `bethe-richardson` gives attractive
   reduced-BCS ground energies for distinct levels and a specified pair/blocked
   sector, using regularized variables through pair-root collisions.

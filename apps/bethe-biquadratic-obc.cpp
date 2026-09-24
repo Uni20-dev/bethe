@@ -15,7 +15,7 @@ namespace model = bethe::biquadratic;
 struct Arguments
 {
     std::size_t sites = 0, max_iterations = 10000;
-    std::optional<std::size_t> through_lines, excitations, max_candidates;
+    std::optional<std::size_t> through_lines, excitations, max_candidates, real_window;
     std::optional<std::size_t> bound_pairs, bound_triples;
     std::optional<bethe::xxz::QuantumNumbers> numbers;
     std::optional<std::string> tolerance;
@@ -39,6 +39,7 @@ auto program_info()
       "--ferromagnetic --bound-pairs COUNT|all targets two-string modes in ell=N-4 on odd/even chains.",
       "--ferromagnetic --bound-triples COUNT|all targets three-string droplets in ell=N-6 on odd/even chains.",
       "Ferromagnetic real-root scans exclude complex-root levels; NOT general module minima.",
+      "--ferromagnetic --excitations COUNT|all --real-window WIDTH scans only the highest WIDTH real labels.",
       "TL loop weight 3; reference XXZ Delta=3/2 with opposite end fields.",
       "Real-root scans are NOT complete spectra: complex-root levels are excluded.",
       "--q-spectrum searches real and complex levels of one TL module; validated through N=8.",
@@ -46,7 +47,8 @@ auto program_info()
       "--q-seed selects a polynomial branch, not necessarily a low-lying state.",
       "--singlet-excitation targets one two-string singlet above a real sea, including on long chains.",
       "Multiplicity counts physical states per TL eigenvector, not SU(2) multiplets.",
-      "TL through-lines are not physical spin; other numerical root modes require even N; no lattice momentum.",
+      "TL through-lines are not physical spin; AF ground/sector helpers and Q-system modes require even N.",
+      "Selected real roots and ferro real-root scans accept odd/even N; no lattice momentum.",
       "This is not the TB point, ULS point, or zero-boundary-field XXZ chain.",
       "See docs/biquadratic.md for the TL mapping and representation multiplicities.",
       "Use --references for literature and applicability; see CITATIONS.md."};
@@ -72,6 +74,9 @@ void add_options(CLI::App& app, Arguments& args)
       "lowest COUNT, or all, supported real-root levels; default ELL=2 (ferro: N-2); excludes complex roots");
   bethe::cli::option(app, "--max-candidates", args.max_candidates,
                      "real-family scan / analytic band / bound-cluster row limit (default: 10000)");
+  bethe::cli::option(
+      app, "--real-window", args.real_window,
+      "ferro --excitations: highest WIDTH integer labels only; choose(WIDTH,M) candidates, not a full sector");
   bethe::cli::option(app, "--quantum-numbers", args.numbers, "explicit integer labels; none for vacuum");
   bethe::cli::option(
       app, "--q-spectrum", args.q_spectrum,
@@ -94,6 +99,8 @@ void add_options(CLI::App& app, Arguments& args)
 void validate(Arguments const& args)
 {
   args.output.validate();
+  if (args.real_window && (!args.ferromagnetic || !args.excitations))
+    throw std::invalid_argument("--real-window requires --ferromagnetic --excitations COUNT|all");
   if (args.bound_pairs || args.bound_triples)
   {
     std::string const option = args.bound_pairs ? "--bound-pairs" : "--bound-triples";
@@ -731,9 +738,11 @@ template <uni20::Real Real> int run(Arguments const& args, int argc, char** argv
     auto const ell = args.through_lines.value_or(args.ferromagnetic ? args.sites - 2 : 2);
     bethe::RealExcitationOptions const enumeration{.count = *args.excitations,
                                                    .max_candidates = args.max_candidates.value_or(10000)};
-    auto const scan = args.ferromagnetic
-                          ? model::ferromagnetic::real_excitations<Real>(args.sites, ell, enumeration, options)
-                          : model::real_excitations<Real>(args.sites, ell, enumeration, options);
+    auto const scan =
+        args.real_window     ? model::ferromagnetic::real_excitations_window<Real>(args.sites, ell, *args.real_window,
+                                                                                   enumeration, options)
+        : args.ferromagnetic ? model::ferromagnetic::real_excitations<Real>(args.sites, ell, enumeration, options)
+                             : model::real_excitations<Real>(args.sites, ell, enumeration, options);
     computation.finish();
     auto const& ground = scan.ground_state;
     report.field("calculation", "Calculation", "restricted real-root excitations")
@@ -748,7 +757,9 @@ template <uni20::Real Real> int run(Arguments const& args, int argc, char** argv
         .field("converged_candidates", "Converged candidates", scan.converged_count)
         .field("returned_levels", "Returned levels", scan.levels.size())
         .field("ordering", "Ordering",
-               scan.family_converged() ? "complete within supported family" : "incomplete; failed candidates excluded")
+               !scan.family_converged() ? "incomplete; failed candidates excluded"
+               : args.real_window       ? "complete within selected label window; NOT a global excitation ranking"
+                                        : "complete within supported family")
         .field("ground_energy", "Ground energy", ground.energy)
         .field("ground_status", "Ground status", status(ground.reference.status))
         .field("ground_residual", "Ground residual", ground.reference.residual_norm)
@@ -758,6 +769,17 @@ template <uni20::Real Real> int run(Arguments const& args, int argc, char** argv
                : ground.reference.converged ? "E-E0; global singlet ground state"
                                             : "unavailable; ground solve failed")
         .result(scan.converged(), scan.converged() ? "converged" : "incomplete scan or ground reference");
+    if (args.real_window)
+    {
+      auto const m = (args.sites - ell) / 2, last = args.sites - m;
+      report.field("real_window_width", "Real-label window width", *args.real_window)
+          .field("real_window_first", "First allowed I", last - *args.real_window + 1)
+          .field("real_window_last", "Last allowed I", last)
+          .field("coverage", "Coverage",
+                 "selected real-root scattering window only; bound and mixed-string branches excluded")
+          .field("energy_ordering", "Energy ordering",
+                 "direct excitation energy; independent of the extensive total-energy offset");
+    }
     if (scan.first_unconverged)
       report
           .field("first_failed_i", "First failed I",

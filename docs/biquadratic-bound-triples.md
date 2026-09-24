@@ -144,5 +144,6 @@ Tests cover original complex equations (including the central root), analytic
 Jacobians, native-precision N=6 energies, all branch labels at small odd/even
 sizes, and ED through N=10. XXZ ED checks also exercise Delta=1.25, 2 and 3.
 Long-chain checks reach N=100000, including both family edges and deviation
-underflow. Scattering branches, larger droplets, physical-spin resolution
+underflow. [Real-root scattering windows](biquadratic-scattering.md) cover
+three unbound defects; mixed-string scattering, larger droplets, physical-spin resolution
 and operator-dependent spectral weights remain separate extensions.
