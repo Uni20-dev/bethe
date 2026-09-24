@@ -6,6 +6,7 @@
 
 #include "exact_spectrum.hpp"
 
+#include <bit>
 #include <set>
 #include <string>
 #include <string_view>
@@ -16,6 +17,43 @@ using namespace bethe::heisenberg;
 using uni20::half_int;
 
 half_int half(std::int64_t twice) { return uni20::from_twice(twice); }
+
+TEST(CombinationEnumeration, IntegerAndHalfIntegerWindows)
+{
+  for (std::size_t slots = 0; slots <= 8; ++slots)
+    for (std::size_t m = 0; m <= slots; ++m)
+    {
+      std::vector<std::size_t> integers(m);
+      std::iota(integers.begin(), integers.end(), 1);
+      std::vector<half_int> halves(m);
+      for (std::size_t i = 0; i < m; ++i)
+        halves[i] = half(-7 + 2 * std::int64_t(i));
+      std::set<std::vector<std::size_t>> seen;
+      for (;;)
+      {
+        EXPECT_TRUE(seen.insert(integers).second);
+        for (std::size_t i = 0; i < m; ++i)
+          EXPECT_EQ(halves[i].twice(), -9 + 2 * std::int64_t(integers[i]));
+        auto const a = bethe::detail::advance_combination<std::size_t>(integers, slots);
+        auto const b = bethe::detail::advance_combination<half_int>(halves, half(-9 + 2 * std::int64_t(slots)));
+        EXPECT_EQ(a, b);
+        if (!a) break;
+      }
+      EXPECT_EQ(seen.size(), bethe::detail::bounded_binomial(slots, m, 1000));
+      std::set<std::vector<std::size_t>> expected;
+      for (unsigned mask = 0; mask < (1U << slots); ++mask)
+        if (std::popcount(mask) == int(m))
+        {
+          std::vector<std::size_t> selected;
+          for (std::size_t i = 0; i < slots; ++i)
+            if (mask & (1U << i)) selected.push_back(i + 1);
+          expected.insert(std::move(selected));
+        }
+      EXPECT_EQ(seen, expected);
+    }
+  std::vector<std::size_t> edge{std::numeric_limits<std::size_t>::max() - 1, std::numeric_limits<std::size_t>::max()};
+  EXPECT_FALSE(bethe::detail::advance_combination<std::size_t>(edge, edge.back()));
+}
 
 void remove_energy(std::vector<double>& spectrum, double target)
 {

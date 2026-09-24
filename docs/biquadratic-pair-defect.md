@@ -1,4 +1,4 @@
-# A bound pair scattering with one defect
+# A bound pair scattering with real defects
 
 [Ferromagnetic overview](biquadratic-ferromagnetic.md) · [Real-root scattering](biquadratic-scattering.md) · [Bound triples](biquadratic-bound-triples.md)
 
@@ -8,6 +8,8 @@ branch in ell=N-6. Selected states and CLI family scans support this branch
 on odd/even N>=6, in fp64, native long double and enabled fp128.
 `--excitations` still means the purely real-root family; it does not contain
 these mixed-string levels.
+The same CLI also supports one pair plus several real roots, as described
+[below](#a-pair-with-several-real-defects).
 
 ## Command line and bounded scans
 
@@ -35,8 +37,9 @@ in that rectangle, not the full excited spectrum. The `--max-candidates`
 budget (default 10000) limits the work before allocation and checks the
 product without overflowing. Requesting one output level does not bypass
 the scan budget. A selected `--pair-defect I,J` requires no enumeration.
-These options require `--ferromagnetic`, fix ell=N-6, and exclude other
-state selectors. `--mixed-window` applies only to `--pair-defects`.
+These options require `--ferromagnetic` and exclude other state selectors.
+The default single-real-root family fixes ell=N-6. `--mixed-window` applies
+only to `--pair-defects`.
 
 Sorting uses the direct gap, not the extensive total energy: the latter
 can round to the same value for distinct states on long chains. Exact
@@ -50,9 +53,10 @@ and `--tsv` export `states`, while `--csv-table NAME=FILE` and
 exports, and `--no-retain` uses the same streaming table interface. The
 solver still stores the budgeted candidate set for sorting.
 
-`labels` records I, J and the real rapidity alpha for each `state_id`;
+`labels` records I, J and alpha in one row per real root, grouped by
+`state_id` and ordered by I;
 `string` records the pair center, sign, L and optional representable
-deviation. `roots` lists the real root first, followed by the conjugate
+deviation. `roots` lists the real roots first, followed by the conjugate
 pair. The `states.row` column is a display row number, **not a physical
 mode label**. L and the sign retain the deviation when exported rounded
 roots no longer resolve it; an underflowed deviation is null, not exact zero.
@@ -163,9 +167,39 @@ labels, scattering amplitudes or form factors.
 
 ## A pair with several real defects
 
-The library also accepts **one pair and an arbitrary selected real-root
-set**, with M=r+2 insertions and ell=N-2M. The command-line options above
-remain specifically the r=1 family; this generalization is a library API.
+The library and CLI also accept **one pair and a selected real-root set**,
+with M=r+2 insertions and ell=N-2M.
+
+```sh
+# Two real roots I1=123, I2=124, and pair label J=121:
+build/bethe-biquadratic-obc 128 --ferromagnetic --pair-defect 123,124,121 --roots
+# All six one-pair-plus-two-real-root candidates on eight sites:
+build/bethe-biquadratic-obc 8 --ferromagnetic --pair-defects all --real-defects 2
+# Two real roots in a six-label window, times six pair labels: 90 candidates:
+build/bethe-biquadratic-obc 129 --ferromagnetic --pair-defects 8 \
+  --real-defects 2 --mixed-window 6 --precision fp128 --json mixed-four.json
+```
+
+For selected states, `--pair-defect I1,...,Ir,J` infers r from the labels;
+the **last** label belongs to the pair. For scans, `--real-defects R`
+sets r (default 1). Both require r>=1 and M=r+2<=N/2. Use `--bound-pairs`
+for an isolated pair; the library additionally accepts an empty real-root set.
+
+Without a window, the candidate count is
+`binomial(N-M,r)*(N-2M+1)`. With `--mixed-window WIDTH`, it is
+`binomial(WIDTH,r)*WIDTH`: choose r distinct real labels from
+`N-M-WIDTH+1,...,N-M`, independently of the pair label in
+`N-2M-WIDTH+2,...,N-2M+1`. The window requires
+`r<=WIDTH<=N-2M+1`. Near the largest allowed M, no such shared-width window
+may exist; omit the window to scan the full family within the candidate
+budget, or select explicit labels. No unbudgeted fallback scan occurs.
+
+All candidates are solved before selecting COUNT converged levels. Sorting
+uses direct gaps, with lexicographic `(I1,...,Ir,J)` ties, and the same
+failure-sample convention as the r=1 scan. The shared combination iterator
+and overflow-checked binomial count are also used by the real-root-only
+excitation scans. Table schemas are unchanged: several `labels` rows now
+share each state ID, and the root table has r+2 rows per state.
 
 ```cpp
 std::vector<std::size_t> labels{123, 124};

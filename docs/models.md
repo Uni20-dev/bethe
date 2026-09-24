@@ -345,8 +345,9 @@ reuse the two-string solver; combined with the other two three-defect
 families, it reproduces the entire ell=N-6 module spectrum for N=6,...,10.
 The mixed CLI uses the same cluster tables and native-precision exports,
 with candidate budgets and explicit partial-convergence reporting.
-The underlying library extends to one pair plus several selected real roots;
-four-/five-defect examples are validated as ED subsets, not full spectra.
+The library and CLI extend to one pair plus several selected real roots,
+with shared budgeted combination scans; four-/five-defect examples are
+validated as ED subsets, not full spectra.
 
 Literature: [Barber–Batchelor](../CITATIONS.md#barber-batchelor-1989),
 [Albertini](../CITATIONS.md#albertini-2000), and

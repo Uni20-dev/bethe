@@ -8,6 +8,7 @@
 #include <limits>
 #include <numeric>
 #include <optional>
+#include <span>
 #include <stdexcept>
 #include <uni20/common/half_int.hpp>
 #include <utility>
@@ -81,6 +82,27 @@ inline std::size_t bounded_binomial(std::size_t slots, std::size_t m, std::size_
   return count;
 }
 
+/// Advance ordered unit-spaced labels lexicographically within an inclusive
+/// upper bound. The caller supplies a valid combination. Empty sets have one
+/// combination, so advancing an empty span returns false.
+template <typename Integer> bool advance_combination(std::span<Integer> labels, Integer last)
+{
+  std::size_t i = labels.size();
+  while (i > 0 && labels[i - 1] == last)
+  {
+    --i;
+    if (i > 0) --last;
+  }
+  if (i == 0) return false;
+  ++labels[i - 1];
+  for (std::size_t j = i; j < labels.size(); ++j)
+  {
+    labels[j] = labels[j - 1];
+    ++labels[j];
+  }
+  return true;
+}
+
 template <typename Result, typename Solve, typename Ground, typename Energy = StateEnergy>
 Result scan_real_combinations(std::size_t slots, std::size_t m, std::int64_t first, RealExcitationOptions const& scan,
                               Solve&& solve, Ground&& ground, EnergyOrder order = EnergyOrder::ascending,
@@ -133,13 +155,9 @@ Result scan_real_combinations(std::size_t slots, std::size_t m, std::int64_t fir
       result.first_unconverged = std::move(state);
 
     // Lexicographic combinations of M slots, including the unique M=0 set.
-    std::size_t i = m;
-    while (i > 0 && numbers[i - 1].twice() == first + 2 * static_cast<std::int64_t>(slots - m + i - 1))
-      --i;
-    if (i == 0) break;
-    numbers[i - 1] = uni20::from_twice(numbers[i - 1].twice() + 2);
-    for (std::size_t j = i; j < m; ++j)
-      numbers[j] = uni20::from_twice(numbers[j - 1].twice() + 2);
+    if (m == 0 || !advance_combination<uni20::half_int>(
+                      numbers, uni20::from_twice(first + 2 * static_cast<std::int64_t>(slots - 1))))
+      break;
   }
   std::sort_heap(result.levels.begin(), result.levels.end(), less);
   return result;

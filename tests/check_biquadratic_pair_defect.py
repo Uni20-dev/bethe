@@ -2,6 +2,8 @@
 from decimal import Decimal, localcontext
 import csv
 import json
+import itertools
+import math
 import os
 from pathlib import Path
 import subprocess
@@ -24,13 +26,20 @@ def tables(args, status=0):
     assert doc["status"] == "complete"
     for t in doc["tables"].values():
         assert t["summary"]["Outcome"] == ("success" if status == 0 else "partial")
-        assert "NOT the full three-defect" in t["metadata"]["Coverage"]
+        assert "NOT the full" in t["metadata"]["Coverage"]
         assert "not a global excitation rank" in t["metadata"]["Ordering"]
     return doc["tables"]
 
 
 def rows(t):
     return [dict(zip([c["id"] for c in t["columns"]], row)) for row in t["rows"]]
+
+
+def state_labels(t):
+    result = {}
+    for row in rows(t["labels"]):
+        result.setdefault(row["state_id"], ([], int(row["string_label"])))[0].append(int(row["real_label"]))
+    return {sid: (tuple(labels), j) for sid, (labels, j) in result.items()}
 
 
 for precision in precisions:
@@ -99,6 +108,47 @@ for precision in precisions:
         assert len(rows(failed["labels"])) == 1 and len(rows(failed["roots"])) == 3
         assert rows(failed["reference"])[0]["state_id"] == "1"
 
+    for sea, n in ((2, 8), (2, 9), (2, 10), (3, 10), (4, 12)):
+        m = sea + 2
+        args = [str(n), "--ferromagnetic", "--pair-defects", "all", "--real-defects", str(sea),
+                "--precision", precision, "--roots"]
+        full = tables(args)
+        count = math.comb(n-m, sea) * (n-2*m+1)
+        assert len(rows(full["states"])) == count
+        assert full["states"]["metadata"]["Scanned candidates"] == str(count)
+        keys = state_labels(full)
+        expected = {(labels, j) for labels in itertools.combinations(range(1, n-m+1), sea)
+                    for j in range(1, n-2*m+2)}
+        assert set(keys.values()) == expected
+        assert len(rows(full["labels"])) == sea*count and len(rows(full["roots"])) == m*count
+        assert all(int(s["through_lines"]) == n-2*m and s["converged"] for s in rows(full["states"]))
+        gaps = [Decimal(s["gap"]) for s in rows(full["states"])]
+        assert gaps == sorted(gaps)
+        for sid in ("0", str(count-1)):
+            labels, j = keys[sid]
+            token = ",".join(map(str, (*labels, j)))
+            selected = tables([str(n), "--ferromagnetic", "--pair-defect", token, "--precision", precision, "--roots"])
+            assert rows(selected["states"])[0]["gap"] == rows(full["states"])[int(sid)]["gap"]
+            assert state_labels(selected)["0"] == keys[sid]
+        streamed = tables([*args, "--no-retain"])
+        assert all(streamed[name]["rows"] == t["rows"] for name, t in full.items())
+
+    for sea in (2, 3, 4):
+        n, width, m = 129, sea+1, sea+2
+        args = [str(n), "--ferromagnetic", "--pair-defects", "all", "--real-defects", str(sea),
+                "--mixed-window", str(width), "--precision", precision, "--roots"]
+        window = tables(args)
+        expected = {(labels, j) for labels in itertools.combinations(range(n-m-width+1, n-m+1), sea)
+                    for j in range(n-2*m-width+2, n-2*m+2)}
+        assert set(state_labels(window).values()) == expected
+        count = math.comb(width, sea)*width
+        assert len(rows(window["states"])) == count
+        assert len(rows(window["roots"])) == m*count
+        failed = tables([*args, "--max-iterations", "0"], 2)
+        assert failed["states"]["metadata"]["Failed candidates"] == str(count)
+        assert len(rows(failed["labels"])) == sea and len(rows(failed["roots"])) == m
+        assert rows(failed["states"])[0]["gap"] is None
+
 partial = tables(["16", "--ferromagnetic", "--pair-defects", "2", "--mixed-window", "4",
                   "--max-iterations", "5", "--roots"], 2)
 meta = partial["states"]["metadata"]
@@ -132,6 +182,18 @@ for option in ("--pair-defect", "--pair-defects"):
         run(["8", "--ferromagnetic", *selector, *conflict], 1)
 run(["8", "--ferromagnetic", "--pair-defect", "1,1", "--pair-defects", "all"], 1)
 run(["100000", "--ferromagnetic", "--pair-defects", "1"], 1)  # Budget covers scan, not retained count.
+for extra in (["--real-defects", "2"], ["--pair-defect", "1,2,1", "--real-defects", "2"],
+              ["--pair-defects", "all", "--real-defects", "0"],
+              ["--pair-defects", "all", "--real-defects", "7"],
+              ["--pair-defects", "all", "--real-defects", "2", "--mixed-window", "1"],
+              ["--pair-defects", "all", "--real-defects", "2", "--mixed-window", "3", "--max-candidates", "8"],
+              ["--pair-defect", "1,1,1"], ["--pair-defect", "2,1,1"], ["--pair-defect", "1,13,1"],
+              ["--pair-defect", "1,2,10"]):
+    run(["16", "--ferromagnetic", *extra], 1)
+exact_budget = tables(["16", "--ferromagnetic", "--pair-defects", "all", "--real-defects", "2",
+                       "--mixed-window", "3", "--max-candidates", "9"])
+assert len(rows(exact_budget["states"])) == 9
+run(["1000000000000", "--ferromagnetic", "--pair-defects", "1", "--real-defects", "499999999998"], 1)
 
 with tempfile.TemporaryDirectory() as tmp:
     path = Path(tmp)
@@ -148,5 +210,14 @@ with tempfile.TemporaryDirectory() as tmp:
     # Invalid labels fail before creating output files.
     run(["8", "--ferromagnetic", "--pair-defect", "6,1", "--json", str(path/"invalid.json")], 1)
     assert not (path/"invalid.json").exists()
+    run(["8", "--ferromagnetic", "--pair-defects", "all", "--real-defects", "2", "--roots",
+         "--no-retain", "--quiet", "--json", str(path/"four.json"), "--tsv-table", f"labels={path/'four-labels.tsv'}"])
+    four = json.loads((path/"four.json").read_text())["tables"]
+    assert len(four["states"]["rows"]) == 6
+    assert len(four["labels"]["rows"]) == 12 and len(four["roots"]["rows"]) == 24
+    data = list(csv.DictReader([line for line in (path/"four-labels.tsv").read_text().splitlines()
+                               if not line.startswith("#")], delimiter="\t"))
+    assert len(data) == 12
 
 assert "--pair-defect" in run(["--help"])
+assert "--real-defects" in run(["--help"])
