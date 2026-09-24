@@ -91,7 +91,10 @@ StringIteration<Real> solve_log_string(System const& system, SolverOptions<Real>
     {
       for (std::size_t i = 0; i < system.order; ++i)
         trial[i] = x[i] + damping * step[i];
-      if constexpr (requires { system.normalize(trial); }) system.normalize(trial);
+      if constexpr (requires { system.normalize(trial, ideal); })
+        system.normalize(trial, ideal);
+      else if constexpr (requires { system.normalize(trial); })
+        system.normalize(trial);
       if (system.physical(trial) &&
           system.evaluate(trial, nullptr, ideal).norm < (Real{1} - damping / Real{10000}) * evaluation.norm)
       {

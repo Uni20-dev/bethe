@@ -21,6 +21,8 @@ struct Arguments
     std::optional<std::string> pair_defect;
     std::optional<std::string> two_pairs;
     std::optional<std::size_t> two_pair_states, pair_window;
+    std::optional<std::string> triple_defect;
+    std::optional<std::size_t> triple_defects;
     std::optional<bethe::xxz::QuantumNumbers> numbers;
     std::optional<std::string> tolerance;
     std::optional<std::string> q_seed;
@@ -73,6 +75,10 @@ void add_options(CLI::App& app, Arguments& args)
       "ferro: first COUNT, or all N-5, targeted three-string modes; NOT full three-defect spectrum");
   bethe::cli::option(app, "--pair-defect", args.pair_defect,
                      "ferro: selected pair plus real roots, integer labels I1,...,Ir,J; r>=1, ell=N-2(r+2)");
+  bethe::cli::option(app, "--triple-defect", args.triple_defect,
+                     "ferro: selected bound triple plus one real root, integer labels I,J; ell=N-8");
+  bethe::cli::all_count_option(app, "--triple-defects", args.triple_defects,
+                               "ferro: retain lowest COUNT or all converged triple-plus-real-root candidates");
   bethe::cli::option(app, "--two-pairs", args.two_pairs,
                      "ferro: two scattering pairs with ordered labels J1,J2; ell=N-8");
   bethe::cli::all_count_option(app, "--two-pair-states", args.two_pair_states,
@@ -83,8 +89,9 @@ void add_options(CLI::App& app, Arguments& args)
                                "ferro: retain lowest COUNT or all converged one-pair-family candidates");
   bethe::cli::option(app, "--real-defects", args.real_defects,
                      "--pair-defects: number R>=1 of real roots alongside one pair (default: 1)");
-  bethe::cli::option(app, "--mixed-window", args.mixed_window,
-                     "--pair-defects: highest WIDTH labels for real roots and pair; choose(WIDTH,R)*WIDTH candidates");
+  bethe::cli::option(
+      app, "--mixed-window", args.mixed_window,
+      "--pair-defects/--triple-defects: highest WIDTH real and string labels (triple: WIDTH^2 candidates)");
   bethe::cli::option(app, "--through-lines", args.through_lines,
                      "select TL module; standalone ferro minima require ELL=N or N-2");
   bethe::cli::option(app, "--sectors", args.sectors, "AF: lowest level in every TL module");
@@ -118,6 +125,23 @@ void add_options(CLI::App& app, Arguments& args)
 void validate(Arguments const& args)
 {
   args.output.validate();
+  if (args.triple_defect || args.triple_defects)
+  {
+    if (!args.ferromagnetic || args.sites < 8)
+      throw std::invalid_argument("triple plus defect requires --ferromagnetic and N>=8");
+    if (args.one_defect || args.q_seed || args.q_spectrum || args.sectors || args.excitations || args.numbers ||
+        args.through_lines || args.singlet_excitation || args.max_attempts || args.bound_pairs || args.bound_triples ||
+        args.pair_defect || args.pair_defects || args.two_pairs || args.two_pair_states || args.real_defects ||
+        (args.triple_defect && args.triple_defects))
+      throw std::invalid_argument(
+          "triple-defect selections cannot combine with other state selections or --real-defects");
+    if (args.triple_defects && *args.triple_defects == 0)
+      throw std::invalid_argument("--triple-defects requires a positive count or all");
+    if (args.triple_defect && args.max_candidates)
+      throw std::invalid_argument("--max-candidates is not used by --triple-defect I,J");
+    if (args.mixed_window && (*args.mixed_window == 0 || *args.mixed_window > args.sites - 7))
+      throw std::invalid_argument("triple --mixed-window requires 1<=WIDTH<=N-7");
+  }
   if (args.pair_window && !args.two_pair_states)
     throw std::invalid_argument("--pair-window requires --two-pair-states COUNT|all");
   if (args.two_pairs || args.two_pair_states)
@@ -135,8 +159,8 @@ void validate(Arguments const& args)
     if (args.pair_window && (*args.pair_window < 2 || *args.pair_window > args.sites - 6))
       throw std::invalid_argument("--pair-window requires 2<=WIDTH<=N-6");
   }
-  if (args.mixed_window && !args.pair_defects)
-    throw std::invalid_argument("--mixed-window requires --pair-defects COUNT|all");
+  if (args.mixed_window && !args.pair_defects && !args.triple_defects)
+    throw std::invalid_argument("--mixed-window requires --pair-defects or --triple-defects COUNT|all");
   if (args.real_defects && !args.pair_defects)
     throw std::invalid_argument(
         "--real-defects requires --pair-defects COUNT|all; selected states infer R from labels");
@@ -185,7 +209,7 @@ void validate(Arguments const& args)
           "ferromagnetic --sectors and --singlet-excitation are not implemented; use --q-spectrum --through-lines ELL");
     bool const analytic = !args.numbers && !args.excitations && !args.q_seed && !args.q_spectrum && !args.bound_pairs &&
                           !args.bound_triples && !args.pair_defect && !args.pair_defects && !args.two_pairs &&
-                          !args.two_pair_states;
+                          !args.two_pair_states && !args.triple_defect && !args.triple_defects;
     if (analytic && args.through_lines && *args.through_lines != args.sites && *args.through_lines != args.sites - 2)
       throw std::invalid_argument(
           "ferromagnetic module minima are analytic only for ELL=N or N-2; use --q-spectrum --through-lines ELL");
@@ -208,7 +232,7 @@ void validate(Arguments const& args)
     throw std::invalid_argument(
         "--quantum-numbers determines the TL module; cannot combine with --through-lines or --excitations");
   if (args.max_candidates && !args.excitations && !args.one_defect && !args.bound_pairs && !args.bound_triples &&
-      !args.pair_defects && !args.two_pair_states)
+      !args.pair_defects && !args.two_pair_states && !args.triple_defects)
     throw std::invalid_argument("--max-candidates requires a state scan");
 }
 char const* status(bethe::xxz::quantum_group::SolveStatus value)
@@ -626,15 +650,27 @@ template <uni20::Real Real> int run_ferro_analytic(Arguments const& args, cli::R
   return 0;
 }
 
-template <uni20::Real Real, std::size_t Defects, bool Mixed = false>
+enum class ClusterFamily
+{
+  pair,
+  triple,
+  pair_real,
+  two_pairs,
+  triple_real
+};
+
+template <uni20::Real Real, ClusterFamily Family>
 int run_bound_clusters(Arguments const& args, std::size_t requested, bethe::SolverOptions<Real> const& options,
                        cli::RunReport report)
 {
-  static_assert(Defects >= 2 && Defects <= 4);
-  constexpr bool TwoPairs = Defects == 4;
+  constexpr bool TwoPairs = Family == ClusterFamily::two_pairs;
+  constexpr bool TripleMixed = Family == ClusterFamily::triple_real;
+  constexpr bool PairMixed = Family == ClusterFamily::pair_real;
+  constexpr bool Mixed = PairMixed || TripleMixed;
+  constexpr std::size_t Defects = TwoPairs || TripleMixed ? 4 : Family == ClusterFamily::pair ? 2 : 3;
   constexpr bool Scan = Mixed || TwoPairs;
   auto computation = report.context().computation();
-  static_assert(!Mixed || Defects == 3);
+  auto const& selected = TripleMixed ? args.triple_defect : args.pair_defect;
   std::size_t available = args.sites - (2 * Defects - 1), count = std::min(requested, available);
   std::size_t real_width = 0, pair_width = 0, selected_j = 0;
   std::size_t sea = args.real_defects.value_or(1), defects = Defects;
@@ -664,13 +700,14 @@ int run_bound_clusters(Arguments const& args, std::size_t requested, bethe::Solv
   if constexpr (Mixed)
   {
     (void)bethe::xxz::detail::checked_sites(args.sites);
-    if (args.pair_defect)
+    if (selected)
     {
-      std::string_view text = *args.pair_defect;
+      std::string_view text = *selected;
       sea = std::count(text.begin(), text.end(), ',');
-      if (sea == 0 || sea > args.sites / 2 - 2)
-        throw std::invalid_argument("--pair-defect requires I1,...,Ir,J with 1<=r<=N/2-2");
-      defects = sea + 2;
+      if (TripleMixed && sea != 1) throw std::invalid_argument("--triple-defect requires exactly I,J");
+      if (sea == 0 || sea > args.sites / 2 - (TripleMixed ? 3 : 2))
+        throw std::invalid_argument("mixed selection requires real-root labels followed by one string label");
+      defects = sea + (TripleMixed ? 3 : 2);
       bethe::xxz::quantum_group::detail::check_matrix_size<Real>(defects);
       real_labels.reserve(sea);
       for (std::size_t i = 0; i < sea; ++i)
@@ -684,9 +721,9 @@ int run_bound_clusters(Arguments const& args, std::size_t requested, bethe::Solv
     }
     else
     {
-      defects = sea + 2;
+      defects = sea + (TripleMixed ? 3 : 2);
       bethe::xxz::quantum_group::detail::check_matrix_size<Real>(defects);
-      real_last = args.sites - defects;
+      real_last = args.sites - (TripleMixed ? 3 : defects);
       pair_last = args.sites - 2 * defects + 1;
       real_width = args.mixed_window.value_or(real_last);
       pair_width = args.mixed_window.value_or(pair_last);
@@ -703,6 +740,8 @@ int run_bound_clusters(Arguments const& args, std::size_t requested, bethe::Solv
   auto solve = [&](std::size_t mode) {
     if constexpr (TwoPairs)
       return model::ferromagnetic::two_bound_pairs<Real>(args.sites, pair_labels, options);
+    else if constexpr (TripleMixed)
+      return model::ferromagnetic::triple_defect<Real>(args.sites, real_labels.front(), selected_j, options);
     else if constexpr (Mixed)
       return model::ferromagnetic::pair_with_real_roots<Real>(args.sites, real_labels, selected_j, options);
     else if constexpr (Defects == 2)
@@ -729,7 +768,7 @@ int run_bound_clusters(Arguments const& args, std::size_t requested, bethe::Solv
   }
   else if constexpr (Mixed)
   {
-    if (args.pair_defect)
+    if (selected)
       append(1);
     else
     {
@@ -756,6 +795,9 @@ int run_bound_clusters(Arguments const& args, std::size_t requested, bethe::Solv
       if (a.tl_energy != b.tl_energy) return a.tl_energy < b.tl_energy;
       if constexpr (TwoPairs)
         return a.reference.string_labels < b.reference.string_labels;
+      else if constexpr (TripleMixed)
+        return std::pair{a.reference.real_label, a.reference.string_label} <
+               std::pair{b.reference.real_label, b.reference.string_label};
       else
       {
         if (a.reference.real_labels != b.reference.real_labels)
@@ -781,27 +823,31 @@ int run_bound_clusters(Arguments const& args, std::size_t requested, bethe::Solv
       report.field("pair_label_first", "First allowed J", args.two_pairs ? pair_labels[0] : pair_last - pair_width + 1)
           .field("pair_label_last", "Last allowed J", args.two_pairs ? pair_labels[1] : pair_last);
     else
-      report.field("real_defects", "Real roots alongside pair", sea)
-          .field("real_label_first", "First allowed I",
-                 args.pair_defect ? real_labels.front() : real_last - real_width + 1)
-          .field("real_label_last", "Last allowed I", args.pair_defect ? real_labels.back() : real_last)
-          .field("pair_label_first", "First allowed J", args.pair_defect ? selected_j : pair_last - pair_width + 1)
-          .field("pair_label_last", "Last allowed J", args.pair_defect ? selected_j : pair_last);
+      report.field("real_defects", TripleMixed ? "Real roots alongside triple" : "Real roots alongside pair", sea)
+          .field("real_label_first", "First allowed I", selected ? real_labels.front() : real_last - real_width + 1)
+          .field("real_label_last", "Last allowed I", selected ? real_labels.back() : real_last)
+          .field(TripleMixed ? "triple_label_first" : "pair_label_first", "First allowed J",
+                 selected ? selected_j : pair_last - pair_width + 1)
+          .field(TripleMixed ? "triple_label_last" : "pair_label_last", "Last allowed J",
+                 selected ? selected_j : pair_last);
   }
   computation.finish();
   report
       .field("calculation", "Calculation",
              TwoPairs       ? "two scattering bound pairs"
+             : TripleMixed  ? "mixed bound triple plus one real defect"
              : Mixed        ? "mixed bound pair plus selected real defects"
              : Defects == 2 ? "targeted two-defect bound-pair modes"
                             : "targeted three-defect bound-triple modes")
       .field("family", "Family",
              TwoPairs       ? "two two-strings, no real roots; ordered J1,J2; sign(d_i)=(-1)^(N-J_i-i), i=1,2"
+             : TripleMixed  ? "one three-string plus one real root; I,J labels, complex deviation z=exp(-L+i*phi)"
              : Mixed        ? "one two-string plus real roots; I1,...,Ir,J labels, sign(d)=(-1)^(N-J-1)"
              : Defects == 2 ? "one two-string, no real sea; J=N-2-mode, sign(d)=(-1)^(mode+1)"
                             : "one three-string, no real sea; J=N-4-mode, complex deviation z=exp(-L+i*phi)")
       .field("coverage", "Coverage",
-             TwoPairs ? "selected two-pair family only; NOT the full four-defect or excited spectrum"
+             TwoPairs      ? "selected two-pair family only; NOT the full four-defect or excited spectrum"
+             : TripleMixed ? "selected triple-plus-real-root family only; NOT the full four-defect or excited spectrum"
              : Mixed
                  ? (sea == 1
                         ? "selected mixed-family label rectangle only; NOT the full three-defect or excited spectrum"
@@ -822,21 +868,24 @@ int run_bound_clusters(Arguments const& args, std::size_t requested, bethe::Solv
       .field("residual_convention", "Residual convention",
              "max phase/log-modulus residual divided by 2N; not an energy-error bound")
       .field("string_coordinate", "String coordinate",
-             (Defects == 2 || Mixed || TwoPairs)
+             (Defects == 2 || PairMixed || TwoPairs)
                  ? "pair u=(eta+d)/2 +/- i*a/2; d=sign*exp(-L); real roots u=i*alpha/2; L is authoritative"
                  : "u0=i*a/2; u+/-=eta+Re(z) +/- i*(a/2+Im(z)); L and phi are authoritative")
       .field("wave_number", "Wave number", "mode and string center are branch coordinates, not lattice momentum")
       .field("multiplicity_meaning", "Multiplicity meaning", "physical states per TL eigenvector, not SU(2) multiplets")
       .field("gap_reference", "Gap reference", "E-(N-1); exact degenerate ferro ground space")
       .field(TwoPairs       ? "bulk_two_pair_threshold"
+             : TripleMixed  ? "bulk_triple_defect_threshold"
              : Mixed        ? "bulk_mixed_threshold"
              : Defects == 2 ? "bulk_pair_threshold"
                             : "bulk_triple_threshold",
              TwoPairs       ? "Bulk two-pair threshold"
+             : TripleMixed  ? "Bulk triple-plus-defect threshold"
              : Mixed        ? "Bulk pair-plus-defect threshold"
              : Defects == 2 ? "Bulk bound-pair threshold"
                             : "Bulk bound-triple threshold",
              TwoPairs       ? Real{10} / Real{3}
+             : TripleMixed  ? Real{3}
              : Mixed        ? Real{5} / Real{3} + Real(sea)
              : Defects == 2 ? Real{5} / Real{3}
                             : Real{2})
@@ -848,6 +897,7 @@ int run_bound_clusters(Arguments const& args, std::size_t requested, bethe::Solv
   output.table(
       "states",
       TwoPairs       ? "Two scattering bound pairs"
+      : TripleMixed  ? "Mixed triple-plus-defect states"
       : Mixed        ? "Mixed pair-plus-defect states"
       : Defects == 2 ? "Two-defect bound-pair modes"
                      : "Three-defect bound-triple modes",
@@ -880,8 +930,11 @@ int run_bound_clusters(Arguments const& args, std::size_t requested, bethe::Solv
           for (std::size_t i = 0; i < states.size(); ++i)
           {
             auto const& r = states[i].reference;
-            for (std::size_t j = 0; j < r.real_labels.size(); ++j)
-              table.append(i, r.real_labels[j], r.string_label, r.rapidities[j]);
+            if constexpr (TripleMixed)
+              table.append(i, r.real_label, r.string_label, r.rapidity);
+            else
+              for (std::size_t j = 0; j < r.real_labels.size(); ++j)
+                table.append(i, r.real_labels[j], r.string_label, r.rapidities[j]);
           }
         },
         cli::column<std::size_t>("state_id"), cli::column<std::size_t>("real_label", "I"),
@@ -905,7 +958,7 @@ int run_bound_clusters(Arguments const& args, std::size_t requested, bethe::Solv
         cli::column<std::size_t>("string_label", "J"), cli::column<Real>("center", "a"),
         cli::column<int>("deviation_sign", "sign(d)"), cli::column<Real>("log_deviation", "L=-log|d|"),
         cli::column<std::optional<Real>>("deviation", "d (null if underflow)"));
-  else if constexpr (Defects == 2 || Mixed)
+  else if constexpr (Defects == 2 || PairMixed)
     output.table(
         "string", "Signed two-string parameters (L is authoritative even on underflow)",
         [&](auto& table) {
@@ -956,7 +1009,7 @@ int run_bound_clusters(Arguments const& args, std::size_t requested, bethe::Solv
                 table.append(i, 2 * p + 1, width / Real{2}, -r.centers[p] / Real{2});
               }
             }
-            else if constexpr (Defects == 2 || Mixed)
+            else if constexpr (Defects == 2 || PairMixed)
             {
               Real const width = std::acosh(r.delta) + Real(r.deviation_sign) * std::exp(-r.log_deviation);
               if constexpr (Mixed)
@@ -973,6 +1026,7 @@ int run_bound_clusters(Arguments const& args, std::size_t requested, bethe::Solv
               table.append(i, 0, Real{0}, r.center / Real{2});
               table.append(i, 1, real, imag);
               table.append(i, 2, real, -imag);
+              if constexpr (TripleMixed) table.append(i, 3, Real{0}, r.rapidity / Real{2});
             }
           }
         },
@@ -1000,12 +1054,19 @@ template <uni20::Real Real> int run(Arguments const& args, int argc, char** argv
   auto report = preamble(context, args, options);
   if (args.q_seed || args.q_spectrum) return run_qsystem(args, options, std::move(report));
   if (args.singlet_excitation) return run_singlet(args, options, std::move(report));
-  if (args.bound_pairs) return run_bound_clusters<Real, 2>(args, *args.bound_pairs, options, std::move(report));
-  if (args.bound_triples) return run_bound_clusters<Real, 3>(args, *args.bound_triples, options, std::move(report));
+  if (args.bound_pairs)
+    return run_bound_clusters<Real, ClusterFamily::pair>(args, *args.bound_pairs, options, std::move(report));
+  if (args.bound_triples)
+    return run_bound_clusters<Real, ClusterFamily::triple>(args, *args.bound_triples, options, std::move(report));
   if (args.two_pairs || args.two_pair_states)
-    return run_bound_clusters<Real, 4>(args, args.two_pair_states.value_or(1), options, std::move(report));
+    return run_bound_clusters<Real, ClusterFamily::two_pairs>(args, args.two_pair_states.value_or(1), options,
+                                                              std::move(report));
+  if (args.triple_defect || args.triple_defects)
+    return run_bound_clusters<Real, ClusterFamily::triple_real>(args, args.triple_defects.value_or(1), options,
+                                                                std::move(report));
   if (args.pair_defect || args.pair_defects)
-    return run_bound_clusters<Real, 3, true>(args, args.pair_defects.value_or(1), options, std::move(report));
+    return run_bound_clusters<Real, ClusterFamily::pair_real>(args, args.pair_defects.value_or(1), options,
+                                                              std::move(report));
   if (args.ferromagnetic && !args.excitations && !args.numbers)
     return run_ferro_analytic<Real>(args, std::move(report));
   auto computation = context.computation();

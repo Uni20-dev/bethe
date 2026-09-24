@@ -19,7 +19,24 @@ template <uni20::Real Real> class System {
       return x.size() == order && triple.physical(x.first(3)) && uni20::isfinite(x[3]) && x[3] > Real{0} &&
              x[3] < triple.pi && x[3] != x[0];
     }
-    void normalize(std::vector<Real>& x) const { triple.normalize(x); }
+    void normalize(std::vector<Real>& x, bool ideal) const
+    {
+      triple.normalize(x);
+      if (!ideal && physical(x) && std::exp(-x[1]) == Real{0})
+      {
+        // Once z underflows, L and phi enter the exact residuals linearly.
+        // Solve those two rows at the *rounded* trial angles. Near coincident
+        // centers, a sub-ulp angular Newton step otherwise asks for a large
+        // compensating L update although the represented angles never move.
+        auto const f = evaluate(x);
+        Real const L = x[1] + Real{2} * Real(triple.sites) * f.residual[1];
+        if (uni20::isfinite(L) && std::exp(-L) == Real{0})
+        {
+          x[1] = L;
+          x[2] = Triple::wrap(x[2] - Real{2} * Real(triple.sites) * f.residual[2]);
+        }
+      }
+    }
     auto coordinate_scales(std::span<Real const> x) const
     {
       auto s = triple.coordinate_scales(x.first(3));

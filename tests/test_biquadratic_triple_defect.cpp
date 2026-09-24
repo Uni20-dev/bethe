@@ -108,7 +108,11 @@ TYPED_TEST(TripleDefect, OriginalEquationsAndLongChains)
   using C = std::complex<R>;
   R const eps = uni20::numeric_limits<R>::epsilon();
   for (std::size_t n : {8, 9, 10, 16, 65, 128, 1024, 100000})
-    for (auto labels : {std::pair<std::size_t, std::size_t>{1, 1}, {n - 3, n - 7}, {1, n - 7}, {n - 3, 1}})
+    for (auto labels : {std::pair<std::size_t, std::size_t>{1, 1},
+                        {n - 3, n - 7},
+                        {1, n - 7},
+                        {n - 3, 1},
+                        {n - 3, n > 8 ? n - 8 : 1}})
     {
       auto const state = bethe::biquadratic::ferromagnetic::triple_defect<R>(n, labels.first, labels.second);
       auto const& s = state.reference;
@@ -175,5 +179,29 @@ TYPED_TEST(TripleDefect, BudgetsAndValidation)
                std::invalid_argument);
   EXPECT_THROW((void)qg::triple_defect::solve<R>(std::numeric_limits<std::size_t>::max(), R{3} / R{2}, 1, 1),
                std::invalid_argument);
+}
+
+TYPED_TEST(TripleDefect, RoundedAngleUnderflowPolish)
+{
+  using R = TypeParam;
+  for (std::size_t i : {99996, 99997})
+    for (std::size_t j : {99992, 99993})
+    {
+      auto const s = qg::triple_defect::solve<R>(100000, R{3} / R{2}, i, j);
+      ASSERT_TRUE(s.converged) << i << " " << j;
+      EXPECT_LE(s.residual_norm, R{32} * uni20::numeric_limits<R>::epsilon());
+      EXPECT_EQ(std::exp(-s.log_deviation), R{0});
+      qg::triple_defect::detail::System<R> system(100000, s.delta, i, j);
+      std::vector<R> x{s.center, s.log_deviation + R{1}, s.deviation_phase + R{1}, s.rapidity};
+      auto ideal = x;
+      system.normalize(ideal, true);
+      EXPECT_EQ(ideal[1], x[1]); // Never apply the finite-row correction in initialization.
+      system.normalize(x, false);
+      EXPECT_EQ(x[0], s.center);
+      EXPECT_EQ(x[3], s.rapidity);
+      auto const f = system.evaluate(x);
+      EXPECT_LE(f.modulus_norm, R{32} * uni20::numeric_limits<R>::epsilon());
+      EXPECT_LE(f.phase_norm, R{32} * uni20::numeric_limits<R>::epsilon());
+    }
 }
 } // namespace

@@ -23,7 +23,36 @@ triple. They are neither momenta nor energy ranks. The corner
 `(I,J)=(N-3,N-7)` approaches gap **3 = 2+1**, the separated triple-plus-single
 threshold, not the minimum of the full four-defect module. These are TL
 singlet insertions, not physical spin flips; no SU(2) decomposition or
-spectral weights are implied. CLI integration is a separate next step.
+spectral weights are implied.
+
+## Command-line selections and scans
+
+```sh
+bethe-biquadratic-obc 128 --ferromagnetic --triple-defect 125,121 --roots
+bethe-biquadratic-obc 128 --ferromagnetic --triple-defects all --mixed-window 3
+bethe-biquadratic-obc 128 --ferromagnetic --triple-defects 4 --mixed-window 3 \
+  --precision fp128 --json triples.json --csv triples.csv
+```
+
+`--triple-defects COUNT|all` scans `(N-3)*(N-7)` label pairs unless
+`--mixed-window WIDTH` selects only the highest WIDTH values of I and J.
+For this family `1<=WIDTH<=N-7`, giving WIDTH^2 candidates. The default
+`--max-candidates 10000` bounds all solves, not just retained output rows;
+overflow-safe counts are checked before allocation. `--real-defects` is
+not applicable: this family has exactly one real root alongside its triple.
+
+The shared cluster reporter sorts by direct gap, with ties ordered by
+`(I,J)`, and retains the lowest COUNT converged candidates. Tables are
+`states`, `reference`, `labels` (I, J, alpha), and `string` (a, L, phi),
+plus optional `roots`. The four root indices are 0 for the central triple
+root, 1 and 2 for its conjugate pair, and 3 for the additional real root.
+The usual JSON/CSV/TSV exports, streaming, and no-retain output are available.
+
+If any candidate fails, exit status is 2 and the summary remains partial.
+One failed diagnostic row follows the retained converged levels; its
+verified `gap` is null, while energy and `tl_energy` are only estimates.
+Metadata records all scanned, converged, failed, and retained counts.
+Neither `all` nor a successful scan certifies a complete module spectrum.
 
 ## Reusing the isolated triple
 
@@ -90,6 +119,14 @@ is never accepted using the initializer alone. The common Newton driver
 uses one iteration budget and the requested native precision throughout.
 It solves four real unknowns, independent of N. Failed iterates retain
 consistent diagnostics and estimates, not verified energies.
+
+Once exp(-L) underflows, the two internal deviation equations are linear
+in L and phi. After a finite-stage Newton trial rounds the angles, those
+two rows are solved at the represented angles. This prevents sub-ulp
+angular steps near coincident centers from inducing a spurious modulus
+stall. It is part of the trial normalization and line search, not extra
+iterations, a tolerance relaxation, or a change of precision. It is never
+used during ideal initialization.
 
 The lower API is
 `bethe::xxz::quantum_group::triple_defect::solve(N,Delta,I,J,options)`.
