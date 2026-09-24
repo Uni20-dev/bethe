@@ -160,3 +160,49 @@ characteristic polynomial, zero/one-iteration failure diagnostics, and the
 8/3 threshold up to N=100000. The generic finite-size string description
 still permits numerical failure and does not provide physical SU(2)
 labels, scattering amplitudes or form factors.
+
+## A pair with several real defects
+
+The library also accepts **one pair and an arbitrary selected real-root
+set**, with M=r+2 insertions and ell=N-2M. The command-line options above
+remain specifically the r=1 family; this generalization is a library API.
+
+```cpp
+std::vector<std::size_t> labels{123, 124};
+auto four_defects = ferro::pair_with_real_roots<long double>(128, labels, 121);
+// M=4, ell=120: one pair plus two separate defects, not a four-string.
+if (four_defects.reference.converged) {
+    auto gap = four_defects.tl_energy;
+}
+```
+
+The domain is `2<=M<=N/2`, ordered distinct real labels in `1,...,N-M`,
+and pair label `J=1,...,N-2M+1`. The endpoint limits of the same logarithmic
+equations give these ranges: a real root at alpha=pi would have label
+N-M+1, while the pair center at a=pi would have J=N-2M+2. Both endpoints
+are excluded. The deviation sign remains `(-1)^(N-J-1)`.
+
+No new Bethe equations or Newton implementation are introduced. Explicit
+sea labels, a label-dependent pair seed and edge-scaled coordinates extend
+the existing two-string system. For fixed r the work is independent of N;
+in r it uses a dense (r+2)-by-(r+2) Jacobian, quadratic storage and cubic
+linear-solve work per update. Matrix-size checks precede label allocation.
+Conditioning, branch topology and precision can still prevent convergence.
+
+An empty label set reproduces an isolated pair. One label reproduces
+`pair_defect`, which delegates to this API. Consecutive labels
+`1,...,N/2-2` and J=1 reproduce the even-chain AF singlet's auxiliary
+solution, though the general API uses a different Newton scaling. Its
+biquadratic adapter always maps to the **ferromagnetic** convention.
+The lower XXZ API is
+`two_string::pair_with_real_roots(N,Delta,labels,J,options)`.
+
+For Delta=3/2, all pair-plus-two-real-root candidates match distinct module
+ED levels for N=8,...,10 (6, 20 and 45 candidates respectively). The ten
+pair-plus-three-real-root candidates at N=10 also match ED. These are
+**subsets**, not complete four- or five-defect spectra: two pairs,
+three-strings with real roots, and larger droplets are missing.
+Independent original-equation checks cover r=2,3,4, both deviation signs,
+odd/even chains and all supported precisions. High-label branches approach
+the separated-cluster threshold `5/3+r`, checked up to N=100000. This
+threshold is not a claim about the minimum of the whole TL module.

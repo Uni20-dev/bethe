@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Copyright (C) 2026 Ian McCulloch
 #pragma once
+#include <array>
 #include <bethe/detail/open_string_solver.hpp>
 #include <utility>
 
@@ -42,12 +43,15 @@ template <uni20::Real Real> class System {
         real_labels[i] = i + 1;
     }
     System(std::size_t n, Real delta, std::size_t real_label, std::size_t pair_label)
-        : System(n, delta, 3, pair_label, (n - pair_label) % 2 ? 1 : -1)
+        : System(n, delta, std::span<std::size_t const>{std::array<std::size_t, 1>{real_label}}, pair_label)
+    {}
+    System(std::size_t n, Real delta, std::span<std::size_t const> labels, std::size_t pair_label)
+        : System(n, delta, labels.size() + 2, pair_label, (n - pair_label) % 2 ? 1 : -1)
     {
       // The product phase discards the sign of the singular reflected factor;
       // the unsquared pair equation requires sign(d)=(-1)^(N-J-1).
-      real_labels[0] = real_label;
-      selected_pair_defect = true;
+      real_labels.assign(labels.begin(), labels.end());
+      selected_labels = true;
     }
     using Function = quantum_group::detail::StringPhase<Real>;
     // Theta(beta;w) and its two derivatives, without coth(w) near w=0.
@@ -84,9 +88,9 @@ template <uni20::Real Real> class System {
       for (std::size_t i = 0; i < sea; ++i)
         x[i] = Real{2} *
                std::atan(std::tanh(eta / Real{2}) * std::tan(pi * Real(real_labels[i]) / (Real{2} * Real(sites))));
-      x[sea] = selected_pair_defect ? pi * (Real(string_label) / Real(sites - 4))
-               : sea                ? pi / Real{2}
-                                    : pi * (Real(string_label) / Real(sites - 2));
+      x[sea] = selected_labels ? pi * (Real(string_label) / Real(sites - 2 - 2 * sea))
+               : sea           ? pi / Real{2}
+                               : pi * (Real(string_label) / Real(sites - 2));
       x[sea + 1] = Real{8} + std::abs(std::log(eta));
       // Solve the ideal-string modulus equation for L at the bare sea seed.
       x[sea + 1] += Real{2} * Real(sites) * evaluate(x, nullptr, true).residual.back();
@@ -196,7 +200,14 @@ template <uni20::Real Real> class System {
     }
     std::vector<Real> coordinate_scales(std::span<Real const> x) const
     {
-      if (selected_pair_defect) return {std::min(x[0], pi - x[0]), std::min(x[1], pi - x[1]), Real{2} * Real(sites)};
+      if (selected_labels)
+      {
+        std::vector<Real> scales(order);
+        for (std::size_t i = 0; i <= sea; ++i)
+          scales[i] = std::min(x[i], pi - x[i]);
+        scales.back() = Real{2} * Real(sites);
+        return scales;
+      }
       if (sea) return {};
       return {std::min(x[0], pi - x[0]), Real{2} * Real(sites)};
     }
@@ -204,7 +215,7 @@ template <uni20::Real Real> class System {
     int deviation_sign;
     Real eta, pi;
     std::vector<std::size_t> real_labels;
-    bool selected_pair_defect = false;
+    bool selected_labels = false;
 };
 
 template <uni20::Real Real>
@@ -236,6 +247,26 @@ State<Real> solve(System<Real> const& system, Real delta, SolverOptions<Real> co
   return state;
 }
 } // namespace detail
+
+/// One signed two-string plus selected real roots, M=labels.size()+2<=N/2.
+/// Ordered distinct integer real labels in [1,N-M], pair label in [1,N-2M+1].
+/// The string topology is an ansatz: convergence is not guaranteed at all Delta.
+template <uni20::Real Real = double>
+[[nodiscard]] State<Real> pair_with_real_roots(std::size_t sites, Real delta, std::span<std::size_t const> labels,
+                                               std::size_t pair_label, SolverOptions<Real> const& options = {})
+{
+  (void)xxz::detail::checked_sites(sites);
+  if (sites < 4 || labels.size() > sites / 2 - 2)
+    throw std::invalid_argument("one pair plus real roots requires 2<=M<=N/2");
+  auto const m = labels.size() + 2;
+  quantum_group::detail::check_matrix_size<Real>(m);
+  if (pair_label == 0 || pair_label > sites - 2 * m + 1)
+    throw std::invalid_argument("pair label requires 1<=J<=N-2M+1");
+  for (std::size_t i = 0; i < labels.size(); ++i)
+    if (labels[i] == 0 || labels[i] > sites - m || (i && labels[i] <= labels[i - 1]))
+      throw std::invalid_argument("real labels must be ordered distinct integers in [1,N-M]");
+  return detail::solve(detail::System<Real>(sites, delta, labels, pair_label), delta, options);
+}
 
 /// One positive-deviation two-string above a real sea, even N>=4, Delta>1.
 /// Native precision, O(N^2) memory/O(N^3) per update; no enumeration or site cap.
@@ -279,6 +310,6 @@ template <uni20::Real Real = double>
     throw std::invalid_argument("pair-defect real label requires 1<=I<=N-3");
   if (pair_label == 0 || pair_label > sites - 5)
     throw std::invalid_argument("pair-defect string label requires 1<=J<=N-5");
-  return detail::solve(detail::System<Real>(sites, delta, real_label, pair_label), delta, options);
+  return pair_with_real_roots<Real>(sites, delta, std::array<std::size_t, 1>{real_label}, pair_label, options);
 }
 } // namespace bethe::xxz::quantum_group::two_string

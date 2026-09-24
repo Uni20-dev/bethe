@@ -5,7 +5,7 @@
 This page describes the AF singlet branch. The same regularized solver also
 supports [ferromagnetic empty-sea bound pairs](biquadratic-bound-pairs.md),
 including signed deviations and other string labels on odd/even chains,
-and [a bound pair plus one real defect](biquadratic-pair-defect.md).
+and [a bound pair plus selected real defects](biquadratic-pair-defect.md).
 
 The Q-system is useful for discovering small spectra, but finding every
 polynomial is an expensive way to obtain one low-lying level on a long chain.

@@ -224,6 +224,18 @@ template <uni20::Real Real = double>
       0);
 }
 
+/// One bound pair plus selected real roots: M=labels.size()+2 TL insertions.
+/// A selected branch in ell=N-2M, not a full module or a lowest-state claim.
+template <uni20::Real Real = double>
+[[nodiscard]] PairDefectState<Real> pair_with_real_roots(std::size_t sites, std::span<std::size_t const> labels,
+                                                         std::size_t pair_label,
+                                                         SolverOptions<Real> const& options = {})
+{
+  return detail::from_cluster<Real>(
+      xxz::quantum_group::two_string::pair_with_real_roots<Real>(sites, Real{3} / Real{2}, labels, pair_label, options),
+      labels.size() + 2, 0);
+}
+
 namespace qsystem
 {
 template <uni20::Real Real = double>
