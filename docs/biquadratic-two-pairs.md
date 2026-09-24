@@ -5,8 +5,32 @@
 Four TL singlet insertions can form two bound pairs. This selected-state
 library solver follows that family in **ell=N-8**, for odd/even N>=8.
 It retains both finite string deviations in fp64, native long double or
-enabled fp128. CLI scans and table exports for this family are a later
-integration step; `--pair-defects` still means **one** pair plus real roots.
+enabled fp128. `--pair-defects` means **one** pair plus real roots;
+the two-pair family has separate selections and scans:
+
+```sh
+bethe-biquadratic-obc 128 --ferromagnetic --two-pairs 121,122 --roots
+bethe-biquadratic-obc 128 --ferromagnetic --two-pair-states all --pair-window 4
+bethe-biquadratic-obc 128 --ferromagnetic --two-pair-states 3 --pair-window 4 \
+  --precision fp128 --json pairs.json --csv pairs.csv
+```
+
+`--two-pair-states COUNT|all` scans all `binomial(N-6,2)` candidates unless
+`--pair-window WIDTH` restricts both labels to the highest WIDTH values
+(2<=WIDTH<=N-6, giving `binomial(WIDTH,2)` candidates). The default
+`--max-candidates 10000` bounds **all solves**, not just retained rows;
+counts are checked before allocation. The scan ranks direct gaps and retains
+the lowest COUNT converged candidates, with ties ordered by `(J1,J2)`.
+This is not a global excitation rank or a claim of module completeness.
+
+Tables are `states`, `reference`, and `string` (two rows per state,
+zero-based `pair_index`), plus optional `roots` (four rows per state).
+Both signed logarithmic deviations are preserved, with null `deviation`
+on underflow. Standard JSON/CSV/TSV exports and streaming/no-retain output
+work as for the other bound families. If any candidate fails, exit status
+is 2 and metadata records all candidate counts; one failed diagnostic row
+follows the retained converged rows, with a null verified `gap`. Its energy
+and `tl_energy` are only estimates.
 
 ```cpp
 #include <bethe/biquadratic_ferromagnetic.hpp>

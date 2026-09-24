@@ -203,9 +203,10 @@ Targeted two- and three-defect bound families are now available on long chains.
 Real-root scattering windows and [pair-plus-defect states and CLI scans](biquadratic-pair-defect.md)
 are also available. One pair with several real roots is supported through
 selected labels or `--pair-defects ... --real-defects R` scans.
-A selected-state [two-bound-pair library solver](biquadratic-two-pairs.md)
-is also available. Next are its CLI integration, three-strings with real
-roots, and larger droplets.
+A [two-bound-pair solver and CLI scans](biquadratic-two-pairs.md)
+are also available (`--two-pairs J1,J2` or `--two-pair-states COUNT|all`,
+with optional `--pair-window WIDTH`). Next are three-strings with real
+roots and larger droplets.
 Other open work is
 physical-spin decomposition, state-dependent spectral weights/form factors,
 and periodic twists with genuine momentum labels. Energies and multiplicities
