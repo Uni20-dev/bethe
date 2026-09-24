@@ -208,7 +208,10 @@ are also available (`--two-pairs J1,J2` or `--two-pair-states COUNT|all`,
 with optional `--pair-window WIDTH`). A selected-state
 [triple-plus-real-root solver and CLI scans](biquadratic-triple-defect.md) add
 another four-defect family (`--triple-defect I,J` or `--triple-defects COUNT|all`
-with optional `--mixed-window WIDTH`). Next are larger droplets.
+with optional `--mixed-window WIDTH`). A selected-state
+[bound-quartet library solver](biquadratic-bound-quartets.md) completes the
+five four-defect topologies, jointly checked against complete module ED
+through N=10. Next are quartet CLI integration and higher-defect families.
 Other open work is
 physical-spin decomposition, state-dependent spectral weights/form factors,
 and periodic twists with genuine momentum labels. Energies and multiplicities

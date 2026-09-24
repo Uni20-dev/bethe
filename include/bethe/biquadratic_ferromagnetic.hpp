@@ -3,6 +3,7 @@
 #pragma once
 
 #include <bethe/biquadratic_qsystem.hpp>
+#include <bethe/xxz_open_four_string.hpp>
 #include <bethe/xxz_open_three_string.hpp>
 #include <bethe/xxz_open_triple_defect.hpp>
 #include <bethe/xxz_open_two_pairs.hpp>
@@ -174,6 +175,7 @@ template <uni20::Real Real, typename Reference> using BoundClusterState = Cluste
 template <uni20::Real Real> using BoundPairState = BoundClusterState<Real, xxz::quantum_group::two_string::State<Real>>;
 template <uni20::Real Real> using PairDefectState = ClusterState<Real, xxz::quantum_group::two_string::State<Real>>;
 template <uni20::Real Real> using TwoPairsState = ClusterState<Real, xxz::quantum_group::two_pairs::State<Real>>;
+template <uni20::Real Real> using BoundQuartetState = ClusterState<Real, xxz::quantum_group::four_string::State<Real>>;
 template <uni20::Real Real>
 using TripleDefectState = ClusterState<Real, xxz::quantum_group::triple_defect::State<Real>>;
 template <uni20::Real Real>
@@ -259,6 +261,15 @@ template <uni20::Real Real = double>
   return detail::from_cluster<Real>(
       xxz::quantum_group::triple_defect::solve<Real>(sites, Real{3} / Real{2}, real_label, string_label, options), 4,
       0);
+}
+
+/// Four-defect droplet, ell=N-8; mode is not a full-module energy rank.
+template <uni20::Real Real = double>
+[[nodiscard]] BoundQuartetState<Real> bound_quartet(std::size_t sites, std::size_t mode = 1,
+                                                    SolverOptions<Real> const& options = {})
+{
+  return detail::from_cluster<Real>(
+      xxz::quantum_group::four_string::bound_quartet<Real>(sites, Real{3} / Real{2}, mode, options), 4, mode);
 }
 
 namespace qsystem

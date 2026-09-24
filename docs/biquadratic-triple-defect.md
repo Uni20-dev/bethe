@@ -145,9 +145,10 @@ as a multiset at N=8,9,10. The last family contributes `(N-3)*(N-7)` levels:
 | 9 | 28 | 12 | 42 | 2 |
 | 10 | 66 | 21 | 90 | 3 |
 
-The remaining counts agree with the expected four-string droplet family;
-that family still needs implementation and independent validation. This
-small-chain counting is not a general completeness proof.
+The remaining counts are filled by the separately implemented
+[four-string droplet family](biquadratic-bound-quartets.md). The combined
+multiset now matches the complete small-chain module spectra, but this
+counting is not a general completeness proof.
 
 Additional tests check the original outer-, central-, and real-root
 equations, every Jacobian column, iteration-budget failures, and the

@@ -51,7 +51,14 @@ TEST(TripleDefectED, SmallModules)
         double const energy = (n - 1) * 1.5 / 4 + system.energy_shift(s.x);
         ASSERT_NO_FATAL_FAILURE(remove(energy));
       }
-    EXPECT_EQ(ed.size(), n - 7); // The four-string droplet family remains.
+    EXPECT_EQ(ed.size(), n - 7);
+    for (std::size_t mode = 1; mode <= n - 7; ++mode)
+    {
+      auto const s = ferro::bound_quartet<double>(n, mode);
+      ASSERT_TRUE(s.reference.converged);
+      ASSERT_NO_FATAL_FAILURE(remove(s.reference.energy));
+    }
+    EXPECT_TRUE(ed.empty()); // All five four-defect string topologies, as a multiset.
   }
 }
 template <typename R> class TripleDefect : public ::testing::Test {};

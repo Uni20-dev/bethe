@@ -353,7 +353,9 @@ four-defect subset, retaining both signed logarithmic deviations and sharing
 the single-pair equations, energy mapping and Newton driver.
 A [three-string plus real-root solver and CLI scans](biquadratic-triple-defect.md)
 reuse the isolated triple and a general external-scattering kernel;
-the four-string droplet remains the missing four-defect topology.
+the [four-string droplet library solver](biquadratic-bound-quartets.md)
+completes the five four-defect topologies, with joint module-spectrum
+validation through N=10 (not a general completeness proof).
 
 Literature: [Barber–Batchelor](../CITATIONS.md#barber-batchelor-1989),
 [Albertini](../CITATIONS.md#albertini-2000), and
