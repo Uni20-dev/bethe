@@ -55,7 +55,7 @@ per TL eigenvector**. For even ell=0,2,4,6,... these multiplicities are
 1,8,55,377,... in the spin-1 chain. In particular, the ell=2 multiplicity
 space is one spin-1 triplet plus one spin-2 quintuplet, not eight multiplets
 and not a single spin-1 multiplet. The code reports the total multiplicity;
-the [shared spin-content API](biquadratic-spin-content.md) separately decomposes
+the [shared spin-content API and optional `--spin-content` table](biquadratic-spin-content.md) separately decompose
 the multiplicity space into physical SU(2) spins when its dimension fits uint64.
 Coincident levels are not numerically merged: sum their weights if a genuine
 degeneracy has been established. A decimal energy tolerance alone is not a

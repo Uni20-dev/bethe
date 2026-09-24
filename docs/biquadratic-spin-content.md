@@ -28,7 +28,30 @@ with overflow of the **total** representation dimension in the existing
 `spin_chain_multiplicity(3,ell)` API. This deliberately does not return a
 partially representable spin distribution. Long-chain energy solvers are
 unaffected: a small-ell module can still be resolved on any chain admitting it.
-This checkpoint provides the library API; optional CLI tables are next.
+
+## Optional CLI table
+
+```sh
+bethe-biquadratic-obc 8 --ferromagnetic --bound-pairs 2 --spin-content
+bethe-biquadratic-obc 6 --sectors --spin-content --json sectors.json
+bethe-biquadratic-obc 8 --ferromagnetic --one-defect --spin-content \
+  --csv-table spin_content=spins.csv
+```
+
+`--spin-content` works with every biquadratic state-selection mode and either
+Hamiltonian sign. It adds a `spin_content` table, leaving default output unchanged.
+Each row gives `state_id`, `through_lines`, physical `spin`, `multiplets`,
+`magnetic_states=(2S+1)*multiplets`, and `status`. Spin uses Uni20's native
+half-integer column type, exported as a decimal number. Zero-count spins are
+omitted. Join by `state_id` to `states`, `reference`, or `failed`; reference
+rows are included even when they repeat a state already in the main table.
+
+For an overflowing multiplicity space there is one row with null spin and
+counts, and status `total dimension exceeds uint64`. This does not change
+the energy solver's outcome or exit status. For an unconverged state, exact
+spin counts describe its **requested module**, not a verified eigenvalue:
+check the state table's convergence status before interpreting energies.
+JSON/CSV/TSV and `--no-retain` streaming use the same writer and schema.
 
 ## Why the recurrence resolves physical spins
 
@@ -63,6 +86,8 @@ for N=2,...,6, including odd chains. The independent oracle builds
 the Sz=S+1 spectrum from Sz=S to isolate spin-S multiplets. This checks
 which spins accompany each energy, not just the sum of degeneracies.
 Dimension sums and overflow are also tested through the exact-integer limit.
+CLI tests cover all output paths, references and failures, using an independent
+magnetization-character expansion to check each spin count.
 
 ## What this does not say about excitation weights
 

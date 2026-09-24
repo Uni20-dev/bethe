@@ -7,6 +7,7 @@
 #include <bethe/biquadratic_ferromagnetic.hpp>
 #include <bethe/biquadratic_qsystem.hpp>
 #include <bethe/biquadratic_two_string.hpp>
+#include <map>
 
 namespace
 {
@@ -29,7 +30,7 @@ struct Arguments
     std::optional<std::size_t> max_attempts;
     std::string precision = "fp64";
     cli::DataOutputOptions output;
-    bool roots = false, sectors = false;
+    bool roots = false, sectors = false, spin_content = false;
     bool q_spectrum = false, singlet_excitation = false;
     bool ferromagnetic = false, one_defect = false;
 };
@@ -116,6 +117,8 @@ void add_options(CLI::App& app, Arguments& args)
   bethe::cli::option(app, "--singlet-excitation", args.singlet_excitation,
                      "AF: target the low-lying complex-root singlet (one two-string); even N>=4; not a spectrum scan");
   bethe::cli::option(app, "--roots", args.roots, "print reference roots (real labels or complex coordinates)");
+  bethe::cli::option(app, "--spin-content", args.spin_content,
+                     "add physical SU(2) multiplets per TL eigenvector; null if total dimension exceeds uint64");
   bethe::cli::option(
       app, "--tolerance", args.tolerance,
       "equation tolerance (default: 32 epsilon); Q-system uses coefficient backward error, not phase error");
@@ -281,6 +284,45 @@ char const* status(bethe::xxz::quantum_group::qsystem::Status value)
   return "unknown";
 }
 
+std::vector<std::string> table_names(Arguments const& args, std::vector<std::string> names)
+{
+  if (args.spin_content) names.push_back("spin_content");
+  return names;
+}
+
+// State IDs also cover references and failed estimates. Spin content belongs to
+// the module independently of convergence; it never certifies a numerical level.
+template <typename ThroughLines>
+void write_spin_content(cli::ResultOutput& output, Arguments const& args, std::size_t count, ThroughLines ell_of)
+{
+  if (!args.spin_content) return;
+  output.table(
+      "spin_content", "Physical SU(2) content per TL eigenvector (not spectral weights)",
+      [&](auto& table) {
+        std::map<std::size_t, std::optional<std::vector<std::uint64_t>>> cache;
+        for (std::size_t i = 0; i < count; ++i)
+        {
+          auto const ell = ell_of(i);
+          auto [found, inserted] = cache.try_emplace(ell);
+          if (inserted) found->second = bethe::temperley_lieb::spin_one_multiplets(ell);
+          auto const& counts = found->second;
+          if (!counts)
+            table.append(i, ell, std::optional<uni20::half_int>{}, std::optional<std::uint64_t>{},
+                         std::optional<std::uint64_t>{}, std::string("total dimension exceeds uint64"));
+          else
+            for (std::size_t spin = 0; spin < counts->size(); ++spin)
+              if ((*counts)[spin])
+                table.append(i, ell, std::optional<uni20::half_int>{uni20::half_int(std::int64_t(spin))},
+                             std::optional<std::uint64_t>{(*counts)[spin]},
+                             std::optional<std::uint64_t>{(2 * spin + 1) * (*counts)[spin]}, std::string("exact"));
+        }
+      },
+      cli::column<std::size_t>("state_id"), cli::column<std::size_t>("through_lines"),
+      cli::column<std::optional<uni20::half_int>>("spin", "S"), cli::column<std::optional<std::uint64_t>>("multiplets"),
+      cli::column<std::optional<std::uint64_t>>("magnetic_states", "(2S+1)*multiplets"),
+      cli::column<std::string>("status"));
+}
+
 template <uni20::Real Real> std::vector<Real> parse_q_seed(std::string_view text)
 {
   if (text == "none") return {};
@@ -355,7 +397,7 @@ int run_qsystem(Arguments const& args, bethe::SolverOptions<Real> const& options
       .result(complete, complete ? "converged" : "incomplete or unverified");
   std::vector<std::string> names{"states", "reference", "q_coefficients"};
   if (args.roots) names.push_back("roots");
-  cli::ResultOutput output(report, args.output, names);
+  cli::ResultOutput output(report, args.output, table_names(args, names));
   output.table(
       "states", "Q-system levels",
       [&](auto& table) {
@@ -424,6 +466,8 @@ int run_qsystem(Arguments const& args, bethe::SolverOptions<Real> const& options
         cli::column<std::size_t>("state_id"), cli::column<std::size_t>("index"),
         cli::column<std::optional<Real>>("x_real"), cli::column<std::optional<Real>>("x_imag"),
         cli::column<std::optional<Real>>("u_real"), cli::column<std::optional<Real>>("u_imag"));
+  write_spin_content(output, args, states.size() + 1,
+                     [&](std::size_t i) { return i < states.size() ? states[i].through_lines : ground.through_lines; });
   output.finish();
   if (!complete) std::cerr << "Q-system calculation incomplete or unverified; no lowest-level guarantee.\n";
   return complete ? 0 : 2;
@@ -458,7 +502,7 @@ int run_singlet(Arguments const& args, bethe::SolverOptions<Real> const& options
       .result(complete, complete ? "converged" : "incomplete; unconverged estimate");
   std::vector<std::string> names{"states", "reference", "string"};
   if (args.roots) names.push_back("roots");
-  cli::ResultOutput output(report, args.output, names);
+  cli::ResultOutput output(report, args.output, table_names(args, names));
   output.table(
       "states", "Selected two-string singlet",
       [&](auto& table) {
@@ -500,6 +544,8 @@ int run_singlet(Arguments const& args, bethe::SolverOptions<Real> const& options
         },
         cli::column<std::size_t>("state_id"), cli::column<std::size_t>("index"), cli::column<std::string>("kind"),
         cli::column<Real>("u_real"), cli::column<Real>("u_imag"));
+  write_spin_content(output, args, 2,
+                     [&](std::size_t i) { return i == 0 ? state.through_lines : ground.through_lines; });
   output.finish();
   if (!complete) std::cerr << "Two-string singlet or ground reference unconverged; no verified gap.\n";
   return complete ? 0 : 2;
@@ -514,7 +560,7 @@ void write_output(cli::RunReport& report, Arguments const& args, std::vector<mod
   if (reference) names.push_back("reference");
   if (failed) names.push_back("failed");
   if (args.roots) names.push_back("roots");
-  cli::ResultOutput output(report, args.output, names);
+  cli::ResultOutput output(report, args.output, table_names(args, names));
   auto write_states = [&](std::string name, std::string title, auto const& rows, std::size_t offset, bool ranked) {
     output.table(
         name, title,
@@ -573,6 +619,7 @@ void write_output(cli::RunReport& report, Arguments const& args, std::vector<mod
         cli::column<std::size_t>("state_id"), cli::column<std::size_t>("index", "Index"),
         cli::column<uni20::half_int>("quantum_number", "I"), cli::column<Real>("rapidity", "alpha"),
         cli::column<Real>("angle", "x=Theta_1/2"));
+  write_spin_content(output, args, all.size(), [&](std::size_t i) { return all[i]->through_lines; });
   output.finish();
 }
 
@@ -589,6 +636,10 @@ auto preamble(uni20::run_context& context, Arguments const& args, bethe::SolverO
       .field("xxz_reference", "XXZ reference", "spin-half exchange 1; +sqrt(5)/4*(sz_1-sz_N)")
       .field("precision", "Precision", args.precision)
       .field("residual_tolerance", "Residual tolerance", options.residual_tolerance);
+  if (args.spin_content)
+    report.field("spin_content_convention", "Spin content",
+                 "physical SU(2) multiplets per TL eigenvector, independent of solver convergence; "
+                 "not spectral weights; null when total dimension exceeds uint64");
   if (args.ferromagnetic)
     report.field("tl_convention", "TL convention", "tl_energy=+sum e_i=E-(N-1); auxiliary XXZ reference is unchanged")
         .field("defect_meaning", "Defect meaning", "M=(N-ell)/2; TL singlet defects, not physical spin flips")
@@ -628,7 +679,7 @@ template <uni20::Real Real> int run_ferro_analytic(Arguments const& args, cli::R
       .field("multiplicity_meaning", "Multiplicity meaning",
              "physical states per TL eigenvector; not SU(2) multiplets or accidental-degeneracy sums")
       .result(true, "exact spectral rules");
-  cli::ResultOutput output(report, args.output, {"states", "reference"});
+  cli::ResultOutput output(report, args.output, table_names(args, {"states", "reference"}));
   output.table(
       "states", "Analytic ferromagnetic levels",
       [&](auto& table) {
@@ -655,6 +706,8 @@ template <uni20::Real Real> int run_ferro_analytic(Arguments const& args, cli::R
       },
       cli::column<std::size_t>("state_id"), cli::column<std::size_t>("through_lines"),
       cli::column<Real>("energy", "Energy"), cli::column<std::optional<std::uint64_t>>("multiplicity"));
+  write_spin_content(output, args, std::max(std::size_t{1}, levels.size()) + 1,
+                     [&](std::size_t i) { return i < levels.size() ? levels[i].through_lines : ground.through_lines; });
   output.finish();
   return 0;
 }
@@ -915,7 +968,7 @@ int run_bound_clusters(Arguments const& args, std::size_t requested, bethe::Solv
   std::vector<std::string> names{"states", "reference", "string"};
   if constexpr (Mixed) names.push_back("labels");
   if (args.roots) names.push_back("roots");
-  cli::ResultOutput output(report, args.output, names);
+  cli::ResultOutput output(report, args.output, table_names(args, names));
   output.table(
       "states",
       TwoPairs       ? "Two scattering bound pairs"
@@ -1089,6 +1142,8 @@ int run_bound_clusters(Arguments const& args, std::size_t requested, bethe::Solv
         },
         cli::column<std::size_t>("state_id"), cli::column<std::size_t>("index"), cli::column<Real>("u_real"),
         cli::column<Real>("u_imag"));
+  write_spin_content(output, args, states.size() + 1,
+                     [&](std::size_t i) { return i < states.size() ? states[i].through_lines : ground.through_lines; });
   output.finish();
   if (!complete) std::cerr << "Bound-cluster calculation incomplete; unconverged modes have no verified gap.\n";
   return complete ? 0 : 2;

@@ -96,6 +96,9 @@ if(BETHE_BUILD_APPS)
     add_test(NAME BiquadraticFerro.cli
       COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_biquadratic_ferromagnetic.py"
         "$<TARGET_FILE:bethe-biquadratic-obc>" "${UNI20_ENABLE_MPLAPACK}")
+    add_test(NAME BiquadraticSpinContent.cli
+      COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_biquadratic_spin_content.py"
+        "$<TARGET_FILE:bethe-biquadratic-obc>" "${UNI20_ENABLE_MPLAPACK}")
     add_test(NAME BiquadraticTwoString.cli
       COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_biquadratic_two_string.py"
         "$<TARGET_FILE:bethe-biquadratic-obc>" "${UNI20_ENABLE_MPLAPACK}")
