@@ -3,6 +3,7 @@
 #pragma once
 
 #include <bethe/biquadratic_qsystem.hpp>
+#include <bethe/xxz_open_two_string.hpp>
 
 namespace bethe::biquadratic::ferromagnetic
 {
@@ -119,6 +120,32 @@ template <uni20::Real Real = double>
             biquadratic::detail::from_tl(temperley_lieb::detail::from_reference(std::move(state), Real{3})));
       },
       -Real{2});
+}
+
+template <uni20::Real Real> struct BoundPairState
+{
+    std::size_t sites{}, through_lines{}, mode{};
+    Real energy{}, tl_energy{}; // tl_energy=E-E0; an estimate unless reference.converged.
+    std::optional<std::uint64_t> multiplicity;
+    xxz::quantum_group::two_string::State<Real> reference;
+};
+
+/// One targeted two-singlet bound-pair mode, ell=N-4; odd/even N>=4.
+/// mode=1,...,N-3 follows the two-string family from its low-energy edge.
+/// Does not enumerate scattering levels, other modules, or physical SU(2) spins.
+template <uni20::Real Real = double>
+[[nodiscard]] BoundPairState<Real> bound_pair(std::size_t sites, std::size_t mode = 1,
+                                              SolverOptions<Real> const& options = {})
+{
+  auto ref = xxz::quantum_group::two_string::bound_pair<Real>(sites, Real{3} / Real{2}, mode, options);
+  Real const gap = -Real{2} * ref.energy_shift;
+  return {.sites = sites,
+          .through_lines = sites - 4,
+          .mode = mode,
+          .energy = Real(sites - 1) + gap,
+          .tl_energy = gap,
+          .multiplicity = temperley_lieb::spin_chain_multiplicity(3, sites - 4),
+          .reference = std::move(ref)};
 }
 
 namespace qsystem

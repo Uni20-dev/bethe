@@ -668,6 +668,17 @@
         {"label": "DOI", "url": "https://doi.org/10.1088/1751-8121/ae05d9"},
         {"label": "arXiv", "url": "https://arxiv.org/abs/2302.13126"}
       ]
+    },
+    {
+      "id": "nachtergaele-spitzer-starr-2007",
+      "authors": "Bruno Nachtergaele, Wolfgang Spitzer, and Shannon Starr",
+      "title": "Droplet Excitations for the Spin-1/2 XXZ Chain with Kink Boundary Conditions",
+      "publication": "Ann. Henri Poincare 8, 165-201",
+      "year": 2007,
+      "links": [
+        {"label": "DOI", "url": "https://doi.org/10.1007/s00023-006-0304-6"},
+        {"label": "arXiv", "url": "https://arxiv.org/abs/math-ph/0508049"}
+      ]
     }
   ],
   "tools": [
@@ -680,7 +691,8 @@
         {"id": "aufgebauer-klumper-2010", "context": "TL loop weight and quantum-group XXZ end fields, Sec. 2.3; open spin-chain module multiplicities, Sec. 3, especially (48)-(55). Periodic twists, physical-spin decomposition and thermodynamics are not implemented."},
         {"id": "koma-nachtergaele-1997", "context": "Ferromagnetic OBC gap and one-defect band: Proposition 2 and Eq. (3.30), transferred through TL equivalence at Delta=3/2 and multiplied by 2*Delta=3. Gap above the entire ground space is 3-2*cos(pi/N), not a zero-mode splitting."},
         {"id": "zhou-2025-biquadratic", "context": "Ferromagnetic convention H=+sum (S.S)^2, Eq. (3), and Fibonacci ground-space multiplicities under free ends. Ground-space zero modes are distinct from the positive-energy TL defect band; entanglement and ground-state wavefunctions are not implemented."},
-        {"id": "bajnok-2020", "context": "Open quantum-group-invariant XXZ Q-system, Sec. 5: Wronskian (5.17), Bethe equations (5.12), and admissibility conditions. Used for Q-system module searches (validated through N=8; larger sizes experimental) and a separately regularized one-two-string singlet branch on long chains. Neither numerical completeness nor long-chain energy ordering is rigorously certified."}
+        {"id": "bajnok-2020", "context": "Open quantum-group-invariant XXZ Q-system, Sec. 5: Wronskian (5.17), Bethe equations (5.12), and admissibility conditions. Used for Q-system module searches (validated through N=8; larger sizes experimental), the regularized AF two-string singlet, and signed empty-sea two-string ferro branches on odd/even long chains. Neither numerical completeness nor long-chain energy ordering is rigorously certified."},
+        {"id": "nachtergaele-spitzer-starr-2007", "context": "Droplet interpretation and thermodynamic module-edge limit, Theorem 2.1; rescaling by 2*Delta=3 gives a two-defect threshold 5/3. Finite-chain bound-pair modes solve the original Bethe equations with signed finite deviations, not a bulk/ideal-string substitution. No form factors or physical-spin decomposition are implemented."}
       ]
     },
     {

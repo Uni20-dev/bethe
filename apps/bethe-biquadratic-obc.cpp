@@ -16,6 +16,7 @@ struct Arguments
 {
     std::size_t sites = 0, max_iterations = 10000;
     std::optional<std::size_t> through_lines, excitations, max_candidates;
+    std::optional<std::size_t> bound_pairs;
     std::optional<bethe::xxz::QuantumNumbers> numbers;
     std::optional<std::string> tolerance;
     std::optional<std::string> q_seed;
@@ -31,21 +32,23 @@ auto program_info()
   auto info = bethe::cli::program_info("bethe-biquadratic-obc",
                                        "Spin-1 pure biquadratic chain, free ends: H=-sum_i (S_i.S_(i+1))^2 by default.",
                                        bethe::citations::Tool::biquadratic_obc);
-  info.notes = {"Default: unique singlet ground state; even N>=2, coefficient -1.",
-                "--ferromagnetic reverses the sign: H=+sum (S.S)^2; gaps use the exact degenerate ground space.",
-                "--ferromagnetic --one-defect gives the complete ell=N-2 band analytically, including odd N.",
-                "Ferromagnetic real-root scans exclude complex-root levels; NOT general module minima.",
-                "TL loop weight 3; reference XXZ Delta=3/2 with opposite end fields.",
-                "Real-root scans are NOT complete spectra: complex-root levels are excluded.",
-                "--q-spectrum searches real and complex levels of one TL module; validated through N=8.",
-                "Q-system modes have no site cutoff; larger sizes are experimental and may be costly or unresolved.",
-                "--q-seed selects a polynomial branch, not necessarily a low-lying state.",
-                "--singlet-excitation targets one two-string singlet above a real sea, including on long chains.",
-                "Multiplicity counts physical states per TL eigenvector, not SU(2) multiplets.",
-                "TL through-lines are not physical spin; numerical root modes require even N; no lattice momentum.",
-                "This is not the TB point, ULS point, or zero-boundary-field XXZ chain.",
-                "See docs/biquadratic.md for the TL mapping and representation multiplicities.",
-                "Use --references for literature and applicability; see CITATIONS.md."};
+  info.notes = {
+      "Default: unique singlet ground state; even N>=2, coefficient -1.",
+      "--ferromagnetic reverses the sign: H=+sum (S.S)^2; gaps use the exact degenerate ground space.",
+      "--ferromagnetic --one-defect gives the complete ell=N-2 band analytically, including odd N.",
+      "--ferromagnetic --bound-pairs COUNT|all targets two-string modes in ell=N-4 on odd/even chains.",
+      "Ferromagnetic real-root scans exclude complex-root levels; NOT general module minima.",
+      "TL loop weight 3; reference XXZ Delta=3/2 with opposite end fields.",
+      "Real-root scans are NOT complete spectra: complex-root levels are excluded.",
+      "--q-spectrum searches real and complex levels of one TL module; validated through N=8.",
+      "Q-system modes have no site cutoff; larger sizes are experimental and may be costly or unresolved.",
+      "--q-seed selects a polynomial branch, not necessarily a low-lying state.",
+      "--singlet-excitation targets one two-string singlet above a real sea, including on long chains.",
+      "Multiplicity counts physical states per TL eigenvector, not SU(2) multiplets.",
+      "TL through-lines are not physical spin; other numerical root modes require even N; no lattice momentum.",
+      "This is not the TB point, ULS point, or zero-boundary-field XXZ chain.",
+      "See docs/biquadratic.md for the TL mapping and representation multiplicities.",
+      "Use --references for literature and applicability; see CITATIONS.md."};
   return info;
 }
 void add_options(CLI::App& app, Arguments& args)
@@ -54,6 +57,9 @@ void add_options(CLI::App& app, Arguments& args)
   bethe::cli::option(app, "--ferromagnetic", args.ferromagnetic,
                      "use H=+sum (S.S)^2 and the exact ferro ground reference");
   bethe::cli::option(app, "--one-defect", args.one_defect, "complete analytic ferro ell=N-2 band; odd/even N>=2");
+  bethe::cli::all_count_option(
+      app, "--bound-pairs", args.bound_pairs,
+      "ferro: first COUNT, or all N-3, targeted two-string modes; NOT full two-defect spectrum");
   bethe::cli::option(app, "--through-lines", args.through_lines,
                      "select TL module; standalone ferro minima require ELL=N or N-2");
   bethe::cli::option(app, "--sectors", args.sectors, "AF: lowest level in every TL module");
@@ -61,7 +67,7 @@ void add_options(CLI::App& app, Arguments& args)
       app, "--excitations", args.excitations,
       "lowest COUNT, or all, supported real-root levels; default ELL=2 (ferro: N-2); excludes complex roots");
   bethe::cli::option(app, "--max-candidates", args.max_candidates,
-                     "real-family scan / analytic band row limit (default: 10000)");
+                     "real-family scan / analytic band / bound-pair row limit (default: 10000)");
   bethe::cli::option(app, "--quantum-numbers", args.numbers, "explicit integer labels; none for vacuum");
   bethe::cli::option(
       app, "--q-spectrum", args.q_spectrum,
@@ -84,6 +90,15 @@ void add_options(CLI::App& app, Arguments& args)
 void validate(Arguments const& args)
 {
   args.output.validate();
+  if (args.bound_pairs)
+  {
+    if (!args.ferromagnetic) throw std::invalid_argument("--bound-pairs requires --ferromagnetic");
+    if (args.sites < 4) throw std::invalid_argument("--bound-pairs requires N>=4");
+    if (*args.bound_pairs == 0) throw std::invalid_argument("--bound-pairs requires a positive count or all");
+    if (args.one_defect || args.q_seed || args.q_spectrum || args.sectors || args.excitations || args.numbers ||
+        args.through_lines || args.singlet_excitation || args.max_attempts)
+      throw std::invalid_argument("--bound-pairs determines ell=N-4; cannot combine with other state selections");
+  }
   if (args.one_defect && !args.ferromagnetic) throw std::invalid_argument("--one-defect requires --ferromagnetic");
   if (args.one_defect && (args.q_seed || args.q_spectrum || args.sectors || args.excitations || args.numbers ||
                           args.through_lines || args.singlet_excitation || args.max_attempts))
@@ -94,7 +109,7 @@ void validate(Arguments const& args)
     if (args.sectors || args.singlet_excitation)
       throw std::invalid_argument(
           "ferromagnetic --sectors and --singlet-excitation are not implemented; use --q-spectrum --through-lines ELL");
-    bool const analytic = !args.numbers && !args.excitations && !args.q_seed && !args.q_spectrum;
+    bool const analytic = !args.numbers && !args.excitations && !args.q_seed && !args.q_spectrum && !args.bound_pairs;
     if (analytic && args.through_lines && *args.through_lines != args.sites && *args.through_lines != args.sites - 2)
       throw std::invalid_argument(
           "ferromagnetic module minima are analytic only for ELL=N or N-2; use --q-spectrum --through-lines ELL");
@@ -116,8 +131,8 @@ void validate(Arguments const& args)
   if (args.numbers && (args.through_lines || args.excitations))
     throw std::invalid_argument(
         "--quantum-numbers determines the TL module; cannot combine with --through-lines or --excitations");
-  if (args.max_candidates && !args.excitations && !args.one_defect)
-    throw std::invalid_argument("--max-candidates requires --excitations or --one-defect");
+  if (args.max_candidates && !args.excitations && !args.one_defect && !args.bound_pairs)
+    throw std::invalid_argument("--max-candidates requires --excitations, --one-defect or --bound-pairs");
 }
 char const* status(bethe::xxz::quantum_group::SolveStatus value)
 {
@@ -534,6 +549,100 @@ template <uni20::Real Real> int run_ferro_analytic(Arguments const& args, cli::R
   return 0;
 }
 
+template <uni20::Real Real>
+int run_bound_pairs(Arguments const& args, bethe::SolverOptions<Real> const& options, cli::RunReport report)
+{
+  auto computation = report.context().computation();
+  auto const count = std::min(*args.bound_pairs, args.sites - 3);
+  if (count > args.max_candidates.value_or(10000))
+    throw std::length_error("bound-pair rows exceed max_candidates; raise --max-candidates");
+  auto const ground = model::ferromagnetic::ground_space<Real>(args.sites);
+  std::vector<model::ferromagnetic::BoundPairState<Real>> states;
+  states.reserve(count);
+  bool complete = true;
+  for (std::size_t mode = 1; mode <= count; ++mode)
+  {
+    states.push_back(model::ferromagnetic::bound_pair<Real>(args.sites, mode, options));
+    complete = complete && states.back().reference.converged;
+  }
+  computation.finish();
+  report.field("calculation", "Calculation", "targeted two-defect bound-pair modes")
+      .field("family", "Family", "one two-string, no real sea; J=N-2-mode, sign(d)=(-1)^(mode+1)")
+      .field("coverage", "Coverage", "selected two-string family only; NOT the full two-defect or excited spectrum")
+      .field("ordering", "Ordering", "mode order from the low-energy branch edge; not a global excitation rank")
+      .field("tl_through_lines", "TL through-lines", args.sites - 4)
+      .field("tl_defects", "TL singlet insertions M", 2)
+      .field("available_modes", "Available two-string labels", args.sites - 3)
+      .field("selected_modes", "Selected modes", count)
+      .field("residual_convention", "Residual convention",
+             "max phase/log-modulus residual divided by 2N; not an energy-error bound")
+      .field("string_coordinate", "String coordinate", "u=(eta+d)/2 +/- i*a/2; d=sign*exp(-L); L is authoritative")
+      .field("wave_number", "Wave number", "mode and string center are branch coordinates, not lattice momentum")
+      .field("multiplicity_meaning", "Multiplicity meaning", "physical states per TL eigenvector, not SU(2) multiplets")
+      .field("gap_reference", "Gap reference", "E-(N-1); exact degenerate ferro ground space")
+      .field("bulk_pair_threshold", "Bulk bound-pair threshold", Real{5} / Real{3})
+      .result(complete, complete ? "converged targeted branches" : "incomplete; unconverged estimates");
+  std::vector<std::string> names{"states", "reference", "string"};
+  if (args.roots) names.push_back("roots");
+  cli::ResultOutput output(report, args.output, names);
+  output.table(
+      "states", "Two-defect bound-pair modes",
+      [&](auto& table) {
+        for (std::size_t i = 0; i < states.size(); ++i)
+        {
+          auto const& s = states[i];
+          auto const& r = s.reference;
+          table.append(i, s.mode, s.through_lines, s.multiplicity, s.energy,
+                       r.converged ? std::optional<Real>{s.tl_energy} : std::nullopt, s.tl_energy, r.energy,
+                       r.residual_norm, r.phase_residual, r.modulus_residual, r.iterations, r.converged,
+                       std::string(status(r.status)));
+        }
+      },
+      cli::column<std::size_t>("state_id"), cli::column<std::size_t>("mode"), cli::column<std::size_t>("through_lines"),
+      cli::column<std::optional<std::uint64_t>>("multiplicity"), cli::column<Real>("energy", "Energy"),
+      cli::column<std::optional<Real>>("gap", "E-E0"), cli::column<Real>("tl_energy"),
+      cli::column<Real>("reference_energy"), cli::column<Real>("residual"), cli::column<Real>("phase_residual"),
+      cli::column<Real>("modulus_residual"), cli::column<std::size_t>("iterations"), cli::column<bool>("converged"),
+      cli::column<std::string>("status"));
+  output.table(
+      "reference", "Exact ferromagnetic ground space",
+      [&](auto& table) { table.append(states.size(), ground.through_lines, ground.energy, ground.multiplicity); },
+      cli::column<std::size_t>("state_id"), cli::column<std::size_t>("through_lines"),
+      cli::column<Real>("energy", "Energy"), cli::column<std::optional<std::uint64_t>>("multiplicity"));
+  output.table(
+      "string", "Signed two-string parameters (L is authoritative even on underflow)",
+      [&](auto& table) {
+        for (std::size_t i = 0; i < states.size(); ++i)
+        {
+          auto const& r = states[i].reference;
+          Real const d = Real(r.deviation_sign) * std::exp(-r.log_deviation);
+          table.append(i, r.string_label, r.center, r.deviation_sign, r.log_deviation,
+                       d != Real{0} ? std::optional<Real>{d} : std::nullopt);
+        }
+      },
+      cli::column<std::size_t>("state_id"), cli::column<std::size_t>("string_label", "J"),
+      cli::column<Real>("center", "a"), cli::column<int>("deviation_sign", "sign(d)"),
+      cli::column<Real>("log_deviation", "L=-log|d|"),
+      cli::column<std::optional<Real>>("deviation", "d (null if underflow)"));
+  if (args.roots)
+    output.table(
+        "roots", "Reference pair roots (rounded u; use sign and L for deviation)",
+        [&](auto& table) {
+          for (std::size_t i = 0; i < states.size(); ++i)
+          {
+            auto const& r = states[i].reference;
+            Real const width = std::acosh(r.delta) + Real(r.deviation_sign) * std::exp(-r.log_deviation);
+            for (std::size_t j = 0; j < 2; ++j)
+              table.append(i, j, width / Real{2}, (j ? -r.center : r.center) / Real{2});
+          }
+        },
+        cli::column<std::size_t>("state_id"), cli::column<std::size_t>("index"), cli::column<Real>("u_real"),
+        cli::column<Real>("u_imag"));
+  output.finish();
+  if (!complete) std::cerr << "Bound-pair calculation incomplete; unconverged modes have no verified gap.\n";
+  return complete ? 0 : 2;
+}
+
 int finish(bool converged)
 {
   if (!converged) std::cerr << "Biquadratic solve incomplete; consider a larger budget or higher precision.\n";
@@ -551,6 +660,7 @@ template <uni20::Real Real> int run(Arguments const& args, int argc, char** argv
   auto report = preamble(context, args, options);
   if (args.q_seed || args.q_spectrum) return run_qsystem(args, options, std::move(report));
   if (args.singlet_excitation) return run_singlet(args, options, std::move(report));
+  if (args.bound_pairs) return run_bound_pairs(args, options, std::move(report));
   if (args.ferromagnetic && !args.excitations && !args.numbers)
     return run_ferro_analytic<Real>(args, std::move(report));
   auto computation = context.computation();

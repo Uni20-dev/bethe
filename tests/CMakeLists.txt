@@ -36,6 +36,10 @@ foreach(module IN ITEMS heisenberg sectors open excitations xxz xxz_open xxz_ope
   bethe_discover_tests(bethe_${module}_tests)
 endforeach()
 
+add_executable(bethe_biquadratic_bound_pair_tests test_biquadratic_bound_pair.cpp)
+target_link_libraries(bethe_biquadratic_bound_pair_tests PRIVATE bethe::bethe)
+bethe_discover_tests(bethe_biquadratic_bound_pair_tests)
+
 add_executable(bethe_output_tests test_output.cpp)
 target_link_libraries(bethe_output_tests PRIVATE bethe_cli_output)
 bethe_discover_tests(bethe_output_tests)
@@ -62,6 +66,9 @@ endif()
 
 if(BETHE_BUILD_APPS)
   if(Python3_Interpreter_FOUND)
+    add_test(NAME BiquadraticBoundPair.cli
+      COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_biquadratic_bound_pair.py"
+        "$<TARGET_FILE:bethe-biquadratic-obc>" "${UNI20_ENABLE_MPLAPACK}")
     add_test(NAME BiquadraticFerro.cli
       COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_biquadratic_ferromagnetic.py"
         "$<TARGET_FILE:bethe-biquadratic-obc>" "${UNI20_ENABLE_MPLAPACK}")

@@ -69,6 +69,15 @@ Real-family selection reverses energy ordering before truncation. Q-system
 discoveries are reordered in physical energy without strengthening their
 completeness claim. See the [ferromagnetic excitation guide](docs/biquadratic-ferromagnetic.md).
 
+The [targeted bound-pair solver](docs/biquadratic-bound-pairs.md) uses an
+empty-sea two-string regularization of [bajnok-2020](#bajnok-2020), Eq. (5.12),
+with both signs of the finite deviation. Its phase label and deviation sign
+must satisfy N-J odd for positive deviation, even for negative deviation.
+The thermodynamic two-defect threshold 5/3 follows from
+[nachtergaele-spitzer-starr-2007](#nachtergaele-spitzer-starr-2007), Theorem 2.1,
+after the same factor-three rescaling. These are targeted finite-chain modes,
+not an ideal-string substitution, full two-defect spectrum or form-factor calculation.
+
 The free-end XXX equations follow the rational limit of Eqs. (11)-(12) and
 footnote 2 in [mei-2017](#mei-2017).
 Our rapidity is `z=2*lambda`; our spin-1/2 Hamiltonian is the paper's XXX
@@ -395,7 +404,7 @@ JHEP 03 (2020) 177 (2020).
 
 Relevant tool modes:
 
-- `bethe-biquadratic-obc`: Open quantum-group-invariant XXZ Q-system, Sec. 5: Wronskian (5.17), Bethe equations (5.12), and admissibility conditions. Used for Q-system module searches (validated through N=8; larger sizes experimental) and a separately regularized one-two-string singlet branch on long chains. Neither numerical completeness nor long-chain energy ordering is rigorously certified.
+- `bethe-biquadratic-obc`: Open quantum-group-invariant XXZ Q-system, Sec. 5: Wronskian (5.17), Bethe equations (5.12), and admissibility conditions. Used for Q-system module searches (validated through N=8; larger sizes experimental), the regularized AF two-string singlet, and signed empty-sea two-string ferro branches on odd/even long chains. Neither numerical completeness nor long-chain energy ordering is rigorously certified.
 
 ### popkov-2021
 
@@ -869,5 +878,16 @@ J. Phys. A: Math. Theor. 58, 39LT01 (2025).
 Relevant tool modes:
 
 - `bethe-biquadratic-obc`: Ferromagnetic convention H=+sum (S.S)^2, Eq. (3), and Fibonacci ground-space multiplicities under free ends. Ground-space zero modes are distinct from the positive-energy TL defect band; entanglement and ground-state wavefunctions are not implemented.
+
+### nachtergaele-spitzer-starr-2007
+
+Bruno Nachtergaele, Wolfgang Spitzer, and Shannon Starr. *Droplet Excitations for the Spin-1/2 XXZ Chain with Kink Boundary Conditions*.
+Ann. Henri Poincare 8, 165-201 (2007).
+
+[DOI](<https://doi.org/10.1007/s00023-006-0304-6>), [arXiv](<https://arxiv.org/abs/math-ph/0508049>).
+
+Relevant tool modes:
+
+- `bethe-biquadratic-obc`: Droplet interpretation and thermodynamic module-edge limit, Theorem 2.1; rescaling by 2\*Delta=3 gives a two-defect threshold 5/3. Finite-chain bound-pair modes solve the original Bethe equations with signed finite deviations, not a bulk/ideal-string substitution. No form factors or physical-spin decomposition are implemented.
 
 <!-- END GENERATED BIBLIOGRAPHY -->

@@ -23,6 +23,8 @@ native long double, and enabled fp128, with the shared screen/JSON/CSV/TSV outpu
 # Complete one-defect band, analytically (odd N also supported):
 build/bethe-biquadratic-obc 64 --ferromagnetic --one-defect
 build/bethe-biquadratic-obc 65 --ferromagnetic --one-defect --json band.json
+# Target bound-pair modes on a long chain (not all two-defect states):
+build/bethe-biquadratic-obc 128 --ferromagnetic --bound-pairs 8
 # Small two-defect module, including complex-root states:
 build/bethe-biquadratic-obc 6 --ferromagnetic --q-spectrum --through-lines 2 --roots
 # Compare it with the restricted real-root family in the same module:
@@ -35,11 +37,17 @@ Both scans default to `ell=N-2` in ferromagnetic mode. Set `ell=N-4` to
 explore two defects, `ell=N-6` for three, etc. The number `M=(N-ell)/2`
 counts **TL singlet defects, not physical spin lowerings**. Through-lines
 are not a physical SU(2) total-spin quantum number.
+The diagrammatic through-lines are the unpaired strands; the remaining sites
+form M non-crossing singlet arcs, so N=ell+2M. Some TL literature calls the
+through-lines themselves "defects"; our one-/two-defect terminology instead
+counts singlet insertions M. These are algebraic sectors, not counts of
+fixed local singlet bonds in an eigenstate.
 
 Without state-selection options, `--ferromagnetic` reports only the exact
 ground-space reference and the positive spectral gap. `--through-lines N-2`
-alone selects the exact first positive level; other nontrivial module minima
-must be investigated with a Q-system search. `--sectors` and the AF-specific
+alone selects the exact first positive level. For ell=N-4, use the targeted
+`--bound-pairs` family; other nontrivial module minima still require a
+Q-system investigation. `--sectors` and the AF-specific
 `--singlet-excitation` are rejected with this sign, not silently reinterpreted.
 
 ## What the one-defect band means
@@ -119,6 +127,12 @@ use the reordered `state_id`; an exported polynomial can be supplied to
 `--q-seed` to follow that branch. This is a practical entry point to studying
 complex-root families, not an automatic classification of bound states.
 
+For the selected two-string family, [the bound-pair solver](biquadratic-bound-pairs.md)
+now follows modes directly on long chains, including both signs of the finite
+string deviation. `--bound-pairs COUNT|all` fixes ell=N-4, supports odd and
+even N>=4, and excludes scattering states. The lowest branch approaches
+E-E0=5/3, below the two-separated-defect threshold 2.
+
 ## Ordering, references, and coverage
 
 Sign reversal leaves the auxiliary XXZ equations and roots unchanged.
@@ -140,8 +154,8 @@ Q-system searches include complex roots, retaining the existing budget,
 admissibility and numerical completeness checks. Validation covers even
 N<=8; larger systems are experimental. An incomplete search is a set of
 discoveries, **not necessarily the lowest levels**, even after sorting.
-Numerical root modes still require even N. The exact analytic band and ground
-space do not share that restriction.
+Real-root and Q-system modes still require even N. The targeted bound-pair
+solver, exact analytic band and ground space do not share that restriction.
 
 Multiplicities use checked uint64 arithmetic, becoming unavailable on overflow
 rather than approximate. This does not invalidate an energy or gap.
@@ -157,11 +171,12 @@ auto first = ferro::one_defect_level<long double>(65, 64);
 auto gap = ferro::spectral_gap<long double>(65);
 auto real = ferro::real_excitations<long double>(6, 2, {.count=10});
 auto complex = ferro::qsystem::spectrum<long double>(6, 2);
+auto pair = ferro::bound_pair<long double>(128, 1);
 // Inspect real.converged() and complex.complete() before interpreting coverage.
 ```
 
-The natural next checkpoint is targeted low-energy two-/few-defect branches
-on long chains, avoiding exhaustive multistart searches. Other open work is
+The targeted two-defect bound-pair family is now available on long chains.
+Next are three-/few-defect droplets and scattering branches. Other open work is
 physical-spin decomposition, state-dependent spectral weights/form factors,
 and periodic twists with genuine momentum labels. Energies and multiplicities
 alone do not determine which branches an operator or a chosen iMPS ground

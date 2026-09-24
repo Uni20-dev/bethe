@@ -6,8 +6,8 @@
 
 namespace bethe::xxz::quantum_group::two_string
 {
-/// Selected ell=0 branch: I_real=1,...,N/2-2 and two-string label 1.
-/// u_pair=(eta+exp(-log_deviation))/2 +/- i*center/2; u_real=i*alpha/2.
+/// One two-string, optionally above a real sea.
+/// u_pair=(eta+sign*exp(-log_deviation))/2 +/- i*center/2; u_real=i*alpha/2.
 /// log_deviation is authoritative: adding exp(-L) to eta may round it away.
 /// NOT a spectrum enumeration or a guarantee of global excitation ordering.
 template <uni20::Real Real> struct State
@@ -19,14 +19,20 @@ template <uni20::Real Real> struct State
     std::size_t iterations = 0;
     bool converged = false;
     SolveStatus status = SolveStatus::iteration_limit;
+    std::size_t string_label = 1;
+    int deviation_sign = 1;
+    /// E_ref-(N-1)*Delta/4, evaluated without subtracting extensive energies.
+    Real energy_shift{};
 };
 
 namespace detail
 {
 template <uni20::Real Real> class System {
   public:
-    System(std::size_t n, Real delta)
-        : sites(n), order(n / 2), sea(order - 2), eta(std::acosh(delta)), pi(Real{4} * std::atan(Real{1}))
+    System(std::size_t n, Real delta) : System(n, delta, n / 2, 1, 1) {}
+    System(std::size_t n, Real delta, std::size_t roots, std::size_t label, int sign)
+        : sites(n), order(roots), sea(order - 2), string_label(label), deviation_sign(sign), eta(std::acosh(delta)),
+          pi(Real{4} * std::atan(Real{1}))
     {}
     struct Function
     {
@@ -51,7 +57,8 @@ template <uni20::Real Real> class System {
     // log(sinh(d)/d), and d*coth(d), including d=0 after underflow.
     static std::pair<Real, Real> sinh_correction(Real d)
     {
-      if (d < std::sqrt(uni20::numeric_limits<Real>::epsilon())) return {d * d / Real{6}, Real{1} + d * d / Real{3}};
+      if (std::abs(d) < std::sqrt(uni20::numeric_limits<Real>::epsilon()))
+        return {d * d / Real{6}, Real{1} + d * d / Real{3}};
       return {std::log(std::sinh(d) / d), d / std::tanh(d)};
     }
     bool physical(std::span<Real const> x) const
@@ -68,7 +75,7 @@ template <uni20::Real Real> class System {
       std::vector<Real> x(order);
       for (std::size_t i = 0; i < sea; ++i)
         x[i] = Real{2} * std::atan(std::tanh(eta / Real{2}) * std::tan(pi * Real(i + 1) / (Real{2} * Real(sites))));
-      x[sea] = pi / Real{2};
+      x[sea] = sea ? pi / Real{2} : pi * (Real(string_label) / Real(sites - 2));
       x[sea + 1] = Real{8} + std::abs(std::log(eta));
       // Solve the ideal-string modulus equation for L at the bare sea seed.
       x[sea + 1] += Real{2} * Real(sites) * evaluate(x, nullptr, true).residual.back();
@@ -85,7 +92,7 @@ template <uni20::Real Real> class System {
     Evaluation evaluate(std::span<Real const> x, std::vector<Real>* jac = nullptr, bool ideal = false) const
     {
       Real const scale = Real{1} / (Real{2} * Real(sites));
-      Real const a = x[sea], L = x[sea + 1], d = ideal ? Real{0} : std::exp(-L);
+      Real const a = x[sea], L = x[sea + 1], d = ideal ? Real{0} : Real(deviation_sign) * std::exp(-L);
       Real const wp = (Real{3} * eta + d) / Real{2}, wm = (eta - d) / Real{2};
       if (jac) jac->assign(order * order, Real{0});
       auto add = [&](std::size_t i, std::size_t j, Real v) {
@@ -121,7 +128,7 @@ template <uni20::Real Real> class System {
       auto p = phase(a, eta + d / Real{2}), c = phase(a, d / Real{2}, true), self = phase(Real{2} * a, eta);
       bethe::detail::CompensatedSum<Real> ph, mod;
       ph.add(p.value + c.value);
-      ph.add(-scale * (Real{2} * self.value + Real{2} * pi));
+      ph.add(-scale * (Real{2} * self.value + Real{2} * pi * Real(string_label)));
       add(sea, sea, Real{2} * Real(sites) * (p.angle + c.angle) - Real{4} * self.angle);
       add(sea, sea + 1, -Real(sites) * d * (p.width + c.width));
       auto lp = log_sinh(a, eta + d / Real{2}), lm = log_sinh(a, d / Real{2});
@@ -156,41 +163,45 @@ template <uni20::Real Real> class System {
       out.modulus_norm = std::abs(mod.value());
       return out;
     }
-    Real energy(std::span<Real const> x, Real delta) const
+    Real energy_sum(std::span<Real const> x, Real delta, Real offset) const
     {
       Real const sh = std::sinh(eta), s2 = sh * sh;
       bethe::detail::CompensatedSum<Real> sum;
-      sum.add(Real(sites - 1) * delta / Real{4});
+      sum.add(offset);
       for (std::size_t i = 0; i < sea; ++i)
         sum.add(-s2 / (delta - std::cos(x[i])));
-      Real const width = eta + std::exp(-x[sea + 1]);
-      Real const re = delta - std::cosh(width) * std::cos(x[sea]), im = std::sinh(width) * std::sin(x[sea]);
+      Real const d = Real(deviation_sign) * std::exp(-x[sea + 1]), a = x[sea];
+      Real const sa = std::sin(a / Real{2}), sd = std::sinh(d / Real{2});
+      // delta-cosh(eta+d)*cos(a), without cancellation as a->0 or d->0.
+      Real const re = Real{2} * delta * sa * sa - (Real{2} * delta * sd * sd + sh * std::sinh(d)) * std::cos(a);
+      Real const im = std::sinh(eta + d) * std::sin(a);
       sum.add(-Real{2} * s2 * re / (re * re + im * im));
       return sum.value();
     }
-    std::size_t sites, order, sea;
+    Real energy_shift(std::span<Real const> x, Real delta) const { return energy_sum(x, delta, Real{0}); }
+    Real energy(std::span<Real const> x, Real delta) const
+    {
+      return energy_sum(x, delta, Real(sites - 1) * delta / Real{4});
+    }
+    std::size_t sites, order, sea, string_label;
+    int deviation_sign;
     Real eta, pi;
 };
-} // namespace detail
 
-/// One positive-deviation two-string above a real sea, even N>=4, Delta>1.
-/// Native precision, O(N^2) memory/O(N^3) per update; no enumeration or site cap.
-/// Equations are the exact open-chain Bethe equations regularized in L=-log(d),
-/// not an ideal-string approximation. See docs/xxz-open-two-string.md.
-template <uni20::Real Real = double>
-[[nodiscard]] State<Real> singlet(std::size_t sites, Real delta, SolverOptions<Real> const& options = {})
+template <uni20::Real Real>
+State<Real> solve(System<Real> const& system, Real delta, SolverOptions<Real> const& options)
 {
-  (void)quantum_group::detail::sector_roots(sites, 0);
-  if (sites < 4) throw std::invalid_argument("two-string singlet requires even N>=4");
   if (!uni20::isfinite(delta) || delta <= Real{1}) throw std::invalid_argument("two-string requires finite Delta>1");
   if (!uni20::isfinite(options.residual_tolerance) || options.residual_tolerance <= Real{0})
     throw std::invalid_argument("residual tolerance must be finite and positive");
-  quantum_group::detail::check_matrix_size<Real>(sites / 2);
-  detail::System<Real> system(sites, delta);
+  quantum_group::detail::check_matrix_size<Real>(system.order);
   auto x = system.seed();
+  if (!system.physical(x)) throw std::overflow_error("two-string seed is not resolvable at the selected precision");
   State<Real> state;
-  state.sites = sites;
+  state.sites = system.sites;
   state.delta = delta;
+  state.string_label = system.string_label;
+  state.deviation_sign = system.deviation_sign;
   std::vector<Real> jac, step(system.order);
   bool ideal = true;
   for (;;)
@@ -210,10 +221,34 @@ template <uni20::Real Real = double>
     if (state.iterations == options.max_iterations) break;
     for (std::size_t i = 0; i < system.order; ++i)
       step[i] = -evaluation.residual[i];
+    // Empty-sea coordinates have very different natural scales: the center
+    // can be O(1/N), while L is O(N log N). Equilibrate this 2x2 correction
+    // so the common pivot test does not mistake units for rank loss. Keep
+    // acceptance and all published residuals in the original equation units.
+    Real const center_scale = std::min(x[0], system.pi - x[0]);
+    Real const log_scale = Real{2} * Real(system.sites);
+    if (system.sea == 0)
+      for (std::size_t i = 0; i < 2; ++i)
+      {
+        jac[2 * i] *= center_scale;
+        jac[2 * i + 1] *= log_scale;
+        Real const row_scale = std::max(std::abs(jac[2 * i]), std::abs(jac[2 * i + 1]));
+        if (row_scale > Real{0})
+        {
+          jac[2 * i] /= row_scale;
+          jac[2 * i + 1] /= row_scale;
+          step[i] /= row_scale;
+        }
+      }
     if (!bethe::detail::newton_step(jac, step))
     {
       state.status = SolveStatus::singular_jacobian;
       break;
+    }
+    if (system.sea == 0)
+    {
+      step[0] *= center_scale;
+      step[1] *= log_scale;
     }
     auto trial = x;
     Real damping{1};
@@ -249,7 +284,37 @@ template <uni20::Real Real = double>
   state.log_deviation = x.back();
   state.rapidities.assign(x.begin(), x.begin() + system.sea);
   state.energy = system.energy(x, delta);
+  state.energy_shift = system.energy_shift(x, delta);
   if (!uni20::isfinite(state.energy)) throw std::overflow_error("two-string energy overflow");
   return state;
+}
+} // namespace detail
+
+/// One positive-deviation two-string above a real sea, even N>=4, Delta>1.
+/// Native precision, O(N^2) memory/O(N^3) per update; no enumeration or site cap.
+/// Equations are the exact open-chain Bethe equations regularized in L=-log(d),
+/// not an ideal-string approximation. See docs/xxz-open-two-string.md.
+template <uni20::Real Real = double>
+[[nodiscard]] State<Real> singlet(std::size_t sites, Real delta, SolverOptions<Real> const& options = {})
+{
+  (void)quantum_group::detail::sector_roots(sites, 0);
+  if (sites < 4) throw std::invalid_argument("two-string singlet requires even N>=4");
+  return detail::solve(detail::System<Real>(sites, delta), delta, options);
+}
+
+/// Target one empty-sea two-string in ell=N-4, odd/even N>=4.
+/// mode=1,...,N-3 selects J=N-2-mode, with sign(d)=(-1)^(mode+1).
+/// Two unknowns, constant storage/work per Newton step even for long chains.
+/// This is NOT a full two-root spectrum or a guarantee of spectral ordering.
+/// At other Delta, a chosen branch can collapse or fail to converge.
+template <uni20::Real Real = double>
+[[nodiscard]] State<Real> bound_pair(std::size_t sites, Real delta, std::size_t mode = 1,
+                                     SolverOptions<Real> const& options = {})
+{
+  if (sites < 4) throw std::invalid_argument("bound pair requires N>=4");
+  if (mode == 0 || mode > sites - 3) throw std::invalid_argument("bound-pair mode requires 1<=mode<=N-3");
+  auto const label = sites - 2 - mode;
+  auto const sign = mode % 2 ? 1 : -1;
+  return detail::solve(detail::System<Real>(sites, delta, 2, label, sign), delta, options);
 }
 } // namespace bethe::xxz::quantum_group::two_string

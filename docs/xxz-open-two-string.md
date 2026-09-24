@@ -2,6 +2,10 @@
 
 [Biquadratic application](biquadratic.md) · [Q-system search](xxz-open-qsystem.md)
 
+This page describes the AF singlet branch. The same regularized solver also
+supports [ferromagnetic empty-sea bound pairs](biquadratic-bound-pairs.md),
+including signed deviations and other string labels on odd/even chains.
+
 The Q-system is useful for discovering small spectra, but finding every
 polynomial is an expensive way to obtain one low-lying level on a long chain.
 The separate two-string solver targets an ell=0 branch with **one conjugate
@@ -34,8 +38,9 @@ L = -log(d).
 ```
 
 The real labels are I_j=j and the two-string label is 1. The positive-deviation
-branch is fixed; negative deviations, more strings and other string labels
-are not implemented. The equations below are our regularization of the
+branch is fixed for this singlet API; more strings are not implemented.
+The separate bound-pair API allows negative deviations and other string labels.
+The equations below are our regularization of the
 published equations, not a claim that the paper proves its energy ordering.
 
 For a nearly ideal string, forming `u_+ + u_- - eta` can give zero by rounding,

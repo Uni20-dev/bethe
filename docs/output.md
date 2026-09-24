@@ -53,7 +53,7 @@ The remaining models use these tables:
 | `bethe-xxx-pbc`, `bethe-xxx-obc` | `states` | `roots` with `--roots`; periodic `--spinons` also has `spinons` |
 | `bethe-xxz-pbc`, `bethe-xxz-obc` | `states` | `roots` with `--roots`; open ground-state modes also have `boundary_roots` |
 | `bethe-lieb-liniger-pbc` | `states` | `roots` with `--roots` |
-| `bethe-biquadratic-obc` | `states` | real modes: `quantum_numbers`; Q-system: `reference`, `q_coefficients`; two-string singlet: `reference`, `string`; ferro analytic modes: `reference`; numerical `roots` with `--roots` |
+| `bethe-biquadratic-obc` | `states` | real modes: `quantum_numbers`; Q-system: `reference`, `q_coefficients`; two-string singlet / ferro bound pairs: `reference`, `string`; ferro analytic modes: `reference`; numerical `roots` with `--roots` |
 
 Excitation scans additionally write `reference` (the ground state used for gaps)
 and, if a candidate fails, `failed` (the first unranked estimate). State IDs are
