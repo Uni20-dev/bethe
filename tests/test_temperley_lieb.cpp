@@ -197,6 +197,75 @@ TEST(TemperleyLiebED, FullSpinOneSpectrumAndRepresentationWeights)
   }
 }
 
+TEST(TemperleyLiebRepresentation, PhysicalSpinMultipletsAndOverflow)
+{
+  std::vector<std::vector<std::uint64_t>> const expected{{1}, {0, 1}, {0, 1, 1}, {1, 1, 2, 1}, {1, 3, 3, 3, 1}};
+  for (std::size_t ell = 0; ell < expected.size(); ++ell)
+    EXPECT_EQ(tl::spin_one_multiplets(ell), expected[ell]);
+  for (std::size_t ell = 0; ell <= 45; ++ell)
+  {
+    auto const counts = tl::spin_one_multiplets(ell);
+    ASSERT_TRUE(counts);
+    ASSERT_EQ(counts->size(), ell + 1);
+    EXPECT_EQ(counts->back(), 1); // Unique fully polarized multiplet.
+    std::uint64_t dimension = 0;
+    for (std::size_t spin = 0; spin <= ell; ++spin)
+    {
+      ASSERT_LE((*counts)[spin], std::numeric_limits<std::uint64_t>::max() / (2 * spin + 1));
+      auto const states = (2 * spin + 1) * (*counts)[spin];
+      ASSERT_LE(states, std::numeric_limits<std::uint64_t>::max() - dimension);
+      dimension += states;
+    }
+    EXPECT_EQ(dimension, tl::spin_chain_multiplicity(3, ell));
+  }
+  EXPECT_FALSE(tl::spin_one_multiplets(46));
+  EXPECT_FALSE(tl::spin_one_multiplets(100000));
+  EXPECT_FALSE(tl::spin_one_multiplets(std::numeric_limits<std::size_t>::max()));
+}
+
+TEST(TemperleyLiebED, EveryPhysicalSpinSpectrum)
+{
+  // Resolve irreps independently by subtracting the physical Sz=S+1 spectrum
+  // from Sz=S. Compare full energy multisets, not just total dimensions.
+  // This catches assigning auxiliary spin ell/2 or physical spin ell alone.
+  for (unsigned n : {2, 3, 4, 5, 6})
+  {
+    std::vector<std::vector<double>> modules(n / 2 + 1);
+    for (unsigned m = 0; m <= n / 2; ++m)
+      modules[m] = bethe::test::quantum_group_module_ed(n, n - 2 * m, 1.5);
+    std::vector<double> higher;
+    for (int spin = int(n); spin >= 0; --spin)
+    {
+      SCOPED_TRACE(::testing::Message() << "N=" << n << " S=" << spin);
+      auto const sz = bethe::test::biquadratic_ed(n, spin);
+      auto physical = sz;
+      for (double e : higher)
+      {
+        auto found = std::find_if(physical.begin(), physical.end(), [e](double f) { return std::abs(e - f) < 1e-10; });
+        ASSERT_NE(found, physical.end());
+        physical.erase(found);
+      }
+      higher = sz;
+      std::vector<double> reconstructed;
+      for (unsigned m = 0; m <= n / 2; ++m)
+      {
+        auto const counts = tl::spin_one_multiplets(n - 2 * m);
+        ASSERT_TRUE(counts);
+        if (std::size_t(spin) >= counts->size()) continue;
+        for (double e : modules[m])
+          for (std::uint64_t k = 0; k < (*counts)[spin]; ++k)
+            reconstructed.push_back(2 * e - 1.75 * (n - 1));
+      }
+      std::sort(reconstructed.begin(), reconstructed.end());
+      ASSERT_EQ(reconstructed.size(), physical.size());
+      for (std::size_t i = 0; i < physical.size(); ++i)
+        EXPECT_NEAR(reconstructed[i], physical[i], 3e-11);
+      // Reversing the Hamiltonian negates these same spin-resolved levels;
+      // representation content cannot depend on the energy sign.
+    }
+  }
+}
+
 TEST(TemperleyLiebED, GenericLoopWeightGroundStates)
 {
   for (unsigned n : {2, 4, 6, 8})

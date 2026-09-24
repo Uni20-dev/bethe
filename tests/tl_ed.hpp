@@ -5,6 +5,7 @@
 #include <array>
 #include <bit>
 #include <cmath>
+#include <optional>
 #include <stdexcept>
 #include <uni20/linalg/ops/self_adjoint_eigh.hpp>
 #include <utility>
@@ -24,9 +25,11 @@ inline std::vector<double> tl_ed_eigenvalues(uni20::DenseMatrix<double> h)
 
 // Independent full spin-1 basis: form -(S.S)^2 by multiplying the physical
 // local spin matrix, NOT from the singlet projector or an XXZ energy shift.
-inline std::vector<double> biquadratic_ed(unsigned n)
+inline std::vector<double> biquadratic_ed(unsigned n, std::optional<int> magnetization = std::nullopt)
 {
   if (n < 2 || n > 6) throw std::invalid_argument("small biquadratic ED oracle domain");
+  if (magnetization && (*magnetization < -int(n) || *magnetization > int(n)))
+    throw std::invalid_argument("invalid physical magnetization");
   std::vector<unsigned> powers(n + 1, 1);
   for (unsigned i = 1; i <= n; ++i)
     powers[i] = 3 * powers[i - 1];
@@ -42,7 +45,19 @@ inline std::vector<double> biquadratic_ed(unsigned n)
     for (unsigned b = 0; b < 9; ++b)
       for (unsigned k = 0; k < 9; ++k)
         local[a][b] -= dot[a][k] * dot[k][b];
-  auto const dim = powers[n];
+  std::vector<unsigned> basis, index(powers[n]);
+  for (unsigned state = 0; state < powers[n]; ++state)
+  {
+    int sz = 0;
+    for (unsigned j = 0; j < n; ++j)
+      sz += int((state / powers[j]) % 3) - 1;
+    if (!magnetization || sz == *magnetization)
+    {
+      index[state] = basis.size();
+      basis.push_back(state);
+    }
+  }
+  auto const dim = basis.size();
   uni20::DenseMatrix<double> h(dim, dim);
   for (std::size_t i = 0; i < dim; ++i)
     for (std::size_t j = 0; j < dim; ++j)
@@ -50,11 +65,13 @@ inline std::vector<double> biquadratic_ed(unsigned n)
   for (unsigned col = 0; col < dim; ++col)
     for (unsigned j = 0; j < n - 1; ++j)
     {
-      auto const a = (col / powers[j]) % 3, b = (col / powers[j + 1]) % 3;
+      auto const state = basis[col];
+      auto const a = (state / powers[j]) % 3, b = (state / powers[j + 1]) % 3;
       for (unsigned aa = 0; aa < 3; ++aa)
         for (unsigned bb = 0; bb < 3; ++bb)
-          h[col - a * powers[j] - b * powers[j + 1] + aa * powers[j] + bb * powers[j + 1], col] +=
-              local[3 * aa + bb][3 * a + b];
+          if (local[3 * aa + bb][3 * a + b] != 0)
+            h[index[state - a * powers[j] - b * powers[j + 1] + aa * powers[j] + bb * powers[j + 1]], col] +=
+                local[3 * aa + bb][3 * a + b];
     }
   return tl_ed_eigenvalues(std::move(h));
 }

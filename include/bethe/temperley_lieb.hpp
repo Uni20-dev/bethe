@@ -38,6 +38,40 @@ namespace bethe::temperley_lieb
   return current;
 }
 
+/// Physical SU(2) multiplets per TL eigenvector in the open, isotropic spin-1
+/// singlet-projector representation (loop weight 3), for either energy sign.
+/// Entry S counts spin-S irreps, NOT their 2S+1 magnetic states. Includes zeros
+/// and has length ell+1. Not applicable to the auxiliary XXZ spin or PBC twists.
+/// Character recurrence: W_0=[0], W_1=[1], W_(ell+1)=[1]*W_ell-W_(ell-1).
+/// Derived from the SU(2)-equivariant kernel/surjection in Aufgebauer-Kluemper
+/// (2010), Sec. 3.3, Eq. (49). No root solve or eigenvector is required.
+/// Returns nullopt if the TOTAL representation dimension exceeds uint64,
+/// even when some individual spin counts still fit (currently ell>=46).
+[[nodiscard]] inline std::optional<std::vector<std::uint64_t>> spin_one_multiplets(std::size_t through_lines)
+{
+  // Preflight also bounds work/storage for arbitrarily large input labels.
+  if (!spin_chain_multiplicity(3, through_lines)) return std::nullopt;
+  std::vector<std::uint64_t> previous{1};
+  if (through_lines == 0) return previous;
+  std::vector<std::uint64_t> current{0, 1};
+  for (std::size_t ell = 1; ell < through_lines; ++ell)
+  {
+    std::vector<std::uint64_t> next(ell + 2);
+    // [1]*[0]=[1]; [1]*[S]=[S-1]+[S]+[S+1] for S>=1.
+    next[1] = current[0];
+    for (std::size_t spin = 1; spin < current.size(); ++spin)
+      for (std::size_t target = spin - 1; target <= spin + 1; ++target)
+        next[target] += current[spin];
+    // All coefficients are nonnegative. With the dimension preflight above,
+    // even the unsubtracted tensor-product coefficients fit in uint64.
+    for (std::size_t spin = 0; spin < previous.size(); ++spin)
+      next[spin] -= previous[spin];
+    previous = std::move(current);
+    current = std::move(next);
+  }
+  return current;
+}
+
 /// A finite-real-root level of H_TL=-sum e_i,
 /// e_i^2=loop_weight*e_i, loop_weight>2. Representation multiplicities are
 /// separate from this spectral problem; no physical spin or momentum is inferred.

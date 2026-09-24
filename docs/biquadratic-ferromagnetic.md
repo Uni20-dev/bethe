@@ -214,8 +214,9 @@ with optional `--mixed-window WIDTH`). A selected-state
 five four-defect topologies, jointly checked against complete module ED
 through N=10. Use `--bound-quartets COUNT|all` for the selected four-string
 family. Higher-defect families remain open work.
-Other open work is
-physical-spin decomposition, state-dependent spectral weights/form factors,
+The [physical-spin decomposition](biquadratic-spin-content.md) is now available
+as a shared library API for multiplicity spaces whose total dimension fits uint64.
+Other open work is state-dependent spectral weights/form factors,
 and periodic twists with genuine momentum labels. Energies and multiplicities
 alone do not determine which branches an operator or a chosen iMPS ground
 state couples to. None of those additional capabilities is implied here.
