@@ -60,16 +60,17 @@ void validate(Arguments const& args)
 }
 template <uni20::Real Real> int run(Arguments const& args, int argc, char** argv)
 {
+  uni20::run_context context(program_info(), {.invocation = std::vector<std::string>(argv, argv + argc)});
   Real const interaction = uni20::parse_real<Real>(*args.interaction);
   model::SolverOptions<Real> options;
   options.max_iterations = args.max_iterations;
   if (args.tolerance) options.residual_tolerance = uni20::parse_real<Real>(*args.tolerance);
-  bethe::cli::CpuTimer const timer;
+  auto computation = context.computation();
   auto const state =
       model::sector_ground_state<Real>(args.sites, args.particles.value_or(args.sites), args.sz, interaction, options);
-  auto const cpu_time = timer.elapsed_text();
+  computation.finish();
   return bethe::cli::print_hubbard_state(state, args.sz, args.precision, args.output, options.residual_tolerance,
-                                         cpu_time, args.roots, argc, argv);
+                                         context, args.roots);
 }
 } // namespace
 int main(int argc, char** argv)

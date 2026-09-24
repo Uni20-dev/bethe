@@ -29,7 +29,8 @@ auto program_info()
                 "Other color sectors, excitations, complex strings, twists and open ends",
                 "are not implemented. See docs/su3.md, including the spin-1 ULS mapping.",
                 "Use --references for literature and applicability; see CITATIONS.md."};
-  info.notes.push_back("Tables: states; first_roots and second_roots with --roots. See docs/output.md for file exports.");
+  info.notes.push_back(
+      "Tables: states; first_roots and second_roots with --roots. See docs/output.md for file exports.");
   return info;
 }
 void add_options(CLI::App& app, Arguments& args)
@@ -62,33 +63,33 @@ char const* status(model::SolveStatus value)
 
 template <uni20::Real Real> int run(Arguments const& args, int argc, char** argv)
 {
+  uni20::run_context context(program_info(), {.invocation = std::vector<std::string>(argv, argv + argc)});
   model::SolverOptions<Real> options;
   options.max_iterations = args.max_iterations;
   if (args.tolerance) options.residual_tolerance = uni20::parse_real<Real>(*args.tolerance);
-  cli::CpuTimer const timer;
+  auto computation = context.computation();
   auto const state = model::ground_state<Real>(args.sites, options);
-  auto const cpu_time = timer.elapsed_text();
-  cli::report_builder report("SU(3) permutation chain (periodic)");
+  computation.finish();
+  cli::RunReport report(context, "SU(3) permutation chain (periodic)");
   report.status(state.converged ? cli::semantic_glyph::success : cli::semantic_glyph::warning, status(state.status))
-      .field("Hamiltonian", "H=sum_j P_(j,j+1); J=1")
-      .field("Calculation", "balanced singlet ground state")
-      .field("Sites", state.sites)
-      .field("Color populations",
+      .field("hamiltonian", "Hamiltonian", "H=sum_j P_(j,j+1); J=1")
+      .field("calculation", "Calculation", "balanced singlet ground state")
+      .field("sites", "Sites", state.sites)
+      .field("color_populations", "Color populations",
              fmt::format("{}, {}, {}", state.populations[0], state.populations[1], state.populations[2]))
-      .field("First-level roots", state.rapidities[0].size())
-      .field("Second-level roots", state.rapidities[1].size())
-      .field("Precision", args.precision)
-      .field("Residual tolerance", uni20::format_real(options.residual_tolerance))
-      .field("Status", status(state.status))
-      .field("Total energy", uni20::format_real(state.energy))
-      .field("Energy per site", uni20::format_real(state.energy / Real(state.sites)))
-      .field("Momentum index", state.momentum_index)
-      .field("Momentum P", uni20::format_real(state.momentum))
-      .field("First-level residual", uni20::format_real(state.level_residuals[0]))
-      .field("Second-level residual", uni20::format_real(state.level_residuals[1]))
-      .field("Residual norm", uni20::format_real(state.residual_norm))
-      .field("Iterations", state.iterations)
-      .field("CPU time", cpu_time);
+      .field("first_level_roots", "First-level roots", state.rapidities[0].size())
+      .field("second_level_roots", "Second-level roots", state.rapidities[1].size())
+      .field("precision", "Precision", args.precision)
+      .field("residual_tolerance", "Residual tolerance", options.residual_tolerance)
+      .result(state.converged, status(state.status))
+      .field("total_energy", "Total energy", state.energy)
+      .field("energy_per_site", "Energy per site", state.energy / Real(state.sites))
+      .field("momentum_index", "Momentum index", state.momentum_index)
+      .field("momentum_p", "Momentum P", state.momentum)
+      .field("first_level_residual", "First-level residual", state.level_residuals[0])
+      .field("second_level_residual", "Second-level residual", state.level_residuals[1])
+      .field("residual_norm", "Residual norm", state.residual_norm)
+      .field("iterations", "Iterations", state.iterations);
   using cli::column;
   std::vector<std::string> names{"states"};
   if (args.roots)
@@ -96,7 +97,7 @@ template <uni20::Real Real> int run(Arguments const& args, int argc, char** argv
     names.push_back("first_roots");
     names.push_back("second_roots");
   }
-  cli::ResultOutput output(report, args.output, "bethe-su3-pbc", argc, argv, names);
+  cli::ResultOutput output(report, args.output, names);
   output.table(
       "states", "State",
       [&](auto& t) {

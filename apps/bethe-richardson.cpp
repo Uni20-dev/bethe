@@ -30,7 +30,8 @@ auto program_info()
                 "Pair rapidities are not reconstructed; no lattice momentum or PBC/OBC applies.",
                 "See docs/richardson.md for energy shifts, blocking and continuation controls.",
                 "Use --references for literature and applicability; see CITATIONS.md."};
-  info.notes.push_back("Tables: states; variables with --variables. Exported energy belongs to reached_g, not necessarily requested_g.");
+  info.notes.push_back(
+      "Tables: states; variables with --variables. Exported energy belongs to reached_g, not necessarily requested_g.");
   return info;
 }
 void add_options(CLI::App& app, Arguments& args)
@@ -86,6 +87,7 @@ char const* status(model::SolveStatus value)
 }
 template <uni20::Real Real> int run(Arguments const& args, int argc, char** argv)
 {
+  uni20::run_context context(program_info(), {.invocation = std::vector<std::string>(argv, argv + argc)});
   std::vector<Real> levels;
   each_item(*args.levels, [&](auto value) { levels.push_back(uni20::parse_real<Real>(value)); });
   std::vector<std::size_t> blocked;
@@ -95,36 +97,35 @@ template <uni20::Real Real> int run(Arguments const& args, int argc, char** argv
   options.max_iterations = args.max_iterations;
   options.max_stages = args.max_stages;
   if (args.tolerance) options.residual_tolerance = uni20::parse_real<Real>(*args.tolerance);
-  cli::CpuTimer const timer;
+  auto computation = context.computation();
   auto const state = model::ground_state<Real>(levels, *args.pairs, g, blocked, options);
-  auto const cpu_time = timer.elapsed_text();
-  cli::report_builder report("Richardson reduced BCS pairing");
+  computation.finish();
+  cli::RunReport report(context, "Richardson reduced BCS pairing");
   report.status(state.converged ? cli::semantic_glyph::success : cli::semantic_glyph::warning, status(state.status))
-      .field("Hamiltonian", "sum epsilon_i*n_i-g*sum_ij b_i^dagger*b_j (including i=j)")
-      .field("Calculation", "lowest state in the specified pair/blocked sector")
-      .field("Levels", levels.size())
-      .field("Unblocked levels", state.active.size())
-      .field("Pairs", state.pairs)
-      .field("Blocked levels", state.blocked.size())
-      .field("Fermions", 2 * state.pairs + state.blocked.size())
-      .field("Precision", args.precision)
-      .field("Requested coupling g", uni20::format_real(state.coupling))
-      .field("Reached coupling g", uni20::format_real(state.reached_coupling))
-      .field("Energy evaluated at g", uni20::format_real(state.reached_coupling))
-      .field("Status", status(state.status))
-      .field("Total energy", uni20::format_real(state.energy))
-      .field("Residual tolerance", uni20::format_real(options.residual_tolerance))
-      .field("Reached backward residual", uni20::format_real(state.residual_norm))
-      .field("Target backward residual", uni20::format_real(state.target_residual_norm))
-      .field("Pair-number error", uni20::format_real(state.particle_number_error))
-      .field("Newton corrections", state.iterations)
-      .field("Continuation stages", state.stages)
-      .field("Rejected stages", state.rejected_stages)
-      .field("CPU time", cpu_time);
+      .field("hamiltonian", "Hamiltonian", "sum epsilon_i*n_i-g*sum_ij b_i^dagger*b_j (including i=j)")
+      .field("calculation", "Calculation", "lowest state in the specified pair/blocked sector")
+      .field("levels", "Levels", levels.size())
+      .field("unblocked_levels", "Unblocked levels", state.active.size())
+      .field("pairs", "Pairs", state.pairs)
+      .field("blocked_levels", "Blocked levels", state.blocked.size())
+      .field("fermions", "Fermions", 2 * state.pairs + state.blocked.size())
+      .field("precision", "Precision", args.precision)
+      .field("requested_coupling_g", "Requested coupling g", state.coupling)
+      .field("reached_coupling_g", "Reached coupling g", state.reached_coupling)
+      .field("energy_evaluated_at_g", "Energy evaluated at g", state.reached_coupling)
+      .result(state.converged, status(state.status))
+      .field("total_energy", "Total energy", state.energy)
+      .field("residual_tolerance", "Residual tolerance", options.residual_tolerance)
+      .field("reached_backward_residual", "Reached backward residual", state.residual_norm)
+      .field("target_backward_residual", "Target backward residual", state.target_residual_norm)
+      .field("pair_number_error", "Pair-number error", state.particle_number_error)
+      .field("newton_corrections", "Newton corrections", state.iterations)
+      .field("continuation_stages", "Continuation stages", state.stages)
+      .field("rejected_stages", "Rejected stages", state.rejected_stages);
   using cli::column;
   std::vector<std::string> names{"states"};
   if (args.variables) names.push_back("variables");
-  cli::ResultOutput output(report, args.output, "bethe-richardson", argc, argv, names);
+  cli::ResultOutput output(report, args.output, names);
   output.table(
       "states", "State",
       [&](auto& t) {

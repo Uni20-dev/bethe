@@ -84,4 +84,56 @@ TEST(RunMetadata, UnavailableCpuAndFailedComputationRemainExplicit)
   EXPECT_EQ(exported.at("Outcome"), "failed");
   EXPECT_EQ(exported.at("Status"), "aborted");
 }
+
+TYPED_TEST(RunMetadataPrecision, BatchReportKeepsNativeValuesAndIndependentPresentation)
+{
+  using Real = TypeParam;
+  Real const x = Real{1} + uni20::numeric_limits<Real>::epsilon();
+  uni20::run_clock_sample now{10, 1};
+  uni20::run_context run({.name = "test"}, {.clock = [&] { return now; }, .utc = [] { return "fixed"; }});
+  cli::RunReport report(run, "Native model");
+  report.field("coupling", "Requested c", x, {.numeric = {.precision = 2}})
+      .field("spin", "Sz", uni20::from_twice(1), {.fractions = true})
+      .field("energy", "Energy", std::optional<Real>{}, {.missing = "unavailable: no converged stage"})
+      .field("empty", "Empty text", "")
+      .field("count", "Count", std::uint64_t{9007199254740993ULL});
+  auto const before = report.metadata();
+  auto const snapshot = run.snapshot();
+  EXPECT_EQ(snapshot.find("coupling")->value.type(), typeid(Real));
+  test_support::expect_exact(snapshot.find("coupling")->value.template get<Real>(), x, "native report value");
+  test_support::expect_exact(uni20::parse_real<Real>(before.at("Requested c")), x, "native report export");
+  EXPECT_EQ(before.at("Sz"), "0.5");
+  EXPECT_EQ(before.at("Energy"), "unavailable: no converged stage");
+  EXPECT_EQ(before.at("Count"), "9007199254740993");
+  EXPECT_EQ(before.at("Empty text"), "");
+  EXPECT_TRUE(snapshot.find("energy")->value.missing());
+  EXPECT_FALSE(before.contains("Status"));
+  // Outcome comes from the model, never from substrings in its status message.
+  report.result(false, "converged subset; ground reference failed");
+  run.measure([&] { now = {11, 1.25L}; });
+  now = {13, 2};
+  auto const summary = report.finish();
+  EXPECT_EQ(summary.at("Outcome"), "partial");
+  EXPECT_EQ(summary.at("CPU time"), "0.250000 s");
+  EXPECT_EQ(summary.at("Run CPU seconds"), "1");
+  EXPECT_EQ(summary.at("Elapsed seconds"), "3");
+  EXPECT_FALSE(summary.contains("Rows")); // No ambiguous multi-table row count.
+  auto human = uni20::presentation::render_plain(report.overview(summary));
+  EXPECT_NE(human.find("1/2"), std::string::npos);
+  EXPECT_NE(human.find("unavailable: no converged stage"), std::string::npos);
+  EXPECT_EQ(report.metadata(), before); // Summary/presentation never change the native parameters.
+  EXPECT_THROW(report.finish(), std::logic_error);
+}
+
+TEST(RunMetadata, BatchReportRequiresOutcomeAndRejectsExportKeyCollisions)
+{
+  uni20::run_context run({.name = "test"});
+  cli::RunReport report(run, "test");
+  EXPECT_THROW(report.finish(), std::logic_error);
+  report.field("first", "Same key", 1).field("second", "Same key", 2);
+  EXPECT_THROW(report.metadata(), std::invalid_argument);
+  EXPECT_THROW(report.field("first", "Different key", 3), std::invalid_argument);
+  report.result(true, "exact spectral rules");
+  EXPECT_THROW(report.result(false, "changed"), std::logic_error);
+}
 } // namespace

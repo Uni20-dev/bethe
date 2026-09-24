@@ -27,6 +27,8 @@ def tables(program, args, status=0):
     assert p.returncode == status, (program, args, p.returncode, p.stdout, p.stderr)
     document = json.loads(p.stdout)
     assert document["status"] == "complete"
+    for table in document["tables"].values():
+        assert table["summary"]["Outcome"] == ("success" if status == 0 else "partial")
     return document["tables"]
 
 for program in programs:

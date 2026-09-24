@@ -2,6 +2,7 @@
 import csv
 from decimal import Decimal, localcontext
 import io
+import json
 import subprocess
 import sys
 
@@ -39,6 +40,15 @@ assert len(data) == 13 and sum(int(r["degeneracy"]) for r in data) == 64
 assert len(rows(run("6", "--levels", "3", "--format", "csv")[0])) == 3
 assert rows(run("4", "--motif", "", "--format", "csv")[0])[0]["degeneracy"] == "5"
 assert len(rows(run("6", "--levels", "all", "--max-motifs", "12", "--format", "csv", status=2)[0])) == 0
+for budget, status in ((13, 0), (12, 2)):
+    doc = json.loads(run("6", "--levels", "all", "--max-motifs", str(budget), "--format", "json", status=status)[0])
+    table = doc["tables"]["levels"]
+    assert doc["status"] == "complete"
+    assert table["summary"]["Outcome"] == ("success" if status == 0 else "partial")
+    assert Decimal(table["summary"]["Run CPU seconds"]) >= 0
+    assert Decimal(table["summary"]["Elapsed seconds"]) >= 0
+selected = json.loads(run("5", "--sz", "1/2", "--format", "json")[0])["tables"]["levels"]
+assert selected["metadata"]["Selected Sz"] == "0.5"
 run("8", "--sz", "-1", "--format", "pretty")
 for args in [("1",), ("1000001",), ("6", "--sz", "1/2"), ("6", "--motif", "1,2"),
              ("6", "--motif", "6"), ("6", "--levels", "0"), ("6", "--levels", "all", "--sz", "0"),

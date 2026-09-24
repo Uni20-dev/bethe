@@ -2,6 +2,7 @@
 // Copyright (C) 2026 Ian McCulloch
 #include "data-output-options.hpp"
 #include "program-options.hpp"
+#include "result-output.hpp"
 #include <bethe/haldane_shastry.hpp>
 
 namespace
@@ -56,7 +57,8 @@ std::vector<std::size_t> parse_motif(std::string_view text)
 }
 template <uni20::Real Real> int run(Arguments const& a, int argc, char** argv)
 {
-  cli::CpuTimer timer;
+  uni20::run_context context(program_info(), {.invocation = std::vector<std::string>(argv, argv + argc)});
+  auto computation = context.computation();
   std::vector<model::Level<Real>> levels;
   std::optional<model::Spectrum<Real>> scan;
   if (a.motif)
@@ -71,48 +73,46 @@ template <uni20::Real Real> int run(Arguments const& a, int argc, char** argv)
     levels = model::sector_ground_levels<Real>(a.sites, uni20::half_int::parse(*a.sz));
   else
     levels = model::ground_levels<Real>(a.sites);
-  auto const cpu = timer.elapsed_text();
+  computation.finish();
   bool const complete = !scan || scan->complete;
-  auto metadata = cli::provenance("bethe-haldane-shastry-pbc", argc, argv);
-  metadata.insert({{"Hamiltonian", "H=(pi/N)^2 sum_{i<j} S_i.S_j/sin^2(pi*(i-j)/N); J=1"},
-                   {"Sites", std::to_string(a.sites)},
-                   {"Precision", a.precision},
-                   {"Calculation", a.motif    ? "specified motif"
-                                   : a.levels ? "energy-ordered motif spectrum"
-                                   : a.sz     ? "Sz-sector minimum"
-                                              : "global ground multiplets"},
-                   {"Momentum", "P=2*pi*momentum_index/N modulo 2*pi"},
-                   {"Degeneracy", "whole Yangian multiplet; S_max is not a unique total spin"}});
-  if (a.sz) metadata.emplace("Selected Sz", *a.sz);
-  if (scan && complete) metadata.emplace("Motifs enumerated", std::to_string(scan->total_motifs));
-  auto table = data::make_data_table(
-      "Haldane-Shastry Yangian multiplets",
-      {.retain = a.output.retain ? data::retention::all : data::retention::none, .metadata = std::move(metadata)},
+  cli::RunReport report(context, "Haldane-Shastry Yangian multiplets");
+  report.field("hamiltonian", "Hamiltonian", "H=(pi/N)^2 sum_{i<j} S_i.S_j/sin^2(pi*(i-j)/N); J=1")
+      .field("sites", "Sites", a.sites)
+      .field("precision", "Precision", a.precision)
+      .field("calculation", "Calculation",
+             a.motif    ? "specified motif"
+             : a.levels ? "energy-ordered motif spectrum"
+             : a.sz     ? "Sz-sector minimum"
+                        : "global ground multiplets")
+      .field("momentum", "Momentum", "P=2*pi*momentum_index/N modulo 2*pi")
+      .field("degeneracy", "Degeneracy", "whole Yangian multiplet; S_max is not a unique total spin")
+      .result(complete, complete ? "exact spectral rules" : "motif budget exceeded; no levels published");
+  if (a.sz) report.field("selected_sz", "Selected Sz", uni20::half_int::parse(*a.sz));
+  if (scan && complete) report.field("motifs_enumerated", "Motifs enumerated", scan->total_motifs);
+  cli::ResultOutput output(report, a.output, {"levels"}, false);
+  output.table(
+      "levels", "Haldane-Shastry Yangian multiplets",
+      [&](auto& table) {
+        for (std::size_t i = 0; i < levels.size(); ++i)
+        {
+          auto const& s = levels[i];
+          std::string motif;
+          for (auto m : s.motif)
+          {
+            if (!motif.empty()) motif += ' ';
+            motif += std::to_string(m);
+          }
+          if (motif.empty()) motif = "empty";
+          table.append(i, motif, s.energy, s.gap, s.momentum_index, s.momentum, s.spinons, s.maximum_spin,
+                       s.degeneracy);
+        }
+      },
       data::data_column<std::size_t>("state_id"), data::data_column<std::string>("motif"),
       data::data_column<Real>("energy").round_trip(), data::data_column<Real>("gap").round_trip(),
       data::data_column<std::size_t>("momentum_index"), data::data_column<Real>("p").unit("radians").round_trip(),
       data::data_column<std::size_t>("spinons"), data::data_column<uni20::half_int>("s_max"),
       data::data_column<std::optional<std::uint64_t>>("degeneracy"));
-  cli::DataOutput output(a.output, {"levels"});
-  output.write_table("levels", table,
-                     [&](auto& table) {
-                       for (std::size_t i = 0; i < levels.size(); ++i)
-                       {
-                         auto const& s = levels[i];
-                         std::string motif;
-                         for (auto m : s.motif)
-                         {
-                           if (!motif.empty()) motif += ' ';
-                           motif += std::to_string(m);
-                         }
-                         if (motif.empty()) motif = "empty";
-                         table.append(i, motif, s.energy, s.gap, s.momentum_index, s.momentum, s.spinons,
-                                      s.maximum_spin, s.degeneracy);
-                       }
-                     },
-                     {{"Status", complete ? "exact spectral rules" : "motif budget exceeded; no levels published"},
-                      {"CPU time", cpu}});
-  output.finish_document();
+  output.finish();
   if (!complete) std::cerr << "Motif budget exceeded; raise --max-motifs. No lowest levels claimed.\n";
   return complete ? 0 : 2;
 }

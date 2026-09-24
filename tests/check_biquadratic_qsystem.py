@@ -22,6 +22,8 @@ def run(args, status=0):
 def tables(args, status=0):
     doc = json.loads(run([*args, "--format", "json"], status))
     assert doc["status"] == "complete"  # Document transport, not scientific convergence.
+    assert all(t["summary"]["Outcome"] == ("success" if status == 0 else "partial")
+               for t in doc["tables"].values())
     return doc["tables"]
 
 

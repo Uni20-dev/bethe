@@ -222,11 +222,7 @@ template <uni20::Real Real> int run(Arguments const& args, int argc, char** argv
   metadata.group("model", "Model");
   metadata.group("numerics", "Numerics");
   metadata.group("background", "Background");
-  std::map<std::string, std::string> keys{{"program", "Program"},         {"version", "Bethe version"},
-                                          {"revision", "Bethe revision"}, {"uni20_revision", "Uni20 revision"},
-                                          {"started_utc", "Date"},        {"compiler", "Compiler"},
-                                          {"build_type", "Build type"},   {"platform", "Platform"}};
-  if (!context.invocation().empty()) keys.emplace("invocation", "Command");
+  auto keys = cli::provenance_keys(context);
   auto field = [&](std::string const& group, std::string id, std::string label, uni20::metadata_value value) {
     keys.emplace(id, label); // Deliberate legacy keys, independent of the stable field IDs.
     metadata.add(group, std::move(id), std::move(value), {.label = std::move(label)});

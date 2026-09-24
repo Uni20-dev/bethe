@@ -83,26 +83,30 @@ char const* status(model::SolveStatus value)
 }
 
 template <uni20::Real Real>
-void add_state(cli::report_builder& report, model::State<Real> const& state, std::string prefix = "")
+void add_state(cli::RunReport& report, model::State<Real> const& state, std::string id_prefix = "",
+               std::string prefix = "")
 {
-  report.field(prefix + "Status", status(state.status))
-      .field(prefix + "Total energy", uni20::format_real(state.energy))
-      .field(prefix + "Momentum index", state.momentum_index)
-      .field(prefix + "Momentum", uni20::format_real(state.momentum))
-      .field(prefix + "Residual norm", uni20::format_real(state.residual_norm))
-      .field(prefix + "Iterations", state.iterations);
+  if (id_prefix.empty())
+    report.result(state.converged, status(state.status));
+  else
+    report.field(id_prefix + "status", prefix + "Status", status(state.status));
+  report.field(id_prefix + "total_energy", prefix + "Total energy", state.energy)
+      .field(id_prefix + "momentum_index", prefix + "Momentum index", state.momentum_index)
+      .field(id_prefix + "momentum", prefix + "Momentum", state.momentum)
+      .field(id_prefix + "residual_norm", prefix + "Residual norm", state.residual_norm)
+      .field(id_prefix + "iterations", prefix + "Iterations", state.iterations);
 }
 
 template <uni20::Real Real>
-void write_output(cli::report_builder report, Arguments const& args, int argc, char** argv,
-                  std::vector<model::State<Real> const*> const& states, std::vector<std::optional<Real>> const& gaps,
-                  model::State<Real> const* reference = nullptr, model::State<Real> const* failed = nullptr)
+void write_output(cli::RunReport& report, Arguments const& args, std::vector<model::State<Real> const*> const& states,
+                  std::vector<std::optional<Real>> const& gaps, model::State<Real> const* reference = nullptr,
+                  model::State<Real> const* failed = nullptr)
 {
   std::vector<std::string> names{"states"};
   if (reference) names.push_back("reference");
   if (failed) names.push_back("failed");
   if (args.roots) names.push_back("roots");
-  cli::ResultOutput output(report, args.output, "bethe-lieb-liniger-pbc", argc, argv, names);
+  cli::ResultOutput output(report, args.output, names);
   auto write_states = [&](std::string name, std::string title, auto const& rows, std::size_t offset, bool ranked) {
     output.table(
         name, title,
@@ -147,37 +151,37 @@ void write_output(cli::report_builder report, Arguments const& args, int argc, c
 
 template <uni20::Real Real> int run(Arguments const& args, int argc, char** argv)
 {
+  uni20::run_context context(program_info(), {.invocation = std::vector<std::string>(argv, argv + argc)});
   Real const length = uni20::parse_real<Real>(*args.length), c = uni20::parse_real<Real>(*args.interaction);
   model::SolverOptions<Real> options;
   options.max_iterations = args.max_iterations;
   if (args.tolerance) options.residual_tolerance = uni20::parse_real<Real>(*args.tolerance);
-  cli::report_builder report("Lieb-Liniger (periodic)");
-  report.field("Particles", args.particles)
-      .field("Length", uni20::format_real(length))
-      .field("c", uni20::format_real(c))
-      .field("Units", "hbar^2/(2m)=1; interaction 2c delta")
-      .field("Precision", args.precision)
-      .field("Residual tolerance", uni20::format_real(options.residual_tolerance))
-      .field("Momentum convention", "P=2*pi*sum(I)/length; no modular reduction");
+  cli::RunReport report(context, "Lieb-Liniger (periodic)");
+  report.field("particles", "Particles", args.particles)
+      .field("length", "Length", length)
+      .field("c", "c", c)
+      .field("units", "Units", "hbar^2/(2m)=1; interaction 2c delta")
+      .field("precision", "Precision", args.precision)
+      .field("residual_tolerance", "Residual tolerance", options.residual_tolerance)
+      .field("momentum_convention", "Momentum convention", "P=2*pi*sum(I)/length; no modular reduction");
   bool converged;
   if (args.count)
   {
     bethe::RealExcitationOptions const enumeration{.count = *args.count,
                                                    .max_candidates = args.max_candidates.value_or(10000)};
-    cli::CpuTimer const timer;
+    auto computation = context.computation();
     auto const scan = model::real_excitations(args.particles, length, c, *args.padding, enumeration, options);
-    auto const cpu_time = timer.elapsed_text();
+    computation.finish();
     converged = scan.converged();
-    report.field("Calculation", "finite-window excitations (including ground state)")
-        .field("Padding per edge", *args.padding)
-        .field("Candidate count", scan.candidate_count)
-        .field("Converged count", scan.converged_count)
-        .field("Retained count", scan.levels.size())
-        .field("Status",
-               converged ? "converged within the specified window" : "incomplete scan; failed states excluded")
-        .field("CPU time", cpu_time);
-    add_state(report, scan.ground_state, "Ground ");
-    if (scan.first_unconverged) add_state(report, *scan.first_unconverged, "First failed ");
+    report.field("calculation", "Calculation", "finite-window excitations (including ground state)")
+        .field("padding_per_edge", "Padding per edge", *args.padding)
+        .field("candidate_count", "Candidate count", scan.candidate_count)
+        .field("converged_count", "Converged count", scan.converged_count)
+        .field("retained_count", "Retained count", scan.levels.size())
+        .result(converged,
+                converged ? "converged within the specified window" : "incomplete scan; failed states excluded");
+    add_state(report, scan.ground_state, "ground_", "Ground ");
+    if (scan.first_unconverged) add_state(report, *scan.first_unconverged, "first_failed_", "First failed ");
     report.status(converged ? cli::semantic_glyph::success : cli::semantic_glyph::warning,
                   converged ? "converged" : "unconverged estimates are not ranked");
     std::vector<model::State<Real> const*> states;
@@ -187,7 +191,7 @@ template <uni20::Real Real> int run(Arguments const& args, int argc, char** argv
       states.push_back(&level.state);
       gaps.push_back(level.gap);
     }
-    write_output(report, args, argc, argv, states, gaps, &scan.ground_state,
+    write_output(report, args, states, gaps, &scan.ground_state,
                  scan.first_unconverged ? &*scan.first_unconverged : nullptr);
   }
   else
@@ -198,16 +202,16 @@ template <uni20::Real Real> int run(Arguments const& args, int argc, char** argv
       numbers = cli::parse_quantum_numbers(*args.numbers == "none" ? "" : *args.numbers);
       if (numbers->size() != args.particles) throw std::invalid_argument("quantum-number count must equal N");
     }
-    cli::CpuTimer const timer;
+    auto computation = context.computation();
     auto const state = numbers ? model::solve_real(length, c, *numbers, options)
                                : model::ground_state(args.particles, length, c, options);
-    auto const cpu_time = timer.elapsed_text();
+    computation.finish();
     converged = state.converged;
-    report.field("Calculation", args.numbers ? "specified Bethe state" : "ground state").field("CPU time", cpu_time);
+    report.field("calculation", "Calculation", args.numbers ? "specified Bethe state" : "ground state");
     add_state(report, state);
     report.status(converged ? cli::semantic_glyph::success : cli::semantic_glyph::warning,
                   converged ? "converged" : "unconverged estimate");
-    write_output<Real>(report, args, argc, argv, {&state}, {std::nullopt});
+    write_output<Real>(report, args, {&state}, {std::nullopt});
   }
 
   if (!converged) std::cerr << "Lieb-Liniger solve incomplete; consider a larger budget or higher precision.\n";

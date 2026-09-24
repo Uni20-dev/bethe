@@ -145,34 +145,52 @@ files are not fingerprinted. A source without Git information reports
 `unavailable` (or `unknown` through Uni20's provenance provider) rather than
 claiming the pinned revision was used.
 
-The rectangular header and data rows follow. Completion status, accepted row
-count and CPU time appear in **trailing comments**, since they are not known
-when streaming starts. Readers should ignore `#` lines throughout the file,
-not only at its beginning. CPU time measures the numerical background and
-point solves, excluding rendering and export work; it is not wall-clock time.
+The rectangular header and data rows follow. Status and timing appear in
+**trailing comments**; Hubbard dispersion also reports its accepted row count.
+Readers should ignore `#` lines throughout the file, not only at its beginning.
 
-Hubbard dispersion now uses Uni20's typed run context for its resolved parameters,
-background metadata, provenance and timing. Values remain native until projected
-into the existing string-valued table metadata; export keys and the single-table
-JSON shape are unchanged. Missing background values still read `unavailable`.
-The metadata also records the compiler, build type and platform. Its UTC timestamp
-marks the start of the calculation, before the background solve.
+All frontends use Uni20's typed run context for scalar metadata, provenance and
+timing. Real values retain their selected precision, counts remain integers,
+and optional values remain distinguishable from empty text until export. The
+human overview and exported metadata use the same native values; metadata is
+no longer copied out of a formatted report. Existing export keys and JSON
+structures are retained. Half-integer metadata is now consistently decimal
+(`0.5`), even where the human overview keeps a fraction (`1/2`). Model-specific
+missing-value explanations, such as overflow or an unreached continuation
+stage, are preserved. Metadata also records the compiler, build type and
+platform. Its UTC timestamp marks the start of the selected-precision
+calculation, before solving.
 
-Its summary retains the compute-only `CPU time` field with six fractional digits
-and an `s` suffix, and adds `Run CPU seconds`, `Elapsed seconds` and `Outcome`.
-Run CPU includes validation, setup and interleaved output within the selected
-precision's calculation function; elapsed time is monotonic wall time over that
-same interval. Neither includes argument parsing or the final summary's own
-rendering/flush. The new seconds fields contain round-trip decimal text without
-units suffixes; unavailable timing is `unavailable`. `Outcome` is `success` for
-converged lines, `partial` for incomplete numerical results, or `failed` when a
-run aborts before its summary is frozen. It is not an I/O-success guarantee: a
-later write/flush failure still causes exit 1 without rewriting an already
-finalized numerical summary.
+Every summary includes these timings:
 
-This first pilot retains the existing CLI, output coordinator and final-report
-layout. An initial human preamble before the background solve, shared sessions,
-and the multi-table JSON transition are subsequent steps, not enabled here.
+- `CPU time`: numerical solve/enumeration CPU time, excluding report rendering
+  and export work, with six fractional digits and an `s` suffix.
+- `Run CPU seconds`: process CPU from entry into the selected-precision
+  calculation until its numerical summary is frozen, including validation and
+  setup within that function.
+- `Elapsed seconds`: monotonic wall time over that same interval.
+
+The new seconds fields contain round-trip decimal text without unit suffixes;
+unavailable timing is `unavailable`. CLI parsing is outside this interval.
+Batch calculations freeze one summary **before emitting their result tables**,
+then copy it to every table: these are run timings, not per-table timings, and
+do not include table rendering or export. Hubbard dispersion instead solves
+and streams points in one loop, so its run CPU and elapsed time include the
+interleaved output. Neither includes the final summary's rendering or flush.
+
+`Outcome` is set explicitly by the model: `success` for converged results or
+exact spectral rules, `partial` for incomplete scans, failed references,
+unreached targets or enumeration-budget refusals. A completed JSON document
+can therefore have `"status":"complete"` while its table summary says
+`"Outcome":"partial"`; successful serialization does not establish scientific
+convergence. Hubbard dispersion can also record `failed` if it aborts before
+freezing its summary. Errors before output begins may produce only a diagnostic.
+A later write/flush failure still causes exit 1 without rewriting a frozen
+numerical outcome; named JSON documents report an independent transport abort.
+
+This migration retains the existing CLI, output coordinator and final-report
+layout. Staged human preambles, shared output sessions, configuration sources,
+and a multi-table JSON format change are separate, not enabled here.
 
 `--no-preamble` removes both initial and trailing CSV/TSV comments, leaving
 strict rectangular data for readers that do not support comments. It does not

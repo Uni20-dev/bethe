@@ -131,7 +131,11 @@ Generic CLI, precision dispatch, and report rendering live in
 model-specific arguments and report metadata stay in their respective front ends.
 `apps/program-options.hpp` supplies the shared parse/information/error lifecycle,
 exact option adapters, Bethe identity and citations. `apps/data-output-options.hpp`
-declares the shared export flags for typed-table frontends. All executables
+declares the shared export flags for typed-table frontends. `apps/run-metadata.hpp`
+projects Uni20's native run metadata into human overviews and legacy export keys;
+`apps/result-output.hpp` shares a frozen numerical summary across batch result
+tables. Models specify convergence and missing-value policy explicitly.
+All executables
 link the private `bethe_cli` helper target; numerical headers and
 the existing data-output unit tests remain parser-independent.
 The repository's `.clang-format` is copied from Uni20; use `clang-format -i`

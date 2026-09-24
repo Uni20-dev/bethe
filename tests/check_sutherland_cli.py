@@ -2,6 +2,7 @@
 import csv
 from decimal import Decimal, localcontext
 import io
+import json
 import subprocess
 import sys
 
@@ -64,6 +65,14 @@ assert len({r["labels"] for r in data}) == 35
 assert len(rows(run(*base, "--levels", "4", "--window", "2")[0])) == 4
 assert len(rows(run(*base, "--levels", "all", "--window", "0")[0])) == 1
 assert not rows(run(*base, "--levels", "all", "--window", "2", "--max-states", "34", status=2)[0])
+for budget, status in ((35, 0), (34, 2)):
+    doc = json.loads(run("3", "--length", "4", "--lambda", "2", "--levels", "all", "--window", "2",
+                         "--max-states", str(budget), "--pseudomomenta", "--format", "json", status=status)[0])
+    assert doc["status"] == "complete"
+    summary = doc["tables"]["states"]["summary"]
+    assert summary["Outcome"] == ("success" if status == 0 else "partial")
+    assert Decimal(summary["Run CPU seconds"]) >= 0 and Decimal(summary["Elapsed seconds"]) >= 0
+    assert doc["tables"]["pseudomomenta"]["summary"] == summary
 run("4", "--length", "4", "--lambda", "0.25", "--format", "pretty")
 data = rows(run("2", "--length", "4", "--lambda", "0", "--labels", "-2,3", "--format", "tsv")[0], "\t")
 assert data[0]["labels"] == "-2 3" and data[0]["momentum_index"] == "1"

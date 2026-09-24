@@ -90,6 +90,11 @@ for executable in programs:
                 assert abs(reconstructed - Decimal(row["energy"])) < tolerance
         for table_name, table in doc["tables"].items():
             assert table["summary"]["CPU time"].endswith(" s")
+            assert table["summary"]["Outcome"] == "success"
+            assert Decimal(table["summary"]["Run CPU seconds"]) >= 0
+            assert Decimal(table["summary"]["Elapsed seconds"]) >= 0
+            assert table["summary"] == main["summary"]  # One frozen run summary across all tables.
+            assert table["metadata"]["Compiler"] and table["metadata"]["Platform"]
             assert table["metadata"]["Precision"] == precision
             assert all(r["state_id"] == "0" for r in records(table))
             for c in table["columns"]:
@@ -114,6 +119,7 @@ for executable in programs:
     if name in ("bethe-richardson", "bethe-central-spin"):
         document = json.loads(run(program, [*args, "--max-iterations", "0", "--format", "json"], status=2).stdout)
         row = records(document["tables"]["states"])[0]
+        assert document["tables"]["states"]["summary"]["Outcome"] == "partial"
         assert row["converged"] is False
         if name == "bethe-richardson":
             assert Decimal(row["reached_g"]) == 0 and Decimal(row["requested_g"]) == 1
@@ -131,6 +137,7 @@ for executable in programs:
     if name == "bethe-sun-fermions-pbc":
         missing = json.loads(run(program, [*args, "--max-iterations", "0", "--format", "json"], status=2).stdout)["tables"]
         assert records(missing["states"])[0]["energy"] is None and not records(missing["roots"])
+        assert missing["states"]["summary"]["Outcome"] == "partial"
         free = json.loads(run(program, ["--populations", "2,0,1", "--length", "1", "--c", "0", "--roots", "--format", "json"]).stdout)["tables"]
         assert [r["component"] for r in records(free["free_modes"])] == ["0", "0", "2"]
         nested = json.loads(run(program, ["--populations", "1,1,1,1", "--length", "4", "--c", "1", "--roots", "--format", "json"]).stdout)["tables"]
@@ -143,6 +150,7 @@ for executable in programs:
         assert all(r["state_id"] == selected["state_id"] for r in records(scan["roots"]))
         partial = json.loads(run(program, [*args, "--max-iterations", "0", "--format", "json"], status=2).stdout)["tables"]
         assert records(partial["states"])[0]["converged"] is False
+        assert partial["states"]["summary"]["Outcome"] == "partial"
         assert records(partial["states"])[0]["energy"] is not None
         assert {r["level"] for r in records(partial["roots"])} == {"1"}
         nested = json.loads(run(program, ["8", "--rung", "0", "--roots", "--format", "json"]).stdout)["tables"]

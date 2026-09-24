@@ -28,7 +28,8 @@ auto program_info()
                 "This is not the generic spin-1 Heisenberg chain or the SU(3) ULS point.",
                 "See docs/takhtajan-babujian.md for normalization and numerical conventions.",
                 "Use --references for literature and applicability; see CITATIONS.md."};
-  info.notes.push_back("Tables: states; strings and roots with --roots. Complex roots have separate real/imaginary columns.");
+  info.notes.push_back(
+      "Tables: states; strings and roots with --roots. Complex roots have separate real/imaginary columns.");
   return info;
 }
 void add_options(CLI::App& app, Arguments& args)
@@ -61,33 +62,33 @@ char const* status(model::SolveStatus value)
 }
 template <uni20::Real Real> int run(Arguments const& args, int argc, char** argv)
 {
+  uni20::run_context context(program_info(), {.invocation = std::vector<std::string>(argv, argv + argc)});
   model::SolverOptions<Real> options;
   options.max_iterations = args.max_iterations;
   if (args.tolerance) options.residual_tolerance = uni20::parse_real<Real>(*args.tolerance);
-  cli::CpuTimer const timer;
+  auto computation = context.computation();
   auto const state = model::ground_state<Real>(args.sites, options);
-  auto const cpu_time = timer.elapsed_text();
-  cli::report_builder report("Spin-1 Takhtajan-Babujian chain (periodic)");
+  computation.finish();
+  cli::RunReport report(context, "Spin-1 Takhtajan-Babujian chain (periodic)");
   report.status(state.converged ? cli::semantic_glyph::success : cli::semantic_glyph::warning, status(state.status))
-      .field("Hamiltonian", "H=sum_j [S.S-(S.S)^2]; bilinear coefficient 1")
-      .field("Calculation", "zero-field singlet ground state with finite string deviations")
-      .field("Sites", state.sites)
-      .field("Spin", 1)
-      .field("Total spin", 0)
-      .field("Two-strings", state.centers.size())
-      .field("Complex roots", state.rapidities.size())
-      .field("Precision", args.precision)
-      .field("Residual tolerance", uni20::format_real(options.residual_tolerance))
-      .field("Status", status(state.status))
-      .field("Total energy", uni20::format_real(state.energy))
-      .field("Energy per site", uni20::format_real(state.energy / Real(state.sites)))
-      .field("Momentum index", state.momentum_index)
-      .field("Momentum P", uni20::format_real(state.momentum))
-      .field("Phase residual", uni20::format_real(state.phase_residual))
-      .field("Modulus residual", uni20::format_real(state.modulus_residual))
-      .field("Residual norm", uni20::format_real(state.residual_norm))
-      .field("Iterations", state.iterations)
-      .field("CPU time", cpu_time);
+      .field("hamiltonian", "Hamiltonian", "H=sum_j [S.S-(S.S)^2]; bilinear coefficient 1")
+      .field("calculation", "Calculation", "zero-field singlet ground state with finite string deviations")
+      .field("sites", "Sites", state.sites)
+      .field("spin", "Spin", 1)
+      .field("total_spin", "Total spin", 0)
+      .field("two_strings", "Two-strings", state.centers.size())
+      .field("complex_roots", "Complex roots", state.rapidities.size())
+      .field("precision", "Precision", args.precision)
+      .field("residual_tolerance", "Residual tolerance", options.residual_tolerance)
+      .result(state.converged, status(state.status))
+      .field("total_energy", "Total energy", state.energy)
+      .field("energy_per_site", "Energy per site", state.energy / Real(state.sites))
+      .field("momentum_index", "Momentum index", state.momentum_index)
+      .field("momentum_p", "Momentum P", state.momentum)
+      .field("phase_residual", "Phase residual", state.phase_residual)
+      .field("modulus_residual", "Modulus residual", state.modulus_residual)
+      .field("residual_norm", "Residual norm", state.residual_norm)
+      .field("iterations", "Iterations", state.iterations);
   using cli::column;
   std::vector<std::string> names{"states"};
   if (args.roots)
@@ -95,7 +96,7 @@ template <uni20::Real Real> int run(Arguments const& args, int argc, char** argv
     names.push_back("strings");
     names.push_back("roots");
   }
-  cli::ResultOutput output(report, args.output, "bethe-tb-pbc", argc, argv, names);
+  cli::ResultOutput output(report, args.output, names);
   output.table(
       "states", "State",
       [&](auto& t) {

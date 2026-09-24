@@ -8,8 +8,8 @@ namespace bethe::cli
 {
 template <uni20::Real Real, typename State>
 int print_hubbard_state(State const& state, uni20::half_int sz, std::string_view precision,
-                        DataOutputOptions const& output_options, Real tolerance, std::string_view cpu_time, bool roots,
-                        int argc, char** argv)
+                        DataOutputOptions const& output_options, Real tolerance, uni20::run_context& context,
+                        bool roots)
 {
   constexpr bool periodic = requires { state.momentum_index; };
   auto const model_description =
@@ -28,38 +28,38 @@ int print_hubbard_state(State const& state, uni20::half_int sz, std::string_view
     mapping = "none";
   else
     mapping.resize(mapping.size() - 2);
-  bethe::cli::report_builder report(periodic ? "Hubbard (periodic) - sector ground state"
-                                             : "Hubbard (free ends) - sector ground state");
+  bethe::cli::RunReport report(context, periodic ? "Hubbard (periodic) - sector ground state"
+                                                 : "Hubbard (free ends) - sector ground state");
   report.status(state.converged ? semantic_glyph::success : semantic_glyph::warning, status)
-      .field("Status", status)
-      .field("Model", model_description)
-      .field("Sites", state.sites)
-      .field("Particles", state.particles)
-      .field("Down spins", state.down_spins)
-      .field("Sz", uni20::to_string_fraction(sz))
-      .field("U", uni20::format_real(state.interaction))
-      .field("Precision", precision)
-      .field("Method", method)
-      .field("Symmetry mapping", mapping)
-      .field("Residual tolerance", uni20::format_real(tolerance))
-      .field("CPU time", cpu_time)
-      .field("Iterations", state.iterations)
-      .field("Completed continuation stages", state.continuation_steps)
-      .field("Charge residual", uni20::format_real(state.charge_residual))
-      .field("Spin residual", uni20::format_real(state.spin_residual))
-      .field("Residual norm", uni20::format_real(state.residual_norm));
+      .result(state.converged, status)
+      .field("model", "Model", model_description)
+      .field("sites", "Sites", state.sites)
+      .field("particles", "Particles", state.particles)
+      .field("down_spins", "Down spins", state.down_spins)
+      .field("sz", "Sz", sz, {.fractions = true})
+      .field("u", "U", state.interaction)
+      .field("precision", "Precision", precision)
+      .field("method", "Method", method)
+      .field("symmetry_mapping", "Symmetry mapping", mapping)
+      .field("residual_tolerance", "Residual tolerance", tolerance)
+      .field("iterations", "Iterations", state.iterations)
+      .field("completed_continuation_stages", "Completed continuation stages", state.continuation_steps)
+      .field("charge_residual", "Charge residual", state.charge_residual)
+      .field("spin_residual", "Spin residual", state.spin_residual)
+      .field("residual_norm", "Residual norm", state.residual_norm);
   if constexpr (periodic)
-    report.field("Momentum index", state.momentum_index).field("Momentum P", uni20::format_real(state.momentum));
-  report.field("Total energy", uni20::format_real(state.energy))
-      .field("Energy per site", uni20::format_real(state.energy / Real(state.sites)));
+    report.field("momentum_index", "Momentum index", state.momentum_index)
+        .field("momentum_p", "Momentum P", state.momentum);
+  report.field("total_energy", "Total energy", state.energy)
+      .field("energy_per_site", "Energy per site", state.energy / Real(state.sites));
   if (state.auxiliary_roots())
   {
-    report.field("Roots and residuals", "auxiliary sector (not physical-sector Bethe roots)")
-        .field("Root particles", state.root_particles)
-        .field("Root down spins", state.root_down_spins)
-        .field("Root U", uni20::format_real(state.root_interaction))
-        .field("Energy offset", uni20::format_real(state.energy_offset));
-    if constexpr (periodic) report.field("Momentum index offset", state.momentum_offset);
+    report.field("roots_and_residuals", "Roots and residuals", "auxiliary sector (not physical-sector Bethe roots)")
+        .field("root_particles", "Root particles", state.root_particles)
+        .field("root_down_spins", "Root down spins", state.root_down_spins)
+        .field("root_u", "Root U", state.root_interaction)
+        .field("energy_offset", "Energy offset", state.energy_offset);
+    if constexpr (periodic) report.field("momentum_index_offset", "Momentum index offset", state.momentum_offset);
   }
   std::vector<std::string> names{"states"};
   if (roots)
@@ -67,7 +67,7 @@ int print_hubbard_state(State const& state, uni20::half_int sz, std::string_view
     names.push_back(state.free_fermion ? "free_modes" : "charge_roots");
     if (!state.free_fermion) names.push_back("spin_roots");
   }
-  ResultOutput output(report, output_options, periodic ? "bethe-hubbard-pbc" : "bethe-hubbard-obc", argc, argv, names);
+  ResultOutput output(report, output_options, names);
   auto const state_columns = std::tuple{
       column<std::size_t>("state_id"),   column<uni20::half_int>("sz", "Sz"), column<Real>("energy", "Energy"),
       column<Real>("charge_residual"),   column<Real>("spin_residual"),       column<Real>("residual"),

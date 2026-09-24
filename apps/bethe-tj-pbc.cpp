@@ -66,6 +66,7 @@ char const* status(model::SolveStatus value)
 }
 template <uni20::Real Real> int run(Arguments const& args, int argc, char** argv)
 {
+  uni20::run_context context(program_info(), {.invocation = std::vector<std::string>(argv, argv + argc)});
   model::detail::check_counts(args.sites, 0, 0);
   auto const particles = args.particles.value_or(args.sites);
   if (particles > args.sites) throw std::invalid_argument("t-J requires 0 <= particles <= L");
@@ -78,34 +79,33 @@ template <uni20::Real Real> int run(Arguments const& args, int argc, char** argv
   model::SolverOptions<Real> options;
   options.max_iterations = args.max_iterations;
   if (args.tolerance) options.residual_tolerance = uni20::parse_real<Real>(*args.tolerance);
-  cli::CpuTimer const timer;
+  auto computation = context.computation();
   auto const state = model::ground_state<Real>(args.sites, up, down, options);
-  auto const cpu_time = timer.elapsed_text();
+  computation.finish();
   char const* branch = state.branch == model::Branch::sutherland       ? "Sutherland real-root sector"
                        : state.branch == model::Branch::polarized_free ? "exact polarized free fermions"
                                                                        : "no-hole XXX reduction";
-  cli::report_builder report("Supersymmetric t-J chain (periodic)");
+  cli::RunReport report(context, "Supersymmetric t-J chain (periodic)");
   report.status(state.converged ? cli::semantic_glyph::success : cli::semantic_glyph::warning, status(state.status))
-      .field("Hamiltonian", "t=1, J=2; projected hopping + 2*(S.S-nn/4)")
-      .field("Calculation", branch)
-      .field("Sites", state.sites)
-      .field("Particles", particles)
-      .field("N_up", up)
-      .field("N_down", down)
-      .field("Holes", state.holes)
-      .field("Sz", uni20::to_string_fraction(sz))
-      .field("Precision", args.precision)
-      .field("Residual tolerance", uni20::format_real(options.residual_tolerance))
-      .field("Status", status(state.status))
-      .field("Total energy", uni20::format_real(state.energy))
-      .field("Energy per site", uni20::format_real(state.energy / Real(state.sites)))
-      .field("Momentum index", state.momentum_index)
-      .field("Momentum P", uni20::format_real(state.momentum))
-      .field("First-level roots", state.rapidities[0].size())
-      .field("Second-level roots", state.rapidities[1].size())
-      .field("Residual norm", uni20::format_real(state.residual_norm))
-      .field("Iterations", state.iterations)
-      .field("CPU time", cpu_time);
+      .field("hamiltonian", "Hamiltonian", "t=1, J=2; projected hopping + 2*(S.S-nn/4)")
+      .field("calculation", "Calculation", branch)
+      .field("sites", "Sites", state.sites)
+      .field("particles", "Particles", particles)
+      .field("n_up", "N_up", up)
+      .field("n_down", "N_down", down)
+      .field("holes", "Holes", state.holes)
+      .field("sz", "Sz", sz, {.fractions = true})
+      .field("precision", "Precision", args.precision)
+      .field("residual_tolerance", "Residual tolerance", options.residual_tolerance)
+      .result(state.converged, status(state.status))
+      .field("total_energy", "Total energy", state.energy)
+      .field("energy_per_site", "Energy per site", state.energy / Real(state.sites))
+      .field("momentum_index", "Momentum index", state.momentum_index)
+      .field("momentum_p", "Momentum P", state.momentum)
+      .field("first_level_roots", "First-level roots", state.rapidities[0].size())
+      .field("second_level_roots", "Second-level roots", state.rapidities[1].size())
+      .field("residual_norm", "Residual norm", state.residual_norm)
+      .field("iterations", "Iterations", state.iterations);
   std::vector<std::string> tables{"states"};
   bool const free = state.branch == model::Branch::polarized_free;
   if (args.roots)
@@ -115,7 +115,7 @@ template <uni20::Real Real> int run(Arguments const& args, int argc, char** argv
     else
       tables.insert(tables.end(), {"first_roots", "second_roots"});
   }
-  cli::ResultOutput output(report, args.output, "bethe-tj-pbc", argc, argv, tables);
+  cli::ResultOutput output(report, args.output, tables);
   output.table(
       "states", "State",
       [&](auto& table) {

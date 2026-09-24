@@ -11,7 +11,6 @@
 
 namespace
 {
-using bethe::cli::CpuTimer;
 using bethe::cli::finish;
 using bethe::cli::parse_quantum_numbers;
 namespace model = bethe::heisenberg::open;
@@ -64,45 +63,44 @@ void add_options(CLI::App& app, Arguments& args)
 
 template <uni20::Real Real> int run(Arguments const& args, int argc, char** argv)
 {
+  uni20::run_context context(program_info(), {.invocation = std::vector<std::string>(argv, argv + argc)});
   namespace cli = bethe::cli;
   namespace model = bethe::heisenberg::open;
   bethe::SolverOptions<Real> options;
   options.max_iterations = args.max_iterations;
   if (args.tolerance) options.residual_tolerance = uni20::parse_real<Real>(*args.tolerance);
-  CpuTimer const timer;
-  auto header = [&](std::string_view mode, std::string_view cpu_time) {
-    return cli::report_header(args.sites, args.precision, options, mode, cpu_time, false);
+  auto computation = context.computation();
+  auto header = [&](std::string_view mode) {
+    return cli::report_header(args.sites, args.precision, options, mode, context, false);
   };
   if (args.excitations.count)
   {
     auto const scan = model::real_excitations<Real>(args.sites, args.excitations.selected_spin(args.sites),
                                                     args.excitations.options(), options);
-    auto const cpu_time = timer.elapsed_text();
+    computation.finish();
     return finish(cli::print_excitation_report(
-        header("real-root excitations", cpu_time), scan,
+        header("real-root excitations"), scan,
         {.family = "restricted real-root highest-weight multiplets; NOT a complete spectrum",
          .sector_label = "S",
          .sector = scan.spin,
          .multiplet_size = scan.spin.twice() + 1},
-        args.print_roots, args.output, "bethe-xxx-obc", argc, argv));
+        args.print_roots, args.output));
   }
   if (args.sectors)
   {
     auto const states = model::sector_ground_states<Real>(args.sites, options);
-    auto const cpu_time = timer.elapsed_text();
-    return finish(cli::spin_sectors<Real>(header("sector minima", cpu_time), states, args.print_roots, args.output,
-                                          "bethe-xxx-obc", argc, argv));
+    computation.finish();
+    return finish(cli::spin_sectors<Real>(header("sector minima"), states, args.print_roots, args.output));
   }
   auto const state = args.quantum_numbers
                          ? model::solve_real<Real>(args.sites, parse_quantum_numbers(*args.quantum_numbers), options)
                      : args.sz ? model::sector_ground_state<Real>(args.sites, *args.sz, options)
                                : model::ground_state<Real>(args.sites, options);
-  auto const cpu_time = timer.elapsed_text();
+  computation.finish();
   return finish(cli::spin_state<Real>(header(args.quantum_numbers ? "specified real-root state"
                                              : args.sz            ? "sector minimum"
-                                                                  : "ground state",
-                                             cpu_time),
-                                      args.sites, state, args.print_roots, args.output, "bethe-xxx-obc", argc, argv));
+                                                                  : "ground state"),
+                                      args.sites, state, args.print_roots, args.output));
 }
 } // namespace
 

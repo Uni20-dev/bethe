@@ -36,6 +36,7 @@ auto program_info()
 
 template <uni20::Real Real> int run(Arguments const& args, int argc, char** argv)
 {
+  uni20::run_context context(program_info(), {.invocation = std::vector<std::string>(argv, argv + argc)});
   namespace cli = bethe::cli;
   Real const delta = uni20::parse_real<Real>(*args.delta);
   model::SolverOptions<Real> options;
@@ -47,56 +48,53 @@ template <uni20::Real Real> int run(Arguments const& args, int argc, char** argv
   auto const residual = delta < Real{0}   ? "rank-subtracted equations divided by N*s; s=sqrt((1+Delta)/(1-Delta))"
                         : delta > Real{1} ? "normalized bulk and regularized boundary equations"
                                           : "max|F|/(2*N), logarithmic phase";
-  auto header = [&](std::string_view mode, std::string_view cpu_time) {
-    bethe::cli::report_builder report("Heisenberg XXZ (free ends) - " + std::string(mode));
-    report.field("Model", "open spin-1/2, free ends, J=1, h=0")
-        .field("Sites", args.sites)
-        .field("Delta", uni20::format_real(delta))
-        .field("Precision", args.precision)
-        .field("Residual tolerance", uni20::format_real(options.residual_tolerance))
-        .field("CPU time", cpu_time)
-        .field("Root coordinate", coordinate);
-    if (delta > Real{1} || delta < Real{0}) report.field("Residual convention", residual);
+  auto header = [&](std::string_view mode) {
+    bethe::cli::RunReport report(context, "Heisenberg XXZ (free ends) - " + std::string(mode));
+    report.field("model", "Model", "open spin-1/2, free ends, J=1, h=0")
+        .field("sites", "Sites", args.sites)
+        .field("delta", "Delta", delta)
+        .field("precision", "Precision", args.precision)
+        .field("residual_tolerance", "Residual tolerance", options.residual_tolerance)
+        .field("root_coordinate", "Root coordinate", coordinate);
+    if (delta > Real{1} || delta < Real{0}) report.field("residual_convention", "Residual convention", residual);
     return report;
   };
 
-  cli::CpuTimer const timer;
+  auto computation = context.computation();
   if (args.excitation_count)
   {
     auto const sz = args.sz.value_or(uni20::from_twice(std::int64_t{args.sites % 2 == 0 ? 2 : 1}));
     auto const scan = model::real_excitations<Real>(
         args.sites, delta, sz, {.count = *args.excitation_count, .max_candidates = args.max_candidates.value_or(10000)},
         options);
-    auto const cpu_time = timer.elapsed_text();
-    auto report = header("real-root excitations", cpu_time);
+    computation.finish();
+    auto report = header("real-root excitations");
     auto const window = scan.window.slots == 0
                             ? "empty (polarized vacuum)"
                             : uni20::to_string(scan.window.first) + ".." + uni20::to_string(scan.window.last);
-    report.field("Quantum-number window", window)
-        .field("Available slots", scan.window.slots)
-        .field("Spin-reversed reference", sz.twice() < 0 ? 1 : 0);
+    report.field("quantum_number_window", "Quantum-number window", window)
+        .field("available_slots", "Available slots", scan.window.slots)
+        .field("spin_reversed_reference", "Spin-reversed reference", sz.twice() < 0 ? 1 : 0);
     return finish(
         cli::print_excitation_report(std::move(report), scan,
                                      {.family = "restricted finite-real XXZ states; NOT a complete Sz spectrum",
                                       .sector_label = "Sz",
                                       .sector = sz,
                                       .multiplet_size = std::nullopt},
-                                     args.print_roots, args.output, "bethe-xxz-obc", argc, argv));
+                                     args.print_roots, args.output));
   }
   if (args.sectors)
   {
     auto const states = model::sector_ground_states<Real>(args.sites, delta, options);
-    auto const cpu_time = timer.elapsed_text();
-    return finish(cli::spin_sectors<Real>(header("sector minima", cpu_time), states, args.print_roots, args.output,
-                                          "bethe-xxz-obc", argc, argv));
+    computation.finish();
+    return finish(cli::spin_sectors<Real>(header("sector minima"), states, args.print_roots, args.output));
   }
   auto report_one = [&](auto const& state) {
-    auto const cpu_time = timer.elapsed_text();
+    computation.finish();
     return finish(cli::spin_state<Real>(header(args.quantum_numbers ? "specified real-root state"
                                                : args.sz            ? "sector minimum"
-                                                                    : "ground state",
-                                               cpu_time),
-                                        args.sites, state, args.print_roots, args.output, "bethe-xxz-obc", argc, argv));
+                                                                    : "ground state"),
+                                        args.sites, state, args.print_roots, args.output));
   };
   if (args.quantum_numbers)
     return report_one(model::solve_real<Real>(args.sites, delta, *args.quantum_numbers, options));

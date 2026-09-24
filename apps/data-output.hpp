@@ -1,9 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Copyright (C) 2026 Ian McCulloch
 #pragma once
-#include "bethe-build-info.hpp"
 #include "report-common.hpp"
-#include <ctime>
 #include <filesystem>
 #include <fstream>
 #include <memory>
@@ -37,38 +35,6 @@ struct DataOutputOptions
           throw std::invalid_argument("unknown export format: " + file.format);
     }
 };
-// Quote argv for POSIX shells, including empty arguments and literal apostrophes.
-inline std::string quote_argument(std::string_view value)
-{
-  std::string result = "'";
-  for (char c : value)
-    result += c == '\'' ? "'\\''" : std::string(1, c);
-  return result + "'";
-}
-inline std::string command_line(int argc, char** argv)
-{
-  std::string result;
-  for (int i = 0; i < argc; ++i)
-  {
-    if (i) result += ' ';
-    result += quote_argument(argv[i]);
-  }
-  return result;
-}
-inline data::table_metadata provenance(std::string program, int argc, char** argv)
-{
-  auto const now = std::time(nullptr);
-  std::tm utc{};
-  char date[32]{};
-  if (now == std::time_t{-1} || !gmtime_r(&now, &utc) || !std::strftime(date, sizeof(date), "%Y-%m-%dT%H:%M:%SZ", &utc))
-    throw std::runtime_error("could not determine output timestamp");
-  return {{"Program", std::move(program)},
-          {"Bethe version", build_info::version},
-          {"Bethe revision", build_info::revision},
-          {"Uni20 revision", build_info::uni20_revision},
-          {"Date", date},
-          {"Command", command_line(argc, argv)}};
-}
 // Keep every metadata field on one comment line; argv may contain real newlines.
 inline std::string comment_text(std::string_view value)
 {
@@ -332,11 +298,14 @@ class DataOutput {
       {
         attach(table, std::move(name));
         fill(table);
-        finish(table, std::move(summary));
+        finish(table, summary);
       }
       catch (...)
       {
-        abort(table, {{"Status", "aborted"}});
+        // Batch callers already froze their numerical outcome. Keep it even if
+        // delivery fails; the outer document reports the independent I/O abort.
+        summary.try_emplace("Status", "aborted");
+        abort(table, std::move(summary));
         try
         {
           finish_document(true);

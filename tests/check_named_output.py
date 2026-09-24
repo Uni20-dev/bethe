@@ -68,6 +68,15 @@ with tempfile.TemporaryDirectory(prefix="bethe-tables-") as directory:
     # Literal '=' in a path is retained after the first TABLE= separator.
     run(*base, "--quiet", "--csv-table", "pseudomomenta=a=b.csv", cwd=folder)
     assert len(rows((folder / "a=b.csv").read_text())) == 2
+    if Path("/dev/full").exists():
+        with open("/dev/full", "w") as full:
+            failed = subprocess.run([program, *base, "--format", "csv", "--json", "healthy.json"],
+                                    stdout=full, stderr=subprocess.PIPE, text=True, env=env, timeout=30, cwd=folder)
+        assert failed.returncode == 1 and "stdout" in failed.stderr
+        aborted = json.loads((folder / "healthy.json").read_text())
+        assert aborted["status"] == "aborted"
+        assert aborted["tables"]["states"]["summary"]["Outcome"] == "success"
+        assert aborted["tables"]["states"]["summary"]["Status"] == "exact spectral rules"
 
 help_text = run("--help").stdout
 assert "--references" in help_text and "Used for:" not in help_text

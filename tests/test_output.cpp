@@ -9,10 +9,8 @@ namespace
 namespace cli = bethe::cli;
 namespace data = uni20::presentation;
 
-TEST(DataOutput, ShellQuotingAndCommentEscaping)
+TEST(DataOutput, CommentEscaping)
 {
-  EXPECT_EQ(cli::quote_argument(""), "''");
-  EXPECT_EQ(cli::quote_argument("a'b $HOME"), "'a'\\''b $HOME'");
   EXPECT_EQ(cli::comment_text("a\nb\rc\td\\e\x1b"), "a\\nb\\rc\\td\\\\e\\x1b");
   std::ostringstream out;
   cli::write_comments(out, {{"Command", "with\nnewline"}});
@@ -76,6 +74,22 @@ TEST(DataOutput, AcceptedRowIsNotRetriedAndHealthyJsonFinishesOnAbort)
   EXPECT_TRUE(table.finished());
   EXPECT_NE(json.str().find("\"rows\":[[42]]"), std::string::npos);
   EXPECT_NE(json.str().find("\"Status\":\"aborted\""), std::string::npos);
+}
+
+TEST(DataOutput, FrozenScientificOutcomeSurvivesDeliveryFailure)
+{
+  cli::DataOutputOptions options;
+  options.quiet = true;
+  cli::DataOutput output(options, {"states"});
+  std::ostringstream json;
+  auto table = data::make_data_table("test", {}, data::data_column<int>("i"));
+  table.attach(FailingSink{});
+  table.attach(data::json_sink(json));
+  data::table_metadata summary{{"Status", "exact spectral rules"}, {"Outcome", "success"}, {"CPU time", "1.000000 s"}};
+  EXPECT_THROW(output.write_table("states", table, [](auto& t) { t.append(42); }, summary), data::data_delivery_error);
+  EXPECT_TRUE(table.finished());
+  EXPECT_EQ(*table.summary(), summary);
+  EXPECT_NE(json.str().find("\"Outcome\":\"success\""), std::string::npos);
 }
 
 struct FlushFailure : std::stringbuf

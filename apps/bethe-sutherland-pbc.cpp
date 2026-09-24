@@ -2,6 +2,7 @@
 // Copyright (C) 2026 Ian McCulloch
 #include "data-output-options.hpp"
 #include "program-options.hpp"
+#include "result-output.hpp"
 #include <bethe/sutherland.hpp>
 #include <charconv>
 
@@ -72,8 +73,9 @@ std::vector<std::int64_t> parse_labels(std::string_view text)
 }
 template <uni20::Real Real> int run(Arguments const& a, int argc, char** argv)
 {
-  cli::CpuTimer timer;
+  uni20::run_context context(program_info(), {.invocation = std::vector<std::string>(argv, argv + argc)});
   Real const length = uni20::parse_real<Real>(a.length), lambda = uni20::parse_real<Real>(a.lambda);
+  auto computation = context.computation();
   std::vector<model::State<Real>> states;
   std::optional<model::Spectrum<Real>> scan;
   if (a.labels)
@@ -86,41 +88,36 @@ template <uni20::Real Real> int run(Arguments const& a, int argc, char** argv)
   }
   else
     states = {model::ground_state(a.particles, length, lambda)};
-  auto const cpu = timer.elapsed_text();
+  computation.finish();
   bool const complete = !scan || scan->complete;
-  auto metadata = cli::provenance("bethe-sutherland-pbc", argc, argv);
-  metadata.insert({{"Hamiltonian", "H=-sum d_i^2+2*lambda*(lambda-1)*(pi/L)^2 sum_{i<j} csc^2(pi*(x_i-x_j)/L)"},
-                   {"Units", "hbar=2m=1"},
-                   {"Statistics/domain", "periodic bosons; collision branch |x_i-x_j|^lambda"},
-                   {"Particles", std::to_string(a.particles)},
-                   {"Length", uni20::format_real(length)},
-                   {"Lambda", uni20::format_real(lambda)},
-                   {"Precision", a.precision},
-                   {"Calculation", a.labels   ? "specified integer labels"
-                                   : a.levels ? "label-window spectrum"
-                                              : "ground state"},
-                   {"Momentum", "P=2*pi*momentum_index/L; not reduced modulo 2*pi"}});
-  if (!states.empty()) metadata.emplace("Ground energy", uni20::format_real(states.front().ground_energy));
+  cli::RunReport report(context, "Sutherland states");
+  report
+      .field("hamiltonian", "Hamiltonian", "H=-sum d_i^2+2*lambda*(lambda-1)*(pi/L)^2 sum_{i<j} csc^2(pi*(x_i-x_j)/L)")
+      .field("units", "Units", "hbar=2m=1")
+      .field("statistics_domain", "Statistics/domain", "periodic bosons; collision branch |x_i-x_j|^lambda")
+      .field("particles", "Particles", a.particles)
+      .field("length", "Length", length)
+      .field("lambda", "Lambda", lambda)
+      .field("precision", "Precision", a.precision)
+      .field("calculation", "Calculation",
+             a.labels   ? "specified integer labels"
+             : a.levels ? "label-window spectrum"
+                        : "ground state")
+      .field("momentum", "Momentum", "P=2*pi*momentum_index/L; not reduced modulo 2*pi")
+      .result(complete, complete ? "exact spectral rules" : "state budget exceeded; no levels published");
+  if (!states.empty()) report.field("ground_energy", "Ground energy", states.front().ground_energy);
   if (scan)
   {
-    metadata.emplace("Label window", "[-" + std::to_string(*a.window) + "," + std::to_string(*a.window) + "]");
-    metadata.emplace("Coverage", "window only; no global low-energy completeness claimed");
-    if (complete) metadata.emplace("States enumerated", std::to_string(scan->total_states));
+    report.field("label_window", "Label window",
+                 "[-" + std::to_string(*a.window) + "," + std::to_string(*a.window) + "]");
+    report.field("coverage", "Coverage", "window only; no global low-energy completeness claimed");
+    if (complete) report.field("states_enumerated", "States enumerated", scan->total_states);
   }
-  data::data_table_options table_options{.retain = a.output.retain ? data::retention::all : data::retention::none,
-                                         .metadata = metadata};
-  auto table = data::make_data_table(
-      "Sutherland states", table_options, data::data_column<std::size_t>("state_id"),
-      data::data_column<std::string>("labels"), data::data_column<Real>("energy").round_trip(),
-      data::data_column<Real>("gap").round_trip(), data::data_column<std::int64_t>("momentum_index"),
-      data::data_column<Real>("p").round_trip());
   std::vector<std::string> names{"states"};
   if (a.pseudomomenta) names.push_back("pseudomomenta");
-  cli::DataOutput output(a.output, names);
-  data::table_metadata summary{
-      {"Status", complete ? "exact spectral rules" : "state budget exceeded; no levels published"}, {"CPU time", cpu}};
-  output.write_table(
-      "states", table,
+  cli::ResultOutput output(report, a.output, names, false);
+  output.table(
+      "states", "Sutherland states",
       [&](auto& table) {
         for (std::size_t i = 0; i < states.size(); ++i)
         {
@@ -134,23 +131,22 @@ template <uni20::Real Real> int run(Arguments const& a, int argc, char** argv)
           table.append(i, labels, s.energy, s.gap, s.momentum_index, s.momentum);
         }
       },
-      summary);
+      data::data_column<std::size_t>("state_id"), data::data_column<std::string>("labels"),
+      data::data_column<Real>("energy").round_trip(), data::data_column<Real>("gap").round_trip(),
+      data::data_column<std::int64_t>("momentum_index"), data::data_column<Real>("p").round_trip());
   if (a.pseudomomenta)
   {
-    auto roots =
-        data::make_data_table("Sutherland pseudomomenta", table_options, data::data_column<std::size_t>("state_id"),
-                              data::data_column<std::size_t>("index"), data::data_column<std::int64_t>("label"),
-                              data::data_column<Real>("k").round_trip());
-    output.write_table(
-        "pseudomomenta", roots,
+    output.table(
+        "pseudomomenta", "Sutherland pseudomomenta",
         [&](auto& table) {
           for (std::size_t i = 0; i < states.size(); ++i)
             for (std::size_t j = 0; j < states[i].pseudomomenta.size(); ++j)
               table.append(i, j, states[i].labels[j], states[i].pseudomomenta[j]);
         },
-        summary);
+        data::data_column<std::size_t>("state_id"), data::data_column<std::size_t>("index"),
+        data::data_column<std::int64_t>("label"), data::data_column<Real>("k").round_trip());
   }
-  output.finish_document();
+  output.finish();
   if (!complete) std::cerr << "State budget exceeded; raise --max-states. No lowest levels claimed.\n";
   return complete ? 0 : 2;
 }

@@ -105,11 +105,6 @@ char const* status(bethe::xxz::quantum_group::SolveStatus value)
   }
   return "unknown";
 }
-std::string multiplicity_text(std::optional<std::uint64_t> value)
-{
-  return value ? std::to_string(*value) : "overflow (>uint64)";
-}
-
 char const* status(bethe::xxz::quantum_group::qsystem::Status value)
 {
   using S = bethe::xxz::quantum_group::qsystem::Status;
@@ -145,10 +140,9 @@ template <uni20::Real Real> std::vector<Real> parse_q_seed(std::string_view text
 }
 
 template <uni20::Real Real>
-int run_qsystem(Arguments const& args, int argc, char** argv, bethe::SolverOptions<Real> const& options,
-                cli::report_builder report)
+int run_qsystem(Arguments const& args, bethe::SolverOptions<Real> const& options, cli::RunReport report)
 {
-  cli::CpuTimer const timer;
+  auto& context = report.context();
   if (args.sites > 8)
     std::cerr << "Warning: Q-system spectrum validation covers N<=8. Larger chains are experimental; "
                  "memory, search cost and string conditioning may prevent convergence or completeness.\n";
@@ -156,42 +150,48 @@ int run_qsystem(Arguments const& args, int argc, char** argv, bethe::SolverOptio
   bool complete = false;
   if (args.q_seed)
   {
-    states.push_back(model::qsystem::solve<Real>(args.sites, parse_q_seed<Real>(*args.q_seed), options));
+    states.push_back(context.measure(
+        [&] { return model::qsystem::solve<Real>(args.sites, parse_q_seed<Real>(*args.q_seed), options); }));
     complete = states.front().reference.converged;
-    report.field("Calculation", "selected Q-system branch; not necessarily a lowest level");
+    report.field("calculation", "Calculation", "selected Q-system branch; not necessarily a lowest level");
   }
   else
   {
-    auto scan = model::qsystem::spectrum<Real>(args.sites, args.through_lines.value_or(0),
-                                               {.max_attempts = args.max_attempts.value_or(4000)}, options);
+    auto scan = context.measure([&] {
+      return model::qsystem::spectrum<Real>(args.sites, args.through_lines.value_or(0),
+                                            {.max_attempts = args.max_attempts.value_or(4000)}, options);
+    });
     complete = scan.complete();
-    report.field("Calculation", "Q-system spectrum search (real and complex roots)")
-        .field("Expected module dimension", scan.expected_count ? std::to_string(*scan.expected_count)
-                                                                : "overflow (>size_t); completeness unavailable")
-        .field("Discovered levels", scan.states.size())
-        .field("Attempts", scan.attempts)
-        .field("Attempt budget", args.max_attempts.value_or(4000))
-        .field("Failed attempts", scan.failed_attempts)
-        .field("Ordering", complete ? "numerically complete TL module; count matched, not a rigorous certificate"
-                                    : "incomplete discoveries; NOT guaranteed lowest levels");
+    report.field("calculation", "Calculation", "Q-system spectrum search (real and complex roots)")
+        .field("expected_module_dimension", "Expected module dimension", scan.expected_count,
+               {.missing = "overflow (>size_t); completeness unavailable"})
+        .field("discovered_levels", "Discovered levels", scan.states.size())
+        .field("attempts", "Attempts", scan.attempts)
+        .field("attempt_budget", "Attempt budget", args.max_attempts.value_or(4000))
+        .field("failed_attempts", "Failed attempts", scan.failed_attempts)
+        .field("ordering", "Ordering",
+               complete ? "numerically complete TL module; count matched, not a rigorous certificate"
+                        : "incomplete discoveries; NOT guaranteed lowest levels");
     states = std::move(scan.states);
   }
-  auto const ground = model::ground_state<Real>(args.sites, options);
+  auto const ground = context.measure([&] { return model::ground_state<Real>(args.sites, options); });
   complete = complete && ground.reference.converged;
-  report.field("TL through-lines", args.q_seed ? states.front().through_lines : args.through_lines.value_or(0))
-      .field("Q-system validation", args.sites <= 8
-                                        ? "within small-chain regression range"
-                                        : "experimental beyond N=8; no completeness or convergence guarantee")
-      .field("Residual convention", "Q-system Wronskian coefficient backward error; not an energy-error bound")
-      .field("Root coordinate", "x=cosh(2u)=cos(alpha); Bajnok u, alpha=-2iu")
-      .field("Multiplicity meaning", "physical states per TL eigenvector, not SU(2) multiplets")
-      .field("Gap reference",
+  report
+      .field("tl_through_lines", "TL through-lines",
+             args.q_seed ? states.front().through_lines : args.through_lines.value_or(0))
+      .field("q_system_validation", "Q-system validation",
+             args.sites <= 8 ? "within small-chain regression range"
+                             : "experimental beyond N=8; no completeness or convergence guarantee")
+      .field("residual_convention", "Residual convention",
+             "Q-system Wronskian coefficient backward error; not an energy-error bound")
+      .field("root_coordinate", "Root coordinate", "x=cosh(2u)=cos(alpha); Bajnok u, alpha=-2iu")
+      .field("multiplicity_meaning", "Multiplicity meaning", "physical states per TL eigenvector, not SU(2) multiplets")
+      .field("gap_reference", "Gap reference",
              ground.reference.converged ? "E-E0; global singlet ground state" : "unavailable; ground solve failed")
-      .field("Status", complete ? "converged" : "incomplete or unverified")
-      .field("CPU time", timer.elapsed_text());
+      .result(complete, complete ? "converged" : "incomplete or unverified");
   std::vector<std::string> names{"states", "reference", "q_coefficients"};
   if (args.roots) names.push_back("roots");
-  cli::ResultOutput output(report, args.output, "bethe-biquadratic-obc", argc, argv, names);
+  cli::ResultOutput output(report, args.output, names);
   output.table(
       "states", "Q-system levels",
       [&](auto& table) {
@@ -264,33 +264,35 @@ int run_qsystem(Arguments const& args, int argc, char** argv, bethe::SolverOptio
 }
 
 template <uni20::Real Real>
-int run_singlet(Arguments const& args, int argc, char** argv, bethe::SolverOptions<Real> const& options,
-                cli::report_builder report)
+int run_singlet(Arguments const& args, bethe::SolverOptions<Real> const& options, cli::RunReport report)
 {
-  cli::CpuTimer const timer;
+  auto& context = report.context();
+  auto computation = context.computation();
   auto const state = model::two_string::singlet<Real>(args.sites, options);
   auto const ground = model::ground_state<Real>(args.sites, options);
+  computation.finish();
   auto const& r = state.reference;
   bool const complete = r.converged && ground.reference.converged;
   Real const eta = std::acosh(r.delta), d = std::exp(-r.log_deviation);
   std::optional<Real> gap;
   if (complete) gap = Real{2} * (r.energy - ground.reference.energy);
-  report.field("Calculation", "selected complex-root singlet excitation")
-      .field("Family", "one positive-deviation two-string; real I=1,...,N/2-2; string label 1")
-      .field("Ordering", "targeted branch, not an exhaustive search or a global first-excitation guarantee")
-      .field("TL through-lines", 0)
-      .field("Multiplicity meaning", "one physical singlet per TL eigenvector")
-      .field("Residual convention", "max phase/log-modulus equation residual divided by 2N; not an energy-error bound")
-      .field("String coordinate", "u=(eta+d)/2 +/- i*a/2; d=exp(-L)>0; L is authoritative")
-      .field("String deviation", eta + d == eta ? "unresolved in rounded u; retained by L=-log(d)"
-                                                : "resolved in rounded u; L=-log(d) also retained")
-      .field("Gap reference",
+  report.field("calculation", "Calculation", "selected complex-root singlet excitation")
+      .field("family", "Family", "one positive-deviation two-string; real I=1,...,N/2-2; string label 1")
+      .field("ordering", "Ordering", "targeted branch, not an exhaustive search or a global first-excitation guarantee")
+      .field("tl_through_lines", "TL through-lines", 0)
+      .field("multiplicity_meaning", "Multiplicity meaning", "one physical singlet per TL eigenvector")
+      .field("residual_convention", "Residual convention",
+             "max phase/log-modulus equation residual divided by 2N; not an energy-error bound")
+      .field("string_coordinate", "String coordinate", "u=(eta+d)/2 +/- i*a/2; d=exp(-L)>0; L is authoritative")
+      .field("string_deviation", "String deviation",
+             eta + d == eta ? "unresolved in rounded u; retained by L=-log(d)"
+                            : "resolved in rounded u; L=-log(d) also retained")
+      .field("gap_reference", "Gap reference",
              ground.reference.converged ? "E-E0; global singlet ground state" : "unavailable; ground solve failed")
-      .field("Status", complete ? "converged" : "incomplete; unconverged estimate")
-      .field("CPU time", timer.elapsed_text());
+      .result(complete, complete ? "converged" : "incomplete; unconverged estimate");
   std::vector<std::string> names{"states", "reference", "string"};
   if (args.roots) names.push_back("roots");
-  cli::ResultOutput output(report, args.output, "bethe-biquadratic-obc", argc, argv, names);
+  cli::ResultOutput output(report, args.output, names);
   output.table(
       "states", "Selected two-string singlet",
       [&](auto& table) {
@@ -338,15 +340,15 @@ int run_singlet(Arguments const& args, int argc, char** argv, bethe::SolverOptio
 }
 
 template <uni20::Real Real>
-void write_output(cli::report_builder const& report, Arguments const& args, int argc, char** argv,
-                  std::vector<model::State<Real> const*> const& states, std::vector<std::optional<Real>> const& gaps,
-                  model::State<Real> const* reference = nullptr, model::State<Real> const* failed = nullptr)
+void write_output(cli::RunReport& report, Arguments const& args, std::vector<model::State<Real> const*> const& states,
+                  std::vector<std::optional<Real>> const& gaps, model::State<Real> const* reference = nullptr,
+                  model::State<Real> const* failed = nullptr)
 {
   std::vector<std::string> names{"states", "quantum_numbers"};
   if (reference) names.push_back("reference");
   if (failed) names.push_back("failed");
   if (args.roots) names.push_back("roots");
-  cli::ResultOutput output(report, args.output, "bethe-biquadratic-obc", argc, argv, names);
+  cli::ResultOutput output(report, args.output, names);
   auto write_states = [&](std::string name, std::string title, auto const& rows, std::size_t offset, bool ranked) {
     output.table(
         name, title,
@@ -407,17 +409,18 @@ void write_output(cli::report_builder const& report, Arguments const& args, int 
   output.finish();
 }
 
-template <uni20::Real Real> auto preamble(Arguments const& args, bethe::SolverOptions<Real> const& options)
+template <uni20::Real Real>
+auto preamble(uni20::run_context& context, Arguments const& args, bethe::SolverOptions<Real> const& options)
 {
-  cli::report_builder report("Spin-1 pure biquadratic chain (free ends)");
-  report.field("Hamiltonian", "H=-sum_i (S_i.S_(i+1))^2")
-      .field("Sites", args.sites)
-      .field("Spin", 1)
-      .field("TL loop weight", 3)
-      .field("XXZ Delta", "1.5")
-      .field("XXZ reference", "spin-half exchange 1; +sqrt(5)/4*(sz_1-sz_N)")
-      .field("Precision", args.precision)
-      .field("Residual tolerance", uni20::format_real(options.residual_tolerance));
+  cli::RunReport report(context, "Spin-1 pure biquadratic chain (free ends)");
+  report.field("hamiltonian", "Hamiltonian", "H=-sum_i (S_i.S_(i+1))^2")
+      .field("sites", "Sites", args.sites)
+      .field("spin", "Spin", 1)
+      .field("tl_loop_weight", "TL loop weight", 3)
+      .field("xxz_delta", "XXZ Delta", Real{1.5})
+      .field("xxz_reference", "XXZ reference", "spin-half exchange 1; +sqrt(5)/4*(sz_1-sz_N)")
+      .field("precision", "Precision", args.precision)
+      .field("residual_tolerance", "Residual tolerance", options.residual_tolerance);
   return report;
 }
 
@@ -429,43 +432,46 @@ int finish(bool converged)
 
 template <uni20::Real Real> int run(Arguments const& args, int argc, char** argv)
 {
+  uni20::run_context context(program_info(), {.invocation = std::vector<std::string>(argv, argv + argc)});
   bethe::SolverOptions<Real> options;
   options.max_iterations = args.max_iterations;
   if (args.tolerance) options.residual_tolerance = uni20::parse_real<Real>(*args.tolerance);
-  auto report = preamble(args, options);
-  if (args.q_seed || args.q_spectrum) return run_qsystem(args, argc, argv, options, std::move(report));
-  if (args.singlet_excitation) return run_singlet(args, argc, argv, options, std::move(report));
-  cli::CpuTimer const timer;
+  auto report = preamble(context, args, options);
+  if (args.q_seed || args.q_spectrum) return run_qsystem(args, options, std::move(report));
+  if (args.singlet_excitation) return run_singlet(args, options, std::move(report));
+  auto computation = context.computation();
   if (args.excitations)
   {
     auto const ell = args.through_lines.value_or(2);
     auto const scan = model::real_excitations<Real>(
         args.sites, ell, {.count = *args.excitations, .max_candidates = args.max_candidates.value_or(10000)}, options);
-    auto const cpu_time = timer.elapsed_text();
+    computation.finish();
     auto const& ground = scan.ground_state;
-    report.field("Calculation", "restricted real-root excitations")
-        .field("Family", "positive finite roots; complex-root levels excluded; NOT the complete TL spectrum")
-        .field("TL through-lines", ell)
-        .field("Multiplicity per TL eigenvector",
-               multiplicity_text(bethe::temperley_lieb::spin_chain_multiplicity(3, ell)))
-        .field("Multiplicity meaning", "physical states, not SU(2) multiplets; not an accidental-degeneracy sum")
-        .field("Candidates", scan.candidate_count)
-        .field("Converged candidates", scan.converged_count)
-        .field("Returned levels", scan.levels.size())
-        .field("Ordering",
+    report.field("calculation", "Calculation", "restricted real-root excitations")
+        .field("family", "Family", "positive finite roots; complex-root levels excluded; NOT the complete TL spectrum")
+        .field("tl_through_lines", "TL through-lines", ell)
+        .field("multiplicity_per_tl_eigenvector", "Multiplicity per TL eigenvector",
+               bethe::temperley_lieb::spin_chain_multiplicity(3, ell), {.missing = "overflow (>uint64)"})
+        .field("multiplicity_meaning", "Multiplicity meaning",
+               "physical states, not SU(2) multiplets; not an accidental-degeneracy sum")
+        .field("candidates", "Candidates", scan.candidate_count)
+        .field("converged_candidates", "Converged candidates", scan.converged_count)
+        .field("returned_levels", "Returned levels", scan.levels.size())
+        .field("ordering", "Ordering",
                scan.family_converged() ? "complete within supported family" : "incomplete; failed candidates excluded")
-        .field("Ground energy", uni20::format_real(ground.energy))
-        .field("Ground status", status(ground.reference.status))
-        .field("Ground residual", uni20::format_real(ground.reference.residual_norm))
-        .field("Ground iterations", ground.reference.iterations)
-        .field("Gap reference",
+        .field("ground_energy", "Ground energy", ground.energy)
+        .field("ground_status", "Ground status", status(ground.reference.status))
+        .field("ground_residual", "Ground residual", ground.reference.residual_norm)
+        .field("ground_iterations", "Ground iterations", ground.reference.iterations)
+        .field("gap_reference", "Gap reference",
                ground.reference.converged ? "E-E0; global singlet ground state" : "unavailable; ground solve failed")
-        .field("Status", scan.converged() ? "converged" : "incomplete scan or ground reference")
-        .field("CPU time", cpu_time);
+        .result(scan.converged(), scan.converged() ? "converged" : "incomplete scan or ground reference");
     if (scan.first_unconverged)
-      report.field("First failed I", cli::quantum_number_text(scan.first_unconverged->reference.quantum_numbers))
-          .field("First failed status", status(scan.first_unconverged->reference.status))
-          .field("First failed residual", uni20::format_real(scan.first_unconverged->reference.residual_norm));
+      report
+          .field("first_failed_i", "First failed I",
+                 cli::quantum_number_text(scan.first_unconverged->reference.quantum_numbers))
+          .field("first_failed_status", "First failed status", status(scan.first_unconverged->reference.status))
+          .field("first_failed_residual", "First failed residual", scan.first_unconverged->reference.residual_norm);
     std::vector<model::State<Real> const*> states;
     std::vector<std::optional<Real>> gaps;
     for (auto const& level : scan.levels)
@@ -473,8 +479,7 @@ template <uni20::Real Real> int run(Arguments const& args, int argc, char** argv
       states.push_back(&level.state);
       gaps.push_back(level.gap);
     }
-    write_output(report, args, argc, argv, states, gaps, &ground,
-                 scan.first_unconverged ? &*scan.first_unconverged : nullptr);
+    write_output(report, args, states, gaps, &ground, scan.first_unconverged ? &*scan.first_unconverged : nullptr);
     return finish(scan.converged());
   }
   if (args.sectors)
@@ -487,11 +492,11 @@ template <uni20::Real Real> int run(Arguments const& args, int argc, char** argv
       states.push_back(model::sector_ground_state<Real>(args.sites, ell, options));
       converged = converged && states.back().reference.converged;
     }
-    auto const cpu_time = timer.elapsed_text();
-    report.field("Calculation", "TL module minima (not physical-spin sectors)")
-        .field("Multiplicity meaning", "physical states per TL eigenvector, not SU(2) multiplets")
-        .field("Status", converged ? "converged" : "incomplete; unconverged estimates")
-        .field("CPU time", cpu_time);
+    computation.finish();
+    report.field("calculation", "Calculation", "TL module minima (not physical-spin sectors)")
+        .field("multiplicity_meaning", "Multiplicity meaning",
+               "physical states per TL eigenvector, not SU(2) multiplets")
+        .result(converged, converged ? "converged" : "incomplete; unconverged estimates");
     std::vector<model::State<Real> const*> rows;
     std::vector<std::optional<Real>> gaps;
     for (auto const& state : states)
@@ -501,34 +506,35 @@ template <uni20::Real Real> int run(Arguments const& args, int argc, char** argv
                          ? std::optional<Real>{Real{2} * (state.reference.energy - states.front().reference.energy)}
                          : std::nullopt);
     }
-    write_output(report, args, argc, argv, rows, gaps);
+    write_output(report, args, rows, gaps);
     return finish(converged);
   }
   auto const state = args.numbers
                          ? model::solve_real<Real>(args.sites, *args.numbers, options)
                          : model::sector_ground_state<Real>(args.sites, args.through_lines.value_or(0), options);
-  auto const cpu_time = timer.elapsed_text();
+  computation.finish();
   auto const& reference = state.reference;
   report
       .status(reference.converged ? cli::semantic_glyph::success : cli::semantic_glyph::warning,
               status(reference.status))
-      .field("Calculation", args.numbers               ? "specified real-root TL level"
-                            : state.through_lines == 0 ? "even-chain singlet ground state"
-                                                       : "TL module minimum")
-      .field("TL through-lines", state.through_lines)
-      .field(state.through_lines == 0 ? "Ground-state multiplicity" : "Multiplicity per TL eigenvector",
-             multiplicity_text(state.multiplicity))
-      .field("Status", status(reference.status))
-      .field("Total energy", uni20::format_real(state.energy))
-      .field("Energy per site", uni20::format_real(state.energy / Real(args.sites)))
-      .field("TL energy (-sum e_i)", uni20::format_real(state.tl_energy))
-      .field("XXZ reference energy", uni20::format_real(reference.energy))
-      .field("Residual norm", uni20::format_real(reference.residual_norm))
-      .field("Iterations", reference.iterations)
-      .field("CPU time", cpu_time);
-  if (state.through_lines == 0) report.field("Total spin", 0);
-  if (state.through_lines != 0) report.field("Multiplicity meaning", "physical states, not a physical-spin label");
-  write_output<Real>(report, args, argc, argv, {&state}, {std::nullopt});
+      .field("calculation", "Calculation",
+             args.numbers               ? "specified real-root TL level"
+             : state.through_lines == 0 ? "even-chain singlet ground state"
+                                        : "TL module minimum")
+      .field("tl_through_lines", "TL through-lines", state.through_lines)
+      .field("multiplicity", state.through_lines == 0 ? "Ground-state multiplicity" : "Multiplicity per TL eigenvector",
+             state.multiplicity, {.missing = "overflow (>uint64)"})
+      .result(reference.converged, status(reference.status))
+      .field("total_energy", "Total energy", state.energy)
+      .field("energy_per_site", "Energy per site", state.energy / Real(args.sites))
+      .field("tl_energy_sum_e_i", "TL energy (-sum e_i)", state.tl_energy)
+      .field("xxz_reference_energy", "XXZ reference energy", reference.energy)
+      .field("residual_norm", "Residual norm", reference.residual_norm)
+      .field("iterations", "Iterations", reference.iterations);
+  if (state.through_lines == 0) report.field("total_spin", "Total spin", 0);
+  if (state.through_lines != 0)
+    report.field("multiplicity_meaning", "Multiplicity meaning", "physical states, not a physical-spin label");
+  write_output<Real>(report, args, {&state}, {std::nullopt});
   return finish(reference.converged);
 }
 } // namespace

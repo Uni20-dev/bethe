@@ -17,8 +17,8 @@
 #include <vector>
 
 // Presentation belongs to the front end, not the numerical library. Typed data
-// tables supply their native-precision cell text; scalar overview fields use
-// format_real without narrowing through double.
+// tables supply their native-precision cell text; scalar overviews are projected
+// from Uni20's typed run metadata without narrowing through double.
 namespace bethe::cli
 {
 namespace presentation = uni20::presentation;
@@ -106,7 +106,7 @@ inline void print_report(report_builder const& report, std::string_view format)
   }
 }
 
-inline void add_scan_status(report_builder& report, std::size_t converged, std::size_t total)
+template <typename Report> void add_scan_status(Report& report, std::size_t converged, std::size_t total)
 {
   bool const all = converged == total;
   report.status(all ? semantic_glyph::success : semantic_glyph::warning,

@@ -2,6 +2,7 @@
 // Copyright (C) 2026 Ian McCulloch
 #pragma once
 #include "data-output-options.hpp"
+#include "run-metadata.hpp"
 
 namespace bethe::cli
 {
@@ -13,22 +14,18 @@ template <data::DataTableValue T> auto column(std::string id, std::string label 
   return result;
 }
 
-// Application metadata stays with the model. This adapter only adds provenance
-// and gives a collection of differently typed tables one output lifetime.
+// Models supply typed metadata and an explicit scientific outcome. Freeze one
+// numerical summary before emitting the batch, and share it across all tables.
+// Output completion remains an independent document-level property.
 class ResultOutput {
   public:
-    ResultOutput(report_builder const& report, DataOutputOptions const& options, std::string program, int argc,
-                 char** argv, std::vector<std::string> names)
+    ResultOutput(RunReport& report, DataOutputOptions const& options, std::vector<std::string> names,
+                 bool overview = true)
         : options_{.retain = options.retain ? data::retention::all : data::retention::none,
-                   .metadata = provenance(std::move(program), argc, argv)},
-          output_(options, std::move(names))
+                   .metadata = report.metadata()},
+          summary_(report.finish()), output_(options, std::move(names))
     {
-      output_.overview(report);
-      for (auto const& [key, value] : report.fields())
-        if (key == "CPU time" || key == "Status")
-          summary_[key] = value;
-        else
-          options_.metadata[key] = value;
+      if (overview) output_.overview(report.overview(summary_));
     }
     template <typename Fill, data::DataTableValue... Ts>
     void table(std::string name, std::string title, Fill&& fill, data::data_column<Ts>... columns)

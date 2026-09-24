@@ -7,8 +7,6 @@
 #include <uni20/core/scalar_io.hpp>
 
 #include <charconv>
-#include <ctime>
-#include <fmt/format.h>
 #include <iostream>
 #include <stdexcept>
 #include <string>
@@ -37,21 +35,6 @@ template <typename Function> int dispatch_precision(std::string_view precision, 
   }
   throw std::invalid_argument("unknown precision: " + std::string(precision));
 }
-
-// Process CPU time, excluding report construction and printing.
-class CpuTimer {
-  public:
-    std::string elapsed_text() const
-    {
-      auto const end = std::clock();
-      if (start_ == std::clock_t{-1} || end == std::clock_t{-1} || end < start_) return "unavailable";
-      auto const seconds = (static_cast<long double>(end) - static_cast<long double>(start_)) / CLOCKS_PER_SEC;
-      return fmt::format("{:.6f} s", seconds);
-    }
-
-  private:
-    std::clock_t const start_ = std::clock();
-};
 
 inline std::size_t parse_size(std::string_view text)
 {

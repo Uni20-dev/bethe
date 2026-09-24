@@ -80,12 +80,13 @@ std::string shape_text(model::detail::Shape const& shape)
 
 template <uni20::Real Real> int run(Arguments const& args, int argc, char** argv)
 {
+  uni20::run_context context(program_info(), {.invocation = std::vector<std::string>(argv, argv + argc)});
   Real const rung = uni20::parse_real<Real>(*args.rung);
   model::SolverOptions<Real> options;
   options.max_iterations = args.max_iterations;
   options.max_branches = args.max_branches;
   if (args.tolerance) options.residual_tolerance = uni20::parse_real<Real>(*args.tolerance);
-  cli::CpuTimer const timer;
+  auto computation = context.computation();
   model::State<Real> state;
   std::optional<model::SectorScan<Real>> scan;
   if (args.sectors)
@@ -99,42 +100,44 @@ template <uni20::Real Real> int run(Arguments const& args, int argc, char** argv
     state = model::sector_ground_state(args.rungs, *args.singlets, rung, options);
   else
     state = model::ground_state(args.rungs, rung, options);
-  auto const cpu_time = timer.elapsed_text();
-  cli::report_builder report("Integrable spin ladder (periodic)");
+  computation.finish();
+  cli::RunReport report(context, "Integrable spin ladder (periodic)");
   report.status(state.converged ? cli::semantic_glyph::success : cli::semantic_glyph::warning, status(state.status))
-      .field("Hamiltonian", "H=sum[S.S_next+T.T_next+4(S.S_next)(T.T_next)]+J_r*sum S.T")
-      .field("Calculation", args.singlets  ? "fixed singlet-count sector"
-                            : args.sectors ? "all singlet-count sectors"
-                                           : "global ground state")
-      .field("Rungs", args.rungs)
-      .field("Rung coupling J_r", uni20::format_real(rung))
-      .field("Precision", args.precision)
-      .field("Residual tolerance", uni20::format_real(options.residual_tolerance))
-      .field("Status", status(state.status));
+      .field("hamiltonian", "Hamiltonian", "H=sum[S.S_next+T.T_next+4(S.S_next)(T.T_next)]+J_r*sum S.T")
+      .field("calculation", "Calculation",
+             args.singlets  ? "fixed singlet-count sector"
+             : args.sectors ? "all singlet-count sectors"
+                            : "global ground state")
+      .field("rungs", "Rungs", args.rungs)
+      .field("rung_coupling_j_r", "Rung coupling J_r", rung)
+      .field("precision", "Precision", args.precision)
+      .field("residual_tolerance", "Residual tolerance", options.residual_tolerance)
+      .result(state.converged, status(state.status));
   if (state.energy)
   {
-    report.field(state.converged ? "Total energy" : "Candidate energy (upper bound)", uni20::format_real(*state.energy))
-        .field("Singlets N_s", state.singlets)
-        .field("Populations (s,t+,t0,t-)", shape_text(state.populations))
-        .field("Highest-weight rows", shape_text(state.highest_weight.shape))
-        .field("SU(4) descendant", state.descendant ? "yes; roots belong to the highest-weight representative"
-                                                    : "no (up to color permutation)")
-        .field("Permutation energy", uni20::format_real(state.highest_weight.energy))
-        .field("Momentum index", state.highest_weight.momentum_index)
-        .field("Reflected momentum index", (state.rungs - state.highest_weight.momentum_index) % state.rungs)
-        .field("Selected branch residual", uni20::format_real(state.highest_weight.residual));
-    if (state.converged) report.field("Energy per rung", uni20::format_real(*state.energy / Real(state.rungs)));
-    if (state.analytic) report.field("Exact limit", "rung-singlet product (no root solve)");
+    report.field("total_energy", state.converged ? "Total energy" : "Candidate energy (upper bound)", *state.energy)
+        .field("singlets_n_s", "Singlets N_s", state.singlets)
+        .field("populations_s_t_t0_t", "Populations (s,t+,t0,t-)", shape_text(state.populations))
+        .field("highest_weight_rows", "Highest-weight rows", shape_text(state.highest_weight.shape))
+        .field("su_4_descendant", "SU(4) descendant",
+               state.descendant ? "yes; roots belong to the highest-weight representative"
+                                : "no (up to color permutation)")
+        .field("permutation_energy", "Permutation energy", state.highest_weight.energy)
+        .field("momentum_index", "Momentum index", state.highest_weight.momentum_index)
+        .field("reflected_momentum_index", "Reflected momentum index",
+               (state.rungs - state.highest_weight.momentum_index) % state.rungs)
+        .field("selected_branch_residual", "Selected branch residual", state.highest_weight.residual);
+    if (state.converged) report.field("energy_per_rung", "Energy per rung", *state.energy / Real(state.rungs));
+    if (state.analytic) report.field("exact_limit", "Exact limit", "rung-singlet product (no root solve)");
   }
   else
-    report.field("Energy", "unavailable: no converged branch");
-  report.field("Highest weights visited", state.tableaux)
-      .field("Sea branches attempted", state.branches)
-      .field("Newton corrections", state.iterations)
-      .field("CPU time", cpu_time);
+    report.field("energy", "Energy", state.energy, {.missing = "unavailable: no converged branch"});
+  report.field("highest_weights_visited", "Highest weights visited", state.tableaux)
+      .field("sea_branches_attempted", "Sea branches attempted", state.branches)
+      .field("newton_corrections", "Newton corrections", state.iterations);
   std::vector<std::string> tables{"states", "representations"};
   if (args.roots) tables.push_back("roots");
-  cli::ResultOutput output(report, args.output, "bethe-ladder-pbc", argc, argv, tables);
+  cli::ResultOutput output(report, args.output, tables);
   // Scan rows retain their sector identity; roots below belong only to the selected row.
   auto const selected_id = scan ? state.singlets : std::size_t{0};
   auto for_states = [&](auto&& append) {

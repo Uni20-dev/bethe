@@ -1,4 +1,4 @@
-# Check the overview timing field, then remove only that nondeterministic line
+# Check the overview timing fields, then remove their nondeterministic lines
 # before comparing numerical output, color policies, or precision tokens.
 function(normalize_cpu_time input_variable output_variable)
   string(ASCII 27 escape)
@@ -12,5 +12,13 @@ function(normalize_cpu_time input_variable output_variable)
     message(FATAL_ERROR "Invalid CPU time field: ${timings}")
   endif()
   string(REGEX REPLACE "[^\n]*CPU time[^\n]*\n" "" normalized "${${input_variable}}")
+  foreach(label IN ITEMS "Run CPU seconds" "Elapsed seconds")
+    string(REGEX MATCHALL "[^\n]*${label}[^\n]*\n" timings "${unstyled}")
+    list(LENGTH timings count)
+    if(NOT count EQUAL 1 OR NOT timings MATCHES "^(# )?[ ]*${label}[: ]+([0-9]+(\\.[0-9]+)?([eE][-+]?[0-9]+)?|unavailable)\n$")
+      message(FATAL_ERROR "Invalid ${label} field: ${timings}")
+    endif()
+    string(REGEX REPLACE "[^\n]*${label}[^\n]*\n" "" normalized "${normalized}")
+  endforeach()
   set(${output_variable} "${normalized}" PARENT_SCOPE)
 endfunction()

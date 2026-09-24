@@ -31,7 +31,8 @@ auto program_info()
       "No PBC/OBC or lattice momentum applies; a sector minimum is not necessarily the global minimum.",
       "See docs/central-spin.md for conventions, state selection and continuation controls.",
       "Use --references for literature and applicability; see CITATIONS.md."};
-  info.notes.push_back("Tables: states; variables with --variables. Null energy/reached_field means no finite-field stage was reached.");
+  info.notes.push_back(
+      "Tables: states; variables with --variables. Null energy/reached_field means no finite-field stage was reached.");
   return info;
 }
 void add_options(CLI::App& app, Arguments& args)
@@ -75,6 +76,7 @@ char const* status(model::SolveStatus value)
 }
 template <uni20::Real Real> int run(Arguments const& args, int argc, char** argv)
 {
+  uni20::run_context context(program_info(), {.invocation = std::vector<std::string>(argv, argv + argc)});
   std::vector<Real> a;
   std::string_view list = *args.couplings;
   while (!list.empty())
@@ -91,37 +93,36 @@ template <uni20::Real Real> int run(Arguments const& args, int argc, char** argv
   options.max_iterations = args.max_iterations;
   options.max_stages = args.max_stages;
   if (args.tolerance) options.residual_tolerance = uni20::parse_real<Real>(*args.tolerance);
-  cli::CpuTimer const timer;
+  auto computation = context.computation();
   auto const state = model::sector_ground_state<Real>(a, b, *args.sz, options);
-  auto const cpu_time = timer.elapsed_text();
-  cli::report_builder report("Rational Gaudin central spin");
+  computation.finish();
+  cli::RunReport report(context, "Rational Gaudin central spin");
   report.status(state.converged ? cli::semantic_glyph::success : cli::semantic_glyph::warning, status(state.status))
-      .field("Hamiltonian", "B*S0^z+sum_j A_j*S0.Sj (all spins 1/2)")
-      .field("Calculation", "lowest state in the specified total-Sz sector")
-      .field("Bath spins", a.size())
-      .field("Total Sz", uni20::to_string_fraction(state.sz))
-      .field("Up spins", state.up_spins)
-      .field("Precision", args.precision)
-      .field("Spin reversed", state.spin_reversed ? "yes" : "no")
-      .field("Requested field B", uni20::format_real(state.field))
-      .field("Reached field B", state.reached_field ? uni20::format_real(*state.reached_field) : "infinite-field seed")
-      .field("Status", status(state.status));
+      .field("hamiltonian", "Hamiltonian", "B*S0^z+sum_j A_j*S0.Sj (all spins 1/2)")
+      .field("calculation", "Calculation", "lowest state in the specified total-Sz sector")
+      .field("bath_spins", "Bath spins", a.size())
+      .field("total_sz", "Total Sz", state.sz, {.fractions = true})
+      .field("up_spins", "Up spins", state.up_spins)
+      .field("precision", "Precision", args.precision)
+      .field("spin_reversed", "Spin reversed", state.spin_reversed ? "yes" : "no")
+      .field("requested_field_b", "Requested field B", state.field)
+      .field("reached_field_b", "Reached field B", state.reached_field, {.missing = "infinite-field seed"})
+      .result(state.converged, status(state.status));
   if (state.energy)
-    report.field("Energy evaluated at B", uni20::format_real(*state.reached_field))
-        .field("Total energy", uni20::format_real(*state.energy));
+    report.field("energy_evaluated_at_b", "Energy evaluated at B", *state.reached_field)
+        .field("total_energy", "Total energy", *state.energy);
   else
-    report.field("Energy", "unavailable: no finite-field stage reached");
-  report.field("Residual tolerance", uni20::format_real(options.residual_tolerance))
-      .field("Reached backward residual", uni20::format_real(state.residual_norm))
-      .field("Number-constraint error", uni20::format_real(state.number_error))
-      .field("Newton corrections", state.iterations)
-      .field("Continuation stages", state.stages)
-      .field("Rejected stages", state.rejected_stages)
-      .field("CPU time", cpu_time);
+    report.field("energy", "Energy", state.energy, {.missing = "unavailable: no finite-field stage reached"});
+  report.field("residual_tolerance", "Residual tolerance", options.residual_tolerance)
+      .field("reached_backward_residual", "Reached backward residual", state.residual_norm)
+      .field("number_constraint_error", "Number-constraint error", state.number_error)
+      .field("newton_corrections", "Newton corrections", state.iterations)
+      .field("continuation_stages", "Continuation stages", state.stages)
+      .field("rejected_stages", "Rejected stages", state.rejected_stages);
   using cli::column;
   std::vector<std::string> names{"states"};
   if (args.variables) names.push_back("variables");
-  cli::ResultOutput output(report, args.output, "bethe-central-spin", argc, argv, names);
+  cli::ResultOutput output(report, args.output, names);
   output.table(
       "states", "State",
       [&](auto& t) {

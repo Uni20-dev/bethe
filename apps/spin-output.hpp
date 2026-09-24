@@ -161,29 +161,29 @@ std::vector<std::string> spin_tables(bool roots, bool labels, bool reference = f
 }
 
 template <uni20::Real Real, typename State>
-bool spin_state(report_builder report, std::size_t sites, State const& state, bool roots,
-                DataOutputOptions const& options, std::string program, int argc, char** argv)
+bool spin_state(RunReport report, std::size_t sites, State const& state, bool roots, DataOutputOptions const& options)
 {
   report.status(state.converged ? semantic_glyph::success : semantic_glyph::warning, spin_status(state))
-      .field("Sz", uni20::to_string(state.sz))
-      .field("Reference vacuum", state.spin_reversed ? "all down (spin reversed)" : "all up")
-      .field("Spin-reversed reference", state.spin_reversed ? 1 : 0)
-      .field("Status", spin_status(state))
-      .field("Iterations", state.iterations)
-      .field("Residual norm", uni20::format_real(state.residual_norm))
-      .field("Total energy", uni20::format_real(state.energy))
-      .field("Energy per site", uni20::format_real(state.energy / Real(sites)));
+      .field("sz", "Sz", state.sz)
+      .field("reference_vacuum", "Reference vacuum", state.spin_reversed ? "all down (spin reversed)" : "all up")
+      .field("spin_reversed_reference", "Spin-reversed reference", state.spin_reversed ? 1 : 0)
+      .result(state.converged, spin_status(state))
+      .field("iterations", "Iterations", state.iterations)
+      .field("residual_norm", "Residual norm", state.residual_norm)
+      .field("total_energy", "Total energy", state.energy)
+      .field("energy_per_site", "Energy per site", state.energy / Real(sites));
   if constexpr (requires { state.momentum; })
-    report.field("Momentum index", state.momentum_index).field("Momentum P", uni20::format_real(state.momentum));
+    report.field("momentum_index", "Momentum index", state.momentum_index)
+        .field("momentum_p", "Momentum P", state.momentum);
   if constexpr (requires { state.boundary_root; })
   {
     auto const kind = !state.boundary_root                            ? "none"
                       : state.boundary_root->inverse_square > Real{0} ? "real"
                       : state.boundary_root->inverse_square < Real{0} ? "imaginary"
                                                                       : "infinity";
-    report.field("Root Delta", uni20::format_real(state.root_delta)).field("Boundary root", kind);
+    report.field("root_delta", "Root Delta", state.root_delta).field("boundary_root", "Boundary root", kind);
   }
-  ResultOutput output(report, options, std::move(program), argc, argv, spin_tables<State>(roots, false));
+  ResultOutput output(report, options, spin_tables<State>(roots, false));
   spin_rows<Real>(output, "states", "State", std::vector{&state}, {});
   spin_roots<Real>(output, std::vector{&state}, roots, false);
   output.finish();
@@ -191,8 +191,7 @@ bool spin_state(report_builder report, std::size_t sites, State const& state, bo
 }
 
 template <uni20::Real Real, typename State>
-bool spin_sectors(report_builder report, std::vector<State> const& states, bool roots, DataOutputOptions const& options,
-                  std::string program, int argc, char** argv)
+bool spin_sectors(RunReport report, std::vector<State> const& states, bool roots, DataOutputOptions const& options)
 {
   std::vector<State const*> rows;
   std::size_t converged = 0;
@@ -202,10 +201,11 @@ bool spin_sectors(report_builder report, std::vector<State> const& states, bool 
     converged += s.converged;
   }
   add_scan_status(report, converged, states.size());
-  report.field("Status", converged == states.size() ? "converged" : "incomplete; unconverged estimates");
+  report.result(converged == states.size(),
+                converged == states.size() ? "converged" : "incomplete; unconverged estimates");
   if constexpr (requires(State s) { s.momentum; })
-    report.field("Momentum convention", "P = 2*pi*momentum_index/N (mod 2*pi)");
-  ResultOutput output(report, options, std::move(program), argc, argv, spin_tables<State>(roots, false));
+    report.field("momentum_convention", "Momentum convention", "P = 2*pi*momentum_index/N (mod 2*pi)");
+  ResultOutput output(report, options, spin_tables<State>(roots, false));
   spin_rows<Real>(output, "states", "Sector energies and convergence", rows, {});
   spin_roots<Real>(output, rows, roots, false);
   output.finish();

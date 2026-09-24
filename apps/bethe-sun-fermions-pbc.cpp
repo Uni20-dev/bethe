@@ -73,6 +73,7 @@ char const* status(model::SolveStatus value)
 }
 template <uni20::Real Real> int run(Arguments const& args, int argc, char** argv)
 {
+  uni20::run_context context(program_info(), {.invocation = std::vector<std::string>(argv, argv + argc)});
   std::vector<std::size_t> pop;
   std::string_view list = *args.populations;
   if (list.empty()) throw std::invalid_argument("at least one component population is required");
@@ -90,39 +91,39 @@ template <uni20::Real Real> int run(Arguments const& args, int argc, char** argv
   options.max_iterations = args.max_iterations;
   options.max_stages = args.max_stages;
   if (args.tolerance) options.residual_tolerance = uni20::parse_real<Real>(*args.tolerance);
-  cli::CpuTimer const timer;
+  auto computation = context.computation();
   auto const state = model::ground_state<Real>(pop, length, c, options);
-  auto const cpu_time = timer.elapsed_text();
-  cli::report_builder report("SU(n) fermion gas (periodic)");
+  computation.finish();
+  cli::RunReport report(context, "SU(n) fermion gas (periodic)");
   report.status(state.converged ? cli::semantic_glyph::success : cli::semantic_glyph::warning, status(state.status))
-      .field("Calculation", state.free ? "exact free-fermion ground state" : "odd-population sector ground state")
-      .field("Particles", state.particles)
-      .field("Components", pop.size())
-      .field("Occupied components", state.component_order.size())
-      .field("Length", uni20::format_real(length))
-      .field("Requested c", uni20::format_real(c))
-      .field("Units", "hbar^2/(2m)=1; interaction 2c delta")
-      .field("Precision", args.precision)
-      .field("Status", status(state.status));
+      .field("calculation", "Calculation",
+             state.free ? "exact free-fermion ground state" : "odd-population sector ground state")
+      .field("particles", "Particles", state.particles)
+      .field("components", "Components", pop.size())
+      .field("occupied_components", "Occupied components", state.component_order.size())
+      .field("length", "Length", length)
+      .field("requested_c", "Requested c", c)
+      .field("units", "Units", "hbar^2/(2m)=1; interaction 2c delta")
+      .field("precision", "Precision", args.precision)
+      .result(state.converged, status(state.status));
   if (state.energy)
   {
-    report.field("Energy evaluated at c", uni20::format_real(*state.reached_interaction))
-        .field("Total energy", uni20::format_real(*state.energy))
-        .field("Momentum index", state.momentum_index)
-        .field("Momentum P", uni20::format_real(state.momentum));
+    report.field("energy_evaluated_at_c", "Energy evaluated at c", *state.reached_interaction)
+        .field("total_energy", "Total energy", *state.energy)
+        .field("momentum_index", "Momentum index", state.momentum_index)
+        .field("momentum_p", "Momentum P", state.momentum);
     if (!state.free)
-      report.field("Reached residual", uni20::format_real(state.residual_norm))
-          .field("Target residual", uni20::format_real(state.target_residual_norm));
+      report.field("reached_residual", "Reached residual", state.residual_norm)
+          .field("target_residual", "Target residual", state.target_residual_norm);
   }
   else
-    report.field("Energy", "unavailable: no converged coupling stage");
-  report.field("Residual tolerance", uni20::format_real(options.residual_tolerance))
-      .field("Newton corrections", state.iterations)
-      .field("Continuation stages", state.stages)
-      .field("CPU time", cpu_time);
+    report.field("energy", "Energy", state.energy, {.missing = "unavailable: no converged coupling stage"});
+  report.field("residual_tolerance", "Residual tolerance", options.residual_tolerance)
+      .field("newton_corrections", "Newton corrections", state.iterations)
+      .field("continuation_stages", "Continuation stages", state.stages);
   std::vector<std::string> tables{"states", "components"};
   if (args.roots) tables.push_back(state.free ? "free_modes" : "roots");
-  cli::ResultOutput output(report, args.output, "bethe-sun-fermions-pbc", argc, argv, tables);
+  cli::ResultOutput output(report, args.output, tables);
   output.table(
       "states", "State",
       [&](auto& table) {
