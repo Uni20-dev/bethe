@@ -142,13 +142,37 @@ effective solver controls. Doped calculations also include the solved
 background. Revisions describe the actual build checkouts, including a local
 Uni20 override; `-dirty` means tracked modifications at build time. Untracked
 files are not fingerprinted. A source without Git information reports
-`unavailable` rather than claiming the pinned revision was used.
+`unavailable` (or `unknown` through Uni20's provenance provider) rather than
+claiming the pinned revision was used.
 
 The rectangular header and data rows follow. Completion status, accepted row
 count and CPU time appear in **trailing comments**, since they are not known
 when streaming starts. Readers should ignore `#` lines throughout the file,
 not only at its beginning. CPU time measures the numerical background and
 point solves, excluding rendering and export work; it is not wall-clock time.
+
+Hubbard dispersion now uses Uni20's typed run context for its resolved parameters,
+background metadata, provenance and timing. Values remain native until projected
+into the existing string-valued table metadata; export keys and the single-table
+JSON shape are unchanged. Missing background values still read `unavailable`.
+The metadata also records the compiler, build type and platform. Its UTC timestamp
+marks the start of the calculation, before the background solve.
+
+Its summary retains the compute-only `CPU time` field with six fractional digits
+and an `s` suffix, and adds `Run CPU seconds`, `Elapsed seconds` and `Outcome`.
+Run CPU includes validation, setup and interleaved output within the selected
+precision's calculation function; elapsed time is monotonic wall time over that
+same interval. Neither includes argument parsing or the final summary's own
+rendering/flush. The new seconds fields contain round-trip decimal text without
+units suffixes; unavailable timing is `unavailable`. `Outcome` is `success` for
+converged lines, `partial` for incomplete numerical results, or `failed` when a
+run aborts before its summary is frozen. It is not an I/O-success guarantee: a
+later write/flush failure still causes exit 1 without rewriting an already
+finalized numerical summary.
+
+This first pilot retains the existing CLI, output coordinator and final-report
+layout. An initial human preamble before the background solve, shared sessions,
+and the multi-table JSON transition are subsequent steps, not enabled here.
 
 `--no-preamble` removes both initial and trailing CSV/TSV comments, leaving
 strict rectangular data for readers that do not support comments. It does not

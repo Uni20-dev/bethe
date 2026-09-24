@@ -97,33 +97,6 @@ inline void write_comments(std::ostream& out, data::table_metadata const& values
   if (!out) throw std::ios_base::failure("metadata output failed");
 }
 
-// Preserve compute-only CPU timing when formatting/I/O is interleaved with solves.
-class ComputeCpuTime {
-  public:
-    template <typename Function> decltype(auto) measure(Function&& function)
-    {
-      struct interval
-      {
-          ComputeCpuTime& owner;
-          std::clock_t start = std::clock();
-          ~interval()
-          {
-            auto end = std::clock();
-            if (start == std::clock_t{-1} || end == std::clock_t{-1} || end < start)
-              owner.available_ = false;
-            else
-              owner.seconds_ += (static_cast<long double>(end) - static_cast<long double>(start)) / CLOCKS_PER_SEC;
-          }
-      } scope{*this};
-      return std::forward<Function>(function)();
-    }
-    std::string text() const { return available_ ? fmt::format("{:.6f} s", seconds_) : "unavailable"; }
-
-  private:
-    long double seconds_ = 0;
-    bool available_ = true;
-};
-
 // Add Bethe's comment dialect without changing Uni20's rectangular CSV/TSV writers.
 template <typename Sink> class CommentedSink {
   public:

@@ -2,6 +2,7 @@
 // Copyright (C) 2026 Ian McCulloch
 #include "data-output-options.hpp"
 #include "program-options.hpp"
+#include "run-metadata.hpp"
 #include <bethe/hubbard_doped.hpp>
 
 namespace
@@ -156,6 +157,7 @@ char const* name(model::DopedStatus s)
 }
 template <uni20::Real Real> int run(Arguments const& args, int argc, char** argv)
 {
+  uni20::run_context context(program_info(), {.invocation = std::vector<std::string>(argv, argv + argc)});
   Real const u = uni20::parse_real<Real>(args.u), pi = Real{4} * std::atan(Real{1});
   Real const density = uni20::parse_real<Real>(args.density);
   if (!uni20::isfinite(density) || density <= Real{0} || density > Real{1})
@@ -175,7 +177,6 @@ template <uni20::Real Real> int run(Arguments const& args, int argc, char** argv
   options.max_levels = args.max_levels;
   options.max_iterations = args.max_iterations;
   if (args.tolerance) options.relative_tolerance = uni20::parse_real<Real>(*args.tolerance);
-  cli::ComputeCpuTime timer;
   std::optional<model::DopedSolver<Real>> solver;
   model::DopedOptions<Real> controls;
   bool complete = true;
@@ -186,7 +187,7 @@ template <uni20::Real Real> int run(Arguments const& args, int argc, char** argv
     controls.max_nodes = args.max_nodes;
     controls.max_background_iterations = args.max_background_iterations;
     controls.max_iterations = args.max_iterations;
-    timer.measure([&] { solver.emplace(u, density, controls); });
+    context.measure([&] { solver.emplace(u, density, controls); });
     complete = solver->background().converged;
     options.relative_tolerance = controls.tolerance;
   }
@@ -217,57 +218,73 @@ template <uni20::Real Real> int run(Arguments const& args, int argc, char** argv
       if (args.branch == "all" || args.branch == name(b))
         check_momentum(b == model::Branch::spinon ? Real{0} : -pi, pi);
 
-  auto metadata = cli::provenance("bethe-hubbard-dispersion", argc, argv);
-  auto field = [&](std::string key, std::string value) { metadata.emplace(std::move(key), std::move(value)); };
-  field("U (t=1)", uni20::format_real(u));
-  field("Density N/L", uni20::format_real(density));
-  field("Background",
+  auto& metadata = context.metadata();
+  metadata.group("model", "Model");
+  metadata.group("numerics", "Numerics");
+  metadata.group("background", "Background");
+  std::map<std::string, std::string> keys{{"program", "Program"},         {"version", "Bethe version"},
+                                          {"revision", "Bethe revision"}, {"uni20_revision", "Uni20 revision"},
+                                          {"started_utc", "Date"},        {"compiler", "Compiler"},
+                                          {"build_type", "Build type"},   {"platform", "Platform"}};
+  if (!context.invocation().empty()) keys.emplace("invocation", "Command");
+  auto field = [&](std::string const& group, std::string id, std::string label, uni20::metadata_value value) {
+    keys.emplace(id, label); // Deliberate legacy keys, independent of the stable field IDs.
+    metadata.add(group, std::move(id), std::move(value), {.label = std::move(label)});
+  };
+  field("model", "interaction", "U (t=1)", u);
+  field("model", "density", "Density N/L", density);
+  field("model", "background_description", "Background",
         doped ? "below half filling, zero field, infinite chain" : "half filling, zero field, infinite chain");
-  field("Spectrum", "elementary lines, not multiparticle continuum thresholds");
-  field("Hamiltonian", args.convention == "symmetric"
-                           ? "-sum(c^dagger_i,s c_i+1,s + h.c.) + U*sum((n_i,up-1/2)*(n_i,down-1/2))"
-                           : "-sum(c^dagger_i,s c_i+1,s + h.c.) + U*sum(n_i,up*n_i,down)");
-  field("Energy convention", std::string(args.convention));
-  field("Energy reference", std::string(args.reference));
-  field("Energy conversion", "E_unshifted = E_symmetric + U*DeltaN/2; E_fermi = E_H - mu*DeltaN");
-  field("Momentum", doped ? "unwrapped one-site radians; hole offset pi*n/2; particle offset -pi*n/2"
-                          : "one-site radians; antiholon p = holon p - pi at the same bare k");
-  field("Precision", std::string(args.precision));
-  field("Branch selection", std::string(args.branch));
-  field(momentum ? "Requested momentum" : "Points per branch",
-        momentum ? uni20::format_real(*momentum) : std::to_string(args.points));
-  field(doped ? "Tolerance" : "Relative tolerance", uni20::format_real(options.relative_tolerance));
-  field("Max iterations", std::to_string(args.max_iterations));
+  field("model", "spectrum", "Spectrum", "elementary lines, not multiparticle continuum thresholds");
+  field("model", "hamiltonian", "Hamiltonian",
+        args.convention == "symmetric" ? "-sum(c^dagger_i,s c_i+1,s + h.c.) + U*sum((n_i,up-1/2)*(n_i,down-1/2))"
+                                       : "-sum(c^dagger_i,s c_i+1,s + h.c.) + U*sum(n_i,up*n_i,down)");
+  field("model", "energy_convention", "Energy convention", args.convention);
+  field("model", "energy_reference", "Energy reference", args.reference);
+  field("model", "energy_conversion", "Energy conversion",
+        "E_unshifted = E_symmetric + U*DeltaN/2; E_fermi = E_H - mu*DeltaN");
+  field("model", "momentum_convention", "Momentum",
+        doped ? "unwrapped one-site radians; hole offset pi*n/2; particle offset -pi*n/2"
+              : "one-site radians; antiholon p = holon p - pi at the same bare k");
+  field("numerics", "precision", "Precision", args.precision);
+  field("model", "branches", "Branch selection", args.branch);
+  if (momentum)
+    field("numerics", "momentum", "Requested momentum", *momentum);
+  else
+    field("numerics", "points", "Points per branch", args.points);
+  field("numerics", "tolerance", doped ? "Tolerance" : "Relative tolerance", options.relative_tolerance);
+  field("numerics", "max_iterations", "Max iterations", args.max_iterations);
   if (doped)
   {
     auto const& background = solver->background();
-    auto value = [](std::optional<Real> const& x) { return x ? uni20::format_real(*x) : "unavailable"; };
-    field("Initial nodes", std::to_string(controls.initial_nodes));
-    field("Max nodes", std::to_string(controls.max_nodes));
-    field("Max background iterations", std::to_string(controls.max_background_iterations));
-    field("Background status", name(background.status));
-    field("Fermi rapidity Q", value(background.fermi_rapidity));
-    field("Mu unshifted", value(background.mu_unshifted));
-    field("Mu symmetric", value(background.mu_symmetric));
-    field("Ground energy/site unshifted", value(background.energy_per_site_unshifted));
-    field("Nodes (positive half)", std::to_string(background.nodes));
-    field("Background iterations", std::to_string(background.iterations));
-    field("Density residual", uni20::format_real(background.density_error));
-    field("Background mesh error estimate", uni20::format_real(background.mesh_error));
+    field("numerics", "initial_nodes", "Initial nodes", controls.initial_nodes);
+    field("numerics", "max_nodes", "Max nodes", controls.max_nodes);
+    field("numerics", "max_background_iterations", "Max background iterations", controls.max_background_iterations);
+    field("background", "background_status", "Background status", name(background.status));
+    field("background", "fermi_rapidity", "Fermi rapidity Q", background.fermi_rapidity);
+    field("background", "mu_unshifted", "Mu unshifted", background.mu_unshifted);
+    field("background", "mu_symmetric", "Mu symmetric", background.mu_symmetric);
+    field("background", "energy_per_site_unshifted", "Ground energy/site unshifted",
+          background.energy_per_site_unshifted);
+    field("background", "nodes", "Nodes (positive half)", background.nodes);
+    field("background", "background_iterations", "Background iterations", background.iterations);
+    field("background", "density_error", "Density residual", background.density_error);
+    field("background", "mesh_error", "Background mesh error estimate", background.mesh_error);
   }
   else
   {
-    field("Mu unshifted", uni20::format_real(u / Real{2}));
-    field("Mu symmetric", "0");
-    field("Max evaluations", std::to_string(options.max_evaluations));
-    field("Max levels", std::to_string(options.max_levels));
+    field("background", "mu_unshifted", "Mu unshifted", Real(u / Real{2}));
+    field("background", "mu_symmetric", "Mu symmetric", Real{0});
+    field("numerics", "max_evaluations", "Max evaluations", options.max_evaluations);
+    field("numerics", "max_levels", "Max levels", options.max_levels);
   }
   namespace data = cli::data;
   using Optional = std::optional<Real>;
   cli::DataOutput output(args.output);
   auto table = data::make_data_table(
       doped ? "Doped Hubbard thermodynamic dispersions" : "Half-filled Hubbard thermodynamic dispersions",
-      {.retain = args.output.retain ? data::retention::all : data::retention::none, .metadata = std::move(metadata)},
+      {.retain = args.output.retain ? data::retention::all : data::retention::none,
+       .metadata = cli::run_metadata(context.snapshot(), keys)},
       data::data_column<std::string>("branch"), data::data_column<Real>("p").unit("radians").round_trip(),
       data::data_column<Real>("p_over_pi").round_trip(),
       data::data_column<Optional>("energy")
@@ -290,8 +307,12 @@ template <uni20::Real Real> int run(Arguments const& args, int argc, char** argv
           .unit("t")
           .description("DeltaE - mu*DeltaN; independent of Hamiltonian convention")
           .round_trip());
-  auto summary = [&](std::string status) -> data::table_metadata {
-    return {{"Status", std::move(status)}, {"CPU time", timer.text()}, {"Rows", std::to_string(table.size())}};
+  auto summary = [&](uni20::run_outcome outcome, std::string status) {
+    uni20::metadata_document result;
+    result.group("results", "Results");
+    result.add("results", "status", std::move(status), {.label = "Status"});
+    result.add("results", "rows", table.size(), {.label = "Rows"});
+    return cli::run_summary(context.finish(outcome, std::move(result)));
   };
   auto append = [&](auto const& s, std::optional<std::size_t> evaluations, Optional fermi_energy) {
     complete = complete && s.converged;
@@ -313,7 +334,7 @@ template <uni20::Real Real> int run(Arguments const& args, int argc, char** argv
         for (std::size_t i = 0; i < count; ++i)
         {
           Real const p = momentum ? *momentum : i == count - 1 ? hi : lo + (hi - lo) * Real(i) / Real(count - 1);
-          auto const s = timer.measure([&] { return solver->at_momentum(b, p, convention, reference); });
+          auto const s = context.measure([&] { return solver->at_momentum(b, p, convention, reference); });
           append(s, std::nullopt, s.fermi_energy);
         }
       }
@@ -327,16 +348,27 @@ template <uni20::Real Real> int run(Arguments const& args, int argc, char** argv
           Real const p = momentum                     ? *momentum
                          : b == model::Branch::spinon ? pi * fraction
                                                       : pi * (Real{2} * fraction - Real{1});
-          auto s = timer.measure([&] { return model::dispersion(b, u, p, convention, options); });
+          auto s = context.measure([&] { return model::dispersion(b, u, p, convention, options); });
           if (reference == model::EnergyReference::fermi && s.converged) s.energy = s.symmetric_energy;
           append(s, s.evaluations, s.symmetric_energy);
         }
       }
-    output.finish(table, summary(complete ? "converged" : "incomplete; failed energies omitted"));
+    output.finish(table, summary(complete ? uni20::run_outcome::success : uni20::run_outcome::partial,
+                                 complete ? "converged" : "incomplete; failed energies omitted"));
   }
   catch (...)
   {
-    output.abort(table, summary("aborted"));
+    // If final output failed, the table may already have its immutable numerical
+    // summary. Do not finalize the context twice or replace that outcome with an
+    // I/O failure. Cleanup must also preserve the original exception if timing fails.
+    data::table_metadata aborted{{"Status", "aborted"}, {"Rows", std::to_string(table.size())}};
+    if (!context.finished()) try
+      {
+        aborted = summary(uni20::run_outcome::failed, "aborted");
+      }
+      catch (...)
+      {}
+    output.abort(table, std::move(aborted));
     throw;
   }
   if (!complete) std::cerr << "Some dispersion points did not converge; their energies are unavailable.\n";

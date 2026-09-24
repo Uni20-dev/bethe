@@ -16,7 +16,7 @@ if(NOT TARGET uni20_core)
   include(FetchContent)
   FetchContent_Declare(uni20
     GIT_REPOSITORY https://github.com/Uni20-dev/uni20.git
-    GIT_TAG 2da3358aaab23c2817e69d1efdcdd80a76fc3baa
+    GIT_TAG 5aee9d35c39c74f7d4b16e6b976db36836b6acf3
   )
   FetchContent_MakeAvailable(uni20)
   # Keep default builds limited to the components our targets actually link.
@@ -33,6 +33,11 @@ if(BETHE_BUILD_APPS OR BETHE_BUILD_TESTS)
   # Inspect the actual dependency checkout, including source overrides. Refresh
   # before each build; the script changes the header only when its contents change.
   get_target_property(bethe_uni20_source uni20_common SOURCE_DIR)
+  if(NOT EXISTS "${bethe_uni20_source}/run_context.hpp")
+    message(FATAL_ERROR
+      "Bethe applications and tests require Uni20's run_context API. "
+      "Update the supplied Uni20 checkout to include PR56, or use Bethe's pinned dependency.")
+  endif()
   set(bethe_generated_dir "${CMAKE_CURRENT_BINARY_DIR}/generated")
   add_custom_target(bethe_build_info
     COMMAND "${CMAKE_COMMAND}" "-DBETHE_SOURCE=${PROJECT_SOURCE_DIR}"

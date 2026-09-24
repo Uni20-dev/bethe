@@ -40,6 +40,10 @@ add_executable(bethe_output_tests test_output.cpp)
 target_link_libraries(bethe_output_tests PRIVATE bethe_cli_output)
 bethe_discover_tests(bethe_output_tests)
 
+add_executable(bethe_run_metadata_tests test_run_metadata.cpp)
+target_link_libraries(bethe_run_metadata_tests PRIVATE bethe_cli_output)
+bethe_discover_tests(bethe_run_metadata_tests)
+
 add_executable(bethe_citation_tests test_citations.cpp)
 # The citation data API is deliberately standard-library-only.
 target_compile_features(bethe_citation_tests PRIVATE cxx_std_23)

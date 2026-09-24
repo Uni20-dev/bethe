@@ -9,10 +9,11 @@ need the extra precision.
 CMake 3.28+, a C++23 compiler supported by Uni20 (GCC 13+ or Clang 19+),
 and Uni20's numerical dependencies are required. Uni20 is pinned to a tested
 commit and fetched automatically unless a parent already supplies `uni20_core`.
-The current pin is the merged CLI/presentation implementation at `2da3358`
-([Uni20 PR54](https://github.com/Uni20-dev/uni20/pull/54)), including the typed
-data-table APIs, exact CLI conversions, and token-preserving help. Local
-overrides must provide these APIs too. Application builds also enable Uni20's
+The current pin is the merged run-context implementation at `5aee9d3`
+([Uni20 PR56](https://github.com/Uni20-dev/uni20/pull/56)), including typed
+run metadata and timing, data-table APIs, exact CLI conversions, and
+token-preserving help. Local overrides must provide these APIs too.
+Application builds also enable Uni20's
 optional CLI11 dependency; library-only builds do not require it.
 
 ## Build the pinned version
@@ -61,7 +62,7 @@ For binary128, use a separate build directory and add
 `-DUNI20_ENABLE_MPLAPACK=ON`. To use an installed MPLAPACK 3.0+ binary128
 package, add `-DUNI20_USE_SYSTEM_MPLAPACK=ON` and
 `-Dmplapack_DIR=/path/to/lib/cmake/mplapack`; otherwise Uni20 can fetch it.
-See [Uni20's provider setup](https://github.com/Uni20-dev/uni20/blob/2da3358aaab23c2817e69d1efdcdd80a76fc3baa/docs/linalg/mplapack_binary128.md).
+See [Uni20's provider setup](https://github.com/Uni20-dev/uni20/blob/5aee9d35c39c74f7d4b16e6b976db36836b6acf3/docs/linalg/mplapack_binary128.md).
 
 `UNI20_USE_SYSTEM_MPLAPACK=OFF` forces a v3.0.0 source fetch. Alternatively,
 build MPLAPACK v3.0.0 separately and pass its **build directory** as

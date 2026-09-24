@@ -71,10 +71,14 @@ with tempfile.TemporaryDirectory(prefix="bethe-output-") as directory:
         assert shlex.split(doc["metadata"]["Command"]) == result.args
         assert re.fullmatch(r"\d{4}-\d\d-\d\dT\d\d:\d\d:\d\dZ", metadata["Date"])
         assert re.fullmatch(r"[0-9a-f]{40}(-dirty)?|unavailable", metadata["Bethe revision"])
-        assert re.fullmatch(r"[0-9a-f]{40}(-dirty)?|unavailable", metadata["Uni20 revision"])
+        assert re.fullmatch(r"[0-9a-f]{40}(-dirty)?|unavailable|unknown", metadata["Uni20 revision"])
         assert metadata["Program"] == "bethe-hubbard-dispersion"
         assert metadata["Precision"] == precision and metadata["Bethe version"]
         assert metadata["Status"] == "converged" and metadata["Rows"] == "9"
+        assert metadata["Outcome"] == "success"
+        assert Decimal(metadata["Run CPU seconds"]) >= 0
+        assert Decimal(metadata["Elapsed seconds"]) >= 0
+        assert metadata["Compiler"] and metadata["Platform"]
         assert re.fullmatch(r"\d+\.\d{6} s", metadata["CPU time"])
         assert csv_path.read_text().index("# CPU time:") > csv_path.read_text().index("branch,p,")
         columns = {c["id"]: c for c in doc["columns"]}
@@ -124,6 +128,7 @@ with tempfile.TemporaryDirectory(prefix="bethe-output-") as directory:
         compare(doc, records)
         assert doc["rows"][0][3] is None and doc["rows"][0][7] is None
         assert meta["Status"].startswith("incomplete") and "unavailable" in result.stderr
+        assert doc["summary"]["Outcome"] == "partial"
 
     # Existing files are protected; even --force must validate all arguments first.
     existing = root / "existing.csv"
@@ -181,5 +186,7 @@ with tempfile.TemporaryDirectory(prefix="bethe-output-") as directory:
             assert len(doc["rows"]) <= 3
             assert int(doc["summary"]["Rows"]) == len(doc["rows"])
             assert doc["summary"]["Status"] in ("aborted", "converged")
+            assert doc["summary"]["Outcome"] == (
+                "failed" if doc["summary"]["Status"] == "aborted" else "success")
 
 print("Data output CLI contracts passed")
