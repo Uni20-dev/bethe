@@ -54,6 +54,10 @@ With `--ferromagnetic`, the [excitation tools](biquadratic-ferromagnetic.md)
 also offer an analytic one-defect band and targeted bound pairs/triples.
 Ferro real-root scans accept odd/even N; `--real-window WIDTH` restricts
 `--excitations` to a [high-label scattering window](biquadratic-scattering.md).
+For [mixed bound-pair-plus-defect states](biquadratic-pair-defect.md), use
+`--pair-defect I,J` or `--pair-defects COUNT|all`. The latter can select a
+bounded high-label rectangle with `--mixed-window WIDTH`. Both fix ell=N-6;
+these are not full three-defect spectra, and partial scans return exit 2.
 Explicit `--quantum-numbers` also accepts odd N; AF ground/sector and Q-system
 modes retain their even-N restriction.
 For reduced BCS pairing, [`bethe-richardson`](richardson.md) requires

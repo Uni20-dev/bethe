@@ -4,10 +4,68 @@
 
 Three TL singlet insertions need not all bind, or all remain separate. A
 two-string plus one real root describes the intermediate **pair-plus-defect**
-branch in ell=N-6. A selected-state library API now supports this branch on
-odd/even N>=6, in fp64, native long double and enabled fp128. CLI scans and
-exports for this family are the next integration step; `--excitations` still
-means the purely real-root family.
+branch in ell=N-6. Selected states and CLI family scans support this branch
+on odd/even N>=6, in fp64, native long double and enabled fp128.
+`--excitations` still means the purely real-root family; it does not contain
+these mixed-string levels.
+
+## Command line and bounded scans
+
+```sh
+# One explicitly selected pair of Bethe labels:
+build/bethe-biquadratic-obc 128 --ferromagnetic --pair-defect 125,123 --roots
+# Complete small mixed family, not the entire three-defect module:
+build/bethe-biquadratic-obc 8 --ferromagnetic --pair-defects all
+# Lowest eight converged levels among the 36 selected label combinations:
+build/bethe-biquadratic-obc 129 --ferromagnetic --pair-defects 8 --mixed-window 6 \
+  --precision long-double --json mixed.json --csv mixed.csv \
+  --tsv-table labels=mixed-labels.tsv
+```
+
+`--pair-defects COUNT|all` scans the full rectangle
+`1<=I<=N-3, 1<=J<=N-5` by default. `--mixed-window WIDTH` instead selects
+the highest WIDTH labels on **each** axis: `I=N-2-WIDTH,...,N-3` and
+`J=N-4-WIDTH,...,N-5`. This gives WIDTH squared candidates and requires
+`1<=WIDTH<=N-5`. A high-label window makes long-chain low-energy searches
+practical, but does not certify that excluded labels have higher energy.
+
+`COUNT` retains at most that many converged levels **after** solving every
+candidate in the selected rectangle. `all` retains every converged candidate
+in that rectangle, not the full excited spectrum. The `--max-candidates`
+budget (default 10000) limits the work before allocation and checks the
+product without overflowing. Requesting one output level does not bypass
+the scan budget. A selected `--pair-defect I,J` requires no enumeration.
+These options require `--ferromagnetic`, fix ell=N-6, and exclude other
+state selectors. `--mixed-window` applies only to `--pair-defects`.
+
+Sorting uses the direct gap, not the extensive total energy: the latter
+can round to the same value for distinct states on long chains. Exact
+numerical gap ties use ascending `(I,J)`. These are rankings within the
+computed set, not general module minima or a global excitation ranking.
+
+The shared cluster reporter supplies `states`, `reference`, `string`,
+`labels`, and optional `roots` tables. JSON exports all tables; `--csv`
+and `--tsv` export `states`, while `--csv-table NAME=FILE` and
+`--tsv-table NAME=FILE` select auxiliary tables. Metadata accompanies the
+exports, and `--no-retain` uses the same streaming table interface. The
+solver still stores the budgeted candidate set for sorting.
+
+`labels` records I, J and the real rapidity alpha for each `state_id`;
+`string` records the pair center, sign, L and optional representable
+deviation. `roots` lists the real root first, followed by the conjugate
+pair. The `states.row` column is a display row number, **not a physical
+mode label**. L and the sign retain the deviation when exported rounded
+roots no longer resolve it; an underflowed deviation is null, not exact zero.
+
+If any candidate fails, the command returns exit status 2 and records
+the total converged/failed counts. Retained converged levels come first,
+followed by **one unconverged diagnostic sample**, whose gap is null.
+Its energy and TL energy are estimates only. That extra diagnostic row
+does not count toward COUNT. Missing candidates could lie below the retained
+ones: a partial result is not a verified lowest-level list. The exact ground
+reference remains valid even if every candidate fails.
+
+## Library API
 
 ```cpp
 #include <bethe/biquadratic_ferromagnetic.hpp>

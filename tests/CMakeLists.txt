@@ -66,6 +66,9 @@ endif()
 
 if(BETHE_BUILD_APPS)
   if(Python3_Interpreter_FOUND)
+    add_test(NAME BiquadraticPairDefect.cli
+      COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_biquadratic_pair_defect.py"
+        "$<TARGET_FILE:bethe-biquadratic-obc>" "${UNI20_ENABLE_MPLAPACK}")
     add_test(NAME BiquadraticBoundPair.cli
       COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_biquadratic_bound_cluster.py"
         "$<TARGET_FILE:bethe-biquadratic-obc>" "${UNI20_ENABLE_MPLAPACK}" 2)

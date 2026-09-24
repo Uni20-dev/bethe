@@ -27,6 +27,8 @@ build/bethe-biquadratic-obc 65 --ferromagnetic --one-defect --json band.json
 build/bethe-biquadratic-obc 128 --ferromagnetic --bound-pairs 8
 # Three-defect droplets, not all three-defect states:
 build/bethe-biquadratic-obc 128 --ferromagnetic --bound-triples 8
+# Mixed bound pair plus a separate defect, a 6-by-6 label window:
+build/bethe-biquadratic-obc 128 --ferromagnetic --pair-defects 8 --mixed-window 6
 # Real-root scattering near the two-defect low-energy edge:
 build/bethe-biquadratic-obc 129 --ferromagnetic --through-lines 125 --excitations all --real-window 8
 # Small two-defect module, including complex-root states:
@@ -196,10 +198,9 @@ auto mixed = ferro::pair_defect<long double>(128, 125, 123);
 ```
 
 Targeted two- and three-defect bound families are now available on long chains.
-Real-root scattering windows and a selected-state
-[pair-plus-defect library API](biquadratic-pair-defect.md) are also available.
-Next are CLI scans for that mixed branch, more general mixed strings and
-larger droplets. Other open work is
+Real-root scattering windows and [pair-plus-defect states and CLI scans](biquadratic-pair-defect.md)
+are also available. Next are more general mixed strings and larger droplets.
+Other open work is
 physical-spin decomposition, state-dependent spectral weights/form factors,
 and periodic twists with genuine momentum labels. Energies and multiplicities
 alone do not determine which branches an operator or a chosen iMPS ground
