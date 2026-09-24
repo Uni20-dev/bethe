@@ -371,6 +371,10 @@ inline constexpr std::array<Use, 3> uses_lieb_liniger_pbc{{
   {&references[22], "Excited-state background; we solve finite-volume states in explicit label windows, not a thermodynamic dispersion calculation."},
   {&references[52], "Explicit normalization and finite-ring equations, Eqs. (4), (24)-(27); root-density equation (32)-(33) used for validation, not a thermodynamics API. No matrix elements are implemented."},
 }};
+inline constexpr std::array<Use, 2> uses_lieb_liniger_obc{{
+  {&references[23], "Repulsive Bose gas with Dirichlet walls, positive real roots and reflected scattering. We implement finite-volume states and bounded label windows, not general boundary potentials."},
+  {&references[65], "Equations (7)-(8) fix the hard-wall ground-state convention and exclusion of self-image scattering; the finite-volume solver extends the logarithmic labels to selected excitations. No boundary-energy integral-equation or thermodynamics API is implemented."},
+}};
 inline constexpr std::array<Use, 2> uses_su3_pbc{{
   {&references[27], "Original multicomponent permutation-chain solution; the implementation selects only the fundamental SU(3) periodic balanced ground state."},
   {&references[54], "Nested equations and energy, Eqs. (2.17)-(2.19), logarithmic labels (2.24)-(2.29), and the filled-sea singlet in Sec. 2.3. Our H=sum P gives E=2*E_paper+L. No strings, S matrices or boundary fields are implemented."},
@@ -414,7 +418,7 @@ inline constexpr std::array<Use, 3> uses_gaudin_yang_pbc{{
   {&references[55], "Hamiltonian and periodic fermion equations (1), (2), (7), (8), (25); even N, odd minority population as in Sec. 5. Weak and strong limits (12), (15)-(16) provide checks. Hard walls, attraction and excitations are not implemented."},
 }};
 
-enum class Tool { biquadratic_obc, xxx_pbc, xxx_obc, xxz_pbc, xxz_obc, hubbard_dispersion, hubbard_pbc, hubbard_obc, lieb_liniger_pbc, su3_pbc, tj_pbc, tb_pbc, richardson, central_spin, sun_fermions_pbc, ladder_pbc, haldane_shastry_pbc, sutherland_pbc, gaudin_yang_pbc };
+enum class Tool { biquadratic_obc, xxx_pbc, xxx_obc, xxz_pbc, xxz_obc, hubbard_dispersion, hubbard_pbc, hubbard_obc, lieb_liniger_pbc, lieb_liniger_obc, su3_pbc, tj_pbc, tb_pbc, richardson, central_spin, sun_fermions_pbc, ladder_pbc, haldane_shastry_pbc, sutherland_pbc, gaudin_yang_pbc };
 
 [[nodiscard]] constexpr std::span<Use const> for_tool(Tool tool)
 {
@@ -429,6 +433,7 @@ enum class Tool { biquadratic_obc, xxx_pbc, xxx_obc, xxz_pbc, xxz_obc, hubbard_d
     case Tool::hubbard_pbc: return uses_hubbard_pbc;
     case Tool::hubbard_obc: return uses_hubbard_obc;
     case Tool::lieb_liniger_pbc: return uses_lieb_liniger_pbc;
+    case Tool::lieb_liniger_obc: return uses_lieb_liniger_obc;
     case Tool::su3_pbc: return uses_su3_pbc;
     case Tool::tj_pbc: return uses_tj_pbc;
     case Tool::tb_pbc: return uses_tb_pbc;

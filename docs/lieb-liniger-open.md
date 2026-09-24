@@ -6,7 +6,32 @@ The library supports repulsive bosons with Dirichlet walls at x=0 and x=L,
 in the same units as the ring: `H=-sum d_j^2 + 2c sum_(i<j) delta(x_i-x_j)`.
 Both L and c must be finite and positive. Ground states, specified real-root
 states and finite-window excitation scans work in fp64, native long double
-and enabled fp128. The dedicated CLI is the next integration checkpoint.
+and enabled fp128. The executable is `bethe-lieb-liniger-obc`.
+
+## Start with a calculation
+
+```sh
+build/bethe-lieb-liniger-obc 4 --length 4 --c 1 --roots
+build/bethe-lieb-liniger-obc 4 --length 4 --c 1 --excitations all --padding 1
+build/bethe-lieb-liniger-obc 4 --length 4 --c 1 --quantum-numbers 1,2,4,5 --precision fp128
+build/bethe-lieb-liniger-obc 4 --length 4 --c 1 --excitations 2 --padding 1 \
+  --roots --json box.json --csv-table roots=box.roots.csv
+```
+
+Both `--length` and `--c` are required. The second example solves all five
+configurations of four occupied labels in `1,...,5`, including the ground
+state. `all` refers to this window, not the infinite spectrum. The same command
+on the ring frontend instead has 15 candidates because ring padding is two-sided.
+
+The shared frontend supplies CPU timing, `--references`, precision selection,
+JSON/CSV/TSV, and optional `--no-retain` streaming. Main rows include energy,
+gap (for ranked scans), residual, iteration count and convergence. Unlike the
+ring, there are no total-momentum columns. `--roots` adds positive wave numbers
+and integer labels. Reference and failed rows have distinct `state_id` values
+for joins with roots. Unconverged energies are estimates; a partial solve exits
+with status 2 and scan failures are not ranked. Invalid input exits with status 1.
+
+## Library
 
 ```cpp
 #include <bethe/lieb_liniger_open.hpp>
@@ -52,7 +77,7 @@ continuum spectrum. Vacuum N=0 is allowed and has one empty-label state.
 
 The two boundary geometries share the physical-domain damped Newton driver,
 stable rational scattering kernel, parameter validation, compensated sums and
-finite-window enumerator. The hard-wall model owns its reflection phases,
+finite-window enumerator, as well as the CLI/reporting implementation. The hard-wall model owns its reflection phases,
 Jacobian, labels, seed and observables. For g<1 it removes the exact rank phase
 analytically, using target `pi*(I_j-j)` with zero-based j and complementary
 arctangents. The reported residual is

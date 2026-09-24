@@ -780,6 +780,14 @@
       ]
     },
     {
+      "id": "lieb_liniger_obc",
+      "executable": "bethe-lieb-liniger-obc",
+      "references": [
+        {"id": "gaudin-1971", "context": "Repulsive Bose gas with Dirichlet walls, positive real roots and reflected scattering. We implement finite-volume states and bounded label windows, not general boundary potentials."},
+        {"id": "reichert-2019", "context": "Equations (7)-(8) fix the hard-wall ground-state convention and exclusion of self-image scattering; the finite-volume solver extends the logarithmic labels to selected excitations. No boundary-energy integral-equation or thermodynamics API is implemented."}
+      ]
+    },
+    {
       "id": "su3_pbc",
       "executable": "bethe-su3-pbc",
       "references": [

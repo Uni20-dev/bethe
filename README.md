@@ -48,6 +48,8 @@ Thermodynamic dispersion tools use `bethe-<model>-dispersion`.
 - [Periodic Lieb–Liniger](docs/lieb-liniger.md): `bethe-lieb-liniger-pbc` gives
   repulsive continuum-boson ground states, specified Bethe states, and
   excitation scans within an explicit finite quantum-number window.
+  [Hard-wall boxes](docs/lieb-liniger-open.md) use `bethe-lieb-liniger-obc`,
+  with positive standing-wave roots and one-sided label windows.
 - [Periodic SU(3)](docs/su3.md): `bethe-su3-pbc` gives the balanced singlet
   ground state of the permutation chain for lengths divisible by three,
   also covering the spin-1 ULS point through an energy shift.
@@ -208,7 +210,8 @@ together. Read them in roughly this order, or go straight to your model:
 10. [Free-end Hubbard chains](docs/hubbard-open.md) — reflected scattering,
     standing waves, and unrestricted ground-state sectors.
 11. [Periodic Lieb–Liniger gas](docs/lieb-liniger.md) — continuum units,
-    repulsive bosons, weak coupling, and finite excitation windows.
+    repulsive bosons, weak coupling, and finite excitation windows;
+    [hard-wall boxes](docs/lieb-liniger-open.md) add reflected scattering.
 12. [Periodic SU(3) chain](docs/su3.md) — nested real-root seas, balanced
     singlets, permutation normalization, and the spin-1 ULS mapping.
 13. [Periodic Gaudin–Yang gas](docs/gaudin-yang.md) — continuum fermions,

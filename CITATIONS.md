@@ -498,6 +498,10 @@ Phys. Rev. A 4, 386 (1971).
 
 [DOI](<https://doi.org/10.1103/PhysRevA.4.386>).
 
+Relevant tool modes:
+
+- `bethe-lieb-liniger-obc`: Repulsive Bose gas with Dirichlet walls, positive real roots and reflected scattering. We implement finite-volume states and bounded label windows, not general boundary potentials.
+
 ### gaudin-1967
 
 M. Gaudin. *Un système à une dimension de fermions en interaction*.
@@ -896,5 +900,9 @@ Benjamin Reichert, Grigori E. Astrakharchik, Aleksandra Petkovic, and Zoran Rist
 Phys. Rev. Lett. 123, 250602 (2019).
 
 [DOI](<https://doi.org/10.1103/PhysRevLett.123.250602>), [arXiv](<https://arxiv.org/abs/1908.08172>).
+
+Relevant tool modes:
+
+- `bethe-lieb-liniger-obc`: Equations (7)-(8) fix the hard-wall ground-state convention and exclusion of self-image scattering; the finite-volume solver extends the logarithmic labels to selected excitations. No boundary-energy integral-equation or thermodynamics API is implemented.
 
 <!-- END GENERATED BIBLIOGRAPHY -->

@@ -2,7 +2,7 @@
 
 [Overview](../README.md) · [Build guide](building.md) · [Model catalogue](models.md)
 
-For Dirichlet boundaries, see the separate [hard-wall library](lieb-liniger-open.md).
+For Dirichlet boundaries, use [bethe-lieb-liniger-obc](lieb-liniger-open.md).
 
 This is the continuum counterpart of a chain calculation: specify a physical
 ring circumference `ell`, a particle number `N`, and a repulsive coupling `c`.
@@ -164,7 +164,7 @@ thermodynamics solver.
 
 Attractive interactions/bound states, exactly zero or infinite
 coupling, thermodynamic excitation curves, finite-temperature TBA, and matrix
-elements are not implemented. The separate [hard-wall library](lieb-liniger-open.md)
+elements are not implemented. The separate [hard-wall frontend](lieb-liniger-open.md)
 implements reflection equations, not a boundary toggle on the ring frontend;
 negative `c` must not be treated as a sign switch in this real-root solver.
 See the [catalogue](models.md#lieb-liniger-the-simplest-new-interacting-family)
