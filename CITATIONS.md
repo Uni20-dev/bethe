@@ -57,6 +57,18 @@ representations. It does not implement periodic twists, full-spectrum Bethe
 enumeration, physical-spin decomposition, or thermodynamics. See the
 [biquadratic/TL guide](docs/biquadratic.md) for the explicit conventions.
 
+The ferromagnetic option reverses the physical Hamiltonian, not the auxiliary
+XXZ equations: `H=+sum(S.S)^2=(N-1)+sum e_i`. The one-defect module has
+`E-E0=3+2*cos(pi*j/N)`, `j=1,...,N-1`. The exact OBC gap above the entire
+ground space, `3-2*cos(pi/N)`, follows from
+[koma-nachtergaele-1997](#koma-nachtergaele-1997), Proposition 2 and Eq. (3.30),
+using TL equivalence and rescaling their normalized XXZ Hamiltonian by
+`2*Delta=3`. The sign convention and ground-space degeneracies are also
+discussed in [zhou-2025-biquadratic](#zhou-2025-biquadratic).
+Real-family selection reverses energy ordering before truncation. Q-system
+discoveries are reordered in physical energy without strengthening their
+completeness claim. See the [ferromagnetic excitation guide](docs/biquadratic-ferromagnetic.md).
+
 The free-end XXX equations follow the rational limit of Eqs. (11)-(12) and
 footnote 2 in [mei-2017](#mei-2017).
 Our rapidity is `z=2*lambda`; our spin-1/2 Hamiltonian is the paper's XXX
@@ -835,5 +847,27 @@ Thomas R. Cameron and Stef Graillat. *On a compensated Ehrlich-Aberth method for
 Electronic Transactions on Numerical Analysis 55, 401-423 (2022).
 
 [DOI](<https://doi.org/10.1553/etna_vol55s401>), [Open-access article](<https://etna.ricam.oeaw.ac.at/vol.55.2022/pp401-423.dir/pp401-423.pdf>).
+
+### koma-nachtergaele-1997
+
+Tohru Koma and Bruno Nachtergaele. *The spectral gap of the ferromagnetic XXZ chain*.
+Lett. Math. Phys. 40, 1-16 (1997).
+
+[arXiv](<https://arxiv.org/abs/cond-mat/9512120>).
+
+Relevant tool modes:
+
+- `bethe-biquadratic-obc`: Ferromagnetic OBC gap and one-defect band: Proposition 2 and Eq. (3.30), transferred through TL equivalence at Delta=3/2 and multiplied by 2\*Delta=3. Gap above the entire ground space is 3-2\*cos(pi/N), not a zero-mode splitting.
+
+### zhou-2025-biquadratic
+
+Huan-Qiang Zhou, Qian-Qian Shi, Ian P. McCulloch, and Murray T. Batchelor. *Goldstone modes and the golden spiral in the ferromagnetic spin-1 biquadratic model*.
+J. Phys. A: Math. Theor. 58, 39LT01 (2025).
+
+[DOI](<https://doi.org/10.1088/1751-8121/ae05d9>), [arXiv](<https://arxiv.org/abs/2302.13126>).
+
+Relevant tool modes:
+
+- `bethe-biquadratic-obc`: Ferromagnetic convention H=+sum (S.S)^2, Eq. (3), and Fibonacci ground-space multiplicities under free ends. Ground-space zero modes are distinct from the positive-energy TL defect band; entanglement and ground-state wavefunctions are not implemented.
 
 <!-- END GENERATED BIBLIOGRAPHY -->

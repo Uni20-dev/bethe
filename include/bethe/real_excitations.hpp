@@ -16,7 +16,8 @@
 namespace bethe
 {
 /// Scan the entire supported real-root family in a model-defined window, retaining
-/// at most count lowest converged states. The sector minimum is included.
+/// at most count lowest converged states. The supported family's minimum is
+/// included; this need not be the true sector minimum if complex roots are missing.
 struct RealExcitationOptions
 {
     std::size_t count = 10;
@@ -50,6 +51,12 @@ template <typename State> struct RealExcitationScan
 
 namespace detail
 {
+enum class EnergyOrder
+{
+  ascending,
+  descending
+};
+
 inline std::size_t bounded_binomial(std::size_t slots, std::size_t m, std::size_t limit)
 {
   if (m > slots) return 0;
@@ -71,7 +78,7 @@ inline std::size_t bounded_binomial(std::size_t slots, std::size_t m, std::size_
 
 template <typename Result, typename Solve, typename Ground>
 Result scan_real_combinations(std::size_t slots, std::size_t m, std::int64_t first, RealExcitationOptions const& scan,
-                              Solve&& solve, Ground&& ground)
+                              Solve&& solve, Ground&& ground, EnergyOrder order = EnergyOrder::ascending)
 {
   if (scan.count == 0 || scan.max_candidates == 0)
     throw std::invalid_argument("excitation count and max_candidates must be positive");
@@ -86,8 +93,10 @@ Result scan_real_combinations(std::size_t slots, std::size_t m, std::int64_t fir
     numbers[i] = uni20::from_twice(first + 2 * static_cast<std::int64_t>(i));
 
   // A bounded max heap avoids retaining roots for every solved candidate.
-  auto less = [](auto const& left, auto const& right) {
-    if (left.state.energy != right.state.energy) return left.state.energy < right.state.energy;
+  auto less = [order](auto const& left, auto const& right) {
+    if (left.state.energy != right.state.energy)
+      return order == EnergyOrder::ascending ? left.state.energy < right.state.energy
+                                             : left.state.energy > right.state.energy;
     return left.state.quantum_numbers < right.state.quantum_numbers;
   };
   auto const keep = std::min(scan.count, result.candidate_count);

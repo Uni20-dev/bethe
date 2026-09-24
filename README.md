@@ -67,6 +67,8 @@ Thermodynamic dispersion tools use `bethe-<model>-dispersion`.
   [Q-system mode](docs/xxz-open-qsystem.md) adds complex-root levels and bounded
   small-chain spectrum searches. A [targeted two-string solver](docs/xxz-open-two-string.md)
   supplies the low-lying complex-root singlet on long chains (`--singlet-excitation`).
+  The [ferromagnetic sign](docs/biquadratic-ferromagnetic.md) adds an exact
+  one-defect band and sign-aware real/complex-root levels.
 - [Richardson pairing](docs/richardson.md): `bethe-richardson` gives attractive
   reduced-BCS ground energies for distinct levels and a specified pair/blocked
   sector, using regularized variables through pair-root collisions.

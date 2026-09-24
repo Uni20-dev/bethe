@@ -6,8 +6,15 @@
 
 namespace bethe::biquadratic
 {
-/// Even free-end spin-1 chain, H=-sum (S_i.S_(i+1))^2, coefficient -1.
-/// ell=0 ground state is a unique singlet. Other TL labels are NOT physical spin.
+enum class Exchange
+{
+  antiferromagnetic,
+  ferromagnetic
+};
+
+/// Even free-end spin-1 chain. Default API: H=-sum (S_i.S_(i+1))^2.
+/// The ferromagnetic API reverses physical and TL energies, not the XXZ reference.
+/// TL labels are NOT physical spin. The AF ell=0 ground state is a unique singlet.
 /// Check reference.converged before interpreting energy as an eigenvalue.
 template <uni20::Real Real> struct State
 {
@@ -17,6 +24,7 @@ template <uni20::Real Real> struct State
     /// nullopt means uint64 overflow, never zero or an approximate multiplicity.
     std::optional<std::uint64_t> multiplicity;
     xxz::quantum_group::RealState<Real> reference;
+    Exchange exchange = Exchange::antiferromagnetic;
 };
 template <uni20::Real Real> using GroundState = State<Real>;
 

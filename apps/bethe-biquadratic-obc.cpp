@@ -4,6 +4,7 @@
 #include "program-options.hpp"
 #include "result-output.hpp"
 #include <bethe/biquadratic.hpp>
+#include <bethe/biquadratic_ferromagnetic.hpp>
 #include <bethe/biquadratic_qsystem.hpp>
 #include <bethe/biquadratic_two_string.hpp>
 
@@ -23,13 +24,17 @@ struct Arguments
     cli::DataOutputOptions output;
     bool roots = false, sectors = false;
     bool q_spectrum = false, singlet_excitation = false;
+    bool ferromagnetic = false, one_defect = false;
 };
 auto program_info()
 {
   auto info = bethe::cli::program_info("bethe-biquadratic-obc",
-                                       "Spin-1 pure biquadratic chain, free ends: H=-sum_i (S_i.S_(i+1))^2.",
+                                       "Spin-1 pure biquadratic chain, free ends: H=-sum_i (S_i.S_(i+1))^2 by default.",
                                        bethe::citations::Tool::biquadratic_obc);
-  info.notes = {"Unique singlet ground state; even N>=2, coefficient -1.",
+  info.notes = {"Default: unique singlet ground state; even N>=2, coefficient -1.",
+                "--ferromagnetic reverses the sign: H=+sum (S.S)^2; gaps use the exact degenerate ground space.",
+                "--ferromagnetic --one-defect gives the complete ell=N-2 band analytically, including odd N.",
+                "Ferromagnetic real-root scans exclude complex-root levels; NOT general module minima.",
                 "TL loop weight 3; reference XXZ Delta=3/2 with opposite end fields.",
                 "Real-root scans are NOT complete spectra: complex-root levels are excluded.",
                 "--q-spectrum searches real and complex levels of one TL module; validated through N=8.",
@@ -37,7 +42,7 @@ auto program_info()
                 "--q-seed selects a polynomial branch, not necessarily a low-lying state.",
                 "--singlet-excitation targets one two-string singlet above a real sea, including on long chains.",
                 "Multiplicity counts physical states per TL eigenvector, not SU(2) multiplets.",
-                "TL through-lines are not physical spin; no odd chains or lattice momentum.",
+                "TL through-lines are not physical spin; numerical root modes require even N; no lattice momentum.",
                 "This is not the TB point, ULS point, or zero-boundary-field XXZ chain.",
                 "See docs/biquadratic.md for the TL mapping and representation multiplicities.",
                 "Use --references for literature and applicability; see CITATIONS.md."};
@@ -46,20 +51,26 @@ auto program_info()
 void add_options(CLI::App& app, Arguments& args)
 {
   bethe::cli::option(app, "N", args.sites, "Number of particles or sites")->required();
-  bethe::cli::option(app, "--through-lines", args.through_lines, "lowest level in an even TL module, 0<=ELL<=N");
-  bethe::cli::option(app, "--sectors", args.sectors, "lowest level in every TL module");
+  bethe::cli::option(app, "--ferromagnetic", args.ferromagnetic,
+                     "use H=+sum (S.S)^2 and the exact ferro ground reference");
+  bethe::cli::option(app, "--one-defect", args.one_defect, "complete analytic ferro ell=N-2 band; odd/even N>=2");
+  bethe::cli::option(app, "--through-lines", args.through_lines,
+                     "select TL module; standalone ferro minima require ELL=N or N-2");
+  bethe::cli::option(app, "--sectors", args.sectors, "AF: lowest level in every TL module");
   bethe::cli::all_count_option(
       app, "--excitations", args.excitations,
-      "lowest COUNT, or all, supported real-root levels default ELL=2; includes module minimum");
-  bethe::cli::option(app, "--max-candidates", args.max_candidates, "exhaustive scan limit (default: 10000)");
+      "lowest COUNT, or all, supported real-root levels; default ELL=2 (ferro: N-2); excludes complex roots");
+  bethe::cli::option(app, "--max-candidates", args.max_candidates,
+                     "real-family scan / analytic band row limit (default: 10000)");
   bethe::cli::option(app, "--quantum-numbers", args.numbers, "explicit integer labels; none for vacuum");
-  bethe::cli::option(app, "--q-spectrum", args.q_spectrum,
-                     "budgeted Q-system search including complex roots; default ELL=0; larger N is experimental");
+  bethe::cli::option(
+      app, "--q-spectrum", args.q_spectrum,
+      "budgeted Q-system search including complex roots; default ELL=0 (ferro: N-2); larger N is experimental");
   bethe::cli::option(app, "--q-seed", args.q_seed,
                      "selected Q-system branch: c0,c1,... for monic Q(x), x=cosh(2u); none for vacuum");
   bethe::cli::option(app, "--max-attempts", args.max_attempts, "Q-system seed budget (default: 4000)");
   bethe::cli::option(app, "--singlet-excitation", args.singlet_excitation,
-                     "target the low-lying complex-root singlet (one two-string); even N>=4; not a spectrum scan");
+                     "AF: target the low-lying complex-root singlet (one two-string); even N>=4; not a spectrum scan");
   bethe::cli::option(app, "--roots", args.roots, "print reference roots (real labels or complex coordinates)");
   bethe::cli::option(
       app, "--tolerance", args.tolerance,
@@ -73,6 +84,24 @@ void add_options(CLI::App& app, Arguments& args)
 void validate(Arguments const& args)
 {
   args.output.validate();
+  if (args.one_defect && !args.ferromagnetic) throw std::invalid_argument("--one-defect requires --ferromagnetic");
+  if (args.one_defect && (args.q_seed || args.q_spectrum || args.sectors || args.excitations || args.numbers ||
+                          args.through_lines || args.singlet_excitation || args.max_attempts))
+    throw std::invalid_argument("--one-defect cannot combine with other state selections");
+  if (args.ferromagnetic)
+  {
+    if (args.sites < 2) throw std::invalid_argument("ferromagnetic free-end chain requires N>=2");
+    if (args.sectors || args.singlet_excitation)
+      throw std::invalid_argument(
+          "ferromagnetic --sectors and --singlet-excitation are not implemented; use --q-spectrum --through-lines ELL");
+    bool const analytic = !args.numbers && !args.excitations && !args.q_seed && !args.q_spectrum;
+    if (analytic && args.through_lines && *args.through_lines != args.sites && *args.through_lines != args.sites - 2)
+      throw std::invalid_argument(
+          "ferromagnetic module minima are analytic only for ELL=N or N-2; use --q-spectrum --through-lines ELL");
+    if (analytic && args.roots)
+      throw std::invalid_argument(
+          "analytic ferro modes have no root table; use --quantum-numbers or --excitations for XXZ roots");
+  }
   if (args.singlet_excitation && (args.q_seed || args.q_spectrum || args.sectors || args.excitations || args.numbers ||
                                   args.through_lines || args.max_candidates || args.max_attempts))
     throw std::invalid_argument("--singlet-excitation cannot combine with other state selections or scan budgets");
@@ -87,7 +116,8 @@ void validate(Arguments const& args)
   if (args.numbers && (args.through_lines || args.excitations))
     throw std::invalid_argument(
         "--quantum-numbers determines the TL module; cannot combine with --through-lines or --excitations");
-  if (args.max_candidates && !args.excitations) throw std::invalid_argument("--max-candidates requires --excitations");
+  if (args.max_candidates && !args.excitations && !args.one_defect)
+    throw std::invalid_argument("--max-candidates requires --excitations or --one-defect");
 }
 char const* status(bethe::xxz::quantum_group::SolveStatus value)
 {
@@ -147,19 +177,24 @@ int run_qsystem(Arguments const& args, bethe::SolverOptions<Real> const& options
     std::cerr << "Warning: Q-system spectrum validation covers N<=8. Larger chains are experimental; "
                  "memory, search cost and string conditioning may prevent convergence or completeness.\n";
   std::vector<model::qsystem::State<Real>> states;
+  auto const ell = args.through_lines.value_or(args.ferromagnetic ? args.sites - 2 : 0);
   bool complete = false;
   if (args.q_seed)
   {
-    states.push_back(context.measure(
-        [&] { return model::qsystem::solve<Real>(args.sites, parse_q_seed<Real>(*args.q_seed), options); }));
+    states.push_back(context.measure([&] {
+      auto const seed = parse_q_seed<Real>(*args.q_seed);
+      return args.ferromagnetic ? model::ferromagnetic::qsystem::solve<Real>(args.sites, seed, options)
+                                : model::qsystem::solve<Real>(args.sites, seed, options);
+    }));
     complete = states.front().reference.converged;
     report.field("calculation", "Calculation", "selected Q-system branch; not necessarily a lowest level");
   }
   else
   {
     auto scan = context.measure([&] {
-      return model::qsystem::spectrum<Real>(args.sites, args.through_lines.value_or(0),
-                                            {.max_attempts = args.max_attempts.value_or(4000)}, options);
+      bethe::xxz::quantum_group::qsystem::SearchOptions search{.max_attempts = args.max_attempts.value_or(4000)};
+      return args.ferromagnetic ? model::ferromagnetic::qsystem::spectrum<Real>(args.sites, ell, search, options)
+                                : model::qsystem::spectrum<Real>(args.sites, ell, search, options);
     });
     complete = scan.complete();
     report.field("calculation", "Calculation", "Q-system spectrum search (real and complex roots)")
@@ -174,11 +209,13 @@ int run_qsystem(Arguments const& args, bethe::SolverOptions<Real> const& options
                         : "incomplete discoveries; NOT guaranteed lowest levels");
     states = std::move(scan.states);
   }
-  auto const ground = context.measure([&] { return model::ground_state<Real>(args.sites, options); });
+  auto const ground = context.measure([&] {
+    return args.ferromagnetic ? model::ferromagnetic::solve_real<Real>(args.sites, {}, options)
+                              : model::ground_state<Real>(args.sites, options);
+  });
   complete = complete && ground.reference.converged;
-  report
-      .field("tl_through_lines", "TL through-lines",
-             args.q_seed ? states.front().through_lines : args.through_lines.value_or(0))
+  report.field("tl_through_lines", "TL through-lines", args.q_seed ? states.front().through_lines : ell)
+      .field("tl_defects", "TL defects M", (args.sites - (args.q_seed ? states.front().through_lines : ell)) / 2)
       .field("q_system_validation", "Q-system validation",
              args.sites <= 8 ? "within small-chain regression range"
                              : "experimental beyond N=8; no completeness or convergence guarantee")
@@ -187,7 +224,9 @@ int run_qsystem(Arguments const& args, bethe::SolverOptions<Real> const& options
       .field("root_coordinate", "Root coordinate", "x=cosh(2u)=cos(alpha); Bajnok u, alpha=-2iu")
       .field("multiplicity_meaning", "Multiplicity meaning", "physical states per TL eigenvector, not SU(2) multiplets")
       .field("gap_reference", "Gap reference",
-             ground.reference.converged ? "E-E0; global singlet ground state" : "unavailable; ground solve failed")
+             args.ferromagnetic           ? "E-(N-1); exact degenerate ferro ground space"
+             : ground.reference.converged ? "E-E0; global singlet ground state"
+                                          : "unavailable; ground solve failed")
       .result(complete, complete ? "converged" : "incomplete or unverified");
   std::vector<std::string> names{"states", "reference", "q_coefficients"};
   if (args.roots) names.push_back("roots");
@@ -200,7 +239,9 @@ int run_qsystem(Arguments const& args, bethe::SolverOptions<Real> const& options
           auto const& s = states[i];
           auto const& r = s.reference;
           std::optional<Real> gap;
-          if (r.converged && ground.reference.converged) gap = Real{2} * (*r.energy - ground.reference.energy);
+          if (r.converged && ground.reference.converged)
+            gap =
+                args.ferromagnetic ? s.tl_energy : std::optional<Real>{Real{2} * (*r.energy - ground.reference.energy)};
           table.append(i, s.through_lines, s.multiplicity, s.energy, gap, s.tl_energy, r.energy, r.residual_norm,
                        uni20::isfinite(r.bethe_residual) ? std::optional<Real>{r.bethe_residual} : std::nullopt,
                        uni20::isfinite(r.bethe_residual_bound) ? std::optional<Real>{r.bethe_residual_bound}
@@ -370,7 +411,8 @@ void write_output(cli::RunReport& report, Arguments const& args, std::vector<mod
         cli::column<bool>("converged"), cli::column<std::string>("status", "Status"));
   };
   write_states("states",
-               args.excitations ? "Real-root TL levels (module minimum included)"
+               args.excitations ? (args.ferromagnetic ? "Real-root TL levels (complex levels excluded)"
+                                                      : "Real-root TL levels (module minimum included)")
                : args.sectors   ? "TL module minima"
                                 : "State",
                states, 0, true);
@@ -413,7 +455,8 @@ template <uni20::Real Real>
 auto preamble(uni20::run_context& context, Arguments const& args, bethe::SolverOptions<Real> const& options)
 {
   cli::RunReport report(context, "Spin-1 pure biquadratic chain (free ends)");
-  report.field("hamiltonian", "Hamiltonian", "H=-sum_i (S_i.S_(i+1))^2")
+  report
+      .field("hamiltonian", "Hamiltonian", args.ferromagnetic ? "H=+sum_i (S_i.S_(i+1))^2" : "H=-sum_i (S_i.S_(i+1))^2")
       .field("sites", "Sites", args.sites)
       .field("spin", "Spin", 1)
       .field("tl_loop_weight", "TL loop weight", 3)
@@ -421,7 +464,74 @@ auto preamble(uni20::run_context& context, Arguments const& args, bethe::SolverO
       .field("xxz_reference", "XXZ reference", "spin-half exchange 1; +sqrt(5)/4*(sz_1-sz_N)")
       .field("precision", "Precision", args.precision)
       .field("residual_tolerance", "Residual tolerance", options.residual_tolerance);
+  if (args.ferromagnetic)
+    report.field("tl_convention", "TL convention", "tl_energy=+sum e_i=E-(N-1); auxiliary XXZ reference is unchanged")
+        .field("defect_meaning", "Defect meaning", "M=(N-ell)/2; TL singlet defects, not physical spin flips")
+        .field("spectral_gap", "Exact gap above ground space", model::ferromagnetic::spectral_gap<Real>(args.sites));
   return report;
+}
+
+template <uni20::Real Real> int run_ferro_analytic(Arguments const& args, cli::RunReport report)
+{
+  auto computation = report.context().computation();
+  auto const ground = model::ferromagnetic::ground_space<Real>(args.sites);
+  std::vector<model::ferromagnetic::OneDefectLevel<Real>> levels;
+  if (args.one_defect)
+  {
+    if (args.sites - 1 > args.max_candidates.value_or(10000))
+      throw std::length_error("one-defect band exceeds max_candidates; raise --max-candidates");
+    levels.reserve(args.sites - 1);
+    for (std::size_t j = args.sites - 1; j > 0; --j)
+      levels.push_back(model::ferromagnetic::one_defect_level<Real>(args.sites, j));
+  }
+  else if (args.through_lines && *args.through_lines == args.sites - 2)
+    levels.push_back(model::ferromagnetic::one_defect_level<Real>(args.sites, args.sites - 1));
+  computation.finish();
+  report
+      .field("calculation", "Calculation",
+             args.one_defect  ? "complete one-defect TL module"
+             : levels.empty() ? "exact ferro ground space"
+                              : "exact one-defect module minimum")
+      .field("coverage", "Coverage",
+             args.one_defect  ? "all N-1 eigenvalues of ell=N-2; NOT the full excited spectrum"
+             : levels.empty() ? "ground space only; zero modes are not individually enumerated"
+                              : "first positive level above the entire ground space")
+      .field("wave_number", "Wave number", "k=pi*j/N is an OBC standing-wave coordinate, not lattice momentum")
+      .field("ground_energy", "Ground energy", ground.energy)
+      .field("ground_multiplicity", "Ground-space dimension", ground.multiplicity, {.missing = "overflow (>uint64)"})
+      .field("gap_reference", "Gap reference", "E-(N-1); exact degenerate ferro ground space")
+      .field("multiplicity_meaning", "Multiplicity meaning",
+             "physical states per TL eigenvector; not SU(2) multiplets or accidental-degeneracy sums")
+      .result(true, "exact spectral rules");
+  cli::ResultOutput output(report, args.output, {"states", "reference"});
+  output.table(
+      "states", "Analytic ferromagnetic levels",
+      [&](auto& table) {
+        if (levels.empty())
+          table.append(std::size_t{0}, ground.through_lines, std::size_t{0}, ground.multiplicity,
+                       std::optional<std::size_t>{}, std::optional<Real>{}, ground.energy, Real{0});
+        for (std::size_t i = 0; i < levels.size(); ++i)
+        {
+          auto const& level = levels[i];
+          table.append(i, level.through_lines, std::size_t{1}, level.multiplicity,
+                       std::optional<std::size_t>{level.mode}, std::optional<Real>{level.wave_number}, level.energy,
+                       level.gap);
+        }
+      },
+      cli::column<std::size_t>("state_id"), cli::column<std::size_t>("through_lines"),
+      cli::column<std::size_t>("defects"), cli::column<std::optional<std::uint64_t>>("multiplicity"),
+      cli::column<std::optional<std::size_t>>("mode", "j"),
+      cli::column<std::optional<Real>>("wave_number", "Standing-wave k"), cli::column<Real>("energy", "Energy"),
+      cli::column<Real>("gap", "E-E0"));
+  output.table(
+      "reference", "Exact ferromagnetic ground space",
+      [&](auto& table) {
+        table.append(std::max(std::size_t{1}, levels.size()), ground.through_lines, ground.energy, ground.multiplicity);
+      },
+      cli::column<std::size_t>("state_id"), cli::column<std::size_t>("through_lines"),
+      cli::column<Real>("energy", "Energy"), cli::column<std::optional<std::uint64_t>>("multiplicity"));
+  output.finish();
+  return 0;
 }
 
 int finish(bool converged)
@@ -436,20 +546,28 @@ template <uni20::Real Real> int run(Arguments const& args, int argc, char** argv
   bethe::SolverOptions<Real> options;
   options.max_iterations = args.max_iterations;
   if (args.tolerance) options.residual_tolerance = uni20::parse_real<Real>(*args.tolerance);
+  if (!uni20::isfinite(options.residual_tolerance) || options.residual_tolerance <= Real{0})
+    throw std::invalid_argument("residual tolerance must be finite and positive");
   auto report = preamble(context, args, options);
   if (args.q_seed || args.q_spectrum) return run_qsystem(args, options, std::move(report));
   if (args.singlet_excitation) return run_singlet(args, options, std::move(report));
+  if (args.ferromagnetic && !args.excitations && !args.numbers)
+    return run_ferro_analytic<Real>(args, std::move(report));
   auto computation = context.computation();
   if (args.excitations)
   {
-    auto const ell = args.through_lines.value_or(2);
-    auto const scan = model::real_excitations<Real>(
-        args.sites, ell, {.count = *args.excitations, .max_candidates = args.max_candidates.value_or(10000)}, options);
+    auto const ell = args.through_lines.value_or(args.ferromagnetic ? args.sites - 2 : 2);
+    bethe::RealExcitationOptions const enumeration{.count = *args.excitations,
+                                                   .max_candidates = args.max_candidates.value_or(10000)};
+    auto const scan = args.ferromagnetic
+                          ? model::ferromagnetic::real_excitations<Real>(args.sites, ell, enumeration, options)
+                          : model::real_excitations<Real>(args.sites, ell, enumeration, options);
     computation.finish();
     auto const& ground = scan.ground_state;
     report.field("calculation", "Calculation", "restricted real-root excitations")
         .field("family", "Family", "positive finite roots; complex-root levels excluded; NOT the complete TL spectrum")
         .field("tl_through_lines", "TL through-lines", ell)
+        .field("tl_defects", "TL defects M", (args.sites - ell) / 2)
         .field("multiplicity_per_tl_eigenvector", "Multiplicity per TL eigenvector",
                bethe::temperley_lieb::spin_chain_multiplicity(3, ell), {.missing = "overflow (>uint64)"})
         .field("multiplicity_meaning", "Multiplicity meaning",
@@ -464,7 +582,9 @@ template <uni20::Real Real> int run(Arguments const& args, int argc, char** argv
         .field("ground_residual", "Ground residual", ground.reference.residual_norm)
         .field("ground_iterations", "Ground iterations", ground.reference.iterations)
         .field("gap_reference", "Gap reference",
-               ground.reference.converged ? "E-E0; global singlet ground state" : "unavailable; ground solve failed")
+               args.ferromagnetic           ? "E-(N-1); exact degenerate ferro ground space"
+               : ground.reference.converged ? "E-E0; global singlet ground state"
+                                            : "unavailable; ground solve failed")
         .result(scan.converged(), scan.converged() ? "converged" : "incomplete scan or ground reference");
     if (scan.first_unconverged)
       report
@@ -509,9 +629,10 @@ template <uni20::Real Real> int run(Arguments const& args, int argc, char** argv
     write_output(report, args, rows, gaps);
     return finish(converged);
   }
-  auto const state = args.numbers
-                         ? model::solve_real<Real>(args.sites, *args.numbers, options)
-                         : model::sector_ground_state<Real>(args.sites, args.through_lines.value_or(0), options);
+  auto const state =
+      args.numbers ? (args.ferromagnetic ? model::ferromagnetic::solve_real<Real>(args.sites, *args.numbers, options)
+                                         : model::solve_real<Real>(args.sites, *args.numbers, options))
+                   : model::sector_ground_state<Real>(args.sites, args.through_lines.value_or(0), options);
   computation.finish();
   auto const& reference = state.reference;
   report
@@ -522,19 +643,25 @@ template <uni20::Real Real> int run(Arguments const& args, int argc, char** argv
              : state.through_lines == 0 ? "even-chain singlet ground state"
                                         : "TL module minimum")
       .field("tl_through_lines", "TL through-lines", state.through_lines)
-      .field("multiplicity", state.through_lines == 0 ? "Ground-state multiplicity" : "Multiplicity per TL eigenvector",
+      .field("tl_defects", "TL defects M", (args.sites - state.through_lines) / 2)
+      .field("multiplicity",
+             !args.ferromagnetic && state.through_lines == 0 ? "Ground-state multiplicity"
+                                                             : "Multiplicity per TL eigenvector",
              state.multiplicity, {.missing = "overflow (>uint64)"})
       .result(reference.converged, status(reference.status))
       .field("total_energy", "Total energy", state.energy)
       .field("energy_per_site", "Energy per site", state.energy / Real(args.sites))
-      .field("tl_energy_sum_e_i", "TL energy (-sum e_i)", state.tl_energy)
+      .field("tl_energy_sum_e_i", args.ferromagnetic ? "TL energy (+sum e_i)" : "TL energy (-sum e_i)", state.tl_energy)
       .field("xxz_reference_energy", "XXZ reference energy", reference.energy)
       .field("residual_norm", "Residual norm", reference.residual_norm)
       .field("iterations", "Iterations", reference.iterations);
   if (state.through_lines == 0) report.field("total_spin", "Total spin", 0);
   if (state.through_lines != 0)
     report.field("multiplicity_meaning", "Multiplicity meaning", "physical states, not a physical-spin label");
-  write_output<Real>(report, args, {&state}, {std::nullopt});
+  if (args.ferromagnetic)
+    report.field("gap_reference", "Gap reference", "E-(N-1); exact degenerate ferro ground space");
+  write_output<Real>(report, args, {&state},
+                     {args.ferromagnetic && reference.converged ? std::optional<Real>{state.tl_energy} : std::nullopt});
   return finish(reference.converged);
 }
 } // namespace

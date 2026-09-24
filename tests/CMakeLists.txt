@@ -30,7 +30,7 @@ function(bethe_discover_tests target)
   )
 endfunction()
 
-foreach(module IN ITEMS heisenberg sectors open excitations xxz xxz_open xxz_open_massive xxz_open_negative xxz_periodic_negative xxz_negative xxz_polynomial xxz_open_qsystem xxz_open_two_string xxz_odd_continuation xxz_odd_bounds xxz_wronskian xxz_odd_sectors xxz_regularity xxz_spin_helix xxz_phantom xxz_phantom_wave xxz_phantom_check xxz_coordinate_wave polynomial_roots hubbard hubbard_open hubbard_thermo hubbard_doped lieb_liniger su3 gaudin_yang tj takhtajan_babujian temperley_lieb richardson central_spin su_fermions ladder haldane_shastry sutherland support)
+foreach(module IN ITEMS heisenberg sectors open excitations xxz xxz_open xxz_open_massive xxz_open_negative xxz_periodic_negative xxz_negative xxz_polynomial xxz_open_qsystem xxz_open_two_string xxz_odd_continuation xxz_odd_bounds xxz_wronskian xxz_odd_sectors xxz_regularity xxz_spin_helix xxz_phantom xxz_phantom_wave xxz_phantom_check xxz_coordinate_wave polynomial_roots hubbard hubbard_open hubbard_thermo hubbard_doped lieb_liniger su3 gaudin_yang tj takhtajan_babujian temperley_lieb biquadratic_ferromagnetic richardson central_spin su_fermions ladder haldane_shastry sutherland support)
   add_executable(bethe_${module}_tests test_${module}.cpp)
   target_link_libraries(bethe_${module}_tests PRIVATE bethe::bethe)
   bethe_discover_tests(bethe_${module}_tests)
@@ -62,6 +62,9 @@ endif()
 
 if(BETHE_BUILD_APPS)
   if(Python3_Interpreter_FOUND)
+    add_test(NAME BiquadraticFerro.cli
+      COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_biquadratic_ferromagnetic.py"
+        "$<TARGET_FILE:bethe-biquadratic-obc>" "${UNI20_ENABLE_MPLAPACK}")
     add_test(NAME BiquadraticTwoString.cli
       COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_biquadratic_two_string.py"
         "$<TARGET_FILE:bethe-biquadratic-obc>" "${UNI20_ENABLE_MPLAPACK}")

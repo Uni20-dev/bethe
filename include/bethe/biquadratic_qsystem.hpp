@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Copyright (C) 2026 Ian McCulloch
 #pragma once
+#include <bethe/biquadratic.hpp>
 #include <bethe/temperley_lieb_qsystem.hpp>
 
 namespace bethe::biquadratic::qsystem
@@ -11,6 +12,7 @@ template <uni20::Real Real> struct State
     std::size_t through_lines = 0;
     std::optional<std::uint64_t> multiplicity;
     xxz::quantum_group::qsystem::State<Real> reference;
+    Exchange exchange = Exchange::antiferromagnetic;
 };
 
 template <uni20::Real Real> [[nodiscard]] State<Real> from_reference(xxz::quantum_group::qsystem::State<Real> reference)

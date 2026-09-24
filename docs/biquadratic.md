@@ -2,6 +2,11 @@
 
 [Overview](../README.md) · [Model catalogue](models.md) · [Precision and CLI controls](command-line.md)
 
+For the opposite sign, `--ferromagnetic`, see
+[ferromagnetic excitations](biquadratic-ferromagnetic.md): an exact one-defect
+band, sign-aware real-root scans and complex-root Q-system levels. The
+conventions and default modes below describe the antiferromagnetic sign.
+
 `bethe-biquadratic-obc` calculates the singlet ground state, TL module minima,
 and restricted real-root excitations of the **even-length, free-end** spin-1
 pure biquadratic chain, N>=2. A separate Q-system mode also handles complex-root

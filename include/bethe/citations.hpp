@@ -236,8 +236,15 @@ inline constexpr std::array<Link, 2> links_61{{
   {"DOI", "https://doi.org/10.1553/etna_vol55s401"},
   {"Open-access article", "https://etna.ricam.oeaw.ac.at/vol.55.2022/pp401-423.dir/pp401-423.pdf"},
 }};
+inline constexpr std::array<Link, 1> links_62{{
+  {"arXiv", "https://arxiv.org/abs/cond-mat/9512120"},
+}};
+inline constexpr std::array<Link, 2> links_63{{
+  {"DOI", "https://doi.org/10.1088/1751-8121/ae05d9"},
+  {"arXiv", "https://arxiv.org/abs/2302.13126"},
+}};
 
-inline constexpr std::array<Reference, 62> references{{
+inline constexpr std::array<Reference, 64> references{{
   {"barber-batchelor-1989", "Michael N. Barber and Murray T. Batchelor", "Spectrum of the biquadratic spin-1 antiferromagnetic chain", "Phys. Rev. B 40, 4621-4626", 1989, links_0},
   {"albertini-2000", "Giuseppe Albertini", "Is the purely biquadratic spin 1 chain always massive?", "arXiv:cond-mat/0012439", 2000, links_1},
   {"aufgebauer-klumper-2010", "Britta Aufgebauer and Andreas Klümper", "Quantum spin chains of Temperley-Lieb type: periodic boundary conditions, spectral multiplicities and finite temperature", "J. Stat. Mech. 2010, P05018", 2010, links_2},
@@ -300,12 +307,16 @@ inline constexpr std::array<Reference, 62> references{{
   {"korepin-2009", "Vladimir E. Korepin", "Norm of Bethe Wave Function as a Determinant", "arXiv:0911.1881 (historical account of the 1982 norm formula)", 2009, links_59},
   {"bini-robol-2013", "Dario A. Bini and Leonardo Robol", "Solving secular and polynomial equations: a multiprecision algorithm", "Author manuscript, May 10, 2013", 2013, links_60},
   {"cameron-graillat-2022", "Thomas R. Cameron and Stef Graillat", "On a compensated Ehrlich-Aberth method for the accurate computation of all polynomial roots", "Electronic Transactions on Numerical Analysis 55, 401-423", 2022, links_61},
+  {"koma-nachtergaele-1997", "Tohru Koma and Bruno Nachtergaele", "The spectral gap of the ferromagnetic XXZ chain", "Lett. Math. Phys. 40, 1-16", 1997, links_62},
+  {"zhou-2025-biquadratic", "Huan-Qiang Zhou, Qian-Qian Shi, Ian P. McCulloch, and Murray T. Batchelor", "Goldstone modes and the golden spiral in the ferromagnetic spin-1 biquadratic model", "J. Phys. A: Math. Theor. 58, 39LT01", 2025, links_63},
 }};
 
-inline constexpr std::array<Use, 4> uses_biquadratic_obc{{
+inline constexpr std::array<Use, 6> uses_biquadratic_obc{{
   {&references[0], "Original free-end spin-1 biquadratic/TL spectral correspondence. Even-chain ground states, TL module minima and restricted real-root excitations of H=-sum (S.S)^2, with representation multiplicities."},
   {&references[1], "Hamiltonians and energy shift (2)-(5), real-root Bethe equations (6)-(10), and integer-label window 1<=I<=N-M. Our spin-half reference is half of (3), after a staggered rotation. The odd-chain spinon band is not implemented."},
   {&references[2], "TL loop weight and quantum-group XXZ end fields, Sec. 2.3; open spin-chain module multiplicities, Sec. 3, especially (48)-(55). Periodic twists, physical-spin decomposition and thermodynamics are not implemented."},
+  {&references[62], "Ferromagnetic OBC gap and one-defect band: Proposition 2 and Eq. (3.30), transferred through TL equivalence at Delta=3/2 and multiplied by 2*Delta=3. Gap above the entire ground space is 3-2*cos(pi/N), not a zero-mode splitting."},
+  {&references[63], "Ferromagnetic convention H=+sum (S.S)^2, Eq. (3), and Fibonacci ground-space multiplicities under free ends. Ground-space zero modes are distinct from the positive-energy TL defect band; entanglement and ground-state wavefunctions are not implemented."},
   {&references[14], "Open quantum-group-invariant XXZ Q-system, Sec. 5: Wronskian (5.17), Bethe equations (5.12), and admissibility conditions. Used for Q-system module searches (validated through N=8; larger sizes experimental) and a separately regularized one-two-string singlet branch on long chains. Neither numerical completeness nor long-chain energy ordering is rigorously certified."},
 }};
 inline constexpr std::array<Use, 4> uses_xxx_pbc{{
