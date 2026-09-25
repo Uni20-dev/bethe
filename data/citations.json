@@ -842,6 +842,18 @@
         {"label": "DOI", "url": "https://doi.org/10.1103/PhysRevLett.72.908"},
         {"label": "arXiv", "url": "https://arxiv.org/abs/cond-mat/9308004"}
       ]
+    },
+    {
+      "id": "bajnok-el-deeb-pearce-2015",
+      "authors": "Zoltan Bajnok, Omar el Deeb, and Paul A. Pearce",
+      "title": "Finite-Volume Spectra of the Lee-Yang Model",
+      "publication": "JHEP 04 (2015), 073",
+      "year": 2015,
+      "links": [
+        {"label": "DOI", "url": "https://doi.org/10.1007/JHEP04(2015)073"},
+        {"label": "arXiv", "url": "https://arxiv.org/abs/1412.8494"},
+        {"label": "HTML", "url": "https://arxiv.org/html/1412.8494"}
+      ]
     }
   ],
   "tools": [

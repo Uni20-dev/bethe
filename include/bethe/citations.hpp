@@ -305,8 +305,13 @@ inline constexpr std::array<Link, 2> links_79{{
   {"DOI", "https://doi.org/10.1103/PhysRevLett.72.908"},
   {"arXiv", "https://arxiv.org/abs/cond-mat/9308004"},
 }};
+inline constexpr std::array<Link, 3> links_80{{
+  {"DOI", "https://doi.org/10.1007/JHEP04(2015)073"},
+  {"arXiv", "https://arxiv.org/abs/1412.8494"},
+  {"HTML", "https://arxiv.org/html/1412.8494"},
+}};
 
-inline constexpr std::array<Reference, 80> references{{
+inline constexpr std::array<Reference, 81> references{{
   {"barber-batchelor-1989", "Michael N. Barber and Murray T. Batchelor", "Spectrum of the biquadratic spin-1 antiferromagnetic chain", "Phys. Rev. B 40, 4621-4626", 1989, links_0},
   {"albertini-2000", "Giuseppe Albertini", "Is the purely biquadratic spin 1 chain always massive?", "arXiv:cond-mat/0012439", 2000, links_1},
   {"aufgebauer-klumper-2010", "Britta Aufgebauer and Andreas Klümper", "Quantum spin chains of Temperley-Lieb type: periodic boundary conditions, spectral multiplicities and finite temperature", "J. Stat. Mech. 2010, P05018", 2010, links_2},
@@ -387,6 +392,7 @@ inline constexpr std::array<Reference, 80> references{{
   {"gainutdinov-hao-nepomechie-sommese-2015", "A. M. Gainutdinov, W. Hao, R. I. Nepomechie, and A. J. Sommese", "Counting solutions of the Bethe equations of the quantum group invariant open XXZ chain at roots of unity", "J. Phys. A: Math. Theor. 48, 494003", 2015, links_77},
   {"gainutdinov-nepomechie-2016", "A. M. Gainutdinov and R. I. Nepomechie", "Algebraic Bethe ansatz for the quantum group invariant open XXZ chain at roots of unity", "Nucl. Phys. B 909, 796-839", 2016, links_78},
   {"essler-korepin-1994-scattering", "F. H. L. Essler and V. E. Korepin", "Scattering matrix and excitation spectrum of the Hubbard model", "Phys. Rev. Lett. 72, 908-911", 1994, links_79},
+  {"bajnok-el-deeb-pearce-2015", "Zoltan Bajnok, Omar el Deeb, and Paul A. Pearce", "Finite-Volume Spectra of the Lee-Yang Model", "JHEP 04 (2015), 073", 2015, links_80},
 }};
 
 inline constexpr std::array<Use, 2> uses_xxz_qg_obc{{

@@ -1094,4 +1094,11 @@ Relevant tool modes:
 
 - `bethe-hubbard-continuum`: Elementary SO(4) spinon and charge doublets and additive spinon-holon, spinon-antiholon and neutral holon-antiholon scattering energies and momenta. Charge-family extrema are resolved numerically, not certified global bounds; our U is four times the paper's U.
 
+### bajnok-el-deeb-pearce-2015
+
+Zoltan Bajnok, Omar el Deeb, and Paul A. Pearce. *Finite-Volume Spectra of the Lee-Yang Model*.
+JHEP 04 (2015), 073 (2015).
+
+[DOI](<https://doi.org/10.1007/JHEP04(2015)073>), [arXiv](<https://arxiv.org/abs/1412.8494>), [HTML](<https://arxiv.org/html/1412.8494>).
+
 <!-- END GENERATED BIBLIOGRAPHY -->
