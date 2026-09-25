@@ -2,6 +2,7 @@
 import csv
 from decimal import Decimal, localcontext
 import json
+import math
 import os
 from pathlib import Path
 import subprocess
@@ -69,13 +70,57 @@ for precision in precisions:
     assert row["energy"] is None and row["energy_shift"] is None and row["status"] == "iteration_limit"
     assert all(not r["converged"] for r in records(failed["roots"]))
 
-invalid = [[], ["1", "--delta", "0.25"], ["4", "--delta", "0"], ["4", "--delta", "1"],
+def free_tables(args):
+    doc = json.loads(run([*args, "--format", "json"]))
+    assert doc["status"] == "complete" and list(doc["tables"]) == ["blocks"]
+    table = doc["tables"]["blocks"]
+    assert table["summary"]["Outcome"] == "success"
+    assert Decimal(table["summary"]["Run CPU seconds"]) >= 0
+    assert "complete fixed-Sz" in table["metadata"]["Scope"]
+    assert "Sz_1-Sz_N" in table["metadata"]["Hamiltonian"]
+    return table
+
+
+endpoint = ["4", "--delta", "0"]
+for precision in precisions:
+    table = free_tables([*endpoint, "--precision", precision])
+    rows = records(table)
+    assert [int(r["block_size"]) for r in rows] == [1, 2, 2, 1]
+    assert [r["modes"] for r in rows] == ["1,3", "1", "3", ""]
+    assert [int(r["zero_occupation"]) for r in rows] == [0, 1, 1, 2]
+    with localcontext() as ctx:
+        ctx.prec = 80
+        exact = -Decimal(2).sqrt()/2
+        tol = {"fp64": Decimal("1e-14"), "long-double": Decimal("1e-18"), "fp128": Decimal("1e-32")}[precision]
+        assert abs(Decimal(rows[2]["energy"])-exact) < tol
+    odd = free_tables(["3", "--delta", "0", "--sz", "-1/2", "--precision", precision])
+    assert odd["metadata"]["Down spins"] == "2"
+    assert odd["metadata"]["Sector dimension"] == "3"
+    assert all(int(r["block_size"]) == 1 for r in records(odd))
+    polarized = records(free_tables([*endpoint, "--sz", "-2", "--precision", precision]))
+    assert len(polarized) == 1 and Decimal(polarized[0]["energy"]) == 0
+    assert int(polarized[0]["zero_occupation"]) == 2 and int(polarized[0]["block_size"]) == 1
+for n in range(2, 9):
+    for down in range(n+1):
+        table = free_tables([str(n), "--delta", "0", "--sz", str((n-2*down)/2)])
+        rows = records(table)
+        assert sum(int(r["block_size"]) for r in rows) == math.comb(n, down)
+        assert int(table["metadata"]["Sector dimension"]) == math.comb(n, down)
+        assert all(len(r["modes"].split(","))*(r["modes"] != "")+int(r["zero_occupation"]) == down for r in rows)
+
+invalid = [[], ["1", "--delta", "0.25"], ["4", "--delta", "0", "--roots"], ["4", "--delta", "1"],
            ["4", "--delta", "-0.25"], ["4", "--delta", "nan"], ["4", "--delta", "inf"],
            [*base, "--through-lines", "1"], [*base, "--through-lines", "6"],
            [*base, "--numbers", "1", "--through-lines", "2"], [*base, "--numbers", "1/2"],
            [*base, "--numbers", "2,1"], [*base, "--numbers", "1,1"], [*base, "--numbers", "0"],
            [*base, "--numbers", "3"], [*base, "--numbers", "1,2,3"], [*base, "--tolerance", "0"],
            [*base, "--max-iterations", "-1"], [*base, "--sz", "0"]]
+invalid += [[*endpoint, *flags] for flags in (
+    ["--numbers", "none"], ["--through-lines", "0"], ["--tolerance", "1e-8"],
+    ["--max-iterations", "10000"], ["--sz", "1/2"], ["--sz", "3"], ["--sz", "-3"],
+    ["--max-blocks", "3"], ["--max-mode-entries", "3"], ["--max-blocks", "0"],
+    ["--max-mode-entries", "-1"])]
+invalid += [[*base, "--max-blocks", "10"], [*base, "--max-mode-entries", "10"], ["1", "--delta", "0"]]
 with tempfile.TemporaryDirectory() as directory:
     path = Path(directory)
     flags = ["--json", str(path/"state.json")]
@@ -102,5 +147,18 @@ with tempfile.TemporaryDirectory() as directory:
     run([*base, "--roots", "--format", "pretty"])
     failed = run([*base, "--max-iterations", "0", "--format", "csv", "--no-preamble"], 2)
     assert next(csv.DictReader(failed.splitlines()))["energy"] == ""
+    flags = ["--json", str(path/"endpoint.json"), "--csv", str(path/"endpoint.csv"),
+             "--tsv", str(path/"endpoint.tsv")]
+    screen = run([*endpoint, *flags, "--format", "plain"])
+    assert "CPU time" in screen and "Used for:" not in screen
+    expected = records(json.loads((path/"endpoint.json").read_text())["tables"]["blocks"])
+    for suffix, delimiter in (("csv", ","), ("tsv", "\t")):
+        content = (path/f"endpoint.{suffix}").read_text()
+        rows = list(csv.DictReader((line for line in content.splitlines() if not line.startswith("#")), delimiter=delimiter))
+        assert rows == [{k: str(v) for k,v in r.items()} for r in expected]
+    run([*endpoint, *flags, "--quiet", "--force", "--no-retain"])
+    assert records(json.loads((path/"endpoint.json").read_text())["tables"]["blocks"]) == expected
+    run([*endpoint, "--stream", "--no-retain", "--format", "plain"])
+    run([*endpoint, "--format", "pretty"])
 
 print("Critical quantum-group XXZ CLI contracts passed")

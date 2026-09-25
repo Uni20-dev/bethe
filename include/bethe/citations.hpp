@@ -390,8 +390,8 @@ inline constexpr std::array<Reference, 80> references{{
 }};
 
 inline constexpr std::array<Use, 2> uses_xxz_qg_obc{{
-  {&references[77], "Quantum-group-invariant open XXZ Hamiltonian and Bethe equations (1.1)-(1.3). Our spin-half Hamiltonian is one quarter of the Pauli normalization with spatially reflected boundary fields. Current scope: positive finite-real roots at 0<Delta<1, without multiplicity or completeness claims."},
-  {&references[78], "Root-of-unity complete strings and generalized eigenvectors explain why regular eigenvalues alone do not determine Jordan structure. Those extensions are not yet implemented."},
+  {&references[77], "Quantum-group-invariant open XXZ Hamiltonian and Bethe equations (1.1)-(1.3). Our spin-half Hamiltonian is one quarter of the Pauli normalization with spatially reflected boundary fields. Positive finite-real roots at 0<Delta<1 have no completeness claim; at Delta=0, a separate free-fermion construction gives complete fixed-Sz spectra and Jordan-block sizes, consistent with Appendices C and D."},
+  {&references[78], "Root-of-unity complete strings and generalized eigenvectors explain why regular eigenvalues alone do not determine Jordan structure. Delta=0 Hamiltonian block sizes are implemented separately; explicit generalized eigenvectors and other root-of-unity extensions remain follow-ups."},
 }};
 inline constexpr std::array<Use, 2> uses_hubbard_continuum{{
   {&references[3], "Half-filled spinon line Eq. (4), two-spinon continuum edges Eq. (18) and following paragraph; our U is four times the paper's U. No form factors or spectral weights."},

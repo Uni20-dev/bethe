@@ -849,8 +849,8 @@
       "id": "xxz_qg_obc",
       "executable": "bethe-xxz-qg-obc",
       "references": [
-        {"id": "gainutdinov-hao-nepomechie-sommese-2015", "context": "Quantum-group-invariant open XXZ Hamiltonian and Bethe equations (1.1)-(1.3). Our spin-half Hamiltonian is one quarter of the Pauli normalization with spatially reflected boundary fields. Current scope: positive finite-real roots at 0<Delta<1, without multiplicity or completeness claims."},
-        {"id": "gainutdinov-nepomechie-2016", "context": "Root-of-unity complete strings and generalized eigenvectors explain why regular eigenvalues alone do not determine Jordan structure. Those extensions are not yet implemented."}
+        {"id": "gainutdinov-hao-nepomechie-sommese-2015", "context": "Quantum-group-invariant open XXZ Hamiltonian and Bethe equations (1.1)-(1.3). Our spin-half Hamiltonian is one quarter of the Pauli normalization with spatially reflected boundary fields. Positive finite-real roots at 0<Delta<1 have no completeness claim; at Delta=0, a separate free-fermion construction gives complete fixed-Sz spectra and Jordan-block sizes, consistent with Appendices C and D."},
+        {"id": "gainutdinov-nepomechie-2016", "context": "Root-of-unity complete strings and generalized eigenvectors explain why regular eigenvalues alone do not determine Jordan structure. Delta=0 Hamiltonian block sizes are implemented separately; explicit generalized eigenvectors and other root-of-unity extensions remain follow-ups."}
       ]
     },
     {

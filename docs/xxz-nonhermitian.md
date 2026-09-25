@@ -3,9 +3,9 @@
 **Status: native positive finite-real-root library and frontend implemented
 for 0<Delta<1; complex-root branches and root-of-unity representation
 accounting remain follow-ups.** This is not the existing free-end XXZ model.
-The separate Delta=0 library described below includes the complete
-fixed-magnetization spectrum and Jordan-block sizes, but not spin-basis
-generalized eigenvectors or a command-line endpoint mode yet.
+The separate Delta=0 construction includes the complete fixed-magnetization
+spectrum and Jordan-block sizes, available through the same frontend, but
+not spin-basis generalized eigenvectors.
 
 ## Command line
 
@@ -14,10 +14,12 @@ bethe-xxz-qg-obc 32 --delta 0.25
 bethe-xxz-qg-obc 7 --delta 0.6 --through-lines 3 --roots
 bethe-xxz-qg-obc 8 --delta 0.6 --numbers 1,3 --precision fp128 --json state.json
 bethe-xxz-qg-obc 4 --delta 0.25 --numbers none
+bethe-xxz-qg-obc 8 --delta 0 --sz 0 --json blocks.json
+bethe-xxz-qg-obc 7 --delta 0 --sz -1/2
 bethe-xxz-qg-obc --references
 ```
 
-The default sea uses ell=N mod 2 and consecutive labels I=1,...,(N-ell)/2.
+For 0<Delta<1, the default sea uses ell=N mod 2 and consecutive labels I=1,...,(N-ell)/2.
 `--through-lines` changes ell; `--numbers` instead supplies explicit labels
 (or `none` for the polarized state). These options exclude each other. The
 label ell is not an ordinary SU(2) spin or a promised root-of-unity degeneracy.
@@ -37,6 +39,24 @@ JSON/CSV/TSV exports and streaming delivery. For separate rectangular files,
 use `--csv-table state=state.csv --csv-table roots=roots.csv --roots`.
 Metadata records the imaginary boundary strength, Hamiltonian normalization,
 state-selection rule and numerical controls; the summary includes CPU time.
+
+At `--delta 0`, the frontend instead lists the **complete fixed-Sz spectrum**.
+`--sz` defaults to 0 for even N and +1/2 for odd N; both positive and negative
+sectors are supported. The `blocks` table contains `block_id`, `energy`,
+`block_size`, `zero_occupation` and comma-separated occupied `modes`.
+Each row is one Jordan block, not one distinct energy: a size-two block has
+one eigenvector and one generalized eigenvector. Coincident energies remain
+separate rows, ordered by zero occupation and then mode labels, not energy.
+Metadata includes the full sector dimension and number of size-two blocks.
+No spin-basis vectors are output.
+
+Endpoint controls `--max-blocks` (default 100000) and `--max-mode-entries`
+(default 1000000) bound the complete enumeration. Budget refusal exits 1
+before any output file is opened, even with `--force`. No partial spectrum is
+published. The existing regular-branch `--through-lines`, `--numbers`,
+`--roots`, `--tolerance` and `--max-iterations` options are rejected at zero;
+conversely `--sz` and the endpoint budget options require Delta=0. This avoids
+confusing fermion-mode labels with regular Bethe labels.
 
 ## Hamiltonian and source normalization
 
@@ -141,8 +161,7 @@ to these parameters. Do not replace this chain with a Hermitian matrix having
 the same real eigenvalues. Even in the implemented interval, regular-root
 solutions do not by themselves specify the full root-of-unity spectrum.
 
-The next stages are admissible-label scans,
-command-line access to the Delta=0 endpoint, and additional complex-root branches.
+The next stages are admissible-label scans and additional complex-root branches.
 CFT fitting must identify boundary sectors and distinguish c from an effective
 central charge; a numerical Casimir coefficient is not automatically c.
 RSOS restrictions and periodic loop realizations are separate representations,
