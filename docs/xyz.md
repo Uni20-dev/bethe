@@ -2,20 +2,20 @@
 
 **Status: ground-branch library and `bethe-xyz-pbc` frontend; no excited-spectrum coverage.**
 Native fp64, long-double and fp128 implementations cover the symmetric regular-root
-branch of even periodic chains with real $0<\eta <1$ and rectangular `tau=i*t`,
-$t >0$. Independent small-chain diagonalization validates the ground-state selection
+branch of even periodic chains with real $`0\lt \eta \lt 1`$ and rectangular `tau=i*t`,
+$`t \gt 0`$. Independent small-chain diagonalization validates the ground-state selection
 on the tested parameter grid; convergence is not a general completeness proof.
 
 ## Convention and initial target
 
-Use spin operators $S =\sigma /2$ and
+Use spin operators $`S =\sigma /2`$ and
 
 ```math
 \begin{aligned}
-H&=\sum_j\left(J_xS_j^xS_{j+1}^x+J_yS_j^yS_{j+1}^y+J_zS_j^zS_{j+1}^z\right),\\
+H&=\sum_j\left(J_xS_j^xS_{j+1}^x+J_yS_j^yS_{j+1}^y+J_zS_j^zS_{j+1}^z\right),\\{}
 J_x&=\frac{\theta_4(\eta)}{\theta_4(0)},\qquad
 J_y=\frac{\theta_3(\eta)}{\theta_3(0)},\qquad
-J_z=\frac{\theta_2(\eta)}{\theta_2(0)},\\
+J_z=\frac{\theta_2(\eta)}{\theta_2(0)},\\{}
 \theta_j(u)&=\vartheta_j(\pi u\mid it),\qquad t>0.
 \end{aligned}
 ```
@@ -102,7 +102,7 @@ even N>=2, N/2 supplied roots, and real 0<eta<1:
 
 ```math
 \begin{aligned}
-g(u)&=\frac{\theta_1(\eta)}{\theta_1'(0)}\frac{\theta_1'(u)}{\theta_1(u)},\\
+g(u)&=\frac{\theta_1(\eta)}{\theta_1'(0)}\frac{\theta_1'(u)}{\theta_1(u)},\\{}
 E&=\frac N4g(\eta)+\frac12\sum_j[g(\lambda_j-\eta/2)-g(\lambda_j+\eta/2)].
 \end{aligned}
 ```
@@ -140,14 +140,14 @@ auto state = bethe::xyz::ground_state(16, 0.4, 0.7);
 if (state.converged) { /* *state.energy is the total energy */ }
 ```
 
-The solver fixes $M =N /2$, `xi=0`, and pairs imaginary roots $\lambda =i \,x$
+The solver fixes $`M =N /2`$, `xi=0`, and pairs imaginary roots $`\lambda =i \,x`$
 with their negatives (including zero for odd M). Thus their sum is exactly
-zero. Positive roots remain ordered in $0<x <t /2$; no independent period
+zero. Positive roots remain ordered in $`0\lt x \lt t /2`$; no independent period
 folding is performed. With centered integer/half-integer labels I, it solves
 
 ```math
 \begin{aligned}
-N\phi_{\eta/2}(x_j)-\sum_{k\ne j}\phi_\eta(x_j-x_k)&=2\pi I_j,\\
+N\phi_{\eta/2}(x_j)-\sum_{k\ne j}\phi_\eta(x_j-x_k)&=2\pi I_j,\\{}
 \phi_a(x)&=2\arg\theta_1(a+ix).
 \end{aligned}
 ```
@@ -155,7 +155,7 @@ N\phi_{\eta/2}(x_j)-\sum_{k\ne j}\phi_\eta(x_j-x_k)&=2\pi I_j,\\
 These are the regular equations (46)–(48) of the cited paper on this branch.
 An analytic reflection-reduced Jacobian feeds the same physical-domain damped
 Newton driver used by the continuum models. The reported residual is
-$\max (\lvert F \rvert)/(N \,(1-\eta))$: the extra scale prevents accepting a small raw
+$`\max (\lvert F \rvert)/(N \,(1-\eta))`$: the extra scale prevents accepting a small raw
 residual simply because the equations flatten near eta=1. Cancellation there
 can still cause stagnation; use higher precision or inspect a failure, rather
 than interpreting retained diagnostic roots as a solved state.

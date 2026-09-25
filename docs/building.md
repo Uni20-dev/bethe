@@ -146,4 +146,24 @@ Literature metadata is centralized in `data/citations.json`; see
 bibliography in `CITATIONS.md`. Generated files are checked in, so Python is
 needed only for regeneration and optional maintainer tests, not normal builds.
 
+### Documentation equations
+
+Use GitHub's backtick-protected inline math and fenced `math` display blocks.
+In inline math, use `\lt` and `\gt` instead of literal angle brackets to avoid
+HTML-entity escaping. End multiline display rows with `\\{}`: GitHub's Markdown
+renderer adds an unwanted backslash to a bare `\\` at the end of a line.
+The empty group preserves the TeX row break without relying on trailing spaces.
+
+Check the conventions locally, or verify that every expression survives
+GitHub's Markdown processing unchanged (requires authenticated `gh` and network
+access; renders only, without publishing):
+
+```sh
+python3 scripts/check_markdown_math.py
+python3 scripts/check_markdown_math.py --github
+```
+
+This checks the Markdown-to-TeX boundary, not the full MathJax grammar or the
+mathematical content. Testing raw TeX alone does not catch Markdown escaping.
+
 Next: [run a calculation and interpret its output](command-line.md).

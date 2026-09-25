@@ -48,7 +48,7 @@ H=-\sum_{j=1}^{L-1}\sum_\sigma
 ```
 
 The reported energy is total and unshifted. To convert to the convention
-$U \,(n_{\mathrm{up}} -1/2)\,(n_{\mathrm{down}} -1/2)$, subtract $U \,N /2$ and add $U \,L /4$.
+$`U \,(n_{\mathrm{up}} -1/2)\,(n_{\mathrm{down}} -1/2)`$, subtract $`U \,N /2`$ and add $`U \,L /4`$.
 For L=1 there is no hopping: empty or singly occupied states have energy zero,
 and the doubly occupied state has energy U.
 
@@ -77,19 +77,19 @@ energy in the implementation.
 ## Reflected scattering and ground-state labels
 
 First consider a repulsive sector, U>0, N<=L, and M=N_down<=N/2.
-Set $u =U /4$. All charge roots obey $0<k_{j} <\pi$, all spin rapidities are
+Set $`u =U /4`$. All charge roots obey $`0\lt k_{j} \lt \pi`$, all spin rapidities are
 positive, and each family is strictly increasing. We solve
 
 ```math
 \begin{aligned}
-F_{\mathrm{charge}}(j)&=2(L+1)k_j-2\pi I_j\\
+F_{\mathrm{charge}}(j)&=2(L+1)k_j-2\pi I_j\\{}
 &\quad+2\sum_a\left[\arctan\!\left(\frac{\sin k_j-\Lambda_a}{u}\right)
-+\arctan\!\left(\frac{\sin k_j+\Lambda_a}{u}\right)\right]=0,\\
++\arctan\!\left(\frac{\sin k_j+\Lambda_a}{u}\right)\right]=0,\\{}
 F_{\mathrm{spin}}(a)&=2\sum_j\left[\arctan\!\left(\frac{\Lambda_a-\sin k_j}{u}\right)
-+\arctan\!\left(\frac{\Lambda_a+\sin k_j}{u}\right)\right]\\
++\arctan\!\left(\frac{\Lambda_a+\sin k_j}{u}\right)\right]\\{}
 &\quad-2\sum_{b\ne a}\left[\arctan\!\left(\frac{\Lambda_a-\Lambda_b}{2u}\right)
-+\arctan\!\left(\frac{\Lambda_a+\Lambda_b}{2u}\right)\right]-2\pi J_a=0,\\
-I_j&=j,\quad j=1,\ldots,N,\qquad J_a=a,\quad a=1,\ldots,M,\\
++\arctan\!\left(\frac{\Lambda_a+\Lambda_b}{2u}\right)\right]-2\pi J_a=0,\\{}
+I_j&=j,\quad j=1,\ldots,N,\qquad J_a=a,\quad a=1,\ldots,M,\\{}
 E_{\mathrm{roots}}&=-2\sum_j\cos k_j.
 \end{aligned}
 ```
@@ -104,7 +104,7 @@ These consecutive integer labels select the sector ground state. For the
 open nearest-neighbor chain, spin ordering places the lowest state at the
 smallest total spin compatible with Sz; the periodic shell-parity issue
 does not arise. Labels use Uni20's exact `half_int`, despite being integers
-for this boundary condition. $\Lambda$ in returned states is the conventional
+for this boundary condition. $`\Lambda`$ in returned states is the conventional
 Hubbard rapidity, not the internally scaled Newton variable.
 
 ## Doping, attraction, and auxiliary roots
@@ -121,7 +121,7 @@ For g=|U|, their unshifted-energy relations are
 
 ```math
 \begin{aligned}
-E_{-g}(N_\uparrow,N_\downarrow)&=E_{+g}(N_\uparrow,L-N_\downarrow)-gN_\uparrow,\\
+E_{-g}(N_\uparrow,N_\downarrow)&=E_{+g}(N_\uparrow,L-N_\downarrow)-gN_\uparrow,\\{}
 E_U(N_\uparrow,N_\downarrow)&=E_U(L-N_\uparrow,L-N_\downarrow)+U(N-L).
 \end{aligned}
 ```
@@ -148,9 +148,9 @@ There are N+M positive-root unknowns, requiring O((N+M)^2) dense storage and
 O((N+M)^3) work per update. This is a moderate-chain solver, not a matrix-free
 large-system implementation.
 
-Internally we solve for $\Lambda /\max (1,u)$. For U<8, continuation starts at
+Internally we solve for $`\Lambda /\max (1,u)`$. For U<8, continuation starts at
 U=8 and halves U down to the target; for U>=8 it starts directly at U.
-The reported charge and spin residuals are $\max \lvert F \rvert /[2\,(L +1)]$, with default
+The reported charge and spin residuals are $`\max \lvert F \rvert /[2\,(L +1)]`$, with default
 tolerance 32 times the selected precision's epsilon. The update budget is
 shared by all stages. Even a stopped solve reports residuals at the requested
 root-sector interaction, not an intermediate continuation value.

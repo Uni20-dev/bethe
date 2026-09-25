@@ -80,7 +80,7 @@ The two boundary geometries share the physical-domain damped Newton driver,
 stable rational scattering kernel, parameter validation, compensated sums and
 finite-window enumerator, as well as the CLI/reporting implementation. The hard-wall model owns its reflection phases,
 Jacobian, labels, seed and observables. For g<1 it removes the exact rank phase
-analytically, using target $\pi \,(I_{j} -j)$ with zero-based j and complementary
+analytically, using target $`\pi \,(I_{j} -j)`$ with zero-based j and complementary
 arctangents. The reported residual is
 `max_j |F_j|/max(1,|target_j|,|q_j|)`, not an energy-error bound.
 
@@ -97,13 +97,13 @@ implemented by this solver.
 ## Independent checks
 
 For N=1, k=pi I/L exactly. For N=2, A=q_2+q_1 and D=q_2-q_1 independently solve
-$x +2 \arctan (x /g)=\pi K$, with K=I_1+I_2 and I_2-I_1 respectively. Tests bisect these
+$`x +2 \arctan (x /g)=\pi K`$, with K=I_1+I_2 and I_2-I_1 respectively. Tests bisect these
 scalar equations without the many-body Newton system. They also check the
 original complex exponential equations, every analytic Jacobian column, finite
 windows and ordering, restart/budget behavior and length scaling.
 
-The ground energy tends to $N \,\pi ^{2}/L ^{2}$ at weak repulsion (with first-order
-shift $3c \,N \,(N -1)/(2L)$), and to `pi^2*sum(j^2)/L^2` in the impenetrable limit.
+The ground energy tends to $`N \,\pi ^{2}/L ^{2}`$ at weak repulsion (with first-order
+shift $`3c \,N \,(N -1)/(2L)`$), and to `pi^2*sum(j^2)/L^2` in the impenetrable limit.
 Ground-state tests cover up to N=32 and couplings from 1e-8 to 1e8 in all
 enabled precisions. These checks do not claim that every extreme parameter
 combination or arbitrarily large excited label is numerically resolved.

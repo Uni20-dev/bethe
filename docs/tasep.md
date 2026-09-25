@@ -86,8 +86,8 @@ For unit rate and reduced population n, use the fugacity coordinate Z=2/z-1:
 
 ```math
 \begin{aligned}
-(1-Z_j)^n(1+Z_j)^{L-n}&=Y,\\
-Y&=-2^L\prod_j\frac{Z_j-1}{Z_j+1},\\
+(1-Z_j)^n(1+Z_j)^{L-n}&=Y,\\{}
+Y&=-2^L\prod_j\frac{Z_j-1}{Z_j+1},\\{}
 \lambda&=\sum_j\frac{Z_j-1}{2}.
 \end{aligned}
 ```
@@ -100,7 +100,7 @@ Cassini pinch relative to the n roots with largest real parts, equations
 an approximation. [Gwa–Spohn (1992)](../CITATIONS.md#gwa-spohn-1992) is the earlier
 spectral-gap reference.
 
-The initial Y is negative, with $\log \lvert Y \rvert =L \log (2)+n \log (n /L)+(L -n) \log (1-n /L)+3.5$.
+The initial Y is negative, with $`\log \lvert Y \rvert =L \log (2)+n \log (n /L)+(L -n) \log (1-n /L)+3.5`$.
 All L polynomial roots are recovered by Ehrlich–Aberth iteration using the
 factored logarithmic expression. Expanding this polynomial in monomials can
 destroy the branch selection at larger half-filled sizes even when the final

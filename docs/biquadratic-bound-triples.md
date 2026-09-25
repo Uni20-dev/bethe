@@ -24,7 +24,7 @@ with other state selectors, including `--bound-pairs`.
 
 ## Where this branch lies
 
-The gap is measured from the entire exact ground space, $E_0 =N -1$. Its
+The gap is measured from the entire exact ground space, $`E_0 =N -1`$. Its
 lowest mode approaches **E-E0=2**, compared with 3 for three widely
 separated lowest one-defect excitations, or 8/3 for a separated bound pair
 and one defect. Two separated single defects also have threshold 2, but
@@ -45,8 +45,8 @@ independent ED for N=6,...,10. Other modules and scattering levels can
 interleave these modes. The global positive gap still approaches 1.
 
 At N=6 the three-defect module has dimension five. Its TL characteristic
-polynomial is $(g -6)(g -7)(g ^{3}-17g ^{2}+80g -106)$. The targeted droplet is the
-smallest cubic root, `g=2.28668884804195...`, with physical energy $5+g$.
+polynomial is $`(g -6)(g -7)(g ^{3}-17g ^{2}+80g -106)`$. The targeted droplet is the
+smallest cubic root, `g=2.28668884804195...`, with physical energy $`5+g`$.
 This makes a useful native-precision check independent of the Bethe equations.
 At N=128 the first gap is approximately `2.00008198366582`.
 
@@ -58,32 +58,32 @@ roots is
 
 ```math
 \begin{aligned}
-u_0&=\frac{ia}{2},\\
-u_+&=\eta+\operatorname{Re}z+i(a/2+\operatorname{Im}z),\qquad u_-=\overline{u_+},\\
-z&=e^{-L+i\phi},\qquad \eta=\operatorname{arcosh}\Delta,\\
+u_0&=\frac{ia}{2},\\{}
+u_+&=\eta+\operatorname{Re}z+i(a/2+\operatorname{Im}z),\qquad u_-=\overline{u_+},\\{}
+z&=e^{-L+i\phi},\qquad \eta=\operatorname{arcosh}\Delta,\\{}
 J&=N-4-\mathrm{mode},\quad \mathrm{mode}=1,\ldots,N-5.
 \end{aligned}
 ```
 
 The central root and conjugate pair together make the three-string; there
 is no additional real-root sea. Unlike a two-string's signed real deviation,
-$z$ generally has both real and imaginary parts. Setting its phase to zero
-does not solve the finite-chain equations. $L =-\log \lvert z \rvert$ and $\phi$ remain
+$`z`$ generally has both real and imaginary parts. Setting its phase to zero
+does not solve the finite-chain equations. $`L =-\log \lvert z \rvert`$ and $`\phi`$ remain
 authoritative even when adding z to eta rounds away the correction, or
 exp(-L) underflows.
 
 Here is our regularization of the original complex equations
-[Bajnok et al., Eq. (5.12)](../CITATIONS.md#bajnok-2020). Put $u =u +$,
+[Bajnok et al., Eq. (5.12)](../CITATIONS.md#bajnok-2020). Put $`u =u +`$,
 `b=a+2 Im(z)` and define
 
 ```math
 \begin{aligned}
-\Theta(\beta;w)&=2\operatorname{atan2}\!\left(\sin(\beta/2),\tanh w\cos(\beta/2)\right),\\
-D&=\log\sinh(u+\eta/2)-\log\sinh(u-\eta/2),\\
-A&=\log\sinh(2\eta+z),\\
-B&=\log\sinh(2\eta+z+ia)-\log\sinh(z+ia),\\
-C&=\log\sinh(\eta+ib)-\log\sinh(-\eta+ib),\\
-R&=\log\sinh(3\eta+2\operatorname{Re}z)-\log\sinh(\eta+2\operatorname{Re}z),\\
+\Theta(\beta;w)&=2\operatorname{atan2}\!\left(\sin(\beta/2),\tanh w\cos(\beta/2)\right),\\{}
+D&=\log\sinh(u+\eta/2)-\log\sinh(u-\eta/2),\\{}
+A&=\log\sinh(2\eta+z),\\{}
+B&=\log\sinh(2\eta+z+ia)-\log\sinh(z+ia),\\{}
+C&=\log\sinh(\eta+ib)-\log\sinh(-\eta+ib),\\{}
+R&=\log\sinh(3\eta+2\operatorname{Re}z)-\log\sinh(\eta+2\operatorname{Re}z),\\{}
 c&=\log\frac{\sinh z}{z},\qquad c(0)=0.
 \end{aligned}
 ```
@@ -93,8 +93,8 @@ With `wrap(t)=atan2(sin(t),cos(t))`, the three residuals are
 ```math
 \begin{aligned}
 f_0&=\Theta(a;\eta/2)+2\operatorname{Im}D
--\frac{2\operatorname{Im}B+\Theta(2b;\eta)+\pi(J+1)}{N},\\
-f_1&=\operatorname{Re}D-\frac{\operatorname{Re}A+L-\operatorname{Re}c+\operatorname{Re}B+R}{2N},\\
+-\frac{2\operatorname{Im}B+\Theta(2b;\eta)+\pi(J+1)}{N},\\{}
+f_1&=\operatorname{Re}D-\frac{\operatorname{Re}A+L-\operatorname{Re}c+\operatorname{Re}B+R}{2N},\\{}
 f_2&=\frac{\operatorname{wrap}(2N\operatorname{Im}D-\operatorname{Im}A+\phi+\operatorname{Im}c-\operatorname{Im}B-\operatorname{Im}C)}{2N}.
 \end{aligned}
 ```
@@ -102,7 +102,7 @@ f_2&=\frac{\operatorname{wrap}(2N\operatorname{Im}D-\operatorname{Im}A+\phi+\ope
 The first equation is the product phase with the singular internal
 scattering cancelled; the other two retain the original outer-root equation.
 For tiny z, the regular correction c is evaluated by its Taylor series.
-The search stays in $0<a <\pi$, $0<b <\pi$, $\lvert z \rvert <\eta /4$.
+The search stays in $`0\lt a \lt \pi`$, $`0\lt b \lt \pi`$, $`\lvert z \rvert \lt \eta /4`$.
 
 An ideal-string stage initializes the solve. Its center satisfies
 `N*Theta(a;3eta/2)-Theta(2a;eta)-Theta(2a;2eta)=pi*J`.

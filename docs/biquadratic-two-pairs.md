@@ -46,8 +46,8 @@ if (state.reference.converged) {
 ```
 
 The arguments are **ordered Bethe labels** `1<=J1<J2<=N-6`, not energy
-ranks or physical lattice momenta. The high-label corner $(N -7,N -6)$
-approaches $E -E_0 =10/3$, the separated-pair threshold `5/3+5/3`.
+ranks or physical lattice momenta. The high-label corner $`(N -7,N -6)`$
+approaches $`E -E_0 =10/3`$, the separated-pair threshold `5/3+5/3`.
 It does not give the minimum of the entire four-defect module; other
 string topologies are missing. These are TL insertions, not spin flips,
 and no operator spectral weights or physical SU(2) labels are supplied.
@@ -59,16 +59,16 @@ Delta=3/2. Its roots are
 
 ```math
 \begin{aligned}
-u_{i,\pm}&=\frac{\eta+d_i}{2}\pm\frac{ia_i}{2},\quad i=1,2,\\
-0&<a_1<a_2<\pi,\qquad \eta=\operatorname{arcosh}\Delta,\\
-d_i&=\sigma_i e^{-L_i},\quad |d_i|<\eta,\\
+u_{i,\pm}&=\frac{\eta+d_i}{2}\pm\frac{ia_i}{2},\quad i=1,2,\\{}
+0&<a_1<a_2<\pi,\qquad \eta=\operatorname{arcosh}\Delta,\\{}
+d_i&=\sigma_i e^{-L_i},\quad |d_i|<\eta,\\{}
 \sigma_i&=(-1)^{N-J_i-i}\qquad(i\text{ is one-based}).
 \end{aligned}
 ```
 
 The ordering-dependent sign is essential. Applying the isolated-pair
 rule to both strings loses a pi phase in the second pair's equation.
-$L_{i}$ and $\sigma_{i}$ are authoritative even if exp(-L_i) underflows or the
+$`L_{i}`$ and $`\sigma_{i}`$ are authoritative even if exp(-L_i) underflows or the
 deviation disappears when added to eta. Distinct ordered centers prevent
 coincident pair roots; a seed that cannot resolve them at the selected
 precision is rejected.
@@ -82,26 +82,26 @@ finite-deviation equations and the original iteration/tolerance budget.
 
 Here is our regularization of
 [Bajnok et al., Eq. (5.12)](../CITATIONS.md#bajnok-2020). For pair i scattering
-with j, set $t =(d_{i} -d_{j})/2$, $s =(d_{i} +d_{j})/2$ and `beta=a_i±a_j`. Define
+with j, set $`t =(d_{i} -d_{j})/2`$, $`s =(d_{i} +d_{j})/2`$ and `beta=a_i±a_j`. Define
 
 ```math
 \begin{aligned}
-\Theta(\beta;w)&=2\operatorname{atan2}\!\left(\sin(\beta/2),\tanh w\cos(\beta/2)\right),\\
-C(\beta;w)&=2\arctan\!\left(\frac{\tanh w}{\tan(\beta/2)}\right),\\
-G(\beta;w)&=\log|\sinh(w+i\beta/2)|,\\
-F(\beta)&=\Theta(\beta;\eta+t)+\Theta(\beta;\eta-t)+\Theta(\beta;2\eta+s)+C(\beta;s),\\
+\Theta(\beta;w)&=2\operatorname{atan2}\!\left(\sin(\beta/2),\tanh w\cos(\beta/2)\right),\\{}
+C(\beta;w)&=2\arctan\!\left(\frac{\tanh w}{\tan(\beta/2)}\right),\\{}
+G(\beta;w)&=\log|\sinh(w+i\beta/2)|,\\{}
+F(\beta)&=\Theta(\beta;\eta+t)+\Theta(\beta;\eta-t)+\Theta(\beta;2\eta+s)+C(\beta;s),\\{}
 K(\beta)&=G(\beta;\eta+t)-G(\beta;\eta-t)+G(\beta;2\eta+s)-G(\beta;s).
 \end{aligned}
 ```
 
 From each isolated pair's scaled phase residual subtract
-$[F (a_{i} -a_{j})+F (a_{i} +a_{j})]/(2N)$. From its log-modulus residual subtract
+$`[F (a_{i} -a_{j})+F (a_{i} +a_{j})]/(2N)`$. From its log-modulus residual subtract
 the analogous sum of K. The complementary phase C is chosen continuously
 for negative as well as positive beta; using the unadjusted `atan2`
 complement would introduce a spurious 2pi jump at negative beta.
 
 The original unsquared pair equation includes a `3pi` branch contribution
-when $a_{i} >a_{j}$. This gives the deviation signs above. The upper center's
+when $`a_{i} \gt a_{j}`$. This gives the deviation signs above. The upper center's
 excluded a=pi endpoint has label N-5, leaving the largest admissible
 candidate label N-6. The energies add through their direct auxiliary
 shifts, then use the common ferro mapping `gap=-2*energy_shift`.

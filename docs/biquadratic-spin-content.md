@@ -2,7 +2,7 @@
 
 [Model overview](biquadratic.md) · [Ferromagnetic excitations](biquadratic-ferromagnetic.md)
 
-A through-line label $\ell$ is not a physical spin. Each eigenvector of the
+A through-line label $`\ell`$ is not a physical spin. Each eigenvector of the
 open TL module carries a whole multiplicity space, which can contain several
 different SU(2) spins and repeated copies of the same spin. This space is the
 same for real-root, bound-string and Q-system levels in that module, and for
@@ -21,8 +21,8 @@ if (counts) {
 }
 ```
 
-The argument is $\ell$, not the chain length (except in the ferro ground
-space, where $\ell =N$). The vector has $\ell +1$ entries including zeros. It is
+The argument is $`\ell`$, not the chain length (except in the ferro ground
+space, where $`\ell =N`$). The vector has $`\ell +1`$ entries including zeros. It is
 available for `ell=0,...,45`; larger labels return `nullopt`, consistently
 with overflow of the **total** representation dimension in the existing
 `spin_chain_multiplicity(3,ell)` API. This deliberately does not return a
@@ -67,7 +67,7 @@ W_0=[0],\qquad W_1=[1],\qquad W_{\ell+1}=[1]\otimes W_\ell-W_{\ell-1}.
 ```
 
 Our implementation expands the tensor product using
-`[1] tensor [S] = [S-1] + [S] + [S+1]` for $S \ge 1$, with the distinct
+`[1] tensor [S] = [S-1] + [S] + [S+1]` for $`S \ge 1`$, with the distinct
 boundary rule `[1] tensor [0] = [1]`. All final coefficients are nonnegative
 integers. The first spaces are
 
@@ -81,7 +81,7 @@ integers. The first spaces are
 
 Tests reconstruct the entire energy multiset at **every physical spin**
 for N=2,...,6, including odd chains. The independent oracle builds
-$-(S_{i} .S _{i +1})^{2}$ in fixed physical magnetization spaces, then subtracts
+$`-(S_{i} .S _{i +1})^{2}`$ in fixed physical magnetization spaces, then subtracts
 the Sz=S+1 spectrum from Sz=S to isolate spin-S multiplets. This checks
 which spins accompany each energy, not just the sum of degeneracies.
 Dimension sums and overflow are also tested through the exact-integer limit.

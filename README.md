@@ -29,14 +29,14 @@ Thermodynamic dispersion tools use `bethe-<model>-dispersion`.
 - [Free-end XXX](docs/open-chains.md): `bethe-xxx-obc` supports
   ground states, sector minima, and real-root excitations, without lattice momentum.
 - [Periodic XXZ](docs/xxz.md): `bethe-xxz-pbc` supports ground states and sector minima
-  for $\Delta \ge 0$ (also $-1 < \Delta < 0$ on even rings), plus restricted
-  real-root excitations for $0 \le \Delta \le 1$.
+  for $`\Delta \ge 0`$ (also $`-1 \lt  \Delta \lt  0`$ on even rings), plus restricted
+  real-root excitations for $`0 \le \Delta \le 1`$.
 - [Free-end XXZ](docs/xxz-open.md): `bethe-xxz-obc` supports ground states and
-  sector minima for $\Delta > -1$, including massive boundary roots, and restricted
-  real-root excitations for $0 \le \Delta \le 1$, without lattice momentum.
+  sector minima for $`\Delta \gt  -1`$, including massive boundary roots, and restricted
+  real-root excitations for $`0 \le \Delta \le 1`$, without lattice momentum.
 - [Periodic Hubbard](docs/hubbard.md): `bethe-hubbard-pbc` gives repulsive
   half-filled spin sectors, balanced attractive ground states at any even filling,
-  and selected doped sectors on even rings, plus the unrestricted $U=0$ limit.
+  and selected doped sectors on even rings, plus the unrestricted $`U=0`$ limit.
 - [Free-end Hubbard](docs/hubbard-open.md): `bethe-hubbard-obc` gives ground
   states at every physical filling and spin projection, for either sign of U
   and odd or even lengths, without lattice momentum.
@@ -82,7 +82,7 @@ Thermodynamic dispersion tools use `bethe-<model>-dispersion`.
   bulk-subtracted periodic ground-state energy of the non-unitary model,
   with native fp64/long-double/fp128 and separate convergence diagnostics.
   `bethe-lee-yang-excited` adds the zero-momentum one-particle level and
-  vacuum-relative gap on the regular branch, $5\le mL\le30$.
+  vacuum-relative gap on the regular branch, $`5\le mL\le30`$.
 - [Periodic TASEP](docs/tasep.md): `bethe-tasep-pbc` gives the leading relaxation
   gap and complex decay eigenvalue at arbitrary filling. These are stochastic
   rates, not quantum energies. [Bidirectional ASEP](docs/asep.md),
@@ -94,10 +94,10 @@ Thermodynamic dispersion tools use `bethe-<model>-dispersion`.
   repulsive continuum-fermion ground states with odd populations of both spins,
   plus unrestricted free and fully polarized limits.
 - [Supersymmetric t–J](docs/tj.md): `bethe-tj-pbc` gives periodic sector ground
-  states at $t=1$, $J=2$ for odd spin populations, plus all no-hole and fully
+  states at $`t=1`$, $`J=2`$ for odd spin populations, plus all no-hole and fully
   polarized sectors, with double occupancy excluded.
 - [Spin-1 Takhtajan–Babujian](docs/takhtajan-babujian.md): `bethe-tb-pbc`
-  gives the periodic even-ring singlet ground state of $H=\sum_j[\mathbf S_j\cdot\mathbf S_{j+1}-(\mathbf S_j\cdot\mathbf S_{j+1})^2]$,
+  gives the periodic even-ring singlet ground state of $`H=\sum_j[\mathbf S_j\cdot\mathbf S_{j+1}-(\mathbf S_j\cdot\mathbf S_{j+1})^2]`$,
   retaining complex-root finite-size string deviations.
 - [Free-end spin-1 biquadratic](docs/biquadratic.md): `bethe-biquadratic-obc`
   gives even-chain ground energies, TL module minima and restricted real-root
@@ -135,9 +135,9 @@ Thermodynamic dispersion tools use `bethe-<model>-dispersion`.
   periodic bosonic ground and excited energies for a specified collision
   exponent, with explicit integer labels or bounded label-window scans.
 
-The XXX and XXZ models use spin-$1/2$ operators, $J=1$, and zero magnetic field.
-Hubbard uses hopping $t=1$. Finite-system tools use the unshifted interaction
-$U \,n_{\mathrm{up}} \,n_{\mathrm{down}}$; the dispersion tool defaults to the symmetric convention.
+The XXX and XXZ models use spin-$`1/2`$ operators, $`J=1`$, and zero magnetic field.
+Hubbard uses hopping $`t=1`$. Finite-system tools use the unshifted interaction
+$`U \,n_{\mathrm{up}} \,n_{\mathrm{down}}`$; the dispersion tool defaults to the symmetric convention.
 Spin-chain excitation scans cover explicitly supported real-root families, **not complete
 spectra**: `--excitations all` means all states in that family. General complex-string
 and infinite-root descendant scans are not implemented.
@@ -192,7 +192,7 @@ For continuum bosons, try `build/bethe-lieb-liniger-pbc 4 --length 4 --c 1`.
 Here 4 particles occupy a ring of physical length 4; it is not a four-site chain.
 
 For three-state sites, try `build/bethe-su3-pbc 6 --roots`. This uses
-$H=\sum_j P_{j,j+1}$, where $P$ swaps adjacent colors; its six-site energy is $-1-\sqrt{13}$.
+$`H=\sum_j P_{j,j+1}`$, where $`P`$ swaps adjacent colors; its six-site energy is $`-1-\sqrt{13}`$.
 
 Next, distinguish the lowest state in a magnetization sector from a family
 of excited states:

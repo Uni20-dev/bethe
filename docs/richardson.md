@@ -7,7 +7,7 @@ Hamiltonian in a **specified pair-number and blocked-level sector**:
 
 ```math
 \begin{aligned}
-H&=\sum_i\epsilon_i(n_{i,\uparrow}+n_{i,\downarrow})-g\sum_{i,j}b_i^\dagger b_j,\\
+H&=\sum_i\epsilon_i(n_{i,\uparrow}+n_{i,\downarrow})-g\sum_{i,j}b_i^\dagger b_j,\\{}
 b_i^\dagger&=c_{i,\uparrow}^\dagger c_{i,\downarrow}^\dagger,\qquad g\ge0.
 \end{aligned}
 ```
@@ -44,7 +44,7 @@ duplicates or out-of-range indices are errors. The energy list is not sorted
 silently, so the meaning of a blocked index cannot change during parsing.
 
 The one-pair, two-level example epsilon=(0,1) has energy
-$1-g -\sqrt{1+g \,g }$, hence E=-sqrt(2) at g=1. Empty, completely paired, and
+$`1-g -\sqrt{1+g \,g }`$, hence E=-sqrt(2) at g=1. Empty, completely paired, and
 zero-coupling sectors use exact formulas and need no Newton iterations.
 
 ## Avoiding pair-root collision singularities
@@ -55,7 +55,7 @@ E_alpha obey
 ```math
 \begin{aligned}
 \frac1g+\sum_i\frac1{E_\alpha-e_i}
--\sum_{\beta\ne\alpha}\frac2{E_\alpha-E_\beta}&=0,\\
+-\sum_{\beta\ne\alpha}\frac2{E_\alpha-E_\beta}&=0,\\{}
 E_{\mathrm{total}}&=\sum_\alpha E_\alpha+\sum_{i\ \mathrm{blocked}}\epsilon_i.
 \end{aligned}
 ```
@@ -67,8 +67,8 @@ eigenvalue-based variables
 
 ```math
 \begin{aligned}
-y_i&=g\Lambda(e_i)=g\sum_\alpha\frac1{e_i-E_\alpha},\\
-F_i&=y_i(y_i-1)-g\sum_{j\ne i}\frac{y_i-y_j}{e_i-e_j}=0,\\
+y_i&=g\Lambda(e_i)=g\sum_\alpha\frac1{e_i-E_\alpha},\\{}
+F_i&=y_i(y_i-1)-g\sum_{j\ne i}\frac{y_i-y_j}{e_i-e_j}=0,\\{}
 \sum_i y_i&=M.
 \end{aligned}
 ```

@@ -3,7 +3,7 @@
 [Hubbard equations and numerical method](hubbard.md) · [Overview](../README.md)
 
 Use `--particles N` and `--sz VALUE` to select the physical sector. The two
-spin populations are $N_{\mathrm{up}} =N /2+S^z$ and $N_{\mathrm{down}} =N /2-S^z$; each must be an integer
+spin populations are $`N_{\mathrm{up}} =N /2+S^z`$ and $`N_{\mathrm{down}} =N /2-S^z`$; each must be an integer
 between zero and L. Half-integers can be written as `1/2` or `0.5`.
 The defaults remain N=L and Sz=0, and L must be even.
 This guide describes `bethe-hubbard-pbc`. The [free-end solver](hubbard-open.md)
@@ -62,7 +62,7 @@ Hamiltonian, writing g=|U|,
 
 ```math
 \begin{aligned}
-(N_\uparrow,N_\downarrow)&\longrightarrow(N_\uparrow,L-N_\downarrow),\\
+(N_\uparrow,N_\downarrow)&\longrightarrow(N_\uparrow,L-N_\downarrow),\\{}
 E_{-g}(N_\uparrow,N_\downarrow)&=E_{+g}(N_\uparrow,L-N_\downarrow)-gN_\uparrow.
 \end{aligned}
 ```
@@ -77,7 +77,7 @@ Above half filling, a particle-hole transformation on **both** species gives
 
 ```math
 \begin{aligned}
-(N_\uparrow,N_\downarrow)&\longrightarrow(L-N_\uparrow,L-N_\downarrow),\\
+(N_\uparrow,N_\downarrow)&\longrightarrow(L-N_\uparrow,L-N_\downarrow),\\{}
 E_U(N_\uparrow,N_\downarrow)&=E_U(L-N_\uparrow,L-N_\downarrow)+U(N-L).
 \end{aligned}
 ```
@@ -91,11 +91,11 @@ would change the periodic boundary condition.
 ## Momentum and root metadata
 
 Momentum also transforms. In the convention `P=sum(k) mod 2*pi`, for even L,
-the down-spin Shiba step adds $\pi \,(N_{\mathrm{down}} -1)$ when converting auxiliary
+the down-spin Shiba step adds $`\pi \,(N_{\mathrm{down}} -1)`$ when converting auxiliary
 momentum back to the physical sector. The full particle-hole step adds
-$\pi \,N$. Counts in these expressions belong to the sector **before that step**;
+$`\pi \,N`$. Counts in these expressions belong to the sector **before that step**;
 spin reversal adds nothing. These offsets follow by replacing each occupied
-down-spin momentum by its complementary hole at $\pi -k$; a filled one-spin
+down-spin momentum by its complementary hole at $`\pi -k`$; a filled one-spin
 band has momentum pi. Tests check the resulting physical momenta directly
 against translation in Fock space, including degenerate ground eigenspaces.
 

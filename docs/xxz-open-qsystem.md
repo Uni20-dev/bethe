@@ -16,7 +16,7 @@ Instead we encode the roots in a monic polynomial
 
 ```math
 \begin{aligned}
-x&=\cosh(2u)=\cos\alpha,\\
+x&=\cosh(2u)=\cos\alpha,\\{}
 Q(x)&=\prod_j(x-x_j)=x^M+\sum_{k=0}^{M-1}c[k]x^k.
 \end{aligned}
 ```
@@ -37,7 +37,7 @@ With eta=acosh(Delta), s=sinh(eta), and
 P has degree N-M+1; its leading coefficient is fixed by this identity, and
 we fix the P -> P+aQ freedom with P_M=0. Both sides are polynomials in x.
 The implementation evaluates them without square roots: the antisymmetric
-basis uses $x _+\,x _-=x ^{2}+s ^{2}$ and the recurrence
+basis uses $`x _+\,x _-=x ^{2}+s ^{2}`$ and the recurrence
 
 ```math
 D_0=0,\quad D_1=1,\qquad

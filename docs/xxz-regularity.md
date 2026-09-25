@@ -32,20 +32,20 @@ hypotheses, at the caller's precision and requested residual tolerance.
 
 ## Expressing those conditions in polynomial coordinates
 
-The input is the monic polynomial F(x), with physical rapidity $z =o +s \,x$.
-Let $a =\sqrt{(1+\Delta)/(1-\Delta)}$. The conventional multiplicative rapidity is
+The input is the monic polynomial F(x), with physical rapidity $`z =o +s \,x`$.
+Let $`a =\sqrt{(1+\Delta)/(1-\Delta)}`$. The conventional multiplicative rapidity is
 
 ```math
 e^{2\lambda}=\frac{a+z}{a-z}.
 ```
 
 Roots at z=+-a therefore require infinite-rapidity limits. The one-particle
-singularities $\lambda =+-i \,\gamma /2$, where $\Delta =\cos (\gamma)$, map to z=+-i.
+singularities $`\lambda =+-i \,\gamma /2`$, where $`\Delta =\cos (\gamma)`$, map to z=+-i.
 Homogeneous Horner evaluation tests F at these points without forming
 large coordinate ratios. Each `*_margin` for a value is its magnitude
 divided by the coefficient-magnitude bound evaluated at
 `max(1,abs(x))`. The unit-radius floor also detects small endpoint values
-without cancellation, such as $F (x)=x ^M$ near x=0; a cancellation-only
+without cancellation, such as $`F (x)=x ^M`$ near x=0; a cancellation-only
 ratio would misleadingly return one. Real coefficients make the
 two driving values at +-i conjugates, so only one needs evaluation.
 
@@ -90,7 +90,7 @@ multiplication matrices use the real block representation
 
 ```math
 \begin{pmatrix}
-\operatorname{Re}A&-\operatorname{Im}A\\
+\operatorname{Re}A&-\operatorname{Im}A\\{}
 \operatorname{Im}A&\operatorname{Re}A
 \end{pmatrix}.
 ```
@@ -105,9 +105,9 @@ elimination returns
 
 This is a rank-resolution indicator, **not a reciprocal condition number**
 or a rigorous error bound. Zero/nonfinite pivots or arithmetic give an
-unresolved result. Every value/rank margin must exceed $64\,\epsilon$, and
+unresolved result. Every value/rank margin must exceed $`64\,\epsilon`$, and
 the full polynomial residual must satisfy the caller's tolerance (default
-$32\,\epsilon$). The routine does not loosen tolerances to obtain a pass.
+$`32\,\epsilon`$). The routine does not loosen tolerances to obtain a pass.
 
 An exact singular matrix is an expected input here. Uni20's ordinary dense
 solve uses a terminal singular-matrix error policy, which aborts under its

@@ -31,9 +31,9 @@ The exact definition is
 
 ```math
 \begin{aligned}
-M&=\frac{N-\ell}{2},\\
-I_{\min}&=N-M-\mathrm{WIDTH}+1,\qquad I_{\max}=N-M,\\
-I_{\min}&\le I_1<\cdots<I_M\le I_{\max},\\
+M&=\frac{N-\ell}{2},\\{}
+I_{\min}&=N-M-\mathrm{WIDTH}+1,\qquad I_{\max}=N-M,\\{}
+I_{\min}&\le I_1<\cdots<I_M\le I_{\max},\\{}
 1&\le M\le\mathrm{WIDTH}\le N-M.
 \end{aligned}
 ```
@@ -91,8 +91,8 @@ At Delta=3/2, in the existing angle coordinate x, evaluate directly
 
 ```math
 \begin{aligned}
-\delta E_{\mathrm{ref}}&=-\sum_i[(\Delta-1)+2\cos^2x_i],\\
-\mathrm{gap}&=\mathrm{tl\_energy}=-2\delta E_{\mathrm{ref}},\\
+\delta E_{\mathrm{ref}}&=-\sum_i[(\Delta-1)+2\cos^2x_i],\\{}
+\mathrm{gap}&=\mathrm{tl\_energy}=-2\delta E_{\mathrm{ref}},\\{}
 E&=(N-1)+\mathrm{gap}.
 \end{aligned}
 ```

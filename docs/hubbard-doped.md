@@ -16,13 +16,13 @@ build/bethe-hubbard-dispersion --u 4 --density 0.75 --precision fp128 --points 1
 
 | Branch | DeltaN | Spin | Unwrapped momentum interval |
 |---|---:|---:|---|
-| `spinon` | 0 | 1/2 | $[0,\pi \,n]$ |
-| `holon` | -1 | 0 | $[-\pi \,n /2,3\,\pi \,n /2]$ |
-| `charge-particle` | +1 | 0 | $[\pi \,n /2,2\,\pi -3\,\pi \,n /2]$ |
+| `spinon` | 0 | 1/2 | $`[0,\pi \,n]`$ |
+| `holon` | -1 | 0 | $`[-\pi \,n /2,3\,\pi \,n /2]`$ |
+| `charge-particle` | +1 | 0 | $`[\pi \,n /2,2\,\pi -3\,\pi \,n /2]`$ |
 
-`--branch all` selects these three at $n <1$. The charge particle adds a real
+`--branch all` selects these three at $`n \lt 1`$. The charge particle adds a real
 charge root outside the occupied sea. It is **not** the gapped antiholon of
-the half-filled Mott insulator; that branch is available only at $n =1$.
+the half-filled Mott insulator; that branch is available only at $`n =1`$.
 This distinction follows the real particle/hole construction in
 [Luo–Pu–Guan, Sec. II](https://arxiv.org/html/2307.00890v3).
 Gapped string excitations, densities above one, attraction, finite fields,
@@ -31,7 +31,7 @@ continuum thresholds and spectral weights are not implemented.
 Grids include both endpoints and are uniform in dressed momentum, not rapidity.
 `--momentum p` replaces the grid. With `--branch all`, it must lie in all
 three intervals. Momenta are in radians for a one-site unit cell; fold modulo
-$2\,\pi$ or into an enlarged iMPS Brillouin zone as appropriate.
+$`2\,\pi`$ or into an enlarged iMPS Brillouin zone as appropriate.
 
 These fractional lines are not isolated finite-ring electron levels. Momentum
 origins depend on the choice of Fermi-point spectators/domain-wall gauge;
@@ -53,7 +53,7 @@ conventions:
 
 ```math
 \begin{aligned}
-\mu_{\mathrm{symmetric}}&=\mu_{\mathrm{unshifted}}-\frac U2,\\
+\mu_{\mathrm{symmetric}}&=\mu_{\mathrm{unshifted}}-\frac U2,\\{}
 E_{\mathrm{Fermi}}&=E_{\mathrm{unshifted}}-\mu_{\mathrm{unshifted}}\Delta N
 =E_{\mathrm{symmetric}}-\mu_{\mathrm{symmetric}}\Delta N.
 \end{aligned}
@@ -61,17 +61,17 @@ E_{\mathrm{Fermi}}&=E_{\mathrm{unshifted}}-\mu_{\mathrm{unshifted}}\Delta N
 
 All three doped lines have zero endpoint energy **in the Fermi reference**.
 The Hamiltonian charge energies need not be positive. For example, at
-$U =4, n =0.5$, `mu_unshifted` is approximately `-0.726930427436425` and
+$`U =4, n =0.5`$, `mu_unshifted` is approximately `-0.726930427436425` and
 `mu_symmetric` is approximately `-2.726930427436425`. A charge particle right
 at the Fermi point has that chemical-potential cost under the corresponding
 Hamiltonian, while its Fermi-referenced energy is zero. Spinons are unchanged.
 
-When comparing to an iMPS calculation that minimizes $H -\mu \,N$, choose `fermi`
-and check the reported $\mu$ against the simulation. `symmetric_energy` in the
+When comparing to an iMPS calculation that minimizes $`H -\mu \,N`$, choose `fermi`
+and check the reported $`\mu`$ against the simulation. `symmetric_energy` in the
 table remains the symmetric **Hamiltonian** difference even in this mode;
 `fermi_energy` is always the subtracted energy.
 
-There is a useful subtlety as $n$ approaches one from below. The chemical
+There is a useful subtlety as $`n`$ approaches one from below. The chemical
 potential approaches the **lower edge** of the Mott plateau, whereas the
 exactly half-filled tool chooses its **middle**. Hamiltonian hole and spinon
 energies have the expected continuous limit; the two Fermi energy zeros do
@@ -83,51 +83,51 @@ not to the half-filled antiholon band.
 We eliminate the infinite zero-field spin sea analytically and solve the
 finite charge-sea Fredholm equations of
 [Essler, Eqs. (103)–(106)](https://arxiv.org/html/1002.1671).
-Let $u =U /4$, with integrals below over $[-Q,Q]$:
+Let $`u =U /4`$, with integrals below over $`[-Q,Q]`$:
 
 ```math
 \begin{aligned}
-R(x)&=\frac1\pi\int_0^\infty\frac{\cos(\omega x)}{1+e^{2u\omega}}\,d\omega,\\
-s(x)&=\frac{1}{4u}\operatorname{sech}\!\left(\frac{\pi x}{2u}\right),\\
-\rho(k)&=\frac1{2\pi}+\cos k\int R(\sin k-\sin k')\rho(k')\,dk',\\
+R(x)&=\frac1\pi\int_0^\infty\frac{\cos(\omega x)}{1+e^{2u\omega}}\,d\omega,\\{}
+s(x)&=\frac{1}{4u}\operatorname{sech}\!\left(\frac{\pi x}{2u}\right),\\{}
+\rho(k)&=\frac1{2\pi}+\cos k\int R(\sin k-\sin k')\rho(k')\,dk',\\{}
 \epsilon_c(k)&=-2\cos k-\mu_{\mathrm{unshifted}}
-+\int\cos k'\,R(\sin k-\sin k')\epsilon_c(k')\,dk',\\
++\int\cos k'\,R(\sin k-\sin k')\epsilon_c(k')\,dk',\\{}
 \epsilon_s(\lambda)&=\int\cos k\,s(\lambda-\sin k)\epsilon_c(k)\,dk.
 \end{aligned}
 ```
 
-Fix $Q$ by `integral rho=n`, and the chemical potential by `eps_c(+-Q)=0`.
-Our `mu_unshifted` is $\mu +2u$ in Essler's Eq. (105). The Fermi energies are
+Fix $`Q`$ by `integral rho=n`, and the chemical potential by `eps_c(+-Q)=0`.
+Our `mu_unshifted` is $`\mu +2u`$ in Essler's Eq. (105). The Fermi energies are
 `-eps_s`, `-eps_c` inside the sea, and `+eps_c` outside it.
 
 To remove any momentum-origin ambiguity, our definitions are
 
 ```math
 \begin{aligned}
-A(x)&=\int_0^x R(y)\,dy,\\
-p_c(k)&=k+2\pi\int\rho(k')A(\sin k-\sin k')\,dk',\\
-p_s(\lambda)&=2\int\rho(k)\arctan\!\left(e^{\pi(\sin k-\lambda)/(2u)}\right)\,dk,\\
-p_{\mathrm{holon}}(k)&=\frac{\pi n}{2}-p_c(k),\\
+A(x)&=\int_0^x R(y)\,dy,\\{}
+p_c(k)&=k+2\pi\int\rho(k')A(\sin k-\sin k')\,dk',\\{}
+p_s(\lambda)&=2\int\rho(k)\arctan\!\left(e^{\pi(\sin k-\lambda)/(2u)}\right)\,dk,\\{}
+p_{\mathrm{holon}}(k)&=\frac{\pi n}{2}-p_c(k),\\{}
 p_{\mathrm{particle}}(k)&=p_c(k)-\frac{\pi n}{2}
 \quad(\text{add }2\pi\text{ on the negative-}k\text{ segment}).
 \end{aligned}
 ```
 
-Here $p_{c} (+-Q)=+-\pi \,n$ and $p_{c} (+-\pi)=+-\pi$. The particle grid passes
+Here $`p_{c} (+-Q)=+-\pi \,n`$ and $`p_{c} (+-\pi)=+-\pi`$. The particle grid passes
 continuously through the zone boundary, even though its bare parameter jumps
-from $\pi$ to $-\pi$. Spinons have infinite rapidity at the two endpoints.
+from $`\pi`$ to $`-\pi`$. Spinons have infinite rapidity at the two endpoints.
 
 Evenness reduces the linear systems to `[0,Q]`. Gauss–Legendre nodes,
 kernel evaluations, pivoted solves and momentum inversion all use the selected
-scalar. $R$ uses a convergent Euler series; $A$ uses a paired log-gamma-ratio
+scalar. $`R`$ uses a convergent Euler series; $`A`$ uses a paired log-gamma-ratio
 expansion with rational coefficients. No fp64 kernel table or external Python
 runtime is used. The background is solved once and reused across every point.
 
 ## Accuracy, budgets and failure
 
-The default tolerance is $4096\,\epsilon$ of the selected scalar. We double the
+The default tolerance is $`4096\,\epsilon`$ of the selected scalar. We double the
 positive-half quadrature order from 16 up to 256 and require successive
-backgrounds to agree in $Q$, chemical potential, ground energy, and sampled
+backgrounds to agree in $`Q`$, chemical potential, ground energy, and sampled
 dispersions. Each requested point is then inverted on **both** final meshes
 at the same physical momentum. These are numerical error estimates, not
 rigorous interval bounds.
@@ -137,10 +137,10 @@ rigorous interval bounds.
   excludes propagation of momentum-inversion error.
 - `momentum_error` reports inversion residuals, mesh disagreement at the
   returned parameter, and the density residual contribution, in radians.
-- Metadata includes the background status, $Q$, both chemical potentials,
+- Metadata includes the background status, $`Q`$, both chemical potentials,
   unshifted ground energy per site, mesh estimate, node count, work and CPU time.
 
-`--tolerance` sets the dimensionless target in units $t =1$. Background mesh
+`--tolerance` sets the dimensionless target in units $`t =1`$. Background mesh
 agreement is absolute; point energies use `tol*max(1,abs(E))`. Charge momentum
 inversion is absolute in radians; spinon inversion scales with the distance
 to the nearer endpoint. Defaults allow 64 density solves **across all meshes**
@@ -151,7 +151,7 @@ Half-filled-only `--max-evaluations`/`--max-levels` are rejected for doping.
 
 Weak coupling makes narrow kernels expensive to resolve; extreme filling,
 huge interactions and extremely small endpoint distances can exhaust the
-mesh or native precision. There is no guarantee that every positive $U$ and
+mesh or native precision. There is no guarantee that every positive $`U`$ and
 every representable density converges within these limits. Failed backgrounds
 and points expose explicit statuses (`mesh_limit`, `density_limit`,
 `linear_failure`, `momentum_limit`, `precision_limit`), omit energies and

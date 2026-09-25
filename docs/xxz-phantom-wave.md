@@ -14,7 +14,7 @@ that callback from momentum factors, without enumerating all permutations.
 
 ## The dressing map
 
-Let `q=exp(i*k0)`, with `Delta=cos(k0)`, and let $M =r +p$. For ordered
+Let `q=exp(i*k0)`, with `Delta=cos(k0)`, and let $`M =r +p`$. For ordered
 occupied sites `J=(j_0,...,j_(M-1))`, select p indices
 `b_0<...<b_(p-1)` to be phantom particles. The other sites form the
 finite-particle configuration A. Our coordinate-ansatz deduction is
@@ -23,8 +23,8 @@ finite-particle configuration A. Our coordinate-ansatz deduction is
 (D_p\Phi)(J)=\sum_B q^{\sum_h[j_{b_h}+2(r+h-b_h)]}\Phi(A).
 ```
 
-Each phantom contributes its plane wave $q ^j$. Moving it past a finite
-particle contributes $q ^{2}$; there are $r +h -b_{h}$ finite particles to its
+Each phantom contributes its plane wave $`q ^j`$. Moving it past a finite
+particle contributes $`q ^{2}`$; there are $`r +h -b_{h}`$ finite particles to its
 right. This generalizes the one-finite-particle formula in the
 [reduction guide](xxz-phantom.md#an-independent-mixed-state-wavefunction).
 It also gives the identity map for p=0 and the projected helix for r=0.
@@ -36,24 +36,24 @@ implementation are our deduction, not a quoted formula from that paper.
 
 ## What the Hamiltonian identity does—and does not—establish
 
-At $q ^{N -2\,r }=1$, the map obeys
+At $`q ^{N -2\,r }=1`$, the map obeys
 
 ```math
 H_{\mathrm{periodic}}^{(r+p)}D_p=D_pH_{\mathrm{twisted}}^r,\qquad e^{i\phi}=q^{-2p}.
 ```
 
-Both Hamiltonians include the same polarized energy $N \,\Delta /4$. Our
-boundary convention assigns coefficient $\exp (-i \,\phi)/2$ to the hop from
+Both Hamiltonians include the same polarized energy $`N \,\Delta /4`$. Our
+boundary convention assigns coefficient $`\exp (-i \,\phi)/2`$ to the hop from
 site N-1 to site 0, and its conjugate to the reverse hop. It gives
-$\exp (i \,N \,k)=\exp (i \,\phi)$ for a single particle. Local terms in the
+$`\exp (i \,N \,k)=\exp (i \,\phi)`$ for a single particle. Local terms in the
 intertwining identity cancel; periodic closure requires the separate
 commensurability condition.
 
 Thus, **if the dressed vector is nonzero**, an eigenvector of the reduced
 twisted Hamiltonian yields a periodic eigenvector at the same energy.
 The nonzero qualification matters. At N=7, r=2, p=1 and
-$q =\exp (2\,\pi \,i /3)$, take the nonzero reduced eigenvector
-$\Phi (a,b)=q ^{a +b }$. Then
+$`q =\exp (2\,\pi \,i /3)`$, take the nonzero reduced eigenvector
+$`\Phi (a,b)=q ^{a +b }`$. Then
 
 ```math
 (D_1\Phi)(j_0,j_1,j_2)=q^{j_0+j_1+j_2}(1+q^2+q^4)=0.
@@ -84,7 +84,7 @@ auto psi = dressing.amplitude(occupied, finite_amplitude);
 instead of summing amplitudes. Its spans refer to scratch storage and must
 not be retained by the visitor. Coordinate validation happens before the
 first callback. The map is defined even away from commensurability;
-`commensurability_error()` records $\lvert q ^\lvert N -2\,r \rvert-1\rvert$, and no coupling or
+`commensurability_error()` records $`\lvert q ^\lvert N -2\,r \rvert-1\rvert`$, and no coupling or
 phase is snapped to make it vanish.
 
 Each amplitude has exactly `binomial(M,p)` terms. Construction checks this
@@ -119,7 +119,7 @@ The tests run in fp64, long double, and fp128:
 - Vacuum/identity limits, exact callback counts, integer-count overflow,
   and rejection before callbacks for invalid coordinates or work budgets.
 - General [root recovery](polynomial-roots.md) and dressing at
-  $(N,r,p)=(9,3,1),(11,4,1),(11,3,2),(13,4,2),(13,3,3)$, with nonzero
+  $`(N,r,p)=(9,3,1),(11,4,1),(11,3,2),(13,4,2),(13,3,3)`$, with nonzero
   vectors and independent twisted/periodic Hamiltonian residuals.
 
 The construction is available for arbitrary finite-state amplitude

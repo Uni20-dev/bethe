@@ -44,24 +44,24 @@ as the periodic solver:
 
 ```math
 \begin{aligned}
-H&=\sum_{i=0}^{N-2}\mathbf S_i\cdot\mathbf S_{i+1},\\
+H&=\sum_{i=0}^{N-2}\mathbf S_i\cdot\mathbf S_{i+1},\\{}
 F_i&=2N\phi(z_i)-2\pi I_i
--\sum_{j\ne i}\left[\phi\!\left(\frac{z_i-z_j}{2}\right)+\phi\!\left(\frac{z_i+z_j}{2}\right)\right],\\
-\phi(z)&=2\arctan z,\\
+-\sum_{j\ne i}\left[\phi\!\left(\frac{z_i-z_j}{2}\right)+\phi\!\left(\frac{z_i+z_j}{2}\right)\right],\\{}
+\phi(z)&=2\arctan z,\\{}
 E&=\frac{N-1}{4}-\sum_i\frac{2}{1+z_i^2}.
 \end{aligned}
 ```
 
 ## Allowed states and convergence
 
-Only the positive, finite real-root branch is represented: $M \le N /2$, with
-distinct increasing integer labels $1\le I_{i} \le N -M$. Labels still use
+Only the positive, finite real-root branch is represented: $`M \le N /2`$, with
+distinct increasing integer labels $`1\le I_{i} \le N -M`$. Labels still use
 `uni20::half_int`, but half-odd integers are rejected. The sector minimum fills
-`I=1,...,M`, where $M =N /2-\lvert S^z \rvert$; negative sectors use spin reversal. The
+`I=1,...,M`, where $`M =N /2-\lvert S^z \rvert`$; negative sectors use spin reversal. The
 ground-state wrapper selects Sz=0 for even N and Sz=1/2 for odd N.
 
 The sum excludes **both** self-scattering terms, including the reflected root
-of the same particle. The residual is $\max \lvert F_{i} \rvert /(2N)$, not $\max \lvert F_{i} \rvert /N$.
+of the same particle. The residual is $`\max \lvert F_{i} \rvert /(2N)`$, not $`\max \lvert F_{i} \rvert /N`$.
 `SolverOptions<Real>` and update-budget semantics are shared with the periodic
 solver. Initial guesses may be finite and nonnegative; the default is zero.
 The physical roots are strictly positive. Zero-root Bethe vectors, complex

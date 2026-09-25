@@ -10,14 +10,14 @@ Hamiltonian/Fermi energy references.
 The Hubbard model adds mobile charge to the spin-chain problem: an electron
 can hop between sites, while opposite spins pay an interaction energy when
 they occupy the same site. Its nested Bethe ansatz therefore has **two root
-families**, charge momenta $k_{j}$ and spin rapidities $\Lambda_{a}$.
+families**, charge momenta $`k_{j}`$ and spin rapidities $`\Lambda_{a}`$.
 
 `bethe-hubbard-pbc` is a separate front end, backed by `bethe::hubbard` in
 `<bethe/hubbard.hpp>`. It calculates sector ground states on **even periodic
 rings**, including repulsive half-filled spin sectors, balanced attractive
 systems at every even particle number, and selected doped sectors. Not every
 finite-ring shell parity is supported: see [sectors and symmetry mappings](hubbard-sectors.md).
-There is an unrestricted exact free-fermion path at $U =0$. Excited-state scans
+There is an unrestricted exact free-fermion path at $`U =0`$. Excited-state scans
 are not yet implemented. For free ends, use the separate
 [`bethe-hubbard-obc` front end](hubbard-open.md), which supports every physical
 particle/spin sector and odd as well as even lengths.
@@ -55,8 +55,8 @@ H=-\sum_{j,\sigma}\left(c^\dagger_{j,\sigma}c_{j+1,\sigma}+\mathrm{h.c.}\right)
 There is no chemical potential or magnetic field. L is the number of sites,
 N the number of electrons, and M the number of down-spin electrons.
 Thus Sz=(N-2M)/2. The energy is the **total unshifted Hubbard energy**,
-not that of $U (n_{\mathrm{up}} -1/2)(n_{\mathrm{down}} -1/2)$. At half filling the latter convention
-has energy $E_{\mathrm{shifted}} = E - U \,L /4$; in general it is $E - U \,N /2 + U \,L /4$.
+not that of $`U (n_{\mathrm{up}} -1/2)(n_{\mathrm{down}} -1/2)`$. At half filling the latter convention
+has energy $`E_{\mathrm{shifted}} = E - U \,L /4`$; in general it is $`E - U \,N /2 + U \,L /4`$.
 
 For L=2 the periodic sum contains the same hopping bond twice, with effective
 two-site hopping amplitude 2. This gives the useful exact check
@@ -69,15 +69,15 @@ It is not the isolated dimer with hopping amplitude 1.
 
 ## Lieb-Wu equations and ground-state labels
 
-Let $u =U /4$. In the repulsive root sector, using principal real arctangents, we solve
+Let $`u =U /4`$. In the repulsive root sector, using principal real arctangents, we solve
 
 ```math
 \begin{aligned}
 F_{\mathrm{charge}}(j)&=Lk_j-2\pi I_j
-+2\sum_a\arctan\!\left(\frac{\sin k_j-\Lambda_a}{u}\right)=0,\\
++2\sum_a\arctan\!\left(\frac{\sin k_j-\Lambda_a}{u}\right)=0,\\{}
 F_{\mathrm{spin}}(a)&=2\sum_j\arctan\!\left(\frac{\Lambda_a-\sin k_j}{u}\right)
--2\sum_b\arctan\!\left(\frac{\Lambda_a-\Lambda_b}{2u}\right)-2\pi J_a=0,\\
-E_{\mathrm{roots}}&=-2\sum_j\cos k_j,\\
+-2\sum_b\arctan\!\left(\frac{\Lambda_a-\Lambda_b}{2u}\right)-2\pi J_a=0,\\{}
+E_{\mathrm{roots}}&=-2\sum_j\cos k_j,\\{}
 P_{\mathrm{roots}}&=\sum_j k_j
 =\frac{2\pi}{L}\left(\sum_j I_j+\sum_a J_a\right)\pmod{2\pi}.
 \end{aligned}
@@ -111,13 +111,13 @@ offsets are applied when the physical sector differs from the root sector.
 We exploit reflection symmetry, solving only for positive k and Lambda.
 The partners are reflected exactly. For even M at half filling, k=0 and k=pi
 are fixed; for odd M, the central spin rapidity is exactly zero. In particular, the
-fixed k=pi contributes $\sin (k)=0$ exactly, avoiding division of a floating
+fixed k=pi contributes $`\sin (k)=0`$ exactly, avoiding division of a floating
 approximation to sin(pi) by a very small U.
 
 The reduced system uses damped Newton updates with an analytic Jacobian.
 Uni20 performs the dense linear solve in the selected scalar type; there is
 no conversion through double. Spin variables are internally scaled as
-$\Lambda /\max (1,u)$ to condition the large-U equations, and converted back on
+$`\Lambda /\max (1,u)`$ to condition the large-U equations, and converted back on
 return. For U<8 we first solve at U=8 and halve U stage by stage down to the
 requested value, preserving physical Lambda between stages. For U>=8 we
 solve directly at the requested interaction.
@@ -126,7 +126,7 @@ The reduced dense solve has approximately (N+M)/2 unknowns, at most 3L/4:
 O((N+M)^2) storage and O((N+M)^3) work per Newton update. This
 is a starting point for moderate rings, not yet a matrix-free large-L solver.
 
-Diagnostics include separate $\max \lvert F_{\mathrm{charge}} \rvert /L$ and $\max \lvert F_{\mathrm{spin}} \rvert /L$, their
+Diagnostics include separate $`\max \lvert F_{\mathrm{charge}} \rvert /L`$ and $`\max \lvert F_{\mathrm{spin}} \rvert /L`$, their
 maximum, accepted Newton updates, and the number of completed continuation
 stages. The default tolerance is 32 times the selected type's epsilon.
 The iteration budget applies to **all stages together**, not to each stage.
@@ -155,7 +155,7 @@ levels. At half filling and Sz=0 this gives
 
 ```math
 E=\begin{cases}
--4\cot(\pi/L),&L=4m,\\
+-4\cot(\pi/L),&L=4m,\\{}
 -4\csc(\pi/L),&L=4m+2.
 \end{cases}
 ```

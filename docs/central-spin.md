@@ -53,14 +53,14 @@ the bath field to zero. For M up spins and B>=0,
 
 ```math
 \begin{aligned}
-\epsilon_0&=0,\qquad\epsilon_j=-\frac1{A_j},\\
+\epsilon_0&=0,\qquad\epsilon_j=-\frac1{A_j},\\{}
 -2B+\sum_i\frac1{\lambda_\alpha-\epsilon_i}
--2\sum_{\beta\ne\alpha}\frac1{\lambda_\alpha-\lambda_\beta}&=0,\\
+-2\sum_{\beta\ne\alpha}\frac1{\lambda_\alpha-\lambda_\beta}&=0,\\{}
 E&=\frac12\sum_\alpha\frac1{\lambda_\alpha}-\frac B2+\frac14\sum_j A_j.
 \end{aligned}
 ```
 
-Spin reversal maps `(B,Sz)` to $(-B,-S^z)$, without changing energy. The
+Spin reversal maps `(B,Sz)` to $`(-B,-S^z)`$, without changing energy. The
 implementation therefore solves at h=|B|, using `M=(Nb+1)/2+Sz` for B>=0
 and the spin-reversed M for B<0.
 
@@ -70,7 +70,7 @@ quadratic eigenvalue-variable approach of
 
 ```math
 \begin{aligned}
-A_\star&=\max_j|A_j|,\quad q_0=0,\quad q_j=A_\star/A_j,\quad z_\alpha=-A_\star\lambda_\alpha,\\
+A_\star&=\max_j|A_j|,\quad q_0=0,\quad q_j=A_\star/A_j,\quad z_\alpha=-A_\star\lambda_\alpha,\\{}
 t&=\frac{A_\star}{2h+A_\star},\quad p=1-t,\qquad
 v_i=t\sum_\alpha\frac1{q_i-z_\alpha}.
 \end{aligned}
@@ -80,8 +80,8 @@ Algebra applied to the rational equations in the convention above gives
 
 ```math
 \begin{aligned}
-v_i^2-pv_i-t\sum_{j\ne i}\frac{v_i-v_j}{q_i-q_j}&=0,\\
-\sum_i v_i&=Mp,\\
+v_i^2-pv_i-t\sum_{j\ne i}\frac{v_i-v_j}{q_i-q_j}&=0,\\{}
+\sum_i v_i&=Mp,\\{}
 E&=hv_0+\frac{A_\star}{2}v_0-\frac h2+\frac14\sum_j A_j.
 \end{aligned}
 ```

@@ -10,12 +10,12 @@ rungs, two spin-1/2 operators S and T per rung, and longitudinal field h:
 ```math
 \begin{aligned}
 H={}&\sum_j\left[\mathbf S_j\cdot\mathbf S_{j+1}+\mathbf T_j\cdot\mathbf T_{j+1}
-+4(\mathbf S_j\cdot\mathbf S_{j+1})(\mathbf T_j\cdot\mathbf T_{j+1})\right]\\
++4(\mathbf S_j\cdot\mathbf S_{j+1})(\mathbf T_j\cdot\mathbf T_{j+1})\right]\\{}
 &+J_r\sum_j\mathbf S_j\cdot\mathbf T_j-h\sum_j(S_j^z+T_j^z).
 \end{aligned}
 ```
 
-The leg coefficient is 1, the four-spin coefficient is 4, and $J_{r}$ can
+The leg coefficient is 1, the four-spin coefficient is 4, and $`J_{r}`$ can
 have either sign. The field h has energy units (g*mu_B absorbed) and defaults
 to zero. Indices are periodic; L>=2, including odd lengths. At
 L=2 the closing bond is counted separately, as in our other periodic chains.
@@ -39,7 +39,7 @@ The default compares all singlet-count sectors. `--singlets NS` selects a
 single sector, while `--sectors` lists all L+1 sector minima and reports the
 lowest one in the overview. These two options are mutually exclusive.
 Within each singlet sector, the triplet populations are minimized too.
-`--sz M` additionally fixes total physical Sz to the integer M in $[-L,L]$;
+`--sz M` additionally fixes total physical Sz to the integer M in $`[-L,L]`$;
 without it, Sz is minimized as well. The implementation returns one
 minimizing representative, not every degenerate state. Reported momenta
 refer to translation by one rung, `P=2*pi*momentum_index/L`; the reflected
@@ -63,33 +63,33 @@ from choosing a field and letting M minimize freely; some finite-size
 sectors need not become global minima for any field.
 
 The rung contains two spin-1/2 sites, so total Sz is always an integer,
-even for odd L. There is no extra parity constraint on $L -N_{s} -M$, because
-the triplet t0 has zero projection. Feasibility is $\lvert M \rvert \le L -N_{s}$.
+even for odd L. There is no extra parity constraint on $`L -N_{s} -M`$, because
+the triplet t0 has zero projection. Feasibility is $`\lvert M \rvert \le L -N_{s}`$.
 With `--sectors`, only `N_s=0,...,L-|M|` are listed. Incompatible explicit
 constraints are input errors, not empty successful calculations.
-At $\lvert M \rvert =L$ the unique polarized state is returned analytically, even when
+At $`\lvert M \rvert =L`$ the unique polarized state is returned analytically, even when
 it is *not* the unconstrained ground state and even with zero solve budgets.
 
 These results are minima of **Sz sectors**, not states of prescribed total
 spin S, and do not enumerate excited levels within a sector. At h=0 a
-spin-S multiplet contributes to all $\lvert M \rvert \le S$; equal sector energies can
+spin-S multiplet contributes to all $`\lvert M \rvert \le S`$; equal sector energies can
 therefore be ordinary SU(2) degeneracies.
 
 ## Why a ladder becomes a four-color chain
 
 Each rung has one singlet s and three triplets t+, t0, t-. Their rung
-energies are $-3J_{r} /4$, $J_{r} /4-h$, $J_{r} /4$, $J_{r} /4+h$, respectively. The identity
+energies are $`-3J_{r} /4`$, $`J_{r} /4-h`$, $`J_{r} /4`$, $`J_{r} /4+h`$, respectively. The identity
 
 ```math
 P_{\mathrm{rung}}(j,k)=\left(2\mathbf S_j\cdot\mathbf S_k+\frac12\right)
 \left(2\mathbf T_j\cdot\mathbf T_k+\frac12\right).
 ```
 
-turns the leg/four-spin part into $P_{\mathrm{rung}} -1/4$. Thus
+turns the leg/four-spin part into $`P_{\mathrm{rung}} -1/4`$. Thus
 
 ```math
 \begin{aligned}
-H&=\sum_jP_{\mathrm{rung}}(j,j+1)-\frac L4+J_r(L/4-N_s)-hM,\\
+H&=\sum_jP_{\mathrm{rung}}(j,j+1)-\frac L4+J_r(L/4-N_s)-hM,\\{}
 E&=E_{\mathrm{perm}}-\frac L4+J_r(L/4-N_s)-hM.
 \end{aligned}
 ```
@@ -100,26 +100,26 @@ of both, although the minimizing multiplet can change. The field is a linear
 combination of conserved color populations, so the same Bethe equations apply.
 We use the permutation form in
 [Wang's Eqs. (2)–(5)](https://arxiv.org/html/cond-mat/9901168), with
-$J_{r} =2J$ in those equations and the energy constants restored as above.
+$`J_{r} =2J`$ in those equations and the energy constants restored as above.
 
 Two useful exact checks follow. The all-singlet product has
-$E =3L (1-J_{r})/4$. It is a global ground state for $J_{r} -\lvert h \rvert \ge 4$, so the default
+$`E =3L (1-J_{r})/4`$. It is a global ground state for $`J_{r} -\lvert h \rvert \ge 4`$, so the default
 calculation returns it analytically, even with zero iteration/branch
 budgets. This sufficient condition follows from the operator inequality
 `sum(P-1)>=-4*N_triplet`; it does not assert uniqueness on the boundary or locate
 every finite-ring crossing. The lowest one-triplet energy above the product is
 `J_r-|h|-4*sin²(pi*floor(L/2)/L)`. The fully polarized triplet product is
-also analytic when $\lvert h \rvert \ge 4+\max (J_{r},0)$, with
-$E =L \,(3/4+J_{r} /4-\lvert h \rvert)$ and `M=sign(h)*L`. The same bound applies to defects
+also analytic when $`\lvert h \rvert \ge 4+\max (J_{r},0)`$, with
+$`E =L \,(3/4+J_{r} /4-\lvert h \rvert)`$ and `M=sign(h)*L`. The same bound applies to defects
 of the favored triplet color: every other rung color then costs at least 4.
 These are sufficient conditions, not all finite-ring phase boundaries.
 In the N_s=0, h=0 sector the model reduces to an SU(3) triplet permutation
-chain plus the constant $L \,(J_{r} -1)/4$.
+chain plus the constant $`L \,(J_{r} -1)/4`$.
 
 ## Finite rings: highest weights are not physical populations
 
 An SU(4) highest weight is a Young diagram with row lengths
-$\mu_{1} \ge \mu_{2} \ge \mu_{3} \ge \mu_{4} \ge 0$, summing to L. A multiplet contains a population
+$`\mu_{1} \ge \mu_{2} \ge \mu_{3} \ge \mu_{4} \ge 0`$, summing to L. A multiplet contains a population
 vector w exactly when mu dominates its sorted entries: every prefix sum
 of mu is at least the corresponding prefix sum of sorted(w).
 
@@ -129,8 +129,8 @@ wrong even for six rungs:
 
 | Physical populations (s,t+,t0,t-) | Own highest-weight sea E_perm | Actual minimizing highest weight | Minimum E_perm |
 | --- | --- | --- | --- |
-| 4,1,1,0 | -1 | 4,2,0,0 | $1-\sqrt{5}$ |
-| 2,2,1,1 | $-(5+\sqrt{17})/2$ | 2,2,2,0 | $-1-\sqrt{13}$ |
+| 4,1,1,0 | -1 | 4,2,0,0 | $`1-\sqrt{5}`$ |
+| 2,2,1,1 | $`-(5+\sqrt{17})/2`$ | 2,2,2,0 | $`-1-\sqrt{13}`$ |
 
 In both cases the lower state is an SU(4) **descendant**. Lowering operators
 change its populations without changing the permutation energy or momentum;
@@ -142,7 +142,7 @@ descendant**. With `--sectors --roots`, only the selected best state's
 roots are printed.
 
 At h=0, for N_t=L-N_s triplets, it suffices to use the population representative
-$(N_{s},q +[r >0],q +[r >1],q)$, where $N_{t} =3q +r$. Every SU(3) triplet multiplet
+$`(N_{s},q +[r \gt 0],q +[r \gt 1],q)`$, where $`N_{t} =3q +r`$. Every SU(3) triplet multiplet
 contains this balanced weight. Scanning all compatible SU(4) highest
 weights therefore retains every triplet-multiplet choice at fixed N_s.
 This weight-space statement should not be confused with assuming a
@@ -152,20 +152,20 @@ has an additional row-parity condition.
 
 At nonzero h we instead minimize the Zeeman term within each multiplet.
 Writing its rows as `lambda_0,...,lambda_3`, restriction to the three triplet
-colors gives interlacing diagrams $\lambda_{i} \ge \mu_{i} \ge \lambda _{i +1}$ with
+colors gives interlacing diagrams $`\lambda_{i} \ge \mu_{i} \ge \lambda _{i +1}`$ with
 `sum(mu)=L-N_s`. A singlet count occurs precisely when
-$\lambda_{3} \le N_{s} \le \lambda_{0}$. For positive h the extremal triplet weight
-maximizes $\mu_{0} -\mu_{2}$. With $T =L -N_{s}$, choose
+$`\lambda_{3} \le N_{s} \le \lambda_{0}`$. For positive h the extremal triplet weight
+maximizes $`\mu_{0} -\mu_{2}`$. With $`T =L -N_{s}`$, choose
 
 ```math
 \begin{aligned}
-\mu_0&=\min(\lambda_0,T-\lambda_2-\lambda_3),\\
-\mu_2&=\max(\lambda_3,T-\mu_0-\lambda_1),\\
+\mu_0&=\min(\lambda_0,T-\lambda_2-\lambda_3),\\{}
+\mu_2&=\max(\lambda_3,T-\mu_0-\lambda_1),\\{}
 \mu_1&=T-\mu_0-\mu_2.
 \end{aligned}
 ```
 
-Assign $(\mu_{0},\mu_{1},\mu_{2})$ to `(t+,t0,t-)`, swapping t+ and t- for negative
+Assign $`(\mu_{0},\mu_{1},\mu_{2})`$ to `(t+,t0,t-)`, swapping t+ and t- for negative
 h. This finite-dimensional weight optimization is checked against exhaustive
 dominance enumeration through 16 rungs, and the resulting energies against
 independent color-word Hamiltonians through six rungs. For L=6, N_s=4 and
@@ -174,8 +174,8 @@ simply shifting the old balanced representative loses a unit of Zeeman energy.
 
 For a fixed M, there is no need to solve every individual triplet population.
 Dominance of a four-color weight by lambda is equivalent to bounding all
-single entries between $\lambda_{3}$ and $\lambda_{0}$, and all pair sums above
-by $P =\lambda_{0} +\lambda_{1}$. At fixed N_s, with $T =L -N_{s}$, every triplet
+single entries between $`\lambda_{3}`$ and $`\lambda_{0}`$, and all pair sums above
+by $`P =\lambda_{0} +\lambda_{1}`$. At fixed N_s, with $`T =L -N_{s}`$, every triplet
 population consequently lies in the same interval
 
 ```math
@@ -183,7 +183,7 @@ population consequently lies in the same interval
 \mathrm{upper}=\min(\lambda_0,P-N_s).
 ```
 
-For nonnegative M write $(N _+,N_{0},N _-)=(x +M,T -M -2x,x)$ and intersect these
+For nonnegative M write $`(N _+,N_{0},N _-)=(x +M,T -M -2x,x)`$ and intersect these
 three bounds over integer x. Negative M swaps t+ and t-. An empty interval
 means the multiplet is absent from this sector. Otherwise one representative
 suffices: its permutation energy is independent of x. This constant-time
@@ -195,13 +195,13 @@ highest-weight sea only once and reuses it across singlet-count sectors.
 
 Remove trailing zero rows and let k<=4 be the remaining number of colors.
 There are k-1 root families, with
-$M_{0} =L$, `M_a=sum_(b>a) mu_b`, and $M_{k} =0$. Define
-$\theta_{w} (x)=2 \arctan (x /w)$. The equations solved are
+$`M_{0} =L`$, `M_a=sum_(b>a) mu_b`, and $`M_{k} =0`$. Define
+$`\theta_{w} (x)=2 \arctan (x /w)`$. The equations solved are
 
 ```math
 \begin{aligned}
 L\theta_{1/2}(\lambda_j^1)-\sum_{\mathrm{same}}\theta_1(\lambda_j^1-\lambda_m^1)
-+\sum_{\mathrm{next}}\theta_{1/2}(\lambda_j^1-\lambda_m^2)&=2\pi I_j^1,\\
++\sum_{\mathrm{next}}\theta_{1/2}(\lambda_j^1-\lambda_m^2)&=2\pi I_j^1,\\{}
 \sum_{\mathrm{prev}}\theta_{1/2}(\lambda_j^a-\lambda_m^{a-1})
 -\sum_{\mathrm{same}}\theta_1(\lambda_j^a-\lambda_m^a)
 +\sum_{\mathrm{next}}\theta_{1/2}(\lambda_j^a-\lambda_m^{a+1})&=2\pi I_j^a.
@@ -209,7 +209,7 @@ L\theta_{1/2}(\lambda_j^1)-\sum_{\mathrm{same}}\theta_1(\lambda_j^1-\lambda_m^1)
 ```
 
 The same-level self term is zero. The packed labels are
-`I_j^a=j-(M_a-1)/2+shift_a`, with zero shift when $M _{a -1}+M _{a +1}$
+`I_j^a=j-(M_a-1)/2+shift_a`, with zero shift when $`M _{a -1}+M _{a +1}`$
 is even and both shifts ±1/2 when it is odd. All independent displacement
 choices are compared, modulo simultaneous reflection. Exact half-integer
 labels use Uni20's `half_int`, not floating-point rounding. Energy and

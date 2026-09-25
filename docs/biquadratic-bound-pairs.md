@@ -28,7 +28,7 @@ with other state selectors; it fixes the through-line sector automatically.
 
 ## Excitation structure
 
-The gap is measured from the entire exact ground manifold, $E_0 =N -1$.
+The gap is measured from the entire exact ground manifold, $`E_0 =N -1`$.
 For N=4 there is one bound-pair mode:
 
 ```math
@@ -45,8 +45,8 @@ gap 1). This is a bound-pair threshold, not the global positive gap, which
 remains 1. The droplet theorem of
 [Nachtergaele, Spitzer and Starr](../CITATIONS.md#nachtergaele-spitzer-starr-2007),
 Theorem 2.1, gives the thermodynamic module-edge limit. Rescaling their
-Hamiltonian by $2\,\Delta =3$, with eta=acosh(3/2), gives
-$2\,\sinh (\eta)\,\tanh (\eta)=5/3$ for two defects.
+Hamiltonian by $`2\,\Delta =3`$, with eta=acosh(3/2), gives
+$`2\,\sinh (\eta)\,\tanh (\eta)=5/3`$ for two defects.
 
 The lowest mode matches the module minimum in independent ED checks for
 N=4,...,10. We do not use that finite validation as a proof of finite-N
@@ -63,9 +63,9 @@ ordinary zero-field open XXZ chain. Our regularization of
 
 ```math
 \begin{aligned}
-u_\pm&=\frac{\eta+d}{2}\pm\frac{ia}{2},\quad 0<a<\pi,\quad |d|<\eta,\\
-d&=\sigma e^{-L},\qquad L=-\log|d|,\\
-J&=N-2-\mathrm{mode},\quad \mathrm{mode}=1,\ldots,N-3,\\
+u_\pm&=\frac{\eta+d}{2}\pm\frac{ia}{2},\quad 0<a<\pi,\quad |d|<\eta,\\{}
+d&=\sigma e^{-L},\qquad L=-\log|d|,\\{}
+J&=N-2-\mathrm{mode},\quad \mathrm{mode}=1,\ldots,N-3,\\{}
 \sigma&=(-1)^{\mathrm{mode}+1}.
 \end{aligned}
 ```
@@ -75,7 +75,7 @@ There is **no real-root sea**. Using Theta, C and G from the
 
 ```math
 \begin{aligned}
-2N[\Theta(a;\eta+d/2)+C(a;d)]-2\Theta(2a;\eta)&=2\pi J,\\
+2N[\Theta(a;\eta+d/2)+C(a;d)]-2\Theta(2a;\eta)&=2\pi J,\\{}
 2N[G(a;\eta+d/2)-G(a;d/2)]-\log\sinh(2\eta+d)-L+\log\frac{\sinh d}{d}&=0.
 \end{aligned}
 ```

@@ -34,8 +34,8 @@ write
 
 ```math
 \begin{aligned}
-u_j&=\frac{i\alpha_j}{2},\qquad 0<\alpha_1<\cdots<\alpha_r<\pi,\quad r=N/2-2,\\
-u_\pm&=\frac{\eta+d}{2}\pm\frac{ia}{2},\qquad 0<a<\pi,\quad 0<d<\eta,\\
+u_j&=\frac{i\alpha_j}{2},\qquad 0<\alpha_1<\cdots<\alpha_r<\pi,\quad r=N/2-2,\\{}
+u_\pm&=\frac{\eta+d}{2}\pm\frac{ia}{2},\qquad 0<a<\pi,\quad 0<d<\eta,\\{}
 L&=-\log d.
 \end{aligned}
 ```
@@ -46,21 +46,21 @@ The separate bound-pair API allows negative deviations and other string labels.
 The equations below are our regularization of the
 published equations, not a claim that the paper proves its energy ordering.
 
-For a nearly ideal string, forming $u _+ + u _- - \eta$ can give zero by rounding,
+For a nearly ideal string, forming $`u _+ + u _- - \eta`$ can give zero by rounding,
 although the true deviation is positive. We therefore solve for **L**, and
 evaluate the singular factor through
-$\log (\sinh (d)) = -L + \log (\sinh (d)/d)$. The latter correction has a regular
-small-d limit. Even if $\exp (-L)$ underflows, L remains finite and meaningful.
+$`\log (\sinh (d)) = -L + \log (\sinh (d)/d)`$. The latter correction has a regular
+small-d limit. Even if $`\exp (-L)`$ underflows, L remains finite and meaningful.
 We never set d=0 as a physical approximation to obtain convergence.
 
 Define
 
 ```math
 \begin{aligned}
-\Theta(\beta;w)&=2\operatorname{atan2}\!\left(\sin(\beta/2),\tanh w\cos(\beta/2)\right),\\
-G(\beta;w)&=\log|\sinh(w+i\beta/2)|,\\
-w_+&=\frac{3\eta+d}{2},\qquad w_-=\frac{\eta-d}{2},\\
-S(\beta)&=\Theta(\beta;w_+)+\Theta(\beta;w_-),\\
+\Theta(\beta;w)&=2\operatorname{atan2}\!\left(\sin(\beta/2),\tanh w\cos(\beta/2)\right),\\{}
+G(\beta;w)&=\log|\sinh(w+i\beta/2)|,\\{}
+w_+&=\frac{3\eta+d}{2},\qquad w_-=\frac{\eta-d}{2},\\{}
+S(\beta)&=\Theta(\beta;w_+)+\Theta(\beta;w_-),\\{}
 C(a;d)&=2\operatorname{atan2}\!\left(\tanh(d/2)\cos(a/2),\sin(a/2)\right).
 \end{aligned}
 ```
@@ -78,7 +78,7 @@ The pair's phase and log-modulus equations are
 ```math
 \begin{aligned}
 2N[\Theta(a;\eta+d/2)+C(a;d)]-2\Theta(2a;\eta)
--\sum_j[S(a-\alpha_j)+S(a+\alpha_j)]&=2\pi,\\
+-\sum_j[S(a-\alpha_j)+S(a+\alpha_j)]&=2\pi,\\{}
 2N[G(a;\eta+d/2)-G(a;d/2)]-\log\sinh(2\eta+d)-L+\log\frac{\sinh d}{d}
 &\\[-1ex]
 {}-\sum_{j,\,s=\pm1}[G(a+s\alpha_j;w_+)-G(a+s\alpha_j;w_-)]&=0.
@@ -113,7 +113,7 @@ E-E0, multiplicity, and separate phase/modulus diagnostics. Gaps are emitted
 only if both the excitation and global ground reference converge.
 
 The energy and multiplicity maps are unchanged:
-$E_{\mathrm{biquadratic}} = 2 E_{\mathrm{ref}} - 7(N -1)/4$, ell=0, multiplicity=1.
+$`E_{\mathrm{biquadratic}} = 2 E_{\mathrm{ref}} - 7(N -1)/4`$, ell=0, multiplicity=1.
 
 ```cpp
 #include <bethe/biquadratic_two_string.hpp>

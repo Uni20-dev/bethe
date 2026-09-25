@@ -25,7 +25,7 @@ input controls, provenance and CPU time. See [output and exports](output.md)
 for JSON/CSV/TSV, streaming and overwrite protection. Literature appears with
 `--references`, not on each ordinary run.
 
-`--tolerance` is an absolute tolerance in Y, default $262144\,\epsilon$ in the
+`--tolerance` is an absolute tolerance in Y, default $`262144\,\epsilon`$ in the
 selected precision. `--contour-shift` and `--initial-cutoff` override the
 automatic contour and rapidity cutoff choices described below.
 `--initial-intervals` (64) and `--max-intervals` (2048) control rapidity
@@ -45,20 +45,20 @@ including when `--force` is given.
 ## Physical convention
 
 Use the canonically normalized kinetic term `(1/2)(partial phi)^2`, coupling
-$0 < \beta ^{2} < 8\,\pi$, and the parameter
+$`0 \lt  \beta ^{2} \lt  8\,\pi`$, and the parameter
 
 ```math
 p=\frac{\beta^2}{8\pi-\beta^2}.
 ```
 
 Then p>1 is repulsive, 0<p<1 attractive, and p=1 the free massive Dirac point.
-In Rutkevich's normalization, his beta squared is our $\beta ^{2}/(8\,\pi)$,
+In Rutkevich's normalization, his beta squared is our $`\beta ^{2}/(8\,\pi)`$,
 his xi is p, and his gamma is `pi/(1+p)`. State these conventions explicitly;
 the different meanings of beta must not be mixed.
 
 Take the soliton mass M as the physical input scale, set velocity and hbar to
-one, and use $u =M \,L$. The observable is the **bulk-subtracted** vacuum
-energy $E_{C} =E_{0} -L \,e_{\mathrm{bulk}}$, or the dimensionless scaling function $Y =L \,E_{C}$.
+one, and use $`u =M \,L`$. The observable is the **bulk-subtracted** vacuum
+energy $`E_{C} =E_{0} -L \,e_{\mathrm{bulk}}`$, or the dimensionless scaling function $`Y =L \,E_{C}`$.
 No nonuniversal absolute bulk energy is inferred. In the attractive regime M
 still denotes the soliton mass, not necessarily the lightest breather mass.
 
@@ -95,7 +95,7 @@ or fp128 type. The implementation reuses the common compensated tanh-sinh
 quadrature; it does not introduce a double-only special-functions dependency.
 
 The hyperbolic ratio is evaluated with `expm1` and decaying exponentials.
-For complex arguments, growth from $\cos (k \,z)$ is combined with the Fourier
+For complex arguments, growth from $`\cos (k \,z)`$ is combined with the Fourier
 decay *before* either factor is evaluated. This avoids an overflowing cosh
 multiplied by an underflowing ratio on otherwise legal contours. The same
 formula retains the small multiplier for p only a few native epsilons from one.
@@ -116,8 +116,8 @@ Independent checks include the exact transforms
 
 ```math
 \begin{aligned}
-G_{1/2}(z)&=-\frac1{2\pi\cosh z},\\
-G_2(z)&=\frac{z}{2\pi^2\sinh z},\qquad G_2(0)=\frac1{2\pi^2},\\
+G_{1/2}(z)&=-\frac1{2\pi\cosh z},\\{}
+G_2(z)&=\frac{z}{2\pi^2\sinh z},\qquad G_2(0)=\frac1{2\pi^2},\\{}
 G_1(z)&=0,\qquad \left.\frac{\partial G_p(0)}{\partial p}\right|_{p=1}=\frac18.
 \end{aligned}
 ```
@@ -154,8 +154,8 @@ It does not return the bulk energy density or an excited-state spectrum.
 - `max_cutoffs=3`: cutoff attempts per contour, each separately mesh-resolved.
   Consecutive cutoffs differ by one rapidity unit and must agree within tolerance/4.
 - Optional `initial_cutoff` and `contour_shift`; defaults estimate a safe tail
-  scale and use $\eta =\pi \,\min (1,p)/4$. The second independently resolved contour is
-  $3\,\eta /4$, and must agree in Y within tolerance/2.
+  scale and use $`\eta =\pi \,\min (1,p)/4`$. The second independently resolved contour is
+  $`3\,\eta /4`$, and must agree in Y within tolerance/2.
 - `kernel`: Fourier evaluation/level/cutoff budgets per table. Its tolerance is
   assigned internally from the vacuum tolerance and rapidity cutoff.
 
@@ -176,14 +176,14 @@ regular attractive ultraviolet iterations.
 
 ## Shifted-contour vacuum NLIE
 
-For $0 < \eta < \pi \,\min (1,p)/2$, use
+For $`0 \lt  \eta \lt  \pi \,\min (1,p)/2`$, use
 
 ```math
 \begin{aligned}
-A(\theta)&=\log(1+e^{-\epsilon(\theta)}),\\
+A(\theta)&=\log(1+e^{-\epsilon(\theta)}),\\{}
 \epsilon(\theta)&=-iu\sinh(\theta+i\eta)
 -\int G_p(\theta-t)A(t)\,dt
-+\int G_p(\theta-t+2i\eta)\overline{A(t)}\,dt,\\
++\int G_p(\theta-t+2i\eta)\overline{A(t)}\,dt,\\{}
 Y&=-\frac u\pi\operatorname{Im}\int\sinh(\theta+i\eta)A(\theta)\,d\theta.
 \end{aligned}
 ```
@@ -215,7 +215,7 @@ the equations summarized in [Hegedus (2026)](../CITATIONS.md#hegedus-2026),
 (2.6)-(2.8), with the magnon plateau integrated analytically.
 
 Further tests cover attractive/repulsive couplings, mass-length scaling, altered
-contours, the ultraviolet $c_{\mathrm{eff}} \to 1$ limit, and the leading soliton plus
+contours, the ultraviolet $`c_{\mathrm{eff}} \to 1`$ limit, and the leading soliton plus
 breather wrapping correction at p=1/2. They also distinguish nonlinear,
 kernel, rapidity-mesh and cutoff failures, and verify that failed states have
 no published observables.

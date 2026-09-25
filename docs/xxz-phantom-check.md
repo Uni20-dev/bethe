@@ -20,7 +20,7 @@ Neither the input coefficients nor Delta are changed.
 For a recovered root x in affine coordinates `z=center+scale*x`, use its
 recovery diagnostic's largest root-uncertainty estimate, transformed to z,
 plus a native rounding allowance. For a radius rho around z, the momentum
-factor $v =-(1-i \,z)/(1+i \,z)$ has the variation estimate
+factor $`v =-(1-i \,z)/(1+i \,z)`$ has the variation estimate
 
 ```math
 \mathrm{radius}_v=\frac{2\rho}{|1+iz|(|1+iz|-\rho)}.
@@ -56,7 +56,7 @@ absolute permutation terms. A separate heuristic arithmetic allowance is
 \left[1+NM+r^2+\binom Mp\right]\mathrm{absolute\_term\_sum}.
 ```
 
-The default `amplitude_tolerance` is $128\,\epsilon$. This allowance accounts
+The default `amplitude_tolerance` is $`128\,\epsilon`$. This allowance accounts
 for the extent of phase powers and finite sums at a conservative numerical
 scale; it is **not a derived interval error bound**. Delta and the nominal
 phantom phase are fixed in the input-variation calculation. None of these

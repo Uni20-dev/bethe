@@ -12,7 +12,7 @@ interpreting both `COUNT` and `all`. For anisotropic chains, use the separate
 
 The periodic `bethe-xxx-pbc` and free-end `bethe-xxx-obc`
 front ends enumerate supported real-root highest-weight states at a
-chosen **total spin S**, with $M =N /2-S$ roots and $S^z =S$:
+chosen **total spin S**, with $`M =N /2-S`$ roots and $`S^z =S`$:
 
 ```sh
 build/bethe-xxx-pbc 64 --excitations 10 --spin 1
@@ -31,7 +31,7 @@ the separate sector-minimum mode, not a filter for this scan.
 ## What is returned
 
 The scan returns up to COUNT lowest **converged multiplets in this family**,
-including its sector minimum. Each multiplet is represented once; its $2S +1$
+including its sector minimum. Each multiplet is represented once; its $`2S +1`$
 SU(2) partners are not listed separately. Distinct multiplets with equal
 energies are retained, including periodic reflection/momentum partners. COUNT
 can cut through such degeneracies. Results are sorted by computed energy;
@@ -66,7 +66,7 @@ descendants are not solved by this mode.
 
 ## Cost and candidate limits
 
-There are $C (N -M,M)$ candidates for either boundary: for example, N=64, S=1
+There are $`C (N -M,M)`$ candidates for either boundary: for example, N=64, S=1
 has 528. The scan solves **every** candidate before returning the requested
 lowest subset, not just the first COUNT configurations. The default
 `--max-candidates 10000` rejects larger families before any solve; raise it

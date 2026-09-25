@@ -4,7 +4,7 @@
 frontend implemented and checked against an independent oracle.** This is a continuum
 field-theory calculation, not a finite spin-chain or RSOS Hamiltonian solver.
 The regular spin-zero one-particle library and frontend are also available
-for $5\le mL\le30$; continuation to small volume is not yet implemented.
+for $`5\le mL\le30`$; continuation to small volume is not yet implemented.
 
 ## Command line
 
@@ -24,7 +24,7 @@ The `vacuum` table contains the bulk-subtracted `casimir_energy`,
 `scaling_function` Y, and computed `effective_central_charge`, followed by
 nonlinear residual/error, mesh and cutoff errors, the direct tail bound,
 cutoff, intervals, iteration/cutoff/work counts and convergence status.
-Metadata labels $c=-22/5$, $h_{\min}=-1/5$ and $c_{\mathrm{eff}}^{\mathrm{UV}}=2/5$ as **theory data**;
+Metadata labels $`c=-22/5`$, $`h_{\min}=-1/5`$ and $`c_{\mathrm{eff}}^{\mathrm{UV}}=2/5`$ as **theory data**;
 these are not inferred from a finite-r calculation. CPU time and numerical
 controls accompany all shared screen/file outputs.
 
@@ -44,9 +44,9 @@ bethe-lee-yang-excited --references
 ```
 
 This tool computes one zero-momentum excited level, not an arbitrary
-excitation scan. Both mass and length must be positive and $5\le mL\le30$.
+excitation scan. Both mass and length must be positive and $`5\le mL\le30`$.
 The same numerical controls apply to each state separately; their tolerance
-defaults to $65536\,\epsilon$. `--max-root-iterations` (default 256 per grid)
+defaults to $`65536\,\epsilon`$. `--max-root-iterations` (default 256 per grid)
 controls the excited source quantization. The default work budget is
 1000000000 kernel products **per state**, not a combined allowance.
 
@@ -54,9 +54,9 @@ Three tables are always present:
 
 - `levels`: vacuum and one-particle bulk-subtracted energies and scaling
   functions, with independent convergence diagnostics and work counters.
-- `source`: $\beta$, its displacement from $\pi/6$, quantization residual,
+- `source`: $`\beta`$, its displacement from $`\pi/6`$, quantization residual,
   propagated source-error estimate, root-iteration count and status.
-- `gap`: $E_{1,C}-E_{0,C}$, `scaled_gap=L*gap`, estimated `gap_error` in energy
+- `gap`: $`E_{1,C}-E_{0,C}`$, `scaled_gap=L*gap`, estimated `gap_error` in energy
   units, and convergence status.
 
 The energy gap is **not** the bulk-subtracted one-particle energy. The tool
@@ -75,32 +75,32 @@ covers both solves; references appear only with `--references`.
 
 ## Physics and normalization
 
-The non-unitary minimal model $M(2,5)$ has $c=-22/5$ and lowest conformal weight
-$h_{\min}=-1/5$. Its massive integrable perturbation has one particle of mass $m$.
+The non-unitary minimal model $`M(2,5)`$ has $`c=-22/5`$ and lowest conformal weight
+$`h_{\min}=-1/5`$. Its massive integrable perturbation has one particle of mass $`m`$.
 Our first target is the periodic circle of circumference L, with velocity 1,
 positive m and L, and no defects. The source is
 [Bajnok–el Deeb–Pearce (2015)](../CITATIONS.md#bajnok-el-deeb-pearce-2015),
 especially Eqs. (1)–(3), (133), (151)–(152), (212), and (218).
 
-Writing $r=mL$, the source-free ground-state TBA and energy are
+Writing $`r=mL`$, the source-free ground-state TBA and energy are
 
 ```math
 \begin{aligned}
 \epsilon(\theta)&=r\cosh\theta+
-\int K(\theta-\theta')\log\!\left(1+e^{-\epsilon(\theta')}\right)\,d\theta',\\
+\int K(\theta-\theta')\log\!\left(1+e^{-\epsilon(\theta')}\right)\,d\theta',\\{}
 K(x)&=-\frac{\phi(x)}{2\pi}
-=\frac{\sqrt3}{2\pi}\frac{\cosh x}{\sinh^2x+3/4},\\
+=\frac{\sqrt3}{2\pi}\frac{\cosh x}{\sinh^2x+3/4},\\{}
 Y(r)&=LE_C(L)=-\frac r{2\pi}\int\cosh\theta\,
 \log\!\left(1+e^{-\epsilon(\theta)}\right)\,d\theta.
 \end{aligned}
 ```
 
-All integrals run over the real line. The sign is important: $K$ is positive.
-$E_C$ is the bulk-subtracted finite-size energy, not an absolute extensive
+All integrals run over the real line. The sign is important: $`K`$ is positive.
+$`E_C`$ is the bulk-subtracted finite-size energy, not an absolute extensive
 vacuum energy. No bulk constant is added in this first implementation.
-The ultraviolet limit is $Y\to-\pi/15$ and therefore
-$c_{\mathrm{eff}} (r)=-6Y /\pi \to 2/5$. This is **not** the central charge: the relation is
-$c=c_{\mathrm{eff}}^{\mathrm{UV}}+24h_{\min}=-22/5$. The lowest state belongs to the nontrivial
+The ultraviolet limit is $`Y\to-\pi/15`$ and therefore
+$`c_{\mathrm{eff}} (r)=-6Y /\pi \to 2/5`$. This is **not** the central charge: the relation is
+$`c=c_{\mathrm{eff}}^{\mathrm{UV}}+24h_{\min}=-22/5`$. The lowest state belongs to the nontrivial
 conformal sector, not the identity sector. Excited-state TBA needs additional
 sources and their quantization conditions; changing particle number in this
 source-free equation is not sufficient.
@@ -108,9 +108,9 @@ source-free equation is not sufficient.
 ## Numerical formulation
 
 The implementation solves for
-the bounded correction $u=\epsilon-r\cosh\theta$, using even parity to work on
-the positive half-line. The folded kernel is $K(\theta-y)+K(\theta+y)$.
-For large arguments use $t=e^{-\lvert x\rvert}$ and
+the bounded correction $`u=\epsilon-r\cosh\theta`$, using even parity to work on
+the positive half-line. The folded kernel is $`K(\theta-y)+K(\theta+y)`$.
+For large arguments use $`t=e^{-\lvert x\rvert}`$ and
 
 ```math
 K(x)=\frac{\sqrt3}{\pi}\frac{t(1+t^2)}{1+t^2+t^4}.
@@ -118,8 +118,8 @@ K(x)=\frac{\sqrt3}{\pi}\frac{t(1+t^2)}{1+t^2+t^4}.
 
 This avoids overflow from squared hyperbolic functions. Evaluate the
 logarithm with a stable softplus routine. Since K integrates to 1 and the
-solution has $\epsilon\ge r>0$, the continuum fixed-point map on nonnegative $u$
-has sup-norm Lipschitz constant at most $1/(1+e^r)<1/2$. A discretization
+solution has $`\epsilon\ge r\gt 0`$, the continuum fixed-point map on nonnegative $`u`$
+has sup-norm Lipschitz constant at most $`1/(1+e^r)\lt 1/2`$. A discretization
 must still check its own quadrature and roundoff; the nonlinear residual
 alone is not an energy error estimate.
 
@@ -133,9 +133,9 @@ an enlarged cutoff verification are required, with explicit budgets and
 missing energies on failure. The tolerance targets absolute error in Y,
 avoiding an implicit change of tolerance when m and L are rescaled.
 
-The direct omitted energy tail has a useful bound: for cutoff $B>0$,
-$\lvert Y_{\mathrm{tail}}\rvert\le\coth(B)e^{-r\cosh B}/\pi$. This bounds the omitted integral
-using $\epsilon\ge r\cosh\theta$; it does **not** alone bound the response of
+The direct omitted energy tail has a useful bound: for cutoff $`B\gt 0`$,
+$`\lvert Y_{\mathrm{tail}}\rvert\le\coth(B)e^{-r\cosh B}/\pi`$. This bounds the omitted integral
+using $`\epsilon\ge r\cosh\theta`$; it does **not** alone bound the response of
 the retained solution to the omitted tail. The cutoff verification must
 account for that response too.
 
@@ -147,17 +147,17 @@ OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 \
 ```
 
 NumPy and SciPy are development-only dependencies. The oracle covers
-$10^{-6}\le r\le50$ and checks orders 12 versus 24 and a cutoff enlarged by 2.
+$`10^{-6}\le r\le50`$ and checks orders 12 versus 24 and a cutoff enlarged by 2.
 Its self-test checks kernel normalization, positivity and parity, the UV
 golden-ratio plateau, the UV effective charge, the leading large-volume
-term $Y\sim-rK_1(r)/\pi$, invalid inputs and iteration-budget exhaustion.
-$K_1$ here is the modified Bessel function, not the scattering kernel.
+term $`Y\sim-rK_1(r)/\pi`$, invalid inputs and iteration-budget exhaustion.
+$`K_1`$ here is the modified Bessel function, not the scattering kernel.
 Mesh/cutoff differences are diagnostics, not certified error bounds.
 
 Representative independently computed fp64 values (use about 1e-12 absolute
 tolerance when comparing Y, not all printed digits as exact references):
 
-| $r$ | $Y=LE_C$ |
+| $`r`$ | $`Y=LE_C`$ |
 | ---: | ---: |
 | 0.001 | -0.20943937151285794 |
 | 0.01 | -0.20942648592833846 |
@@ -229,36 +229,36 @@ including a too-small cutoff, exhausted work and unrepresentable mL.
 
 **Native regular one-particle library and frontend implemented.**
 `scripts/reference_lee_yang_excited.py` solves the spin-zero one-particle
-branch for $5\le r=mL\le30$, independently of the production C++ vacuum solver.
+branch for $`5\le r=mL\le30`$, independently of the production C++ vacuum solver.
 It reuses the Python reference quadrature and vacuum calculation for gaps.
 
 The source is [Dorey–Tateo (1996)](../CITATIONS.md#dorey-tateo-1996),
-Eqs. (2.3)–(2.7). With $\theta_{0} =i \,\beta$, define
+Eqs. (2.3)–(2.7). With $`\theta_{0} =i \,\beta`$, define
 
 ```math
 \begin{aligned}
-S(z)&=\frac{\sinh z+i\sqrt3/2}{\sinh z-i\sqrt3/2},\\
-s(\theta,\beta)&=-2\log\lvert S(\theta+i\beta)\rvert,\\
-\epsilon(\theta)&=r\cosh\theta+s(\theta,\beta)+\int K(\theta-y)L(y)\,dy,\\
-L(\theta)&=\log\!\left(1+e^{-\epsilon(\theta)}\right),\\
-0&=r\cos\beta-\log S(2i\beta)+\int K(i\beta-y)L(y)\,dy,\\
-Y_1&=LE_{1,C}=2r\sin\beta-\frac r{2\pi}\int\cosh\theta\,L(\theta)\,d\theta,\\
+S(z)&=\frac{\sinh z+i\sqrt3/2}{\sinh z-i\sqrt3/2},\\{}
+s(\theta,\beta)&=-2\log\lvert S(\theta+i\beta)\rvert,\\{}
+\epsilon(\theta)&=r\cosh\theta+s(\theta,\beta)+\int K(\theta-y)L(y)\,dy,\\{}
+L(\theta)&=\log\!\left(1+e^{-\epsilon(\theta)}\right),\\{}
+0&=r\cos\beta-\log S(2i\beta)+\int K(i\beta-y)L(y)\,dy,\\{}
+Y_1&=LE_{1,C}=2r\sin\beta-\frac r{2\pi}\int\cosh\theta\,L(\theta)\,d\theta,\\{}
 \frac{\mathrm{gap}}m&=\frac{Y_1-Y_0}{r}.
 \end{aligned}
 ```
 
 Here the integrals are over the full real line, and K uses its analytic
 continuation for the quantization equation. Conjugate symmetry makes that
-integral real. $E_{1,C}$ and $E_{0,C}$ share the vacuum's bulk subtraction; $E_{1,C}$ alone
+integral real. $`E_{1,C}`$ and $`E_{0,C}`$ share the vacuum's bulk subtraction; $`E_{1,C}`$ alone
 is not the excitation gap. The regular source pair collides with scattering
-singularities near $r=2.53$; these equations are not a UV continuation algorithm.
+singularities near $`r=2.53`$; these equations are not a UV continuation algorithm.
 
-Our oracle brackets $\beta$ between $\pi/6$ and $\pi/4$, away from that collision.
-For $r\ge5$ the bare driving term plus source stays positive on this bracket;
+Our oracle brackets $`\beta`$ between $`\pi/6`$ and $`\pi/4`$, away from that collision.
+For $`r\ge5`$ the bare driving term plus source stays positive on this bracket;
 this gives a contractive inner real-axis fixed-point problem. Brent's method
-solves the outer quantization condition in $\log (\beta -\pi /6)$. In particular,
-the denominator of $S(2i\beta)$ is evaluated as
-$2\,\cos (\pi /3+d)\,\sin (d)$, $d=\beta-\pi/6$, rather than subtracting nearly equal
+solves the outer quantization condition in $`\log (\beta -\pi /6)`$. In particular,
+the denominator of $`S(2i\beta)`$ is evaluated as
+$`2\,\cos (\pi /3+d)\,\sin (d)`$, $`d=\beta-\pi/6`$, rather than subtracting nearly equal
 sines. The upper r limit keeps the fp64 energy correction resolvable.
 
 ```sh
@@ -270,11 +270,11 @@ Checks compare quadrature orders 12 and 24 and an enlarged cutoff, for both
 energy and source displacement. They also check source reality, the complex
 kernel's real-axis reduction, nonlinear/quantization residuals, exhausted
 iterations and domain rejection. Large-r checks use
-$\beta-\pi/6\sim\sqrt3\,e^{-\sqrt3r/2}$ and
-$E_{1,C}/m-1\sim3e^{-\sqrt3r/2}$; the latter still has subleading integral
+$`\beta-\pi/6\sim\sqrt3\,e^{-\sqrt3r/2}`$ and
+$`E_{1,C}/m-1\sim3e^{-\sqrt3r/2}`$; the latter still has subleading integral
 corrections. Agreement diagnostics are not certified error bounds.
 
-| $r$ | $Y_1=LE_{1,C}$ | $(E_1-E_0)/m$ |
+| $`r`$ | $`Y_1=LE_{1,C}`$ | $`(E_1-E_0)/m`$ |
 | ---: | ---: | ---: |
 | 5 | 5.146781165267865 | 1.0306379212700556 |
 | 6 | 6.076715733314169 | 1.0132130508527144 |
@@ -296,15 +296,15 @@ if (excited.converged && vacuum.converged) {
 }
 ```
 
-The library has the oracle's explicit $5\le mL\le30$ domain. It computes native
+The library has the oracle's explicit $`5\le mL\le30`$ domain. It computes native
 fp64, long-double or fp128 values without a double fallback. The optional
-outputs are `scaling_function` $Y_1$, `casimir_energy` $E_{1,C}$, $\beta$ and
-`pole_displacement` $\beta-\pi/6$. All are absent on failure. There is deliberately
+outputs are `scaling_function` $`Y_1`$, `casimir_energy` $`E_{1,C}`$, $`\beta`$ and
+`pole_displacement` $`\beta-\pi/6`$. All are absent on failure. There is deliberately
 no excited-state `effective_central_charge` field: this is an energy level,
 not the vacuum scaling function.
 
 `OneParticleOptions<Real>` inherits the vacuum controls, with default
-tolerance $65536\,\epsilon$, work budget 1000000000 kernel products, and an
+tolerance $`65536\,\epsilon`$, work budget 1000000000 kernel products, and an
 additional `max_root_iterations=256` per grid. The absolute tolerance still
 targets Y1. Root iterations sum over grids; inner iterations and kernel
 products include every source-root evaluation. The work budget is checked

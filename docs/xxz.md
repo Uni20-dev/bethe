@@ -14,7 +14,7 @@ labelled by magnetization Sz, not total spin S.
 ```math
 \begin{aligned}
 H&=\sum_i\left(S_i^xS_{i+1}^x+S_i^yS_{i+1}^y+\Delta S_i^zS_{i+1}^z\right),
-\qquad J=1,\quad h=0,\\
+\qquad J=1,\quad h=0,\\{}
 \text{ground states/sectors:}\quad&
 \begin{cases}\Delta>-1,&N\text{ even},\\ \Delta\ge0,&N\text{ odd}.\end{cases}
 \end{aligned}
@@ -22,19 +22,19 @@ H&=\sum_i\left(S_i^xS_{i+1}^x+S_i^yS_{i+1}^y+\Delta S_i^zS_{i+1}^z\right),
 
 The anisotropy is required. This periodic-chain implementation supports
 ground states and magnetization-sector minima for every finite Delta>=0.
-Even rings additionally support $-1<\Delta <0$ using rank-subtracted,
+Even rings additionally support $`-1\lt \Delta \lt 0`$ using rank-subtracted,
 scaled equations. Negative-Delta odd rings are
 [deferred until needed](xxz-negative.md#deferred-odd-ring-work-restart-checklist);
 their internal candidate solver is not exposed through this API or CLI.
 They are explicitly rejected rather than assigned the wrong ground sector.
-For $0\le \Delta \le 1$ it also supports a restricted finite-real-root excitation
+For $`0\le \Delta \le 1`$ it also supports a restricted finite-real-root excitation
 family, not the complete spectrum or strings. For open boundaries,
 use the separate [`bethe-xxz-obc` front end](xxz-open.md).
-That free-end solver supports $\Delta >-1$ ground states for either parity, including the
-massive boundary root; its real-root excitation modes require $0\le \Delta \le 1$.
+That free-end solver supports $`\Delta \gt -1`$ ground states for either parity, including the
+massive boundary root; its real-root excitation modes require $`0\le \Delta \le 1`$.
 Exactly Delta=-1 and lower anisotropies are not included. The
 existing analytic thermodynamic `bethe::xxz::spinon_energy` retains its wider
-$-1 < \Delta \le 1$ domain; it is independent of this finite-size solver.
+$`-1 \lt  \Delta \le 1`$ domain; it is independent of this finite-size solver.
 
 A separate [spin-helix library API](xxz-spin-helix.md) constructs explicit
 eigenstates at commensurate couplings on either parity, including the
@@ -69,7 +69,7 @@ Those scans have their own default sector, distinct from the ground-state defaul
 For negative Delta, the CLI reports the scaled residual convention explicitly
 and `--roots` prints both z and the native hyperbolic lambda. For even rings,
 the ground-sector labels are symmetric and total momentum is pi for odd M,
-zero for even M, with $M =N /2-\lvert S^z \rvert$. The smallest-|Sz| ground-state rule is
+zero for even M, with $`M =N /2-\lvert S^z \rvert`$. The smallest-|Sz| ground-state rule is
 **not** applied to negative-Delta odd rings: there the global minimum can
 instead be polarized, and conjugate root pairs require a different representation.
 
@@ -91,7 +91,7 @@ auto negative = bethe::xxz::ground_state<long double>(64, -0.9L, options);
 
 Ground-state functions now return `xxz::GroundState<Real>` (or a vector of
 it), distinct from `xxz::RealState<Real>` used by `solve_real` and excitation
-scans. Both retain $\delta$, scaled roots, Bethe quantum numbers, Sz,
+scans. Both retain $`\delta`$, scaled roots, Bethe quantum numbers, Sz,
 spin-reversal flag, energy, momentum/index, and convergence diagnostics.
 Ground results additionally retain `log_rapidities` for negative Delta,
 `GroundSolveStatus` (converged, iteration limit, or stalled), and a
@@ -109,21 +109,21 @@ presentation dependency.
 
 ## Scaled rapidities and Bethe equations
 
-For $0 \le \Delta < 1$, define $\gamma =\arccos (\Delta)$ and store
-$z =\tanh (\lambda)/\tan (\gamma /2)$, **not the conventional rapidity lambda**.
+For $`0 \le \Delta \lt  1`$, define $`\gamma =\arccos (\Delta)`$ and store
+$`z =\tanh (\lambda)/\tan (\gamma /2)`$, **not the conventional rapidity lambda**.
 The output labels this coordinate as scaled rapidity z. Its real branch has
-$(1-\Delta)\,z ^{2} < 1+\Delta$. In this coordinate the equations and energy are
+$`(1-\Delta)\,z ^{2} \lt  1+\Delta`$. In this coordinate the equations and energy are
 
 ```math
 \begin{aligned}
-A_{ij}&=\frac{\Delta(z_i-z_j)}{1+\Delta-(1-\Delta)z_iz_j},\\
-F_i&=2N\arctan z_i-2\pi I_i-\sum_{j\ne i}2\arctan A_{ij},\\
-E&=\frac{N\Delta}{4}-\sum_i\frac{1+\Delta-(1-\Delta)z_i^2}{1+z_i^2},\\
+A_{ij}&=\frac{\Delta(z_i-z_j)}{1+\Delta-(1-\Delta)z_iz_j},\\{}
+F_i&=2N\arctan z_i-2\pi I_i-\sum_{j\ne i}2\arctan A_{ij},\\{}
+E&=\frac{N\Delta}{4}-\sum_i\frac{1+\Delta-(1-\Delta)z_i^2}{1+z_i^2},\\{}
 P&=\pi M-\frac{2\pi}{N}\sum_i I_i\pmod{2\pi}.
 \end{aligned}
 ```
 
-The sector minimum has $M =N /2-\lvert S^z \rvert$ roots and consecutive labels
+The sector minimum has $`M =N /2-\lvert S^z \rvert`$ roots and consecutive labels
 `I_i=i-(M-1)/2-(N mod 2)/2`, with zero-based i. For odd N this selects the
 reflection-related minimum with labels centered at -1/2. Momentum indices
 are calculated with integer arithmetic. These ground-state labels do not
@@ -132,17 +132,17 @@ is defined below.
 
 This rational form is algebraically equivalent to the logarithmic hyperbolic
 Bethe equations, but avoids cancellation in expressions such as
-$\cosh (2\,\lambda)-\Delta$ near Delta=1. At Delta=0 scattering vanishes and the
+$`\cosh (2\,\lambda)-\Delta`$ near Delta=1. At Delta=0 scattering vanishes and the
 free-fermion solution takes at most one update. At **exactly** Delta=1 the
 solver delegates to the existing XXX sector solver and returns its coordinate
-$z =2\,\lambda_{\mathrm{XXX}}$; nearby anisotropies are not snapped to the endpoint. All
+$`z =2\,\lambda_{\mathrm{XXX}}`$; nearby anisotropies are not snapped to the endpoint. All
 calculations and parameter parsing use the selected real precision.
 
 ### Easy-axis ground states: Delta>1
 
 The massive regime has a different real-rapidity contour. Set
-$\Delta =\cosh (\eta)$ and store $z =\tan (\lambda)/\tanh (\eta /2)$, where
-$-\pi /2<\lambda <\pi /2$. This z again tends to $2\,\lambda_{\mathrm{XXX}}$ as Delta approaches
+$`\Delta =\cosh (\eta)`$ and store $`z =\tan (\lambda)/\tanh (\eta /2)`$, where
+$`-\pi /2\lt \lambda \lt \pi /2`$. This z again tends to $`2\,\lambda_{\mathrm{XXX}}`$ as Delta approaches
 one. Unlike the massless contour, it has no finite bound on z. The CLI
 continues to label the stored variable **scaled rapidity z**, not lambda.
 
@@ -153,15 +153,15 @@ at zero field. Algebraically, define the continuous real scattering phase
 
 ```math
 \begin{aligned}
-\phi_{ij}&=\operatorname{atan2}\!\left(z_i-z_j,1+\frac1\Delta+\left(1-\frac1\Delta\right)z_iz_j\right),\\
-F_i&=2N\arctan z_i-2\pi I_i-2\sum_{j\ne i}\phi_{ij},\\
+\phi_{ij}&=\operatorname{atan2}\!\left(z_i-z_j,1+\frac1\Delta+\left(1-\frac1\Delta\right)z_iz_j\right),\\{}
+F_i&=2N\arctan z_i-2\pi I_i-2\sum_{j\ne i}\phi_{ij},\\{}
 E&=\left(\frac N4-M\right)\Delta+\sum_i\frac{z_i^2-1}{z_i^2+1}.
 \end{aligned}
 ```
 
 The same consecutive ground-state labels and momentum formula above apply.
-In conventional lambda coordinates, $2\,\phi_{\mathrm{ij}}$ is the continuous lift of
-$2\,\arctan (\tan (\lambda_{i} -\lambda_{j})/\tanh (\eta))$. Keeping the atan2 quadrant matters:
+In conventional lambda coordinates, $`2\,\phi_{\mathrm{ij}}`$ is the continuous lift of
+$`2\,\arctan (\tan (\lambda_{i} -\lambda_{j})/\tanh (\eta))`$. Keeping the atan2 quadrant matters:
 root differences can exceed pi/2, so replacing it by a principal atan yields
 the wrong logarithmic branch. Dividing both atan2 arguments by Delta and
 collecting the explicit anisotropy term in E avoids avoidable large-Delta
@@ -176,7 +176,7 @@ No strings, thermodynamic mode, or spontaneous-symmetry-broken state is implied.
 
 ## Convergence and validation
 
-For nonnegative Delta, convergence uses $\max \lvert F \rvert /N$ with the same default 32-epsilon tolerance as XXX,
+For nonnegative Delta, convergence uses $`\max \lvert F \rvert /N`$ with the same default 32-epsilon tolerance as XXX,
 not an energy-error bound. Both residual and energy describe the returned
 iterate, including on budget exhaustion. The solver starts at zero roots
 and performs simultaneous updates. It uses O(M^2) work per sweep (O(M) at
@@ -185,10 +185,10 @@ Invalid inputs throw `std::invalid_argument`; nonfinite arithmetic or leaving
 the finite real-root branch throws `std::runtime_error`. CLI exit statuses
 remain 0 for convergence, 2 for an unconverged result, and 1 for errors.
 
-For $-1<\Delta <0$ on even rings, Newton solves the rank-subtracted equations
-in lambda, scaled by $s =\sqrt{(1+\Delta)/(1-\Delta)}$ to remain discriminating
+For $`-1\lt \Delta \lt 0`$ on even rings, Newton solves the rank-subtracted equations
+in lambda, scaled by $`s =\sqrt{(1+\Delta)/(1-\Delta)}`$ to remain discriminating
 near Delta=-1. The residual tag is `negative_rank_scaled`, meaning the
-equations in the [negative-anisotropy guide](xxz-negative.md), not $\max \lvert F \rvert /N$.
+equations in the [negative-anisotropy guide](xxz-negative.md), not $`\max \lvert F \rvert /N`$.
 That guide derives the equations from [Kozlowski](../CITATIONS.md#kozlowski-2017),
 whose periodic ground-state identification explicitly assumes even length.
 This path starts from a free-fermion hyperbolic seed, uses O(M^2) workspace
@@ -197,9 +197,9 @@ shared iteration budget. A stalled line search is distinguished from budget
 exhaustion in the result and both CLI formats. Energy and residual always
 refer to the returned coordinates at the requested Delta, even on failure.
 
-Normalization checks include $E_0 (N =2)=-1-\Delta /2$ (the periodic bond is
-counted twice), $E_0 (N =3)=-1/2-\Delta /4$, and
-$E_0 (N =4)=-(\Delta +\sqrt{\Delta ^{2}+8})/2$. Tests compare every sector minimum and
+Normalization checks include $`E_0 (N =2)=-1-\Delta /2`$ (the periodic bond is
+counted twice), $`E_0 (N =3)=-1/2-\Delta /4`$, and
+$`E_0 (N =4)=-(\Delta +\sqrt{\Delta ^{2}+8})/2`$. Tests compare every sector minimum and
 its momentum against independent bit-basis exact diagonalization through
 N=9, verify the XX free-fermion and exact XXX limits, independently evaluate
 the hyperbolic equations, and exercise native long-double/fp128 precision,
@@ -209,7 +209,7 @@ equations (independent of atan2), including a state whose scattering phase
 crosses the principal-atan boundary. Sector ED includes Delta=1.01,2,10;
 larger systems through N=128 and native-precision approach to XXX are tested.
 As Delta tends to infinity, the roots approach
-`lambda_j=pi*(I_j-sum(I)/N)/(N-M)` and $E /\Delta \to N /4-M$.
+`lambda_j=pi*(I_j-sum(I)/N)/(N-M)` and $`E /\Delta \to N /4-M`$.
 Tests check this limit in odd/even sectors and exercise finite answers near
 the largest representable anisotropy, as well as explicit overflow errors.
 
@@ -224,7 +224,7 @@ and negative odd-ring ground calls remain rejected, including vacua/scans.
 
 ## Real-root excitations
 
-This section applies only to $0\le \Delta \le 1$.
+This section applies only to $`0\le \Delta \le 1`$.
 
 ```sh
 build/bethe-xxz-pbc 64 --delta 0.5 --excitations 10
@@ -255,18 +255,18 @@ For M=N/2-|Sz|, use distinct sorted quantum numbers of parity
 
 ```math
 \begin{aligned}
-|2I|&\le N-M-1&&\text{(conventional XXX window)},\\
-|I|&<I_\infty,\\
-I_\infty&=\frac12\left[N-M+1-\frac{(N-2M+2)\gamma}{\pi}\right],\\
+|2I|&\le N-M-1&&\text{(conventional XXX window)},\\{}
+|I|&<I_\infty,\\{}
+I_\infty&=\frac12\left[N-M+1-\frac{(N-2M+2)\gamma}{\pi}\right],\\{}
 \gamma&=\arccos\Delta.
 \end{aligned}
 ```
 
 The second bound follows by sending one conventional rapidity to infinity
 while the others remain finite in the logarithmic equations. The code uses
-the equivalent $2\,I_{\mathrm{infinity}} = N /2 + (N -2\,M +2)\,\arcsin (\Delta)/\pi$, evaluated in
+the equivalent $`2\,I_{\mathrm{infinity}} = N /2 + (N -2\,M +2)\,\arcsin (\Delta)/\pi`$, evaluated in
 the selected precision. For 0<Delta<1, labels within a conservative
-$32\,\epsilon \,\max (1,2\,I_{\mathrm{infinity}})$ band below this doubled bound are also excluded
+$`32\,\epsilon \,\max (1,2\,I_{\mathrm{infinity}})`$ band below this doubled bound are also excluded
 to keep marginal infinite roots out of the finite branch. Delta=0 uses exact
 integer comparisons; Delta=1 uses the existing XXX window exactly.
 

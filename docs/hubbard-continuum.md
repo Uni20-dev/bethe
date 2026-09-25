@@ -39,7 +39,7 @@ total momentum P in [-pi,pi], put q=|P|. In terms of the existing spinon line:
 
 ```math
 \begin{aligned}
-E_{\mathrm{lower}}(P)&=\epsilon_s(q),\\
+E_{\mathrm{lower}}(P)&=\epsilon_s(q),\\{}
 E_{\mathrm{upper}}(P)&=2\epsilon_s(q/2).
 \end{aligned}
 ```

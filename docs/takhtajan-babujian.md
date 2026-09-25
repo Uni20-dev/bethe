@@ -30,7 +30,7 @@ build/bethe-tb-pbc 6 --roots --precision long-double
 build/bethe-tb-pbc 64 --precision fp128
 ```
 
-The four-site ground energy is $-11-\sqrt{41}$, approximately
+The four-site ground energy is $`-11-\sqrt{41}`$, approximately
 `-17.40312423743284868648821767`. Ground momentum is zero for this even-ring
 family. The report includes both phase and modulus residuals, CPU time, and
 accepted Newton updates. `--roots` prints string centres and deviations,
@@ -67,15 +67,15 @@ as well as translation in the spin basis.
 ## Finite-deviation equations and branch selection
 
 The filled two-string sea has consecutive centred string labels
-$I_{j} =j -(L /2-1)/2$, j=0,...,L/2-1. These are not the quantum numbers of the
+$`I_{j} =j -(L /2-1)/2`$, j=0,...,L/2-1. These are not the quantum numbers of the
 individual complex roots. In the relation (3.9) of Vlijm–Caux, the ordered
-string-sign sum cancels I_j, giving $J _++J _-=0$. The half-odd-integer root
-labels and Eq. (3.11) select positive deviations, $J _+=-1/2, J _-=1/2$.
+string-sign sum cancels I_j, giving $`J _++J _-=0`$. The half-odd-integer root
+labels and Eq. (3.11) select positive deviations, $`J _+=-1/2, J _-=1/2`$.
 Coinciding root quantum numbers across different strings do not imply
 coinciding rapidities.
 
 For clarity, the actual equations are recorded here. Define
-$A (a,b)=\operatorname{atan2} (a,b)$, $B (a,b)=\log (a \,a +b \,b)/2$, $d_{\mathrm{jk}} =x_{j} -x_{k}$, and widths
+$`A (a,b)=\operatorname{atan2} (a,b)`$, $`B (a,b)=\log (a \,a +b \,b)/2`$, $`d_{\mathrm{jk}} =x_{j} -x_{k}`$, and widths
 
 ```math
 w_{jk}=(2+\delta_j+\delta_k,-\delta_j-\delta_k,1+\delta_j-\delta_k,1-\delta_j+\delta_k),
@@ -87,9 +87,9 @@ Our normalized residuals are
 ```math
 \begin{aligned}
 F_j&=A(x_j,3/2+\delta_j)+A(x_j,1/2-\delta_j)
--\frac1L\sum_{k\ne j}\sum_{a=1}^{4}A(d_{jk},w_{jk}[a]),\\
+-\frac1L\sum_{k\ne j}\sum_{a=1}^{4}A(d_{jk},w_{jk}[a]),\\{}
 G_j&=B(x_j,3/2+\delta_j)-B(x_j,1/2-\delta_j)
--\frac{\log(1+\delta_j)-\log\delta_j}{L}\\
+-\frac{\log(1+\delta_j)-\log\delta_j}{L}\\{}
 &\quad-\frac1L\sum_{k\ne j}\sum_{a=1}^{4}\mathrm{signs}[a]B(d_{jk},w_{jk}[a]).
 \end{aligned}
 ```
@@ -104,7 +104,7 @@ subtraction of two nearly equal imaginary parts. Positive deviations below
 Reflection symmetry removes redundant equations: centres occur as +/-x,
 deviations are equal in each reflected pair, and a central string at x=0
 has an identically zero phase equation. There are L/2 real Newton variables.
-The seed uses the thermodynamic density $1/(2\,\cosh (\pi \,x))$ and the asymptotic
+The seed uses the thermodynamic density $`1/(2\,\cosh (\pi \,x))`$ and the asymptotic
 deviation estimate in Eq. (3.18). **Only the seed is approximate:** convergence
 is assessed using the finite-size equations above.
 

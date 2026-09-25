@@ -49,31 +49,31 @@ For M finite real roots, the conventions are:
 
 ```math
 \begin{aligned}
-\phi(z)&=2\arctan z,\\
-F_i&=N\phi(z_i)-2\pi I_i-\sum_{j\ne i}\phi\!\left(\frac{z_i-z_j}{2}\right),\\
-E&=\frac N4-\sum_i\frac{2}{1+z_i^2},\\
+\phi(z)&=2\arctan z,\\{}
+F_i&=N\phi(z_i)-2\pi I_i-\sum_{j\ne i}\phi\!\left(\frac{z_i-z_j}{2}\right),\\{}
+E&=\frac N4-\sum_i\frac{2}{1+z_i^2},\\{}
 P&=\pi M-\frac{2\pi}{N}\sum_i I_i\pmod{2\pi}.
 \end{aligned}
 ```
 
-`solve_real` uses $S^z =N /2-M$ and the conventional all-1-string quantum-number
-window: $M \le N /2$, $\lvert 2I_{i} \rvert \le N -M -1$, and $2I_{i}$ has the parity of $N -M -1$.
+`solve_real` uses $`S^z =N /2-M`$ and the conventional all-1-string quantum-number
+window: $`M \le N /2`$, $`\lvert 2I_{i} \rvert \le N -M -1`$, and $`2I_{i}`$ has the parity of $`N -M -1`$.
 This explicitly supported window is not a classification of every real-root
-solution. Quantum numbers and $S^z$ use `uni20::half_int`; conversion to the
+solution. Quantum numbers and $`S^z`$ use `uni20::half_int`; conversion to the
 selected real type uses the doubled integer directly, never `to_double()`.
 The empty quantum-number set gives the fully polarized state.
 
 ## Sectors and state labels
 
-For sector minima, $M =N /2-\lvert S^z \rvert$. Even chains occupy the consecutive numbers
-$I_{i} =i -(M -1)/2$, with zero-based $i$. Odd chains use $I_{i} =i -M /2$, one of two
-reflection-related minima when $M >0$; negating and reversing that sequence
-selects the other momentum. Negative $S^z$ uses the all-down reference vacuum
+For sector minima, $`M =N /2-\lvert S^z \rvert`$. Even chains occupy the consecutive numbers
+$`I_{i} =i -(M -1)/2`$, with zero-based $`i`$. Odd chains use $`I_{i} =i -M /2`$, one of two
+reflection-related minima when $`M \gt 0`$; negating and reversing that sequence
+selects the other momentum. Negative $`S^z`$ uses the all-down reference vacuum
 and sets `spin_reversed=true`. Its roots count up spins rather than down spins.
 
 `RealState<Real>` contains the roots, quantum numbers, `sz`, energy, diagnostics,
-and an exact integer `momentum_index` with `P=2*pi*momentum_index/N` in $[0,2\,\pi)$.
-The integer index is derived modulo $N$, without rounding floating-point phases.
+and an exact integer `momentum_index` with `P=2*pi*momentum_index/N` in $`[0,2\,\pi)`$.
+The integer index is derived modulo $`N`$, without rounding floating-point phases.
 `GroundState<Real>` remains an alias for compatibility. Results with
 `converged=false` are numerical iterates, not established eigenstates; their
 momentum labels specify the requested state.
@@ -100,7 +100,7 @@ tests use an irrational exact energy to detect accidental double narrowing.
 The suite also compares independently converged results across precisions.
 Independent bit-basis exact diagonalization checks every sector minimum for
 N=2..9 and the odd-chain one-spinon energies and momenta through N=9. The
-momentum check adds a multiple of $(T +T ^{-1})/2$ to the Hamiltonian. This oracle
+momentum check adds a multiple of $`(T +T ^{-1})/2`$ to the Hamiltonian. This oracle
 uses double precision; separate irrational analytic references test native
 long-double and binary128 accuracy.
 

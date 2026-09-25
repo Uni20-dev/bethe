@@ -25,7 +25,7 @@ build/bethe-biquadratic-obc 129 --ferromagnetic --pair-defects 8 --mixed-window 
 ```
 
 `--pair-defects COUNT|all` scans the full rectangle
-$1\le I \le N -3, 1\le J \le N -5$ by default. `--mixed-window WIDTH` instead selects
+$`1\le I \le N -3, 1\le J \le N -5`$ by default. `--mixed-window WIDTH` instead selects
 the highest WIDTH labels on **each** axis: `I=N-2-WIDTH,...,N-3` and
 `J=N-4-WIDTH,...,N-5`. This gives WIDTH squared candidates and requires
 `1<=WIDTH<=N-5`. A high-label window makes long-chain low-energy searches
@@ -94,7 +94,7 @@ I=1,\ldots,N-3\quad\text{(real root)},\qquad
 J=1,\ldots,N-5\quad\text{(bound pair)}.
 ```
 
-The high-label corner $(N -3,N -5)$ approaches the separated-cluster threshold
+The high-label corner $`(N -3,N -5)`$ approaches the separated-cluster threshold
 `5/3 + 1 = 8/3`. This is above the three-defect droplet edge 2 and below the
 three-unbound-defect edge 3. It is not the global first excitation, and the
 labels do not imply a universal ordering of finite-size levels. All of these
@@ -109,17 +109,17 @@ Delta=3/2, not the usual zero-field open XXZ chain. We reuse the
 
 ```math
 \begin{aligned}
-v&=\frac{i\alpha}{2},\qquad u_\pm=\frac{\eta+d}{2}\pm\frac{ia}{2},\\
-\eta&=\operatorname{arcosh}\Delta,\qquad d=\mathrm{sign}\,e^{-L},\\
+v&=\frac{i\alpha}{2},\qquad u_\pm=\frac{\eta+d}{2}\pm\frac{ia}{2},\\{}
+\eta&=\operatorname{arcosh}\Delta,\qquad d=\mathrm{sign}\,e^{-L},\\{}
 0&<\alpha,a<\pi,\qquad |d|<\eta.
 \end{aligned}
 ```
 
-Replace the real-root right-hand side by $2\,\pi \,I$, and the pair-phase
-right-hand side by $2\,\pi \,J$. The modulus equation is unchanged. Retaining
+Replace the real-root right-hand side by $`2\,\pi \,I`$, and the pair-phase
+right-hand side by $`2\,\pi \,J`$. The modulus equation is unchanged. Retaining
 the unsquared pair equation fixes `sign(d)=(-1)^(N-J-1)`; the product-phase
 equation alone loses this sign information. The real root may cross the
-pair center: no additional ordering condition $\alpha <a$ is imposed.
+pair center: no additional ordering condition $`\alpha \lt a`$ is imposed.
 In the continuous logarithmic convention, the alpha=pi endpoint has
 I=N-2 and the a=pi endpoint has J=N-4; those excluded endpoint roots give
 the label bounds above.
@@ -211,11 +211,11 @@ if (four_defects.reference.converged) {
 }
 ```
 
-The domain is $2\le M \le N /2$, ordered distinct real labels in `1,...,N-M`,
+The domain is $`2\le M \le N /2`$, ordered distinct real labels in `1,...,N-M`,
 and pair label `J=1,...,N-2M+1`. The endpoint limits of the same logarithmic
 equations give these ranges: a real root at alpha=pi would have label
 N-M+1, while the pair center at a=pi would have J=N-2M+2. Both endpoints
-are excluded. The deviation sign remains $(-1)^{N -J -1}$.
+are excluded. The deviation sign remains $`(-1)^{N -J -1}`$.
 
 No new Bethe equations or Newton implementation are introduced. Explicit
 sea labels, a label-dependent pair seed and edge-scaled coordinates extend
@@ -241,5 +241,5 @@ family. A selected [triple-plus-one-real-root solver](biquadratic-triple-defect.
 covers another; triples with more real roots and larger droplets remain missing.
 Independent original-equation checks cover r=2,3,4, both deviation signs,
 odd/even chains and all supported precisions. High-label branches approach
-the separated-cluster threshold $5/3+r$, checked up to N=100000. This
+the separated-cluster threshold $`5/3+r`$, checked up to N=100000. This
 threshold is not a claim about the minimum of the whole TL module.

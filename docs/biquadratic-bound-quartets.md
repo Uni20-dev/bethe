@@ -21,7 +21,7 @@ if (state.reference.converged) {
 ```
 
 `mode=1,...,N-7` selects the four-string branch, not a rank in the full
-module or excitation spectrum. The module is $\ell =N -8$; these are TL
+module or excitation spectrum. The module is $`\ell =N -8`$; these are TL
 singlet insertions, not four physical spin flips. The lower API is
 `bethe::xxz::quantum_group::four_string::bound_quartet(N,Delta,mode,options)`
 for finite Delta>1, with no blanket convergence or branch-existence guarantee.
@@ -34,7 +34,7 @@ bethe-biquadratic-obc 9 --ferromagnetic --bound-quartets all --roots
 bethe-biquadratic-obc 128 --ferromagnetic --bound-quartets 4 --precision fp128 --json quartets.json
 ```
 
-`COUNT` selects the first modes, capped at the available $N -7$; `all`
+`COUNT` selects the first modes, capped at the available $`N -7`$; `all`
 means all quartet labels, **not all four-defect excitations**. The usual
 `--max-candidates` limit applies. This selection cannot be combined with
 other state families or an explicit through-line sector.
@@ -56,9 +56,9 @@ for the biquadratic model. Define eta=acosh(Delta), and use canonical roots
 
 ```math
 \begin{aligned}
-u&=\frac{\eta+d}{2}+\frac{ia}{2},\qquad \overline u,\\
-w&=u+\eta+z,\qquad \overline w,\\
-d&=\sigma e^{-L_{\mathrm{inner}}},\qquad z=e^{-L_{\mathrm{outer}}+i\phi},\\
+u&=\frac{\eta+d}{2}+\frac{ia}{2},\qquad \overline u,\\{}
+w&=u+\eta+z,\qquad \overline w,\\{}
+d&=\sigma e^{-L_{\mathrm{inner}}},\qquad z=e^{-L_{\mathrm{outer}}+i\phi},\\{}
 J&=N-6-\mathrm{mode},\qquad \sigma=(-1)^{N-J-1}=(-1)^{\mathrm{mode}+1}.
 \end{aligned}
 ```
@@ -66,7 +66,7 @@ J&=N-6-\mathrm{mode},\qquad \sigma=(-1)^{N-J-1}=(-1)^{\mathrm{mode}+1}.
 The inner pair has a signed real deviation, while the outer pair needs a
 complex relative deviation. The solver retains both logarithms, the sign,
 and phi even when the deviations underflow or round away in the roots.
-It requires $0<a <\pi$, `0<a+2 Im(z)<pi`, and $\lvert d \rvert,\lvert z \rvert <\eta /4$.
+It requires $`0\lt a \lt \pi`$, `0<a+2 Im(z)<pi`, and $`\lvert d \rvert,\lvert z \rvert \lt \eta /4`$.
 
 Our regularization of
 [Bajnok et al., Eq. (5.12)](../CITATIONS.md#bajnok-2020) cancels the singular
@@ -74,15 +74,15 @@ internal scattering in the sum of the u and w equations. Write
 
 ```math
 \begin{aligned}
-D_0&=\log\sinh(u+\eta/2)-\log\sinh(u-\eta/2),\\
-D_1&=\log\sinh(w+\eta/2)-\log\sinh(w-\eta/2),\qquad D=D_0+D_1,\\
-A&=\log\sinh(2\eta+z),\\
-B&=\log\sinh(3\eta+d+ia+z)-\log\sinh(\eta+d+ia+z),\\
-K&=\log\sinh(2\eta+ia+z)-\log\sinh(ia+z),\\
-R&=\log\sinh(3\eta+d+z)-\log\sinh(\eta+d+z),\\
-q&=\log\sinh(2\eta+d),\\
-Q&=\log\sinh(4\eta+d+2\operatorname{Re}z)-\log\sinh(2\eta+d+2\operatorname{Re}z),\\
-c_d&=\log\frac{\sinh d}{d},\qquad c_z=\log\frac{\sinh z}{z},\\
+D_0&=\log\sinh(u+\eta/2)-\log\sinh(u-\eta/2),\\{}
+D_1&=\log\sinh(w+\eta/2)-\log\sinh(w-\eta/2),\qquad D=D_0+D_1,\\{}
+A&=\log\sinh(2\eta+z),\\{}
+B&=\log\sinh(3\eta+d+ia+z)-\log\sinh(\eta+d+ia+z),\\{}
+K&=\log\sinh(2\eta+ia+z)-\log\sinh(ia+z),\\{}
+R&=\log\sinh(3\eta+d+z)-\log\sinh(\eta+d+z),\\{}
+q&=\log\sinh(2\eta+d),\\{}
+Q&=\log\sinh(4\eta+d+2\operatorname{Re}z)-\log\sinh(2\eta+d+2\operatorname{Re}z),\\{}
+c_d&=\log\frac{\sinh d}{d},\qquad c_z=\log\frac{\sinh z}{z},\\{}
 t_0&=\Theta(2a;\eta),\qquad t_1=\Theta(2a+4\operatorname{Im}z;\eta).
 \end{aligned}
 ```
@@ -91,9 +91,9 @@ Theta and wrap are as in the pair/triple guides. The four residuals are
 
 ```math
 \begin{aligned}
-f_0&=2\operatorname{Im}D+\pi-\frac{t_0+t_1+2\operatorname{Im}B+2\operatorname{Im}K+\pi(J+1)}N,\\
-f_1&=\operatorname{Re}D-\frac{q+L_{\mathrm{inner}}-\operatorname{Re}c_d+Q+2\operatorname{Re}B+2\operatorname{Re}R}{2N},\\
-f_2&=\operatorname{Re}D_1-\frac{\operatorname{Re}A+L_{\mathrm{outer}}-\operatorname{Re}c_z+\operatorname{Re}B+\operatorname{Re}K+\operatorname{Re}R+Q}{2N},\\
+f_0&=2\operatorname{Im}D+\pi-\frac{t_0+t_1+2\operatorname{Im}B+2\operatorname{Im}K+\pi(J+1)}N,\\{}
+f_1&=\operatorname{Re}D-\frac{q+L_{\mathrm{inner}}-\operatorname{Re}c_d+Q+2\operatorname{Re}B+2\operatorname{Re}R}{2N},\\{}
+f_2&=\operatorname{Re}D_1-\frac{\operatorname{Re}A+L_{\mathrm{outer}}-\operatorname{Re}c_z+\operatorname{Re}B+\operatorname{Re}K+\operatorname{Re}R+Q}{2N},\\{}
 f_3&=\frac{\operatorname{wrap}(2N\operatorname{Im}D_1-\operatorname{Im}A+\phi+\operatorname{Im}c_z-\operatorname{Im}B-\operatorname{Im}K-\operatorname{Im}R-t_1+\pi)}{2N}.
 \end{aligned}
 ```
@@ -116,7 +116,7 @@ estimates and residuals, not verified energies.
 ## Threshold and coverage
 
 The thermodynamic droplet formula
-$g_{M} =2\,\sinh (\eta)\,\tanh (M \,\eta /2)$ gives **g4=15/7** at Delta=3/2; see
+$`g_{M} =2\,\sinh (\eta)\,\tanh (M \,\eta /2)`$ gives **g4=15/7** at Delta=3/2; see
 [Nachtergaele, Spitzer and Starr, Theorem 2.1](../CITATIONS.md#nachtergaele-spitzer-starr-2007).
 The lowest quartet branch approaches this value from above. It lies below
 the separated triple-plus-single threshold 3 and the two-pair threshold

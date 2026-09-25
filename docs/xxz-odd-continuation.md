@@ -4,7 +4,7 @@
 
 The internal driver `bethe::xxz::detail::continue_odd_polynomial<Real>` in
 [xxz_odd_continuation.hpp](../include/bethe/xxz_odd_continuation.hpp) follows
-the free-fermion ground-sea polynomial towards $-1<\Delta \le 0$ on odd periodic
+the free-fermion ground-sea polynomial towards $`-1\lt \Delta \le 0`$ on odd periodic
 rings. It uses the collision-regular [coefficient equations](xxz-polynomial.md)
 derived from [Caux's coordinate Bethe ansatz](../CITATIONS.md#caux-xxz-coordinate).
 All arithmetic, including linear solves, remains in the selected scalar type:
@@ -23,12 +23,12 @@ records the unresolved issues and the recommended first investigation.
 
 ## Coordinates that retain the momentum branch
 
-Let $M =N /2-\lvert S^z \rvert$, folding spin reversal so `M<=floor(N/2)`. Choose one of
+Let $`M =N /2-\lvert S^z \rvert`$, folding spin reversal so `M<=floor(N/2)`. Choose one of
 the two reflection-related free seas,
 
 ```math
 \begin{aligned}
-z_j&=\tan\!\left(\frac{\pi(j-M/2)}N\right),\quad j=0,\ldots,M-1,\\
+z_j&=\tan\!\left(\frac{\pi(j-M/2)}N\right),\quad j=0,\ldots,M-1,\\{}
 P_{\mathrm{total}}&=\pi M+\frac{\pi M}{N}\pmod{2\pi}.
 \end{aligned}
 ```
@@ -37,35 +37,35 @@ The driver represents a monic polynomial in the affine coordinate x:
 
 ```math
 \begin{aligned}
-z&=o+sx,\qquad o=-\tan\!\left(\frac{\pi}{2N}\right),\\
-s&=\sqrt{\frac{1+\Delta}{1-\Delta}+o^2},\\
+z&=o+sx,\qquad o=-\tan\!\left(\frac{\pi}{2N}\right),\\{}
+s&=\sqrt{\frac{1+\Delta}{1-\Delta}+o^2},\\{}
 Q(x)&=x^M+c_{M-1}x^{M-1}+\cdots+c_0.
 \end{aligned}
 ```
 
-The original polynomial class defaults to $o =0,s =1$; its extended constructor
+The original polynomial class defaults to $`o =0,s =1`$; its extended constructor
 accepts any finite center and positive finite scale. For the minus-scattering
 recurrence, the transformed factors are
 
 ```math
 \begin{aligned}
-A(x)&=1+\Delta-(1-\Delta)o^2+[-(1-\Delta)os-i\Delta s]x,\\
-B(x)&=(1-\Delta)os-i\Delta s+(1-\Delta)s^2x,\\
+A(x)&=1+\Delta-(1-\Delta)o^2+[-(1-\Delta)os-i\Delta s]x,\\{}
+B(x)&=(1-\Delta)os-i\Delta s+(1-\Delta)s^2x,\\{}
 A-Bx&=1+\Delta-(1-\Delta)(o+sx)^2.
 \end{aligned}
 ```
 
-The driving factor is $1+i \,o +i \,s \,x$. Thus the same divided-Horner construction
+The driving factor is $`1+i \,o +i \,s \,x`$. Thus the same divided-Horner construction
 removes self-scattering before reduction modulo Q, including at collisions.
 
-Define $t =s /(i -o)$ and the reciprocal polynomial
+Define $`t =s /(i -o)`$ and the reciprocal polynomial
 
 ```math
 W(t)=1+c_{M-1}t+\cdots+c_0t^M.
 ```
 
 The chosen center already carries the required total momentum:
-the physical root polynomial has $R (i)=(i -o)^M \,W (t)$. Enforcing `Im(W)=0`
+the physical root polynomial has $`R (i)=(i -o)^M \,W (t)`$. Enforcing `Im(W)=0`
 therefore fixes `conj(R(i))/R(i)` without extracting roots. Crucially, this
 is a **linear** coefficient constraint. Since `Im(t)` is nonzero, eliminate
 
@@ -74,12 +74,12 @@ c_{M-1}=-\sum_{j=0}^{M-2}c_j\frac{\operatorname{Im}(t^{M-j})}{\operatorname{Im}t
 ```
 
 Energy and momentum evaluation use W and `t*W'`, avoiding large powers of
-$(i -o)/s$. When the coupling changes, rescale
-$c_{j} <- c_{j} \,(s_{\mathrm{old}} /s_{\mathrm{new}})^{M -j }$ to preserve the physical roots.
+$`(i -o)/s`$. When the coupling changes, rescale
+$`c_{j} \lt - c_{j} \,(s_{\mathrm{old}} /s_{\mathrm{new}})^{M -j }`$ to preserve the physical roots.
 
 ## Adaptive continuation and acceptance
 
-Newton solves the first $M -1$ raw coefficient equations after eliminating
+Newton solves the first $`M -1`$ raw coefficient equations after eliminating
 the last coefficient with the momentum constraint. The analytic Jacobian
 includes that elimination. **All M residuals**, including the unused Newton
 row, are checked for acceptance. Backtracking requires a decrease of the
@@ -91,9 +91,9 @@ A stage is accepted only when:
   error are both at most the requested `residual_tolerance`;
 - the largest relative coefficient correction is at most the square root
   of that tolerance (a correction check, not an energy-error estimate);
-- the reduced Jacobian reciprocal condition estimate exceeds $64\,\epsilon$;
-- the energy change obeys $\lvert E_{\mathrm{new}} -E_{\mathrm{old}} \rvert \le N \,\lvert \Delta_{\mathrm{new}} -\Delta_{\mathrm{old}} \rvert /4$,
-  with an additional $256\,\epsilon \,(1+\lvert E_{\mathrm{old}} \rvert)$ roundoff allowance;
+- the reduced Jacobian reciprocal condition estimate exceeds $`64\,\epsilon`$;
+- the energy change obeys $`\lvert E_{\mathrm{new}} -E_{\mathrm{old}} \rvert \le N \,\lvert \Delta_{\mathrm{new}} -\Delta_{\mathrm{old}} \rvert /4`$,
+  with an additional $`256\,\epsilon \,(1+\lvert E_{\mathrm{old}} \rvert)`$ roundoff allowance;
 - after two accepted couplings, the energy lies below the extrapolation of
   the preceding energy secant, with a rounding allowance scaled by the energies
   and the ratio of successive coupling steps;
@@ -123,7 +123,7 @@ is an **upper** bound on the true sector minimum. A candidate above that
 bound cannot be the minimum, even if its equations and momentum are correct.
 Being below the bound is necessary, not sufficient.
 
-Write $R =\sin (\pi \,M /N)/\sin (\pi /N)$ and $c =-\cos (\pi /N)$. The free-fermion ground
+Write $`R =\sin (\pi \,M /N)/\sin (\pi /N)`$ and $`c =-\cos (\pi /N)`$. The free-fermion ground
 sea at Delta=0, held fixed as the coupling changes, has expectation
 
 ```math
@@ -131,25 +131,25 @@ E_{\mathrm{sea}}(\Delta)=cR+\Delta\left[\frac N4-M+\frac{M^2-R^2}{N}\right].
 ```
 
 The first term is the sum of occupied one-particle cosine energies. For the
-second, the density is $\rho =M /N$, the nearest-neighbor one-body correlation
-has magnitude $R /N$, and Wick's theorem gives
-$<n_{j} \,n _{j +1}\ge \rho \,\rho -(R /N)^{2}$. This includes the appropriate odd-ring
+second, the density is $`\rho =M /N`$, the nearest-neighbor one-body correlation
+has magnitude $`R /N`$, and Wick's theorem gives
+$`\lt n_{j} \,n _{j +1}\ge \rho \,\rho -(R /N)^{2}`$. This includes the appropriate odd-ring
 free-sea shift, not an even-ring occupation formula.
 
-The [projected spin helix](xxz-spin-helix.md) of pitch $\pi +\pi /N$ has equal
+The [projected spin helix](xxz-spin-helix.md) of pitch $`\pi +\pi /N`$ has equal
 amplitude magnitude in every configuration in the sector. Set
-$A =M \,(N -M)/(N -1)$. Counting unlike neighbors and their exchange phases gives
+$`A =M \,(N -M)/(N -1)`$. Counting unlike neighbors and their exchange phases gives
 
 ```math
 E_{\mathrm{helix}}(\Delta)=cA+\Delta\left(\frac N4-A\right).
 ```
 
 The trial vector remains valid at **every** coupling, even though it is an
-eigenvector only at its commensurate coupling $\Delta =c$ (apart from trivial
+eigenvector only at its commensurate coupling $`\Delta =c`$ (apart from trivial
 sectors). This comparison only requires matching magnetization, not momentum:
 it bounds a minimum in the whole magnetization sector, not a momentum block.
 At Delta=0 the free sea saturates the sector bound; at the all-phantom
-collision the helix expectation is $N \,\Delta /4$. Neither statement alone
+collision the helix expectation is $`N \,\Delta /4`$. Neither statement alone
 classifies the spectrum at other couplings.
 
 Each converged continuation stage must satisfy
@@ -175,11 +175,11 @@ wrong branch by more than 0.15, without relying on the preceding secant or ED.
 The coupling step adapts to successful stages and is halved after failures.
 A stage allows at most 24 accepted Newton updates before retrying a smaller
 coupling step. Every accepted update, including updates in discarded stages,
-counts towards **one global** `max_iterations` budget. The $M =0,1$ branches
+counts towards **one global** `max_iterations` budget. The $`M =0,1`$ branches
 are analytic and can converge with a zero budget. No tolerance is silently
 relaxed when arithmetic precision prevents convergence.
 
-The result returns the coefficients, center, scale, requested $\delta$,
+The result returns the coefficients, center, scale, requested $`\delta`$,
 attempted `root_delta`, numerical status, iteration and rejected-stage counts,
 and diagnostics. On failure, energy and residual are still evaluated at the
 **requested** Hamiltonian, not a nearby accepted coupling. They are not
@@ -193,11 +193,11 @@ Invalid inputs throw; exhausted budgets and numerical failures return status.
 The typed tests compare every folded sector at N=3,5,7,9 against dense
 spin-basis diagonalization at four negative couplings. Joint energy/translation
 spectra check the momentum branch. They exercise the collision at
-$\Delta =-\cos (\pi /N)$ for N=5,7,9, and compare the exact five-site two-magnon
-energy at native precision, including $\Delta =-1+128\,\epsilon$.
+$`\Delta =-\cos (\pi /N)`$ for N=5,7,9, and compare the exact five-site two-magnon
+energy at native precision, including $`\Delta =-1+128\,\epsilon`$.
 
 Larger-chain tests use independent sparse spin-basis ground energies for
-N=13,17,21, $\lvert S^z \rvert =1/2$, at Delta=-0.5,-0.97,-0.999. The optional
+N=13,17,21, $`\lvert S^z \rvert =1/2`$, at Delta=-0.5,-0.97,-0.999. The optional
 [reference generator](../tests/reference_xxz_odd_ed.py) uses NumPy/SciPy,
 not Bethe equations; its largest basis has 352716 states. These fp64
 references complement, rather than replace, the native-precision analytic
@@ -239,11 +239,11 @@ The internal `scan_odd_polynomial_sectors<Real>` in
 spin-reversal-distinct branch, `M=0,...,floor(N/2)`, at the requested coupling.
 It deliberately returns an `OddSectorScan`, not a public `GroundState`.
 The entries are ordered by increasing M, with positive
-$S^z =N /2-M$; the negative-Sz partners have the same energy.
+$`S^z =N /2-M`$; the negative-Sz partners have the same energy.
 
 This matters even on five sites. At Delta=-0.9, the polarized sector has
 energy -1.125, below the smallest-|Sz| value of approximately -0.9898034892.
-Selecting $S^z =1/2$ unconditionally would return the wrong global candidate.
+Selecting $`S^z =1/2`$ unconditionally would return the wrong global candidate.
 The scan compares all sectors instead of assuming a universal phase boundary
 from this or any other finite-size example.
 

@@ -6,7 +6,7 @@ than prescribing it. A fixed-density wrapper instead accepts c,T,n and solves
 for mu. `bethe-lieb-liniger-thermal` exposes both ensembles, including temperature
 scans. Chemical-potential scans are not yet implemented.
 
-The Hamiltonian is `H=-sum d_i²+2c sum delta(x_i-x_j)`, with $\hbar =2m =k_{B} =1$.
+The Hamiltonian is `H=-sum d_i²+2c sum delta(x_i-x_j)`, with $`\hbar =2m =k_{B} =1`$.
 Pressure and energy are per length, density is particles per length, and entropy
 is also per length. The grand potential per length is **minus the pressure**.
 The uniform thermodynamic limit is not a finite-ring spectrum or a trapped gas.
@@ -60,8 +60,8 @@ With `C(x)=c/(pi*(c²+x²))`, the Yang–Yang equation is
 
 ```math
 \begin{aligned}
-\epsilon(k)&=k^2-\mu-\int C(k-q)T\log\!\left(1+e^{-\epsilon(q)/T}\right)\,dq,\\
-\operatorname{filling}(k)&=\frac{1}{1+e^{\epsilon(k)/T}},\\
+\epsilon(k)&=k^2-\mu-\int C(k-q)T\log\!\left(1+e^{-\epsilon(q)/T}\right)\,dq,\\{}
+\operatorname{filling}(k)&=\frac{1}{1+e^{\epsilon(k)/T}},\\{}
 \rho_{\mathrm{total}}(k)&=\frac1{2\pi}
 +\int C(k-q)\operatorname{filling}(q)\rho_{\mathrm{total}}(q)\,dq.
 \end{aligned}
@@ -69,7 +69,7 @@ With `C(x)=c/(pi*(c²+x²))`, the Yang–Yang equation is
 
 All integrals cover the real axis. The filling has a Fermi-like form because
 it counts occupied Bethe quantum numbers; the physical particles remain bosons.
-Pressure integrates $T \log (1+\exp (-\epsilon /T))/(2\,\pi)$. Particle and energy
+Pressure integrates $`T \log (1+\exp (-\epsilon /T))/(2\,\pi)`$. Particle and energy
 densities integrate `filling*rho_total` and `k²*filling*rho_total` respectively.
 Entropy integrates the binary entropy of the filling times `rho_total`.
 
@@ -116,19 +116,19 @@ cutoffs grow by 5/4. Mesh sizes double at each fixed cutoff, starting again at
 3. Two separately mesh-converged cutoffs must agree for all four observables.
 
 `nodes` counts the positive-half nodes: evenness supplies the negative half
-through $C (k -q)+C (k +q)$. `cutoff` is physical; `cutoffs` counts attempted domains.
+through $`C (k -q)+C (k +q)`$. `cutoff` is physical; `cutoffs` counts attempted domains.
 `mesh_error` and `cutoff_error` are eight times the largest relative observable
 change. They are estimates, not rigorous bounds on omitted tails or quadrature.
 The library reports no physical observable until both checks pass. Small c,
 low T, or a large user-selected initial cutoff may need more nodes than allowed.
 
-Calculations scale energies by $S =\max (T,\lvert \mu \rvert)$ and rapidities by `sqrt(S)`.
+Calculations scale energies by $`S =\max (T,\lvert \mu \rvert)`$ and rapidities by `sqrt(S)`.
 `nonlinear_residual` is the largest scaled-equation residual divided by
 `max(1,abs(epsilon),abs(k²-mu))` in these dimensionless variables. Its target is
 `tolerance*(T/S)/64`, so the equation's precision requirement tracks temperature.
 
 Stable shared thermal factors avoid exponentially overflowing expressions.
-Entropy is calculated directly, not by subtracting $p +e -\mu \,n$ at low T.
+Entropy is calculated directly, not by subtracting $`p +e -\mu \,n`$ at low T.
 Native Gauss–Legendre rules, compensated sums, rational scattering kernels, and
 recoverable pivoting solves are shared with existing continuum/Hubbard solvers.
 
@@ -140,7 +140,7 @@ No asymptotic zero-density or T=0 answer is silently substituted on underflow.
 Use the separate [zero-temperature API](lieb-liniger-thermo.md) for T=0.
 
 Validation includes the original integral equations, scale covariance,
-$p +e -\mu \,n =T \,s$, pressure derivatives at fixed c, a native-precision fugacity
+$`p +e -\mu \,n =T \,s`$, pressure derivatives at fixed c, a native-precision fugacity
 series in the Tonks limit, decreasing-temperature comparison with the ground
 state, and independently exhausted nonlinear, mesh, and cutoff budgets.
 
@@ -156,7 +156,7 @@ if (canonical.converged) {
 ```
 
 `DensityOptions<Real>` contains the inner `equilibrium` options, an outer
-relative density `tolerance` (default $65536\,\epsilon$), and `max_evaluations`
+relative density `tolerance` (default $`65536\,\epsilon`$), and `max_evaluations`
 (default 128). Each evaluation is a complete grand-canonical solve with its
 own inner budgets; the inner tolerance is tightened to at most one eighth of
 the density tolerance. `evaluations` counts those solves and `iterations`

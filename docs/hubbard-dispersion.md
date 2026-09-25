@@ -3,9 +3,9 @@
 `bethe-hubbard-dispersion` evaluates elementary excitation lines of the infinite,
 repulsive Hubbard chain at zero field, at or below half filling. Unlike the
 [finite-ring](hubbard.md) and [free-end](hubbard-open.md) solvers, it takes no
-length or boundary-condition argument. It requires $U >0$, hopping $t =1$, and
-$0<n \le 1$. The default is half filling (`--density 1`), described below.
-For `--density n` with $n <1$, see the [doped dispersion guide](hubbard-doped.md).
+length or boundary-condition argument. It requires $`U \gt 0`$, hopping $`t =1`$, and
+$`0\lt n \le 1`$. The default is half filling (`--density 1`), described below.
+For `--density n` with $`n \lt 1`$, see the [doped dispersion guide](hubbard-doped.md).
 Attraction, nonzero magnetic fields, spectral weights, and multiparticle
 continuum thresholds are not implemented in this frontend. A separate
 [two-spinon continuum tool](hubbard-continuum.md) now provides the
@@ -21,11 +21,11 @@ build/bethe-hubbard-dispersion --u 4 --precision fp128 --points 33 --format csv
 Calculations and output retain the selected `fp64` (default), `long-double`, or
 optional `fp128` precision. Grids are uniform in **dressed physical momentum**,
 not the auxiliary Bethe parameter. `--points` includes both endpoints; charge
-endpoints $-\pi$ and $\pi$ are the same point in the Brillouin zone. `--momentum`
+endpoints $`-\pi`$ and $`\pi`$ are the same point in the Brillouin zone. `--momentum`
 instead selects one point in radians. With `--branch all` it must belong to
 every selected branch.
 
-Use `--help` or $-h$ for Uni20-rendered options and examples, and `--references`
+Use `--help` or $`-h`$ for Uni20-rendered options and examples, and `--references`
 for the literature and its applicability. `--version` and `--build-info`
 report the compiled application and dependency
 identity without calculating or opening files. This frontend accepts both
@@ -37,8 +37,8 @@ file-export options. See [shared CLI behavior](command-line.md#uni20-help-and-op
 | Branch | Particle change | Total spin | Momentum interval |
 |---|---:|---:|---|
 | `spinon` | 0 | 1/2 | `[0,pi]` |
-| `holon` | -1 | 0 | $[-\pi,\pi]$ |
-| `antiholon` | +1 | 0 | $[-\pi,\pi]$ |
+| `holon` | -1 | 0 | $`[-\pi,\pi]`$ |
+| `antiholon` | +1 | 0 | $`[-\pi,\pi]`$ |
 
 “Chargon” describes the charge excitations, not a fourth independent branch.
 Spin projection does not split the spinon line at zero field. At the same bare
@@ -46,8 +46,8 @@ charge parameter, holon and antiholon have equal symmetric energies but
 `p_antiholon = p_holon - pi (mod 2*pi)`.
 
 Spinons are gapless at both endpoints. Holon and antiholon minima occur at
-$p =-\pi /2$ and $p =\pi /2$ respectively. The common symmetric minimum is **half**
-the charge gap $E (N +1)+E (N -1)-2E (N)$. At $U =4$ this single-charge minimum is
+$`p =-\pi /2`$ and $`p =\pi /2`$ respectively. The common symmetric minimum is **half**
+the charge gap $`E (N +1)+E (N -1)-2E (N)`$. At $`U =4`$ this single-charge minimum is
 approximately `0.64336351100645219736629488464487225`.
 
 ## Hamiltonian and energy zero
@@ -57,12 +57,12 @@ The default `--convention symmetric` uses the SO(4)-symmetric Hamiltonian
 ```math
 \begin{aligned}
 H_{\mathrm{symmetric}}&=-\sum_{j,s}\left(c^\dagger_{j,s}c_{j+1,s}+\mathrm{h.c.}\right)
-+U\sum_j\left(n_{j,\uparrow}-\frac12\right)\left(n_{j,\downarrow}-\frac12\right),\\
++U\sum_j\left(n_{j,\uparrow}-\frac12\right)\left(n_{j,\downarrow}-\frac12\right),\\{}
 H_{\mathrm{symmetric}}&=H_{\mathrm{unshifted}}-\frac{UN}{2}+\frac{UL}{4}.
 \end{aligned}
 ```
 
-`--convention unshifted` matches $U \,n_{\mathrm{up}} \,n_{\mathrm{down}}$ in our finite Hubbard tools.
+`--convention unshifted` matches $`U \,n_{\mathrm{up}} \,n_{\mathrm{down}}`$ in our finite Hubbard tools.
 For excitation energies above the same background at fixed length,
 
 ```math
@@ -70,14 +70,14 @@ E_{\mathrm{unshifted}}=E_{\mathrm{symmetric}}+\frac U2\Delta N.
 ```
 
 The extensive background cancels. Spinons are unchanged, holons shift down by
-$U /2$, and antiholons up by $U /2$. Negative unshifted removal energies are
-legitimate: half filling is centered at chemical potential $U /2$ in that
+$`U /2`$, and antiholons up by $`U /2`$. Negative unshifted removal energies are
+legitimate: half filling is centered at chemical potential $`U /2`$ in that
 Hamiltonian, not at zero chemical potential.
 
 The default `--reference hamiltonian` reports these Hamiltonian differences.
 `--reference fermi` instead reports `E_H-mu_H*DeltaN`, independent of the chosen
 interaction convention. At half filling we choose the middle of the Mott
-plateau: $\mu_{\mathrm{symmetric}} =0$, $\mu_{\mathrm{unshifted}} =U /2$. Thus the Fermi-referenced energies
+plateau: $`\mu_{\mathrm{symmetric}} =0`$, $`\mu_{\mathrm{unshifted}} =U /2`$. Thus the Fermi-referenced energies
 equal the symmetric energies here, including the nonzero charge gap. Both
 chemical potentials appear in the metadata. For doping they are solved from
 the requested density, not fixed at these half-filled values.
@@ -100,8 +100,8 @@ illustrates the comparison.
 
 The reference formulas are the Fourier-Bessel dispersions in
 [Essler–Korepin, Eqs. (4)–(5)](https://arxiv.org/html/cond-mat/9808018).
-Set $u =U /4$ in that paper's notation. Our spin rapidity is
-$\lambda =2\,u \,\beta /\pi$; $k$ denotes bare charge momentum.
+Set $`u =U /4`$ in that paper's notation. Our spin rapidity is
+$`\lambda =2\,u \,\beta /\pi`$; $`k`$ denotes bare charge momentum.
 
 Direct oscillatory integration is costly at weak coupling, and subtracting
 order-one energies can erase the exponentially small charge gap. Instead we
@@ -109,23 +109,23 @@ use a nonoscillatory spinon convolution with `sech` and a positive-integrand
 resummation of the exact modified-Bessel series in
 [Melzer](https://arxiv.org/html/cond-mat/9410043). His attractive massive spin
 branch maps to our repulsive charge branch: his interaction parameter becomes
-our $u$, and energies multiply by two to change hopping from `1/2` to `1`.
+our $`u`$, and energies multiply by two to change hopping from `1/2` to `1`.
 
-For reproducibility, set $a =\pi /(2\,u)$ and $A (z)=\operatorname{artanh} (\exp (-z))$. Our resummation is
+For reproducibility, set $`a =\pi /(2\,u)`$ and $`A (z)=\operatorname{artanh} (\exp (-z))`$. Our resummation is
 
 ```math
 \begin{aligned}
 E_{\mathrm{inner}}(k)&=\frac4\pi\int_0^\infty\cosh t\,
-\left[A\!\left(a(\cosh t-\sin k)\right)+A\!\left(a(\cosh t+\sin k)\right)\right]\,dt,\\
+\left[A\!\left(a(\cosh t-\sin k)\right)+A\!\left(a(\cosh t+\sin k)\right)\right]\,dt,\\{}
 Q(k)&=\frac2\pi\int_0^\infty
-\left[A\!\left(a(\cosh t-\sin k)\right)-A\!\left(a(\cosh t+\sin k)\right)\right]\,dt,\\
+\left[A\!\left(a(\cosh t-\sin k)\right)-A\!\left(a(\cosh t+\sin k)\right)\right]\,dt,\\{}
 E_h(k)&=E_{\mathrm{inner}}(k)+4\max(\cos k,0).
 \end{aligned}
 ```
 
-Unwrapped holon momentum is $\pi /2-2\,k +Q$ for $\lvert k \rvert <\pi /2$, $-\pi /2+Q$ for
-$k \ge \pi /2$, and $3\,\pi /2+Q$ for $k \le -\pi /2$. Stable trigonometric differences
-retain the integrable logarithmic endpoint at $k =+-\pi /2$.
+Unwrapped holon momentum is $`\pi /2-2\,k +Q`$ for $`\lvert k \rvert \lt \pi /2`$, $`-\pi /2+Q`$ for
+$`k \ge \pi /2`$, and $`3\,\pi /2+Q`$ for $`k \le -\pi /2`$. Stable trigonometric differences
+retain the integrable logarithmic endpoint at $`k =+-\pi /2`$.
 
 Tanh-sinh quadrature compares successive meshes; infinite-domain tails are
 bounded separately. Reported errors are **estimates**, not interval certificates:
@@ -138,7 +138,7 @@ bounded separately. Reported errors are **estimates**, not interval certificates
 - `parameter` is rapidity or bare momentum, not plotted momentum. Analytic
   spinon endpoints have infinite rapidity and zero energy.
 
-Defaults: tolerance $256\,\epsilon$ of the selected scalar, 1,000,000 quadrature
+Defaults: tolerance $`256\,\epsilon`$ of the selected scalar, 1,000,000 quadrature
 samples **per entire point**, 12 refinement levels and 160 inversion updates.
 Use `--tolerance`, `--max-evaluations`, `--max-levels`, and `--max-iterations`
 to change them. Weak coupling/fp128 can need substantially more work. Gaps and
