@@ -16,6 +16,7 @@ enum class Status
   iteration_limit,
   mesh_limit,
   cutoff_limit,
+  density_limit,
   precision_limit
 };
 template <uni20::Real Real> struct Options
@@ -166,10 +167,10 @@ template <uni20::Real Real> Real difference(Mesh<Real> const& a, Mesh<Real> cons
 }
 } // namespace detail
 
-/// Grand-canonical Yang-Yang equilibrium, c,T>0, H=-sum d^2+2c sum delta.
-/// No observables are published until both mesh and cutoff refinement pass.
+namespace detail
+{
 template <uni20::Real Real>
-State<Real> equilibrium(Real interaction, Real temperature, Real chemical_potential, Options<Real> options = {})
+void validate(Real interaction, Real temperature, Real chemical_potential, Options<Real> const& options)
 {
   if (!uni20::isfinite(interaction) || !(interaction > Real{0}) || !uni20::isfinite(temperature) ||
       !(temperature > Real{0}) || !uni20::isfinite(chemical_potential))
@@ -179,6 +180,15 @@ State<Real> equilibrium(Real interaction, Real temperature, Real chemical_potent
       options.max_cutoffs > 32 ||
       (options.initial_cutoff && (!uni20::isfinite(*options.initial_cutoff) || !(*options.initial_cutoff > Real{0}))))
     throw std::invalid_argument("require 0<tol<1, 4<=initial_nodes<=max_nodes<=512, max_cutoffs<=32, cutoff>0");
+}
+} // namespace detail
+
+/// Grand-canonical Yang-Yang equilibrium, c,T>0, H=-sum d^2+2c sum delta.
+/// No observables are published until both mesh and cutoff refinement pass.
+template <uni20::Real Real>
+State<Real> equilibrium(Real interaction, Real temperature, Real chemical_potential, Options<Real> options = {})
+{
+  detail::validate(interaction, temperature, chemical_potential, options);
   State<Real> out;
   out.interaction = interaction;
   out.temperature = temperature;
@@ -269,6 +279,120 @@ State<Real> equilibrium(Real interaction, Real temperature, Real chemical_potent
       out.status = Status::precision_limit;
       return out;
     }
+  }
+  return out;
+}
+
+template <uni20::Real Real> struct DensityOptions
+{
+    Options<Real> equilibrium{};
+    Real tolerance = Real{65536} * uni20::numeric_limits<Real>::epsilon();
+    std::size_t max_evaluations = 128;
+};
+template <uni20::Real Real> struct DensityState
+{
+    Real requested_density{}, density_error{};
+    std::size_t evaluations = 0, iterations = 0;
+    std::optional<State<Real>> state;
+    bool converged = false;
+    Status status = Status::density_limit;
+};
+
+/// Canonical equilibrium: invert the monotone n(mu) at fixed c,T.
+/// Only successful inner solves participate in the bracket; no failed inner
+/// observable is used to infer a sign or silently treated as vacuum.
+template <uni20::Real Real>
+DensityState<Real> at_density(Real interaction, Real temperature, Real density, DensityOptions<Real> options = {})
+{
+  detail::validate(interaction, temperature, Real{0}, options.equilibrium);
+  if (!(density > Real{0}) || !uni20::isfinite(density) || !(options.tolerance > Real{0}) ||
+      !uni20::isfinite(options.tolerance) || options.tolerance >= Real{1})
+    throw std::invalid_argument("require finite density>0 and 0<density tolerance<1");
+  DensityState<Real> out;
+  out.requested_density = density;
+  if (options.max_evaluations == 0) return out;
+  options.equilibrium.tolerance = std::min(options.equilibrium.tolerance, options.tolerance / Real{8});
+  if (!(options.equilibrium.tolerance > Real{0}))
+  {
+    out.status = Status::precision_limit;
+    return out;
+  }
+  Real const pi = Real{4} * std::atan(Real{1});
+  // Classical gas seed, evaluated in log space rather than forming fugacity.
+  Real mu = temperature * (std::log(density) + std::log(Real{2} * std::sqrt(pi)) - std::log(temperature) / Real{2});
+  Real step = temperature;
+  std::optional<Real> lo, hi;
+  Real flo{}, fhi{};
+  int previous_side = 0;
+  for (; out.evaluations < options.max_evaluations;)
+  {
+    if (!uni20::isfinite(mu))
+    {
+      out.status = Status::precision_limit;
+      return out;
+    }
+    auto candidate = equilibrium(interaction, temperature, mu, options.equilibrium);
+    ++out.evaluations;
+    out.iterations += candidate.iterations;
+    if (!candidate.converged)
+    {
+      out.status = candidate.status;
+      return out;
+    }
+    Real const f = (*candidate.density - density) / density;
+    out.density_error = std::abs(f);
+    if (out.density_error <= options.tolerance / Real{2})
+    {
+      out.state = std::move(candidate);
+      out.converged = true;
+      out.status = Status::converged;
+      return out;
+    }
+    if (!uni20::isfinite(f))
+    {
+      out.status = Status::precision_limit;
+      return out;
+    }
+    // Illinois regula falsi: halve the retained endpoint's interpolation
+    // weight on repeated updates to the same side, preventing stagnation.
+    int const side = f < Real{0} ? -1 : 1;
+    if (side < 0)
+    {
+      lo = mu;
+      flo = f;
+      if (previous_side == side) fhi /= Real{2};
+    }
+    else
+    {
+      hi = mu;
+      fhi = f;
+      if (previous_side == side) flo /= Real{2};
+    }
+    previous_side = side;
+    Real next;
+    if (lo && hi)
+    {
+      Real const weight = (-flo) / std::max(-flo, fhi);
+      Real const fraction = weight / (weight + fhi / std::max(-flo, fhi));
+      next = (Real{1} - fraction) * *lo + fraction * *hi;
+      if (!(next > *lo && next < *hi)) next = *lo / Real{2} + *hi / Real{2};
+      if (!(next > *lo && next < *hi))
+      {
+        out.status = Status::precision_limit;
+        return out;
+      }
+    }
+    else
+    {
+      next = mu + (side < 0 ? step : -step);
+      step *= Real{2};
+    }
+    if (next == mu)
+    {
+      out.status = Status::precision_limit;
+      return out;
+    }
+    mu = next;
   }
   return out;
 }

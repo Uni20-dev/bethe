@@ -2,8 +2,9 @@
 
 The library implements the repulsive Yang–Yang equation in the **grand-canonical
 ensemble**: give c>0, T>0, and chemical potential mu; obtain the density rather
-than prescribing it. This checkpoint is a C++ API, not yet a command-line tool.
-Fixed-density inversion and temperature/chemical-potential scans are follow-ups.
+than prescribing it. A fixed-density wrapper instead accepts c,T,n and solves
+for mu. Both are C++ APIs, not yet command-line tools. A thermal frontend and
+temperature/chemical-potential scans are follow-ups.
 
 The Hamiltonian is `H=-sum d_i²+2c sum delta(x_i-x_j)`, with `hbar=2m=k_B=1`.
 Pressure and energy are per length, density is particles per length, and entropy
@@ -96,3 +97,39 @@ Validation includes the original integral equations, scale covariance,
 `p+e-mu*n=T*s`, pressure derivatives at fixed c, a native-precision fugacity
 series in the Tonks limit, decreasing-temperature comparison with the ground
 state, and independently exhausted nonlinear, mesh, and cutoff budgets.
+
+## Fixed density
+
+```cpp
+auto canonical = yy::at_density(4.0, 1.0, 1.0); // c, T, n
+if (canonical.converged) {
+    auto mu = canonical.state->chemical_potential;
+    auto free_energy_per_length = mu * *canonical.state->density
+                               - *canonical.state->pressure;
+}
+```
+
+`DensityOptions<Real>` contains the inner `equilibrium` options, an outer
+relative density `tolerance` (default `65536*epsilon`), and `max_evaluations`
+(default 128). Each evaluation is a complete grand-canonical solve with its
+own inner budgets; the inner tolerance is tightened to at most one eighth of
+the density tolerance. `evaluations` counts those solves and `iterations`
+sums their accepted Newton updates.
+
+The chemical potential starts at the classical-gas estimate, but every density
+used is calculated from the full Yang–Yang equation. Exponentially expanding
+steps bracket the target; Illinois regula falsi then interpolates inside that
+bracket, falling back to its midpoint when rounding places a trial at an end.
+The stopping test requires a relative density mismatch at most half the outer
+tolerance, leaving room for the inner numerical error estimate. Small bracket
+width alone is not accepted as convergence.
+
+`density_error` is the last successfully evaluated relative density mismatch.
+`density_limit` means the outer evaluation budget was exhausted. Inner failures
+retain their original status; no failed density is treated as zero and no
+partially converged thermodynamics are published. The optional `state` is set
+only on success, and its density is the calculated value, not overwritten by
+the requested density. Extreme parameters can still encounter the inner mesh
+or precision limits described above. Tests cover native-precision round trips,
+scale covariance, dilute and degenerate gases, and independent outer/inner
+budget exhaustion.

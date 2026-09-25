@@ -125,6 +125,68 @@ TYPED_TEST(LiebLinigerThermal, OriginalEquationsAndZeroTemperatureLimit)
   EXPECT_REAL_NEAR(*cold.density, Real{1}, Real{1} / Real{100});
 }
 
+TYPED_TEST(LiebLinigerThermal, FixedDensityRoundTripAndScaling)
+{
+  using Real = TypeParam;
+  auto const reference = model::equilibrium(Real{4}, Real{1}, Real{-1});
+  ASSERT_TRUE(reference.converged);
+  auto const canonical = model::at_density(Real{4}, Real{1}, *reference.density);
+  ASSERT_TRUE(canonical.converged) << int(canonical.status) << " evaluations=" << canonical.evaluations;
+  ASSERT_TRUE(canonical.state);
+  Real const tol = Real{262144} * uni20::numeric_limits<Real>::epsilon();
+  EXPECT_REAL_NEAR(canonical.state->chemical_potential, Real{-1}, tol);
+  EXPECT_REAL_NEAR(*canonical.state->pressure, *reference.pressure, tol * *reference.pressure);
+  auto const scaled = model::at_density(Real{8}, Real{4}, Real{2} * *reference.density);
+  ASSERT_TRUE(scaled.converged) << int(scaled.status);
+  EXPECT_REAL_NEAR(scaled.state->chemical_potential, Real{-4}, Real{4} * tol);
+  EXPECT_REAL_NEAR(*scaled.state->energy_per_length, Real{8} * *canonical.state->energy_per_length,
+                   Real{8} * tol * *canonical.state->energy_per_length);
+  EXPECT_LT(canonical.evaluations, 32u);
+  EXPECT_LE(canonical.density_error, model::DensityOptions<Real>{}.tolerance / Real{2});
+}
+
+TYPED_TEST(LiebLinigerThermal, FixedDensityFailures)
+{
+  using Real = TypeParam;
+  EXPECT_THROW(model::at_density(Real{4}, Real{1}, Real{0}), std::invalid_argument);
+  EXPECT_THROW(model::at_density(Real{4}, Real{1}, Real{1}, {.tolerance = Real{0}}), std::invalid_argument);
+  EXPECT_THROW(model::at_density(Real{4}, Real{1}, Real{1}, {.equilibrium = {.max_nodes = 513}, .max_evaluations = 0}),
+               std::invalid_argument);
+  for (std::size_t budget : {0u, 1u})
+  {
+    auto const failed = model::at_density(Real{4}, Real{1}, Real{1} / Real{10}, {.max_evaluations = budget});
+    EXPECT_FALSE(failed.converged);
+    EXPECT_FALSE(failed.state);
+    EXPECT_EQ(failed.status, model::Status::density_limit);
+    EXPECT_EQ(failed.evaluations, budget);
+  }
+  auto const inner = model::at_density(Real{4}, Real{1}, Real{1}, {.equilibrium = {.max_cutoffs = 0}});
+  EXPECT_EQ(inner.status, model::Status::cutoff_limit);
+  EXPECT_FALSE(inner.state);
+  EXPECT_EQ(inner.evaluations, 1u);
+}
+
+TYPED_TEST(LiebLinigerThermal, FixedDensityDiluteAndDegenerate)
+{
+  using Real = TypeParam;
+  model::DensityOptions<Real> options;
+  options.tolerance = Real{1} / Real{100000000};
+  options.equilibrium.tolerance = options.tolerance / Real{8};
+  for (Real density : {Real{1} / Real{100}, Real{1}})
+  {
+    auto const state = model::at_density(Real{4}, Real{1}, density, options);
+    ASSERT_TRUE(state.converged) << int(state.status) << " evaluations=" << state.evaluations;
+    EXPECT_REAL_NEAR(*state.state->density, density, options.tolerance * density);
+    EXPECT_REAL_NEAR(*state.state->energy_per_length + *state.state->pressure -
+                         state.state->chemical_potential * *state.state->density,
+                     *state.state->entropy_per_length, options.tolerance);
+    if (density == Real{1})
+      EXPECT_GT(state.state->chemical_potential, Real{0});
+    else
+      EXPECT_LT(state.state->chemical_potential, Real{0});
+  }
+}
+
 TYPED_TEST(LiebLinigerThermal, IndependentBudgetsAndValidation)
 {
   using Real = TypeParam;
