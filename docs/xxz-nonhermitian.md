@@ -1,8 +1,39 @@
 # Non-Hermitian quantum-group XXZ chain
 
-**Status: native positive finite-real-root library implemented for 0<Delta<1;
-frontend, complex-root branches and root-of-unity representation accounting
-remain follow-ups.** This is not the existing free-end XXZ model.
+**Status: native positive finite-real-root library and frontend implemented
+for 0<Delta<1; complex-root branches and root-of-unity representation
+accounting remain follow-ups.** This is not the existing free-end XXZ model.
+
+## Command line
+
+```sh
+bethe-xxz-qg-obc 32 --delta 0.25
+bethe-xxz-qg-obc 7 --delta 0.6 --through-lines 3 --roots
+bethe-xxz-qg-obc 8 --delta 0.6 --numbers 1,3 --precision fp128 --json state.json
+bethe-xxz-qg-obc 4 --delta 0.25 --numbers none
+bethe-xxz-qg-obc --references
+```
+
+The default sea uses ell=N mod 2 and consecutive labels I=1,...,(N-ell)/2.
+`--through-lines` changes ell; `--numbers` instead supplies explicit labels
+(or `none` for the polarized state). These options exclude each other. The
+label ell is not an ordinary SU(2) spin or a promised root-of-unity degeneracy.
+The corresponding Bethe representative has Sz=ell/2.
+
+`--tolerance` and `--max-iterations` control the regular-root solve.
+The `state` table contains energy, energy shift from the fully polarized
+reference, normalized residual, iteration count and convergence status.
+`--roots` adds a `roots` table with I, z, lambda and convergence status.
+Failed solves leave energies missing (JSON null or empty delimited cells),
+return exit status 2, and mark root coordinates as provisional last iterates.
+Unrepresentable rapidities are missing rather than serialized as valid roots.
+Invalid inputs exit 1 before files are opened, even with `--force`.
+
+The [common output options](output.md) provide screen output, independent
+JSON/CSV/TSV exports and streaming delivery. For separate rectangular files,
+use `--csv-table state=state.csv --csv-table roots=roots.csv --roots`.
+Metadata records the imaginary boundary strength, Hamiltonian normalization,
+state-selection rule and numerical controls; the summary includes CPU time.
 
 ## Hamiltonian and source normalization
 
@@ -107,7 +138,7 @@ to these parameters. Do not replace this chain with a Hermitian matrix having
 the same real eigenvalues. Even in the implemented interval, regular-root
 solutions do not by themselves specify the full root-of-unity spectrum.
 
-The next stages are a boundary-specific frontend, admissible-label scans,
+The next stages are admissible-label scans,
 the Delta=0 free-fermion/Jordan benchmark, and additional complex-root branches.
 CFT fitting must identify boundary sectors and distinguish c from an effective
 central charge; a numerical Casimir coefficient is not automatically c.

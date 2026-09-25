@@ -180,6 +180,15 @@ if(BETHE_BUILD_APPS)
     add_test(NAME HubbardContinuum.cli
       COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_hubbard_continuum.py"
         "$<TARGET_FILE:bethe-hubbard-continuum>" "${UNI20_ENABLE_MPLAPACK}")
+    add_test(NAME CriticalQuantumGroup.cli
+      COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_xxz_qg.py"
+        "$<TARGET_FILE:bethe-xxz-qg-obc>" "${UNI20_ENABLE_MPLAPACK}")
+    add_test(NAME Arguments.bethe-xxz-qg-obc.cli
+      COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_shared_arguments.py"
+        "$<TARGET_FILE:bethe-xxz-qg-obc>")
+    add_test(NAME Citations.bethe-xxz-qg-obc.cli
+      COMMAND "${CMAKE_COMMAND}" "-DPROGRAM=$<TARGET_FILE:bethe-xxz-qg-obc>"
+        "-DTOOL=bethe-xxz-qg-obc" -P "${CMAKE_CURRENT_SOURCE_DIR}/check_citations_cli.cmake")
     add_test(NAME Arguments.bethe-hubbard-continuum.cli
       COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_shared_arguments.py"
         "$<TARGET_FILE:bethe-hubbard-continuum>")

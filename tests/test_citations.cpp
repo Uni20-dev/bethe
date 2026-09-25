@@ -28,6 +28,7 @@ TEST(Citations, RegistryUniqueIdsAndLookup)
 TEST(Citations, ToolReferenceSelections)
 {
   for (auto tool : {refs::Tool::xxx_pbc,
+                    refs::Tool::xxz_qg_obc,
                     refs::Tool::tasep_pbc,
                     refs::Tool::asep_pbc,
                     refs::Tool::hubbard_continuum,

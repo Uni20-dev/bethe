@@ -389,6 +389,10 @@ inline constexpr std::array<Reference, 80> references{{
   {"essler-korepin-1994-scattering", "F. H. L. Essler and V. E. Korepin", "Scattering matrix and excitation spectrum of the Hubbard model", "Phys. Rev. Lett. 72, 908-911", 1994, links_79},
 }};
 
+inline constexpr std::array<Use, 2> uses_xxz_qg_obc{{
+  {&references[77], "Quantum-group-invariant open XXZ Hamiltonian and Bethe equations (1.1)-(1.3). Our spin-half Hamiltonian is one quarter of the Pauli normalization with spatially reflected boundary fields. Current scope: positive finite-real roots at 0<Delta<1, without multiplicity or completeness claims."},
+  {&references[78], "Root-of-unity complete strings and generalized eigenvectors explain why regular eigenvalues alone do not determine Jordan structure. Those extensions are not yet implemented."},
+}};
 inline constexpr std::array<Use, 2> uses_hubbard_continuum{{
   {&references[3], "Half-filled spinon line Eq. (4), two-spinon continuum edges Eq. (18) and following paragraph; our U is four times the paper's U. No form factors or spectral weights."},
   {&references[79], "Elementary SO(4) spinon and charge doublets and additive spinon-holon, spinon-antiholon and neutral holon-antiholon scattering energies and momenta. Charge-family extrema are resolved numerically, not certified global bounds; our U is four times the paper's U."},
@@ -532,12 +536,13 @@ inline constexpr std::array<Use, 3> uses_gaudin_yang_pbc{{
   {&references[59], "Hamiltonian and periodic fermion equations (1), (2), (7), (8), (25); even N, odd minority population as in Sec. 5. Weak and strong limits (12), (15)-(16) provide checks. Hard walls, attraction and excitations are not implemented."},
 }};
 
-enum class Tool { hubbard_continuum, kondo_response, sine_gordon_vacuum, asep_pbc, tasep_pbc, xyz_pbc, bose_fermi_pbc, q_boson_pbc, lieb_liniger_thermal, lieb_liniger_dispersion, biquadratic_obc, xxx_pbc, xxx_obc, xxz_pbc, xxz_obc, hubbard_dispersion, hubbard_pbc, hubbard_obc, lieb_liniger_pbc, lieb_liniger_obc, su3_pbc, tj_pbc, tb_pbc, richardson, central_spin, sun_fermions_pbc, ladder_pbc, haldane_shastry_pbc, sutherland_pbc, gaudin_yang_pbc };
+enum class Tool { xxz_qg_obc, hubbard_continuum, kondo_response, sine_gordon_vacuum, asep_pbc, tasep_pbc, xyz_pbc, bose_fermi_pbc, q_boson_pbc, lieb_liniger_thermal, lieb_liniger_dispersion, biquadratic_obc, xxx_pbc, xxx_obc, xxz_pbc, xxz_obc, hubbard_dispersion, hubbard_pbc, hubbard_obc, lieb_liniger_pbc, lieb_liniger_obc, su3_pbc, tj_pbc, tb_pbc, richardson, central_spin, sun_fermions_pbc, ladder_pbc, haldane_shastry_pbc, sutherland_pbc, gaudin_yang_pbc };
 
 [[nodiscard]] constexpr std::span<Use const> for_tool(Tool tool)
 {
   switch (tool)
   {
+    case Tool::xxz_qg_obc: return uses_xxz_qg_obc;
     case Tool::hubbard_continuum: return uses_hubbard_continuum;
     case Tool::kondo_response: return uses_kondo_response;
     case Tool::sine_gordon_vacuum: return uses_sine_gordon_vacuum;

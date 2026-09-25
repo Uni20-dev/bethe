@@ -1068,12 +1068,20 @@ J. Phys. A: Math. Theor. 48, 494003 (2015).
 
 [DOI](<https://doi.org/10.1088/1751-8113/48/49/494003>), [arXiv](<https://arxiv.org/abs/1505.02104>).
 
+Relevant tool modes:
+
+- `bethe-xxz-qg-obc`: Quantum-group-invariant open XXZ Hamiltonian and Bethe equations (1.1)-(1.3). Our spin-half Hamiltonian is one quarter of the Pauli normalization with spatially reflected boundary fields. Current scope: positive finite-real roots at 0\<Delta\<1, without multiplicity or completeness claims.
+
 ### gainutdinov-nepomechie-2016
 
 A. M. Gainutdinov and R. I. Nepomechie. *Algebraic Bethe ansatz for the quantum group invariant open XXZ chain at roots of unity*.
 Nucl. Phys. B 909, 796-839 (2016).
 
 [DOI](<https://doi.org/10.1016/j.nuclphysb.2016.06.007>), [arXiv](<https://arxiv.org/abs/1603.09249>).
+
+Relevant tool modes:
+
+- `bethe-xxz-qg-obc`: Root-of-unity complete strings and generalized eigenvectors explain why regular eigenvalues alone do not determine Jordan structure. Those extensions are not yet implemented.
 
 ### essler-korepin-1994-scattering
 

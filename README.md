@@ -62,6 +62,10 @@ Thermodynamic dispersion tools use `bethe-<model>-dispersion`.
 - [Periodic XYZ](docs/xyz.md): `bethe-xyz-pbc` gives even-chain regular ground
   states in the rectangular elliptic parametrization, including either sign
   of Jz. Generic XYZ has no conserved Sz sector; excitations are not yet exposed.
+- [Non-Hermitian quantum-group XXZ](docs/xxz-nonhermitian.md):
+  `bethe-xxz-qg-obc` evaluates regular positive-real Bethe states at
+  `0<Delta<1` with opposite imaginary end fields. This is not free-end XXZ;
+  complex branches, full multiplicities and Jordan structure remain separate work.
 - [Hubbard two-particle continua](docs/hubbard-continuum.md):
   `bethe-hubbard-continuum` gives half-filled lower and upper edges versus
   total momentum for two spinons, spinon–holon, spinon–antiholon and
