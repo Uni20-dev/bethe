@@ -57,8 +57,8 @@ Thermodynamic dispersion tools use `bethe-<model>-dispersion`.
   `bethe-lieb-liniger-thermal` at fixed chemical potential or density, including
   temperature scans and pressure, energy, and entropy densities.
 - [Periodic q-bosons](docs/q-boson.md): `bethe-q-boson-pbc` gives fixed-particle-number
-  ground energies for deformed boson hopping, including the free-boson and
-  phase-model limits. This is not the Bose–Hubbard model.
+  ground energies and canonical excitation scans for deformed boson hopping,
+  including free-boson and phase-model limits. This is not the Bose–Hubbard model.
 - [Periodic SU(3)](docs/su3.md): `bethe-su3-pbc` gives the balanced singlet
   ground state of the permutation chain for lengths divisible by three,
   also covering the spin-1 ULS point through an energy shift.

@@ -340,7 +340,7 @@ inline constexpr std::array<Reference, 70> references{{
 }};
 
 inline constexpr std::array<Use, 2> uses_q_boson_pbc{{
-  {&references[68], "Periodic q-boson Hamiltonian (2.1), Bethe equations (2.13), and shifted energy 4 sum sin^2(k/2). Only fixed-N ground states are selected; no quenches or correlation functions."},
+  {&references[68], "Periodic q-boson Hamiltonian (2.1), Bethe equations (2.13), and shifted energy 4 sum sin^2(k/2). Fixed-N ground states and canonical real-root excitation scans; no quenches or correlation functions."},
   {&references[39], "Deformed Fock algebra (1.2)-(1.8), free/phase limits, and exact phase-model momenta (3.4). Our Hamiltonian is twice (1.1), with the +2N shift included."},
 }};
 inline constexpr std::array<Use, 3> uses_lieb_liniger_thermal{{

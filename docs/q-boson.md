@@ -2,8 +2,7 @@
 
 The C++ library `bethe/q_boson.hpp` implements the fixed-particle-number ground
 state and real-root excited states of the repulsive q-boson hopping model. The
-frontend `bethe-q-boson-pbc` currently exposes ground states; excited-state CLI
-support is a follow-up. It is **not** the
+frontend `bethe-q-boson-pbc` exposes ground states and excitation scans. It is **not** the
 ordinary Bose–Hubbard model.
 
 ## Command-line use
@@ -12,6 +11,7 @@ ordinary Bose–Hubbard model.
 build/bethe-q-boson-pbc 16 --particles 8 --eta 0.5 --roots
 build/bethe-q-boson-pbc 16 --particles 8 --phase --json phase.json
 build/bethe-q-boson-pbc 2 --particles 2 --eta 1e-60 --precision fp128
+build/bethe-q-boson-pbc 5 --particles 3 --eta 0.5 --excitations all --roots --json spectrum.json
 build/bethe-q-boson-pbc --references
 ```
 
@@ -34,6 +34,23 @@ CPU timing, metadata and JSON/CSV/TSV exports. To export multiple tables, use
 `--json result.json` or explicit destinations such as
 `--csv-table states=states.csv --csv-table roots=roots.csv` with `--roots`.
 References are displayed only with `--references`.
+
+`--excitations COUNT|all` scans all `binomial(L+N-1,N)` canonical states,
+retaining the lowest COUNT converged levels (including the ground state), or
+all of them. COUNT does **not** limit the number of solves. The default
+`--max-candidates 10000` rejects larger families before solving or opening
+output files. This option requires `--excitations`; there is no padding window.
+
+Scans add a `reference` table for the ground state and, on failure, a `failed`
+table containing the first failed candidate. `states` contains only converged
+levels, with energy gaps relative to the ground reference. If that reference
+fails, gaps are null. Any failed candidate makes the scan incomplete (exit 2),
+even if all requested retained levels were found. Metadata records candidate,
+converged, and retained counts. State IDs are unique across these tables;
+`roots` refers to those IDs and includes integer mode `m` and native-precision
+`deviation` as well as `I` and lifted `k`. On failure both `k` and `deviation`
+are null. Default ground-state mode still emits one state, with gap zero on
+success.
 
 ## Hamiltonian and conventions
 

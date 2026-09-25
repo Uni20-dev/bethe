@@ -947,7 +947,7 @@ J. Stat. Mech. (2014) P10045 (2014).
 
 Relevant tool modes:
 
-- `bethe-q-boson-pbc`: Periodic q-boson Hamiltonian (2.1), Bethe equations (2.13), and shifted energy 4 sum sin^2(k/2). Only fixed-N ground states are selected; no quenches or correlation functions.
+- `bethe-q-boson-pbc`: Periodic q-boson Hamiltonian (2.1), Bethe equations (2.13), and shifted energy 4 sum sin^2(k/2). Fixed-N ground states and canonical real-root excitation scans; no quenches or correlation functions.
 
 ### guan-batchelor-2011
 
