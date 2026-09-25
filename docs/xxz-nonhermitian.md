@@ -13,6 +13,7 @@ not spin-basis generalized eigenvectors.
 bethe-xxz-qg-obc 32 --delta 0.25
 bethe-xxz-qg-obc 7 --delta 0.6 --through-lines 3 --roots
 bethe-xxz-qg-obc 8 --delta 0.6 --numbers 1,3 --precision fp128 --json state.json
+bethe-xxz-qg-obc 8 --delta 0.6 --through-lines 4 --excitations all --roots
 bethe-xxz-qg-obc 4 --delta 0.25 --numbers none
 bethe-xxz-qg-obc 8 --delta 0 --sz 0 --json blocks.json
 bethe-xxz-qg-obc 7 --delta 0 --sz -1/2
@@ -54,7 +55,8 @@ Endpoint controls `--max-blocks` (default 100000) and `--max-mode-entries`
 (default 1000000) bound the complete enumeration. Budget refusal exits 1
 before any output file is opened, even with `--force`. No partial spectrum is
 published. The existing regular-branch `--through-lines`, `--numbers`,
-`--roots`, `--tolerance` and `--max-iterations` options are rejected at zero;
+`--roots`, `--tolerance`, `--max-iterations`, `--excitations` and
+`--max-candidates` options are rejected at zero;
 conversely `--sz` and the endpoint budget options require Delta=0. This avoids
 confusing fermion-mode labels with regular Bethe labels.
 
@@ -161,14 +163,36 @@ to these parameters. Do not replace this chain with a Hermitian matrix having
 the same real eigenvalues. Even in the implemented interval, regular-root
 solutions do not by themselves specify the full root-of-unity spectrum.
 
-The next stages are frontend access to regular-state scans and additional
-complex-root branches.
+Additional complex-root branches remain follow-ups.
 CFT fitting must identify boundary sectors and distinguish c from an effective
 central charge; a numerical Casimir coefficient is not automatically c.
 RSOS restrictions and periodic loop realizations are separate representations,
 not a boundary-field toggle on this open spin-chain solver.
 
-## Regular-state excitation scans (library)
+## Regular-state excitation scans
+
+`--excitations COUNT|all` scans the regular label family at the selected
+`--through-lines` value (default N mod 2). `COUNT` retains the lowest COUNT
+converged states, including the sea where applicable; `all` retains every
+converged candidate, **not every state of the physical sector**. Every candidate
+is attempted even when only a few results are requested. `--max-candidates`
+(default 10000) bounds this work before any solves or output files are opened.
+It requires `--excitations`; explicit `--numbers` cannot be combined with a scan.
+Budget refusal and invalid inputs exit 1, without overwriting `--force` targets.
+
+The `levels` table is ranked by energy shift and reports `gap_from_sea`.
+The `reference` table contains the selected sector's consecutive-label sea.
+If a solve fails, `failed` contains the first failed candidate, unranked, with
+missing energy and gap. All failed candidates are counted in the metadata,
+not just that diagnostic example. Partial scans exit 2 while retaining valid
+energies; gaps are missing if the sea reference failed. Successful scans exit 0
+only when every candidate and the reference converged.
+
+With `--roots`, each root row has `source` (levels/reference/failed), `state_id`
+within that source, `root_id`, I, z, lambda and a convergence flag. Reference
+roots can duplicate a ranked state intentionally; failed roots are provisional.
+All tables support the shared independent exports, streaming and `--no-retain`.
+For example, use `--csv-table levels=levels.csv --csv-table reference=sea.csv`.
 
 For 0<Delta<1, `real_quantum_number_window(N,Delta,ell)` reports the necessary
 finite-root window I=1,...,slots for M=(N-ell)/2 roots. It shares the strict
@@ -208,8 +232,7 @@ Native tests verify threshold crossings, analytic one-root energies,
 all-pairs enumeration and direct substitution of every returned two-root
 state into the original complex Bethe equations. Zero-budget and mixed
 success/failure scans test that no failed energies or unsupported gaps are
-published. The existing CLI still selects one regular state at a time;
-its complete-spectrum mode remains specific to Delta=0.
+published. The complete-spectrum mode remains specific to Delta=0.
 
 ## Exact Delta=0 spectrum and Jordan blocks
 

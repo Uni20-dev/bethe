@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Copyright (C) 2026 Ian McCulloch
+#include "excitation-report.hpp"
 #include "program-options.hpp"
 #include "result-output.hpp"
 #include <bethe/xxz_quantum_group_critical.hpp>
@@ -12,7 +13,7 @@ namespace model = bethe::xxz::quantum_group::critical;
 struct Arguments
 {
     std::size_t sites = 0;
-    std::optional<std::size_t> through_lines, iterations, max_blocks, max_mode_entries;
+    std::optional<std::size_t> through_lines, iterations, max_blocks, max_mode_entries, excitations, max_candidates;
     std::optional<std::vector<uni20::half_int>> numbers;
     std::string delta, precision = "fp64";
     std::optional<std::string> tolerance, sz;
@@ -25,17 +26,24 @@ auto program_info()
                                 bethe::citations::Tool::xxz_qg_obc);
   info.notes = {
       "Spin-half J=1: H=sum(SxSx+SySy+Delta SzSz)+i*sqrt(1-Delta^2)/2*(Sz_1-Sz_N).",
-      "Current scope: N>=2, 0<Delta<1, positive finite-real Bethe roots only; not free-end XXZ.",
+      "Regular branch: N>=2, 0<Delta<1, positive finite-real Bethe roots only; not free-end XXZ.",
       "Delta=0: complete fixed-Sz free-fermion spectrum with Jordan-block sizes; --sz defaults to (N mod 2)/2.",
-      "Default: consecutive labels with ell=N mod 2. --through-lines selects ell=N-2M, not physical SU(2) spin.",
+      "Regular default: consecutive labels with ell=N mod 2. --through-lines selects ell=N-2M, not physical SU(2) "
+      "spin.",
       "--numbers selects increasing integer labels, or none for the polarized state.",
+      "--excitations COUNT|all scans the regular label family; gaps reference the selected sector's sea, not a global "
+      "ground.",
       "Regular-root branch has no completeness or degeneracy claim. Neither branch returns Jordan vectors or CFT fits.",
       "Tolerance controls max|F|/(2N), not energy error; default 32 epsilon. Failed energies are missing (exit 2).",
       "Tables: state; optional roots contains last-iterate coordinates even on failure.",
+      "Scan tables: levels, reference, optional failed and roots. Failed candidates are unranked; partial scans exit "
+      "2.",
       "Delta=0 table: blocks, ordered by zero occupation then mode labels, not energy. Equal energies are not merged.",
       "See docs/xxz-nonhermitian.md; --references for literature."};
   info.examples = {
       {"bethe-xxz-qg-obc 32 --delta 0.25 --roots", "Consecutive-label sea"},
+      {"bethe-xxz-qg-obc 8 --delta 0.6 --through-lines 4 --excitations all", "Regular-family scan"},
+      {"bethe-xxz-qg-obc 8 --delta 0 --sz 0", "Exact endpoint sector and Jordan-block sizes"},
       {"bethe-xxz-qg-obc 8 --delta 0.6 --numbers 1,3 --precision fp128 --json state.json", "Selected regular state"}};
   return info;
 }
@@ -48,6 +56,10 @@ void add_options(CLI::App& app, Arguments& a)
   auto* lines = cli::count_option(app, "--through-lines", a.through_lines,
                                   "Consecutive-label sea with ell=N-2M; default N mod 2");
   cli::option(app, "--numbers", a.numbers, "Explicit Bethe labels, e.g. 1,3; none selects M=0")->excludes(lines);
+  cli::all_count_option(app, "--excitations", a.excitations, "Keep COUNT lowest converged regular states, or all")
+      ->excludes("--numbers");
+  cli::count_option(app, "--max-candidates", a.max_candidates, "Regular scan candidate budget; default 10000")
+      ->needs("--excitations");
   cli::text_option(app, "--tolerance", a.tolerance, "Normalized logarithmic residual tolerance");
   cli::count_option(app, "--max-iterations", a.iterations, "Simultaneous root updates (regular branch)")
       ->default_str("10000");
@@ -75,7 +87,7 @@ char const* name(model::Status s)
 template <uni20::Real Real> int run_free(Arguments const& a, uni20::run_context& context)
 {
   namespace free = bethe::xxz::quantum_group::free;
-  if (a.through_lines || a.numbers || a.tolerance || a.iterations || a.roots)
+  if (a.through_lines || a.numbers || a.tolerance || a.iterations || a.roots || a.excitations || a.max_candidates)
     throw std::invalid_argument("Delta=0 uses --sz; regular-root labels, roots and solver controls do not apply");
   auto const n = bethe::xxz::detail::checked_sites(a.sites);
   auto const sz = a.sz ? uni20::half_int::parse(*a.sz) : uni20::from_twice(n % 2);
@@ -136,6 +148,94 @@ template <uni20::Real Real> int run_free(Arguments const& a, uni20::run_context&
   output.finish();
   return 0;
 }
+template <uni20::Real Real>
+int run_scan(Arguments const& a, Real delta, bethe::SolverOptions<Real> const& controls, uni20::run_context& context)
+{
+  auto const ell = a.through_lines.value_or(a.sites % 2);
+  auto const window = model::real_quantum_number_window(a.sites, delta, ell);
+  auto const budget = a.max_candidates.value_or(10000);
+  auto const scan = context.measure([&] {
+    return model::real_excitations<Real>(a.sites, delta, ell, {.count = *a.excitations, .max_candidates = budget},
+                                         controls);
+  });
+  cli::RunReport report(context, "Non-Hermitian quantum-group XXZ regular-state scan");
+  report.field("hamiltonian", "Hamiltonian", "sum(SxSx+SySy+Delta SzSz)+i*sqrt(1-Delta^2)/2*(Sz_1-Sz_N); spin-half J=1")
+      .field("sites", "Sites", a.sites)
+      .field("delta", "Delta", delta)
+      .field("boundary_strength", "Imaginary end-field coefficient",
+             std::sqrt((Real{1} - delta) * (Real{1} + delta)) / Real{2})
+      .field("through_lines", "ell=N-2M", ell)
+      .field("sz", "Sz", uni20::from_twice(static_cast<std::int64_t>(ell)))
+      .field("roots", "Bethe roots", window.roots)
+      .field("label_slots", "Label slots", window.slots)
+      .field("label_threshold", "Exclusive label threshold", window.exclusive_threshold)
+      .field("scope", "Scope",
+             "regular positive-real family only; no full-spectrum completeness, multiplicity or Jordan claim")
+      .field("gap_reference", "Gap reference",
+             "selected sector consecutive-label sea; not a proven global ground state")
+      .field("energy_reference", "Energy reference",
+             "absolute Hamiltonian energy; shift is relative to E_F=(N-1)*Delta/4")
+      .field("ordering", "Ordering", "converged states by energy shift then labels; failed candidates excluded")
+      .field("root_coordinates", "Root coordinates",
+             "z=tanh(lambda)/tan(gamma/2), Delta=cos(gamma); failed roots are provisional")
+      .field("candidates", "Candidates", scan.candidate_count)
+      .field("converged_candidates", "Converged candidates", scan.converged_count)
+      .field("returned_levels", "Returned levels", scan.levels.size())
+      .field("requested_levels", "Requested levels",
+             *a.excitations == std::numeric_limits<std::size_t>::max() ? "all" : std::to_string(*a.excitations))
+      .field("max_candidates", "Max candidates", budget)
+      .field("reference_converged", "Sea reference converged", scan.ground_state.converged ? 1 : 0)
+      .field("precision", "Precision", a.precision)
+      .field("tolerance", "Residual tolerance", controls.residual_tolerance)
+      .field("residual", "Residual convention", "max|F|/(2N), not an energy error")
+      .field("max_iterations", "Max iterations", controls.max_iterations)
+      .result(scan.converged(), scan.converged() ? "family converged" : "incomplete family or sea reference");
+  std::vector<std::string> names{"levels", "reference"};
+  if (scan.first_unconverged) names.push_back("failed");
+  if (a.roots) names.push_back("roots");
+  cli::ResultOutput output(report, a.output, std::move(names));
+  using cli::column;
+  using Optional = std::optional<Real>;
+  auto rows = [&](std::string id, std::string title, auto&& fill) {
+    output.table(std::move(id), std::move(title), std::forward<decltype(fill)>(fill), column<std::size_t>("state_id"),
+                 column<std::string>("numbers"), column<Optional>("energy"), column<Optional>("energy_shift"),
+                 column<Optional>("gap_from_sea"), column<Real>("residual"), column<std::size_t>("iterations"),
+                 column<bool>("converged"), column<std::string>("status"));
+  };
+  auto append = [](auto& table, std::size_t id, auto const& state, Optional gap) {
+    table.append(id, cli::quantum_number_text(state.quantum_numbers), state.energy, state.energy_shift, gap,
+                 state.residual_norm, state.iterations, state.converged, std::string(name(state.status)));
+  };
+  rows("levels", "Ranked regular states", [&](auto& table) {
+    for (std::size_t i = 0; i < scan.levels.size(); ++i)
+      append(table, i, scan.levels[i].state, scan.levels[i].gap);
+  });
+  rows("reference", "Selected sea reference", [&](auto& table) {
+    append(table, 0, scan.ground_state, scan.ground_state.converged ? Optional{Real{0}} : std::nullopt);
+  });
+  if (scan.first_unconverged)
+    rows("failed", "First failed candidate (unranked)",
+         [&](auto& table) { append(table, 0, *scan.first_unconverged, std::nullopt); });
+  if (a.roots)
+    output.table(
+        "roots", "Bethe roots by table and state",
+        [&](auto& table) {
+          auto append_roots = [&](std::string const& source, std::size_t id, auto const& s) {
+            for (std::size_t j = 0; j < s.quantum_numbers.size(); ++j)
+              table.append(source, id, j, s.quantum_numbers[j], s.scaled_roots[j],
+                           uni20::isfinite(s.rapidities[j]) ? Optional{s.rapidities[j]} : std::nullopt, s.converged);
+          };
+          for (std::size_t i = 0; i < scan.levels.size(); ++i)
+            append_roots("levels", i, scan.levels[i].state);
+          append_roots("reference", 0, scan.ground_state);
+          if (scan.first_unconverged) append_roots("failed", 0, *scan.first_unconverged);
+        },
+        column<std::string>("source"), column<std::size_t>("state_id"), column<std::size_t>("root_id"),
+        column<uni20::half_int>("I"), column<Real>("z"), column<Optional>("lambda"), column<bool>("converged"));
+  output.finish();
+  if (!scan.converged()) std::cerr << "Regular-family scan incomplete; failed candidates are excluded from ranking.\n";
+  return scan.converged() ? 0 : 2;
+}
 template <uni20::Real Real> int run(Arguments const& a, int argc, char** argv)
 {
   uni20::run_context context(program_info(), {.invocation = std::vector<std::string>(argv, argv + argc)});
@@ -146,6 +246,7 @@ template <uni20::Real Real> int run(Arguments const& a, int argc, char** argv)
   bethe::SolverOptions<Real> controls;
   controls.max_iterations = a.iterations.value_or(10000);
   if (a.tolerance) controls.residual_tolerance = uni20::parse_real<Real>(*a.tolerance);
+  if (a.excitations) return run_scan<Real>(a, delta, controls, context);
   // All argument/branch validation and the solve precede opening --force targets.
   auto const s = context.measure([&] {
     return a.numbers ? model::solve_real<Real>(a.sites, delta, *a.numbers, controls)

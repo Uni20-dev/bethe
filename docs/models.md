@@ -607,9 +607,8 @@ An additional non-unitary target is now underway: the
 [quantum-group-invariant XXZ chain with imaginary boundary fields](xxz-nonhermitian.md).
 Its positive finite-real-root library and `bethe-xxz-qg-obc` frontend cover
 0<Delta<1 in native precision, with independent non-Hermitian spin-basis checks.
-The regular-state library also scans bounded label families for low-lying
-converged states, with explicit failures and gaps relative to the selected sea;
-frontend access to these scans is a follow-up.
+`--excitations COUNT|all` scans bounded regular label families for low-lying
+converged states, with explicit failures and gaps relative to the selected sea.
 A separate native Delta=0 construction, exposed by the same frontend with
 `--delta 0 --sz ...`, enumerates complete fixed-magnetization spectra with
 size-one/two Hamiltonian Jordan blocks and budgeted output.

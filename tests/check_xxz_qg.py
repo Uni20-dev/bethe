@@ -108,6 +108,70 @@ for n in range(2, 9):
         assert int(table["metadata"]["Sector dimension"]) == math.comb(n, down)
         assert all(len(r["modes"].split(","))*(r["modes"] != "")+int(r["zero_occupation"]) == down for r in rows)
 
+scan_base = ["8", "--delta", "0.6", "--through-lines", "4"]
+
+
+def scan_tables(args, status=0):
+    doc = json.loads(run([*args, "--format", "json"], status))
+    assert doc["status"] == "complete"
+    result = doc["tables"]
+    expected = ["levels", "reference"] + (["failed"] if status else []) + (["roots"] if "--roots" in args else [])
+    assert list(result) == expected
+    for table in result.values():
+        assert table["summary"]["Outcome"] == ("partial" if status else "success")
+        assert "not a proven global ground" in table["metadata"]["Gap reference"]
+        assert Decimal(table["summary"]["Run CPU seconds"]) >= 0
+    rows = records(result["levels"])
+    energies = [Decimal(r["energy_shift"]) for r in rows]
+    assert energies == sorted(energies)
+    assert all(r["converged"] for r in rows)
+    assert len(rows) == int(result["levels"]["metadata"]["Returned levels"])
+    if "--roots" in args:
+        grouped = {}
+        for root in records(result["roots"]):
+            grouped.setdefault((root["source"], root["state_id"]), []).append(root)
+        for name in expected:
+            if name == "roots":
+                continue
+            for state in records(result[name]):
+                roots = grouped.get((name, state["state_id"]), [])
+                assert [str(r["I"]) for r in roots] == ([] if state["numbers"] == "-" else state["numbers"].split(","))
+                assert all(r["converged"] == state["converged"] for r in roots)
+    return result
+
+
+for precision in precisions:
+    flags = ["--precision", precision]
+    full = scan_tables([*scan_base, "--excitations", "all", "--roots", *flags])
+    all_rows = records(full["levels"])
+    assert len(all_rows) == 10
+    assert full["levels"]["metadata"]["Candidates"] == "10"
+    assert full["levels"]["metadata"]["Converged candidates"] == "10"
+    lowest = scan_tables([*scan_base, "--excitations", "2", *flags])
+    assert records(lowest["levels"]) == all_rows[:2]
+    assert lowest["levels"]["metadata"]["Candidates"] == "10"
+    reference = records(full["reference"])[0]
+    assert reference["numbers"] == "1,2"
+    with localcontext() as ctx:
+        ctx.prec = 80
+        tol = {"fp64": Decimal("1e-13"), "long-double": Decimal("1e-16"), "fp128": Decimal("1e-31")}[precision]
+        for state in all_rows:
+            assert abs(Decimal(state["gap_from_sea"])-Decimal(state["energy_shift"])+Decimal(reference["energy_shift"])) < tol
+    failed = scan_tables([*scan_base, "--excitations", "all", "--roots", "--max-iterations", "0", *flags], 2)
+    assert not records(failed["levels"])
+    for name in ("reference", "failed"):
+        r = records(failed[name])[0]
+        assert r["energy"] is None and r["energy_shift"] is None and r["gap_from_sea"] is None
+        assert not r["converged"] and r["status"] == "iteration_limit"
+    # Select a precision-specific budget with both successful and failed candidates.
+    budget = min(int(r["iterations"]) for r in all_rows)
+    partial = scan_tables([*scan_base, "--excitations", "all", "--roots", "--max-iterations", str(budget), *flags], 2)
+    assert 0 < len(records(partial["levels"])) < 10
+    assert records(partial["failed"])[0]["energy"] is None
+    vacuum = scan_tables(["7", "--delta", "0.6", "--through-lines", "7", "--excitations", "all", "--roots", *flags])
+    assert len(records(vacuum["levels"])) == 1
+    assert Decimal(records(vacuum["levels"])[0]["gap_from_sea"]) == 0
+
 invalid = [[], ["1", "--delta", "0.25"], ["4", "--delta", "0", "--roots"], ["4", "--delta", "1"],
            ["4", "--delta", "-0.25"], ["4", "--delta", "nan"], ["4", "--delta", "inf"],
            [*base, "--through-lines", "1"], [*base, "--through-lines", "6"],
@@ -121,6 +185,10 @@ invalid += [[*endpoint, *flags] for flags in (
     ["--max-blocks", "3"], ["--max-mode-entries", "3"], ["--max-blocks", "0"],
     ["--max-mode-entries", "-1"])]
 invalid += [[*base, "--max-blocks", "10"], [*base, "--max-mode-entries", "10"], ["1", "--delta", "0"]]
+invalid += [[*scan_base, "--excitations", value] for value in ("0", "-1", "bad")]
+invalid += [[*scan_base, "--excitations", "all", "--max-candidates", value] for value in ("0", "9", "-1")]
+invalid += [[*endpoint, "--excitations", "all"], [*base, "--max-candidates", "10"],
+            [*base, "--excitations", "all", "--numbers", "1,2"]]
 with tempfile.TemporaryDirectory() as directory:
     path = Path(directory)
     flags = ["--json", str(path/"state.json")]
@@ -160,5 +228,22 @@ with tempfile.TemporaryDirectory() as directory:
     assert records(json.loads((path/"endpoint.json").read_text())["tables"]["blocks"]) == expected
     run([*endpoint, "--stream", "--no-retain", "--format", "plain"])
     run([*endpoint, "--format", "pretty"])
+    scan_flags = [*scan_base, "--excitations", "all", "--roots"]
+    output_flags = ["--json", str(path/"scan.json")]
+    for suffix in ("csv", "tsv"):
+        for name in ("levels", "reference", "roots"):
+            output_flags += [f"--{suffix}-table", f"{name}={path/f'{name}.{suffix}'}"]
+    run([*scan_flags, *output_flags, "--force", "--format", "plain"])
+    expected = json.loads((path/"scan.json").read_text())["tables"]
+    for suffix, delimiter in (("csv", ","), ("tsv", "\t")):
+        for name in expected:
+            content = (path/f"{name}.{suffix}").read_text()
+            rows = list(csv.DictReader((line for line in content.splitlines() if not line.startswith("#")), delimiter=delimiter))
+            assert rows == [{k: str(v).lower() if isinstance(v, bool) else str(v) for k,v in r.items()} for r in records(expected[name])]
+    run([*scan_flags, *output_flags, "--force", "--quiet", "--no-retain"])
+    actual = json.loads((path/"scan.json").read_text())["tables"]
+    assert all(actual[name]["rows"] == expected[name]["rows"] for name in expected)
+    run([*scan_flags, "--stream", "--no-retain", "--format", "plain"])
+    run([*scan_flags, "--format", "pretty"])
 
 print("Critical quantum-group XXZ CLI contracts passed")
