@@ -401,6 +401,10 @@ inline constexpr std::array<Reference, 82> references{{
   {"dorey-tateo-1996", "Patrick Dorey and Roberto Tateo", "Excited states by analytic continuation of TBA equations", "Nucl. Phys. B 482, 639-659", 1996, links_81},
 }};
 
+inline constexpr std::array<Use, 2> uses_lee_yang_excited{{
+  {&references[81], "Periodic spin-zero one-particle source terms, quantization and energy, Eqs. (2.3)-(2.7). Only the regular infrared branch at 5<=mL<=30 is implemented, not continuation through the source collision near mL=2.53 or higher/moving states. Levels are bulk-subtracted; gaps subtract a separately converged vacuum."},
+  {&references[80], "Source-free periodic vacuum TBA and bulk-subtracted energy, Eqs. (133), (212), (218), used as the excitation-gap reference. The CFT central charge is not inferred from the excited level."},
+}};
 inline constexpr std::array<Use, 1> uses_lee_yang_vacuum{{
   {&references[80], "Periodic source-free massive Lee-Yang ground-state TBA and bulk-subtracted finite-volume energy: equations (133), (212), (218). Equations (151)-(152) distinguish c_eff=2/5 from c=-22/5 with h_min=-1/5. No excited-state, boundary or defect equations are implemented."},
 }};
@@ -551,12 +555,13 @@ inline constexpr std::array<Use, 3> uses_gaudin_yang_pbc{{
   {&references[59], "Hamiltonian and periodic fermion equations (1), (2), (7), (8), (25); even N, odd minority population as in Sec. 5. Weak and strong limits (12), (15)-(16) provide checks. Hard walls, attraction and excitations are not implemented."},
 }};
 
-enum class Tool { lee_yang_vacuum, xxz_qg_obc, hubbard_continuum, kondo_response, sine_gordon_vacuum, asep_pbc, tasep_pbc, xyz_pbc, bose_fermi_pbc, q_boson_pbc, lieb_liniger_thermal, lieb_liniger_dispersion, biquadratic_obc, xxx_pbc, xxx_obc, xxz_pbc, xxz_obc, hubbard_dispersion, hubbard_pbc, hubbard_obc, lieb_liniger_pbc, lieb_liniger_obc, su3_pbc, tj_pbc, tb_pbc, richardson, central_spin, sun_fermions_pbc, ladder_pbc, haldane_shastry_pbc, sutherland_pbc, gaudin_yang_pbc };
+enum class Tool { lee_yang_excited, lee_yang_vacuum, xxz_qg_obc, hubbard_continuum, kondo_response, sine_gordon_vacuum, asep_pbc, tasep_pbc, xyz_pbc, bose_fermi_pbc, q_boson_pbc, lieb_liniger_thermal, lieb_liniger_dispersion, biquadratic_obc, xxx_pbc, xxx_obc, xxz_pbc, xxz_obc, hubbard_dispersion, hubbard_pbc, hubbard_obc, lieb_liniger_pbc, lieb_liniger_obc, su3_pbc, tj_pbc, tb_pbc, richardson, central_spin, sun_fermions_pbc, ladder_pbc, haldane_shastry_pbc, sutherland_pbc, gaudin_yang_pbc };
 
 [[nodiscard]] constexpr std::span<Use const> for_tool(Tool tool)
 {
   switch (tool)
   {
+    case Tool::lee_yang_excited: return uses_lee_yang_excited;
     case Tool::lee_yang_vacuum: return uses_lee_yang_vacuum;
     case Tool::xxz_qg_obc: return uses_xxz_qg_obc;
     case Tool::hubbard_continuum: return uses_hubbard_continuum;

@@ -212,6 +212,15 @@ if(BETHE_BUILD_APPS)
     add_test(NAME Citations.bethe-kondo-response.cli
       COMMAND "${CMAKE_COMMAND}" "-DPROGRAM=$<TARGET_FILE:bethe-kondo-response>"
         "-DTOOL=bethe-kondo-response" -P "${CMAKE_CURRENT_SOURCE_DIR}/check_citations_cli.cmake")
+    add_test(NAME LeeYangExcited.cli
+      COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_lee_yang_excited.py"
+        "$<TARGET_FILE:bethe-lee-yang-excited>" "${UNI20_ENABLE_MPLAPACK}")
+    add_test(NAME Arguments.bethe-lee-yang-excited.cli
+      COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_shared_arguments.py"
+        "$<TARGET_FILE:bethe-lee-yang-excited>")
+    add_test(NAME Citations.bethe-lee-yang-excited.cli
+      COMMAND "${CMAKE_COMMAND}" "-DPROGRAM=$<TARGET_FILE:bethe-lee-yang-excited>"
+        "-DTOOL=bethe-lee-yang-excited" -P "${CMAKE_CURRENT_SOURCE_DIR}/check_citations_cli.cmake")
     add_test(NAME LeeYang.cli
       COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_lee_yang.py"
         "$<TARGET_FILE:bethe-lee-yang-vacuum>" "${UNI20_ENABLE_MPLAPACK}")

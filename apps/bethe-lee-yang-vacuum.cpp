@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Copyright (C) 2026 Ian McCulloch
-#include "program-options.hpp"
+#include "lee-yang-common.hpp"
 #include "result-output.hpp"
 #include <bethe/lee_yang.hpp>
 
@@ -8,13 +8,8 @@ namespace
 {
 namespace cli = bethe::cli;
 namespace model = bethe::lee_yang;
-struct Arguments
-{
-    std::optional<std::string> mass, length, tolerance, cutoff;
-    std::size_t initial_intervals = 32, max_intervals = 2048, iterations = 1000, cutoffs = 3, products = 200000000;
-    std::string precision = "fp64";
-    cli::DataOutputOptions output;
-};
+using cli::lee_yang::Arguments;
+using cli::lee_yang::name;
 auto program_info()
 {
   auto info = cli::program_info("bethe-lee-yang-vacuum", "Periodic scaling Lee-Yang ground-state TBA.",
@@ -33,55 +28,14 @@ auto program_info()
 }
 void add_options(CLI::App& app, Arguments& a)
 {
-  cli::text_option(app, "--mass", a.mass, "Positive particle mass m; default 1")->type_name("REAL");
-  cli::text_option(app, "--length", a.length, "Positive circumference L")->required()->type_name("REAL");
-  cli::text_option(app, "--tolerance", a.tolerance, "Absolute Y tolerance; default 8192 epsilon")->type_name("REAL");
-  cli::text_option(app, "--initial-cutoff", a.cutoff, "Positive initial rapidity cutoff; default automatic")
-      ->type_name("REAL");
-  cli::count_option(app, "--initial-intervals", a.initial_intervals, "Initial intervals on positive half-line, >=2")
-      ->capture_default_str();
-  cli::count_option(app, "--max-intervals", a.max_intervals, "Maximum intervals per grid, <=8192")
-      ->capture_default_str();
-  cli::count_option(app, "--max-iterations", a.iterations, "Fixed-point updates per grid")->capture_default_str();
-  cli::count_option(app, "--max-cutoffs", a.cutoffs, "Total cutoff trials, including initial cutoff")
-      ->capture_default_str();
-  cli::count_option(app, "--max-kernel-products", a.products, "Total folded kernel-times-logarithm terms")
-      ->capture_default_str();
-  cli::precision_option(app, a.precision);
-  cli::add_data_output_options(app, a.output, true);
-}
-char const* name(model::Status s)
-{
-  switch (s)
-  {
-    case model::Status::converged:
-      return "converged";
-    case model::Status::iteration_limit:
-      return "iteration_limit";
-    case model::Status::mesh_limit:
-      return "mesh_limit";
-    case model::Status::cutoff_limit:
-      return "cutoff_limit";
-    case model::Status::work_limit:
-      return "work_limit";
-    case model::Status::precision_limit:
-      return "precision_limit";
-  }
-  return "unknown";
+  cli::lee_yang::add_options(app, a, "Absolute Y tolerance; default 8192 epsilon");
 }
 template <uni20::Real Real> int run(Arguments const& a, int argc, char** argv)
 {
   uni20::run_context context(program_info(), {.invocation = std::vector<std::string>(argv, argv + argc)});
   Real const mass = a.mass ? uni20::parse_real<Real>(*a.mass) : Real{1};
   Real const length = uni20::parse_real<Real>(*a.length);
-  model::Options<Real> options;
-  if (a.tolerance) options.tolerance = uni20::parse_real<Real>(*a.tolerance);
-  if (a.cutoff) options.initial_cutoff = uni20::parse_real<Real>(*a.cutoff);
-  options.initial_intervals = a.initial_intervals;
-  options.max_intervals = a.max_intervals;
-  options.max_iterations = a.iterations;
-  options.max_cutoffs = a.cutoffs;
-  options.max_kernel_products = a.products;
+  auto const options = cli::lee_yang::options_from<Real>(a, model::Options<Real>{});
   // Validation and the solve precede opening any --force targets.
   auto const s = context.measure([&] { return model::ground_state(mass, length, options); });
   cli::RunReport report(context, "Scaling Lee-Yang ground state (bulk-subtracted)");

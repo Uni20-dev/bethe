@@ -1103,6 +1103,7 @@ JHEP 04 (2015), 073 (2015).
 
 Relevant tool modes:
 
+- `bethe-lee-yang-excited`: Source-free periodic vacuum TBA and bulk-subtracted energy, Eqs. (133), (212), (218), used as the excitation-gap reference. The CFT central charge is not inferred from the excited level.
 - `bethe-lee-yang-vacuum`: Periodic source-free massive Lee-Yang ground-state TBA and bulk-subtracted finite-volume energy: equations (133), (212), (218). Equations (151)-(152) distinguish c\_eff=2/5 from c=-22/5 with h\_min=-1/5. No excited-state, boundary or defect equations are implemented.
 
 ### dorey-tateo-1996
@@ -1111,5 +1112,9 @@ Patrick Dorey and Roberto Tateo. *Excited states by analytic continuation of TBA
 Nucl. Phys. B 482, 639-659 (1996).
 
 [DOI](<https://doi.org/10.1016/S0550-3213(96)00516-0>), [arXiv](<https://arxiv.org/abs/hep-th/9607167>), [HTML](<https://arxiv.org/html/hep-th/9607167>).
+
+Relevant tool modes:
+
+- `bethe-lee-yang-excited`: Periodic spin-zero one-particle source terms, quantization and energy, Eqs. (2.3)-(2.7). Only the regular infrared branch at 5\<=mL\<=30 is implemented, not continuation through the source collision near mL=2.53 or higher/moving states. Levels are bulk-subtracted; gaps subtract a separately converged vacuum.
 
 <!-- END GENERATED BIBLIOGRAPHY -->

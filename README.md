@@ -81,6 +81,8 @@ Thermodynamic dispersion tools use `bethe-<model>-dispersion`.
 - [Scaling Lee–Yang](docs/lee-yang.md): `bethe-lee-yang-vacuum` gives the
   bulk-subtracted periodic ground-state energy of the non-unitary model,
   with native fp64/long-double/fp128 and separate convergence diagnostics.
+  `bethe-lee-yang-excited` adds the zero-momentum one-particle level and
+  vacuum-relative gap on the regular branch, 5<=mL<=30.
 - [Periodic TASEP](docs/tasep.md): `bethe-tasep-pbc` gives the leading relaxation
   gap and complex decay eigenvalue at arbitrary filling. These are stochastic
   rates, not quantum energies. [Bidirectional ASEP](docs/asep.md),

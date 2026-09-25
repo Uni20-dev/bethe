@@ -1,10 +1,10 @@
-# Scaling Lee–Yang model: periodic finite-volume ground state
+# Scaling Lee–Yang model: periodic finite-volume energies
 
 **Status: native fp64/long-double/fp128 periodic ground-state TBA library and
 frontend implemented and checked against an independent oracle.** This is a continuum
 field-theory calculation, not a finite spin-chain or RSOS Hamiltonian solver.
-The regular spin-zero one-particle library is also available for 5<=mL<=30;
-its frontend and continuation to small volume are not yet implemented.
+The regular spin-zero one-particle library and frontend are also available
+for 5<=mL<=30; continuation to small volume is not yet implemented.
 
 ## Command line
 
@@ -33,6 +33,45 @@ observables; unavailable diagnostics are also missing (JSON null or empty
 delimited cells), not infinity strings. Invalid input exits 1 before opening
 files, including existing `--force` targets. The [common output options](output.md)
 provide independent JSON/CSV/TSV exports, streaming and optional table retention.
+
+### One-particle level and gap
+
+```sh
+bethe-lee-yang-excited --length 5
+bethe-lee-yang-excited --mass 2 --length 2.5 --precision fp128 --json levels.json
+bethe-lee-yang-excited --length 10 --csv-table gap=gap.csv --tsv-table source=source.tsv
+bethe-lee-yang-excited --references
+```
+
+This tool computes one zero-momentum excited level, not an arbitrary
+excitation scan. Both mass and length must be positive and `5<=mL<=30`.
+The same numerical controls apply to each state separately; their tolerance
+defaults to `65536*epsilon`. `--max-root-iterations` (default 256 per grid)
+controls the excited source quantization. The default work budget is
+1000000000 kernel products **per state**, not a combined allowance.
+
+Three tables are always present:
+
+- `levels`: vacuum and one-particle bulk-subtracted energies and scaling
+  functions, with independent convergence diagnostics and work counters.
+- `source`: beta, its displacement from pi/6, quantization residual,
+  propagated source-error estimate, root-iteration count and status.
+- `gap`: E1_C-E0_C, `scaled_gap=L*gap`, estimated `gap_error` in energy
+  units, and convergence status.
+
+The energy gap is **not** the bulk-subtracted one-particle energy. The tool
+subtracts the scaling functions before dividing by L. Its gap-error estimate
+sums both verified cutoff errors (which already include nonlinear and mesh
+errors) and subtraction roundoff, then divides by L. It is not a rigorous
+error certificate. The excited table does not label its energy as an
+effective central charge.
+
+If either state fails, the tool exits 2 and leaves the gap/error fields
+missing. A successfully computed level remains available. For example,
+`--max-root-iterations 0` can leave a converged vacuum alongside an
+unavailable excited level. Invalid input, including unsupported mL, exits 1
+before opening output files even with `--force`. Shared CPU-time metadata
+covers both solves; references appear only with `--references`.
 
 ## Physics and normalization
 
@@ -183,7 +222,7 @@ including a too-small cutoff, exhausted work and unrepresentable mL.
 
 ## First excited state: independent infrared oracle
 
-**Native regular one-particle library implemented; no excited-state frontend yet.**
+**Native regular one-particle library and frontend implemented.**
 `scripts/reference_lee_yang_excited.py` solves the spin-zero one-particle
 branch for `5<=r=mL<=30`, independently of the production C++ vacuum solver.
 It reuses the Python reference quadrature and vacuum calculation for gaps.
@@ -291,9 +330,6 @@ fp64 scan of the supported interval. The vacuum regressions exercise the
 same refactored iteration and refinement code.
 
 ## Next checkpoints
-
-Next is a frontend exposing the one-particle level and its vacuum-relative
-gap with shared metadata, output tables and literature references.
 
 Continuation through the source collision toward the UV identity sector,
 moving particles, additional particles, boundaries and defects remain

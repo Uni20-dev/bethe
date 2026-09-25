@@ -870,6 +870,14 @@
   ],
   "tools": [
     {
+      "id": "lee_yang_excited",
+      "executable": "bethe-lee-yang-excited",
+      "references": [
+        {"id": "dorey-tateo-1996", "context": "Periodic spin-zero one-particle source terms, quantization and energy, Eqs. (2.3)-(2.7). Only the regular infrared branch at 5<=mL<=30 is implemented, not continuation through the source collision near mL=2.53 or higher/moving states. Levels are bulk-subtracted; gaps subtract a separately converged vacuum."},
+        {"id": "bajnok-el-deeb-pearce-2015", "context": "Source-free periodic vacuum TBA and bulk-subtracted energy, Eqs. (133), (212), (218), used as the excitation-gap reference. The CFT central charge is not inferred from the excited level."}
+      ]
+    },
+    {
       "id": "lee_yang_vacuum",
       "executable": "bethe-lee-yang-vacuum",
       "references": [

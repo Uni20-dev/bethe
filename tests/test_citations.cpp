@@ -35,6 +35,7 @@ TEST(Citations, ToolReferenceSelections)
                     refs::Tool::kondo_response,
                     refs::Tool::sine_gordon_vacuum,
                     refs::Tool::lee_yang_vacuum,
+                    refs::Tool::lee_yang_excited,
                     refs::Tool::xyz_pbc,
                     refs::Tool::xxx_obc,
                     refs::Tool::xxz_pbc,
