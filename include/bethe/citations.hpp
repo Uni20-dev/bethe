@@ -274,11 +274,15 @@ inline constexpr std::array<Link, 2> links_71{{
   {"arXiv", "https://arxiv.org/abs/1010.4842"},
 }};
 inline constexpr std::array<Link, 2> links_72{{
+  {"DOI", "https://doi.org/10.1088/0305-4470/39/41/S03"},
+  {"arXiv", "https://arxiv.org/abs/cond-mat/0611701"},
+}};
+inline constexpr std::array<Link, 2> links_73{{
   {"DOI", "https://doi.org/10.1088/0305-4470/38/7/001"},
   {"arXiv", "https://arxiv.org/abs/cond-mat/0411505"},
 }};
 
-inline constexpr std::array<Reference, 73> references{{
+inline constexpr std::array<Reference, 74> references{{
   {"barber-batchelor-1989", "Michael N. Barber and Murray T. Batchelor", "Spectrum of the biquadratic spin-1 antiferromagnetic chain", "Phys. Rev. B 40, 4621-4626", 1989, links_0},
   {"albertini-2000", "Giuseppe Albertini", "Is the purely biquadratic spin 1 chain always massive?", "arXiv:cond-mat/0012439", 2000, links_1},
   {"aufgebauer-klumper-2010", "Britta Aufgebauer and Andreas Klümper", "Quantum spin chains of Temperley-Lieb type: periodic boundary conditions, spectral multiplicities and finite temperature", "J. Stat. Mech. 2010, P05018", 2010, links_2},
@@ -351,11 +355,12 @@ inline constexpr std::array<Reference, 73> references{{
   {"caux-lieb-liniger", "Jean-Sébastien Caux", "The Bethe Ansatz: The ground state and the Lieb equation", "Online lecture notes, integrability.org", 0, links_69},
   {"pozsgay-2014-q-boson", "B. Pozsgay", "Quantum quenches and Generalized Gibbs Ensemble in a Bethe Ansatz solvable lattice model of interacting bosons", "J. Stat. Mech. (2014) P10045", 2014, links_70},
   {"guan-batchelor-2011", "X.-W. Guan and M. T. Batchelor", "Polylogs, thermodynamics and scaling functions of one-dimensional quantum many-body systems", "J. Phys. A: Math. Theor. 44, 102001", 2011, links_71},
-  {"golinelli-mallick-2005", "O. Golinelli and K. Mallick", "Spectral gap of the totally asymmetric exclusion process at arbitrary filling", "J. Phys. A: Math. Gen. 38, 1419-1425", 2005, links_72},
+  {"golinelli-mallick-2006", "O. Golinelli and K. Mallick", "The asymmetric simple exclusion process: an integrable model for non-equilibrium statistical mechanics", "J. Phys. A: Math. Gen. 39, 12679-12705", 2006, links_72},
+  {"golinelli-mallick-2005", "O. Golinelli and K. Mallick", "Spectral gap of the totally asymmetric exclusion process at arbitrary filling", "J. Phys. A: Math. Gen. 38, 1419-1425", 2005, links_73},
 }};
 
 inline constexpr std::array<Use, 2> uses_tasep_pbc{{
-  {&references[72], "Periodic TASEP finite-size Bethe equations (2)-(8) and leading relaxation branch (12)-(14) at arbitrary filling. Complex Markov eigenvalues, not energies; no partial asymmetry or full-spectrum claim."},
+  {&references[73], "Periodic TASEP finite-size Bethe equations (2)-(8) and leading relaxation branch (12)-(14) at arbitrary filling. Complex Markov eigenvalues, not energies; no partial asymmetry or full-spectrum claim."},
   {&references[50], "Original periodic asymmetric-exclusion relaxation-gap analysis. This frontend restricts hopping to the totally asymmetric case."},
 }};
 inline constexpr std::array<Use, 2> uses_xyz_pbc{{

@@ -1,10 +1,8 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Copyright (C) 2026 Ian McCulloch
+#include "exclusion_support.hpp"
 #include "test_support.hpp"
 #include <bethe/tasep.hpp>
-#include <bit>
-#include <uni20/linalg/ops/nonsymmetric_eigen.hpp>
-#include <uni20/tensor/tensor.hpp>
 
 namespace
 {
@@ -16,32 +14,7 @@ TEST(TASEPExact, MarkovGapAtEverySmallFilling)
     for (unsigned n = 1; n < l; ++n)
     {
       SCOPED_TRACE(::testing::Message() << l << " " << n);
-      std::vector<unsigned> basis;
-      std::vector<std::size_t> index(1u << l);
-      for (unsigned a = 0; a < (1u << l); ++a)
-        if (std::popcount(a) == int(n))
-        {
-          index[a] = basis.size();
-          basis.push_back(a);
-        }
-      uni20::DenseMatrix<double> m(basis.size(), basis.size());
-      for (std::size_t i = 0; i < basis.size(); ++i)
-        for (std::size_t j = 0; j < basis.size(); ++j)
-          m[i, j] = 0;
-      for (std::size_t i = 0; i < basis.size(); ++i)
-        for (unsigned j = 0; j < l; ++j)
-        {
-          auto const k = (j + 1) % l, a = basis[i];
-          if ((a & (1u << j)) && !(a & (1u << k)))
-          {
-            m[index[a ^ (1u << j) ^ (1u << k)], i] += 1;
-            m[i, i] -= 1;
-          }
-        }
-      std::vector<std::complex<double>> values(basis.size());
-      uni20::DenseMatrix<std::complex<double>> vectors(basis.size(), basis.size());
-      uni20::linalg::nonsymmetric_eigen(m, std::span<std::complex<double>>(values), vectors, false);
-      std::sort(values.begin(), values.end(), [](auto a, auto b) { return a.real() > b.real(); });
+      auto const values = test_support::exclusion_spectrum(l, n);
       auto const state = bethe::tasep::relaxation_gap(l, n, 1.0);
       ASSERT_TRUE(state.converged) << int(state.status);
       EXPECT_NEAR(*state.gap, -values[1].real(), 2e-11);

@@ -756,6 +756,17 @@
       ]
     },
     {
+      "id": "golinelli-mallick-2006",
+      "authors": "O. Golinelli and K. Mallick",
+      "title": "The asymmetric simple exclusion process: an integrable model for non-equilibrium statistical mechanics",
+      "publication": "J. Phys. A: Math. Gen. 39, 12679-12705",
+      "year": 2006,
+      "links": [
+        {"label": "DOI", "url": "https://doi.org/10.1088/0305-4470/39/41/S03"},
+        {"label": "arXiv", "url": "https://arxiv.org/abs/cond-mat/0611701"}
+      ]
+    },
+    {
       "id": "golinelli-mallick-2005",
       "authors": "O. Golinelli and K. Mallick",
       "title": "Spectral gap of the totally asymmetric exclusion process at arbitrary filling",

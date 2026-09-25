@@ -995,6 +995,13 @@ Relevant tool modes:
 
 - `bethe-lieb-liniger-thermal`: Yang-Yang pseudoenergy, root density and pressure equations (2)-(5). We solve the full integral equations, not the finite-c polylog expansion.
 
+### golinelli-mallick-2006
+
+O. Golinelli and K. Mallick. *The asymmetric simple exclusion process: an integrable model for non-equilibrium statistical mechanics*.
+J. Phys. A: Math. Gen. 39, 12679-12705 (2006).
+
+[DOI](<https://doi.org/10.1088/0305-4470/39/41/S03>), [arXiv](<https://arxiv.org/abs/cond-mat/0611701>).
+
 ### golinelli-mallick-2005
 
 O. Golinelli and K. Mallick. *Spectral gap of the totally asymmetric exclusion process at arbitrary filling*.
