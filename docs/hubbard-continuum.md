@@ -82,6 +82,9 @@ solve to ensure a partial pair of edges is not published.
 
 ## Subsequent slices
 
+The [charge-continuum design and independent oracle](hubbard-charge-continuum-design.md)
+record the next implementation's channels, conventions and reference points.
+
 Spinon–holon/antiholon and holon–antiholon thresholds require constrained
 minimization of the corresponding sums at fixed total momentum. That work
 must inspect all stationary branches and endpoints, propagate constituent

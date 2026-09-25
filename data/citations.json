@@ -809,6 +809,17 @@
         {"label": "DOI", "url": "https://doi.org/10.1103/PhysRevB.101.075132"},
         {"label": "arXiv", "url": "https://arxiv.org/abs/1911.08279"}
       ]
+    },
+    {
+      "id": "essler-korepin-1994-scattering",
+      "authors": "F. H. L. Essler and V. E. Korepin",
+      "title": "Scattering matrix and excitation spectrum of the Hubbard model",
+      "publication": "Phys. Rev. Lett. 72, 908-911",
+      "year": 1994,
+      "links": [
+        {"label": "DOI", "url": "https://doi.org/10.1103/PhysRevLett.72.908"},
+        {"label": "arXiv", "url": "https://arxiv.org/abs/cond-mat/9308004"}
+      ]
     }
   ],
   "tools": [

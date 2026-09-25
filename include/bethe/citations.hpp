@@ -293,8 +293,12 @@ inline constexpr std::array<Link, 2> links_76{{
   {"DOI", "https://doi.org/10.1103/PhysRevB.101.075132"},
   {"arXiv", "https://arxiv.org/abs/1911.08279"},
 }};
+inline constexpr std::array<Link, 2> links_77{{
+  {"DOI", "https://doi.org/10.1103/PhysRevLett.72.908"},
+  {"arXiv", "https://arxiv.org/abs/cond-mat/9308004"},
+}};
 
-inline constexpr std::array<Reference, 77> references{{
+inline constexpr std::array<Reference, 78> references{{
   {"barber-batchelor-1989", "Michael N. Barber and Murray T. Batchelor", "Spectrum of the biquadratic spin-1 antiferromagnetic chain", "Phys. Rev. B 40, 4621-4626", 1989, links_0},
   {"albertini-2000", "Giuseppe Albertini", "Is the purely biquadratic spin 1 chain always massive?", "arXiv:cond-mat/0012439", 2000, links_1},
   {"aufgebauer-klumper-2010", "Britta Aufgebauer and Andreas Klümper", "Quantum spin chains of Temperley-Lieb type: periodic boundary conditions, spectral multiplicities and finite temperature", "J. Stat. Mech. 2010, P05018", 2010, links_2},
@@ -372,6 +376,7 @@ inline constexpr std::array<Reference, 77> references{{
   {"golinelli-mallick-2006", "O. Golinelli and K. Mallick", "The asymmetric simple exclusion process: an integrable model for non-equilibrium statistical mechanics", "J. Phys. A: Math. Gen. 39, 12679-12705", 2006, links_74},
   {"golinelli-mallick-2005", "O. Golinelli and K. Mallick", "Spectral gap of the totally asymmetric exclusion process at arbitrary filling", "J. Phys. A: Math. Gen. 38, 1419-1425", 2005, links_75},
   {"barcza-2020", "G. Barcza, K. Bauerbach, F. Eickhoff, F. B. Anders, F. Gebhard, and O. Legeza", "Symmetric single-impurity Kondo model on a tight-binding chain: A comparison of analytical and numerical ground-state approaches", "Phys. Rev. B 101, 075132", 2020, links_76},
+  {"essler-korepin-1994-scattering", "F. H. L. Essler and V. E. Korepin", "Scattering matrix and excitation spectrum of the Hubbard model", "Phys. Rev. Lett. 72, 908-911", 1994, links_77},
 }};
 
 inline constexpr std::array<Use, 1> uses_hubbard_continuum{{

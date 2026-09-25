@@ -1061,4 +1061,11 @@ Relevant tool modes:
 
 - `bethe-kondo-response`: Universal zero-temperature magnetization, equations (124)-(126). Full Zeeman splitting b=2B and T\_B=2T1; impurity energy change obtained by integrating the response.
 
+### essler-korepin-1994-scattering
+
+F. H. L. Essler and V. E. Korepin. *Scattering matrix and excitation spectrum of the Hubbard model*.
+Phys. Rev. Lett. 72, 908-911 (1994).
+
+[DOI](<https://doi.org/10.1103/PhysRevLett.72.908>), [arXiv](<https://arxiv.org/abs/cond-mat/9308004>).
+
 <!-- END GENERATED BIBLIOGRAPHY -->
