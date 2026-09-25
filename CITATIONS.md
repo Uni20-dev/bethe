@@ -665,7 +665,7 @@ Phys. Rev. B 60, 9236 (1999).
 
 Relevant tool modes:
 
-- `bethe-ladder-pbc`: Permutation-form ladder Hamiltonian (2), rung basis (3), conserved color populations and chemical-potential form (4), and three nested rational equations (5). We use spin-1/2 operators, leg coefficient 1, four-spin coefficient 4, and J\_r=2\*J in (2)/(4), restoring E=E\_perm-L/4+J\_r\*(L/4-N\_s)-h\*(N\_+-N\_-). Longitudinal field enters through the conserved populations; periodic ground states and singlet-count sector minima only.
+- `bethe-ladder-pbc`: Permutation-form ladder Hamiltonian (2), rung basis (3), conserved color populations and chemical-potential form (4), and three nested rational equations (5). We use spin-1/2 operators, leg coefficient 1, four-spin coefficient 4, and J\_r=2\*J in (2)/(4), restoring E=E\_perm-L/4+J\_r\*(L/4-N\_s)-h\*(N\_+-N\_-). Longitudinal field enters through the conserved populations; periodic ground states and singlet-count or fixed-magnetization sector minima only.
 
 ### hakobyan-2004
 

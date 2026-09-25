@@ -12,6 +12,7 @@ struct Arguments
 {
     std::size_t rungs = 0, max_iterations = 10000, max_branches = 10000;
     std::optional<std::size_t> singlets;
+    std::optional<uni20::half_int> sz;
     std::optional<std::string> rung, field, tolerance;
     std::string precision = "fp64";
     cli::DataOutputOptions output;
@@ -25,10 +26,11 @@ auto program_info()
   info.notes = {"H=sum[S.S_next+T.T_next+4(S.S_next)(T.T_next)]+JR*sum S.T-h*sum(Sz+Tz).",
                 "This is NOT the ordinary two-leg Heisenberg ladder. JR may have either sign.",
                 "Sector minima include compatible SU(4) descendants; triplet populations",
-                "are minimized too, not fixed Sz. --sectors --roots prints the best state.",
+                "are minimized too unless --sz fixes total Sz. --sectors --roots prints the best state.",
                 "--field h uses energy units (g*mu_B absorbed); default zero. M=N_t+ - N_t- is total Sz.",
-                "At zero field, populations are a balanced representative, not a unique magnetization.",
-                "No excitations, fixed Sz, arbitrary four-spin couplings or open ends.",
+                "Without --sz at zero field, populations are a balanced representative, not a unique magnetization.",
+                "--sz M requires integer M in [-L,L]; compatible with --singlets or --sectors and --field.",
+                "No excited-state enumeration, arbitrary four-spin couplings or open ends.",
                 "An incomplete scan reports only a candidate upper bound, never a minimum.",
                 "See docs/ladder.md for normalization, finite-ring labels and scan cost.",
                 "Use --references for literature and applicability; see CITATIONS.md."};
@@ -39,6 +41,7 @@ void add_options(CLI::App& app, Arguments& args)
   bethe::cli::option(app, "L", args.rungs, "Number of sites or rungs")->required();
   bethe::cli::option(app, "--rung", args.rung, "Rung coupling, either sign")->required();
   bethe::cli::option(app, "--field", args.field, "Longitudinal Zeeman coefficient h, either sign; default 0");
+  bethe::cli::option(app, "--sz", args.sz, "Fix total physical Sz (integer); default minimizes all magnetizations");
   bethe::cli::option(app, "--singlets", args.singlets, "fixed singlet-count sector minimum");
   bethe::cli::option(app, "--sectors", args.sectors,
                      "all singlet-count sector minima (mutually exclusive; default: global minimum)");
@@ -57,6 +60,7 @@ void validate(Arguments const& args)
 {
   if (!args.rung) throw std::invalid_argument("--rung is required");
   if (args.sectors && args.singlets) throw std::invalid_argument("--sectors and --singlets are mutually exclusive");
+  if (args.sz && args.sz->twice() % 2) throw std::invalid_argument("ladder --sz must be an integer");
   args.output.validate();
 }
 char const* status(model::SolveStatus value)
@@ -95,9 +99,12 @@ template <uni20::Real Real> int run(Arguments const& args, int argc, char** argv
   std::optional<model::SectorScan<Real>> scan;
   if (args.sectors)
   {
-    scan = model::sector_ground_states(args.rungs, rung, field, options);
+    scan = args.sz ? model::magnetization_sector_ground_states(args.rungs, args.sz->twice() / 2, rung, field, options)
+                   : model::sector_ground_states(args.rungs, rung, field, options);
     state = model::minimum_candidate(*scan);
   }
+  else if (args.sz)
+    state = model::magnetization_ground_state(args.rungs, args.sz->twice() / 2, rung, field, options, args.singlets);
   else if (args.singlets)
     state = model::sector_ground_state(args.rungs, *args.singlets, rung, field, options);
   else
@@ -107,9 +114,12 @@ template <uni20::Real Real> int run(Arguments const& args, int argc, char** argv
   report.status(state.converged ? cli::semantic_glyph::success : cli::semantic_glyph::warning, status(state.status))
       .field("hamiltonian", "Hamiltonian", "H=sum[S.S_next+T.T_next+4(S.S_next)(T.T_next)]+J_r*sum S.T-h*sum(Sz+Tz)")
       .field("calculation", "Calculation",
-             args.singlets  ? "fixed singlet-count sector"
-             : args.sectors ? "all singlet-count sectors"
-                            : "global ground state")
+             args.sz         ? (args.singlets  ? "fixed Sz and singlet count"
+                                : args.sectors ? "singlet-count sectors at fixed Sz"
+                                               : "fixed Sz sector minimum")
+             : args.singlets ? "fixed singlet-count sector"
+             : args.sectors  ? "all singlet-count sectors"
+                             : "global ground state")
       .field("rungs", "Rungs", args.rungs)
       .field("rung_coupling_j_r", "Rung coupling J_r", rung)
       .field("magnetic_field", "Magnetic field h", field)
@@ -118,6 +128,7 @@ template <uni20::Real Real> int run(Arguments const& args, int argc, char** argv
       .field("precision", "Precision", args.precision)
       .field("residual_tolerance", "Residual tolerance", options.residual_tolerance)
       .result(state.converged, status(state.status));
+  if (args.sz) report.field("requested_sz", "Requested total Sz", *args.sz);
   if (state.energy)
   {
     report.field("total_energy", state.converged ? "Total energy" : "Candidate energy (upper bound)", *state.energy)

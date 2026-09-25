@@ -4,6 +4,7 @@
 #include <bethe/heisenberg.hpp>
 #include <bethe/ladder.hpp>
 #include <bethe/su3.hpp>
+#include <bit>
 #include <map>
 #include <uni20/linalg/ops/self_adjoint_eigh.hpp>
 
@@ -56,7 +57,7 @@ Exact permutation_ground(unsigned l, model::detail::Shape const& counts)
                           basis.size() > 1 ? eig.eigenvalues[1] - eig.eigenvalues[0] : 1};
 }
 
-double spin_ground(unsigned l, double rung, double field = 0)
+double spin_ground(unsigned l, double rung, double field = 0, std::optional<int> projection = {})
 {
   // Literal spin-1/2 dot products, not the permutation identity used by BA.
   unsigned const size = 1u << (2 * l);
@@ -84,6 +85,17 @@ double spin_ground(unsigned l, double rung, double field = 0)
         for (auto [row, w] : dot(mid, 2 * j + 1, 2 * k + 1))
           h[row, col] += 4 * v * w;
     }
+  if (projection)
+  {
+    std::vector<unsigned> basis;
+    for (unsigned word = 0; word < size; ++word)
+      if (std::popcount(word) - int(l) == *projection) basis.push_back(word);
+    uni20::DenseMatrix<double> block(basis.size(), basis.size());
+    for (std::size_t i = 0; i < basis.size(); ++i)
+      for (std::size_t j = 0; j < basis.size(); ++j)
+        block[i, j] = h[basis[i], basis[j]];
+    return uni20::linalg::eigh(std::move(block)).eigenvalues[0];
+  }
   return uni20::linalg::eigh(std::move(h)).eigenvalues[0];
 }
 
@@ -191,14 +203,29 @@ TEST(LadderOracles, ExtremalWeightsAgainstExhaustiveDominance)
             EXPECT_EQ(weight[1], reverse[3]);
             EXPECT_EQ(weight[3], reverse[1]);
             std::int64_t largest = -std::int64_t(l);
+            std::vector<bool> available(2 * l + 1);
             for (std::size_t plus = 0; plus <= l - ns; ++plus)
               for (std::size_t minus = 0; minus <= l - ns - plus; ++minus)
               {
                 model::detail::Shape const candidate{ns, plus, l - ns - plus - minus, minus};
                 if (model::detail::dominates(shape, candidate))
+                {
                   largest = std::max(largest, model::detail::magnetization(candidate));
+                  available[std::size_t(model::detail::magnetization(candidate) + std::int64_t(l))] = true;
+                }
               }
             EXPECT_EQ(model::detail::magnetization(weight), largest);
+            for (std::int64_t m = -std::int64_t(l); m <= std::int64_t(l); ++m)
+            {
+              auto const fixed = model::detail::fixed_magnetization_populations(shape, ns, m);
+              ASSERT_EQ(fixed.has_value(), available[std::size_t(m + std::int64_t(l))]);
+              if (fixed)
+              {
+                EXPECT_TRUE(model::detail::dominates(shape, *fixed));
+                EXPECT_EQ(model::detail::magnetization(*fixed), m);
+                EXPECT_EQ((*fixed)[0], ns);
+              }
+            }
           }
         }
 }
@@ -295,6 +322,93 @@ TYPED_TEST(Ladder, FieldNativePrecisionLimitsAndBudgets)
   EXPECT_THROW((void)model::ground_state<Real>(6, Real{5}, uni20::numeric_limits<Real>::infinity()),
                std::invalid_argument);
   EXPECT_THROW((void)model::sector_ground_state<Real>(6, 6, Real{5}, uni20::numeric_limits<Real>::quiet_NaN()),
+               std::invalid_argument);
+}
+
+TYPED_TEST(Ladder, FixedMagnetizationAgainstAllPopulationMatrices)
+{
+  using Real = TypeParam;
+  for (unsigned l = 2; l <= 6; ++l)
+    for (int m = -int(l); m <= int(l); ++m)
+    {
+      auto const scan = model::magnetization_sector_ground_states<Real>(l, m, Real{0.75}, Real{0.375});
+      ASSERT_TRUE(scan.complete);
+      ASSERT_EQ(scan.sectors.size(), l - std::size_t(std::abs(m)) + 1);
+      for (auto const& s : scan.sectors)
+      {
+        double best = std::numeric_limits<double>::infinity();
+        for (std::size_t plus = 0; plus <= l - s.singlets; ++plus)
+          for (std::size_t minus = 0; minus <= l - s.singlets - plus; ++minus)
+          {
+            if (int(plus) - int(minus) != m) continue;
+            model::detail::Shape const counts{s.singlets, plus, l - s.singlets - plus - minus, minus};
+            best =
+                std::min(best, permutation_ground(l, counts).energy - l / 4. + .75 * (l / 4. - s.singlets) - .375 * m);
+          }
+        ASSERT_TRUE(s.energy);
+        EXPECT_REAL_NEAR(*s.energy, Real(best), Real{1} / Real{1000000000}) << l << "," << m << "," << s.singlets;
+        EXPECT_EQ(s.magnetization, m);
+        ASSERT_NO_FATAL_FAILURE(check_branch(s));
+      }
+    }
+}
+
+TEST(LadderOracles, FixedMagnetizationLiteralSpinHamiltonian)
+{
+  for (unsigned l : {2, 3, 4})
+    for (double rung : {-2., 1., 5.})
+      for (int m = -int(l); m <= int(l); ++m)
+      {
+        auto const state = model::magnetization_ground_state(l, m, rung, -.75);
+        ASSERT_TRUE(state.converged);
+        EXPECT_NEAR(*state.energy, spin_ground(l, rung, -.75, m), 1e-10) << l << "," << rung << "," << m;
+      }
+}
+
+TYPED_TEST(Ladder, FixedMagnetizationNativeShiftsAndBudgets)
+{
+  using Real = TypeParam;
+  Real const eps = uni20::numeric_limits<Real>::epsilon(), field = std::sqrt(Real{2});
+  for (int m : {-2, -1, 0, 1, 2})
+  {
+    auto const zero = model::magnetization_ground_state<Real>(6, m, Real{0}, Real{0}, {}, 4);
+    auto const shifted = model::magnetization_ground_state<Real>(6, m, Real{0}, field, {}, 4);
+    ASSERT_TRUE(zero.converged && shifted.converged);
+    EXPECT_REAL_NEAR(*zero.energy, Real{-0.5} - std::sqrt(Real{5}), Real{4096} * eps);
+    EXPECT_REAL_NEAR(*shifted.energy, Real{-0.5} - std::sqrt(Real{5}) - field * Real(m), Real{4096} * eps);
+    EXPECT_EQ(zero.highest_weight.shape, shifted.highest_weight.shape);
+    EXPECT_EQ(zero.populations, shifted.populations);
+    EXPECT_EQ(shifted.magnetization, m);
+  }
+  auto const a = model::magnetization_ground_state<Real>(6, 1, Real{1});
+  auto const b = model::magnetization_ground_state<Real>(6, 1, Real{1}, Real{1} / (eps * eps));
+  ASSERT_TRUE(a.converged && b.converged);
+  EXPECT_EQ(a.singlets, b.singlets);
+  EXPECT_EQ(a.highest_weight.shape, b.highest_weight.shape);
+  model::SolverOptions<Real> options;
+  options.max_branches = options.max_iterations = 0;
+  for (int m : {-7, 7})
+  {
+    auto const saturated = model::magnetization_ground_state<Real>(7, m, Real{-2}, field, options);
+    ASSERT_TRUE(saturated.converged && saturated.analytic);
+    EXPECT_EQ(saturated.magnetization, m);
+    EXPECT_REAL_NEAR(*saturated.energy, Real{7} / Real{4} - field * Real(m), Real{128} * eps);
+  }
+  auto const singlets = model::magnetization_ground_state<Real>(6, 0, Real{-2}, field, options, 6);
+  EXPECT_TRUE(singlets.converged && singlets.analytic);
+  auto const failed = model::magnetization_ground_state<Real>(6, 1, Real{1}, field, options);
+  EXPECT_FALSE(failed.converged);
+  EXPECT_FALSE(failed.energy);
+  options.max_branches = 100;
+  auto const partial = model::magnetization_ground_state<Real>(6, 1, Real{1}, field, options);
+  EXPECT_FALSE(partial.converged);
+  ASSERT_TRUE(partial.energy);
+  EXPECT_EQ(partial.magnetization, 1);
+  EXPECT_THROW((void)model::magnetization_ground_state<Real>(6, 7, Real{1}), std::invalid_argument);
+  EXPECT_THROW((void)model::magnetization_ground_state<Real>(6, std::numeric_limits<std::int64_t>::min(), Real{1}),
+               std::invalid_argument);
+  EXPECT_THROW((void)model::magnetization_ground_state<Real>(6, 2, Real{1}, field, {}, 5), std::invalid_argument);
+  EXPECT_THROW((void)model::magnetization_ground_state<Real>(6, 6, Real{1}, uni20::numeric_limits<Real>::quiet_NaN()),
                std::invalid_argument);
 }
 

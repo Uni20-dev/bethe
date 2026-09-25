@@ -73,6 +73,30 @@ inline std::int64_t magnetization(Shape const& populations)
 {
   return std::int64_t(populations[1]) - std::int64_t(populations[3]);
 }
+// A four-color weight belongs to lambda iff every single entry is between
+// lambda_3 and lambda_0 and every pair sums to at most lambda_0+lambda_1.
+// With N_s fixed, these become identical lower/upper bounds on the three
+// triplet populations. Intersect with (N_+,N_0,N_-)=(x+|M|,T-|M|-2x,x).
+inline std::optional<Shape> fixed_magnetization_populations(Shape const& shape, std::size_t singlets,
+                                                            std::int64_t projection)
+{
+  auto const l = shape[0] + shape[1] + shape[2] + shape[3];
+  if (singlets < shape[3] || singlets > shape[0] || projection < -std::int64_t(l - singlets) ||
+      projection > std::int64_t(l - singlets))
+    return {};
+  auto const m = std::size_t(projection < 0 ? -projection : projection), total = l - singlets;
+  auto const pair = shape[0] + shape[1];
+  auto const lower = std::max(shape[3], total > pair ? total - pair : 0);
+  auto const upper = std::min(shape[0], pair - singlets);
+  if (m > upper || total - m < lower) return {};
+  auto const excess = total - m > upper ? total - m - upper : 0;
+  auto const first = std::max(lower, excess / 2 + excess % 2);
+  auto const last = std::min(upper - m, (total - m - lower) / 2);
+  if (first > last) return {};
+  Shape weight{singlets, first + m, total - m - 2 * first, first};
+  if (projection < 0) std::swap(weight[1], weight[3]);
+  return weight;
+}
 template <uni20::Real Real> void validate(std::size_t l, Real rung, SolverOptions<Real> const& options)
 {
   if (l < 2 || l > std::size_t(std::numeric_limits<std::int64_t>::max() / 8))
@@ -116,17 +140,26 @@ template <uni20::Real Real> State<Real> product(std::size_t l, Real rung, Real f
 }
 template <uni20::Real Real>
 SectorScan<Real> scan(std::size_t l, Real rung, Real field, std::optional<std::size_t> only,
-                      SolverOptions<Real> const& options)
+                      SolverOptions<Real> const& options, std::optional<std::int64_t> projection = {})
 {
   validate(l, rung, options);
   if (!uni20::isfinite(field)) throw std::invalid_argument("ladder magnetic field must be finite");
   if (only && *only > l) throw std::invalid_argument("singlet count must not exceed the number of rungs");
+  if (projection && (*projection < -std::int64_t(l) || *projection > std::int64_t(l)))
+    throw std::invalid_argument("ladder magnetization must be an integer in [-L,L]");
+  auto const magnitude = projection ? std::size_t(*projection < 0 ? -*projection : *projection) : 0;
+  if (only && *only > l - magnitude)
+    throw std::invalid_argument("singlet count is incompatible with the requested magnetization");
   if (only && *only == l)
     return {.sectors = {product(l, rung, field, 0)}, .complete = true, .status = SolveStatus::converged};
+  if (magnitude == l)
+    return {.sectors = {product(l, rung, field, *projection > 0 ? 1 : 3)},
+            .complete = true,
+            .status = SolveStatus::converged};
   auto const order = l + l / 2, elements = std::size_t(std::numeric_limits<std::ptrdiff_t>::max()) / sizeof(Real);
   if (order > elements / order) throw std::length_error("ladder Newton matrix is too large");
   SectorScan<Real> out;
-  auto const begin = only ? *only : 0, end = only ? *only : l;
+  auto const begin = only ? *only : 0, end = only ? *only : l - magnitude;
   for (std::size_t ns = begin; ns <= end; ++ns)
   {
     State<Real> s;
@@ -142,9 +175,20 @@ SectorScan<Real> scan(std::size_t l, Real rung, Real field, std::optional<std::s
   // requested population. Their descendants can be lower than that weight's
   // own filled-sea state on a ring; omitting them gives wrong sector minima.
   auto visit = [&]() {
+    std::vector<std::optional<Shape>> weights;
+    weights.reserve(out.sectors.size());
     bool relevant = false;
     for (auto const& s : out.sectors)
-      if (dominates(shape, populations(l, s.singlets))) relevant = true;
+    {
+      std::optional<Shape> weight;
+      if (projection)
+        weight = fixed_magnetization_populations(shape, s.singlets, *projection);
+      else if (dominates(shape, populations(l, s.singlets)))
+        weight =
+            field == Real{0} ? populations(l, s.singlets) : polarized_populations(shape, s.singlets, field < Real{0});
+      relevant = relevant || weight.has_value();
+      weights.push_back(weight);
+    }
     if (!relevant) return true;
     ++out.tableaux;
     for (auto const& shift : shifts(shape))
@@ -165,11 +209,11 @@ SectorScan<Real> scan(std::size_t l, Real rung, Real field, std::optional<std::s
                                                                       : SolveStatus::stalled;
         return false;
       }
-      for (auto& s : out.sectors)
-        if (dominates(shape, populations(l, s.singlets)))
+      for (std::size_t index = 0; index < out.sectors.size(); ++index)
+        if (weights[index])
         {
-          auto const weight =
-              field == Real{0} ? populations(l, s.singlets) : polarized_populations(shape, s.singlets, field < Real{0});
+          auto& s = out.sectors[index];
+          auto const& weight = *weights[index];
           // Cancel common shifts before comparing: a large field must not
           // erase differences between branches with identical magnetization.
           if (!s.energy ||
@@ -282,5 +326,24 @@ template <uni20::Real Real = double>
 [[nodiscard]] State<Real> ground_state(std::size_t rungs, Real rung, SolverOptions<Real> const& options = {})
 {
   return ground_state(rungs, rung, Real{0}, options);
+}
+
+/// All allowed singlet-count sectors at fixed total physical Sz. No parity
+/// restriction on integer Sz: a rung triplet also has a zero-projection state.
+template <uni20::Real Real = double>
+[[nodiscard]] SectorScan<Real> magnetization_sector_ground_states(std::size_t rungs, std::int64_t projection, Real rung,
+                                                                  Real field = Real{0},
+                                                                  SolverOptions<Real> const& options = {})
+{
+  return detail::scan(rungs, rung, field, std::nullopt, options, projection);
+}
+/// Lowest energy at fixed total Sz, optionally also fixing the singlet count.
+/// Field only adds -h*Sz here; it cannot change the selected multiplet.
+template <uni20::Real Real = double>
+[[nodiscard]] State<Real> magnetization_ground_state(std::size_t rungs, std::int64_t projection, Real rung,
+                                                     Real field = Real{0}, SolverOptions<Real> const& options = {},
+                                                     std::optional<std::size_t> singlets = {})
+{
+  return minimum_candidate(detail::scan(rungs, rung, field, singlets, options, projection));
 }
 } // namespace bethe::ladder

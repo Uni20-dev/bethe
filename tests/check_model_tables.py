@@ -167,4 +167,19 @@ for executable in programs:
         missing = json.loads(run(program, [*args, "--field", "0.5", "--max-branches", "0", "--format", "json"], status=2).stdout)["tables"]
         assert records(missing["states"])[0]["magnetization"] is None
         assert not records(missing["representations"])
+        for projection in ("-2", "0", "1", "6"):
+            fixed = json.loads(run(program, [*args, "--sz", projection, "--sectors", "--field", "0.5", "--format", "json"]).stdout)["tables"]
+            states = records(fixed["states"])
+            assert len(states) == 7 - abs(int(projection))
+            assert all(r["magnetization"] == projection for r in states)
+            assert Decimal(fixed["states"]["metadata"]["Requested total Sz"]) == Decimal(projection)
+            selected, = [r for r in states if r["selected"]]
+            assert all(r["state_id"] == selected["state_id"] for r in records(fixed["roots"]))
+            pops = records(fixed["representations"])
+            for r in states:
+                counts = [int(p["population"]) for p in pops if p["state_id"] == r["state_id"]]
+                assert counts[1] - counts[3] == int(projection)
+        constrained_missing = json.loads(run(program, [*args, "--sz", "1", "--max-branches", "0", "--format", "json"], status=2).stdout)["tables"]
+        assert records(constrained_missing["states"])[0]["magnetization"] is None
+        assert Decimal(constrained_missing["states"]["metadata"]["Requested total Sz"]) == 1
 print(f"Native model table contracts passed for {len(programs)} frontends")

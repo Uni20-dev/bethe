@@ -89,7 +89,7 @@ paper's correlation functions, thermodynamics, or full spectrum.
 | `gaudin-magnet` | Rational spin-1/2 central spin | Implemented (limited): [sector minima](central-spin.md), distinct nonzero bath couplings of either sign, central field of either sign or zero | Repeated/zero couplings, higher local spins, excitations, general Gaudin charges |
 | `multicomponent-gas` | Equal-mass SU(κ) delta fermions | Implemented (limited): [repulsive PBC](su-fermions.md), odd occupied populations, any number of components, unrestricted free/single-component limits | Other periodic shells, attraction, excitations, hard walls, TBA |
 | `bose-fermi` | Equal-mass, equal-repulsion scalar Bose–Fermi gas | [Ground-state library/frontend](bose-fermi.md): PBC, odd fermion population; unrestricted pure/free limits | Other shells, excitations, thermodynamics |
-| `integrable-ladder` | Wang's spin-1/2 ladder with four-spin exchange | Implemented (limited): [PBC with longitudinal field](ladder.md), global and singlet-count sector ground energies and magnetization, either sign of J_r and h, leg coefficient 1 and four-spin coefficient 4 | Fixed Sz, excitations, open ends, other integrable ladder families |
+| `integrable-ladder` | Wang's spin-1/2 ladder with four-spin exchange | Implemented (limited): [PBC with longitudinal field](ladder.md), global, singlet-count and fixed-Sz sector minima, either sign of J_r and h, leg coefficient 1 and four-spin coefficient 4 | Excited-state enumeration, open ends, other integrable ladder families |
 
 Analytic thermodynamic XXX/XXZ spinon dispersions are separate existing
 facilities; they do not constitute a general thermodynamic Bethe ansatz
@@ -498,8 +498,11 @@ global scan also converged within the default budgets.
 
 Field-dependent populations and magnetization are checked against exhaustive
 weight enumeration and independent finite-ring Hamiltonians.
-**Next slice:** fixed-Sz sectors or explicit excited branches, with new
-finite-ring state-selection checks. The ordinary
+Fixed-Sz constraints are also implemented, optionally combined with fixed
+singlet count. Integer weight-membership bounds select compatible multiplets
+without changing the nested equations; independent population and literal
+spin-basis sector matrices validate the results.
+**Next slice:** explicit excited branches, with new finite-ring state-selection checks. The ordinary
 two-leg Heisenberg ladder at generic couplings is not integrable here.
 
 ## Extensions of current models, rather than new solvers
@@ -604,7 +607,7 @@ initial deliverable, rather than an unqualified claim of model support.
 | --- | --- | --- |
 | `gaudin-magnet` | Rational Gaudin magnets; a concrete central-spin realization is treated by [Faribault–Schuricht](../CITATIONS.md#faribault-schuricht-2013) | [Central-spin sector ground states implemented](central-spin.md); general Gaudin charges, repeated couplings and higher spins remain open, not arbitrary spin-bath interactions |
 | `multicomponent-gas` | Equal-mass SU(kappa) delta fermions, [Lee et al.](../CITATIONS.md#lee-2011); equal-mass Bose–Fermi mixture with equal repulsive Bose–Bose/Bose–Fermi couplings, [Imambekov–Demler](../CITATIONS.md#imambekov-demler-2006) | [Odd-population fermion sectors](su-fermions.md) and the [odd-fermion Bose–Fermi ground-state library](bose-fermi.md) implemented; other shells remain open. A trapped local-density calculation would be an approximation, not an exact trapped BA solution |
-| `integrable-ladder` | [Wang's ladder](../CITATIONS.md#wang-1999), with its required exchange and four-spin terms | [Periodic sector minima and longitudinal fields implemented](ladder.md); fixed Sz and excitations remain open. Not the ordinary two-leg Heisenberg ladder at generic couplings |
+| `integrable-ladder` | [Wang's ladder](../CITATIONS.md#wang-1999), with its required exchange and four-spin terms | [Periodic sector minima, fixed Sz and longitudinal fields implemented](ladder.md); excited-state enumeration remains open. Not the ordinary two-leg Heisenberg ladder at generic couplings |
 | `q-boson` | Deformed boson hopping and its phase-model limit, [Bogoliubov–Izergin–Kitanine](../CITATIONS.md#bogoliubov-1997) and [Pozsgay](../CITATIONS.md#pozsgay-2014-q-boson) | [Fixed-N PBC ground-state and excitation library/frontend implemented](q-boson.md), with small-sector full-spectrum checks, free/phase limits and continuum scaling. Not the standard Bose–Hubbard chain |
 | `xyz` | Zero-field spin-1/2 XYZ / eight-vertex family, [Baxter](../CITATIONS.md#baxter-1973) and [Zhang–Klümper–Popkov](../CITATIONS.md#zhang-klumper-popkov-2024) | [Native-precision even-chain regular ground solver and frontend implemented](xyz.md), checked against small-chain exact energies and XXZ limits; singular solutions and excited spectrum remain. Sz is not generally conserved |
 | `haldane-shastry` | Spin-1/2 inverse-chord-square exchange on a ring, [Haldane](../CITATIONS.md#haldane-1988) and [Shastry](../CITATIONS.md#shastry-1988) | [Implemented](haldane-shastry.md): exact motif energies, momenta, Yangian dimensions and spin-sector minima. Full motif scans have an explicit budget; SU(2) decomposition, wavefunctions and correlations remain future work |

@@ -27,6 +27,8 @@ build/bethe-ladder-pbc 6 --rung 0 --singlets 4 --roots
 build/bethe-ladder-pbc 24 --rung 2 --precision long-double
 build/bethe-ladder-pbc 12 --rung 5 --field 3 --sectors
 build/bethe-ladder-pbc 6 --rung 0 --singlets 4 --field -0.125 --roots
+build/bethe-ladder-pbc 12 --rung 1 --sz 2 --sectors
+build/bethe-ladder-pbc 6 --rung 0 --sz 0 --singlets 4 --roots
 # Requires a binary128-enabled build:
 build/bethe-ladder-pbc 8 --rung 1 --precision fp128 --roots
 ```
@@ -34,20 +36,42 @@ build/bethe-ladder-pbc 8 --rung 1 --precision fp128 --roots
 The default compares all singlet-count sectors. `--singlets NS` selects a
 single sector, while `--sectors` lists all L+1 sector minima and reports the
 lowest one in the overview. These two options are mutually exclusive.
-Within each singlet sector, the triplet populations are minimized too:
-this is **not a fixed-Sz calculation**. The implementation returns one
+Within each singlet sector, the triplet populations are minimized too.
+`--sz M` additionally fixes total physical Sz to the integer M in `[-L,L]`;
+without it, Sz is minimized as well. The implementation returns one
 minimizing representative, not every degenerate state. Reported momenta
 refer to translation by one rung, `P=2*pi*momentum_index/L`; the reflected
 index identifies its parity partner (possibly the same momentum).
 
 The `magnetization` column gives total `M=N_t+ - N_t-`, not M per rung.
 At a level crossing only one minimizer is returned, not all degenerate states
-or a thermal average. Exactly at zero field the original balanced-triplet
+or a thermal average. Without `--sz`, exactly at zero field the original balanced-triplet
 representative is retained; its M is not a unique zero-field response.
 
-Excitations, fixed-Sz constraints, twists, open ends, arbitrary
+Excited-state enumeration, twists, open ends, arbitrary
 four-spin couplings, correlation functions and thermodynamics are not
 implemented.
+
+## Fixed magnetization sectors
+
+`--sz M` can be combined with `--singlets NS` or `--sectors`, and with
+either sign of `--field`. At fixed M the field contributes only `-h*M`:
+it does not change the minimizing roots or singlet count. This differs
+from choosing a field and letting M minimize freely; some finite-size
+sectors need not become global minima for any field.
+
+The rung contains two spin-1/2 sites, so total Sz is always an integer,
+even for odd L. There is no extra parity constraint on `L-N_s-M`, because
+the triplet t0 has zero projection. Feasibility is `|M|<=L-N_s`.
+With `--sectors`, only `N_s=0,...,L-|M|` are listed. Incompatible explicit
+constraints are input errors, not empty successful calculations.
+At `|M|=L` the unique polarized state is returned analytically, even when
+it is *not* the unconstrained ground state and even with zero solve budgets.
+
+These results are minima of **Sz sectors**, not states of prescribed total
+spin S, and do not enumerate excited levels within a sector. At h=0 a
+spin-S multiplet contributes to all `|M|<=S`; equal sector energies can
+therefore be ordinary SU(2) degeneracies.
 
 ## Why a ladder becomes a four-color chain
 
@@ -141,6 +165,25 @@ independent color-word Hamiltonians through six rungs. For L=6, N_s=4 and
 small positive h, the minimizing population is `(4,2,0,0)`, not `(4,1,1,0)`:
 simply shifting the old balanced representative loses a unit of Zeeman energy.
 
+For a fixed M, there is no need to solve every individual triplet population.
+Dominance of a four-color weight by lambda is equivalent to bounding all
+single entries between `lambda_3` and `lambda_0`, and all pair sums above
+by `P=lambda_0+lambda_1`. At fixed N_s, with `T=L-N_s`, every triplet
+population consequently lies in the same interval
+
+```text
+lower = max(lambda_3, T-P)
+upper = min(lambda_0, P-N_s).
+```
+
+For nonnegative M write `(N_+,N_0,N_-)=(x+M,T-M-2x,x)` and intersect these
+three bounds over integer x. Negative M swaps t+ and t-. An empty interval
+means the multiplet is absent from this sector. Otherwise one representative
+suffices: its permutation energy is independent of x. This constant-time
+membership calculation is exhaustively checked against all population
+vectors through 16 rungs. The shared scan still solves each relevant
+highest-weight sea only once and reuses it across singlet-count sectors.
+
 ## Three nested real seas
 
 Remove trailing zero rows and let k<=4 be the remaining number of colors.
@@ -214,6 +257,10 @@ auto scan = bethe::ladder::sector_ground_states<long double>(12, -1.0L);
 auto field_ground = bethe::ladder::ground_state<long double>(12, 5.0L, 3.0L);
 auto field_sector = bethe::ladder::sector_ground_state<long double>(6, 4, 0.0L, -0.125L);
 // Optional SolverOptions follows the field; zero-field overloads remain supported.
+auto fixed_sz = bethe::ladder::magnetization_ground_state<long double>(12, 2, 1.0L);
+auto sz_scan = bethe::ladder::magnetization_sector_ground_states<long double>(12, 2, 1.0L);
+// Last optional argument fixes N_s too: (L, M, J_r, h, options, N_s).
+auto both = bethe::ladder::magnetization_ground_state<long double>(6, 0, 0.0L, 0.0L, {}, 4);
 // Check ground.converged / scan.complete before interpreting minima.
 // State::energy is optional; State::highest_weight owns the representative roots.
 ```
@@ -222,7 +269,8 @@ Regression tests cover independent fixed-population permutation matrices
 through seven rungs, literal spin-basis ladder matrices through four rungs,
 the descendant counterexamples, original multiplicative Bethe equations,
 momentum, analytic Jacobians, SU(2)/SU(3) reductions, both field signs,
-magnetization/energy slopes, exact rung/one-triplet/polarized
+magnetization/energy slopes, every fixed-Sz/singlet-count sector through six
+rungs, literal spin-basis Sz blocks through four rungs, exact rung/one-triplet/polarized
 limits and native-precision algebraic energies. Larger scans, budget
 failures, parsing, formatting and generated literature citations are also
 checked. See [the centralized bibliography](../CITATIONS.md#wang-1999).
