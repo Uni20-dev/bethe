@@ -3,6 +3,8 @@
 **Status: native fp64/long-double/fp128 periodic ground-state TBA library and
 frontend implemented and checked against an independent oracle.** This is a continuum
 field-theory calculation, not a finite spin-chain or RSOS Hamiltonian solver.
+The regular spin-zero one-particle library is also available for 5<=mL<=30;
+its frontend and continuation to small volume are not yet implemented.
 
 ## Command line
 
@@ -181,7 +183,7 @@ including a too-small cutoff, exhausted work and unrepresentable mL.
 
 ## First excited state: independent infrared oracle
 
-**Research checkpoint only: no native excited-state API or frontend yet.**
+**Native regular one-particle library implemented; no excited-state frontend yet.**
 `scripts/reference_lee_yang_excited.py` solves the spin-zero one-particle
 branch for `5<=r=mL<=30`, independently of the production C++ vacuum solver.
 It reuses the Python reference quadrature and vacuum calculation for gaps.
@@ -237,14 +239,61 @@ corrections. Agreement diagnostics are not certified error bounds.
 Use about 2e-12 absolute tolerance in Y1 for comparisons, not every displayed
 digit as an exact reference. This oracle is a development dependency only.
 
+## Native one-particle library
+
+```cpp
+#include <bethe/lee_yang_excited.hpp>
+auto excited = bethe::lee_yang::one_particle<long double>(1.0L, 5.0L);
+auto vacuum = bethe::lee_yang::ground_state<long double>(1.0L, 5.0L);
+if (excited.converged && vacuum.converged) {
+  auto gap = *excited.casimir_energy - *vacuum.casimir_energy;
+}
+```
+
+The library has the oracle's explicit `5<=mL<=30` domain. It computes native
+fp64, long-double or fp128 values without a double fallback. The optional
+outputs are `scaling_function` Y1, `casimir_energy` E1_C, `beta` and
+`pole_displacement` beta-pi/6. All are absent on failure. There is deliberately
+no excited-state `effective_central_charge` field: this is an energy level,
+not the vacuum scaling function.
+
+`OneParticleOptions<Real>` inherits the vacuum controls, with default
+tolerance `65536*epsilon`, work budget 1000000000 kernel products, and an
+additional `max_root_iterations=256` per grid. The absolute tolerance still
+targets Y1. Root iterations sum over grids; inner iterations and kernel
+products include every source-root evaluation. The work budget is checked
+before each integral-operator evaluation. An exhausted root or inner
+iteration budget returns `iteration_limit`; other statuses match the vacuum.
+
+The shared real TBA iteration now includes a source-dependent contraction
+estimate and sensitivity of the continued-kernel integral. The outer solve
+uses safeguarded secant updates in log displacement, falling back within its
+sign bracket. It retains the last resolved slope when changes in the
+quantization residual become comparable to inner-solve roundoff, rather
+than differentiating numerical noise. Acceptance checks both residual and
+successive source positions. `quantization_residual` is dimensionless;
+`source_error` estimates its propagated absolute Y1 error, including the
+change of source position, using a conservative response factor and the
+local secant slope. These are numerical estimates, not certified bounds.
+
+The shared mesh/cutoff controller checks the displacement as well as energy.
+The direct energy-tail bound is multiplied by the maximum of exp(-source)
+on the allowed beta bracket; cutoff enlargement also checks the response
+of the coupled source root. `nonlinear_error` includes source-location and
+energy-roundoff contributions on an accepted grid. Failed solves retain
+diagnostics, not provisional physical outputs. A gap calculation must check
+both states and propagate both error estimates.
+
+Tests cover independent oracle energies, analytic source/kernel identities,
+default-tolerance agreement between different meshes and cutoffs in all
+three precisions, mass/length rescaling, every failure status, and a 51-point
+fp64 scan of the supported interval. The vacuum regressions exercise the
+same refactored iteration and refinement code.
+
 ## Next checkpoints
 
-Next is a native regular one-particle solver with separate source-root,
-nonlinear, mesh and cutoff diagnostics and missing physical outputs on
-failure. Shared thermal functions, quadrature and compensated sums should
-be reused; the vacuum's positivity/tail-error proof cannot simply be copied
-because the source changes its lower bound on epsilon. Compute gaps only
-when both states converge, and propagate both error estimates.
+Next is a frontend exposing the one-particle level and its vacuum-relative
+gap with shared metadata, output tables and literature references.
 
 Continuation through the source collision toward the UV identity sector,
 moving particles, additional particles, boundaries and defects remain
