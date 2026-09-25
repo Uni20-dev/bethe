@@ -258,11 +258,15 @@ inline constexpr std::array<Link, 1> links_67{{
   {"Lieb equation", "https://integrability.org/g_l_Le.html"},
 }};
 inline constexpr std::array<Link, 2> links_68{{
+  {"DOI", "https://doi.org/10.1088/1742-5468/2014/10/P10045"},
+  {"arXiv", "https://arxiv.org/abs/1407.8344"},
+}};
+inline constexpr std::array<Link, 2> links_69{{
   {"DOI", "https://doi.org/10.1088/1751-8113/44/10/102001"},
   {"arXiv", "https://arxiv.org/abs/1010.4842"},
 }};
 
-inline constexpr std::array<Reference, 69> references{{
+inline constexpr std::array<Reference, 70> references{{
   {"barber-batchelor-1989", "Michael N. Barber and Murray T. Batchelor", "Spectrum of the biquadratic spin-1 antiferromagnetic chain", "Phys. Rev. B 40, 4621-4626", 1989, links_0},
   {"albertini-2000", "Giuseppe Albertini", "Is the purely biquadratic spin 1 chain always massive?", "arXiv:cond-mat/0012439", 2000, links_1},
   {"aufgebauer-klumper-2010", "Britta Aufgebauer and Andreas Klümper", "Quantum spin chains of Temperley-Lieb type: periodic boundary conditions, spectral multiplicities and finite temperature", "J. Stat. Mech. 2010, P05018", 2010, links_2},
@@ -331,12 +335,13 @@ inline constexpr std::array<Reference, 69> references{{
   {"reichert-2019", "Benjamin Reichert, Grigori E. Astrakharchik, Aleksandra Petkovic, and Zoran Ristivojevic", "Exact Results for the Boundary Energy of One-Dimensional Bosons", "Phys. Rev. Lett. 123, 250602", 2019, links_65},
   {"franchini-2011", "Fabio Franchini", "Notes on Bethe Ansatz Techniques", "SISSA lecture notes, May 15, 2011", 2011, links_66},
   {"caux-lieb-liniger", "Jean-Sébastien Caux", "The Bethe Ansatz: The ground state and the Lieb equation", "Online lecture notes, integrability.org", 0, links_67},
-  {"guan-batchelor-2011", "X.-W. Guan and M. T. Batchelor", "Polylogs, thermodynamics and scaling functions of one-dimensional quantum many-body systems", "J. Phys. A: Math. Theor. 44, 102001", 2011, links_68},
+  {"pozsgay-2014-q-boson", "B. Pozsgay", "Quantum quenches and Generalized Gibbs Ensemble in a Bethe Ansatz solvable lattice model of interacting bosons", "J. Stat. Mech. (2014) P10045", 2014, links_68},
+  {"guan-batchelor-2011", "X.-W. Guan and M. T. Batchelor", "Polylogs, thermodynamics and scaling functions of one-dimensional quantum many-body systems", "J. Phys. A: Math. Theor. 44, 102001", 2011, links_69},
 }};
 
 inline constexpr std::array<Use, 3> uses_lieb_liniger_thermal{{
   {&references[53], "Finite-temperature thermodynamics of repulsive continuum bosons, at fixed chemical potential or by inversion at fixed density; hbar=2m=k_B=1."},
-  {&references[68], "Yang-Yang pseudoenergy, root density and pressure equations (2)-(5). We solve the full integral equations, not the finite-c polylog expansion."},
+  {&references[69], "Yang-Yang pseudoenergy, root density and pressure equations (2)-(5). We solve the full integral equations, not the finite-c polylog expansion."},
   {&references[66], "Section 2.11: thermal filling and entropy of Lieb-Liniger Bethe states. No attractive strings, trapped gases or dynamical correlations."},
 }};
 inline constexpr std::array<Use, 4> uses_lieb_liniger_dispersion{{

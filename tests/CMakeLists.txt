@@ -48,6 +48,10 @@ add_executable(bethe_lieb_liniger_thermal_tests test_lieb_liniger_thermal.cpp)
 target_link_libraries(bethe_lieb_liniger_thermal_tests PRIVATE bethe::bethe)
 bethe_discover_tests(bethe_lieb_liniger_thermal_tests)
 
+add_executable(bethe_q_boson_tests test_q_boson.cpp)
+target_link_libraries(bethe_q_boson_tests PRIVATE bethe::bethe)
+bethe_discover_tests(bethe_q_boson_tests)
+
 add_executable(bethe_biquadratic_pair_defect_tests test_biquadratic_pair_defect.cpp)
 target_link_libraries(bethe_biquadratic_pair_defect_tests PRIVATE bethe::bethe)
 bethe_discover_tests(bethe_biquadratic_pair_defect_tests)

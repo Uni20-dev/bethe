@@ -1,0 +1,93 @@
+# Periodic q-boson ground states
+
+The C++ library `bethe/q_boson.hpp` implements the fixed-particle-number ground
+state of the repulsive q-boson hopping model. This first checkpoint is a library
+API: a frontend and excited-state labels are follow-ups. It is **not** the
+ordinary Bose–Hubbard model.
+
+## Hamiltonian and conventions
+
+For L>=2 periodic sites and N>=0 particles, use lattice spacing and hopping
+amplitude one:
+
+```text
+H = -sum_j (B_j^dagger B_{j+1} + B_{j+1}^dagger B_j - 2 N_j)
+B|n> = sqrt([n]_q) |n-1>
+[n]_q = (1-exp(-2 eta n))/(1-exp(-2 eta)),  q=exp(eta).
+```
+
+Here `N_j` counts particles; it is not `B_j^dagger B_j`. The `+2N` diagonal
+shift is included. To compare with a Hamiltonian containing only the hopping
+terms, subtract `2N` from the returned energy. For L=2 the periodic sum contains
+both bonds, doubling the hopping between its two sites.
+
+This is the normalization in [Pozsgay (2014)](../CITATIONS.md#pozsgay-2014-q-boson),
+equations (2.1), (2.13), and the energy immediately below (2.13). It is twice
+the Hamiltonian used in [Bogoliubov–Izergin–Kitanine](../CITATIONS.md#bogoliubov-1997),
+equation (1.1). Neither chemical potential nor external potential is included.
+
+At eta=0, `[n]_q=n`: all ground-state momenta and the shifted energy are zero.
+At eta=+infinity, `[n]_q=1` for n>0: this is the *phase model*, not hard-core
+bosons (multiple occupancy remains allowed). Its ground momenta are exactly
+`k_j=2*pi*I_j/(L+N)` with consecutive `I_j=j-(N-1)/2`.
+
+## Bethe equations and state selection
+
+The finite-eta logarithmic equations used here are
+
+```text
+L k_j + sum_(l!=j) theta(k_j-k_l) = 2*pi*I_j
+theta(d) = 2 atan2(sin(d/2), tanh(eta)*cos(d/2))
+E = sum_j 4 sin²(k_j/2).
+```
+
+Ordered ground roots lie inside `(-pi,pi)`. Their differences may exceed pi;
+the `atan2` branch must not be replaced by a principal `atan(tan(...))`.
+Integers label odd N, half-odd integers even N. The centered consecutive labels
+give total momentum zero. The phase-model formula follows from the same branch
+and agrees with (3.4) in Bogoliubov–Izergin–Kitanine.
+
+Our state-selection reasoning is separate from checking a root residual:
+the connected occupation-basis hopping matrix has nonpositive off-diagonals
+and a unique fixed-N ground state. The centered branch connects continuously
+to its free-boson ground state. The logarithmic Jacobian is L times the identity
+plus a positive weighted graph Laplacian, so this ordered branch has no local
+singularity for eta>0. Small-sector independent diagonalization checks that
+the selected energy is the lowest, not merely an eigenvalue.
+
+## C++ API and numerical behavior
+
+```cpp
+#include <bethe/q_boson.hpp>
+
+auto state = bethe::q_boson::ground_state(16, 8, 0.5); // sites, particles, eta
+if (state.converged) {
+    auto energy = *state.energy;
+    auto const& roots = state.momenta;
+}
+```
+
+Use native `long double` or enabled Uni20 fp128 types in place of double.
+The optional fourth argument is `SolverOptions<Real>`, with residual tolerance
+`32*epsilon` and 10000 accepted Newton updates by default. A zero budget only
+checks the seed; exact free/vacuum/one-particle/phase results can still succeed.
+Positive infinity explicitly requests the phase model; negative eta, NaN,
+L<2, and nonpositive/nonfinite tolerances are invalid.
+
+The existing physical-domain Newton driver, native dense solve, and compensated
+sums are shared with the continuum solvers. The phase kernel uses `tanh(eta)`
+and scaled trigonometric factors rather than exponentially large hyperbolic
+functions. For small eta, the known rank phase is canceled against the ground
+labels before arithmetic. The residual is scaled by
+`L*max(sqrt(tanh(eta)/L),abs(k_j))`, retaining a relative test as roots approach
+zero. The positive energy uses sine squares instead of subtracting `2-2*cos(k)`.
+
+`iteration_limit`, `stalled`, and `precision_limit` leave `energy` empty. Roots
+on failure are diagnostics, not a converged eigenstate. Nonzero but insufficiently
+resolved subnormal energies are rejected. No excited-spectrum completeness,
+wavefunctions, correlation functions, OBC, or q<1 support is claimed.
+
+Tests cover occupation-space ground energies for L=2..5 and N=0..4, a native
+two-site/two-particle formula, the original complex multiplicative equations,
+the exact phase limit, weak eta=epsilon², larger rings, continuum scaling to
+Lieb–Liniger, and explicit validation/iteration/precision failures.

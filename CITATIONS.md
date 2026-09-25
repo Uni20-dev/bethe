@@ -934,6 +934,13 @@ Relevant tool modes:
 
 - `bethe-lieb-liniger-dispersion`: Pedagogical ground-state integral equation and normalization at fixed density.
 
+### pozsgay-2014-q-boson
+
+B. Pozsgay. *Quantum quenches and Generalized Gibbs Ensemble in a Bethe Ansatz solvable lattice model of interacting bosons*.
+J. Stat. Mech. (2014) P10045 (2014).
+
+[DOI](<https://doi.org/10.1088/1742-5468/2014/10/P10045>), [arXiv](<https://arxiv.org/abs/1407.8344>).
+
 ### guan-batchelor-2011
 
 X.-W. Guan and M. T. Batchelor. *Polylogs, thermodynamics and scaling functions of one-dimensional quantum many-body systems*.

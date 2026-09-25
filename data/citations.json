@@ -712,6 +712,17 @@
       ]
     },
     {
+      "id": "pozsgay-2014-q-boson",
+      "authors": "B. Pozsgay",
+      "title": "Quantum quenches and Generalized Gibbs Ensemble in a Bethe Ansatz solvable lattice model of interacting bosons",
+      "publication": "J. Stat. Mech. (2014) P10045",
+      "year": 2014,
+      "links": [
+        {"label": "DOI", "url": "https://doi.org/10.1088/1742-5468/2014/10/P10045"},
+        {"label": "arXiv", "url": "https://arxiv.org/abs/1407.8344"}
+      ]
+    },
+    {
       "id": "guan-batchelor-2011",
       "authors": "X.-W. Guan and M. T. Batchelor",
       "title": "Polylogs, thermodynamics and scaling functions of one-dimensional quantum many-body systems",

@@ -18,7 +18,7 @@ template <uni20::Real Real> Real rational_scattering_kernel(Real x, Real c)
   return (Real{1} / c) / (Real{1} + ratio * ratio);
 }
 
-/// Shared physical-domain damped Newton iteration for continuum Bethe systems.
+/// Shared physical-domain damped Newton iteration for real-root Bethe systems.
 /// The caller owns validation, seed, residual scaling, observables and the final
 /// residual check after conversion back to physical units. Returns accepted steps.
 template <uni20::Real Real, typename System>
