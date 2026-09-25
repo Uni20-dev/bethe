@@ -131,6 +131,15 @@ if(BETHE_BUILD_APPS)
     add_test(NAME QBoson.cli
       COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_q_boson.py"
         "$<TARGET_FILE:bethe-q-boson-pbc>" "${UNI20_ENABLE_MPLAPACK}")
+    add_test(NAME BoseFermi.cli
+      COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_bose_fermi.py"
+        "$<TARGET_FILE:bethe-bose-fermi-pbc>" "${UNI20_ENABLE_MPLAPACK}")
+    add_test(NAME Arguments.bethe-bose-fermi-pbc.cli
+      COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_shared_arguments.py"
+        "$<TARGET_FILE:bethe-bose-fermi-pbc>")
+    add_test(NAME Citations.bethe-bose-fermi-pbc.cli
+      COMMAND "${CMAKE_COMMAND}" "-DPROGRAM=$<TARGET_FILE:bethe-bose-fermi-pbc>"
+        "-DTOOL=bethe-bose-fermi-pbc" -P "${CMAKE_CURRENT_SOURCE_DIR}/check_citations_cli.cmake")
     add_test(NAME Arguments.bethe-q-boson-pbc.cli
       COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_shared_arguments.py"
         "$<TARGET_FILE:bethe-q-boson-pbc>")

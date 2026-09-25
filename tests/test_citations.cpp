@@ -49,7 +49,8 @@ TEST(Citations, ToolReferenceSelections)
                     refs::Tool::lieb_liniger_obc,
                     refs::Tool::lieb_liniger_dispersion,
                     refs::Tool::lieb_liniger_thermal,
-                    refs::Tool::q_boson_pbc})
+                    refs::Tool::q_boson_pbc,
+                    refs::Tool::bose_fermi_pbc})
   {
     SCOPED_TRACE(static_cast<int>(tool));
     std::set<std::string_view> ids;

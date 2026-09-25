@@ -16,6 +16,7 @@ base_arguments = {
     "bethe-lieb-liniger-dispersion": ["--c", "4", "--points", "3"],
     "bethe-lieb-liniger-thermal": ["--c", "4", "--temperature", "1", "--mu", "-1"],
     "bethe-q-boson-pbc": ["4", "--particles", "3", "--eta", "1"],
+    "bethe-bose-fermi-pbc": ["--bosons", "2", "--fermions", "3", "--length", "5", "--c", "1"],
     "bethe-sutherland-pbc": ["4", "--length", "4", "--lambda", "2"],
     "bethe-su3-pbc": ["6"],
     "bethe-gaudin-yang-pbc": ["6", "--length", "6", "--c", "1"],

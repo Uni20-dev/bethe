@@ -478,6 +478,7 @@ Phys. Rev. 130, 1605 (1963).
 
 Relevant tool modes:
 
+- `bethe-bose-fermi-pbc`: Pure-boson ground-state reduction on a ring.
 - `bethe-lieb-liniger-dispersion`: Repulsive zero-temperature root-density equation and bulk ground-state energy, in units hbar=2m=1.
 - `bethe-lieb-liniger-pbc`: Repulsive Bose gas on a ring, H=-sum d\_j^2+2c sum delta, and its ground state; c\>0.
 
@@ -640,12 +641,20 @@ Phys. Rev. A 73, 021602(R) (2006).
 
 [DOI](<https://doi.org/10.1103/PhysRevA.73.021602>), [arXiv](<https://arxiv.org/abs/cond-mat/0505632>).
 
+Relevant tool modes:
+
+- `bethe-bose-fermi-pbc`: Original equal-coupling integrable mixture and ground-state study.
+
 ### imambekov-demler-2006-applications
 
 Adilet Imambekov and Eugene Demler. *Applications of exact solution for strongly interacting one-dimensional Bose-Fermi mixture: Low-temperature correlation functions, density profiles, and collective modes*.
 Ann. Phys. 321, 2390 (2006).
 
 [DOI](<https://doi.org/10.1016/j.aop.2005.11.017>), [arXiv](<https://arxiv.org/abs/cond-mat/0510801>).
+
+Relevant tool modes:
+
+- `bethe-bose-fermi-pbc`: Equal-mass, equal-repulsion Bose-Fermi Hamiltonian (3) and periodic nested equations (28)-(34). Odd-fermion mixed ground shells; no auxiliary-auxiliary scattering. No correlation functions or trapped-gas approximation.
 
 ### wang-1999
 

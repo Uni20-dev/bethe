@@ -88,7 +88,7 @@ paper's correlation functions, thermodynamics, or full spectrum.
 | `richardson` | Reduced BCS pairing | Implemented (limited): [attractive pairing](richardson.md), distinct doublet levels, fixed pair count and blocked levels, ground energy through root collisions | Repeated levels/higher degeneracies, excitations, pair-root output, repulsive coupling |
 | `gaudin-magnet` | Rational spin-1/2 central spin | Implemented (limited): [sector minima](central-spin.md), distinct nonzero bath couplings of either sign, central field of either sign or zero | Repeated/zero couplings, higher local spins, excitations, general Gaudin charges |
 | `multicomponent-gas` | Equal-mass SU(κ) delta fermions | Implemented (limited): [repulsive PBC](su-fermions.md), odd occupied populations, any number of components, unrestricted free/single-component limits | Other periodic shells, attraction, excitations, hard walls, TBA |
-| `bose-fermi` | Equal-mass, equal-repulsion scalar Bose–Fermi gas | [Ground-state library](bose-fermi.md): PBC, odd fermion population; unrestricted pure/free limits | Frontend, other shells, excitations, thermodynamics |
+| `bose-fermi` | Equal-mass, equal-repulsion scalar Bose–Fermi gas | [Ground-state library/frontend](bose-fermi.md): PBC, odd fermion population; unrestricted pure/free limits | Other shells, excitations, thermodynamics |
 | `integrable-ladder` | Wang's spin-1/2 ladder with four-spin exchange | Implemented (limited): [zero-field PBC](ladder.md), global and singlet-count sector ground energies, either sign of J_r, leg coefficient 1 and four-spin coefficient 4 | Fields, excitations, open ends, other integrable ladder families |
 
 Analytic thermodynamic XXX/XXZ spinon dispersions are separate existing
@@ -114,7 +114,7 @@ integrable boundaries in the literature.
 | `richardson` | Reduced BCS pairing Hamiltonian, specified levels and pair number | [Implemented (limited)](richardson.md) | First slice complete |
 | `gaudin-magnet` | Rational spin-1/2 central-spin sector ground energies at specified couplings and field | [Implemented (limited)](central-spin.md) | First slice complete |
 | `multicomponent-gas` | Repulsive SU(kappa) fermions on a ring, fixed odd occupied populations | [Implemented (limited)](su-fermions.md) | Fermion first slice complete |
-| `bose-fermi` | Equal-mass scalar Bose–Fermi mixture with equal repulsive BB/BF couplings, PBC | [Ground-state library implemented](bose-fermi.md), odd fermion shells | Frontend next |
+| `bose-fermi` | Equal-mass scalar Bose–Fermi mixture with equal repulsive BB/BF couplings, PBC | [Ground-state library/frontend implemented](bose-fermi.md), odd fermion shells | First slice complete |
 | `integrable-ladder` | Wang's SU(4)-type ladder with its required four-spin interaction, zero-field PBC sector minima | [Implemented (limited)](ladder.md) | First slice complete |
 | `q-boson` | Integrable q-boson hopping/phase model, PBC at fixed particle number | [Ground-state and excitation library/frontend implemented](q-boson.md) | Canonical finite-size scans complete |
 | `xyz` | Zero-field spin-1/2 XYZ chain, PBC finite-size spectrum | Watch | Large |

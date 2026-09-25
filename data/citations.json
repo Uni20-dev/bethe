@@ -747,6 +747,15 @@
   ],
   "tools": [
     {
+      "id": "bose_fermi_pbc",
+      "executable": "bethe-bose-fermi-pbc",
+      "references": [
+        {"id": "imambekov-demler-2006-applications", "context": "Equal-mass, equal-repulsion Bose-Fermi Hamiltonian (3) and periodic nested equations (28)-(34). Odd-fermion mixed ground shells; no auxiliary-auxiliary scattering. No correlation functions or trapped-gas approximation."},
+        {"id": "imambekov-demler-2006", "context": "Original equal-coupling integrable mixture and ground-state study."},
+        {"id": "lieb-liniger-1963", "context": "Pure-boson ground-state reduction on a ring."}
+      ]
+    },
+    {
       "id": "q_boson_pbc",
       "executable": "bethe-q-boson-pbc",
       "references": [

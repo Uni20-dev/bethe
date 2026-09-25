@@ -3,8 +3,38 @@
 The library `bethe/bose_fermi.hpp` implements periodic ground states of an
 equal-mass gas containing scalar bosons and spinless fermions. Bose–Bose and
 Bose–Fermi contact strengths must be equal and repulsive. This is a distinct
-graded model, not another color of the SU(kappa) Fermi gas. A frontend is the
-next checkpoint; no command-line tool is exposed yet.
+graded model, not another color of the SU(kappa) Fermi gas. The frontend is
+`bethe-bose-fermi-pbc`.
+
+## Command-line use
+
+```sh
+build/bethe-bose-fermi-pbc --bosons 2 --fermions 3 --length 5 --c 1 --roots
+build/bethe-bose-fermi-pbc --bosons 4 --fermions 0 --length 4 --c 2 --json bosons.json
+build/bethe-bose-fermi-pbc --bosons 1 --fermions 1 --length 1 --c 1e-40 --precision fp128
+build/bethe-bose-fermi-pbc --references
+```
+
+Both populations, circumference, and coupling are required. The defaults are
+fp64 and ground-state calculation; there is no excitation mode yet.
+`--max-iterations` and `--tolerance` expose the library controls described below.
+The common [output options](output.md) support screen presentation, CPU timing,
+metadata, and JSON/CSV/TSV files, including streaming and `--no-retain`.
+Literature is printed only with `--references`, not ordinary help.
+
+`states` contains total energy, momentum/index, residual, iterations, and
+convergence status. With `--roots`, interacting calculations add `charge_roots`
+and `auxiliary_roots`; the pure-boson reduction has an empty auxiliary table.
+Free calculations instead add `free_modes`, with species, integer mode, and
+physical k. Bosons each occupy mode zero. Half-integer labels are decimal in
+exports. Use `--json result.json` for all tables, or named destinations such as
+`--csv-table charge_roots=charge.csv`.
+
+Failed solves leave energy, physical momentum, and numerical roots missing
+(JSON null, CSV/TSV empty); requested Bethe labels remain available. Exit codes
+are 0 for convergence, 2 for numerical failure, and 1 for invalid input or
+output errors. Parameters and supported shells are checked before opening
+output files, including with `--force`.
 
 ## Hamiltonian and supported sectors
 
