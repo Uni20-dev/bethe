@@ -1,7 +1,7 @@
 # Charge-containing Hubbard continua: implementation plan
 
-**Status: source conventions and independent reference oracle; no native
-charge-continuum solver or CLI selection yet.** The existing
+**Status: source conventions, independent reference oracle and shared native
+extrema helper; no charge-continuum solver or CLI selection yet.** The existing
 [two-spinon tool](hubbard-continuum.md) remains restricted to two spinons.
 
 ## Channels and energy reference
@@ -55,6 +55,33 @@ contract. Return witnesses, mesh/refinement diagnostics and constituent
 quadrature/momentum errors; do not silently treat a horizontal momentum error
 as a vertical energy bound. Error floors must prevent endless refinement
 below the precision actually supplied by the constituent solves.
+
+### Shared helper checkpoint
+
+`bethe/detail/extrema.hpp` now supplies `bounded_extrema<Real>` independently
+of the Hubbard model. Its callback returns an optional `ObjectiveSample<Real>`
+containing value and estimated absolute uncertainty. It caches samples and
+aborts on missing/nonfinite values or invalid uncertainty. The callback must
+be deterministic at a fixed argument; model-specific work is counted by its
+owner, while the helper counts uncached objective calls.
+
+Defaults are absolute value tolerance `65536*epsilon`, coordinate tolerance
+`sqrt(epsilon)*max(1,|lo|,|hi|)`, 16 initial intervals, at most 128 intervals,
+20000 objective calls and 256 golden-section updates per local bracket.
+Meshes double; two successive agreements require at least three meshes.
+Local refinement requires both coordinate resolution and a small value
+spread, with input uncertainty below `tolerance/16`. Endpoints and their
+adjacent cells are always considered. Strict improvement on at least one
+side avoids refining every point of an exactly flat mesh as a new extremum.
+
+Both optional extrema remain absent on objective, evaluation, iteration,
+mesh or precision failure. The selected witnesses have value-error estimates
+combining local spread, input uncertainty and mesh-to-mesh change. These
+remain **heuristic search estimates**, not certified global bounds or a
+guarantee of accurate witness coordinates for nearly degenerate minima.
+Tests cover native precision, non-grid minima, multiple periodic extrema,
+the domain seam, competing wells, a constant function, uncertainty floors
+and exhausted budgets. Connecting the native Hubbard objective is next.
 
 ## Independent developer oracle
 
