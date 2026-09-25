@@ -72,6 +72,10 @@ add_executable(bethe_asep_tests test_asep.cpp)
 target_link_libraries(bethe_asep_tests PRIVATE bethe::bethe)
 bethe_discover_tests(bethe_asep_tests)
 
+add_executable(bethe_sine_gordon_tests test_sine_gordon.cpp)
+target_link_libraries(bethe_sine_gordon_tests PRIVATE bethe::bethe)
+bethe_discover_tests(bethe_sine_gordon_tests)
+
 add_executable(bethe_biquadratic_pair_defect_tests test_biquadratic_pair_defect.cpp)
 target_link_libraries(bethe_biquadratic_pair_defect_tests PRIVATE bethe::bethe)
 bethe_discover_tests(bethe_biquadratic_pair_defect_tests)

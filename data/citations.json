@@ -511,6 +511,17 @@
       ]
     },
     {
+      "id": "rutkevich-2020",
+      "authors": "S. B. Rutkevich",
+      "title": "On the ground-state energy of the finite sine-Gordon ring",
+      "publication": "J. Stat. Mech. 2020, 103101",
+      "year": 2020,
+      "links": [
+        {"label": "DOI", "url": "https://doi.org/10.1088/1742-5468/abb018"},
+        {"label": "arXiv", "url": "https://arxiv.org/abs/2007.06489"}
+      ]
+    },
+    {
       "id": "destri-de-vega-1992",
       "authors": "C. Destri and H. J. de Vega",
       "title": "New thermodynamic Bethe ansatz equations without strings",

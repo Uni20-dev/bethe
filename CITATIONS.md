@@ -773,6 +773,13 @@ Phys. Rev. Lett. 45, 379 (1980).
 
 [DOI](<https://doi.org/10.1103/PhysRevLett.45.379>).
 
+### rutkevich-2020
+
+S. B. Rutkevich. *On the ground-state energy of the finite sine-Gordon ring*.
+J. Stat. Mech. 2020, 103101 (2020).
+
+[DOI](<https://doi.org/10.1088/1742-5468/abb018>), [arXiv](<https://arxiv.org/abs/2007.06489>).
+
 ### destri-de-vega-1992
 
 C. Destri and H. J. de Vega. *New thermodynamic Bethe ansatz equations without strings*.
