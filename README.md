@@ -118,7 +118,8 @@ Thermodynamic dispersion tools use `bethe-<model>-dispersion`.
   with the required four-spin coupling and either sign of rung exchange or field.
 - [Haldane–Shastry ring](docs/haldane-shastry.md): `bethe-haldane-shastry-pbc`
   gives exact ground/spin-sector energies and motif spectra with Yangian
-  multiplicities, for even and odd inverse-chord-square spin-1/2 rings.
+  multiplicities and optional SU(2) spin content, for even and odd
+  inverse-chord-square spin-1/2 rings.
 - [Sutherland gas](docs/sutherland.md): `bethe-sutherland-pbc` gives exact
   periodic bosonic ground and excited energies for a specified collision
   exponent, with explicit integer labels or bounded label-window scans.

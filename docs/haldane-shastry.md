@@ -11,6 +11,7 @@ build/bethe-haldane-shastry-pbc 15 --sz 3/2
 build/bethe-haldane-shastry-pbc 8 --motif 1,3,6
 build/bethe-haldane-shastry-pbc 12 --levels 10 --precision fp128
 build/bethe-haldane-shastry-pbc 8 --levels all --format csv
+build/bethe-haldane-shastry-pbc 6 --motif 3 --spin-content --format json
 ```
 
 ## Normalization
@@ -62,8 +63,8 @@ dimension is four and `S_max=1`, not `3/2`.
 
 ### Resolving ordinary total-spin multiplets
 
-The library now supplies `spin_decomposition(N, motif)`. The CLI still reports
-whole Yangian multiplets; spin-resolved export is a separate follow-up.
+The library supplies `spin_decomposition(N, motif)`. The CLI's optional
+`--spin-content` adds an SU(2)-resolved table alongside the Yangian levels.
 Remove the sites in `motif` and `motif+1` from the ordered list `1,...,N`.
 Each remaining consecutive run of length l contributes one spin-l/2 factor.
 The Yangian multiplet's SU(2) content is the tensor product of these factors,
@@ -99,6 +100,26 @@ partial spin decomposition is published. Counts use uint64; a total dimension
 can overflow even when each multiplicity fits, in which case `dimension` is
 absent but the completed decomposition remains valid. Negative factors and
 unrepresentable sums of twice-spin are invalid arguments.
+
+The CLI `spin_content` table links to `levels` through `state_id`. Each row
+contains `spin`, `multiplicity`, `updates`, `complete` and `status`. The work
+count is per motif and is repeated across its spin rows; do not sum these
+repeated values. Even when `--sz` selects a ground-sector motif, the content
+describes its **whole** Yangian multiplet, not only the selected projection.
+`--levels COUNT` still counts motifs, not SU(2) irreps.
+
+`--max-spin-updates` sets the addition budget per motif and requires
+`--spin-content`. On failure, one diagnostic row with missing spin and
+multiplicity replaces that motif's decomposition. Other motifs are still
+attempted, all valid energy rows remain available, and the overall outcome
+is partial (exit 2). On motif-enumeration refusal, both tables are empty.
+JSON preserves both named tables; for separate rectangular CSV/TSV files use:
+
+```sh
+build/bethe-haldane-shastry-pbc 8 --levels all --spin-content \
+  --csv-table levels=levels.csv --csv-table spin_content=spins.csv \
+  --json spectrum.json
+```
 
 ## Ground sectors and excitation scans
 
@@ -155,5 +176,5 @@ counting spin words and subtracting adjacent magnetization-sector dimensions.
 Gaps are formed from exact
 integer differences before floating conversion.
 
-Wavefunctions, CLI export of SU(2) decompositions, correlations,
+Wavefunctions, correlations,
 open-chain variants and a thermodynamic spinon frontend are not implemented.
