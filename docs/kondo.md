@@ -1,10 +1,32 @@
 # Kondo: universal zero-temperature impurity energy
 
-**Status: native-precision zero-temperature response library implemented;
-frontend pending.**
+**Status: native-precision zero-temperature response library and frontend implemented.**
 
 This is a scaling-limit impurity response, not a finite-band or finite-size
 Kondo Hamiltonian solver.
+
+## Command-line use
+
+```sh
+bethe-kondo-response --field 2 --scale 1
+bethe-kondo-response --field -0.1 --scale 1 --precision long-double
+bethe-kondo-response --field 2 --scale 1 --precision fp128 --json response.json --csv response.csv
+bethe-kondo-response --references
+```
+
+Both `--field` and `--scale` are required. Precision defaults to fp64;
+fp128 requires an enabled MPLAPACK build. The `response` table contains the
+impurity energy change, induced magnetization, zero-field susceptibility,
+error estimates, work counters and convergence status. The preamble and
+export metadata record the conventions below, numerical controls and CPU time.
+JSON, CSV and TSV files use the shared output options; references appear only
+with `--references`.
+
+`--tolerance`, `--max-series-terms`, `--max-lobes`, `--max-evaluations` and
+`--max-quadrature-levels` expose the library controls below. An incomplete
+calculation exits with status 2 and publishes missing observables (JSON null,
+empty CSV/TSV cells), not a partial physical answer. Invalid input exits with
+status 1 before opening output files, including existing `--force` targets.
 
 ## Physical scope and conventions
 
@@ -145,8 +167,8 @@ solvers. No mpmath, Gamma-library or double-precision fallback is used at run ti
    `(x^(-2w)-x^(-1))/(1-2w)`, evaluated with `expm1` near its removable
    singularity. Physical energy is recovered as `|b|*e(x)/x`.
 
-The next checkpoint is a thin frontend using the common CLI, run context,
-tables and citations. Finite-temperature TBA and excited/finite-size states
+The frontend uses the common CLI, run context, tables and citations.
+Finite-temperature TBA and excited/finite-size states
 are later capabilities, not implied by this zero-temperature implementation.
 
 ## Independent oracle and acceptance evidence
@@ -189,7 +211,9 @@ Native regression tests cover:
 - logarithmic approach to saturation and the high-field energy slope;
 - fp64, long-double and fp128 references that detect narrowing;
 - separate budgets, near-zero fields, overflowing ratios, invalid inputs,
-  and missing failed observables (frontend export tests follow with the CLI).
+  and missing failed observables;
+- frontend precision dispatch, metadata, JSON/CSV/TSV export, budget forwarding,
+  streaming output and invalid-input protection of existing files.
 
 The original [Andrei solution](../CITATIONS.md#andrei-1980) remains the
 catalogue's foundational reference. This first implementation deliberately

@@ -773,6 +773,10 @@ Phys. Rev. Lett. 45, 379 (1980).
 
 [DOI](<https://doi.org/10.1103/PhysRevLett.45.379>).
 
+Relevant tool modes:
+
+- `bethe-kondo-response`: Exact solution of the single-channel Kondo problem.
+
 ### hegedus-2026
 
 Arpad Hegedus. *NLIE formulations for the generalized Gibbs ensemble in the sine-Gordon model*.
@@ -1051,5 +1055,9 @@ G. Barcza, K. Bauerbach, F. Eickhoff, F. B. Anders, F. Gebhard, and O. Legeza. *
 Phys. Rev. B 101, 075132 (2020).
 
 [DOI](<https://doi.org/10.1103/PhysRevB.101.075132>), [arXiv](<https://arxiv.org/abs/1911.08279>).
+
+Relevant tool modes:
+
+- `bethe-kondo-response`: Universal zero-temperature magnetization, equations (124)-(126). Full Zeeman splitting b=2B and T\_B=2T1; impurity energy change obtained by integrating the response.
 
 <!-- END GENERATED BIBLIOGRAPHY -->

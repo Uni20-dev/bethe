@@ -62,6 +62,9 @@ Thermodynamic dispersion tools use `bethe-<model>-dispersion`.
 - [Periodic XYZ](docs/xyz.md): `bethe-xyz-pbc` gives even-chain regular ground
   states in the rectangular elliptic parametrization, including either sign
   of Jz. Generic XYZ has no conserved Sz sector; excitations are not yet exposed.
+- [Kondo response](docs/kondo.md): `bethe-kondo-response` gives universal
+  zero-temperature impurity energy changes, magnetization and susceptibility
+  in a uniform field, in native fp64, long-double and fp128 precision.
 - [Sine-Gordon vacuum](docs/sine-gordon.md): `bethe-sine-gordon-vacuum` gives
   the bulk-subtracted finite-volume vacuum energy, scaling function and effective
   central charge, for attractive and repulsive coupling in native precision.

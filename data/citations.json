@@ -813,6 +813,14 @@
   ],
   "tools": [
     {
+      "id": "kondo_response",
+      "executable": "bethe-kondo-response",
+      "references": [
+        {"id": "andrei-1980", "context": "Exact solution of the single-channel Kondo problem."},
+        {"id": "barcza-2020", "context": "Universal zero-temperature magnetization, equations (124)-(126). Full Zeeman splitting b=2B and T_B=2T1; impurity energy change obtained by integrating the response."}
+      ]
+    },
+    {
       "id": "sine_gordon_vacuum",
       "executable": "bethe-sine-gordon-vacuum",
       "references": [
