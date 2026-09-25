@@ -19,7 +19,7 @@ build/bethe-haldane-shastry-pbc 6 --motif 3 --spin-content --format json
 We use spin-1/2 operators, lattice spacing one, `J=1`, zero field, and
 
 ```math
-H=\left(\frac\pi N\right)^2\sum_{i<j}
+H=\left(\frac\pi N\right)^2\sum_{i\lt j}
 \frac{\mathbf S_i\cdot\mathbf S_j}{\sin^2[\pi(i-j)/N]}.
 ```
 

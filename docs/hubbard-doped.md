@@ -88,7 +88,7 @@ Let $`u =U /4`$, with integrals below over $`[-Q,Q]`$:
 ```math
 \begin{aligned}
 R(x)&=\frac1\pi\int_0^\infty\frac{\cos(\omega x)}{1+e^{2u\omega}}\,d\omega,\\{}
-s(x)&=\frac{1}{4u}\operatorname{sech}\!\left(\frac{\pi x}{2u}\right),\\{}
+s(x)&=\frac{1}{4u}\mathrm{sech}\!\left(\frac{\pi x}{2u}\right),\\{}
 \rho(k)&=\frac1{2\pi}+\cos k\int R(\sin k-\sin k')\rho(k')\,dk',\\{}
 \epsilon_c(k)&=-2\cos k-\mu_{\mathrm{unshifted}}
 +\int\cos k'\,R(\sin k-\sin k')\epsilon_c(k')\,dk',\\{}

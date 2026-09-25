@@ -17,7 +17,7 @@ we use its denominator-free numerator with
 ```math
 \begin{aligned}
 F(i,j)&=1+v_iv_j-2\Delta v_i,\\{}
-\Psi(x)&=\sum_P\operatorname{sgn}(P)\prod_{a<b}F(P_a,P_b)\prod_a v_{P_a}^{x_a}.
+\Psi(x)&=\sum_P\mathrm{sgn}(P)\prod_{a\lt b}F(P_a,P_b)\prod_a v_{P_a}^{x_a}.
 \end{aligned}
 ```
 
@@ -44,7 +44,7 @@ of T, so
 
 ```math
 D(S)=\sum_{j\in S}D(T)v_j^{x_{|S|-1}}
-\prod_{i\in T}F(i,j)\,(-1)^{|\{i\in T:i>j\}|}.
+\prod_{i\in T}F(i,j)\,(-1)^{|\{i\in T:i\gt j\}|}.
 ```
 
 The implementation uses the normalized pair factors above. This recurrence

@@ -16,7 +16,7 @@ H&=\sum_j\left(J_xS_j^xS_{j+1}^x+J_yS_j^yS_{j+1}^y+J_zS_j^zS_{j+1}^z\right),\\{}
 J_x&=\frac{\theta_4(\eta)}{\theta_4(0)},\qquad
 J_y=\frac{\theta_3(\eta)}{\theta_3(0)},\qquad
 J_z=\frac{\theta_2(\eta)}{\theta_2(0)},\\{}
-\theta_j(u)&=\vartheta_j(\pi u\mid it),\qquad t>0.
+\theta_j(u)&=\vartheta_j(\pi u\mid it),\qquad t\gt 0.
 \end{aligned}
 ```
 

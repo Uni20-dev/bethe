@@ -184,7 +184,7 @@ A(\theta)&=\log(1+e^{-\epsilon(\theta)}),\\{}
 \epsilon(\theta)&=-iu\sinh(\theta+i\eta)
 -\int G_p(\theta-t)A(t)\,dt
 +\int G_p(\theta-t+2i\eta)\overline{A(t)}\,dt,\\{}
-Y&=-\frac u\pi\operatorname{Im}\int\sinh(\theta+i\eta)A(\theta)\,d\theta.
+Y&=-\frac u\pi\mathrm{Im}\int\sinh(\theta+i\eta)A(\theta)\,d\theta.
 \end{aligned}
 ```
 

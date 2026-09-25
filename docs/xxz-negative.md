@@ -56,7 +56,7 @@ the complementary half-scattering phase
 ```math
 \begin{aligned}
 p(x)&=\frac{\arctan(s\tanh x)}s,\\{}
-h(x)&=\frac{\operatorname{sgn}(x)}s\operatorname{atan2}\!\left(b,a|\tanh x|\right).
+h(x)&=\frac{\mathrm{sgn}(x)}s\mathrm{atan2}\!\left(b,a|\tanh x|\right).
 \end{aligned}
 ```
 
@@ -81,12 +81,12 @@ apply to the ordered ground branch, not arbitrary excitation labels.
 The analytic Jacobian uses
 
 ```math
-h'(x)=-\frac{(1-\Delta)a\,\operatorname{sech}^2x}{b^2+a^2\tanh^2x}.
+h'(x)=-\frac{(1-\Delta)a\,\mathrm{sech}^2x}{b^2+a^2\tanh^2x}.
 ```
 
-The periodic diagonal is $`N \,\operatorname{sech} (\lambda_{i})^{2}/(1+z_{i} ^{2})`$ minus the sum of
+The periodic diagonal is $`N \,\mathrm{sech} (\lambda_{i})^{2}/(1+z_{i} ^{2})`$ minus the sum of
 direct h' terms. The open diagonal doubles that driving term, adds
-$`2\,\operatorname{sech} (\lambda_{i})^{2}/(\tanh (\lambda_{i})^{2}+s ^{2})`$, and subtracts direct and reflected
+$`2\,\mathrm{sech} (\lambda_{i})^{2}/(\tanh (\lambda_{i})^{2}+s ^{2})`$, and subtracts direct and reflected
 h' terms. Off-diagonal entries are direct h', minus reflected h' for OBC.
 Every Jacobian entry is divided by N, matching R.
 
@@ -94,7 +94,7 @@ The energy is evaluated without subtracting $`1-\tanh (\lambda)^{2}`$:
 
 ```math
 E=\frac{\mathrm{bonds}\,\Delta}{4}
--\sum_i\frac{(1+\Delta)\operatorname{sech}^2\lambda_i}{1+z_i^2},
+-\sum_i\frac{(1+\Delta)\mathrm{sech}^2\lambda_i}{1+z_i^2},
 \qquad
 \mathrm{bonds}=\begin{cases}N,&\mathrm{PBC},\\N-1,&\mathrm{OBC}.\end{cases}
 ```

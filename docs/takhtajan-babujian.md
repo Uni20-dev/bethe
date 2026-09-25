@@ -75,7 +75,7 @@ Coinciding root quantum numbers across different strings do not imply
 coinciding rapidities.
 
 For clarity, the actual equations are recorded here. Define
-$`A (a,b)=\operatorname{atan2} (a,b)`$, $`B (a,b)=\log (a \,a +b \,b)/2`$, $`d_{\mathrm{jk}} =x_{j} -x_{k}`$, and widths
+$`A (a,b)=\mathrm{atan2} (a,b)`$, $`B (a,b)=\log (a \,a +b \,b)/2`$, $`d_{\mathrm{jk}} =x_{j} -x_{k}`$, and widths
 
 ```math
 w_{jk}=(2+\delta_j+\delta_k,-\delta_j-\delta_k,1+\delta_j-\delta_k,1-\delta_j+\delta_k),

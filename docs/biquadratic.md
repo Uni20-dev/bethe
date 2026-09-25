@@ -152,7 +152,7 @@ the Temperley–Lieb relations with loop weight lambda=3:
 ```math
 \begin{aligned}
 e_i^2&=\lambda e_i,\qquad e_i e_{i\pm1} e_i=e_i,\\{}
-[e_i,e_j]&=0\qquad(|i-j|>1),\\{}
+[e_i,e_j]&=0\qquad(|i-j|\gt 1),\\{}
 H_{\mathrm{TL}}&=-\sum_i e_i,\qquad H_b=H_{\mathrm{TL}}-(N-1).
 \end{aligned}
 ```
@@ -203,7 +203,7 @@ i=1,...,M; other supported states leave holes in the label window:
 
 ```math
 \begin{aligned}
-\Theta(\alpha;w)&=2\operatorname{atan2}\!\left(\sin(\alpha/2),\tanh w\cos(\alpha/2)\right),\\{}
+\Theta(\alpha;w)&=2\mathrm{atan2}\!\left(\sin(\alpha/2),\tanh w\cos(\alpha/2)\right),\\{}
 2N\Theta(\alpha_i;\eta/2)
 -\sum_{j\ne i}[\Theta(\alpha_i-\alpha_j;\eta)+\Theta(\alpha_i+\alpha_j;\eta)]&=2\pi I_i,\\{}
 E_{\mathrm{ref}}&=\frac{(N-1)\Delta}{4}-\sum_i\frac{\Delta^2-1}{\Delta-\cos\alpha_i}.
@@ -219,7 +219,7 @@ again would duplicate descendants. Its full module dimension is
 
 The reflected sum must retain its phase branch when alpha_i+alpha_j>pi.
 The solver uses `x_i=Theta(alpha_i;eta/2)/2` in (0,pi/2), with
-$`\alpha_{i} =2\,\operatorname{atan2} (\tanh (\eta /2)\,\sin (x_{i}),\cos (x_{i}))`$. In this coordinate the
+$`\alpha_{i} =2\,\mathrm{atan2} (\tanh (\eta /2)\,\sin (x_{i}),\cos (x_{i}))`$. In this coordinate the
 energy contribution is $`-(\Delta +\cos (2\,x_{i}))`$. Its direct excitation shift is
 accumulated as $`-[(\Delta -1)+2\,\cos (x_{i})^{2}]`$, avoiding cancellation near Delta=1
 and the ferromagnetic low-energy edge. The TL adapter uses this direct shift,

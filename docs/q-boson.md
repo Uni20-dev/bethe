@@ -87,7 +87,7 @@ The finite-eta logarithmic equations used here are
 ```math
 \begin{aligned}
 Lk_j+\sum_{l\ne j}\theta(k_j-k_l)&=2\pi I_j,\\{}
-\theta(d)&=2\operatorname{atan2}\!\left(\sin(d/2),\tanh\eta\cos(d/2)\right),\\{}
+\theta(d)&=2\mathrm{atan2}\!\left(\sin(d/2),\tanh\eta\cos(d/2)\right),\\{}
 E&=\sum_j4\sin^2(k_j/2).
 \end{aligned}
 ```

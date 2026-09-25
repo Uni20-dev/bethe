@@ -81,9 +81,9 @@ B&=\log\sinh(3\eta+d+ia+z)-\log\sinh(\eta+d+ia+z),\\{}
 K&=\log\sinh(2\eta+ia+z)-\log\sinh(ia+z),\\{}
 R&=\log\sinh(3\eta+d+z)-\log\sinh(\eta+d+z),\\{}
 q&=\log\sinh(2\eta+d),\\{}
-Q&=\log\sinh(4\eta+d+2\operatorname{Re}z)-\log\sinh(2\eta+d+2\operatorname{Re}z),\\{}
+Q&=\log\sinh(4\eta+d+2\mathrm{Re}z)-\log\sinh(2\eta+d+2\mathrm{Re}z),\\{}
 c_d&=\log\frac{\sinh d}{d},\qquad c_z=\log\frac{\sinh z}{z},\\{}
-t_0&=\Theta(2a;\eta),\qquad t_1=\Theta(2a+4\operatorname{Im}z;\eta).
+t_0&=\Theta(2a;\eta),\qquad t_1=\Theta(2a+4\mathrm{Im}z;\eta).
 \end{aligned}
 ```
 
@@ -91,10 +91,10 @@ Theta and wrap are as in the pair/triple guides. The four residuals are
 
 ```math
 \begin{aligned}
-f_0&=2\operatorname{Im}D+\pi-\frac{t_0+t_1+2\operatorname{Im}B+2\operatorname{Im}K+\pi(J+1)}N,\\{}
-f_1&=\operatorname{Re}D-\frac{q+L_{\mathrm{inner}}-\operatorname{Re}c_d+Q+2\operatorname{Re}B+2\operatorname{Re}R}{2N},\\{}
-f_2&=\operatorname{Re}D_1-\frac{\operatorname{Re}A+L_{\mathrm{outer}}-\operatorname{Re}c_z+\operatorname{Re}B+\operatorname{Re}K+\operatorname{Re}R+Q}{2N},\\{}
-f_3&=\frac{\operatorname{wrap}(2N\operatorname{Im}D_1-\operatorname{Im}A+\phi+\operatorname{Im}c_z-\operatorname{Im}B-\operatorname{Im}K-\operatorname{Im}R-t_1+\pi)}{2N}.
+f_0&=2\mathrm{Im}D+\pi-\frac{t_0+t_1+2\mathrm{Im}B+2\mathrm{Im}K+\pi(J+1)}N,\\{}
+f_1&=\mathrm{Re}D-\frac{q+L_{\mathrm{inner}}-\mathrm{Re}c_d+Q+2\mathrm{Re}B+2\mathrm{Re}R}{2N},\\{}
+f_2&=\mathrm{Re}D_1-\frac{\mathrm{Re}A+L_{\mathrm{outer}}-\mathrm{Re}c_z+\mathrm{Re}B+\mathrm{Re}K+\mathrm{Re}R+Q}{2N},\\{}
+f_3&=\frac{\mathrm{wrap}(2N\mathrm{Im}D_1-\mathrm{Im}A+\phi+\mathrm{Im}c_z-\mathrm{Im}B-\mathrm{Im}K-\mathrm{Im}R-t_1+\pi)}{2N}.
 \end{aligned}
 ```
 

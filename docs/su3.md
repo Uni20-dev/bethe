@@ -105,7 +105,7 @@ The starting guess inverts the integrated thermodynamic filled-sea density.
 For nesting level a=1,2 and a positive label q, it is
 
 ```math
-x_a(q)=\frac3\pi\operatorname{artanh}\!\left[\tan(\pi q/L)\tan(\pi a/6)\right].
+x_a(q)=\frac3\pi\mathrm{artanh}\!\left[\tan(\pi q/L)\tan(\pi a/6)\right].
 ```
 
 This is only a seed: the solver refines the **finite-size equations**, not a

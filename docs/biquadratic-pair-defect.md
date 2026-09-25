@@ -110,8 +110,8 @@ Delta=3/2, not the usual zero-field open XXZ chain. We reuse the
 ```math
 \begin{aligned}
 v&=\frac{i\alpha}{2},\qquad u_\pm=\frac{\eta+d}{2}\pm\frac{ia}{2},\\{}
-\eta&=\operatorname{arcosh}\Delta,\qquad d=\mathrm{sign}\,e^{-L},\\{}
-0&<\alpha,a<\pi,\qquad |d|<\eta.
+\eta&=\mathrm{arcosh}\Delta,\qquad d=\mathrm{sign}\,e^{-L},\\{}
+0&\lt \alpha,a\lt \pi,\qquad |d|\lt \eta.
 \end{aligned}
 ```
 

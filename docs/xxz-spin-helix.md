@@ -25,7 +25,7 @@ the energy above restores our spin-1/2 convention.
 In the sector with $`M =N /2-S^z`$ down spins, the unnormalized amplitude is
 
 ```math
-\psi(j_1,\ldots,j_M)=e^{ik(j_1+\cdots+j_M)},\qquad 0\le j_1<\cdots<j_M<N.
+\psi(j_1,\ldots,j_M)=e^{ik(j_1+\cdots+j_M)},\qquad 0\le j_1\lt \cdots\lt j_M\lt N.
 ```
 
 The state is nonzero: every amplitude has modulus one, and its squared norm

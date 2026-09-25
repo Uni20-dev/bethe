@@ -70,7 +70,7 @@ therefore fixes `conj(R(i))/R(i)` without extracting roots. Crucially, this
 is a **linear** coefficient constraint. Since `Im(t)` is nonzero, eliminate
 
 ```math
-c_{M-1}=-\sum_{j=0}^{M-2}c_j\frac{\operatorname{Im}(t^{M-j})}{\operatorname{Im}t}.
+c_{M-1}=-\sum_{j=0}^{M-2}c_j\frac{\mathrm{Im}(t^{M-j})}{\mathrm{Im}t}.
 ```
 
 Energy and momentum evaluation use W and `t*W'`, avoiding large powers of

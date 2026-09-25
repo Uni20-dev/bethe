@@ -88,7 +88,7 @@ To choose the continuous product-phase branch, put
 ```math
 \begin{aligned}
 F(a,\alpha)&=\sum_{s=\pm1}[\Theta(a+s\alpha;\eta)+\Theta(a+s\alpha;2\eta)],\\{}
-\operatorname{lift}(\mathrm{raw},\mathrm{target})&=\mathrm{target}+\operatorname{wrap}(\mathrm{raw}-\mathrm{target}).
+\mathrm{lift}(\mathrm{raw},\mathrm{target})&=\mathrm{target}+\mathrm{wrap}(\mathrm{raw}-\mathrm{target}).
 \end{aligned}
 ```
 
@@ -97,11 +97,11 @@ Our coupled residuals subtract
 
 ```math
 \begin{aligned}
-&\frac{\operatorname{lift}(\operatorname{Im}[T(u_0,v)+2T(u_+,v)],F(a,\alpha))}{2N}
+&\frac{\mathrm{lift}(\mathrm{Im}[T(u_0,v)+2T(u_+,v)],F(a,\alpha))}{2N}
 &&\text{from the product phase},\\{}
-&\frac{\operatorname{Re}T(u_+,v)}{2N}
+&\frac{\mathrm{Re}T(u_+,v)}{2N}
 &&\text{from the outer-root modulus},\\{}
-&\operatorname{Im}T(u_+,v)
+&\mathrm{Im}T(u_+,v)
 &&\text{inside the wrapped outer-root phase}.
 \end{aligned}
 ```
@@ -110,7 +110,7 @@ The fourth equation is
 
 ```math
 \Theta(\alpha;\eta/2)
--\frac{2\pi I+\operatorname{lift}(\operatorname{Im}[T(v,u_0)+T(v,u_+)+T(v,u_-)],F(\alpha,a))}{2N}=0.
+-\frac{2\pi I+\mathrm{lift}(\mathrm{Im}[T(v,u_0)+T(v,u_+)+T(v,u_-)],F(\alpha,a))}{2N}=0.
 ```
 
 The ideal fused phase fixes a multiple of 2pi only; it does not replace

@@ -63,7 +63,7 @@ ordinary zero-field open XXZ chain. Our regularization of
 
 ```math
 \begin{aligned}
-u_\pm&=\frac{\eta+d}{2}\pm\frac{ia}{2},\quad 0<a<\pi,\quad |d|<\eta,\\{}
+u_\pm&=\frac{\eta+d}{2}\pm\frac{ia}{2},\quad 0\lt a\lt \pi,\quad |d|\lt \eta,\\{}
 d&=\sigma e^{-L},\qquad L=-\log|d|,\\{}
 J&=N-2-\mathrm{mode},\quad \mathrm{mode}=1,\ldots,N-3,\\{}
 \sigma&=(-1)^{\mathrm{mode}+1}.

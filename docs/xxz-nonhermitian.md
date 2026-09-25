@@ -68,7 +68,7 @@ Use spin-half operators, J=1, N>=2, and opposite imaginary end fields:
 \begin{aligned}
 H&=\sum_{j=1}^{N-1}\left(S_j^xS_{j+1}^x+S_j^yS_{j+1}^y+\Delta S_j^zS_{j+1}^z\right)
 +\frac{i\sqrt{1-\Delta^2}}2(S_1^z-S_N^z),\\{}
-\Delta&=\cos\gamma,\qquad 0<\gamma<\frac\pi2.
+\Delta&=\cos\gamma,\qquad 0\lt \gamma\lt \frac\pi2.
 \end{aligned}
 ```
 

@@ -33,7 +33,7 @@ The exact definition is
 \begin{aligned}
 M&=\frac{N-\ell}{2},\\{}
 I_{\min}&=N-M-\mathrm{WIDTH}+1,\qquad I_{\max}=N-M,\\{}
-I_{\min}&\le I_1<\cdots<I_M\le I_{\max},\\{}
+I_{\min}&\le I_1\lt \cdots\lt I_M\le I_{\max},\\{}
 1&\le M\le\mathrm{WIDTH}\le N-M.
 \end{aligned}
 ```

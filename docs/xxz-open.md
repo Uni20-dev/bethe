@@ -12,7 +12,7 @@ doubling the periodic chain length would miss that phase.
 ```math
 \begin{aligned}
 H&=\sum_{i=0}^{N-2}\left(S_i^xS_{i+1}^x+S_i^yS_{i+1}^y+\Delta S_i^zS_{i+1}^z\right),\\{}
-J&=1,\quad h=0,\quad \Delta>-1\ \text{(ground states)},\quad N\ge2,
+J&=1,\quad h=0,\quad \Delta\gt -1\ \text{(ground states)},\quad N\ge2,
 \quad\text{no boundary fields}.
 \end{aligned}
 ```
@@ -74,7 +74,7 @@ For M=N/2-|Sz|, the supported labels are distinct increasing positive integers:
 
 ```math
 \begin{aligned}
-1&\le I\le N-M,\qquad I<I_\infty,\\{}
+1&\le I\le N-M,\qquad I\lt I_\infty,\\{}
 I_\infty&=N-M+1-\frac{(N-2M+1)\gamma}{\pi},\\{}
 \gamma&=\arccos\Delta.
 \end{aligned}

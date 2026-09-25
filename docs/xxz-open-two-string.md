@@ -34,8 +34,8 @@ write
 
 ```math
 \begin{aligned}
-u_j&=\frac{i\alpha_j}{2},\qquad 0<\alpha_1<\cdots<\alpha_r<\pi,\quad r=N/2-2,\\{}
-u_\pm&=\frac{\eta+d}{2}\pm\frac{ia}{2},\qquad 0<a<\pi,\quad 0<d<\eta,\\{}
+u_j&=\frac{i\alpha_j}{2},\qquad 0\lt \alpha_1\lt \cdots\lt \alpha_r\lt \pi,\quad r=N/2-2,\\{}
+u_\pm&=\frac{\eta+d}{2}\pm\frac{ia}{2},\qquad 0\lt a\lt \pi,\quad 0\lt d\lt \eta,\\{}
 L&=-\log d.
 \end{aligned}
 ```
@@ -57,11 +57,11 @@ Define
 
 ```math
 \begin{aligned}
-\Theta(\beta;w)&=2\operatorname{atan2}\!\left(\sin(\beta/2),\tanh w\cos(\beta/2)\right),\\{}
+\Theta(\beta;w)&=2\mathrm{atan2}\!\left(\sin(\beta/2),\tanh w\cos(\beta/2)\right),\\{}
 G(\beta;w)&=\log|\sinh(w+i\beta/2)|,\\{}
 w_+&=\frac{3\eta+d}{2},\qquad w_-=\frac{\eta-d}{2},\\{}
 S(\beta)&=\Theta(\beta;w_+)+\Theta(\beta;w_-),\\{}
-C(a;d)&=2\operatorname{atan2}\!\left(\tanh(d/2)\cos(a/2),\sin(a/2)\right).
+C(a;d)&=2\mathrm{atan2}\!\left(\tanh(d/2)\cos(a/2),\sin(a/2)\right).
 \end{aligned}
 ```
 

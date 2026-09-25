@@ -16,7 +16,7 @@ labelled by magnetization Sz, not total spin S.
 H&=\sum_i\left(S_i^xS_{i+1}^x+S_i^yS_{i+1}^y+\Delta S_i^zS_{i+1}^z\right),
 \qquad J=1,\quad h=0,\\{}
 \text{ground states/sectors:}\quad&
-\begin{cases}\Delta>-1,&N\text{ even},\\ \Delta\ge0,&N\text{ odd}.\end{cases}
+\begin{cases}\Delta\gt -1,&N\text{ even},\\ \Delta\ge0,&N\text{ odd}.\end{cases}
 \end{aligned}
 ```
 
@@ -153,7 +153,7 @@ at zero field. Algebraically, define the continuous real scattering phase
 
 ```math
 \begin{aligned}
-\phi_{ij}&=\operatorname{atan2}\!\left(z_i-z_j,1+\frac1\Delta+\left(1-\frac1\Delta\right)z_iz_j\right),\\{}
+\phi_{ij}&=\mathrm{atan2}\!\left(z_i-z_j,1+\frac1\Delta+\left(1-\frac1\Delta\right)z_iz_j\right),\\{}
 F_i&=2N\arctan z_i-2\pi I_i-2\sum_{j\ne i}\phi_{ij},\\{}
 E&=\left(\frac N4-M\right)\Delta+\sum_i\frac{z_i^2-1}{z_i^2+1}.
 \end{aligned}
@@ -256,7 +256,7 @@ For M=N/2-|Sz|, use distinct sorted quantum numbers of parity
 ```math
 \begin{aligned}
 |2I|&\le N-M-1&&\text{(conventional XXX window)},\\{}
-|I|&<I_\infty,\\{}
+|I|&\lt I_\infty,\\{}
 I_\infty&=\frac12\left[N-M+1-\frac{(N-2M+2)\gamma}{\pi}\right],\\{}
 \gamma&=\arccos\Delta.
 \end{aligned}

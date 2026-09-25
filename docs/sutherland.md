@@ -21,7 +21,7 @@ With $`\hbar =2m =1`$, circumference $`L \gt 0`$ and $`N \ge 1`$, our convention
 ```math
 H=-\sum_i\partial_i^2
 +2\lambda(\lambda-1)\left(\frac\pi L\right)^2
-\sum_{i<j}\frac{1}{\sin^2[\pi(x_i-x_j)/L]}.
+\sum_{i\lt j}\frac{1}{\sin^2[\pi(x_i-x_j)/L]}.
 ```
 
 The input $`\lambda \ge 0`$ selects the bosonic Jastrow domain, with wavefunctions

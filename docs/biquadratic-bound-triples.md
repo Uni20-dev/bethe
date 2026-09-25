@@ -59,8 +59,8 @@ roots is
 ```math
 \begin{aligned}
 u_0&=\frac{ia}{2},\\{}
-u_+&=\eta+\operatorname{Re}z+i(a/2+\operatorname{Im}z),\qquad u_-=\overline{u_+},\\{}
-z&=e^{-L+i\phi},\qquad \eta=\operatorname{arcosh}\Delta,\\{}
+u_+&=\eta+\mathrm{Re}z+i(a/2+\mathrm{Im}z),\qquad u_-=\overline{u_+},\\{}
+z&=e^{-L+i\phi},\qquad \eta=\mathrm{arcosh}\Delta,\\{}
 J&=N-4-\mathrm{mode},\quad \mathrm{mode}=1,\ldots,N-5.
 \end{aligned}
 ```
@@ -78,12 +78,12 @@ Here is our regularization of the original complex equations
 
 ```math
 \begin{aligned}
-\Theta(\beta;w)&=2\operatorname{atan2}\!\left(\sin(\beta/2),\tanh w\cos(\beta/2)\right),\\{}
+\Theta(\beta;w)&=2\mathrm{atan2}\!\left(\sin(\beta/2),\tanh w\cos(\beta/2)\right),\\{}
 D&=\log\sinh(u+\eta/2)-\log\sinh(u-\eta/2),\\{}
 A&=\log\sinh(2\eta+z),\\{}
 B&=\log\sinh(2\eta+z+ia)-\log\sinh(z+ia),\\{}
 C&=\log\sinh(\eta+ib)-\log\sinh(-\eta+ib),\\{}
-R&=\log\sinh(3\eta+2\operatorname{Re}z)-\log\sinh(\eta+2\operatorname{Re}z),\\{}
+R&=\log\sinh(3\eta+2\mathrm{Re}z)-\log\sinh(\eta+2\mathrm{Re}z),\\{}
 c&=\log\frac{\sinh z}{z},\qquad c(0)=0.
 \end{aligned}
 ```
@@ -92,10 +92,10 @@ With `wrap(t)=atan2(sin(t),cos(t))`, the three residuals are
 
 ```math
 \begin{aligned}
-f_0&=\Theta(a;\eta/2)+2\operatorname{Im}D
--\frac{2\operatorname{Im}B+\Theta(2b;\eta)+\pi(J+1)}{N},\\{}
-f_1&=\operatorname{Re}D-\frac{\operatorname{Re}A+L-\operatorname{Re}c+\operatorname{Re}B+R}{2N},\\{}
-f_2&=\frac{\operatorname{wrap}(2N\operatorname{Im}D-\operatorname{Im}A+\phi+\operatorname{Im}c-\operatorname{Im}B-\operatorname{Im}C)}{2N}.
+f_0&=\Theta(a;\eta/2)+2\mathrm{Im}D
+-\frac{2\mathrm{Im}B+\Theta(2b;\eta)+\pi(J+1)}{N},\\{}
+f_1&=\mathrm{Re}D-\frac{\mathrm{Re}A+L-\mathrm{Re}c+\mathrm{Re}B+R}{2N},\\{}
+f_2&=\frac{\mathrm{wrap}(2N\mathrm{Im}D-\mathrm{Im}A+\phi+\mathrm{Im}c-\mathrm{Im}B-\mathrm{Im}C)}{2N}.
 \end{aligned}
 ```
 

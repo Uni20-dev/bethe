@@ -10,8 +10,8 @@ repulsion:
 
 ```math
 \begin{aligned}
-H&=-\sum_j\frac{\partial^2}{\partial x_j^2}+2c\sum_{i<j}\delta(x_i-x_j),\\{}
-\frac{\hbar^2}{2m}&=1,\quad c\ge0,\quad \ell>0\ \text{(circumference)},\\{}
+H&=-\sum_j\frac{\partial^2}{\partial x_j^2}+2c\sum_{i\lt j}\delta(x_i-x_j),\\{}
+\frac{\hbar^2}{2m}&=1,\quad c\ge0,\quad \ell\gt 0\ \text{(circumference)},\\{}
 E&=\sum_jk_j^2,\qquad P=\sum_jk_j.
 \end{aligned}
 ```

@@ -109,8 +109,8 @@ coefficient-wise complex conjugate. Thus the M raw residuals are
 
 ```math
 \begin{cases}
-\operatorname{Im}G_r,&\sigma=+1,\\{}
-\operatorname{Re}G_r,&\sigma=-1.
+\mathrm{Im}G_r,&\sigma=+1,\\{}
+\mathrm{Re}G_r,&\sigma=-1.
 \end{cases}
 ```
 
@@ -136,7 +136,7 @@ The same coefficients give
 
 ```math
 \begin{aligned}
-E&=\frac{N\Delta}{4}+M(1-\Delta)+2\operatorname{Im}\frac{Q'(i)}{Q(i)},\\{}
+E&=\frac{N\Delta}{4}+M(1-\Delta)+2\mathrm{Im}\frac{Q'(i)}{Q(i)},\\{}
 e^{iP_{\mathrm{total}}}&=\frac{Q(-i)}{Q(i)}=\frac{\overline{Q(i)}}{Q(i)}.
 \end{aligned}
 ```

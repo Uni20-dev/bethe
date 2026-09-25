@@ -111,7 +111,7 @@ resummation of the exact modified-Bessel series in
 branch maps to our repulsive charge branch: his interaction parameter becomes
 our $`u`$, and energies multiply by two to change hopping from `1/2` to `1`.
 
-For reproducibility, set $`a =\pi /(2\,u)`$ and $`A (z)=\operatorname{artanh} (\exp (-z))`$. Our resummation is
+For reproducibility, set $`a =\pi /(2\,u)`$ and $`A (z)=\mathrm{artanh} (\exp (-z))`$. Our resummation is
 
 ```math
 \begin{aligned}

@@ -61,9 +61,9 @@ With `C(x)=c/(pi*(c²+x²))`, the Yang–Yang equation is
 ```math
 \begin{aligned}
 \epsilon(k)&=k^2-\mu-\int C(k-q)T\log\!\left(1+e^{-\epsilon(q)/T}\right)\,dq,\\{}
-\operatorname{filling}(k)&=\frac{1}{1+e^{\epsilon(k)/T}},\\{}
+\mathrm{filling}(k)&=\frac{1}{1+e^{\epsilon(k)/T}},\\{}
 \rho_{\mathrm{total}}(k)&=\frac1{2\pi}
-+\int C(k-q)\operatorname{filling}(q)\rho_{\mathrm{total}}(q)\,dq.
++\int C(k-q)\mathrm{filling}(q)\rho_{\mathrm{total}}(q)\,dq.
 \end{aligned}
 ```
 

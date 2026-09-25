@@ -149,8 +149,10 @@ needed only for regeneration and optional maintainer tests, not normal builds.
 ### Documentation equations
 
 Use GitHub's backtick-protected inline math and fenced `math` display blocks.
-In inline math, use `\lt` and `\gt` instead of literal angle brackets to avoid
-HTML-entity escaping. End multiline display rows with `\\{}`: GitHub's Markdown
+In all math, use `\lt` and `\gt` instead of literal angle brackets: these can
+survive Markdown processing but fail in GitHub's browser renderer. Use `\mathrm`
+for named functions such as atan2; GitHub rejects `\operatorname` even though
+MathJax itself supports it. End multiline display rows with `\\{}`: GitHub's Markdown
 renderer adds an unwanted backslash to a bare `\\` at the end of a line.
 The empty group preserves the TeX row break without relying on trailing spaces.
 
@@ -163,7 +165,9 @@ python3 scripts/check_markdown_math.py
 python3 scripts/check_markdown_math.py --github
 ```
 
-This checks the Markdown-to-TeX boundary, not the full MathJax grammar or the
-mathematical content. Testing raw TeX alone does not catch Markdown escaping.
+This checks the Markdown-to-TeX boundary and known browser restrictions, not
+the full MathJax grammar or mathematical content. The rendering API does not
+run GitHub's browser math component: confirm unfamiliar notation in a browser
+too. Testing raw TeX alone does not catch Markdown escaping or GitHub's restrictions.
 
 Next: [run a calculation and interpret its output](command-line.md).

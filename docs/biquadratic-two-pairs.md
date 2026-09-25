@@ -60,8 +60,8 @@ Delta=3/2. Its roots are
 ```math
 \begin{aligned}
 u_{i,\pm}&=\frac{\eta+d_i}{2}\pm\frac{ia_i}{2},\quad i=1,2,\\{}
-0&<a_1<a_2<\pi,\qquad \eta=\operatorname{arcosh}\Delta,\\{}
-d_i&=\sigma_i e^{-L_i},\quad |d_i|<\eta,\\{}
+0&\lt a_1\lt a_2\lt \pi,\qquad \eta=\mathrm{arcosh}\Delta,\\{}
+d_i&=\sigma_i e^{-L_i},\quad |d_i|\lt \eta,\\{}
 \sigma_i&=(-1)^{N-J_i-i}\qquad(i\text{ is one-based}).
 \end{aligned}
 ```
@@ -86,7 +86,7 @@ with j, set $`t =(d_{i} -d_{j})/2`$, $`s =(d_{i} +d_{j})/2`$ and `beta=a_i±a_j`
 
 ```math
 \begin{aligned}
-\Theta(\beta;w)&=2\operatorname{atan2}\!\left(\sin(\beta/2),\tanh w\cos(\beta/2)\right),\\{}
+\Theta(\beta;w)&=2\mathrm{atan2}\!\left(\sin(\beta/2),\tanh w\cos(\beta/2)\right),\\{}
 C(\beta;w)&=2\arctan\!\left(\frac{\tanh w}{\tan(\beta/2)}\right),\\{}
 G(\beta;w)&=\log|\sinh(w+i\beta/2)|,\\{}
 F(\beta)&=\Theta(\beta;\eta+t)+\Theta(\beta;\eta-t)+\Theta(\beta;2\eta+s)+C(\beta;s),\\{}

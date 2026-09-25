@@ -47,6 +47,7 @@ def source_expressions(path, text):
                 block = []
             fence = line[3:] if fence is None else None
         elif fence == "math":
+            check_macros(path, number, line)
             if line.endswith("\\\\"):
                 raise ValueError(f"{path}:{number}: end math rows with \\\\{{}}, not bare \\\\")
             block.append(line)
@@ -56,12 +57,18 @@ def source_expressions(path, text):
                 if not (content.startswith("`") and content.endswith("`")):
                     raise ValueError(f"{path}:{number}: use protected $`...`$ inline math")
                 content = content[1:-1]
-                if "<" in content or ">" in content:
-                    raise ValueError(f"{path}:{number}: use \\lt or \\gt in inline math")
+                check_macros(path, number, content)
                 expressions.append("$" + content + "$")
     if fence is not None:
         raise ValueError(f"{path}: unclosed code fence")
     return expressions
+
+
+def check_macros(path, number, content):
+    if "<" in content or ">" in content:
+        raise ValueError(f"{path}:{number}: use \\lt or \\gt in all math")
+    if re.search(r"\\operatorname\b", content):
+        raise ValueError(f"{path}:{number}: GitHub rejects \\operatorname; use \\mathrm")
 
 
 def check_github(item):

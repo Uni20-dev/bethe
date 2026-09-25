@@ -55,7 +55,7 @@ For the distinguished root, define
 
 ```math
 r=\frac{\Delta-1}{\Delta+1},\qquad y=\frac1{z_B^2},\qquad
-w=-\log(1+y/r^2),\qquad y=r^2\operatorname{expm1}(-w).
+w=-\log(1+y/r^2),\qquad y=r^2\mathrm{expm1}(-w).
 ```
 
 The ground-state branch has $`y \gt -r ^{2}`$. Negative w describes a real z_B; w=0
@@ -76,7 +76,7 @@ are evaluated with `atan2`, retaining their winding. A bulk root z sees the
 distinguished root and its reflection through their combined phase
 
 ```math
-S_B(z,y)=\operatorname{atan2}\!\left(2z(Py-Q),(P^2-z^2)y+1-Q^2z^2\right).
+S_B(z,y)=\mathrm{atan2}\!\left(2z(Py-Q),(P^2-z^2)y+1-Q^2z^2\right).
 ```
 
 Near the pole at strong anisotropy, both arguments in this expression suffer
@@ -90,8 +90,8 @@ The bulk residual used in the solver is
 \begin{aligned}
 R_i=\frac1N\biggl[&2N\arctan z_i-2\arctan(rz_i)-\pi I_i\\{}
 &-\sum_{\substack{j\ne i\\j\ \mathrm{bulk}}}
-\left\{\operatorname{atan2}(z_i-z_j,P-Qz_iz_j)
-+\operatorname{atan2}(z_i+z_j,P+Qz_iz_j)\right\}-S_B(z_i,y)\biggr].
+\left\{\mathrm{atan2}(z_i-z_j,P-Qz_iz_j)
++\mathrm{atan2}(z_i+z_j,P+Qz_iz_j)\right\}-S_B(z_i,y)\biggr].
 \end{aligned}
 ```
 
@@ -106,12 +106,12 @@ continuation
 ```math
 \begin{aligned}
 A(y,a)&=\begin{cases}
-\arctan(\sqrt y\,a)/\sqrt y,&y>0,\\{}
+\arctan(\sqrt y\,a)/\sqrt y,&y\gt 0,\\{}
 a,&y=0,\\{}
-\operatorname{artanh}(\sqrt{-y}\,a)/\sqrt{-y},&y<0,
+\mathrm{artanh}(\sqrt{-y}\,a)/\sqrt{-y},&y\lt 0,
 \end{cases}\\{}
 a_j&=\frac{P+iz_j}{1-iQz_j},\\{}
-R_B&=\frac1N\left[-NA(y,1)+A(y,1/r)+\sum_{\mathrm{bulk}}\operatorname{Re}A(y,a_j)\right].
+R_B&=\frac1N\left[-NA(y,1)+A(y,1/r)+\sum_{\mathrm{bulk}}\mathrm{Re}A(y,a_j)\right].
 \end{aligned}
 ```
 

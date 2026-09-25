@@ -41,7 +41,7 @@ output files, including with `--force`.
 In units $`\hbar ^{2}/(2m)=1`$, circumference $`\ell`$, the first-quantized Hamiltonian is
 
 ```math
-H=-\sum_j\partial_j^2+2c\sum_{i<j}\delta(x_i-x_j),\qquad c\ge0.
+H=-\sum_j\partial_j^2+2c\sum_{i\lt j}\delta(x_i-x_j),\qquad c\ge0.
 ```
 
 Antisymmetry removes the contact interaction between identical fermions.

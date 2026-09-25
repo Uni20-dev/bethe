@@ -90,8 +90,8 @@ multiplication matrices use the real block representation
 
 ```math
 \begin{pmatrix}
-\operatorname{Re}A&-\operatorname{Im}A\\{}
-\operatorname{Im}A&\operatorname{Re}A
+\mathrm{Re}A&-\mathrm{Im}A\\{}
+\mathrm{Im}A&\mathrm{Re}A
 \end{pmatrix}.
 ```
 
