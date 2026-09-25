@@ -6,6 +6,7 @@ import sys
 
 env = dict(os.environ, UNI20_COLOR="never", COLUMNS="4096")
 base_arguments = {
+    "bethe-xyz-pbc": ["4", "--eta", "0.4", "--t", "0.7"],
     "bethe-xxz-pbc": ["4", "--delta", "0.5"],
     "bethe-xxz-obc": ["4", "--delta", "0.5"],
     "bethe-hubbard-pbc": ["4", "--u", "4"],

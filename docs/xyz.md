@@ -1,6 +1,6 @@
 # XYZ: even periodic ground branch
 
-**Status: library ground-branch solver; no frontend or excited-spectrum coverage.**
+**Status: ground-branch library and `bethe-xyz-pbc` frontend; no excited-spectrum coverage.**
 Native fp64, long-double and fp128 implementations cover the symmetric regular-root
 branch of even periodic chains with real `0<eta<1` and rectangular `tau=i*t`,
 `t>0`. Independent small-chain diagonalization validates the ground-state selection
@@ -20,13 +20,43 @@ The parametrization is equation (2) of
 [Zhang–Klümper–Popkov (2024)](../CITATIONS.md#zhang-klumper-popkov-2024).
 Their Hamiltonian uses Pauli matrices, so their energies are four times ours.
 L=2 includes both periodic bonds. Real eta and rectangular `tau=i*t` give the
-initial Hermitian family. Generic XYZ does not conserve total Sz; the future
-frontend must not label roots as a fixed-spin-flip sector.
+initial Hermitian family. Generic XYZ does not conserve total Sz; roots are
+not labeled as a fixed-spin-flip sector.
 
 The first solver target is the even periodic chain, starting with regular
 ground-state roots and independent small-chain Hamiltonian checks. The
 broader catalogue target remains finite-size energies and excitations; neither
 two-site identities nor the trigonometric limit alone meet that target.
+
+## Command-line use
+
+```sh
+bethe-xyz-pbc 16 --eta 0.4 --t 0.7 --roots
+bethe-xyz-pbc 32 --eta 0.7 --t 2 --precision long-double
+bethe-xyz-pbc 16 --eta 0.4 --t 0.7 --roots --json xyz.json \
+  --csv-table states=xyz.csv --tsv-table roots=roots.tsv
+bethe-xyz-pbc --references
+```
+
+Both `--eta` and `--t` are required; this first interface uses elliptic
+parameters, not an inversion from arbitrary Jx/Jy/Jz. Eta below/above 1/2 gives
+positive/negative Jz; eta=1/2 is the anisotropic XY chain. Exactly eta=0 or 1
+is excluded: use the XXX/XXZ tools for those endpoint limits.
+
+The `states` table reports total/per-site energy, momentum, residual, iterations,
+convergence and status. `--roots` adds a `roots` table with decimal labels I and
+separate `lambda_real`/`lambda_imag` columns. Metadata records the elliptic
+parameters, three exchange constants, spin convention, precision, solver
+controls, provenance and CPU time via the common [output system](output.md).
+References appear only with `--references`, not during ordinary calculations.
+
+All enabled precisions (`fp64`, `long-double`, and MPLAPACK-backed `fp128`) parse
+and solve natively. `--max-iterations 0` checks only the seed; it is exact for
+two sites, but generally fails for larger rings. A failed solve exits 2 and
+exports missing energies, momenta and root coordinates (JSON null, CSV/TSV
+empty). Numerical diagnostics and labels remain. Invalid input exits 1 before
+any output file is opened, including existing targets supplied with `--force`.
+Odd rings, `--sz` sectors and `--excitations` are not supported.
 
 ## Implemented numerical layer
 
@@ -87,14 +117,13 @@ Hamiltonian in the declared normalization.
    avoids a separate continuation solver; an XXZ continuation path may help
    difficult parameters. Roots shifted by periods must be handled together
    with their phase parameter, not independently.
-2. Add the ground-branch frontend using the shared CLI and output facilities.
+2. Add coupling inversion/axis mappings, with explicit conventions and tests.
 3. Handle singular/bound-pair solutions separately before claiming spectrum
    completeness. The modern chiral construction explicitly warns about missing
    states; use [Baxter's formulation](../CITATIONS.md#baxter-1973) as well.
-4. Expose only validated branches through a dedicated frontend with the shared
-   CLI, output tables, precision controls, and citation registry. Follow with
-   excited families, coupling inversion/axis mappings, and odd rings as
-   separately validated capabilities.
+4. Extend the frontend only with separately validated excited families and
+   odd-ring capabilities; the existing frontend deliberately exposes ground
+   states only.
 
 ## Ground-state library API
 

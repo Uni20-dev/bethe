@@ -59,6 +59,9 @@ Thermodynamic dispersion tools use `bethe-<model>-dispersion`.
 - [Periodic q-bosons](docs/q-boson.md): `bethe-q-boson-pbc` gives fixed-particle-number
   ground energies and canonical excitation scans for deformed boson hopping,
   including free-boson and phase-model limits. This is not the Bose–Hubbard model.
+- [Periodic XYZ](docs/xyz.md): `bethe-xyz-pbc` gives even-chain regular ground
+  states in the rectangular elliptic parametrization, including either sign
+  of Jz. Generic XYZ has no conserved Sz sector; excitations are not yet exposed.
 - [Periodic SU(3)](docs/su3.md): `bethe-su3-pbc` gives the balanced singlet
   ground state of the permutation chain for lengths divisible by three,
   also covering the spin-1 ULS point through an energy shift.

@@ -696,12 +696,20 @@ Phys. Rev. B 109, 115411 (2024).
 
 [DOI](<https://doi.org/10.1103/PhysRevB.109.115411>), [arXiv](<https://arxiv.org/abs/2312.00161>).
 
+Relevant tool modes:
+
+- `bethe-xyz-pbc`: Rectangular XYZ coupling convention (2), regular Bethe equations (46)-(48), and energy normalized to S=sigma/2. Even periodic symmetric ground branch only; no singular-pair or excited-spectrum completeness claim.
+
 ### baxter-1973
 
 R. J. Baxter. *Eight-vertex model in lattice statistics and one-dimensional anisotropic Heisenberg chain. III. Eigenvectors of the transfer matrix and Hamiltonian*.
 Ann. Phys. 76, 48-71 (1973).
 
 [DOI](<https://doi.org/10.1016/0003-4916(73)90441-7>).
+
+Relevant tool modes:
+
+- `bethe-xyz-pbc`: Eight-vertex/XYZ Bethe-ansatz foundation; this frontend implements only the even-chain regular ground branch.
 
 ### haldane-1988
 

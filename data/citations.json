@@ -758,6 +758,14 @@
   ],
   "tools": [
     {
+      "id": "xyz_pbc",
+      "executable": "bethe-xyz-pbc",
+      "references": [
+        {"id": "zhang-klumper-popkov-2024", "context": "Rectangular XYZ coupling convention (2), regular Bethe equations (46)-(48), and energy normalized to S=sigma/2. Even periodic symmetric ground branch only; no singular-pair or excited-spectrum completeness claim."},
+        {"id": "baxter-1973", "context": "Eight-vertex/XYZ Bethe-ansatz foundation; this frontend implements only the even-chain regular ground branch."}
+      ]
+    },
+    {
       "id": "bose_fermi_pbc",
       "executable": "bethe-bose-fermi-pbc",
       "references": [

@@ -349,6 +349,10 @@ inline constexpr std::array<Reference, 72> references{{
   {"guan-batchelor-2011", "X.-W. Guan and M. T. Batchelor", "Polylogs, thermodynamics and scaling functions of one-dimensional quantum many-body systems", "J. Phys. A: Math. Theor. 44, 102001", 2011, links_71},
 }};
 
+inline constexpr std::array<Use, 2> uses_xyz_pbc{{
+  {&references[41], "Rectangular XYZ coupling convention (2), regular Bethe equations (46)-(48), and energy normalized to S=sigma/2. Even periodic symmetric ground branch only; no singular-pair or excited-spectrum completeness claim."},
+  {&references[42], "Eight-vertex/XYZ Bethe-ansatz foundation; this frontend implements only the even-chain regular ground branch."},
+}};
 inline constexpr std::array<Use, 3> uses_bose_fermi_pbc{{
   {&references[37], "Equal-mass, equal-repulsion Bose-Fermi Hamiltonian (3) and periodic nested equations (28)-(34). Odd-fermion mixed ground shells; no auxiliary-auxiliary scattering. No correlation functions or trapped-gas approximation."},
   {&references[36], "Original equal-coupling integrable mixture and ground-state study."},
@@ -466,12 +470,13 @@ inline constexpr std::array<Use, 3> uses_gaudin_yang_pbc{{
   {&references[57], "Hamiltonian and periodic fermion equations (1), (2), (7), (8), (25); even N, odd minority population as in Sec. 5. Weak and strong limits (12), (15)-(16) provide checks. Hard walls, attraction and excitations are not implemented."},
 }};
 
-enum class Tool { bose_fermi_pbc, q_boson_pbc, lieb_liniger_thermal, lieb_liniger_dispersion, biquadratic_obc, xxx_pbc, xxx_obc, xxz_pbc, xxz_obc, hubbard_dispersion, hubbard_pbc, hubbard_obc, lieb_liniger_pbc, lieb_liniger_obc, su3_pbc, tj_pbc, tb_pbc, richardson, central_spin, sun_fermions_pbc, ladder_pbc, haldane_shastry_pbc, sutherland_pbc, gaudin_yang_pbc };
+enum class Tool { xyz_pbc, bose_fermi_pbc, q_boson_pbc, lieb_liniger_thermal, lieb_liniger_dispersion, biquadratic_obc, xxx_pbc, xxx_obc, xxz_pbc, xxz_obc, hubbard_dispersion, hubbard_pbc, hubbard_obc, lieb_liniger_pbc, lieb_liniger_obc, su3_pbc, tj_pbc, tb_pbc, richardson, central_spin, sun_fermions_pbc, ladder_pbc, haldane_shastry_pbc, sutherland_pbc, gaudin_yang_pbc };
 
 [[nodiscard]] constexpr std::span<Use const> for_tool(Tool tool)
 {
   switch (tool)
   {
+    case Tool::xyz_pbc: return uses_xyz_pbc;
     case Tool::bose_fermi_pbc: return uses_bose_fermi_pbc;
     case Tool::q_boson_pbc: return uses_q_boson_pbc;
     case Tool::lieb_liniger_thermal: return uses_lieb_liniger_thermal;
