@@ -160,7 +160,8 @@ finite differences, independently enumerated windows, and failure paths.
 Native-precision tests distinguish extended arithmetic from fp64 narrowing.
 A separate quadrature solution of the bulk root-density integral equation
 checks finite-size convergence at fixed density; it is test code, not a public
-thermodynamics solver.
+thermodynamics solver. A separate [public bulk ground-state API](lieb-liniger-thermo.md)
+now provides the Fermi rapidity, energy per length, and chemical potential.
 
 Attractive interactions/bound states, exactly zero or infinite
 coupling, thermodynamic excitation curves, finite-temperature TBA, and matrix

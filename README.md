@@ -50,6 +50,8 @@ Thermodynamic dispersion tools use `bethe-<model>-dispersion`.
   excitation scans within an explicit finite quantum-number window.
   [Hard-wall boxes](docs/lieb-liniger-open.md) use `bethe-lieb-liniger-obc`,
   with positive standing-wave roots and one-sided label windows.
+  A [bulk ground-state library](docs/lieb-liniger-thermo.md) supplies the
+  thermodynamic energy density, Fermi rapidity, and chemical potential.
 - [Periodic SU(3)](docs/su3.md): `bethe-su3-pbc` gives the balanced singlet
   ground state of the permutation chain for lengths divisible by three,
   also covering the spin-1 ULS point through an energy shift.

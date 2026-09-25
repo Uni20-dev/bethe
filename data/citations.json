@@ -690,6 +690,26 @@
         {"label": "DOI", "url": "https://doi.org/10.1103/PhysRevLett.123.250602"},
         {"label": "arXiv", "url": "https://arxiv.org/abs/1908.08172"}
       ]
+    },
+    {
+      "id": "franchini-2011",
+      "authors": "Fabio Franchini",
+      "title": "Notes on Bethe Ansatz Techniques",
+      "publication": "SISSA lecture notes, May 15, 2011",
+      "year": 2011,
+      "links": [
+        {"label": "Open lecture notes", "url": "https://people.sissa.it/~ffranchi/BAnotes.pdf"}
+      ]
+    },
+    {
+      "id": "caux-lieb-liniger",
+      "authors": "Jean-Sébastien Caux",
+      "title": "The Bethe Ansatz: The ground state and the Lieb equation",
+      "publication": "Online lecture notes, integrability.org",
+      "year": null,
+      "links": [
+        {"label": "Lieb equation", "url": "https://integrability.org/g_l_Le.html"}
+      ]
     }
   ],
   "tools": [

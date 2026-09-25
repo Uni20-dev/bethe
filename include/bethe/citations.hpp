@@ -251,8 +251,14 @@ inline constexpr std::array<Link, 2> links_65{{
   {"DOI", "https://doi.org/10.1103/PhysRevLett.123.250602"},
   {"arXiv", "https://arxiv.org/abs/1908.08172"},
 }};
+inline constexpr std::array<Link, 1> links_66{{
+  {"Open lecture notes", "https://people.sissa.it/~ffranchi/BAnotes.pdf"},
+}};
+inline constexpr std::array<Link, 1> links_67{{
+  {"Lieb equation", "https://integrability.org/g_l_Le.html"},
+}};
 
-inline constexpr std::array<Reference, 66> references{{
+inline constexpr std::array<Reference, 68> references{{
   {"barber-batchelor-1989", "Michael N. Barber and Murray T. Batchelor", "Spectrum of the biquadratic spin-1 antiferromagnetic chain", "Phys. Rev. B 40, 4621-4626", 1989, links_0},
   {"albertini-2000", "Giuseppe Albertini", "Is the purely biquadratic spin 1 chain always massive?", "arXiv:cond-mat/0012439", 2000, links_1},
   {"aufgebauer-klumper-2010", "Britta Aufgebauer and Andreas Klümper", "Quantum spin chains of Temperley-Lieb type: periodic boundary conditions, spectral multiplicities and finite temperature", "J. Stat. Mech. 2010, P05018", 2010, links_2},
@@ -319,6 +325,8 @@ inline constexpr std::array<Reference, 66> references{{
   {"zhou-2025-biquadratic", "Huan-Qiang Zhou, Qian-Qian Shi, Ian P. McCulloch, and Murray T. Batchelor", "Goldstone modes and the golden spiral in the ferromagnetic spin-1 biquadratic model", "J. Phys. A: Math. Theor. 58, 39LT01", 2025, links_63},
   {"nachtergaele-spitzer-starr-2007", "Bruno Nachtergaele, Wolfgang Spitzer, and Shannon Starr", "Droplet Excitations for the Spin-1/2 XXZ Chain with Kink Boundary Conditions", "Ann. Henri Poincare 8, 165-201", 2007, links_64},
   {"reichert-2019", "Benjamin Reichert, Grigori E. Astrakharchik, Aleksandra Petkovic, and Zoran Ristivojevic", "Exact Results for the Boundary Energy of One-Dimensional Bosons", "Phys. Rev. Lett. 123, 250602", 2019, links_65},
+  {"franchini-2011", "Fabio Franchini", "Notes on Bethe Ansatz Techniques", "SISSA lecture notes, May 15, 2011", 2011, links_66},
+  {"caux-lieb-liniger", "Jean-Sébastien Caux", "The Bethe Ansatz: The ground state and the Lieb equation", "Online lecture notes, integrability.org", 0, links_67},
 }};
 
 inline constexpr std::array<Use, 7> uses_biquadratic_obc{{

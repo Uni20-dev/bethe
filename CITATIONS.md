@@ -905,4 +905,18 @@ Relevant tool modes:
 
 - `bethe-lieb-liniger-obc`: Equations (7)-(8) fix the hard-wall ground-state convention and exclusion of self-image scattering; the finite-volume solver extends the logarithmic labels to selected excitations. No boundary-energy integral-equation or thermodynamics API is implemented.
 
+### franchini-2011
+
+Fabio Franchini. *Notes on Bethe Ansatz Techniques*.
+SISSA lecture notes, May 15, 2011 (2011).
+
+[Open lecture notes](<https://people.sissa.it/~ffranchi/BAnotes.pdf>).
+
+### caux-lieb-liniger
+
+Jean-Sébastien Caux. *The Bethe Ansatz: The ground state and the Lieb equation*.
+Online lecture notes, integrability.org.
+
+[Lieb equation](<https://integrability.org/g_l_Le.html>).
+
 <!-- END GENERATED BIBLIOGRAPHY -->
