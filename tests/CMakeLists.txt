@@ -117,6 +117,15 @@ if(BETHE_BUILD_APPS)
     add_test(NAME LiebLinigerThermo.cli
       COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_lieb_liniger_thermo.py"
         "$<TARGET_FILE:bethe-lieb-liniger-dispersion>" "${UNI20_ENABLE_MPLAPACK}")
+    add_test(NAME LiebLinigerThermal.cli
+      COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_lieb_liniger_thermal.py"
+        "$<TARGET_FILE:bethe-lieb-liniger-thermal>" "${UNI20_ENABLE_MPLAPACK}")
+    add_test(NAME Arguments.bethe-lieb-liniger-thermal.cli
+      COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_shared_arguments.py"
+        "$<TARGET_FILE:bethe-lieb-liniger-thermal>")
+    add_test(NAME Citations.bethe-lieb-liniger-thermal.cli
+      COMMAND "${CMAKE_COMMAND}" "-DPROGRAM=$<TARGET_FILE:bethe-lieb-liniger-thermal>"
+        "-DTOOL=bethe-lieb-liniger-thermal" -P "${CMAKE_CURRENT_SOURCE_DIR}/check_citations_cli.cmake")
     add_test(NAME Arguments.bethe-lieb-liniger-dispersion.cli
       COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_shared_arguments.py"
         "$<TARGET_FILE:bethe-lieb-liniger-dispersion>")

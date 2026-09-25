@@ -54,6 +54,7 @@ The remaining models use these tables:
 | `bethe-xxz-pbc`, `bethe-xxz-obc` | `states` | `roots` with `--roots`; open ground-state modes also have `boundary_roots` |
 | `bethe-lieb-liniger-pbc` | `states` | `roots` with `--roots` |
 | `bethe-lieb-liniger-dispersion` | `dispersion` | none; bulk background in metadata |
+| `bethe-lieb-liniger-thermal` | `thermodynamics` | none; one row per temperature |
 | `bethe-biquadratic-obc` | `states` | real modes: `quantum_numbers`; Q-system: `reference`, `q_coefficients`; two-string singlet / ferro bound pairs and triples: `reference`, `string`; ferro analytic modes: `reference`; numerical `roots` with `--roots` |
 
 Excitation scans additionally write `reference` (the ground state used for gaps)
@@ -175,8 +176,8 @@ The new seconds fields contain round-trip decimal text without unit suffixes;
 unavailable timing is `unavailable`. CLI parsing is outside this interval.
 Batch calculations freeze one summary **before emitting their result tables**,
 then copy it to every table: these are run timings, not per-table timings, and
-do not include table rendering or export. Hubbard dispersion instead solves
-and streams points in one loop, so its run CPU and elapsed time include the
+do not include table rendering or export. Hubbard dispersion and the Lieb–Liniger
+dispersion/thermal tools instead solve and stream points in one loop, so their run CPU and elapsed time include the
 interleaved output. Neither includes the final summary's rendering or flush.
 
 `Outcome` is set explicitly by the model: `success` for converged results or

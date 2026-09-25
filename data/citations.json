@@ -725,6 +725,15 @@
   ],
   "tools": [
     {
+      "id": "lieb_liniger_thermal",
+      "executable": "bethe-lieb-liniger-thermal",
+      "references": [
+        {"id": "yang-yang-1969", "context": "Finite-temperature thermodynamics of repulsive continuum bosons, at fixed chemical potential or by inversion at fixed density; hbar=2m=k_B=1."},
+        {"id": "guan-batchelor-2011", "context": "Yang-Yang pseudoenergy, root density and pressure equations (2)-(5). We solve the full integral equations, not the finite-c polylog expansion."},
+        {"id": "franchini-2011", "context": "Section 2.11: thermal filling and entropy of Lieb-Liniger Bethe states. No attractive strings, trapped gases or dynamical correlations."}
+      ]
+    },
+    {
       "id": "lieb_liniger_dispersion",
       "executable": "bethe-lieb-liniger-dispersion",
       "references": [

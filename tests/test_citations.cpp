@@ -47,7 +47,8 @@ TEST(Citations, ToolReferenceSelections)
                     refs::Tool::sutherland_pbc,
                     refs::Tool::biquadratic_obc,
                     refs::Tool::lieb_liniger_obc,
-                    refs::Tool::lieb_liniger_dispersion})
+                    refs::Tool::lieb_liniger_dispersion,
+                    refs::Tool::lieb_liniger_thermal})
   {
     SCOPED_TRACE(static_cast<int>(tool));
     std::set<std::string_view> ids;

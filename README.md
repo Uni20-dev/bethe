@@ -53,6 +53,9 @@ Thermodynamic dispersion tools use `bethe-<model>-dispersion`.
   [Thermodynamic curves](docs/lieb-liniger-thermo.md) use
   `bethe-lieb-liniger-dispersion` for type-I/type-II excitations, together with
   ground energy density, Fermi rapidity, and chemical potential.
+  [Finite-temperature equilibrium](docs/lieb-liniger-thermal.md) uses
+  `bethe-lieb-liniger-thermal` at fixed chemical potential or density, including
+  temperature scans and pressure, energy, and entropy densities.
 - [Periodic SU(3)](docs/su3.md): `bethe-su3-pbc` gives the balanced singlet
   ground state of the permutation chain for lengths divisible by three,
   also covering the spin-1 ULS point through an energy shift.

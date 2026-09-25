@@ -14,6 +14,7 @@ base_arguments = {
     "bethe-lieb-liniger-pbc": ["4", "--length", "4", "--c", "1"],
     "bethe-lieb-liniger-obc": ["4", "--length", "4", "--c", "1"],
     "bethe-lieb-liniger-dispersion": ["--c", "4", "--points", "3"],
+    "bethe-lieb-liniger-thermal": ["--c", "4", "--temperature", "1", "--mu", "-1"],
     "bethe-sutherland-pbc": ["4", "--length", "4", "--lambda", "2"],
     "bethe-su3-pbc": ["6"],
     "bethe-gaudin-yang-pbc": ["6", "--length", "6", "--c", "1"],

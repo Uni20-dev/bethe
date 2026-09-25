@@ -791,6 +791,10 @@ J. Math. Phys. 10, 1115 (1969).
 
 [DOI](<https://doi.org/10.1063/1.1664947>).
 
+Relevant tool modes:
+
+- `bethe-lieb-liniger-thermal`: Finite-temperature thermodynamics of repulsive continuum bosons, at fixed chemical potential or by inversion at fixed density; hbar=2m=k\_B=1.
+
 ### doikou-nepomechie-1998
 
 Anastasia Doikou and Rafael I. Nepomechie. *Bulk and Boundary S Matrices for the SU(N) Chain*.
@@ -916,6 +920,7 @@ SISSA lecture notes, May 15, 2011 (2011).
 
 Relevant tool modes:
 
+- `bethe-lieb-liniger-thermal`: Section 2.11: thermal filling and entropy of Lieb-Liniger Bethe states. No attractive strings, trapped gases or dynamical correlations.
 - `bethe-lieb-liniger-dispersion`: Dressed-energy equation and Fermi boundary condition (2.87)-(2.88), related particle-hole energies (2.95); our phase is +2 atan(k/c).
 
 ### caux-lieb-liniger
@@ -935,5 +940,9 @@ X.-W. Guan and M. T. Batchelor. *Polylogs, thermodynamics and scaling functions 
 J. Phys. A: Math. Theor. 44, 102001 (2011).
 
 [DOI](<https://doi.org/10.1088/1751-8113/44/10/102001>), [arXiv](<https://arxiv.org/abs/1010.4842>).
+
+Relevant tool modes:
+
+- `bethe-lieb-liniger-thermal`: Yang-Yang pseudoenergy, root density and pressure equations (2)-(5). We solve the full integral equations, not the finite-c polylog expansion.
 
 <!-- END GENERATED BIBLIOGRAPHY -->

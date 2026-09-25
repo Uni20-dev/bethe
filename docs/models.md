@@ -78,7 +78,7 @@ paper's correlation functions, thermodynamics, or full spectrum.
 | `xxx` | Spin-1/2 nearest-neighbor XXX | Implemented (limited): [PBC](xxx.md), [free ends](open-chains.md), sector minima and restricted real-root excitations; periodic one-spinon family | Complex strings, full spectrum, twists/boundary fields |
 | `xxz` | Spin-1/2 nearest-neighbor XXZ | Implemented (limited): [PBC](xxz.md) ground states/sectors at `Delta>=0`, also `-1<Delta<0` on even rings; [free ends](xxz-open.md) at `Delta>-1`; restricted excitations at `0<=Delta<=1`; [massive boundary roots](xxz-open-massive.md) | Negative odd rings, massive/negative excitations, additional root families, twists/boundary fields |
 | `hubbard` | One-band Hubbard, hopping t=1 | Implemented (limited): [PBC](hubbard.md) and [free-end](hubbard-open.md) ground states; [half-filled](hubbard-dispersion.md) and [doped](hubbard-doped.md) thermodynamic spinon/charge lines for U>0, zero field | Continuum thresholds, finite-field/string dispersions; finite-size excitations; remaining PBC shell branches and odd rings |
-| `lieb-liniger` | Continuum contact-interacting bosons | Implemented (limited): [repulsive PBC](lieb-liniger.md) and [hard walls](lieb-liniger-open.md), ground states, explicit labels, bounded excitation scans; [bulk ground state and type-I/type-II curves](lieb-liniger-thermo.md); [grand-canonical and fixed-density finite-T library](lieb-liniger-thermal.md) | Attraction, thermal frontend, form factors |
+| `lieb-liniger` | Continuum contact-interacting bosons | Implemented (limited): [repulsive PBC](lieb-liniger.md) and [hard walls](lieb-liniger-open.md), ground states, explicit labels, bounded excitation scans; [bulk ground state and type-I/type-II curves](lieb-liniger-thermo.md); [grand-canonical and fixed-density finite-T equilibrium and temperature scans](lieb-liniger-thermal.md) | Attraction, form factors |
 | `su-n` | Fundamental SU(n) permutation chain | Implemented (limited): [SU(3) PBC](su3.md), balanced singlet ground state for L>=3 divisible by three, J=1 | Other populations/lengths, excitations, general n, open boundaries |
 | `gaudin-yang` | Equal-mass spin-1/2 continuum delta-interacting fermions | Implemented (limited): [repulsive PBC](gaudin-yang.md), odd populations of both spins; unrestricted free and fully polarized limits | Other periodic shell branches, excitations, attraction, hard walls, thermodynamics |
 | `tj-susy` | Projected t–J electrons, J=2t | Implemented (limited): [PBC](tj.md), t=1, doped odd N_up and N_down on either length parity; every no-hole and fully polarized sector | Other doped shell branches, excitations, open boundaries |
@@ -159,7 +159,7 @@ mesh-verified integral equations and physical-momentum inversion.
 The repulsive finite-size and zero-temperature bulk slices are complete;
 The [finite-temperature Yang–Yang library](lieb-liniger-thermal.md) also supplies
 grand-canonical pressure, density, energy, and entropy with separate mesh and
-cutoff checks, plus fixed-density inversion. A thermal frontend is next;
+cutoff checks, plus fixed-density inversion and a temperature-scan frontend;
 attraction remains a separate bound-state project.
 
 ### `su-n`: permutation chains and the spin-1 ULS point
@@ -624,8 +624,8 @@ The [grand-canonical Lieb–Liniger library](lieb-liniger-thermal.md) now implem
 this first TBA slice, with native-precision quadrature and independent nonlinear,
 mesh, and cutoff checks. Pressure derivatives, the zero-temperature limit, and
 the Tonks fugacity series provide validation. Canonical fixed-density inversion
-is also available; a thermal frontend remains a follow-up. This model-specific layer is not a
-universal TBA engine, and thermodynamic answers must never silently replace
+and a temperature-scan frontend are also available. This model-specific layer
+is not a universal TBA engine, and thermodynamic answers must never silently replace
 finite-system eigenstates.
 
 ## Shared machinery and module boundaries
