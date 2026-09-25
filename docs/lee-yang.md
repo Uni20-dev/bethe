@@ -179,8 +179,73 @@ fixed mL, native round trips and agreement between different initial meshes
 and cutoffs at the selected precision. Every failure status has a regression,
 including a too-small cutoff, exhausted work and unrepresentable mL.
 
+## First excited state: independent infrared oracle
+
+**Research checkpoint only: no native excited-state API or frontend yet.**
+`scripts/reference_lee_yang_excited.py` solves the spin-zero one-particle
+branch for `5<=r=mL<=30`, independently of the production C++ vacuum solver.
+It reuses the Python reference quadrature and vacuum calculation for gaps.
+
+The source is [Dorey–Tateo (1996)](../CITATIONS.md#dorey-tateo-1996),
+Eqs. (2.3)–(2.7). With `theta_0=i*beta`, define
+
+```text
+S(z) = (sinh(z)+i sqrt(3)/2)/(sinh(z)-i sqrt(3)/2)
+s(theta,beta) = -2 log|S(theta+i beta)|
+epsilon(theta) = r cosh(theta) + s(theta,beta) + integral K(theta-y) L(y) dy
+L(theta) = log(1+exp(-epsilon(theta)))
+0 = r cos(beta) - log S(2 i beta) + integral K(i beta-y) L(y) dy
+Y1 = L E1_C = 2 r sin(beta) - r/(2 pi) integral cosh(theta) L(theta) dtheta
+gap/m = (Y1-Y0)/r
+```
+
+Here the integrals are over the full real line, and K uses its analytic
+continuation for the quantization equation. Conjugate symmetry makes that
+integral real. E1_C and E0_C share the vacuum's bulk subtraction; E1_C alone
+is not the excitation gap. The regular source pair collides with scattering
+singularities near r=2.53; these equations are not a UV continuation algorithm.
+
+Our oracle brackets beta between pi/6 and pi/4, away from that collision.
+For r>=5 the bare driving term plus source stays positive on this bracket;
+this gives a contractive inner real-axis fixed-point problem. Brent's method
+solves the outer quantization condition in `log(beta-pi/6)`. In particular,
+the denominator of S(2 i beta) is evaluated as
+`2*cos(pi/3+d)*sin(d)`, d=beta-pi/6, rather than subtracting nearly equal
+sines. The upper r limit keeps the fp64 energy correction resolvable.
+
+```sh
+PYTHONDONTWRITEBYTECODE=1 OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 \
+  python3 scripts/reference_lee_yang_excited.py --self-test
+```
+
+Checks compare quadrature orders 12 and 24 and an enlarged cutoff, for both
+energy and source displacement. They also check source reality, the complex
+kernel's real-axis reduction, nonlinear/quantization residuals, exhausted
+iterations and domain rejection. Large-r checks use
+`beta-pi/6 ~ sqrt(3)*exp(-sqrt(3)*r/2)` and
+`E1_C/m-1 ~ 3*exp(-sqrt(3)*r/2)`; the latter still has subleading integral
+corrections. Agreement diagnostics are not certified error bounds.
+
+| r | Y1=L E1_C | (E1-E0)/m |
+| ---: | ---: | ---: |
+| 5 | 5.146781165267865 | 1.0306379212700556 |
+| 6 | 6.076715733314169 | 1.0132130508527144 |
+| 8 | 8.019437400300701 | 1.0024791202717358 |
+| 10 | 10.004545725250384 | 1.0004605084519487 |
+| 20 | 20.00000175700884 | 1.0000000880377056 |
+
+Use about 2e-12 absolute tolerance in Y1 for comparisons, not every displayed
+digit as an exact reference. This oracle is a development dependency only.
+
 ## Next checkpoints
 
-The identity-sector state and
-other excited-state source terms, then boundaries or defects, are separate
-extensions; they must not silently reuse the source-free ground-state equation.
+Next is a native regular one-particle solver with separate source-root,
+nonlinear, mesh and cutoff diagnostics and missing physical outputs on
+failure. Shared thermal functions, quadrature and compensated sums should
+be reused; the vacuum's positivity/tail-error proof cannot simply be copied
+because the source changes its lower bound on epsilon. Compute gaps only
+when both states converge, and propagate both error estimates.
+
+Continuation through the source collision toward the UV identity sector,
+moving particles, additional particles, boundaries and defects remain
+separate extensions. None should silently reuse the source-free equation.

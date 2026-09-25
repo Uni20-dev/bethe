@@ -1105,4 +1105,11 @@ Relevant tool modes:
 
 - `bethe-lee-yang-vacuum`: Periodic source-free massive Lee-Yang ground-state TBA and bulk-subtracted finite-volume energy: equations (133), (212), (218). Equations (151)-(152) distinguish c\_eff=2/5 from c=-22/5 with h\_min=-1/5. No excited-state, boundary or defect equations are implemented.
 
+### dorey-tateo-1996
+
+Patrick Dorey and Roberto Tateo. *Excited states by analytic continuation of TBA equations*.
+Nucl. Phys. B 482, 639-659 (1996).
+
+[DOI](<https://doi.org/10.1016/S0550-3213(96)00516-0>), [arXiv](<https://arxiv.org/abs/hep-th/9607167>), [HTML](<https://arxiv.org/html/hep-th/9607167>).
+
 <!-- END GENERATED BIBLIOGRAPHY -->
