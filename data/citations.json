@@ -827,7 +827,8 @@
       "id": "hubbard_continuum",
       "executable": "bethe-hubbard-continuum",
       "references": [
-        {"id": "essler-korepin-1999", "context": "Half-filled spinon line Eq. (4), two-spinon continuum edges Eq. (18) and following paragraph; our U is four times the paper's U. No form factors or spectral weights."}
+        {"id": "essler-korepin-1999", "context": "Half-filled spinon line Eq. (4), two-spinon continuum edges Eq. (18) and following paragraph; our U is four times the paper's U. No form factors or spectral weights."},
+        {"id": "essler-korepin-1994-scattering", "context": "Elementary SO(4) spinon and charge doublets and additive spinon-holon, spinon-antiholon and neutral holon-antiholon scattering energies and momenta. Charge-family extrema are resolved numerically, not certified global bounds; our U is four times the paper's U."}
       ]
     },
     {

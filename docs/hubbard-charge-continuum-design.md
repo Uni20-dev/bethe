@@ -1,7 +1,7 @@
 # Charge-containing Hubbard continuum library
 
-**Status: native charge-continuum library implemented; no CLI selection yet.** The existing
-[two-spinon tool](hubbard-continuum.md) remains restricted to two spinons.
+**Status: native charge-continuum library and CLI implemented.** The existing
+[continuum tool](hubbard-continuum.md) selects these families with `--channel`.
 
 ## Channels and energy reference
 
@@ -129,7 +129,7 @@ guarantee of accurate witness coordinates for nearly degenerate minima.
 Tests cover native precision, non-grid minima, multiple periodic extrema,
 the domain seam, competing wells, a constant function, uncertainty floors
 and exhausted budgets. The native Hubbard wrapper now supplies this objective;
-CLI integration follows validation of the library.
+the shared continuum frontend exposes its controls, statuses and missing values.
 
 ## Independent developer oracle
 
@@ -170,4 +170,6 @@ momentum sharing by independently differentiating constituent energy sums,
 and verify momentum shifts, convention offsets, shared budgets and missing
 outputs. The default-tolerance holon–antiholon edges at P=0 are compared to
 the independent high-precision charge-gap reference in fp64, long-double and
-fp128. CLI integration is the next checkpoint.
+fp128. Frontend regressions cover channel selection, convention and reference
+mapping, budget forwarding, streaming JSON/CSV/TSV, native precisions and
+validation before output-file creation.

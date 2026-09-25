@@ -1,4 +1,4 @@
-"""Hubbard two-spinon CLI: grids, native precision, failures and streaming exports."""
+"""Hubbard two-particle CLI: grids, native precision, failures and streaming exports."""
 import csv
 from decimal import Decimal, localcontext
 import json
@@ -91,5 +91,99 @@ with tempfile.TemporaryDirectory() as directory:
     run([*base, "--format", "pretty"])
     failure = run([*base, "--max-evaluations", "0", "--format", "csv", "--no-preamble"], 2)
     assert next(csv.DictReader(failure.splitlines()))["lower_energy"] == ""
+
+charge = ["--u", "4", "--momentum", "0", "--channel", "spinon-holon",
+          "--search-tolerance", "1e-7", "--position-tolerance", "1e-5", "--tolerance", "1e-10"]
+
+
+def charge_table(args, status=0):
+    doc = json.loads(run([*args, "--format", "json"], status))
+    assert doc["status"] == "complete" and list(doc["tables"]) == ["charge_continuum"]
+    result = doc["tables"]["charge_continuum"]
+    assert result["summary"]["Outcome"] == ("success" if status == 0 else "partial")
+    assert Decimal(result["summary"]["Run CPU seconds"]) >= 0
+    return result
+
+
+for precision in precisions:
+    result = charge_table([*charge, "--precision", precision])
+    assert result["metadata"]["DeltaN"] == "-1"
+    row = rows(result)[0]
+    assert row["converged"] and row["search_status"] == row["constituent_status"] == "converged"
+    assert abs(float(row["lower_energy"])-1.8856450004260146) < 1e-6
+    assert abs(float(row["upper_energy"])-3.499612327587533) < 1e-6
+    assert abs(float(row["lower_p1"])+float(row["lower_p2"])) < 1e-10
+    assert int(row["quadrature_evaluations"]) > 0 and int(row["objective_evaluations"]) > 0
+    for option, search_status, constituent_status in (
+            ("--max-total-evaluations", "objective_failure", "quadrature_limit"),
+            ("--max-evaluations", "objective_failure", "quadrature_limit"),
+            ("--max-search-evaluations", "evaluation_limit", "converged"),
+            ("--max-search-iterations", "iteration_limit", "converged"),
+            ("--max-levels", "objective_failure", "quadrature_limit"),
+            ("--max-iterations", "objective_failure", "momentum_limit")):
+        failed = rows(charge_table([*charge, "--precision", precision, option, "0"], 2))[0]
+        assert failed["search_status"] == search_status, failed
+        assert failed["constituent_status"] == constituent_status, failed
+        for key in ("lower_energy", "upper_energy", "lower_symmetric_energy", "upper_symmetric_energy",
+                    "lower_p1", "lower_p2", "upper_p1", "upper_p2", "lower_error", "upper_error"):
+            assert failed[key] is None, failed
+
+# Convention changes shift energies, not the search or momentum witnesses.
+shifted = rows(charge_table([*charge, "--convention", "unshifted"]))[0]
+fermi = rows(charge_table([*charge, "--convention", "unshifted", "--reference", "fermi"]))[0]
+assert abs(float(shifted["lower_energy"])-float(fermi["lower_energy"])+2) < 1e-12
+assert shifted["lower_p1"] == fermi["lower_p1"]
+anti = ["--u", "4", "--channel", "spinon-antiholon", "--momentum", "-3.141592653589793",
+        "--search-tolerance", "1e-7", "--position-tolerance", "1e-5", "--tolerance", "1e-10"]
+anti_row = rows(charge_table([*anti, "--convention", "unshifted"]))[0]
+assert abs(float(anti_row["lower_energy"])-float(shifted["lower_energy"])-4) < 1e-6
+neutral = ["--u", "4", "--channel", "holon-antiholon", "--momentum", "0"]
+neutral_row = rows(charge_table(neutral))[0]  # Default fp64 search controls.
+assert abs(float(neutral_row["lower_energy"])-1.2867270220129044) < 1e-10
+assert abs(float(neutral_row["upper_energy"])-9.2867270220129044) < 1e-10
+mesh_failed = rows(charge_table([*charge, "--max-intervals", "16"], 2))[0]
+assert mesh_failed["search_status"] == "mesh_limit" and mesh_failed["lower_energy"] is None
+grid_args = charge.copy()
+index = grid_args.index("--momentum")
+del grid_args[index:index+2]
+grid = rows(charge_table([*grid_args, "--points", "3"]))
+assert len(grid) == 3 and all(row["converged"] for row in grid)
+assert abs(float(grid[0]["lower_energy"])-3.499612327587533) < 1e-6
+assert abs(float(grid[0]["upper_energy"])-5.885645000426015) < 1e-6
+assert abs(float(grid[0]["lower_energy"])-float(grid[-1]["lower_energy"])) < 1e-10
+
+with tempfile.TemporaryDirectory() as directory:
+    path = Path(directory)
+    flags = ["--json", str(path/"charge.json"), "--csv", str(path/"charge.csv"), "--tsv", str(path/"charge.tsv")]
+    run([*charge, *flags, "--quiet", "--no-retain"])
+    exported = json.loads((path/"charge.json").read_text())["tables"]["charge_continuum"]
+    expected = [{k: "" if v is None else str(v).lower() if isinstance(v, bool) else str(v)
+                 for k, v in row.items()} for row in rows(exported)]
+    for suffix, delimiter in (("csv", ","), ("tsv", "\t")):
+        text = (path/f"charge.{suffix}").read_text()
+        assert "spinon-holon" in text
+        assert list(csv.DictReader((line for line in text.splitlines() if not line.startswith("#")), delimiter=delimiter)) == expected
+    original = (path/"charge.json").read_text()
+    for option, value in (("--search-tolerance", "0"), ("--search-tolerance", "nan"),
+                          ("--position-tolerance", "0"), ("--position-tolerance", "inf"),
+                          ("--initial-intervals", "3"), ("--max-intervals", "8"),
+                          ("--max-intervals", "4097"), ("--max-total-evaluations", "-1"),
+                          ("--convention", "bad"), ("--reference", "bad"), ("--channel", "bad")):
+        # Do not duplicate an already present option: CLI rejects duplicates independently.
+        args = charge.copy()
+        if option in args:
+            index = args.index(option)
+            del args[index:index+2]
+        run([*args, option, value, "--json", str(path/"charge.json"), "--force"], 1)
+        assert (path/"charge.json").read_text() == original
+    run([*base, "--search-tolerance", "1e-7"], 1)
+    grid = rows(charge_table(["--u", "4", "--channel", "holon-antiholon", "--points", "3",
+                             "--max-total-evaluations", "0", "--no-retain"], 2))
+    assert len(grid) == 3 and all(row["lower_p1"] is None for row in grid)
+    failed_csv = run([*charge, "--max-total-evaluations", "0", "--format", "csv", "--no-preamble"], 2)
+    failed_row = next(csv.DictReader(failed_csv.splitlines()))
+    assert failed_row["lower_energy"] == failed_row["lower_p1"] == failed_row["lower_error"] == ""
+    run([*charge, "--stream", "--no-retain", "--format", "plain"])
+    run([*charge, "--format", "pretty"])
 
 print("Hubbard continuum CLI contracts passed")

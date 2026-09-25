@@ -1068,4 +1068,8 @@ Phys. Rev. Lett. 72, 908-911 (1994).
 
 [DOI](<https://doi.org/10.1103/PhysRevLett.72.908>), [arXiv](<https://arxiv.org/abs/cond-mat/9308004>).
 
+Relevant tool modes:
+
+- `bethe-hubbard-continuum`: Elementary SO(4) spinon and charge doublets and additive spinon-holon, spinon-antiholon and neutral holon-antiholon scattering energies and momenta. Charge-family extrema are resolved numerically, not certified global bounds; our U is four times the paper's U.
+
 <!-- END GENERATED BIBLIOGRAPHY -->

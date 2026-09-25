@@ -379,8 +379,9 @@ inline constexpr std::array<Reference, 78> references{{
   {"essler-korepin-1994-scattering", "F. H. L. Essler and V. E. Korepin", "Scattering matrix and excitation spectrum of the Hubbard model", "Phys. Rev. Lett. 72, 908-911", 1994, links_77},
 }};
 
-inline constexpr std::array<Use, 1> uses_hubbard_continuum{{
+inline constexpr std::array<Use, 2> uses_hubbard_continuum{{
   {&references[3], "Half-filled spinon line Eq. (4), two-spinon continuum edges Eq. (18) and following paragraph; our U is four times the paper's U. No form factors or spectral weights."},
+  {&references[77], "Elementary SO(4) spinon and charge doublets and additive spinon-holon, spinon-antiholon and neutral holon-antiholon scattering energies and momenta. Charge-family extrema are resolved numerically, not certified global bounds; our U is four times the paper's U."},
 }};
 inline constexpr std::array<Use, 2> uses_kondo_response{{
   {&references[48], "Exact solution of the single-channel Kondo problem."},
