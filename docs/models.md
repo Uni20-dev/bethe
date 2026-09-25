@@ -89,7 +89,7 @@ paper's correlation functions, thermodynamics, or full spectrum.
 | `gaudin-magnet` | Rational spin-1/2 central spin | Implemented (limited): [sector minima](central-spin.md), distinct nonzero bath couplings of either sign, central field of either sign or zero | Repeated/zero couplings, higher local spins, excitations, general Gaudin charges |
 | `multicomponent-gas` | Equal-mass SU(κ) delta fermions | Implemented (limited): [repulsive PBC](su-fermions.md), odd occupied populations, any number of components, unrestricted free/single-component limits | Other periodic shells, attraction, excitations, hard walls, TBA |
 | `bose-fermi` | Equal-mass, equal-repulsion scalar Bose–Fermi gas | [Ground-state library/frontend](bose-fermi.md): PBC, odd fermion population; unrestricted pure/free limits | Other shells, excitations, thermodynamics |
-| `integrable-ladder` | Wang's spin-1/2 ladder with four-spin exchange | Implemented (limited): [zero-field PBC](ladder.md), global and singlet-count sector ground energies, either sign of J_r, leg coefficient 1 and four-spin coefficient 4 | Fields, excitations, open ends, other integrable ladder families |
+| `integrable-ladder` | Wang's spin-1/2 ladder with four-spin exchange | Implemented (limited): [PBC with longitudinal field](ladder.md), global and singlet-count sector ground energies and magnetization, either sign of J_r and h, leg coefficient 1 and four-spin coefficient 4 | Fixed Sz, excitations, open ends, other integrable ladder families |
 
 Analytic thermodynamic XXX/XXZ spinon dispersions are separate existing
 facilities; they do not constitute a general thermodynamic Bethe ansatz
@@ -115,7 +115,7 @@ integrable boundaries in the literature.
 | `gaudin-magnet` | Rational spin-1/2 central-spin sector ground energies at specified couplings and field | [Implemented (limited)](central-spin.md) | First slice complete |
 | `multicomponent-gas` | Repulsive SU(kappa) fermions on a ring, fixed odd occupied populations | [Implemented (limited)](su-fermions.md) | Fermion first slice complete |
 | `bose-fermi` | Equal-mass scalar Bose–Fermi mixture with equal repulsive BB/BF couplings, PBC | [Ground-state library/frontend implemented](bose-fermi.md), odd fermion shells | First slice complete |
-| `integrable-ladder` | Wang's SU(4)-type ladder with its required four-spin interaction, zero-field PBC sector minima | [Implemented (limited)](ladder.md) | First slice complete |
+| `integrable-ladder` | Wang's SU(4)-type ladder with its required four-spin interaction, PBC sector minima and longitudinal fields | [Implemented (limited)](ladder.md) | First slice and field extension complete |
 | `q-boson` | Integrable q-boson hopping/phase model, PBC at fixed particle number | [Ground-state and excitation library/frontend implemented](q-boson.md) | Canonical finite-size scans complete |
 | `xyz` | Zero-field spin-1/2 XYZ chain, PBC finite-size spectrum | [Even-chain regular ground branch and frontend implemented](xyz.md) | Excited spectrum remains large |
 | `haldane-shastry` | Inverse-chord-square spin-1/2 ring, ground/sector minima and bounded complete motif spectra | [Implemented](haldane-shastry.md) | First slice complete |
@@ -467,11 +467,13 @@ by treating bosons as another fermionic color.
 
 Implemented in [ladder.hpp](../include/bethe/ladder.hpp) and
 `bethe-ladder-pbc`: periodic L>=2 rungs, spin-1/2 leg coefficient 1,
-four-spin coefficient 4, any finite rung exchange J_r, no field.
+four-spin coefficient 4, any finite rung exchange J_r and longitudinal field h.
 The [guide](ladder.md) gives the exact SU(4) permutation identity,
 energy constants, shifted finite-ring labels and state-selection rules.
 The rung coupling is a chemical potential for singlets; all triplet
-populations are minimized within each specified singlet-count sector.
+populations are minimized within each specified singlet-count sector, including
+their Zeeman energy. Nonzero fields select extremal triplet weights by
+SU(4)-to-SU(3) interlacing; zero field preserves a balanced representative.
 
 Three nested real seas are solved in native precision for the packed
 ground branches of compatible Young diagrams, including displaced seas
@@ -480,7 +482,8 @@ L=6, the populations 4,1,1,0 have a lower descendant from the 4,2,0,0
 multiplet than their own highest-weight sea. Reports preserve this
 distinction rather than claiming descendant rapidities are finite.
 Incomplete scans retain candidate upper bounds only. The all-singlet
-product for J_r>=4 has a direct analytic ground-state path.
+product for J_r-|h|>=4 and the polarized triplet product for
+|h|>=4+max(J_r,0) have direct analytic ground-state paths.
 
 Tests compare all singlet-count sectors through seven rungs against
 independent permutation matrices and small literal spin-basis ladder
@@ -493,8 +496,10 @@ The implementation checkpoint passed 795 tests with GCC 13 and fp128,
 in an apps-only build using the published Uni20 pin. A 32-rung fp128
 global scan also converged within the default budgets.
 
-**Next slice:** field-dependent triplet populations or explicit excited
-branches, with new finite-ring state-selection checks. The ordinary
+Field-dependent populations and magnetization are checked against exhaustive
+weight enumeration and independent finite-ring Hamiltonians.
+**Next slice:** fixed-Sz sectors or explicit excited branches, with new
+finite-ring state-selection checks. The ordinary
 two-leg Heisenberg ladder at generic couplings is not integrable here.
 
 ## Extensions of current models, rather than new solvers
@@ -599,7 +604,7 @@ initial deliverable, rather than an unqualified claim of model support.
 | --- | --- | --- |
 | `gaudin-magnet` | Rational Gaudin magnets; a concrete central-spin realization is treated by [Faribault–Schuricht](../CITATIONS.md#faribault-schuricht-2013) | [Central-spin sector ground states implemented](central-spin.md); general Gaudin charges, repeated couplings and higher spins remain open, not arbitrary spin-bath interactions |
 | `multicomponent-gas` | Equal-mass SU(kappa) delta fermions, [Lee et al.](../CITATIONS.md#lee-2011); equal-mass Bose–Fermi mixture with equal repulsive Bose–Bose/Bose–Fermi couplings, [Imambekov–Demler](../CITATIONS.md#imambekov-demler-2006) | [Odd-population fermion sectors](su-fermions.md) and the [odd-fermion Bose–Fermi ground-state library](bose-fermi.md) implemented; other shells remain open. A trapped local-density calculation would be an approximation, not an exact trapped BA solution |
-| `integrable-ladder` | [Wang's ladder](../CITATIONS.md#wang-1999), with its required exchange and four-spin terms | [Periodic zero-field sector minima implemented](ladder.md); fields and excitations remain open. Not the ordinary two-leg Heisenberg ladder at generic couplings |
+| `integrable-ladder` | [Wang's ladder](../CITATIONS.md#wang-1999), with its required exchange and four-spin terms | [Periodic sector minima and longitudinal fields implemented](ladder.md); fixed Sz and excitations remain open. Not the ordinary two-leg Heisenberg ladder at generic couplings |
 | `q-boson` | Deformed boson hopping and its phase-model limit, [Bogoliubov–Izergin–Kitanine](../CITATIONS.md#bogoliubov-1997) and [Pozsgay](../CITATIONS.md#pozsgay-2014-q-boson) | [Fixed-N PBC ground-state and excitation library/frontend implemented](q-boson.md), with small-sector full-spectrum checks, free/phase limits and continuum scaling. Not the standard Bose–Hubbard chain |
 | `xyz` | Zero-field spin-1/2 XYZ / eight-vertex family, [Baxter](../CITATIONS.md#baxter-1973) and [Zhang–Klümper–Popkov](../CITATIONS.md#zhang-klumper-popkov-2024) | [Native-precision even-chain regular ground solver and frontend implemented](xyz.md), checked against small-chain exact energies and XXZ limits; singular solutions and excited spectrum remain. Sz is not generally conserved |
 | `haldane-shastry` | Spin-1/2 inverse-chord-square exchange on a ring, [Haldane](../CITATIONS.md#haldane-1988) and [Shastry](../CITATIONS.md#shastry-1988) | [Implemented](haldane-shastry.md): exact motif energies, momenta, Yangian dimensions and spin-sector minima. Full motif scans have an explicit budget; SU(2) decomposition, wavefunctions and correlations remain future work |

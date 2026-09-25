@@ -56,7 +56,7 @@ Exact permutation_ground(unsigned l, model::detail::Shape const& counts)
                           basis.size() > 1 ? eig.eigenvalues[1] - eig.eigenvalues[0] : 1};
 }
 
-double spin_ground(unsigned l, double rung)
+double spin_ground(unsigned l, double rung, double field = 0)
 {
   // Literal spin-1/2 dot products, not the permutation identity used by BA.
   unsigned const size = 1u << (2 * l);
@@ -73,6 +73,7 @@ double spin_ground(unsigned l, double rung)
     for (unsigned j = 0; j < l; ++j)
     {
       unsigned const k = (j + 1) % l;
+      h[col, col] -= field * (double((col >> (2 * j)) & 1u) + double((col >> (2 * j + 1)) & 1u) - 1.);
       for (auto [row, v] : dot(col, 2 * j, 2 * k))
         h[row, col] += v;
       for (auto [row, v] : dot(col, 2 * j + 1, 2 * k + 1))
@@ -133,7 +134,8 @@ template <uni20::Real Real> void check_branch(model::State<Real> const& state)
   ASSERT_TRUE(state.energy);
   EXPECT_REAL_NEAR(*state.energy,
                    energy - Real(state.rungs) / Real{4} +
-                       state.rung_coupling * (Real(state.rungs) / Real{4} - Real(state.singlets)),
+                       state.rung_coupling * (Real(state.rungs) / Real{4} - Real(state.singlets)) -
+                       state.magnetic_field * Real(state.magnetization),
                    tol);
 }
 
@@ -169,6 +171,131 @@ TEST(LadderOracles, LiteralSpinHamiltonian)
       ASSERT_TRUE(s.converged);
       EXPECT_NEAR(*s.energy, spin_ground(l, rung), 1e-11);
     }
+}
+
+TEST(LadderOracles, ExtremalWeightsAgainstExhaustiveDominance)
+{
+  for (std::size_t l = 2; l <= 16; ++l)
+    for (std::size_t a = 0; a <= l; ++a)
+      for (std::size_t b = 0; b <= a && a + b <= l; ++b)
+        for (std::size_t c = 0; c <= b && a + b + c <= l; ++c)
+        {
+          auto const d = l - a - b - c;
+          if (d > c) continue;
+          model::detail::Shape const shape{a, b, c, d};
+          for (std::size_t ns = d; ns <= a; ++ns)
+          {
+            auto const weight = model::detail::polarized_populations(shape, ns, false);
+            ASSERT_TRUE(model::detail::dominates(shape, weight));
+            auto const reverse = model::detail::polarized_populations(shape, ns, true);
+            EXPECT_EQ(weight[1], reverse[3]);
+            EXPECT_EQ(weight[3], reverse[1]);
+            std::int64_t largest = -std::int64_t(l);
+            for (std::size_t plus = 0; plus <= l - ns; ++plus)
+              for (std::size_t minus = 0; minus <= l - ns - plus; ++minus)
+              {
+                model::detail::Shape const candidate{ns, plus, l - ns - plus - minus, minus};
+                if (model::detail::dominates(shape, candidate))
+                  largest = std::max(largest, model::detail::magnetization(candidate));
+              }
+            EXPECT_EQ(model::detail::magnetization(weight), largest);
+          }
+        }
+}
+
+TYPED_TEST(Ladder, FieldSectorsAgainstAllPopulationMatrices)
+{
+  using Real = TypeParam;
+  for (unsigned l = 2; l <= 6; ++l)
+    for (double field : {0.125, 1.5, 3.75, -0.7})
+    {
+      auto const scan = model::sector_ground_states<Real>(l, Real{0.75}, Real(field));
+      ASSERT_TRUE(scan.complete);
+      for (auto const& s : scan.sectors)
+      {
+        SCOPED_TRACE(::testing::Message() << l << "," << field << "," << s.singlets);
+        double best = std::numeric_limits<double>::infinity();
+        for (std::size_t plus = 0; plus <= l - s.singlets; ++plus)
+          for (std::size_t minus = 0; minus <= l - s.singlets - plus; ++minus)
+          {
+            model::detail::Shape const counts{s.singlets, plus, l - s.singlets - plus - minus, minus};
+            double const energy = permutation_ground(l, counts).energy - l / 4. + .75 * (l / 4. - s.singlets) -
+                                  field * (double(plus) - double(minus));
+            best = std::min(best, energy);
+          }
+        EXPECT_REAL_NEAR(*s.energy, Real(best), Real{1} / Real{1000000000});
+        EXPECT_EQ(s.magnetization, model::detail::magnetization(s.populations));
+        ASSERT_NO_FATAL_FAILURE(check_branch(s));
+      }
+    }
+}
+
+TEST(LadderOracles, FieldLiteralSpinHamiltonian)
+{
+  for (unsigned l : {2, 3, 4})
+    for (double rung : {-2., 1., 5.})
+      for (double field : {-6., -.5, 1.25, 4., 9.})
+      {
+        auto const state = model::ground_state(l, rung, field);
+        ASSERT_TRUE(state.converged);
+        EXPECT_NEAR(*state.energy, spin_ground(l, rung, field), 1e-10) << l << "," << rung << "," << field;
+      }
+}
+
+TYPED_TEST(Ladder, FieldNativePrecisionLimitsAndBudgets)
+{
+  using Real = TypeParam;
+  Real const eps = uni20::numeric_limits<Real>::epsilon(), field = std::sqrt(Real{2}) / Real{10};
+  auto const zero = model::sector_ground_state<Real>(6, 4, Real{0});
+  auto const positive = model::sector_ground_state<Real>(6, 4, Real{0}, field);
+  auto const negative = model::sector_ground_state<Real>(6, 4, Real{0}, -field);
+  ASSERT_TRUE(zero.converged && positive.converged && negative.converged);
+  EXPECT_EQ(positive.magnetization, 2);
+  EXPECT_EQ(negative.magnetization, -2);
+  EXPECT_REAL_NEAR(*positive.energy, Real{-0.5} - std::sqrt(Real{5}) - Real{2} * field, Real{4096} * eps);
+  EXPECT_REAL_NEAR(*positive.energy, *negative.energy, Real{4096} * eps);
+  // Merely shifting the old balanced population (magnetization one) is wrong.
+  EXPECT_GT(std::abs(*positive.energy - (*zero.energy - field)), field / Real{2});
+  auto const huge = model::sector_ground_state<Real>(6, 4, Real{0}, Real{1} / (eps * eps));
+  ASSERT_TRUE(huge.converged);
+  // Equal-M branches still need their permutation energies compared, even
+  // when the large common Zeeman shift rounds away that entire difference.
+  EXPECT_EQ(huge.highest_weight.shape, (model::detail::Shape{4, 2, 0, 0}));
+  EXPECT_REAL_NEAR(huge.highest_weight.energy, Real{1} - std::sqrt(Real{5}), Real{4096} * eps);
+  auto const huge_crossing = model::ground_state<Real>(4, Real{1} / (eps * eps), Real{1} / (eps * eps));
+  ASSERT_TRUE(huge_crossing.converged);
+  EXPECT_EQ(huge_crossing.singlets, 2u);
+  EXPECT_EQ(huge_crossing.magnetization, 2);
+  EXPECT_EQ(huge_crossing.highest_weight.shape, (model::detail::Shape{2, 2, 0, 0}));
+  auto const left = model::sector_ground_state<Real>(6, 4, Real{0}, field - Real{0.01});
+  auto const right = model::sector_ground_state<Real>(6, 4, Real{0}, field + Real{0.01});
+  EXPECT_REAL_NEAR((*left.energy - *right.energy) / Real{0.02}, Real(positive.magnetization), Real{65536} * eps);
+  model::SolverOptions<Real> options;
+  options.max_branches = options.max_iterations = 0;
+  for (Real h : {Real{-9}, Real{9}})
+  {
+    auto const saturated = model::ground_state<Real>(7, Real{3}, h, options);
+    ASSERT_TRUE(saturated.converged && saturated.analytic);
+    EXPECT_EQ(saturated.magnetization, h > Real{0} ? 7 : -7);
+    EXPECT_EQ(saturated.singlets, 0u);
+    EXPECT_REAL_NEAR(*saturated.energy, Real{7} * (Real{1.5} - std::abs(h)), Real{64} * eps);
+    auto const product = model::ground_state<Real>(7, Real{14}, h, options);
+    ASSERT_TRUE(product.converged && product.analytic);
+    EXPECT_EQ(product.magnetization, 0);
+    EXPECT_EQ(product.singlets, 7u);
+  }
+  auto const failed = model::ground_state<Real>(6, Real{1}, Real{0.5}, options);
+  EXPECT_FALSE(failed.converged);
+  EXPECT_FALSE(failed.energy);
+  options.max_branches = 1000;
+  auto const partial = model::ground_state<Real>(6, Real{1}, Real{0.5}, options);
+  EXPECT_FALSE(partial.converged);
+  ASSERT_TRUE(partial.energy);
+  EXPECT_TRUE(partial.highest_weight.converged);
+  EXPECT_THROW((void)model::ground_state<Real>(6, Real{5}, uni20::numeric_limits<Real>::infinity()),
+               std::invalid_argument);
+  EXPECT_THROW((void)model::sector_ground_state<Real>(6, 6, Real{5}, uni20::numeric_limits<Real>::quiet_NaN()),
+               std::invalid_argument);
 }
 
 TYPED_TEST(Ladder, DescendantsBeatOwnWeightSeas)

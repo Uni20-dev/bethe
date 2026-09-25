@@ -1017,7 +1017,7 @@
       "id": "ladder_pbc",
       "executable": "bethe-ladder-pbc",
       "references": [
-        {"id": "wang-1999", "context": "Permutation-form ladder Hamiltonian (2), rung basis (3), chemical-potential form (4), and three nested rational equations (5). We use spin-1/2 operators, leg coefficient 1, four-spin coefficient 4, and J_r=2*J in (2)/(4), restoring E=E_perm-L/4+J_r*(L/4-N_s). Only zero-field periodic ground states and singlet-count sector minima are implemented."},
+        {"id": "wang-1999", "context": "Permutation-form ladder Hamiltonian (2), rung basis (3), conserved color populations and chemical-potential form (4), and three nested rational equations (5). We use spin-1/2 operators, leg coefficient 1, four-spin coefficient 4, and J_r=2*J in (2)/(4), restoring E=E_perm-L/4+J_r*(L/4-N_s)-h*(N_+-N_-). Longitudinal field enters through the conserved populations; periodic ground states and singlet-count sector minima only."},
         {"id": "hakobyan-2004", "context": "SU(n) multiplets, Young diagrams and weight spaces. The periodic energy-ordering theorem has a row-parity restriction; we do not assume each population's own highest weight is lowest. Compatible dominant multiplets and displaced packed real seas are compared, not the full excited-state spectrum."}
       ]
     },

@@ -155,4 +155,16 @@ for executable in programs:
         assert {r["level"] for r in records(partial["roots"])} == {"1"}
         nested = json.loads(run(program, ["8", "--rung", "0", "--roots", "--format", "json"]).stdout)["tables"]
         assert {r["level"] for r in records(nested["roots"])} == {"1", "2", "3"}
+        for field, magnetization in (("0.125", "2"), ("-0.125", "-2")):
+            field_tables = json.loads(run(program, ["6", "--rung", "0", "--singlets", "4",
+                                                    "--field", field, "--roots", "--format", "json"]).stdout)["tables"]
+            r = records(field_tables["states"])[0]
+            assert r["magnetization"] == magnetization
+            assert abs(Decimal(r["energy"]) - Decimal("-2.986067977499789696409173668731")) < Decimal("1e-12")
+            pop = records(field_tables["representations"])
+            assert int(pop[1]["population"]) - int(pop[3]["population"]) == int(magnetization)
+            assert Decimal(field_tables["states"]["metadata"]["Magnetic field h"]) == Decimal(field)
+        missing = json.loads(run(program, [*args, "--field", "0.5", "--max-branches", "0", "--format", "json"], status=2).stdout)["tables"]
+        assert records(missing["states"])[0]["magnetization"] is None
+        assert not records(missing["representations"])
 print(f"Native model table contracts passed for {len(programs)} frontends")

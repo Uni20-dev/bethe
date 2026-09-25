@@ -486,7 +486,7 @@ inline constexpr std::array<Use, 2> uses_sun_fermions_pbc{{
   {&references[35], "Nested finite-size Bethe equations (2)-(3), with c'=c/2, and logarithmic signs from (13)-(19). Our Hamiltonian is -sum d_j^2+2c sum delta with c>=0 and no Zeeman term. Only the centered all-odd occupied-population ground branch is implemented; no strings, TBA or attraction."},
 }};
 inline constexpr std::array<Use, 2> uses_ladder_pbc{{
-  {&references[38], "Permutation-form ladder Hamiltonian (2), rung basis (3), chemical-potential form (4), and three nested rational equations (5). We use spin-1/2 operators, leg coefficient 1, four-spin coefficient 4, and J_r=2*J in (2)/(4), restoring E=E_perm-L/4+J_r*(L/4-N_s). Only zero-field periodic ground states and singlet-count sector minima are implemented."},
+  {&references[38], "Permutation-form ladder Hamiltonian (2), rung basis (3), conserved color populations and chemical-potential form (4), and three nested rational equations (5). We use spin-1/2 operators, leg coefficient 1, four-spin coefficient 4, and J_r=2*J in (2)/(4), restoring E=E_perm-L/4+J_r*(L/4-N_s)-h*(N_+-N_-). Longitudinal field enters through the conserved populations; periodic ground states and singlet-count sector minima only."},
   {&references[39], "SU(n) multiplets, Young diagrams and weight spaces. The periodic energy-ordering theorem has a row-parity restriction; we do not assume each population's own highest weight is lowest. Compatible dominant multiplets and displaced packed real seas are compared, not the full excited-state spectrum."},
 }};
 inline constexpr std::array<Use, 3> uses_haldane_shastry_pbc{{

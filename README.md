@@ -107,8 +107,8 @@ Thermodynamic dispersion tools use `bethe-<model>-dispersion`.
   energies for equal masses and equal repulsive couplings, with odd fermion
   population and unrestricted pure/free limits.
 - [Integrable spin ladder](docs/ladder.md): `bethe-ladder-pbc` gives periodic
-  zero-field ground energies and singlet-count sector minima, with the
-  required four-spin coupling and either sign of the rung exchange.
+  ground energies, singlet-count sector minima and field-dependent magnetization,
+  with the required four-spin coupling and either sign of rung exchange or field.
 - [Haldane–Shastry ring](docs/haldane-shastry.md): `bethe-haldane-shastry-pbc`
   gives exact ground/spin-sector energies and motif spectra with Yangian
   multiplicities, for even and odd inverse-chord-square spin-1/2 rings.

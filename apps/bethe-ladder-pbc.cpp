@@ -12,7 +12,7 @@ struct Arguments
 {
     std::size_t rungs = 0, max_iterations = 10000, max_branches = 10000;
     std::optional<std::size_t> singlets;
-    std::optional<std::string> rung, tolerance;
+    std::optional<std::string> rung, field, tolerance;
     std::string precision = "fp64";
     cli::DataOutputOptions output;
     bool sectors = false, roots = false;
@@ -20,13 +20,15 @@ struct Arguments
 auto program_info()
 {
   auto info = bethe::cli::program_info("bethe-ladder-pbc",
-                                       "Wang's integrable spin-1/2 ladder, L>=2 periodic rungs, zero field.",
+                                       "Wang's integrable spin-1/2 ladder, L>=2 periodic rungs, longitudinal field.",
                                        bethe::citations::Tool::ladder_pbc);
-  info.notes = {"H=sum[S.S_next+T.T_next+4(S.S_next)(T.T_next)]+JR*sum S.T.",
+  info.notes = {"H=sum[S.S_next+T.T_next+4(S.S_next)(T.T_next)]+JR*sum S.T-h*sum(Sz+Tz).",
                 "This is NOT the ordinary two-leg Heisenberg ladder. JR may have either sign.",
                 "Sector minima include compatible SU(4) descendants; triplet populations",
                 "are minimized too, not fixed Sz. --sectors --roots prints the best state.",
-                "No excitations, fields, arbitrary four-spin couplings or open ends.",
+                "--field h uses energy units (g*mu_B absorbed); default zero. M=N_t+ - N_t- is total Sz.",
+                "At zero field, populations are a balanced representative, not a unique magnetization.",
+                "No excitations, fixed Sz, arbitrary four-spin couplings or open ends.",
                 "An incomplete scan reports only a candidate upper bound, never a minimum.",
                 "See docs/ladder.md for normalization, finite-ring labels and scan cost.",
                 "Use --references for literature and applicability; see CITATIONS.md."};
@@ -36,6 +38,7 @@ void add_options(CLI::App& app, Arguments& args)
 {
   bethe::cli::option(app, "L", args.rungs, "Number of sites or rungs")->required();
   bethe::cli::option(app, "--rung", args.rung, "Rung coupling, either sign")->required();
+  bethe::cli::option(app, "--field", args.field, "Longitudinal Zeeman coefficient h, either sign; default 0");
   bethe::cli::option(app, "--singlets", args.singlets, "fixed singlet-count sector minimum");
   bethe::cli::option(app, "--sectors", args.sectors,
                      "all singlet-count sector minima (mutually exclusive; default: global minimum)");
@@ -82,6 +85,7 @@ template <uni20::Real Real> int run(Arguments const& args, int argc, char** argv
 {
   uni20::run_context context(program_info(), {.invocation = std::vector<std::string>(argv, argv + argc)});
   Real const rung = uni20::parse_real<Real>(*args.rung);
+  Real const field = args.field ? uni20::parse_real<Real>(*args.field) : Real{0};
   model::SolverOptions<Real> options;
   options.max_iterations = args.max_iterations;
   options.max_branches = args.max_branches;
@@ -91,25 +95,26 @@ template <uni20::Real Real> int run(Arguments const& args, int argc, char** argv
   std::optional<model::SectorScan<Real>> scan;
   if (args.sectors)
   {
-    scan = model::sector_ground_states(args.rungs, rung, options);
-    state = scan->sectors.front();
-    for (auto const& s : scan->sectors)
-      if (s.energy && (!state.energy || *s.energy < *state.energy)) state = s;
+    scan = model::sector_ground_states(args.rungs, rung, field, options);
+    state = model::minimum_candidate(*scan);
   }
   else if (args.singlets)
-    state = model::sector_ground_state(args.rungs, *args.singlets, rung, options);
+    state = model::sector_ground_state(args.rungs, *args.singlets, rung, field, options);
   else
-    state = model::ground_state(args.rungs, rung, options);
+    state = model::ground_state(args.rungs, rung, field, options);
   computation.finish();
   cli::RunReport report(context, "Integrable spin ladder (periodic)");
   report.status(state.converged ? cli::semantic_glyph::success : cli::semantic_glyph::warning, status(state.status))
-      .field("hamiltonian", "Hamiltonian", "H=sum[S.S_next+T.T_next+4(S.S_next)(T.T_next)]+J_r*sum S.T")
+      .field("hamiltonian", "Hamiltonian", "H=sum[S.S_next+T.T_next+4(S.S_next)(T.T_next)]+J_r*sum S.T-h*sum(Sz+Tz)")
       .field("calculation", "Calculation",
              args.singlets  ? "fixed singlet-count sector"
              : args.sectors ? "all singlet-count sectors"
                             : "global ground state")
       .field("rungs", "Rungs", args.rungs)
       .field("rung_coupling_j_r", "Rung coupling J_r", rung)
+      .field("magnetic_field", "Magnetic field h", field)
+      .field("magnetization_convention", "Magnetization convention",
+             "M=N_t+ - N_t-; total Sz, one minimizing representative, not a degeneracy average")
       .field("precision", "Precision", args.precision)
       .field("residual_tolerance", "Residual tolerance", options.residual_tolerance)
       .result(state.converged, status(state.status));
@@ -117,6 +122,7 @@ template <uni20::Real Real> int run(Arguments const& args, int argc, char** argv
   {
     report.field("total_energy", state.converged ? "Total energy" : "Candidate energy (upper bound)", *state.energy)
         .field("singlets_n_s", "Singlets N_s", state.singlets)
+        .field("magnetization", "Total magnetization M", state.magnetization)
         .field("populations_s_t_t0_t", "Populations (s,t+,t0,t-)", shape_text(state.populations))
         .field("highest_weight_rows", "Highest-weight rows", shape_text(state.highest_weight.shape))
         .field("su_4_descendant", "SU(4) descendant",
@@ -128,7 +134,10 @@ template <uni20::Real Real> int run(Arguments const& args, int argc, char** argv
                (state.rungs - state.highest_weight.momentum_index) % state.rungs)
         .field("selected_branch_residual", "Selected branch residual", state.highest_weight.residual);
     if (state.converged) report.field("energy_per_rung", "Energy per rung", *state.energy / Real(state.rungs));
-    if (state.analytic) report.field("exact_limit", "Exact limit", "rung-singlet product (no root solve)");
+    if (state.analytic)
+      report.field("exact_limit", "Exact limit",
+                   state.singlets == state.rungs ? "rung-singlet product (no root solve)"
+                                                 : "fully polarized triplet product (no root solve)");
   }
   else
     report.field("energy", "Energy", state.energy, {.missing = "unavailable: no converged branch"});
@@ -153,15 +162,16 @@ template <uni20::Real Real> int run(Arguments const& args, int argc, char** argv
            : "State",
       [&](auto& table) {
         for_states([&](std::size_t id, auto const& s) {
-          table.append(id, s.singlets, s.energy, id == selected_id,
-                       s.energy ? std::optional{s.descendant} : std::nullopt,
+          table.append(id, s.singlets, s.energy, s.energy ? std::optional{s.magnetization} : std::nullopt,
+                       id == selected_id, s.energy ? std::optional{s.descendant} : std::nullopt,
                        s.energy ? std::optional{s.highest_weight.momentum_index} : std::nullopt,
                        s.energy ? std::optional{s.highest_weight.residual} : std::nullopt, s.iterations, s.branches,
                        s.tableaux, s.converged, std::string(status(s.status)));
         });
       },
       cli::column<std::size_t>("state_id"), cli::column<std::size_t>("singlets", "N_s"),
-      cli::column<std::optional<Real>>("energy", "Energy"), cli::column<bool>("selected"),
+      cli::column<std::optional<Real>>("energy", "Energy"),
+      cli::column<std::optional<std::int64_t>>("magnetization", "M"), cli::column<bool>("selected"),
       cli::column<std::optional<bool>>("descendant", "Descendant"),
       cli::column<std::optional<std::size_t>>("momentum_index", "Momentum index"),
       cli::column<std::optional<Real>>("residual"), cli::column<std::size_t>("iterations"),
