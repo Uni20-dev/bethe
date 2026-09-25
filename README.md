@@ -62,6 +62,9 @@ Thermodynamic dispersion tools use `bethe-<model>-dispersion`.
 - [Periodic XYZ](docs/xyz.md): `bethe-xyz-pbc` gives even-chain regular ground
   states in the rectangular elliptic parametrization, including either sign
   of Jz. Generic XYZ has no conserved Sz sector; excitations are not yet exposed.
+- [Periodic TASEP](docs/tasep.md): `bethe-tasep-pbc` gives the leading relaxation
+  gap and complex decay eigenvalue at arbitrary filling. These are stochastic
+  rates, not quantum energies; bidirectional ASEP is not yet implemented.
 - [Periodic SU(3)](docs/su3.md): `bethe-su3-pbc` gives the balanced singlet
   ground state of the permutation chain for lengths divisible by three,
   also covering the spin-1 ULS point through an energy shift.

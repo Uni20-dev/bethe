@@ -1,6 +1,6 @@
 # Periodic TASEP: relaxation gaps, not energies
 
-**Status: native-precision library implemented; frontend pending.** This is the
+**Status: native-precision library and `bethe-tasep-pbc` frontend implemented.** This is the
 totally asymmetric member of the ASEP family. It is not yet a solver for
 bidirectional hopping, open reservoirs, or a complete non-Hermitian spectrum.
 
@@ -18,6 +18,41 @@ and the positive relaxation gap `g=-Re(lambda)`. Its conjugate is also present;
 `Im(lambda)` describes oscillation, not a second contribution to the decay rate.
 The relaxation time is 1/g. N=0 or L has just one configuration and no nonzero
 relaxation mode, so its gap is **absent**, not a claimed zero gap.
+
+## Command-line use
+
+```sh
+bethe-tasep-pbc 32 --particles 8 --roots
+bethe-tasep-pbc 64 --particles 32 --rate 2 --precision long-double
+bethe-tasep-pbc 32 --particles 8 --roots --json rates.json \
+  --csv-table relaxation=rates.csv --tsv-table roots=roots.tsv
+bethe-tasep-pbc --references
+```
+
+L and `--particles` are required. `--rate` defaults to one; the shared
+`--precision` choices are fp64, long-double and fp128 when MPLAPACK is enabled.
+The `relaxation` table has one row, with `lambda_real`, `lambda_imag`, `gap`,
+`frequency`, residual, iteration counts, convergence and status. Frequency is
+the nonnegative angular frequency, equal to `lambda_imag`, in inverse time—not
+cycles per time. `gap=-lambda_real`; the conjugate partner is implicit. There
+are no energy or momentum columns.
+
+`has_mode=false` distinguishes the successful empty/full sector, whose mode
+observables are null, from numerical failure in a nontrivial sector. The exact
+stationary eigenvalue zero is recorded in metadata independently of the gap
+calculation. `--roots` adds reduced-population fugacities `Z_real`, `Z_imag`;
+these are not the lattice wave numbers z or necessarily the user's N particles.
+
+Metadata includes the generator/sign convention, rate units, root reduction,
+precision, all work budgets, build/invocation provenance and CPU time. All
+[shared output options](output.md), including streaming and no-retain exports,
+apply. Ordinary help/calculations omit the bibliography; use `--references`.
+
+`--max-iterations`, `--max-seed-iterations` and `--max-sites` expose the library
+budgets below. Numerical failures exit 2 with null JSON observables/root
+coordinates (empty CSV/TSV fields). Invalid inputs exit 1 before opening files,
+including existing `--force` targets. `--left-rate` and `--excitations` are not
+supported: this command is a TASEP relaxation-gap calculation, not a spectrum scan.
 
 ## Library API and output contract
 
@@ -90,6 +125,9 @@ N=2. All enabled precisions check the original multiplicative equations,
 analytic Jacobian, rate scaling, failure budgets and selected rings through
 256 sites. Dense Markov diagonalization is test-only, never the solver backend.
 
-Next: a dedicated frontend with separate decay/frequency fields, shared output
-and citations. General partially asymmetric hopping needs its own equations
+The frontend also tests all precision modes against the independent five-site
+reference, rate scaling, exact one-particle/one-hole limits, empty/full sectors,
+budget/range failures, exports, citation policy and invalid-input file protection.
+
+Next: general partially asymmetric hopping needs its own equations
 and branch continuation; this TASEP reduction must not be silently reused for it.

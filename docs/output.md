@@ -57,6 +57,7 @@ The remaining models use these tables:
 | `bethe-lieb-liniger-thermal` | `thermodynamics` | none; one row per temperature |
 | `bethe-q-boson-pbc` | `states` | `roots` with `--roots`; null momenta on failure |
 | `bethe-xyz-pbc` | `states` | `roots` with `--roots`, split real/imaginary coordinates; missing energy, momentum and coordinates on failure |
+| `bethe-tasep-pbc` | `relaxation` | `roots` with `--roots`, reduced-filling Z coordinates; rates/frequency, not energies; absent modes in empty/full sectors |
 | `bethe-biquadratic-obc` | `states` | real modes: `quantum_numbers`; Q-system: `reference`, `q_coefficients`; two-string singlet / ferro bound pairs and triples: `reference`, `string`; ferro analytic modes: `reference`; numerical `roots` with `--roots` |
 
 Excitation scans additionally write `reference` (the ground state used for gaps)

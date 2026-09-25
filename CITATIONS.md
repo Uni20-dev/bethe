@@ -787,6 +787,10 @@ Phys. Rev. A 46, 844 (1992).
 
 [DOI](<https://doi.org/10.1103/PhysRevA.46.844>).
 
+Relevant tool modes:
+
+- `bethe-tasep-pbc`: Original periodic asymmetric-exclusion relaxation-gap analysis. This frontend restricts hopping to the totally asymmetric case.
+
 ### yang-yang-1966
 
 C. N. Yang and C. P. Yang. *One-Dimensional Chain of Anisotropic Spin-Spin Interactions. I. Proof of Bethe's Hypothesis for Ground State in a Finite System*.
@@ -997,5 +1001,9 @@ O. Golinelli and K. Mallick. *Spectral gap of the totally asymmetric exclusion p
 J. Phys. A: Math. Gen. 38, 1419-1425 (2005).
 
 [DOI](<https://doi.org/10.1088/0305-4470/38/7/001>), [arXiv](<https://arxiv.org/abs/cond-mat/0411505>).
+
+Relevant tool modes:
+
+- `bethe-tasep-pbc`: Periodic TASEP finite-size Bethe equations (2)-(8) and leading relaxation branch (12)-(14) at arbitrary filling. Complex Markov eigenvalues, not energies; no partial asymmetry or full-spectrum claim.
 
 <!-- END GENERATED BIBLIOGRAPHY -->
