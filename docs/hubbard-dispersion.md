@@ -7,7 +7,9 @@ length or boundary-condition argument. It requires `U>0`, hopping `t=1`, and
 `0<n<=1`. The default is half filling (`--density 1`), described below.
 For `--density n` with `n<1`, see the [doped dispersion guide](hubbard-doped.md).
 Attraction, nonzero magnetic fields, spectral weights, and multiparticle
-continuum thresholds are not implemented here.
+continuum thresholds are not implemented in this frontend. A separate
+[two-spinon continuum library](hubbard-continuum.md) now provides the
+half-filled lower and upper edges; charge-containing continua remain open.
 
 ```sh
 build/bethe-hubbard-dispersion --u 4 --points 101 --format csv

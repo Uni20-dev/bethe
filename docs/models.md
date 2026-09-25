@@ -594,8 +594,10 @@ two-leg Heisenberg ladder at generic couplings is not integrable here.
   Half-filled repulsive [thermodynamic elementary lines](hubbard-dispersion.md)
   and [doped zero-field lines](hubbard-doped.md) are now separate implemented
   functionality, with both interaction conventions and Fermi energy references.
-  Multiparticle threshold minimization remains a follow-up; the elementary
-  holon is not automatically a sector minimum.
+  The [half-filled two-spinon continuum library](hubbard-continuum.md) now
+  supplies both edges by reusing the elementary spinon evaluator; its
+  frontend is next. Charge-containing threshold minimization remains a
+  follow-up; the elementary holon is not automatically a sector minimum.
 
 ## Wider catalogue: useful, but not the next default targets
 
