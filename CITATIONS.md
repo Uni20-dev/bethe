@@ -669,6 +669,10 @@ arXiv:solv-int/9710002 (1997).
 
 [arXiv](<https://arxiv.org/abs/solv-int/9710002>).
 
+Relevant tool modes:
+
+- `bethe-q-boson-pbc`: Deformed Fock algebra (1.2)-(1.8), free/phase limits, and exact phase-model momenta (3.4). Our Hamiltonian is twice (1.1), with the +2N shift included.
+
 ### baxter-1973
 
 R. J. Baxter. *Eight-vertex model in lattice statistics and one-dimensional anisotropic Heisenberg chain. III. Eigenvectors of the transfer matrix and Hamiltonian*.
@@ -940,6 +944,10 @@ B. Pozsgay. *Quantum quenches and Generalized Gibbs Ensemble in a Bethe Ansatz s
 J. Stat. Mech. (2014) P10045 (2014).
 
 [DOI](<https://doi.org/10.1088/1742-5468/2014/10/P10045>), [arXiv](<https://arxiv.org/abs/1407.8344>).
+
+Relevant tool modes:
+
+- `bethe-q-boson-pbc`: Periodic q-boson Hamiltonian (2.1), Bethe equations (2.13), and shifted energy 4 sum sin^2(k/2). Only fixed-N ground states are selected; no quenches or correlation functions.
 
 ### guan-batchelor-2011
 

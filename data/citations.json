@@ -736,6 +736,14 @@
   ],
   "tools": [
     {
+      "id": "q_boson_pbc",
+      "executable": "bethe-q-boson-pbc",
+      "references": [
+        {"id": "pozsgay-2014-q-boson", "context": "Periodic q-boson Hamiltonian (2.1), Bethe equations (2.13), and shifted energy 4 sum sin^2(k/2). Only fixed-N ground states are selected; no quenches or correlation functions."},
+        {"id": "bogoliubov-1997", "context": "Deformed Fock algebra (1.2)-(1.8), free/phase limits, and exact phase-model momenta (3.4). Our Hamiltonian is twice (1.1), with the +2N shift included."}
+      ]
+    },
+    {
       "id": "lieb_liniger_thermal",
       "executable": "bethe-lieb-liniger-thermal",
       "references": [

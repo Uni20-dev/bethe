@@ -1,9 +1,38 @@
 # Periodic q-boson ground states
 
 The C++ library `bethe/q_boson.hpp` implements the fixed-particle-number ground
-state of the repulsive q-boson hopping model. This first checkpoint is a library
-API: a frontend and excited-state labels are follow-ups. It is **not** the
+state of the repulsive q-boson hopping model, with the frontend
+`bethe-q-boson-pbc`. Excited-state labels are a follow-up. It is **not** the
 ordinary Bose–Hubbard model.
+
+## Command-line use
+
+```sh
+build/bethe-q-boson-pbc 16 --particles 8 --eta 0.5 --roots
+build/bethe-q-boson-pbc 16 --particles 8 --phase --json phase.json
+build/bethe-q-boson-pbc 2 --particles 2 --eta 1e-60 --precision fp128
+build/bethe-q-boson-pbc --references
+```
+
+The positional argument is the number of sites L. `--particles N` is required
+and may exceed L; vacuum N=0 is allowed. Choose either finite `--eta` (including
+zero) or `--phase`. An infinite `--eta` is rejected in favor of the explicit
+phase option. Energies are in units of the specified unit hopping.
+
+`--roots` adds a `roots` table to the `states` table. The labels `I` are decimal
+half-integers in exports. Free bosons have coincident zero momenta; interacting
+ground roots are strictly ordered. On failure, energy and momenta are missing
+(JSON null, CSV/TSV empty), while the exact requested labels remain available.
+Exit codes are 0 for convergence, 2 for a failed numerical solve, and 1 for
+invalid input or output errors. Invalid physical input is checked before output
+files are opened, including with `--force`.
+
+`--tolerance` and `--max-iterations` set the solver controls described below.
+The shared [output options](output.md) provide the presentation-layer overview,
+CPU timing, metadata and JSON/CSV/TSV exports. To export multiple tables, use
+`--json result.json` or explicit destinations such as
+`--csv-table states=states.csv --csv-table roots=roots.csv` with `--roots`.
+References are displayed only with `--references`.
 
 ## Hamiltonian and conventions
 

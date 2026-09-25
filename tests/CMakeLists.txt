@@ -124,6 +124,15 @@ if(BETHE_BUILD_APPS)
     add_test(NAME LiebLinigerThermal.cli
       COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_lieb_liniger_thermal.py"
         "$<TARGET_FILE:bethe-lieb-liniger-thermal>" "${UNI20_ENABLE_MPLAPACK}")
+    add_test(NAME QBoson.cli
+      COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_q_boson.py"
+        "$<TARGET_FILE:bethe-q-boson-pbc>" "${UNI20_ENABLE_MPLAPACK}")
+    add_test(NAME Arguments.bethe-q-boson-pbc.cli
+      COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_shared_arguments.py"
+        "$<TARGET_FILE:bethe-q-boson-pbc>")
+    add_test(NAME Citations.bethe-q-boson-pbc.cli
+      COMMAND "${CMAKE_COMMAND}" "-DPROGRAM=$<TARGET_FILE:bethe-q-boson-pbc>"
+        "-DTOOL=bethe-q-boson-pbc" -P "${CMAKE_CURRENT_SOURCE_DIR}/check_citations_cli.cmake")
     add_test(NAME Arguments.bethe-lieb-liniger-thermal.cli
       COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_shared_arguments.py"
         "$<TARGET_FILE:bethe-lieb-liniger-thermal>")

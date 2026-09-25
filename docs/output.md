@@ -55,6 +55,7 @@ The remaining models use these tables:
 | `bethe-lieb-liniger-pbc` | `states` | `roots` with `--roots` |
 | `bethe-lieb-liniger-dispersion` | `dispersion` | none; bulk background in metadata |
 | `bethe-lieb-liniger-thermal` | `thermodynamics` | none; one row per temperature |
+| `bethe-q-boson-pbc` | `states` | `roots` with `--roots`; null momenta on failure |
 | `bethe-biquadratic-obc` | `states` | real modes: `quantum_numbers`; Q-system: `reference`, `q_coefficients`; two-string singlet / ferro bound pairs and triples: `reference`, `string`; ferro analytic modes: `reference`; numerical `roots` with `--roots` |
 
 Excitation scans additionally write `reference` (the ground state used for gaps)
