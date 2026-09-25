@@ -294,11 +294,19 @@ inline constexpr std::array<Link, 2> links_76{{
   {"arXiv", "https://arxiv.org/abs/1911.08279"},
 }};
 inline constexpr std::array<Link, 2> links_77{{
+  {"DOI", "https://doi.org/10.1088/1751-8113/48/49/494003"},
+  {"arXiv", "https://arxiv.org/abs/1505.02104"},
+}};
+inline constexpr std::array<Link, 2> links_78{{
+  {"DOI", "https://doi.org/10.1016/j.nuclphysb.2016.06.007"},
+  {"arXiv", "https://arxiv.org/abs/1603.09249"},
+}};
+inline constexpr std::array<Link, 2> links_79{{
   {"DOI", "https://doi.org/10.1103/PhysRevLett.72.908"},
   {"arXiv", "https://arxiv.org/abs/cond-mat/9308004"},
 }};
 
-inline constexpr std::array<Reference, 78> references{{
+inline constexpr std::array<Reference, 80> references{{
   {"barber-batchelor-1989", "Michael N. Barber and Murray T. Batchelor", "Spectrum of the biquadratic spin-1 antiferromagnetic chain", "Phys. Rev. B 40, 4621-4626", 1989, links_0},
   {"albertini-2000", "Giuseppe Albertini", "Is the purely biquadratic spin 1 chain always massive?", "arXiv:cond-mat/0012439", 2000, links_1},
   {"aufgebauer-klumper-2010", "Britta Aufgebauer and Andreas Klümper", "Quantum spin chains of Temperley-Lieb type: periodic boundary conditions, spectral multiplicities and finite temperature", "J. Stat. Mech. 2010, P05018", 2010, links_2},
@@ -376,12 +384,14 @@ inline constexpr std::array<Reference, 78> references{{
   {"golinelli-mallick-2006", "O. Golinelli and K. Mallick", "The asymmetric simple exclusion process: an integrable model for non-equilibrium statistical mechanics", "J. Phys. A: Math. Gen. 39, 12679-12705", 2006, links_74},
   {"golinelli-mallick-2005", "O. Golinelli and K. Mallick", "Spectral gap of the totally asymmetric exclusion process at arbitrary filling", "J. Phys. A: Math. Gen. 38, 1419-1425", 2005, links_75},
   {"barcza-2020", "G. Barcza, K. Bauerbach, F. Eickhoff, F. B. Anders, F. Gebhard, and O. Legeza", "Symmetric single-impurity Kondo model on a tight-binding chain: A comparison of analytical and numerical ground-state approaches", "Phys. Rev. B 101, 075132", 2020, links_76},
-  {"essler-korepin-1994-scattering", "F. H. L. Essler and V. E. Korepin", "Scattering matrix and excitation spectrum of the Hubbard model", "Phys. Rev. Lett. 72, 908-911", 1994, links_77},
+  {"gainutdinov-hao-nepomechie-sommese-2015", "A. M. Gainutdinov, W. Hao, R. I. Nepomechie, and A. J. Sommese", "Counting solutions of the Bethe equations of the quantum group invariant open XXZ chain at roots of unity", "J. Phys. A: Math. Theor. 48, 494003", 2015, links_77},
+  {"gainutdinov-nepomechie-2016", "A. M. Gainutdinov and R. I. Nepomechie", "Algebraic Bethe ansatz for the quantum group invariant open XXZ chain at roots of unity", "Nucl. Phys. B 909, 796-839", 2016, links_78},
+  {"essler-korepin-1994-scattering", "F. H. L. Essler and V. E. Korepin", "Scattering matrix and excitation spectrum of the Hubbard model", "Phys. Rev. Lett. 72, 908-911", 1994, links_79},
 }};
 
 inline constexpr std::array<Use, 2> uses_hubbard_continuum{{
   {&references[3], "Half-filled spinon line Eq. (4), two-spinon continuum edges Eq. (18) and following paragraph; our U is four times the paper's U. No form factors or spectral weights."},
-  {&references[77], "Elementary SO(4) spinon and charge doublets and additive spinon-holon, spinon-antiholon and neutral holon-antiholon scattering energies and momenta. Charge-family extrema are resolved numerically, not certified global bounds; our U is four times the paper's U."},
+  {&references[79], "Elementary SO(4) spinon and charge doublets and additive spinon-holon, spinon-antiholon and neutral holon-antiholon scattering energies and momenta. Charge-family extrema are resolved numerically, not certified global bounds; our U is four times the paper's U."},
 }};
 inline constexpr std::array<Use, 2> uses_kondo_response{{
   {&references[48], "Exact solution of the single-channel Kondo problem."},

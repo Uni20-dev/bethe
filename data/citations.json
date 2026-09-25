@@ -811,6 +811,28 @@
       ]
     },
     {
+      "id": "gainutdinov-hao-nepomechie-sommese-2015",
+      "authors": "A. M. Gainutdinov, W. Hao, R. I. Nepomechie, and A. J. Sommese",
+      "title": "Counting solutions of the Bethe equations of the quantum group invariant open XXZ chain at roots of unity",
+      "publication": "J. Phys. A: Math. Theor. 48, 494003",
+      "year": 2015,
+      "links": [
+        {"label": "DOI", "url": "https://doi.org/10.1088/1751-8113/48/49/494003"},
+        {"label": "arXiv", "url": "https://arxiv.org/abs/1505.02104"}
+      ]
+    },
+    {
+      "id": "gainutdinov-nepomechie-2016",
+      "authors": "A. M. Gainutdinov and R. I. Nepomechie",
+      "title": "Algebraic Bethe ansatz for the quantum group invariant open XXZ chain at roots of unity",
+      "publication": "Nucl. Phys. B 909, 796-839",
+      "year": 2016,
+      "links": [
+        {"label": "DOI", "url": "https://doi.org/10.1016/j.nuclphysb.2016.06.007"},
+        {"label": "arXiv", "url": "https://arxiv.org/abs/1603.09249"}
+      ]
+    },
+    {
       "id": "essler-korepin-1994-scattering",
       "authors": "F. H. L. Essler and V. E. Korepin",
       "title": "Scattering matrix and excitation spectrum of the Hubbard model",

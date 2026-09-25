@@ -1061,6 +1061,20 @@ Relevant tool modes:
 
 - `bethe-kondo-response`: Universal zero-temperature magnetization, equations (124)-(126). Full Zeeman splitting b=2B and T\_B=2T1; impurity energy change obtained by integrating the response.
 
+### gainutdinov-hao-nepomechie-sommese-2015
+
+A. M. Gainutdinov, W. Hao, R. I. Nepomechie, and A. J. Sommese. *Counting solutions of the Bethe equations of the quantum group invariant open XXZ chain at roots of unity*.
+J. Phys. A: Math. Theor. 48, 494003 (2015).
+
+[DOI](<https://doi.org/10.1088/1751-8113/48/49/494003>), [arXiv](<https://arxiv.org/abs/1505.02104>).
+
+### gainutdinov-nepomechie-2016
+
+A. M. Gainutdinov and R. I. Nepomechie. *Algebraic Bethe ansatz for the quantum group invariant open XXZ chain at roots of unity*.
+Nucl. Phys. B 909, 796-839 (2016).
+
+[DOI](<https://doi.org/10.1016/j.nuclphysb.2016.06.007>), [arXiv](<https://arxiv.org/abs/1603.09249>).
+
 ### essler-korepin-1994-scattering
 
 F. H. L. Essler and V. E. Korepin. *Scattering matrix and excitation spectrum of the Hubbard model*.

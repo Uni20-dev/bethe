@@ -603,6 +603,14 @@ two-leg Heisenberg ladder at generic couplings is not integrable here.
 
 ## Wider catalogue: useful, but not the next default targets
 
+An additional non-unitary target is now underway: the
+[quantum-group-invariant XXZ chain with imaginary boundary fields](xxz-nonhermitian.md).
+Its positive finite-real-root library covers 0<Delta<1 in native precision,
+with independent non-Hermitian spin-basis checks. A frontend, complex branches,
+root-of-unity multiplicities and Jordan structure remain distinct checkpoints.
+This must not be confused with the zero-field free-end XXZ frontend or with
+a restricted RSOS/loop representation.
+
 The following entries deliberately remain short until selected for an
 equation-level feasibility study. Each has a concrete restriction and an
 initial deliverable, rather than an unqualified claim of model support.
