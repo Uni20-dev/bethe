@@ -929,4 +929,11 @@ Relevant tool modes:
 
 - `bethe-lieb-liniger-dispersion`: Pedagogical ground-state integral equation and normalization at fixed density.
 
+### guan-batchelor-2011
+
+X.-W. Guan and M. T. Batchelor. *Polylogs, thermodynamics and scaling functions of one-dimensional quantum many-body systems*.
+J. Phys. A: Math. Theor. 44, 102001 (2011).
+
+[DOI](<https://doi.org/10.1088/1751-8113/44/10/102001>), [arXiv](<https://arxiv.org/abs/1010.4842>).
+
 <!-- END GENERATED BIBLIOGRAPHY -->

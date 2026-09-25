@@ -142,6 +142,8 @@ Very weak coupling may exceed the mesh budget; no weak-coupling approximation
 is silently substituted. Overflow or underflow in physical-unit conversion
 also fails explicitly. Exactly zero/infinite c, attraction, finite temperature,
 and boundary corrections are outside this API.
+For T>0 at fixed chemical potential, use the separate
+[Yang–Yang equilibrium library](lieb-liniger-thermal.md).
 
 Tests cover native polynomial quadrature, density and dressed-energy equations,
 finite-ring extrapolation, scale covariance, the thermodynamic derivative
