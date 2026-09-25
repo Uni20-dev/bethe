@@ -780,6 +780,10 @@ Nucl. Phys. B 1025, 117385 (2026).
 
 [DOI](<https://doi.org/10.1016/j.nuclphysb.2026.117385>), [arXiv](<https://arxiv.org/abs/2510.25344>).
 
+Relevant tool modes:
+
+- `bethe-sine-gordon-vacuum`: Integer-coupling D-type TBA used for independent p=2 vacuum validation, equations (2.6)-(2.8).
+
 ### rutkevich-2020
 
 S. B. Rutkevich. *On the ground-state energy of the finite sine-Gordon ring*.
@@ -787,12 +791,20 @@ J. Stat. Mech. 2020, 103101 (2020).
 
 [DOI](<https://doi.org/10.1088/1742-5468/abb018>), [arXiv](<https://arxiv.org/abs/2007.06489>).
 
+Relevant tool modes:
+
+- `bethe-sine-gordon-vacuum`: Bulk-subtracted finite-ring vacuum scaling function and shifted-contour NLIE; soliton-mass convention.
+
 ### destri-de-vega-1992
 
 C. Destri and H. J. de Vega. *New thermodynamic Bethe ansatz equations without strings*.
 Phys. Rev. Lett. 69, 2313-2317 (1992).
 
 [DOI](<https://doi.org/10.1103/PhysRevLett.69.2313>).
+
+Relevant tool modes:
+
+- `bethe-sine-gordon-vacuum`: Nonlinear integral equation approach to finite-volume sine-Gordon energies.
 
 ### gwa-spohn-1992
 

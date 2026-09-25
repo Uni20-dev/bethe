@@ -59,6 +59,7 @@ The remaining models use these tables:
 | `bethe-xyz-pbc` | `states` | `roots` with `--roots`, split real/imaginary coordinates; missing energy, momentum and coordinates on failure |
 | `bethe-tasep-pbc` | `relaxation` | `roots` with `--roots`, reduced-filling Z coordinates; rates/frequency, not energies; absent modes in empty/full sectors |
 | `bethe-asep-pbc` | `relaxation` | `roots` with `--roots`, scaled reduced-filling v coordinates; wave base in metadata; analytic cases have no roots; rates/frequency, not energies |
+| `bethe-sine-gordon-vacuum` | `vacuum` | Bulk-subtracted continuum energy E_C, Y=L*E_C, c_eff and separate numerical error/work diagnostics; no roots or absolute bulk energy |
 | `bethe-biquadratic-obc` | `states` | real modes: `quantum_numbers`; Q-system: `reference`, `q_coefficients`; two-string singlet / ferro bound pairs and triples: `reference`, `string`; ferro analytic modes: `reference`; numerical `roots` with `--roots` |
 
 Excitation scans additionally write `reference` (the ground state used for gaps)

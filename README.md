@@ -62,6 +62,9 @@ Thermodynamic dispersion tools use `bethe-<model>-dispersion`.
 - [Periodic XYZ](docs/xyz.md): `bethe-xyz-pbc` gives even-chain regular ground
   states in the rectangular elliptic parametrization, including either sign
   of Jz. Generic XYZ has no conserved Sz sector; excitations are not yet exposed.
+- [Sine-Gordon vacuum](docs/sine-gordon.md): `bethe-sine-gordon-vacuum` gives
+  the bulk-subtracted finite-volume vacuum energy, scaling function and effective
+  central charge, for attractive and repulsive coupling in native precision.
 - [Periodic TASEP](docs/tasep.md): `bethe-tasep-pbc` gives the leading relaxation
   gap and complex decay eigenvalue at arbitrary filling. These are stochastic
   rates, not quantum energies. [Bidirectional ASEP](docs/asep.md),

@@ -30,6 +30,7 @@ TEST(Citations, ToolReferenceSelections)
   for (auto tool : {refs::Tool::xxx_pbc,
                     refs::Tool::tasep_pbc,
                     refs::Tool::asep_pbc,
+                    refs::Tool::sine_gordon_vacuum,
                     refs::Tool::xyz_pbc,
                     refs::Tool::xxx_obc,
                     refs::Tool::xxz_pbc,

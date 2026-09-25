@@ -1,8 +1,46 @@
 # Sine-Gordon: bulk-subtracted finite-volume vacuum
 
-**Status: native-precision kernel and vacuum-energy library implemented; frontend pending.** This is a field
+**Status: native-precision kernel, vacuum-energy library and `bethe-sine-gordon-vacuum` frontend implemented.** This is a field
 theory calculation, not a classical sine-Gordon PDE evolution or a finite-site
 spin-chain diagonalization.
+
+## Running the vacuum solver
+
+```sh
+bethe-sine-gordon-vacuum --length 1 --p 2
+bethe-sine-gordon-vacuum --mass 2 --length 0.5 --p 0.5 --json vacuum.json
+bethe-sine-gordon-vacuum --length 1 --p 1 --precision fp128 --csv vacuum.csv
+```
+
+`--length` and `--p` are required; `--mass` defaults to one. All real inputs
+are parsed directly in the chosen precision: fp64 (default), long-double or
+fp128 (with MPLAPACK). The last example is the free Dirac check, not an
+interacting calculation. Interacting fp128 runs can take minutes.
+
+The single `vacuum` table reports `casimir_energy` (E_C), `scaling_function`
+(Y), `effective_central_charge`, separate convergence diagnostics and work
+counters. These are not a total absolute energy or an energy per lattice site.
+The metadata records physical conventions, both numerical contour shifts,
+input controls, provenance and CPU time. See [output and exports](output.md)
+for JSON/CSV/TSV, streaming and overwrite protection. Literature appears with
+`--references`, not on each ordinary run.
+
+`--tolerance` is an absolute tolerance in Y, default `262144*epsilon` in the
+selected precision. `--contour-shift` and `--initial-cutoff` override the
+automatic contour and rapidity cutoff choices described below.
+`--initial-intervals` (64) and `--max-intervals` (2048) control rapidity
+resolution; `--max-iterations` (10000) is the total nonlinear-update budget
+across all meshes and both contours. `--max-cutoffs` (3) limits rapidity
+cutoff attempts per contour. Independently, `--max-kernel-evaluations`
+(100000), `--max-kernel-levels` (16) and `--max-fourier-cutoffs` (64) limit
+each Fourier kernel table construction. Kernel accuracy is assigned from the
+vacuum error budget, not a separate user tolerance.
+
+Exit status is 0 on convergence, 1 for invalid input/output errors, and 2 for
+an incomplete solve. On status 2 all three physical observables are missing
+(JSON null, empty CSV/TSV cells); diagnostics remain available. Unknown error
+estimates may be infinite. Numerical validation precedes opening output files,
+including when `--force` is given.
 
 ## Physical convention
 
@@ -164,7 +202,7 @@ the convolution cost. The complex logarithm utility is shared with ASEP.
 Convolution is currently quadratic in mesh size: a demanding fp128 solve can
 take minutes in a Debug build. No FFT or lower-precision fallback is used.
 
-## Validation and next checkpoint
+## Validation and remaining scope
 
 All precisions check the free-Dirac integral against an independent high-precision
 reference, and the interacting p=2 result against an independent, real-valued
@@ -178,8 +216,8 @@ breather wrapping correction at p=1/2. They also distinguish nonlinear,
 kernel, rapidity-mesh and cutoff failures, and verify that failed states have
 no published observables.
 
-Next is the frontend exposing M, L, p and all independent numerical controls
-through the common CLI/run-context/table infrastructure.
+Frontend regressions additionally check native parsing/output, mass-length
+scaling, budget forwarding, missing failed observables and shared export contracts.
 
 This first target is the untwisted zero-topological-charge vacuum. Excited
 states require additional source terms and branch/quantization bookkeeping;

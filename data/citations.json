@@ -802,6 +802,15 @@
   ],
   "tools": [
     {
+      "id": "sine_gordon_vacuum",
+      "executable": "bethe-sine-gordon-vacuum",
+      "references": [
+        {"id": "destri-de-vega-1992", "context": "Nonlinear integral equation approach to finite-volume sine-Gordon energies."},
+        {"id": "rutkevich-2020", "context": "Bulk-subtracted finite-ring vacuum scaling function and shifted-contour NLIE; soliton-mass convention."},
+        {"id": "hegedus-2026", "context": "Integer-coupling D-type TBA used for independent p=2 vacuum validation, equations (2.6)-(2.8)."}
+      ]
+    },
+    {
       "id": "asep_pbc",
       "executable": "bethe-asep-pbc",
       "references": [
