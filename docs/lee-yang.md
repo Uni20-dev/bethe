@@ -1,7 +1,7 @@
 # Scaling Lee–Yang model: periodic finite-volume ground state
 
-**Status: source conventions and independent numerical oracle established;
-native C++ solver and frontend are the next checkpoint.** This is a continuum
+**Status: native fp64/long-double/fp128 periodic ground-state TBA library
+implemented and checked against an independent oracle; frontend is next.** This is a continuum
 field-theory calculation, not a finite spin-chain or RSOS Hamiltonian solver.
 
 ## Physics and normalization
@@ -33,7 +33,7 @@ source-free equation is not sufficient.
 
 ## Numerical formulation
 
-The following choices and checks are our implementation design. Solve for
+The implementation solves for
 the bounded correction u=epsilon-r*cosh(theta), using even parity to work on
 the positive half-line. The folded kernel is K(theta-y)+K(theta+y).
 For large arguments use t=exp(-abs(x)) and
@@ -50,14 +50,14 @@ must still check its own quadrature and roundoff; the nonlinear residual
 alone is not an energy error estimate.
 
 The oracle uses composite Gauss–Legendre rules supplied by SciPy. The native
-solver should use a uniform rapidity mesh and cached difference/sum kernels,
-giving an independent discretization. Reuse scalar math and compensated
-summation from the existing solvers, but do not inherit sine-Gordon contour
-parameters: this is a real scalar TBA. Keep nonlinear, mesh and cutoff
-diagnostics separate. Require successive mesh agreements and an enlarged
-cutoff verification, with explicit budgets and missing energies on failure.
-Convergence checks should target absolute error in dimensionless Y, avoiding
-an implicit change of tolerance when m and L are rescaled.
+solver uses a uniform trapezoidal rapidity mesh and cached difference/sum
+kernels, giving an independent discretization. It reuses stable thermal
+factors, scalar math and compensated summation from the existing solvers,
+without sine-Gordon contour parameters: this is a real scalar TBA. Nonlinear,
+mesh and cutoff diagnostics are separate. Two successive mesh agreements and
+an enlarged cutoff verification are required, with explicit budgets and
+missing energies on failure. The tolerance targets absolute error in Y,
+avoiding an implicit change of tolerance when m and L are rescaled.
 
 The direct omitted energy tail has a useful bound: for cutoff B>0,
 `abs(Y_tail) <= coth(B)*exp(-r*cosh(B))/pi`. This bounds the omitted integral
@@ -94,17 +94,67 @@ tolerance when comparing Y, not all printed digits as exact references):
 | 5 | -0.006408441082412908 |
 | 10 | -0.000059359269102363974 |
 
-## Planned native/public contract
+## Native library
 
-- `bethe/lee_yang.hpp`: scalar kernel and periodic ground-state TBA, native
-  fp64/long-double/fp128 throughout, with no double fallback.
-- Input m and L; record r=mL. Return optional Y, E_C=Y/L and c_eff(r), plus
-  separate numerical diagnostics and work counters. Known CFT constants
-  must be labelled theory data, not fitted numerical results.
-- `bethe-lee-yang-vacuum`: one frontend, following the existing sine-Gordon
-  finite-volume naming convention and shared CLI/table/run-context facilities.
-- Validate independent values above, UV/IR limits, mass/length rescaling,
-  native-precision round trips, and individual numerical-budget failures.
-- Later checkpoints: the identity-sector state and other excited-state
-  source terms, followed by boundaries or defects when needed. They must
-  not silently reuse the source-free ground-state equations.
+```cpp
+#include <bethe/lee_yang.hpp>
+auto state = bethe::lee_yang::ground_state<long double>(1.0L, 1.0L);
+if (state.converged) {
+  auto Y = *state.scaling_function;
+  auto E_C = *state.casimir_energy;
+  auto c_eff = *state.effective_central_charge;
+}
+```
+
+Inputs are mass m and length L; both and their product must be finite,
+representable and positive. There is no double fallback. All three physical
+outputs are optional and absent on failure. `kernel(x)` also exposes the
+positive scattering kernel for finite real x.
+
+`Options<Real>` defaults and meanings:
+
+| Option | Default | Meaning |
+| --- | ---: | --- |
+| tolerance | 8192 epsilon | Absolute target in Y, required in (0,1) |
+| initial_intervals | 32 | Starting intervals on [0,B] |
+| max_intervals | 2048 | Maximum intervals per grid; hard cap 8192 |
+| max_iterations | 1000 | Fixed-point updates per grid; zero still tests the seed |
+| max_cutoffs | 3 | Total cutoff trials, including the initial one |
+| max_kernel_products | 200000000 | Total folded kernel-times-logarithm terms across all grids |
+| initial_cutoff | automatic | Positive B; verification increases it by 1 |
+
+The automatic cutoff is at least 2 and makes the free driving energy at the
+boundary larger than a tolerance-dependent logarithmic target. The driving
+term is evaluated through logarithms to avoid overflow from an intermediate
+cosh when r is tiny. Grids double their interval count; at least three
+converged grids are needed for two successive agreements at each cutoff.
+A single cutoff trial can never publish an energy.
+
+The nonlinear error estimate uses the discrete kernel row-sum bound and the
+energy's sensitivity to the correction u, with a native roundoff floor.
+`nonlinear_residual` itself remains a sup-norm equation residual, not an
+energy error. `mesh_error` includes adjacent-grid changes and their nonlinear
+errors; `cutoff_error` includes the change between independently mesh-refined
+cutoffs, numerical errors and the direct tail bound. These estimates are not
+rigorous interval-arithmetic certificates.
+
+`Status` distinguishes `converged`, `iteration_limit`, `mesh_limit`,
+`cutoff_limit`, `work_limit`, and `precision_limit`. Invalid inputs throw
+`std::invalid_argument`. Failure states retain input mass/length, diagnostics and work
+counters, not a publishable approximate energy. A diagnostic not yet evaluated
+is infinity. `iterations` sums updates over all grids; `intervals` and `cutoff`
+describe the last attempted grid. Storage is O(N), work O(N^2) per fixed-point
+evaluation, with the work budget checked before each evaluation.
+
+Tests cover the independent values above, UV/IR limits, exact rescaling at
+fixed mL, native round trips and agreement between different initial meshes
+and cutoffs at the selected precision. Every failure status has a regression,
+including a too-small cutoff, exhausted work and unrepresentable mL.
+
+## Next checkpoints
+
+`bethe-lee-yang-vacuum` will follow the existing sine-Gordon finite-volume
+naming and shared CLI/table/run-context facilities. Known CFT constants must
+be labelled theory data, not fitted results. The identity-sector state and
+other excited-state source terms, then boundaries or defects, are separate
+extensions; they must not silently reuse the source-free ground-state equation.

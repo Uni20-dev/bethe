@@ -80,6 +80,10 @@ add_executable(bethe_kondo_tests test_kondo.cpp)
 target_link_libraries(bethe_kondo_tests PRIVATE bethe::bethe)
 bethe_discover_tests(bethe_kondo_tests)
 
+add_executable(bethe_lee_yang_tests test_lee_yang.cpp)
+target_link_libraries(bethe_lee_yang_tests PRIVATE bethe::bethe)
+bethe_discover_tests(bethe_lee_yang_tests)
+
 add_executable(bethe_xxz_quantum_group_critical_tests test_xxz_quantum_group_critical.cpp)
 target_link_libraries(bethe_xxz_quantum_group_critical_tests PRIVATE bethe::bethe)
 bethe_discover_tests(bethe_xxz_quantum_group_critical_tests)
