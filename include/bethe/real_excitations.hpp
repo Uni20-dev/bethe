@@ -26,11 +26,23 @@ struct RealExcitationOptions
     std::size_t max_candidates = 10000;
 };
 
+namespace detail
+{
+template <typename T> struct EnergyValue
+{
+    using type = T;
+};
+template <typename T> struct EnergyValue<std::optional<T>>
+{
+    using type = T;
+};
+} // namespace detail
+
 template <typename State> struct RealExcitation
 {
     State state;
     /// E-E0 at the selected precision; absent if the ground reference failed.
-    std::optional<decltype(State{}.energy)> gap;
+    std::optional<typename detail::EnergyValue<decltype(State{}.energy)>::type> gap;
 };
 
 template <typename State> struct RealExcitationScan

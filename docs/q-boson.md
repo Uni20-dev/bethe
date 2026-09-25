@@ -1,8 +1,9 @@
-# Periodic q-boson ground states
+# Periodic q-boson states
 
 The C++ library `bethe/q_boson.hpp` implements the fixed-particle-number ground
-state of the repulsive q-boson hopping model, with the frontend
-`bethe-q-boson-pbc`. Excited-state labels are a follow-up. It is **not** the
+state and real-root excited states of the repulsive q-boson hopping model. The
+frontend `bethe-q-boson-pbc` currently exposes ground states; excited-state CLI
+support is a follow-up. It is **not** the
 ordinary Bose–Hubbard model.
 
 ## Command-line use
@@ -86,6 +87,18 @@ the selected energy is the lowest, not merely an eigenvalue.
 
 ## C++ API and numerical behavior
 
+Excited states are selected by sorted free-boson mode labels
+`0 <= m_0 <= ... <= m_(N-1) < L`, with
+`I_j=m_j+j-(N-1)/2`. At zero deformation these are precisely bosonic occupation
+patterns, with momenta `2*pi*m_j/L`. The canonical family has
+`binomial(L+N-1,N)` candidates, equal to the fixed-N occupation-space dimension.
+The roots are lifted continuously, not individually folded into a Brillouin
+zone: they remain ordered with total spread less than `2*pi` for eta>0.
+In the phase limit,
+`k_j=(2*pi*I_j+P_lifted)/(L+N)`, where `P_lifted=2*pi*sum(m_j)/L`.
+The returned physical `momentum` is reduced to `(-pi,pi]`, using integer mode
+sums before floating-point conversion.
+
 ```cpp
 #include <bethe/q_boson.hpp>
 
@@ -94,7 +107,22 @@ if (state.converged) {
     auto energy = *state.energy;
     auto const& roots = state.momenta;
 }
+
+std::vector<std::size_t> modes{0, 0, 2};
+auto excited = bethe::q_boson::solve_modes<double>(5, modes, 0.5);
+auto scan = bethe::q_boson::real_excitations(5, 3, 0.5,
+    {.count = 10, .max_candidates = 1000});
 ```
+
+`solve_real` accepts the corresponding `QuantumNumbers` instead of modes.
+The shared excitation scanner solves the entire canonical family and retains
+up to `count` lowest converged levels, including the ground state and distinct
+degenerate states. Set `count` to the candidate count to retain everything.
+`excitation_count(L,N,max_candidates)` checks the combinatorial budget before
+any solves or root allocation; this scan is intended for small sectors.
+Failed candidates are counted and one diagnostic example is retained. Gaps
+are absent if the ground reference failed. A converged candidate family is a
+numerical result, not by itself a proof of spectral completeness.
 
 Use native `long double` or enabled Uni20 fp128 types in place of double.
 The optional fourth argument is `SolverOptions<Real>`, with residual tolerance
@@ -106,17 +134,21 @@ L<2, and nonpositive/nonfinite tolerances are invalid.
 The existing physical-domain Newton driver, native dense solve, and compensated
 sums are shared with the continuum solvers. The phase kernel uses `tanh(eta)`
 and scaled trigonometric factors rather than exponentially large hyperbolic
-functions. For small eta, the known rank phase is canceled against the ground
-labels before arithmetic. The residual is scaled by
-`L*max(sqrt(tanh(eta)/L),abs(k_j))`, retaining a relative test as roots approach
-zero. The positive energy uses sine squares instead of subtracting `2-2*cos(k)`.
+functions. Roots are solved as `k_j=2*pi*m_j/L+u_j`; `modes` and `deviations`
+retain weakly split clusters even when rounded `momenta` coincide. For small
+eta, the known rank phase is canceled against the labels before arithmetic.
+The residual is scaled by `L*max(sqrt(tanh(eta)/L),abs(u_j))`, retaining a
+relative test as deviations approach zero. The positive energy uses sine
+squares instead of subtracting `2-2*cos(k)`.
 
 `iteration_limit`, `stalled`, and `precision_limit` leave `energy` empty. Roots
 on failure are diagnostics, not a converged eigenstate. Nonzero but insufficiently
-resolved subnormal energies are rejected. No excited-spectrum completeness,
-wavefunctions, correlation functions, OBC, or q<1 support is claimed.
+resolved subnormal energies are rejected. Wavefunctions, correlation functions,
+OBC, and q<1 are not supported.
 
-Tests cover occupation-space ground energies for L=2..5 and N=0..4, a native
+Tests compare full energy multisets and joint energy/cos(momentum) spectra
+against occupation-space diagonalization for L=2..5 and N=0..4, including free
+and phase limits and several finite deformations. They also cover a native
 two-site/two-particle formula, the original complex multiplicative equations,
 the exact phase limit, weak eta=epsilon², larger rings, continuum scaling to
 Lieb–Liniger, and explicit validation/iteration/precision failures.

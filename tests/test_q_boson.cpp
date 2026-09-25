@@ -14,7 +14,7 @@ template <typename Real> class QBoson : public ::testing::Test {};
 TYPED_TEST_SUITE(QBoson, test_support::RealTypes, test_support::PrecisionNames);
 
 // Occupation-space Hamiltonian, independent of any Bethe roots or phases.
-double exact_ground(unsigned sites, unsigned particles, double eta)
+std::vector<double> exact_spectrum(unsigned sites, unsigned particles, double eta, double translation = 0)
 {
   std::vector<std::vector<unsigned>> basis;
   std::vector<unsigned> occupation(sites);
@@ -63,7 +63,18 @@ double exact_ground(unsigned sites, unsigned particles, double eta)
         ++state[target];
         h[index.at(state), col] -= hop;
       }
-  return uni20::linalg::eigh(std::move(h)).eigenvalues[0];
+  for (std::size_t col = 0; col < basis.size(); ++col)
+  {
+    auto rotated = basis[col];
+    std::rotate(rotated.begin(), rotated.begin() + 1, rotated.end());
+    h[index.at(rotated), col] += translation;
+    h[col, index.at(rotated)] += translation;
+  }
+  auto eig = uni20::linalg::eigh(std::move(h));
+  std::vector<double> values(basis.size());
+  for (std::size_t i = 0; i < values.size(); ++i)
+    values[i] = eig.eigenvalues[i];
+  return values;
 }
 
 TYPED_TEST(QBoson, OccupationBasisGroundEnergies)
@@ -76,7 +87,7 @@ TYPED_TEST(QBoson, OccupationBasisGroundEnergies)
         auto const s = model::ground_state(sites, n, eta);
         ASSERT_TRUE(s.converged) << sites << ',' << n << ',' << double(eta) << " status=" << int(s.status);
         ASSERT_TRUE(s.energy);
-        EXPECT_NEAR(double(*s.energy), exact_ground(sites, n, double(eta)), 1e-11);
+        EXPECT_NEAR(double(*s.energy), exact_spectrum(sites, n, double(eta)).front(), 1e-11);
       }
 }
 
@@ -106,6 +117,23 @@ TYPED_TEST(QBoson, OriginalMultiplicativeEquationsAndPhaseLimit)
   using Real = TypeParam;
   using Complex = std::complex<Real>;
   Real const pi = Real{4} * std::atan(Real{1}), eps = uni20::numeric_limits<Real>::epsilon();
+  for (Real eta : {Real{0.3}, Real{3}})
+  {
+    std::vector<std::size_t> modes{0, 0, 2, 4, 4};
+    auto const s = model::solve_modes<Real>(5, modes, eta);
+    ASSERT_TRUE(s.converged);
+    for (std::size_t j = 0; j < modes.size(); ++j)
+    {
+      Complex product = std::exp(Complex(0, Real{5} * s.momenta[j]));
+      for (std::size_t k = 0; k < modes.size(); ++k)
+        if (k != j)
+        {
+          Real const half = (s.momenta[j] - s.momenta[k]) / Real{2};
+          product *= std::sin(Complex(half, -eta)) / std::sin(Complex(half, eta));
+        }
+      EXPECT_REAL_NEAR(std::abs(product - Complex(1, 0)), Real{0}, Real{4096} * eps);
+    }
+  }
   for (Real eta : {Real{0.01}, Real{0.5}, Real{2}})
     for (std::size_t sites : {2u, 7u})
     {
@@ -177,5 +205,84 @@ TYPED_TEST(QBoson, ValidationAndBudgets)
   EXPECT_FALSE(tiny.converged);
   EXPECT_FALSE(tiny.energy);
   EXPECT_EQ(tiny.status, model::Status::precision_limit);
+}
+
+TYPED_TEST(QBoson, CompleteSmallSpectraAndMomentumAgainstED)
+{
+  using Real = TypeParam;
+  static_assert(std::is_same_v<decltype(bethe::RealExcitation<model::State<Real>>{}.gap), std::optional<Real>>);
+  for (unsigned sites = 2; sites <= 5; ++sites)
+    for (unsigned n = 0; n <= 4; ++n)
+      for (Real eta : {Real{0}, Real{0.01}, Real{0.5}, Real{2}, uni20::numeric_limits<Real>::infinity()})
+      {
+        auto const scan = model::real_excitations(sites, n, eta, {.count = 1000, .max_candidates = 1000});
+        ASSERT_TRUE(scan.converged()) << sites << ',' << n << ',' << double(eta) << " failed="
+                                      << (scan.first_unconverged ? int(scan.first_unconverged->status) : -1);
+        auto const exact = exact_spectrum(sites, n, double(eta));
+        ASSERT_EQ(scan.candidate_count, exact.size());
+        ASSERT_EQ(scan.levels.size(), exact.size());
+        std::vector<double> translated;
+        for (std::size_t j = 0; j < exact.size(); ++j)
+        {
+          auto const& level = scan.levels[j];
+          EXPECT_NEAR(double(*level.state.energy), exact[j], 2e-11);
+          ASSERT_TRUE(level.gap);
+          EXPECT_GE(*level.gap, -Real{1024} * uni20::numeric_limits<Real>::epsilon());
+          translated.push_back(double(*level.state.energy) + 0.274 * std::cos(double(level.state.momentum)));
+        }
+        std::sort(translated.begin(), translated.end());
+        auto const joint = exact_spectrum(sites, n, double(eta), 0.137);
+        for (std::size_t j = 0; j < joint.size(); ++j)
+          EXPECT_NEAR(translated[j], joint[j], 2e-11);
+      }
+}
+
+TYPED_TEST(QBoson, ExcitedLabelsWeakClustersAndFailures)
+{
+  using Real = TypeParam;
+  Real const eps = uni20::numeric_limits<Real>::epsilon(), pi = Real{4} * std::atan(Real{1});
+  std::vector<std::size_t> modes{1, 1, 3};
+  auto const weak = model::solve_modes<Real>(5, modes, eps * eps);
+  ASSERT_TRUE(weak.converged) << int(weak.status);
+  EXPECT_GT(weak.deviations[1] - weak.deviations[0], Real{0});
+  EXPECT_EQ(weak.momentum_index, 0u);
+  auto const explicit_state = model::solve_real(5, eps * eps, weak.quantum_numbers);
+  ASSERT_TRUE(explicit_state.converged);
+  EXPECT_EQ(explicit_state.energy, weak.energy);
+  auto const boosted = model::solve_modes<Real>(5, std::vector<std::size_t>{1, 1}, eps * eps);
+  auto const ground = model::ground_state(5, 2, eps * eps);
+  ASSERT_TRUE(boosted.converged);
+  ASSERT_TRUE(ground.converged);
+  for (std::size_t j = 0; j < 2; ++j)
+    EXPECT_REAL_NEAR(boosted.deviations[j], ground.momenta[j], Real{64} * eps * std::abs(ground.momenta[j]));
+  std::size_t const large_sites = std::size_t{1} << 60;
+  auto const one = model::solve_modes<Real>(large_sites, std::vector<std::size_t>{large_sites - 1}, Real{1});
+  ASSERT_TRUE(one.converged);
+  Real const low = pi / Real(large_sites), expected_one = Real{4} * std::sin(low) * std::sin(low);
+  EXPECT_REAL_NEAR(*one.energy, expected_one, Real{64} * eps * expected_one);
+  EXPECT_REAL_NEAR(one.momentum, -Real{2} * low, Real{64} * eps * low);
+  auto const phase = model::solve_modes<Real>(5, modes, uni20::numeric_limits<Real>::infinity(), {.max_iterations = 0});
+  ASSERT_TRUE(phase.converged) << int(phase.status);
+  for (std::size_t j = 0; j < modes.size(); ++j)
+  {
+    Real const expected = (pi * Real(phase.quantum_numbers[j].twice()) + Real{2} * pi) / Real{8};
+    EXPECT_REAL_NEAR(phase.momenta[j], expected, Real{128} * eps);
+  }
+  EXPECT_THROW(model::solve_modes<Real>(5, std::vector<std::size_t>{1, 0}, Real{1}), std::invalid_argument);
+  EXPECT_THROW(model::solve_modes<Real>(5, std::vector<std::size_t>{5}, Real{1}), std::invalid_argument);
+  EXPECT_THROW(model::solve_real(5, Real{1}, model::QuantumNumbers{uni20::half_int{0}, uni20::half_int{1}}),
+               std::invalid_argument);
+  EXPECT_THROW(model::real_excitations(5, 3, Real{1}, {.max_candidates = 1}), std::length_error);
+  auto const failed = model::real_excitations(3, 2, Real{1}, {.count = 100}, {.max_iterations = 0});
+  EXPECT_FALSE(failed.converged());
+  EXPECT_TRUE(failed.first_unconverged);
+  ASSERT_EQ(failed.ground_state.momenta.size(), 2u);
+  EXPECT_LT(failed.ground_state.momenta[0], Real{0});
+  EXPECT_GT(failed.ground_state.momenta[1], Real{0});
+  for (auto const& level : failed.levels)
+  {
+    EXPECT_TRUE(level.state.converged);
+    EXPECT_FALSE(level.gap);
+  }
 }
 } // namespace
