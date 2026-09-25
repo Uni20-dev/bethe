@@ -798,6 +798,17 @@
         {"label": "DOI", "url": "https://doi.org/10.1088/0305-4470/38/7/001"},
         {"label": "arXiv", "url": "https://arxiv.org/abs/cond-mat/0411505"}
       ]
+    },
+    {
+      "id": "barcza-2020",
+      "authors": "G. Barcza, K. Bauerbach, F. Eickhoff, F. B. Anders, F. Gebhard, and O. Legeza",
+      "title": "Symmetric single-impurity Kondo model on a tight-binding chain: A comparison of analytical and numerical ground-state approaches",
+      "publication": "Phys. Rev. B 101, 075132",
+      "year": 2020,
+      "links": [
+        {"label": "DOI", "url": "https://doi.org/10.1103/PhysRevB.101.075132"},
+        {"label": "arXiv", "url": "https://arxiv.org/abs/1911.08279"}
+      ]
     }
   ],
   "tools": [

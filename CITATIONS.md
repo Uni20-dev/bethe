@@ -1045,4 +1045,11 @@ Relevant tool modes:
 - `bethe-asep-pbc`: Finite-size TASEP leading-relaxation branch used as the continuation seed.
 - `bethe-tasep-pbc`: Periodic TASEP finite-size Bethe equations (2)-(8) and leading relaxation branch (12)-(14) at arbitrary filling. Complex Markov eigenvalues, not energies; no partial asymmetry or full-spectrum claim.
 
+### barcza-2020
+
+G. Barcza, K. Bauerbach, F. Eickhoff, F. B. Anders, F. Gebhard, and O. Legeza. *Symmetric single-impurity Kondo model on a tight-binding chain: A comparison of analytical and numerical ground-state approaches*.
+Phys. Rev. B 101, 075132 (2020).
+
+[DOI](<https://doi.org/10.1103/PhysRevB.101.075132>), [arXiv](<https://arxiv.org/abs/1911.08279>).
+
 <!-- END GENERATED BIBLIOGRAPHY -->
