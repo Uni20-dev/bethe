@@ -1,6 +1,7 @@
 # Half-filled Hubbard continuum edges
 
-**Status: two-spinon library and frontend implemented; charge-containing continua pending.**
+**Status: two-spinon library and frontend implemented; charge-containing
+library implemented separately, with CLI exposure pending.**
 
 This extends the [elementary dispersion lines](hubbard-dispersion.md) to a
 specified scattering family, not to the entire spectrum at fixed quantum
@@ -82,11 +83,14 @@ solve to ensure a partial pair of edges is not published.
 
 ## Subsequent slices
 
-The [charge-continuum design and independent oracle](hubbard-charge-continuum-design.md)
-record the next implementation's channels, conventions and reference points.
+The [charge-continuum library and independent oracle](hubbard-charge-continuum-design.md)
+now cover spinon–holon, spinon–antiholon and holon–antiholon families.
+Their channels, conventions, search limitations and reference points are
+documented there; this frontend still exposes only two spinons.
 
-Spinon–holon/antiholon and holon–antiholon thresholds require constrained
-minimization of the corresponding sums at fixed total momentum. That work
-must inspect all stationary branches and endpoints, propagate constituent
-failures, and distinguish the chosen particle family from a global sector
-minimum. Doped continua and spectral weights remain separate work.
+The charge-containing library searches the corresponding sums at fixed
+total momentum, refining candidate stationary branches and endpoints and
+propagating constituent failures. Its mesh-convergence evidence is not a
+global certificate, nor is a chosen particle family's lower edge a minimum
+over arbitrary additional particles. Doped continua and spectral weights
+remain separate work.

@@ -1,7 +1,6 @@
-# Charge-containing Hubbard continua: implementation plan
+# Charge-containing Hubbard continuum library
 
-**Status: source conventions, independent reference oracle and shared native
-extrema helper; no charge-continuum solver or CLI selection yet.** The existing
+**Status: native charge-continuum library implemented; no CLI selection yet.** The existing
 [two-spinon tool](hubbard-continuum.md) remains restricted to two spinons.
 
 ## Channels and energy reference
@@ -28,6 +27,54 @@ Return symmetric energies first; apply `U*DeltaN/2` only for unshifted
 Hamiltonian energies. At half filling, the middle-of-gap Fermi reference
 agrees with symmetric excitation energies. Conventions never alter the
 minimizing momenta within a fixed channel.
+
+## Native library contract
+
+```cpp
+#include <bethe/hubbard_charge_continuum.hpp>
+namespace hubbard = bethe::hubbard::thermo;
+auto edges = hubbard::charge_continuum(
+    hubbard::ChargeChannel::spinon_holon, 4.0, 1.0);
+```
+
+`ChargeChannel` selects `spinon_holon`, `spinon_antiholon` or
+`holon_antiholon`. Inputs are finite U>0 and total momentum in [-pi,pi].
+`Convention::symmetric` is the default; `Convention::unshifted` changes only
+the reported Hamiltonian energies. Both symmetric and selected energies
+are returned, with particle change and physical spin. Fermi-referenced
+energies at half filling are the symmetric values.
+
+`ChargeContinuumOptions<Real>` keeps three work controls distinct:
+
+- `search`: the shared extrema options, acting on energy divided by
+  `max(1,U)`. Its default value tolerance is `65536*epsilon`. Multiply
+  by `max(1,U)` to obtain the corresponding physical energy tolerance.
+- `constituent`: the existing dispersion solver's controls, including its
+  per-point quadrature limit and relative momentum target.
+- `max_quadrature_evaluations`: cumulative quadrature samples across the
+  entire edge pair, default 200000000. Cached constituent points consume
+  no additional quadrature budget.
+
+Constituent spin reflection and the charge-doublet momentum shift are used
+to reuse evaluations. Neither an interpolation table nor a double-precision
+fallback is involved. Full native fp128 searches can be substantially more
+expensive than a single elementary-line point. The default-tolerance U=4,
+P=0 holon–antiholon regression took about 15 minutes in the GCC 13 debug
+build used during development; this is not a cheap momentum-grid operation.
+For exploratory plots, use fp64 or explicitly choose appropriate tolerances.
+
+Both energies remain absent on any search or constituent failure. Inspect
+`search_status` and `constituent_status` separately: an objective failure
+can originate in quadrature, momentum inversion or representability.
+Counters distinguish objective calls, local-search updates, mesh sizes,
+quadrature samples and constituent inversion updates.
+
+Successful results include both constituent momentum pairs. `lower_error`
+and `upper_error` are vertical search/quadrature estimates in physical energy
+units, including convention-shift roundoff. They **exclude propagation of
+momentum-inversion error**; separate horizontal errors accompany each edge.
+They are not rigorous global error bounds. A loose constituent tolerance
+cannot be repaired merely by requesting a tighter outer search tolerance.
 
 ## Numerical design
 
@@ -81,7 +128,8 @@ remain **heuristic search estimates**, not certified global bounds or a
 guarantee of accurate witness coordinates for nearly degenerate minima.
 Tests cover native precision, non-grid minima, multiple periodic extrema,
 the domain seam, competing wells, a constant function, uncertainty floors
-and exhausted budgets. Connecting the native Hubbard objective is next.
+and exhausted budgets. The native Hubbard wrapper now supplies this objective;
+CLI integration follows validation of the library.
 
 ## Independent developer oracle
 
@@ -117,6 +165,9 @@ minimum instead reaches a zero-energy spinon endpoint and the holon gap.
 The antiholon run agrees with the mixed-holon energies at the pi-shifted
 momenta to better than 1e-9.
 
-Before publishing a native solver, verify these references across couplings
-and meshes, add native-precision stationary-point checks, and test the
-momentum shifts, convention offsets, shared budgets and missing-output rules.
+Native tests now compare the oracle at U=1, 4 and 16, check stationary
+momentum sharing by independently differentiating constituent energy sums,
+and verify momentum shifts, convention offsets, shared budgets and missing
+outputs. The default-tolerance holon–antiholon edges at P=0 are compared to
+the independent high-precision charge-gap reference in fp64, long-double and
+fp128. CLI integration is the next checkpoint.
