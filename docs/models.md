@@ -606,8 +606,11 @@ two-leg Heisenberg ladder at generic couplings is not integrable here.
 An additional non-unitary target is now underway: the
 [quantum-group-invariant XXZ chain with imaginary boundary fields](xxz-nonhermitian.md).
 Its positive finite-real-root library and `bethe-xxz-qg-obc` frontend cover
-0<Delta<1 in native precision, with independent non-Hermitian spin-basis checks. Complex branches,
-root-of-unity multiplicities and Jordan structure remain distinct checkpoints.
+0<Delta<1 in native precision, with independent non-Hermitian spin-basis checks.
+A separate native Delta=0 library enumerates complete fixed-magnetization
+spectra with size-one/two Hamiltonian Jordan blocks and budgeted output.
+Complex branches, other roots of unity, and explicit spin-basis Jordan vectors
+remain distinct checkpoints.
 This must not be confused with the zero-field free-end XXZ frontend or with
 a restricted RSOS/loop representation.
 

@@ -3,6 +3,9 @@
 **Status: native positive finite-real-root library and frontend implemented
 for 0<Delta<1; complex-root branches and root-of-unity representation
 accounting remain follow-ups.** This is not the existing free-end XXZ model.
+The separate Delta=0 library described below includes the complete
+fixed-magnetization spectrum and Jordan-block sizes, but not spin-basis
+generalized eigenvectors or a command-line endpoint mode yet.
 
 ## Command line
 
@@ -139,8 +142,68 @@ the same real eigenvalues. Even in the implemented interval, regular-root
 solutions do not by themselves specify the full root-of-unity spectrum.
 
 The next stages are admissible-label scans,
-the Delta=0 free-fermion/Jordan benchmark, and additional complex-root branches.
+command-line access to the Delta=0 endpoint, and additional complex-root branches.
 CFT fitting must identify boundary sectors and distinguish c from an effective
 central charge; a numerical Casimir coefficient is not automatically c.
 RSOS restrictions and periodic loop realizations are separate representations,
 not a boundary-field toggle on this open spin-chain solver.
+
+## Exact Delta=0 spectrum and Jordan blocks
+
+`bethe/xxz_quantum_group_free.hpp` implements the same spin-chain Hamiltonian
+at Delta=0 using its number-conserving Jordan–Wigner fermions. This is not
+the ordinary Hermitian open XX chain. Its one-particle matrix has hopping
+1/2 and endpoint potentials -i/2 and +i/2. The characteristic polynomial is
+
+```text
+det(x I-h) = 2^(1-N) x U_{N-1}(x),
+```
+
+where U is the Chebyshev polynomial of the second kind. Thus the energies
+are cos(pi*k/N), k=1,...,N-1, and an additional zero. For odd N all are
+distinct. For even N, k=N/2 coincides with the extra zero; the irreducible
+tridiagonal recurrence gives only one eigenvector, so this is a single
+size-two Jordan block, not two ordinary zero modes. This construction is
+consistent with the endpoint Bethe solutions and diagonalizability statements
+in [Gainutdinov et al., Appendices C and D](https://arxiv.org/html/1505.02104).
+
+The many-fermion Hamiltonian acts on exterior powers of this one-particle
+space. Choose a subset of the nonzero modes and a zero-space occupation z:
+
+- Odd N: z=0 or 1, each giving one size-one block.
+- Even N: z=0 or 2 gives one size-one block; z=1 gives one size-two block.
+
+Every block has energy sum_k cos(pi*k/N) over its occupied nonzero modes
+and down-spin count M=(number of those modes)+z. Equal sums can occur for
+different subsets: the API preserves these as separate blocks, without
+floating-point degeneracy merging. The two-dimensional zero-space wedge
+has zero energy and no nilpotent action; consequently no larger Jordan
+blocks arise in this spin-chain Hamiltonian. These are Hamiltonian blocks,
+not a classification of the entire commuting transfer-matrix family.
+
+```cpp
+#include <bethe/xxz_quantum_group_free.hpp>
+namespace qg_free = bethe::xxz::quantum_group::free;
+auto blocks = qg_free::sector<long double>(8, 4); // N=8, four down spins
+for (auto const& b : blocks) {
+  // b.energy, b.block_size (1 or 2), b.modes, b.zero_occupation, b.down
+}
+```
+
+`sector(N,M)` returns the complete sector in zero-occupation/lexicographic
+order, not energy order. The sum of block sizes is binomial(N,M); for even N
+there are binomial(N-2,M-1) size-two blocks (zero outside the binomial range).
+`SectorOptions` bounds the number of blocks (default 100000) and total stored
+mode entries (default 1000000). Exceeding either throws `std::length_error`
+before output allocation; no partial spectrum is returned. `block(N,modes,z)`
+evaluates a selected block without a sector scan. Dispersive labels are
+strictly increasing integers in 1,...,N-1 excluding N/2 for even N.
+Native fp64, long-double and fp128 use the same formulas and shared compensated
+summation; these mode labels are not regular real-root Bethe labels.
+
+Tests check all sector dimensions through N=16 and native half-filled minimum
+energies `(1-cot(pi/(2N)))/2` for even N and `(1-csc(pi/(2N)))/2` for odd N.
+Independent complex spin matrices through N=8 test nullities of H-E,
+(H-E)^2 and (H-E)^3 for every energy in every magnetization sector. This
+checks eigenvector counts and generalized eigenspace dimensions, not merely
+matching eigenvalue lists. No spin-basis Jordan vectors are returned yet.
