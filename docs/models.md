@@ -87,7 +87,8 @@ paper's correlation functions, thermodynamics, or full spectrum.
 | `temperley-lieb` | TL singlet-projector chains; spin-1 pure biquadratic model | Implemented (limited): [even free ends](biquadratic.md), AF ground state, module minima, real-root excitations, Q-system searches and targeted two-string singlet; [ferro one-defect band](biquadratic-ferromagnetic.md), [bound pairs](biquadratic-bound-pairs.md), [three-defect droplets](biquadratic-bound-triples.md), [real-root scattering windows](biquadratic-scattering.md) and [mixed pair-plus-defect scans](biquadratic-pair-defect.md) (odd/even), sign-aware Q-system levels; representation multiplicities, [physical-spin content API and CLI](biquadratic-spin-content.md), and generic lambda>2 TL API | More general mixed strings and larger droplets, other complex-root families, singlet ranks, odd-chain AF spinon branch, PBC twists, other representations |
 | `richardson` | Reduced BCS pairing | Implemented (limited): [attractive pairing](richardson.md), distinct doublet levels, fixed pair count and blocked levels, ground energy through root collisions | Repeated levels/higher degeneracies, excitations, pair-root output, repulsive coupling |
 | `gaudin-magnet` | Rational spin-1/2 central spin | Implemented (limited): [sector minima](central-spin.md), distinct nonzero bath couplings of either sign, central field of either sign or zero | Repeated/zero couplings, higher local spins, excitations, general Gaudin charges |
-| `multicomponent-gas` | Equal-mass SU(κ) delta fermions | Implemented (limited): [repulsive PBC](su-fermions.md), odd occupied populations, any number of components, unrestricted free/single-component limits | Other periodic shells, attraction, excitations, hard walls, TBA, Bose–Fermi mixtures |
+| `multicomponent-gas` | Equal-mass SU(κ) delta fermions | Implemented (limited): [repulsive PBC](su-fermions.md), odd occupied populations, any number of components, unrestricted free/single-component limits | Other periodic shells, attraction, excitations, hard walls, TBA |
+| `bose-fermi` | Equal-mass, equal-repulsion scalar Bose–Fermi gas | [Ground-state library](bose-fermi.md): PBC, odd fermion population; unrestricted pure/free limits | Frontend, other shells, excitations, thermodynamics |
 | `integrable-ladder` | Wang's spin-1/2 ladder with four-spin exchange | Implemented (limited): [zero-field PBC](ladder.md), global and singlet-count sector ground energies, either sign of J_r, leg coefficient 1 and four-spin coefficient 4 | Fields, excitations, open ends, other integrable ladder families |
 
 Analytic thermodynamic XXX/XXZ spinon dispersions are separate existing
@@ -112,7 +113,8 @@ integrable boundaries in the literature.
 | `temperley-lieb` | Spin-1 pure biquadratic even free-end ground and real-root excited levels, with TL multiplicities | [Implemented (limited)](biquadratic.md) | Ground/excitation slice complete |
 | `richardson` | Reduced BCS pairing Hamiltonian, specified levels and pair number | [Implemented (limited)](richardson.md) | First slice complete |
 | `gaudin-magnet` | Rational spin-1/2 central-spin sector ground energies at specified couplings and field | [Implemented (limited)](central-spin.md) | First slice complete |
-| `multicomponent-gas` | Repulsive SU(kappa) fermions on a ring, fixed odd occupied populations | [Implemented (limited)](su-fermions.md); Bose–Fermi mixture still proposed | Fermion first slice complete |
+| `multicomponent-gas` | Repulsive SU(kappa) fermions on a ring, fixed odd occupied populations | [Implemented (limited)](su-fermions.md) | Fermion first slice complete |
+| `bose-fermi` | Equal-mass scalar Bose–Fermi mixture with equal repulsive BB/BF couplings, PBC | [Ground-state library implemented](bose-fermi.md), odd fermion shells | Frontend next |
 | `integrable-ladder` | Wang's SU(4)-type ladder with its required four-spin interaction, zero-field PBC sector minima | [Implemented (limited)](ladder.md) | First slice complete |
 | `q-boson` | Integrable q-boson hopping/phase model, PBC at fixed particle number | [Ground-state and excitation library/frontend implemented](q-boson.md) | Canonical finite-size scans complete |
 | `xyz` | Zero-field spin-1/2 XYZ chain, PBC finite-size spectrum | Watch | Large |
@@ -456,9 +458,10 @@ The implementation checkpoint passed 774 tests with GCC 13 and fp128,
 530 with Clang 20 Release without MPLAPACK, and the new CLI/citation checks
 in an apps-only build using the published Uni20 pin.
 
-**Next slice:** other finite-ring shell branches, excited seas/strings,
-and the distinct equal-coupling Bose–Fermi mixture. The latter requires
-its own grading/statistics and is not implicitly covered by adding colors.
+**Next slice:** other finite-ring shell branches and excited seas/strings.
+The distinct equal-coupling [Bose–Fermi mixture library](bose-fermi.md) now
+implements odd-fermion ground shells using its own graded equations, not
+by treating bosons as another fermionic color.
 
 ### `integrable-ladder`: singlet/triplet sector competition
 
@@ -595,7 +598,7 @@ initial deliverable, rather than an unqualified claim of model support.
 | ID | Literature and integrable restriction | Useful first deliverable / main obstacle |
 | --- | --- | --- |
 | `gaudin-magnet` | Rational Gaudin magnets; a concrete central-spin realization is treated by [Faribault–Schuricht](../CITATIONS.md#faribault-schuricht-2013) | [Central-spin sector ground states implemented](central-spin.md); general Gaudin charges, repeated couplings and higher spins remain open, not arbitrary spin-bath interactions |
-| `multicomponent-gas` | Equal-mass SU(kappa) delta fermions, [Lee et al.](../CITATIONS.md#lee-2011); equal-mass Bose–Fermi mixture with equal repulsive Bose–Bose/Bose–Fermi couplings, [Imambekov–Demler](../CITATIONS.md#imambekov-demler-2006) | [Odd-population repulsive fermion sectors implemented](su-fermions.md); other shells and the Bose–Fermi mixture remain open. A trapped local-density calculation would be an approximation, not an exact trapped BA solution |
+| `multicomponent-gas` | Equal-mass SU(kappa) delta fermions, [Lee et al.](../CITATIONS.md#lee-2011); equal-mass Bose–Fermi mixture with equal repulsive Bose–Bose/Bose–Fermi couplings, [Imambekov–Demler](../CITATIONS.md#imambekov-demler-2006) | [Odd-population fermion sectors](su-fermions.md) and the [odd-fermion Bose–Fermi ground-state library](bose-fermi.md) implemented; other shells remain open. A trapped local-density calculation would be an approximation, not an exact trapped BA solution |
 | `integrable-ladder` | [Wang's ladder](../CITATIONS.md#wang-1999), with its required exchange and four-spin terms | [Periodic zero-field sector minima implemented](ladder.md); fields and excitations remain open. Not the ordinary two-leg Heisenberg ladder at generic couplings |
 | `q-boson` | Deformed boson hopping and its phase-model limit, [Bogoliubov–Izergin–Kitanine](../CITATIONS.md#bogoliubov-1997) and [Pozsgay](../CITATIONS.md#pozsgay-2014-q-boson) | [Fixed-N PBC ground-state and excitation library/frontend implemented](q-boson.md), with small-sector full-spectrum checks, free/phase limits and continuum scaling. Not the standard Bose–Hubbard chain |
 | `xyz` | Zero-field spin-1/2 XYZ / eight-vertex family, [Baxter](../CITATIONS.md#baxter-1973) | Small periodic-chain energies via elliptic/functional equations; Sz is not generally conserved. Native-precision elliptic functions and branch selection are substantial new requirements |

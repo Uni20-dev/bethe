@@ -640,6 +640,13 @@ Phys. Rev. A 73, 021602(R) (2006).
 
 [DOI](<https://doi.org/10.1103/PhysRevA.73.021602>), [arXiv](<https://arxiv.org/abs/cond-mat/0505632>).
 
+### imambekov-demler-2006-applications
+
+Adilet Imambekov and Eugene Demler. *Applications of exact solution for strongly interacting one-dimensional Bose-Fermi mixture: Low-temperature correlation functions, density profiles, and collective modes*.
+Ann. Phys. 321, 2390 (2006).
+
+[DOI](<https://doi.org/10.1016/j.aop.2005.11.017>), [arXiv](<https://arxiv.org/abs/cond-mat/0510801>).
+
 ### wang-1999
 
 Yupeng Wang. *Exact solution of a spin-ladder model*.

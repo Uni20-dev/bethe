@@ -391,6 +391,17 @@
       ]
     },
     {
+      "id": "imambekov-demler-2006-applications",
+      "authors": "Adilet Imambekov and Eugene Demler",
+      "title": "Applications of exact solution for strongly interacting one-dimensional Bose-Fermi mixture: Low-temperature correlation functions, density profiles, and collective modes",
+      "publication": "Ann. Phys. 321, 2390",
+      "year": 2006,
+      "links": [
+        {"label": "DOI", "url": "https://doi.org/10.1016/j.aop.2005.11.017"},
+        {"label": "arXiv", "url": "https://arxiv.org/abs/cond-mat/0510801"}
+      ]
+    },
+    {
       "id": "wang-1999",
       "authors": "Yupeng Wang",
       "title": "Exact solution of a spin-ladder model",

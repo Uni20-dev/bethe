@@ -93,6 +93,9 @@ Thermodynamic dispersion tools use `bethe-<model>-dispersion`.
 - [SU(n) fermion gas](docs/su-fermions.md): `bethe-sun-fermions-pbc` gives
   repulsive multicomponent continuum ground states when every occupied
   population is odd, plus unrestricted free and single-component limits.
+- [Bose–Fermi mixture](docs/bose-fermi.md): C++ ground-state library for equal
+  masses and equal repulsive couplings, with odd fermion population and
+  unrestricted pure/free limits; frontend forthcoming.
 - [Integrable spin ladder](docs/ladder.md): `bethe-ladder-pbc` gives periodic
   zero-field ground energies and singlet-count sector minima, with the
   required four-spin coupling and either sign of the rung exchange.
