@@ -689,6 +689,13 @@ Relevant tool modes:
 
 - `bethe-q-boson-pbc`: Deformed Fock algebra (1.2)-(1.8), free/phase limits, and exact phase-model momenta (3.4). Our Hamiltonian is twice (1.1), with the +2N shift included.
 
+### zhang-klumper-popkov-2024
+
+Xin Zhang, Andreas Klümper, and Vladislav Popkov. *Pedestrian's way to Baxter's Bethe ansatz for the periodic XYZ chain*.
+Phys. Rev. B 109, 115411 (2024).
+
+[DOI](<https://doi.org/10.1103/PhysRevB.109.115411>), [arXiv](<https://arxiv.org/abs/2312.00161>).
+
 ### baxter-1973
 
 R. J. Baxter. *Eight-vertex model in lattice statistics and one-dimensional anisotropic Heisenberg chain. III. Eigenvectors of the transfer matrix and Hamiltonian*.

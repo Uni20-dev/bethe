@@ -56,6 +56,10 @@ add_executable(bethe_bose_fermi_tests test_bose_fermi.cpp)
 target_link_libraries(bethe_bose_fermi_tests PRIVATE bethe::bethe)
 bethe_discover_tests(bethe_bose_fermi_tests)
 
+add_executable(bethe_elliptic_theta_tests test_elliptic_theta.cpp)
+target_link_libraries(bethe_elliptic_theta_tests PRIVATE bethe::bethe)
+bethe_discover_tests(bethe_elliptic_theta_tests)
+
 add_executable(bethe_biquadratic_pair_defect_tests test_biquadratic_pair_defect.cpp)
 target_link_libraries(bethe_biquadratic_pair_defect_tests PRIVATE bethe::bethe)
 bethe_discover_tests(bethe_biquadratic_pair_defect_tests)

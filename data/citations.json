@@ -434,6 +434,17 @@
       ]
     },
     {
+      "id": "zhang-klumper-popkov-2024",
+      "authors": "Xin Zhang, Andreas Klümper, and Vladislav Popkov",
+      "title": "Pedestrian's way to Baxter's Bethe ansatz for the periodic XYZ chain",
+      "publication": "Phys. Rev. B 109, 115411",
+      "year": 2024,
+      "links": [
+        {"label": "DOI", "url": "https://doi.org/10.1103/PhysRevB.109.115411"},
+        {"label": "arXiv", "url": "https://arxiv.org/abs/2312.00161"}
+      ]
+    },
+    {
       "id": "baxter-1973",
       "authors": "R. J. Baxter",
       "title": "Eight-vertex model in lattice statistics and one-dimensional anisotropic Heisenberg chain. III. Eigenvectors of the transfer matrix and Hamiltonian",
