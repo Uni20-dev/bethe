@@ -1,11 +1,33 @@
 # Half-filled Hubbard continuum edges
 
-**Status: two-spinon C++ library; frontend and charge-containing continua pending.**
+**Status: two-spinon library and frontend implemented; charge-containing continua pending.**
 
 This extends the [elementary dispersion lines](hubbard-dispersion.md) to a
 specified scattering family, not to the entire spectrum at fixed quantum
 numbers. The current scope is the infinite half-filled repulsive chain,
 zero magnetic field, hopping t=1, U>0.
+
+```sh
+bethe-hubbard-continuum --u 4 --points 33 --csv edges.csv
+bethe-hubbard-continuum --u 4 --momentum -1 --precision long-double
+bethe-hubbard-continuum --u 4 --points 9 --precision fp128 --json edges.json
+bethe-hubbard-continuum --references
+```
+
+The default grid has 33 equally spaced total momenta on [-pi,pi], including
+both endpoints (the same Brillouin-zone point). `--momentum` selects one point
+and excludes `--points`. The `two_spinon` table reports both energies,
+constituent momenta, separate error estimates, work counts and status.
+`--tolerance`, `--max-evaluations`, `--max-levels` and `--max-iterations`
+control the native solver. Precision defaults to fp64; fp128 requires MPLAPACK.
+
+The [common output options](output.md) support screen output and additional
+JSON/CSV/TSV files. Exports stream each completed point; `--no-retain`
+discards delivered rows. Metadata includes conventions and numerical controls,
+with CPU time and overall outcome in the final summary. Failed points have
+missing energies (JSON null, empty CSV/TSV cells) and yield exit status 2;
+other requested points are still attempted. Invalid arguments exit with
+status 1 before output files are opened, even with `--force`.
 
 ## Two spinons
 
@@ -60,7 +82,6 @@ solve to ensure a partial pair of edges is not published.
 
 ## Subsequent slices
 
-Expose this family through the common CLI and table facilities first.
 Spinon–holon/antiholon and holon–antiholon thresholds require constrained
 minimization of the corresponding sums at fixed total momentum. That work
 must inspect all stationary branches and endpoints, propagate constituent

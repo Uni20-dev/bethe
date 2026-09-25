@@ -813,6 +813,13 @@
   ],
   "tools": [
     {
+      "id": "hubbard_continuum",
+      "executable": "bethe-hubbard-continuum",
+      "references": [
+        {"id": "essler-korepin-1999", "context": "Half-filled spinon line Eq. (4), two-spinon continuum edges Eq. (18) and following paragraph; our U is four times the paper's U. No form factors or spectral weights."}
+      ]
+    },
+    {
       "id": "kondo_response",
       "executable": "bethe-kondo-response",
       "references": [

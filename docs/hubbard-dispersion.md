@@ -8,7 +8,7 @@ length or boundary-condition argument. It requires `U>0`, hopping `t=1`, and
 For `--density n` with `n<1`, see the [doped dispersion guide](hubbard-doped.md).
 Attraction, nonzero magnetic fields, spectral weights, and multiparticle
 continuum thresholds are not implemented in this frontend. A separate
-[two-spinon continuum library](hubbard-continuum.md) now provides the
+[two-spinon continuum tool](hubbard-continuum.md) now provides the
 half-filled lower and upper edges; charge-containing continua remain open.
 
 ```sh

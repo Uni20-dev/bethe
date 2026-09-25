@@ -6,6 +6,7 @@ import sys
 
 env = dict(os.environ, UNI20_COLOR="never", COLUMNS="4096")
 base_arguments = {
+    "bethe-hubbard-continuum": ["--u", "4", "--momentum", "0"],
     "bethe-kondo-response": ["--field", "0", "--scale", "1"],
     "bethe-sine-gordon-vacuum": ["--length", "1", "--p", "1"],
     "bethe-asep-pbc": ["5", "--particles", "2", "--left-rate", "0.5"],

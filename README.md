@@ -62,6 +62,9 @@ Thermodynamic dispersion tools use `bethe-<model>-dispersion`.
 - [Periodic XYZ](docs/xyz.md): `bethe-xyz-pbc` gives even-chain regular ground
   states in the rectangular elliptic parametrization, including either sign
   of Jz. Generic XYZ has no conserved Sz sector; excitations are not yet exposed.
+- [Hubbard two-spinon continua](docs/hubbard-continuum.md):
+  `bethe-hubbard-continuum` gives half-filled lower and upper edges versus
+  total momentum, reusing the native-precision elementary dispersion solver.
 - [Kondo response](docs/kondo.md): `bethe-kondo-response` gives universal
   zero-temperature impurity energy changes, magnetization and susceptibility
   in a uniform field, in native fp64, long-double and fp128 precision.

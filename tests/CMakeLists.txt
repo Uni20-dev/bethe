@@ -165,6 +165,15 @@ if(BETHE_BUILD_APPS)
     add_test(NAME XYZ.cli
       COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_xyz.py"
         "$<TARGET_FILE:bethe-xyz-pbc>" "${UNI20_ENABLE_MPLAPACK}")
+    add_test(NAME HubbardContinuum.cli
+      COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_hubbard_continuum.py"
+        "$<TARGET_FILE:bethe-hubbard-continuum>" "${UNI20_ENABLE_MPLAPACK}")
+    add_test(NAME Arguments.bethe-hubbard-continuum.cli
+      COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_shared_arguments.py"
+        "$<TARGET_FILE:bethe-hubbard-continuum>")
+    add_test(NAME Citations.bethe-hubbard-continuum.cli
+      COMMAND "${CMAKE_COMMAND}" "-DPROGRAM=$<TARGET_FILE:bethe-hubbard-continuum>"
+        "-DTOOL=bethe-hubbard-continuum" -P "${CMAKE_CURRENT_SOURCE_DIR}/check_citations_cli.cmake")
     add_test(NAME Kondo.cli
       COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_kondo.py"
         "$<TARGET_FILE:bethe-kondo-response>" "${UNI20_ENABLE_MPLAPACK}")

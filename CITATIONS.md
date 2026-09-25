@@ -282,6 +282,7 @@ Phys. Rev. B 59, 1734-1738 (1999).
 
 Relevant tool modes:
 
+- `bethe-hubbard-continuum`: Half-filled spinon line Eq. (4), two-spinon continuum edges Eq. (18) and following paragraph; our U is four times the paper's U. No form factors or spectral weights.
 - `bethe-hubbard-dispersion`: Half-filled spinon and holon dispersions, Eqs. (4)-(5), with our U equal to four times the paper's U; no form factors or spectral weights are implemented.
 
 ### melzer-1995
