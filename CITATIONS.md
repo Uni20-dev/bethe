@@ -773,6 +773,13 @@ Phys. Rev. Lett. 45, 379 (1980).
 
 [DOI](<https://doi.org/10.1103/PhysRevLett.45.379>).
 
+### hegedus-2026
+
+Arpad Hegedus. *NLIE formulations for the generalized Gibbs ensemble in the sine-Gordon model*.
+Nucl. Phys. B 1025, 117385 (2026).
+
+[DOI](<https://doi.org/10.1016/j.nuclphysb.2026.117385>), [arXiv](<https://arxiv.org/abs/2510.25344>).
+
 ### rutkevich-2020
 
 S. B. Rutkevich. *On the ground-state energy of the finite sine-Gordon ring*.

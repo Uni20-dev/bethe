@@ -1,11 +1,10 @@
-# Sine-Gordon: finite-volume vacuum roadmap and kernel foundation
+# Sine-Gordon: bulk-subtracted finite-volume vacuum
 
-**Status: native-precision complex scattering kernel implemented.** The vacuum
-integral-equation solver and frontend are not yet implemented. This is a field
+**Status: native-precision kernel and vacuum-energy library implemented; frontend pending.** This is a field
 theory calculation, not a classical sine-Gordon PDE evolution or a finite-site
 spin-chain diagonalization.
 
-## Physical convention for the planned vacuum solver
+## Physical convention
 
 Use the canonically normalized kinetic term `(1/2)(partial phi)^2`, coupling
 `0 < beta^2 < 8*pi`, and the parameter
@@ -20,7 +19,7 @@ his xi is p, and his gamma is `pi/(1+p)`. State these conventions explicitly;
 the different meanings of beta must not be mixed.
 
 Take the soliton mass M as the physical input scale, set velocity and hbar to
-one, and use `u=M*L`. The intended observable is the **bulk-subtracted** vacuum
+one, and use `u=M*L`. The observable is the **bulk-subtracted** vacuum
 energy `E_C=E_0-L*e_bulk`, or the dimensionless scaling function `Y=L*E_C`.
 No nonuniversal absolute bulk energy is inferred. In the attractive regime M
 still denotes the soliton mass, not necessarily the lightest breather mass.
@@ -87,7 +86,55 @@ The first two are test references, not implementation shortcuts. Tests also
 cover evenness, complex conjugation, a separate 90-digit quadrature reference,
 overflow-prone Fourier factors, native near-free couplings, and failure budgets.
 
-## Next implementation: shifted-contour vacuum NLIE
+## Vacuum-energy API
+
+```cpp
+#include <bethe/sine_gordon_vacuum.hpp>
+auto state = bethe::sine_gordon::vacuum_energy(1.0, 2.0, 0.7); // M, L, p
+if (state.converged) {
+  // *state.casimir_energy = E0-L*e_bulk
+  // *state.scaling_function = L*state.casimir_energy
+  // *state.effective_central_charge = -6*Y/pi
+}
+```
+
+The library accepts finite positive M, L and p. It follows the untwisted vacuum
+branch in both regimes; difficult parameters can exhaust a numerical budget.
+It does not return the bulk energy density or an excited-state spectrum.
+
+`VacuumOptions<Real>` controls:
+
+- `tolerance`: absolute accuracy target in Y, default 262144 native epsilons.
+  This is **not** a relative guarantee for exponentially small infrared energies.
+- `initial_intervals=64`, `max_intervals=2048`: an even, uniform rapidity mesh,
+  doubled until two successive energy differences are below tolerance/4.
+  The explicit work ceiling is 16384 intervals; it is not a convergence promise.
+- `max_iterations=10000`: total damped nonlinear updates across all meshes,
+  cutoffs and both contours, rather than a hidden budget per retry.
+- `max_cutoffs=3`: cutoff attempts per contour, each separately mesh-resolved.
+  Consecutive cutoffs differ by one rapidity unit and must agree within tolerance/4.
+- Optional `initial_cutoff` and `contour_shift`; defaults estimate a safe tail
+  scale and use `eta=pi*min(1,p)/4`. The second independently resolved contour is
+  `3*eta/4`, and must agree in Y within tolerance/2.
+- `kernel`: Fourier evaluation/level/cutoff budgets per table. Its tolerance is
+  assigned internally from the vacuum tolerance and rapidity cutoff.
+
+`nonlinear_residual`, `kernel_error`, `mesh_error`, `cutoff_error` and
+`contour_error` are reported separately. These mesh/cutoff comparisons are
+numerical estimates, not rigorous interval bounds. `intervals` and `cutoff`
+report the larger final resolved sizes of the two contours; work counters
+include unsuccessful earlier attempts. A small nonlinear residual cannot by
+itself produce `converged=true`.
+
+All three observables are optional and remain absent on `kernel_limit`,
+`iteration_limit`, `mesh_limit`, `cutoff_limit`, `contour_limit` or
+`precision_limit`. Invalid parameters throw before iteration; unrepresentable
+scaled lengths or energies fail without publishing values. A branch guard keeps
+the logarithm argument in its open right half-plane. A transient pseudoenergy
+with negative real part alone is not rejected: this occurs during perfectly
+regular attractive ultraviolet iterations.
+
+## Shifted-contour vacuum NLIE
 
 For `0 < eta < pi*min(1,p)/2`, use
 
@@ -104,20 +151,35 @@ crossing kernel poles. Do not move directly to eta=pi/2 in the attractive
 regime. The chosen eta is numerical, not a physical model parameter: agreement
 at two independently resolved shifts is an important check.
 
-Implementation requirements:
+The implementation tabulates real and shifted kernels on a difference grid,
+using shared native Gauss-Legendre quadrature and compensated sums. The Fourier
+multiplier is computed once per quadrature point for all displacements;
+short phase recurrences reduce repeated trigonometric calls. The standalone
+tanh-sinh kernel provides an independent check of this tabulation. Its Fourier
+tail bound is unchanged. Two successive Fourier-mesh agreements are required.
 
-1. Tabulate the real and shifted kernels on a difference grid so repeated
-   convolutions reuse them. Keep their error budgets below the desired final
-   energy accuracy. Reuse the stable complex `log(1+z)` utility.
-2. Solve for the interaction correction to the known driving term, with a
-   reported nonlinear residual and an explicit iteration budget.
-3. Refine rapidity spacing and increase the rapidity cutoff independently.
-   A small nonlinear residual alone must not publish a converged vacuum energy.
-4. Check contour independence, the free Dirac integral, the ultraviolet
-   `Y -> -pi/6` limit, and infrared wrapping contributions. Attractive-coupling
-   tests must include the breather contribution, not just a soliton gas.
-5. Publish M, L, p, the subtraction convention, and independent numerical
-   diagnostics through the common CLI/run-context/table infrastructure.
+The unknown is the correction to the analytically known driving term, updated
+with half damping. Vacuum parity `epsilon(-theta)=conj(epsilon(theta))` reduces
+the convolution cost. The complex logarithm utility is shared with ASEP.
+Convolution is currently quadratic in mesh size: a demanding fp128 solve can
+take minutes in a Debug build. No FFT or lower-precision fallback is used.
+
+## Validation and next checkpoint
+
+All precisions check the free-Dirac integral against an independent high-precision
+reference, and the interacting p=2 result against an independent, real-valued
+D3 TBA calculation with two separately refined Gauss meshes. The latter uses
+the equations summarized in [Hegedus (2026)](../CITATIONS.md#hegedus-2026),
+(2.6)-(2.8), with the magnon plateau integrated analytically.
+
+Further tests cover attractive/repulsive couplings, mass-length scaling, altered
+contours, the ultraviolet `c_eff -> 1` limit, and the leading soliton plus
+breather wrapping correction at p=1/2. They also distinguish nonlinear,
+kernel, rapidity-mesh and cutoff failures, and verify that failed states have
+no published observables.
+
+Next is the frontend exposing M, L, p and all independent numerical controls
+through the common CLI/run-context/table infrastructure.
 
 This first target is the untwisted zero-topological-charge vacuum. Excited
 states require additional source terms and branch/quantization bookkeeping;

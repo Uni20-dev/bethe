@@ -511,6 +511,17 @@
       ]
     },
     {
+      "id": "hegedus-2026",
+      "authors": "Arpad Hegedus",
+      "title": "NLIE formulations for the generalized Gibbs ensemble in the sine-Gordon model",
+      "publication": "Nucl. Phys. B 1025, 117385",
+      "year": 2026,
+      "links": [
+        {"label": "DOI", "url": "https://doi.org/10.1016/j.nuclphysb.2026.117385"},
+        {"label": "arXiv", "url": "https://arxiv.org/abs/2510.25344"}
+      ]
+    },
+    {
       "id": "rutkevich-2020",
       "authors": "S. B. Rutkevich",
       "title": "On the ground-state energy of the finite sine-Gordon ring",

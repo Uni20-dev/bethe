@@ -35,19 +35,24 @@ namespace detail
 // cos(k*z) times the Fourier multiplier, with the decaying exponent
 // combined before evaluation. Neither sinh(p*pi*k/2) nor cosh(k*Im(z))
 // is formed, so a legal complex contour cannot cause spurious overflow.
-template <uni20::Real Real> std::complex<Real> fourier_integrand(Real k, std::complex<Real> z, Real p)
+template <uni20::Real Real> std::complex<Real> fourier_components(Real k, Real y, Real p)
 {
   Real const pi = Real{4} * std::atan(Real{1});
   if (k == Real{0}) return {(Real{1} - Real{1} / p) / (Real{2} * pi), Real{0}};
   Real const a = pi * k, decay = pi * std::min(p, Real{1});
   Real const ratio = -std::expm1(-std::abs(p - Real{1}) * a) / (-std::expm1(-p * a) * (Real{1} + std::exp(-a)));
-  Real const slow = std::exp(-(decay - std::abs(z.imag())) * k);
-  Real const fast_ratio = std::exp(-Real{2} * std::abs(z.imag()) * k);
+  Real const slow = std::exp(-(decay - std::abs(y)) * k);
+  Real const fast_ratio = std::exp(-Real{2} * std::abs(y) * k);
   Real const even = slow * (Real{1} + fast_ratio) / Real{2};
   // exp(-decay*k)*sinh(k*y), without subtracting nearby exponentials.
-  Real const odd = std::copysign(slow * (-std::expm1(-Real{2} * std::abs(z.imag()) * k)) / Real{2}, z.imag());
+  Real const odd = std::copysign(slow * (-std::expm1(-Real{2} * std::abs(y) * k)) / Real{2}, y);
   Real const sign = p > Real{1} ? Real{1} : Real{-1};
-  return sign * ratio / pi * std::complex<Real>(std::cos(k * z.real()) * even, -std::sin(k * z.real()) * odd);
+  return sign * ratio / pi * std::complex<Real>(even, odd);
+}
+template <uni20::Real Real> std::complex<Real> fourier_integrand(Real k, std::complex<Real> z, Real p)
+{
+  auto const factors = fourier_components(k, z.imag(), p);
+  return {std::cos(k * z.real()) * factors.real(), -std::sin(k * z.real()) * factors.imag()};
 }
 } // namespace detail
 
