@@ -395,6 +395,9 @@ inline constexpr std::array<Reference, 81> references{{
   {"bajnok-el-deeb-pearce-2015", "Zoltan Bajnok, Omar el Deeb, and Paul A. Pearce", "Finite-Volume Spectra of the Lee-Yang Model", "JHEP 04 (2015), 073", 2015, links_80},
 }};
 
+inline constexpr std::array<Use, 1> uses_lee_yang_vacuum{{
+  {&references[80], "Periodic source-free massive Lee-Yang ground-state TBA and bulk-subtracted finite-volume energy: equations (133), (212), (218). Equations (151)-(152) distinguish c_eff=2/5 from c=-22/5 with h_min=-1/5. No excited-state, boundary or defect equations are implemented."},
+}};
 inline constexpr std::array<Use, 2> uses_xxz_qg_obc{{
   {&references[77], "Quantum-group-invariant open XXZ Hamiltonian and Bethe equations (1.1)-(1.3). Our spin-half Hamiltonian is one quarter of the Pauli normalization with spatially reflected boundary fields. Positive finite-real roots at 0<Delta<1 have no completeness claim; at Delta=0, a separate free-fermion construction gives complete fixed-Sz spectra and Jordan-block sizes, consistent with Appendices C and D."},
   {&references[78], "Root-of-unity complete strings and generalized eigenvectors explain why regular eigenvalues alone do not determine Jordan structure. Delta=0 Hamiltonian block sizes are implemented separately; explicit generalized eigenvectors and other root-of-unity extensions remain follow-ups."},
@@ -542,12 +545,13 @@ inline constexpr std::array<Use, 3> uses_gaudin_yang_pbc{{
   {&references[59], "Hamiltonian and periodic fermion equations (1), (2), (7), (8), (25); even N, odd minority population as in Sec. 5. Weak and strong limits (12), (15)-(16) provide checks. Hard walls, attraction and excitations are not implemented."},
 }};
 
-enum class Tool { xxz_qg_obc, hubbard_continuum, kondo_response, sine_gordon_vacuum, asep_pbc, tasep_pbc, xyz_pbc, bose_fermi_pbc, q_boson_pbc, lieb_liniger_thermal, lieb_liniger_dispersion, biquadratic_obc, xxx_pbc, xxx_obc, xxz_pbc, xxz_obc, hubbard_dispersion, hubbard_pbc, hubbard_obc, lieb_liniger_pbc, lieb_liniger_obc, su3_pbc, tj_pbc, tb_pbc, richardson, central_spin, sun_fermions_pbc, ladder_pbc, haldane_shastry_pbc, sutherland_pbc, gaudin_yang_pbc };
+enum class Tool { lee_yang_vacuum, xxz_qg_obc, hubbard_continuum, kondo_response, sine_gordon_vacuum, asep_pbc, tasep_pbc, xyz_pbc, bose_fermi_pbc, q_boson_pbc, lieb_liniger_thermal, lieb_liniger_dispersion, biquadratic_obc, xxx_pbc, xxx_obc, xxz_pbc, xxz_obc, hubbard_dispersion, hubbard_pbc, hubbard_obc, lieb_liniger_pbc, lieb_liniger_obc, su3_pbc, tj_pbc, tb_pbc, richardson, central_spin, sun_fermions_pbc, ladder_pbc, haldane_shastry_pbc, sutherland_pbc, gaudin_yang_pbc };
 
 [[nodiscard]] constexpr std::span<Use const> for_tool(Tool tool)
 {
   switch (tool)
   {
+    case Tool::lee_yang_vacuum: return uses_lee_yang_vacuum;
     case Tool::xxz_qg_obc: return uses_xxz_qg_obc;
     case Tool::hubbard_continuum: return uses_hubbard_continuum;
     case Tool::kondo_response: return uses_kondo_response;

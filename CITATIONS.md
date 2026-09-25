@@ -1101,4 +1101,8 @@ JHEP 04 (2015), 073 (2015).
 
 [DOI](<https://doi.org/10.1007/JHEP04(2015)073>), [arXiv](<https://arxiv.org/abs/1412.8494>), [HTML](<https://arxiv.org/html/1412.8494>).
 
+Relevant tool modes:
+
+- `bethe-lee-yang-vacuum`: Periodic source-free massive Lee-Yang ground-state TBA and bulk-subtracted finite-volume energy: equations (133), (212), (218). Equations (151)-(152) distinguish c\_eff=2/5 from c=-22/5 with h\_min=-1/5. No excited-state, boundary or defect equations are implemented.
+
 <!-- END GENERATED BIBLIOGRAPHY -->

@@ -78,6 +78,9 @@ Thermodynamic dispersion tools use `bethe-<model>-dispersion`.
 - [Sine-Gordon vacuum](docs/sine-gordon.md): `bethe-sine-gordon-vacuum` gives
   the bulk-subtracted finite-volume vacuum energy, scaling function and effective
   central charge, for attractive and repulsive coupling in native precision.
+- [Scaling Lee–Yang](docs/lee-yang.md): `bethe-lee-yang-vacuum` gives the
+  bulk-subtracted periodic ground-state energy of the non-unitary model,
+  with native fp64/long-double/fp128 and separate convergence diagnostics.
 - [Periodic TASEP](docs/tasep.md): `bethe-tasep-pbc` gives the leading relaxation
   gap and complex decay eigenvalue at arbitrary filling. These are stochastic
   rates, not quantum energies. [Bidirectional ASEP](docs/asep.md),

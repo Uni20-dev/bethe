@@ -858,6 +858,13 @@
   ],
   "tools": [
     {
+      "id": "lee_yang_vacuum",
+      "executable": "bethe-lee-yang-vacuum",
+      "references": [
+        {"id": "bajnok-el-deeb-pearce-2015", "context": "Periodic source-free massive Lee-Yang ground-state TBA and bulk-subtracted finite-volume energy: equations (133), (212), (218). Equations (151)-(152) distinguish c_eff=2/5 from c=-22/5 with h_min=-1/5. No excited-state, boundary or defect equations are implemented."}
+      ]
+    },
+    {
       "id": "xxz_qg_obc",
       "executable": "bethe-xxz-qg-obc",
       "references": [

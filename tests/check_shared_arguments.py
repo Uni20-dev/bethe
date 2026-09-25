@@ -10,6 +10,7 @@ base_arguments = {
     "bethe-xxz-qg-obc": ["4", "--delta", "0.25"],
     "bethe-kondo-response": ["--field", "0", "--scale", "1"],
     "bethe-sine-gordon-vacuum": ["--length", "1", "--p", "1"],
+    "bethe-lee-yang-vacuum": ["--length", "1"],
     "bethe-asep-pbc": ["5", "--particles", "2", "--left-rate", "0.5"],
     "bethe-tasep-pbc": ["5", "--particles", "2"],
     "bethe-xyz-pbc": ["4", "--eta", "0.4", "--t", "0.7"],

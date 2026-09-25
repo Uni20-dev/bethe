@@ -1,8 +1,36 @@
 # Scaling Lee–Yang model: periodic finite-volume ground state
 
-**Status: native fp64/long-double/fp128 periodic ground-state TBA library
-implemented and checked against an independent oracle; frontend is next.** This is a continuum
+**Status: native fp64/long-double/fp128 periodic ground-state TBA library and
+frontend implemented and checked against an independent oracle.** This is a continuum
 field-theory calculation, not a finite spin-chain or RSOS Hamiltonian solver.
+
+## Command line
+
+```sh
+bethe-lee-yang-vacuum --length 1
+bethe-lee-yang-vacuum --mass 2 --length 0.5 --precision fp128 --json vacuum.json
+bethe-lee-yang-vacuum --length 0.001 --csv vacuum.csv --tsv vacuum.tsv
+bethe-lee-yang-vacuum --references
+```
+
+The particle mass defaults to 1; circumference is required. The numerical
+options below are available as `--tolerance`, `--initial-intervals`,
+`--max-intervals`, `--max-iterations`, `--max-cutoffs`,
+`--max-kernel-products`, and `--initial-cutoff`.
+
+The `vacuum` table contains the bulk-subtracted `casimir_energy`,
+`scaling_function` Y, and computed `effective_central_charge`, followed by
+nonlinear residual/error, mesh and cutoff errors, the direct tail bound,
+cutoff, intervals, iteration/cutoff/work counts and convergence status.
+Metadata labels c=-22/5, h_min=-1/5 and c_eff(UV)=2/5 as **theory data**;
+these are not inferred from a finite-r calculation. CPU time and numerical
+controls accompany all shared screen/file outputs.
+
+Successful solves exit 0. Numerical failures exit 2 and publish no physical
+observables; unavailable diagnostics are also missing (JSON null or empty
+delimited cells), not infinity strings. Invalid input exits 1 before opening
+files, including existing `--force` targets. The [common output options](output.md)
+provide independent JSON/CSV/TSV exports, streaming and optional table retention.
 
 ## Physics and normalization
 
@@ -153,8 +181,6 @@ including a too-small cutoff, exhausted work and unrepresentable mL.
 
 ## Next checkpoints
 
-`bethe-lee-yang-vacuum` will follow the existing sine-Gordon finite-volume
-naming and shared CLI/table/run-context facilities. Known CFT constants must
-be labelled theory data, not fitted results. The identity-sector state and
+The identity-sector state and
 other excited-state source terms, then boundaries or defects, are separate
 extensions; they must not silently reuse the source-free ground-state equation.
