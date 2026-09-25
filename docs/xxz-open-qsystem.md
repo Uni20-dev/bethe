@@ -14,9 +14,11 @@ Real-root logarithmic equations use ordered roots and integer phases. They
 cannot simply be continued through arbitrary complex-string configurations.
 Instead we encode the roots in a monic polynomial
 
-```text
-x = cosh(2u) = cos(alpha),
-Q(x) = product_j (x-x_j) = x^M + sum_(k=0)^(M-1) c[k] x^k.
+```math
+\begin{aligned}
+x&=\cosh(2u)=\cos\alpha,\\
+Q(x)&=\prod_j(x-x_j)=x^M+\sum_{k=0}^{M-1}c[k]x^k.
+\end{aligned}
 ```
 
 The coefficients are real; zeros can be real or form conjugate pairs.
@@ -28,18 +30,18 @@ Q-system for precisely these boundaries. We use its Wronskian relation (5.17).
 With eta=acosh(Delta), s=sinh(eta), and
 `x_±=Delta*x ± s*sqrt(x^2-1)`, our normalization is
 
-```text
-[P(x_+) Q(x_-) - P(x_-) Q(x_+)] / [2s sqrt(x^2-1)] = (x-1)^N.
+```math
+\frac{P(x_+)Q(x_-)-P(x_-)Q(x_+)}{2s\sqrt{x^2-1}}=(x-1)^N.
 ```
 
 P has degree N-M+1; its leading coefficient is fixed by this identity, and
 we fix the P -> P+aQ freedom with P_M=0. Both sides are polynomials in x.
 The implementation evaluates them without square roots: the antisymmetric
-basis uses `x_+*x_-=x^2+s^2` and the recurrence
+basis uses $x _+\,x _-=x ^{2}+s ^{2}$ and the recurrence
 
-```text
-D_0=0, D_1=1,
-D_(k+1)=2*Delta*x*D_k-(x^2+s^2)*D_(k-1).
+```math
+D_0=0,\quad D_1=1,\qquad
+D_{k+1}=2\Delta xD_k-(x^2+s^2)D_{k-1}.
 ```
 
 For fixed Q, descending coefficient elimination determines P using only
@@ -53,8 +55,8 @@ energy error estimate.
 
 The reference energy is obtained directly from Q:
 
-```text
-E_ref = (N-1)*Delta/4 - (Delta^2-1)*Q'(Delta)/Q(Delta).
+```math
+E_{\mathrm{ref}}=\frac{(N-1)\Delta}{4}-(\Delta^2-1)\frac{Q'(\Delta)}{Q(\Delta)}.
 ```
 
 The TL and physical biquadratic energy maps and module multiplicities are

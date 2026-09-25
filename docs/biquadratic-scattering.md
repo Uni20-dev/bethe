@@ -29,11 +29,13 @@ build/bethe-biquadratic-obc 100000 --ferromagnetic --through-lines 99994 \
 
 The exact definition is
 
-```text
-M = (N-ell)/2,
-I_min = N-M-WIDTH+1,      I_max = N-M,
-I_min <= I_1 < ... < I_M <= I_max,
-1 <= M <= WIDTH <= N-M.
+```math
+\begin{aligned}
+M&=\frac{N-\ell}{2},\\
+I_{\min}&=N-M-\mathrm{WIDTH}+1,\qquad I_{\max}=N-M,\\
+I_{\min}&\le I_1<\cdots<I_M\le I_{\max},\\
+1&\le M\le\mathrm{WIDTH}\le N-M.
+\end{aligned}
 ```
 
 `--through-lines` must have the same parity as N. Without it, ferro scans
@@ -87,10 +89,12 @@ by removing an input check.
 
 At Delta=3/2, in the existing angle coordinate x, evaluate directly
 
-```text
-delta_E_ref = -sum_i [(Delta-1) + 2*cos(x_i)^2],
-gap = tl_energy = -2*delta_E_ref,
-E = (N-1) + gap.
+```math
+\begin{aligned}
+\delta E_{\mathrm{ref}}&=-\sum_i[(\Delta-1)+2\cos^2x_i],\\
+\mathrm{gap}&=\mathrm{tl\_energy}=-2\delta E_{\mathrm{ref}},\\
+E&=(N-1)+\mathrm{gap}.
+\end{aligned}
 ```
 
 This keeps small gaps and their ordering independent of the extensive

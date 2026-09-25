@@ -47,7 +47,7 @@ energies at half filling are the symmetric values.
 `ChargeContinuumOptions<Real>` keeps three work controls distinct:
 
 - `search`: the shared extrema options, acting on energy divided by
-  `max(1,U)`. Its default value tolerance is `65536*epsilon`. Multiply
+  `max(1,U)`. Its default value tolerance is $65536\,\epsilon$. Multiply
   by `max(1,U)` to obtain the corresponding physical energy tolerance.
 - `constituent`: the existing dispersion solver's controls, including its
   per-point quadrature limit and relative momentum target.
@@ -112,7 +112,7 @@ aborts on missing/nonfinite values or invalid uncertainty. The callback must
 be deterministic at a fixed argument; model-specific work is counted by its
 owner, while the helper counts uncached objective calls.
 
-Defaults are absolute value tolerance `65536*epsilon`, coordinate tolerance
+Defaults are absolute value tolerance $65536\,\epsilon$, coordinate tolerance
 `sqrt(epsilon)*max(1,|lo|,|hi|)`, 16 initial intervals, at most 128 intervals,
 20000 objective calls and 256 golden-section updates per local bracket.
 Meshes double; two successive agreements require at least three meshes.

@@ -5,9 +5,11 @@
 `bethe-richardson` calculates the lowest energy of the reduced BCS pairing
 Hamiltonian in a **specified pair-number and blocked-level sector**:
 
-```text
-H = sum_i epsilon_i*(n_(i,up)+n_(i,down)) - g*sum_(i,j) b_i^dagger*b_j,
-b_i^dagger = c_(i,up)^dagger*c_(i,down)^dagger,    g>=0.
+```math
+\begin{aligned}
+H&=\sum_i\epsilon_i(n_{i,\uparrow}+n_{i,\downarrow})-g\sum_{i,j}b_i^\dagger b_j,\\
+b_i^\dagger&=c_{i,\uparrow}^\dagger c_{i,\downarrow}^\dagger,\qquad g\ge0.
+\end{aligned}
 ```
 
 The input epsilon_i are **single-particle energies**, in strictly increasing
@@ -42,7 +44,7 @@ duplicates or out-of-range indices are errors. The energy list is not sorted
 silently, so the meaning of a blocked index cannot change during parsing.
 
 The one-pair, two-level example epsilon=(0,1) has energy
-`1-g-sqrt(1+g*g)`, hence E=-sqrt(2) at g=1. Empty, completely paired, and
+$1-g -\sqrt{1+g \,g }$, hence E=-sqrt(2) at g=1. Empty, completely paired, and
 zero-coupling sectors use exact formulas and need no Newton iterations.
 
 ## Avoiding pair-root collision singularities
@@ -50,9 +52,12 @@ zero-coupling sectors use exact formulas and need no Newton iterations.
 Let e_i=2*epsilon_i for the L unblocked levels. Richardson's pair rapidities
 E_alpha obey
 
-```text
-1/g + sum_i 1/(E_alpha-e_i) - sum_(beta!=alpha) 2/(E_alpha-E_beta) = 0,
-E_total = sum_alpha E_alpha + sum_(blocked i) epsilon_i.
+```math
+\begin{aligned}
+\frac1g+\sum_i\frac1{E_\alpha-e_i}
+-\sum_{\beta\ne\alpha}\frac2{E_\alpha-E_\beta}&=0,\\
+E_{\mathrm{total}}&=\sum_\alpha E_\alpha+\sum_{i\ \mathrm{blocked}}\epsilon_i.
+\end{aligned}
 ```
 
 Real pair rapidities can meet a level pole and become a complex conjugate
@@ -60,10 +65,12 @@ pair as g changes. Following those individual roots directly is needlessly
 singular. We use [Faribault et al.](../CITATIONS.md#faribault-2011)'s real,
 eigenvalue-based variables
 
-```text
-y_i = g*Lambda(e_i) = g*sum_alpha 1/(e_i-E_alpha),
-F_i = y_i*(y_i-1) - g*sum_(j!=i) (y_i-y_j)/(e_i-e_j) = 0,
-sum_i y_i = M.
+```math
+\begin{aligned}
+y_i&=g\Lambda(e_i)=g\sum_\alpha\frac1{e_i-E_\alpha},\\
+F_i&=y_i(y_i-1)-g\sum_{j\ne i}\frac{y_i-y_j}{e_i-e_j}=0,\\
+\sum_i y_i&=M.
+\end{aligned}
 ```
 
 At g=0, y_i is 1 on the M lowest unblocked levels and 0 elsewhere. At
@@ -76,8 +83,8 @@ not reconstructed pair rapidities.
 Summing the original equations after multiplying by E_alpha gives the
 energy without root recovery:
 
-```text
-E_total = sum_i e_i*y_i - g*M*(L-M+1) + sum_(blocked i) epsilon_i.
+```math
+E_{\mathrm{total}}=\sum_i e_i y_i-gM(L-M+1)+\sum_{i\ \mathrm{blocked}}\epsilon_i.
 ```
 
 The e_i in the referenced pseudospin equations are our pair energies,
@@ -113,10 +120,10 @@ without changing the declared physical Hamiltonian.
 
 The residual is a polynomial backward error:
 
-```text
-r_i = |F_i| / [1 + |y_i*(y_i-1)|
-                 + sum_(j!=i) |g/(e_i-e_j)|*(|y_i|+|y_j|)],
-residual_norm = max_i r_i.
+```math
+r_i=\frac{|F_i|}{1+|y_i(y_i-1)|+
+\displaystyle\sum_{j\ne i}\left|\frac g{e_i-e_j}\right|(|y_i|+|y_j|)},
+\qquad \mathrm{residual\_norm}=\max_i r_i.
 ```
 
 The denominator includes the separate polynomial terms before their

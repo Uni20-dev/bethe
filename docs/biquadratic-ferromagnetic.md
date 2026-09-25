@@ -4,12 +4,10 @@
 
 The ferromagnetic option uses **H=+sum (S_i.S_(i+1))^2**, the opposite sign
 to this tool's default. The spins are 1 and the physical chain has free ends.
-There is no bilinear term or added constant. With `e_i=3*P_singlet`,
+There is no bilinear term or added constant. With $e_{i} =3\,P_{\mathrm{singlet}}$,
 
-```text
-H_F = (N-1) + sum_i e_i,
-E0 = N-1,
-E-E0 = sum_i e_i >= 0.
+```math
+H_F=(N-1)+\sum_i e_i,\qquad E_0=N-1,\qquad E-E_0=\sum_i e_i\ge0.
 ```
 
 The ground space is known exactly. The focus here is the positive-energy
@@ -39,8 +37,8 @@ build/bethe-biquadratic-obc 6 --ferromagnetic --excitations all --through-lines 
 build/bethe-biquadratic-obc 8 --ferromagnetic --quantum-numbers 7 --roots
 ```
 
-Both scans default to `ell=N-2` in ferromagnetic mode. Set `ell=N-4` to
-explore two defects, `ell=N-6` for three, etc. The number `M=(N-ell)/2`
+Both scans default to $\ell =N -2$ in ferromagnetic mode. Set $\ell =N -4$ to
+explore two defects, $\ell =N -6$ for three, etc. The number $M =(N -\ell)/2$
 counts **TL singlet defects, not physical spin lowerings**. Through-lines
 are not a physical SU(2) total-spin quantum number.
 The diagrammatic through-lines are the unpaired strands; the remaining sites
@@ -60,21 +58,22 @@ module minima still require a Q-system investigation. `--sectors` and the AF-spe
 ## What the one-defect band means
 
 Take a singlet on bond i and fully polarized spins elsewhere, and call the
-state `|i>`, for `i=1,...,N-1`. These states span one copy of the `ell=N-2`
+state `|i>`, for `i=1,...,N-1`. These states span one copy of the $\ell =N -2$
 module. They are independent but not orthogonal: adjacent states overlap by
 1/3. Direct action of the singlet projectors gives
 
-```text
-(H_F-E0)|i> = 3|i> + |i-1> + |i+1>,
-|0> = |N> = 0.
+```math
+(H_F-E_0)|i\rangle=3|i\rangle+|i-1\rangle+|i+1\rangle,\qquad
+|0\rangle=|N\rangle=0.
 ```
 
-Thus coefficients proportional to `sin(pi*j*i/N)` give
+Thus coefficients proportional to $\sin (\pi \,j \,i /N)$ give
 
-```text
-k_j = pi*j/N,                     j=1,...,N-1,
-gap_j = 3 + 2*cos(k_j),
-E_j = N-1 + gap_j.
+```math
+\begin{aligned}
+k_j&=\frac{\pi j}{N},\quad j=1,\ldots,N-1,\\
+\mathrm{gap}_j&=3+2\cos k_j,\qquad E_j=N-1+\mathrm{gap}_j.
+\end{aligned}
 ```
 
 The program emits decreasing j, hence increasing energy. Its `wave_number`
@@ -84,20 +83,20 @@ large printed total energies is not needed. These are exact expressions
 evaluated at the chosen floating-point precision, not a Newton calculation.
 
 Every TL eigenvector carries the spin-1 representation multiplicity
-`m_(N-2)`, where `m_0=1`, `m_1=3`, and `m_(ell+1)=3*m_ell-m_(ell-1)`.
+$m _{N -2}$, where $m_{0} =1$, $m_{1} =3$, and $m _{\ell +1}=3\,m_{\ell} -m _{\ell -1}$.
 This includes other physical-spin states beyond the polarized-background
 representative. It is not one SU(2) multiplet. If levels from other modules
 coincide, their multiplicities must be added separately.
 
 The **global positive gap**, not just a one-defect variational estimate, is
 
-```text
-Delta_N = 3 - 2*cos(pi/N) -> 1.
+```math
+\Delta_N=3-2\cos(\pi/N)\longrightarrow1.
 ```
 
 This follows by TL equivalence from
 [Koma-Nachtergaele, Proposition 2](../CITATIONS.md#koma-nachtergaele-1997),
-rescaling their XXZ Hamiltonian by `2*Delta=3`. It is the gap above the
+rescaling their XXZ Hamiltonian by $2\,\Delta =3$. It is the gap above the
 *entire* ground manifold. Physical one-spin-lowering states on the fully
 polarized background remain inside that manifold and cost zero energy.
 They are not the positive-energy band tabulated here.
@@ -114,11 +113,11 @@ positive-energy levels, in increasing physical energy, are:
 
 | Energy | TL defects M | Through-lines ell | Multiplicity | Root family |
 | --- | --- | --- | --- | --- |
-| `6-sqrt(2)` | 1 | 2 | 8 | One real root |
-| `(15-sqrt(17))/2` | 2 | 0 | 1 | Complex roots |
+| $6-\sqrt{2}$ | 1 | 2 | 8 | One real root |
+| $(15-\sqrt{17})/2$ | 2 | 0 | 1 | Complex roots |
 | `6` | 1 | 2 | 8 | One real root |
-| `6+sqrt(2)` | 1 | 2 | 8 | One real root |
-| `(15+sqrt(17))/2` | 2 | 0 | 1 | Two real roots |
+| $6+\sqrt{2}$ | 1 | 2 | 8 | One real root |
+| $(15+\sqrt{17})/2$ | 2 | 0 | 1 | Two real roots |
 
 The two-defect singlet already interleaves the one-defect band. A real-root
 scan of ell=0 returns only the **higher** singlet, even with `all`.
@@ -157,9 +156,9 @@ excited states; mixed string-plus-real-root branches remain excluded.
 Sign reversal leaves the auxiliary XXZ equations and roots unchanged.
 It reverses physical energies and TL energies:
 
-```text
-E_F = -E_AF = -2*E_ref + 7*(N-1)/4,
-tl_energy = +sum e_i = E_F-(N-1).
+```math
+E_F=-E_{\mathrm{AF}}=-2E_{\mathrm{ref}}+\frac{7(N-1)}4,\qquad
+\mathrm{tl\_energy}=\sum_i e_i=E_F-(N-1).
 ```
 
 The `reference_energy` column still denotes the unchanged auxiliary XXZ

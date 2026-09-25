@@ -15,8 +15,8 @@ pure biquadratic chain, N>=2. A separate Q-system mode also handles complex-root
 levels and budgeted spectrum searches; `--singlet-excitation` separately
 targets a low-lying complex-root singlet on long chains. The Hamiltonian is
 
-```text
-H_b = -sum_(i=1)^(N-1) (S_i.S_(i+1))^2.
+```math
+H_b=-\sum_{i=1}^{N-1}(\mathbf S_i\cdot\mathbf S_{i+1})^2.
 ```
 
 The coefficient is -1, the S operators are spin 1, and there is no added
@@ -31,7 +31,7 @@ build/bethe-biquadratic-obc 4 --roots --precision long-double
 build/bethe-biquadratic-obc 64 --precision fp128
 ```
 
-Two useful checks are `E(2)=-4` and
+Two useful checks are $E (2)=-4$ and
 `E(4)=-(15+sqrt(17))/2=-9.561552812808830274910704927...`.
 The report includes physical, TL, and reference XXZ energies, convergence
 diagnostics, and CPU time. `--roots` prints the auxiliary XXZ rapidities
@@ -74,9 +74,9 @@ unavailable even if some candidate levels converge.
 family consists of increasing integer labels selected from 1,...,N-M,
 giving `choose(N-M,M)` candidates. Complex-root levels are missing. For
 example, N=4, ell=0 has two TL eigenvalues, but only its ground state is in
-this real-root family. The other singlet energy `(-15+sqrt(17))/2` is not
+this real-root family. The other singlet energy $(-15+\sqrt{17})/2$ is not
 returned by `--excitations`; use the Q-system mode below. By contrast, the zero- and one-root modules are complete here:
-for N=4, ell=2 the three energies are `-6-sqrt(2), -6, -6+sqrt(2)`, each
+for N=4, ell=2 the three energies are $-6-\sqrt{2}, -6, -6+\sqrt{2}$, each
 with multiplicity 8. The first has gap `2.147339250435735226109016203...`.
 
 `--sectors`, `--excitations`, and `--quantum-numbers` are separate modes.
@@ -111,7 +111,7 @@ returns exit 2 and explicitly labels the results as incomplete discoveries,
 that fp64 cannot; a larger search budget only helps with state discovery.
 
 `--q-seed c0,c1,...` selects one branch of
-`Q(x)=x^M+c[M-1]*x^(M-1)+...+c[0]`, with `x=cosh(2u)=cos(alpha)`.
+`Q(x)=x^M+c[M-1]*x^(M-1)+...+c[0]`, with $x =\cosh (2u)=\cos (\alpha)$.
 Its degree determines ell, so do not supply `--through-lines`; `none` selects
 the vacuum. This is an expert interface, not an excitation rank or string
 label. Neither Q-system mode has a site cutoff; larger chains are experimental.
@@ -149,21 +149,23 @@ selection or scan options.
 Define `e_i=(S_i.S_(i+1))^2-1=3*P_(singlet,i,i+1)`. These operators satisfy
 the Temperley–Lieb relations with loop weight lambda=3:
 
-```text
-e_i^2 = lambda*e_i,
-e_i*e_(i+/-1)*e_i = e_i,
-[e_i,e_j] = 0                         for |i-j|>1.
-H_TL = -sum_i e_i,
-H_b = H_TL - (N-1).
+```math
+\begin{aligned}
+e_i^2&=\lambda e_i,\qquad e_i e_{i\pm1} e_i=e_i,\\
+[e_i,e_j]&=0\qquad(|i-j|>1),\\
+H_{\mathrm{TL}}&=-\sum_i e_i,\qquad H_b=H_{\mathrm{TL}}-(N-1).
+\end{aligned}
 ```
 
 Another representation of the same open-chain algebra uses spin-1/2 XXZ
 operators. For general lambda=2*Delta>2, our reference Hamiltonian is
 
-```text
-H_ref = sum_i [sx_i*sx_(i+1) + sy_i*sy_(i+1) + Delta*sz_i*sz_(i+1)]
-        + sqrt(Delta^2-1)/2 * (sz_1-sz_N),
-E_TL = 2*E_ref - (N-1)*lambda/4.
+```math
+\begin{aligned}
+H_{\mathrm{ref}}&=\sum_i\left(s_i^xs_{i+1}^x+s_i^ys_{i+1}^y+\Delta s_i^zs_{i+1}^z\right)
++\frac{\sqrt{\Delta^2-1}}2(s_1^z-s_N^z),\\
+E_{\mathrm{TL}}&=2E_{\mathrm{ref}}-\frac{(N-1)\lambda}{4}.
+\end{aligned}
 ```
 
 At lambda=3 this gives **Delta=3/2**, end-field coefficient sqrt(5)/4,
@@ -176,12 +178,12 @@ The equivalence is within TL modules. A module labelled by ell through-lines
 has different multiplicities in different spin-chain representations.
 For the generic singlet-projector spin-chain representation of local dimension d,
 
-```text
-m_0=1, m_1=d, m_(ell+1)=d*m_ell-m_(ell-1).
+```math
+m_0=1,\qquad m_1=d,\qquad m_{\ell+1}=dm_\ell-m_{\ell-1}.
 ```
 
 For spin 1, d=3 and the sequence is 1, 3, 8, 21, 55, ...; only ell with
-the same parity as N occurs. For spin 1/2, d=2 and `m_ell=ell+1`.
+the same parity as N occurs. For spin 1/2, d=2 and $m_{\ell} =\ell +1$.
 Consequently an XXZ spin multiplet's degeneracy is not the biquadratic
 degeneracy. Nor should ell/2 be relabelled as the physical spin-1 total spin:
 the multiplicity space can contain several SU(2) multiplets.
@@ -195,19 +197,20 @@ to a finite even open chain. Its ends select the dimer pattern.
 ## Bethe equations and numerical branch
 
 Following [Albertini](../CITATIONS.md#albertini-2000), Eqs. (6)–(10), set
-`Delta=cosh(eta)`. A module with ell through-lines uses M=(N-ell)/2 real
-roots in (0,pi). Its lowest state has consecutive labels `I_i=i`,
+$\Delta =\cosh (\eta)$. A module with ell through-lines uses M=(N-ell)/2 real
+roots in (0,pi). Its lowest state has consecutive labels $I_{i} =i$,
 i=1,...,M; other supported states leave holes in the label window:
 
-```text
-Theta(alpha;w) = 2*atan2(sin(alpha/2), tanh(w)*cos(alpha/2)),
-2*N*Theta(alpha_i;eta/2)
-  - sum_(j!=i) [Theta(alpha_i-alpha_j;eta)+Theta(alpha_i+alpha_j;eta)]
-  = 2*pi*I_i,
-E_ref = (N-1)*Delta/4 - sum_i (Delta^2-1)/(Delta-cos(alpha_i)).
+```math
+\begin{aligned}
+\Theta(\alpha;w)&=2\operatorname{atan2}\!\left(\sin(\alpha/2),\tanh w\cos(\alpha/2)\right),\\
+2N\Theta(\alpha_i;\eta/2)
+-\sum_{j\ne i}[\Theta(\alpha_i-\alpha_j;\eta)+\Theta(\alpha_i+\alpha_j;\eta)]&=2\pi I_i,\\
+E_{\mathrm{ref}}&=\frac{(N-1)\Delta}{4}-\sum_i\frac{\Delta^2-1}{\Delta-\cos\alpha_i}.
+\end{aligned}
 ```
 
-Sending the largest root to pi gives `I=N-M+1`, but that endpoint has a
+Sending the largest root to pi gives $I =N -M +1$, but that endpoint has a
 vanishing Bethe wavefunction and is excluded. Thus `1<=I_1<...<I_M<=N-M`.
 The finite regular roots select quantum-group highest weights, so the
 corresponding TL module is ell=N-2M: counting every auxiliary XXZ Sz sector
@@ -216,9 +219,9 @@ again would duplicate descendants. Its full module dimension is
 
 The reflected sum must retain its phase branch when alpha_i+alpha_j>pi.
 The solver uses `x_i=Theta(alpha_i;eta/2)/2` in (0,pi/2), with
-`alpha_i=2*atan2(tanh(eta/2)*sin(x_i),cos(x_i))`. In this coordinate the
-energy contribution is `-(Delta+cos(2*x_i))`. Its direct excitation shift is
-accumulated as `-[(Delta-1)+2*cos(x_i)^2]`, avoiding cancellation near Delta=1
+$\alpha_{i} =2\,\operatorname{atan2} (\tanh (\eta /2)\,\sin (x_{i}),\cos (x_{i}))$. In this coordinate the
+energy contribution is $-(\Delta +\cos (2\,x_{i}))$. Its direct excitation shift is
+accumulated as $-[(\Delta -1)+2\,\cos (x_{i})^{2}]$, avoiding cancellation near Delta=1
 and the ferromagnetic low-energy edge. The TL adapter uses this direct shift,
 not a difference of extensive total energies. No complex boundary root is
 needed for this reference model's even ground state. Specified real-root
@@ -227,7 +230,7 @@ odd-chain AF ground/sector or one-spinon-band helpers.
 
 Newton iteration uses an analytic Jacobian and a line search preserving
 strictly ordered interior roots. The seed is the bare driving phase
-`x_i=pi*I_i/(2*N)`, not an approximate thermodynamic result. Dense storage
+$x_{i} =\pi \,I_{i} /(2\,N)$, not an approximate thermodynamic result. Dense storage
 is O(N^2), and the partial-pivot solve costs O(N^3) per update. It uses the
 shared native-precision Newton helper with recoverable small-pivot failure,
 without changing Uni20's process-wide error policy.

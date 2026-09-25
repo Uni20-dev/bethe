@@ -5,8 +5,8 @@
 `bethe-central-spin` finds the lowest energy at a **specified total spin
 projection** for
 
-```text
-H = B S0^z + sum_(j=1..Nb) A_j S0.Sj.
+```math
+H=BS_0^z+\sum_{j=1}^{N_b}A_j\,\mathbf S_0\cdot\mathbf S_j.
 ```
 
 Every spin, including the central spin 0, is spin 1/2. There are no bath
@@ -32,8 +32,8 @@ spin with several bath spins is not generally a singlet at zero field.
 
 The one-bath Sz=0 answer is
 
-```text
-E = -A/4 - sqrt(A^2+B^2)/2.
+```math
+E=-\frac A4-\frac{\sqrt{A^2+B^2}}2.
 ```
 
 Thus A=B=1 gives E=-0.9571067811865475244..., and A=1, B=0 gives E=-3/4.
@@ -51,14 +51,16 @@ The Hamiltonian, all-down-reference Bethe equations and energy are fixed by
 [Faribault–Schuricht, Eqs. (2)–(6)](https://arxiv.org/html/1306.2541v2), setting
 the bath field to zero. For M up spins and B>=0,
 
-```text
-epsilon_0=0, epsilon_j=-1/A_j,
--2B + sum_i 1/(lambda_alpha-epsilon_i)
-    - 2 sum_(beta!=alpha) 1/(lambda_alpha-lambda_beta) = 0,
-E = (1/2) sum_alpha 1/lambda_alpha - B/2 + (1/4) sum_j A_j.
+```math
+\begin{aligned}
+\epsilon_0&=0,\qquad\epsilon_j=-\frac1{A_j},\\
+-2B+\sum_i\frac1{\lambda_\alpha-\epsilon_i}
+-2\sum_{\beta\ne\alpha}\frac1{\lambda_\alpha-\lambda_\beta}&=0,\\
+E&=\frac12\sum_\alpha\frac1{\lambda_\alpha}-\frac B2+\frac14\sum_j A_j.
+\end{aligned}
 ```
 
-Spin reversal maps `(B,Sz)` to `(-B,-Sz)`, without changing energy. The
+Spin reversal maps `(B,Sz)` to $(-B,-S^z)$, without changing energy. The
 implementation therefore solves at h=|B|, using `M=(Nb+1)/2+Sz` for B>=0
 and the spin-reversed M for B<0.
 
@@ -66,18 +68,22 @@ Direct rapidities can collide or escape to infinity. Following the
 quadratic eigenvalue-variable approach of
 [Faribault et al.](https://arxiv.org/html/1103.0472v2), introduce
 
-```text
-Astar = max |A_j|, q_0=0, q_j=Astar/A_j, z_alpha=-Astar*lambda_alpha,
-t = Astar/(2h+Astar), p=1-t,
-v_i = t sum_alpha 1/(q_i-z_alpha).
+```math
+\begin{aligned}
+A_\star&=\max_j|A_j|,\quad q_0=0,\quad q_j=A_\star/A_j,\quad z_\alpha=-A_\star\lambda_\alpha,\\
+t&=\frac{A_\star}{2h+A_\star},\quad p=1-t,\qquad
+v_i=t\sum_\alpha\frac1{q_i-z_\alpha}.
+\end{aligned}
 ```
 
 Algebra applied to the rational equations in the convention above gives
 
-```text
-v_i^2 - p*v_i - t sum_(j!=i) (v_i-v_j)/(q_i-q_j) = 0,
-sum_i v_i = M*p,
-E = h*v_0 + (Astar/2)*v_0 - h/2 + sum_j A_j/4.
+```math
+\begin{aligned}
+v_i^2-pv_i-t\sum_{j\ne i}\frac{v_i-v_j}{q_i-q_j}&=0,\\
+\sum_i v_i&=Mp,\\
+E&=hv_0+\frac{A_\star}{2}v_0-\frac h2+\frac14\sum_j A_j.
+\end{aligned}
 ```
 
 These v variables are **not occupations or local magnetizations**, and can

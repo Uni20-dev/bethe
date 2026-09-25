@@ -3,23 +3,26 @@
 [Model catalogue](models.md) | [Periodic XXZ](xxz.md) | [Open XXZ](xxz-open.md)
 
 The [free-end ground-state API and frontend](xxz-open.md) now support
-`-1<Delta<0`, for either parity of N and every physical Sz sector. The
+$-1<\Delta <0$, for either parity of N and every physical Sz sector. The
 [periodic API and frontend](xxz.md) support the same interval on **even rings**.
 The `bethe::xxz::detail::negative_ground_roots` engine in
 [xxz_negative.hpp](../include/bethe/xxz_negative.hpp) solves ground-state
-sectors for `-1<Delta<0` on even periodic rings and free-end chains of either
+sectors for $-1<\Delta <0$ on even periodic rings and free-end chains of either
 parity. It works in fp64, long-double, and optional fp128. Negative-Delta odd
 rings are still not public. Their remaining physical-state and lowest-state
 selection work is **deferred until a concrete need arises**; see the
 [restart checklist](#deferred-odd-ring-work-restart-checklist). The internal
-implementation and its tests are retained. Excitations and `Delta<=-1`
+implementation and its tests are retained. Excitations and $\Delta \le -1$
 require separate work.
 
 The Hamiltonian is unchanged:
 
-```text
-H = sum_bonds [Sx_i*Sx_j + Sy_i*Sy_j + Delta*Sz_i*Sz_j],  S=1/2.
-M = N/2 - |Sz|.
+```math
+\begin{aligned}
+H&=\sum_{\mathrm{bonds}}\left(S_i^xS_j^x+S_i^yS_j^y+\Delta S_i^zS_j^z\right),
+\qquad S=\frac12,\\
+M&=\frac N2-|S^z|.
+\end{aligned}
 ```
 
 ## Sources and geometry
@@ -40,55 +43,60 @@ Delta approaches -1. A small residual in the unscaled equations can then
 mean only that the interval is small, rather than that the roots are accurate.
 Define
 
-```text
-s = sqrt((1+Delta)/(1-Delta)),
-b = sqrt(1+Delta)*sqrt(1-Delta),  a = -Delta,
-z_i = s*tanh(lambda_i).
+```math
+s=\sqrt{\frac{1+\Delta}{1-\Delta}},\qquad
+b=\sqrt{1+\Delta}\sqrt{1-\Delta},\qquad a=-\Delta,\qquad
+z_i=s\tanh\lambda_i.
 ```
 
 The engine works with finite ordered lambda, positive for free ends. On this
 branch the scattering denominators are positive. For distinct roots define
 the complementary half-scattering phase
 
-```text
-p(x) = atan(s*tanh(x))/s,
-h(x) = sign(x)*atan2(b, a*abs(tanh(x)))/s.
+```math
+\begin{aligned}
+p(x)&=\frac{\arctan(s\tanh x)}s,\\
+h(x)&=\frac{\operatorname{sgn}(x)}s\operatorname{atan2}\!\left(b,a|\tanh x|\right).
+\end{aligned}
 ```
 
 The original half-scattering phase is
 `-sign(x)*pi/2 + s*h(x)`. Its rank-dependent constant cancels the consecutive
 ground labels analytically. For PBC those labels are
-`I_i=i-(M-1)/2`, with zero-based i. For OBC they are `I_i=i+1`;
+$I_{i} =i -(M -1)/2$, with zero-based i. For OBC they are $I_{i} =i +1$;
 the positive reflected roots and the boundary phase contribute the remaining
 constants. This yields the following equations, all divided by N and s
 relative to the original logarithmic equations:
 
-```text
-PBC: R_i = [N*p(lambda_i) - sum_(j!=i) h(lambda_i-lambda_j)]/N,
-
-OBC: R_i = [2*N*p(lambda_i) - 2*atan(s/tanh(lambda_i))/s
-            - sum_(j!=i) {h(lambda_i-lambda_j)+h(lambda_i+lambda_j)}]/N.
+```math
+\begin{aligned}
+R_i^{\mathrm{PBC}}&=\frac1N\left[Np(\lambda_i)-\sum_{j\ne i}h(\lambda_i-\lambda_j)\right],\\
+R_i^{\mathrm{OBC}}&=\frac1N\left[2Np(\lambda_i)-\frac2s\arctan\!\left(\frac s{\tanh\lambda_i}\right)
+-\sum_{j\ne i}\{h(\lambda_i-\lambda_j)+h(\lambda_i+\lambda_j)\}\right].
+\end{aligned}
 ```
 
 Self-scattering, including the reflected self, is excluded. These formulas
 apply to the ordered ground branch, not arbitrary excitation labels.
 The analytic Jacobian uses
 
-```text
-h'(x) = -(1-Delta)*a*sech(x)^2 / [b^2+a^2*tanh(x)^2].
+```math
+h'(x)=-\frac{(1-\Delta)a\,\operatorname{sech}^2x}{b^2+a^2\tanh^2x}.
 ```
 
-The periodic diagonal is `N*sech(lambda_i)^2/(1+z_i^2)` minus the sum of
+The periodic diagonal is $N \,\operatorname{sech} (\lambda_{i})^{2}/(1+z_{i} ^{2})$ minus the sum of
 direct h' terms. The open diagonal doubles that driving term, adds
-`2*sech(lambda_i)^2/(tanh(lambda_i)^2+s^2)`, and subtracts direct and reflected
+$2\,\operatorname{sech} (\lambda_{i})^{2}/(\tanh (\lambda_{i})^{2}+s ^{2})$, and subtracts direct and reflected
 h' terms. Off-diagonal entries are direct h', minus reflected h' for OBC.
 Every Jacobian entry is divided by N, matching R.
 
-The energy is evaluated without subtracting `1-tanh(lambda)^2`:
+The energy is evaluated without subtracting $1-\tanh (\lambda)^{2}$:
 
-```text
-E = bonds*Delta/4 - sum_i (1+Delta)*sech(lambda_i)^2/(1+z_i^2),
-bonds = N (PBC), N-1 (OBC).
+```math
+E=\frac{\mathrm{bonds}\,\Delta}{4}
+-\sum_i\frac{(1+\Delta)\operatorname{sech}^2\lambda_i}{1+z_i^2},
+\qquad
+\mathrm{bonds}=\begin{cases}N,&\mathrm{PBC},\\N-1,&\mathrm{OBC}.\end{cases}
 ```
 
 ## Numerical contract
@@ -99,9 +107,9 @@ line search that preserves root order and the physical domain. Each accepted
 step consumes one iteration. There is no hidden continuation budget.
 
 The result retains both z (`rapidities`) and lambda (`log_rapidities`), labels,
-energy, accepted iteration count, and status. `residual_norm` is `max|R_i|`
+energy, accepted iteration count, and status. `residual_norm` is $\max \lvert R_{i} \rvert$
 in the **scaled equations above**, evaluated at the returned roots. It is not
-interchangeable with the old nonnegative solver's `max|F_i|/N` diagnostic.
+interchangeable with the old nonnegative solver's $\max \lvert F_{i} \rvert /N$ diagnostic.
 Always check `converged`; an exhausted budget or stalled line search returns
 the last iterate, not a claimed solution. Odd periodic input is rejected.
 
@@ -125,12 +133,12 @@ four negative couplings, using spin-basis exact diagonalization. Periodic
 momentum is checked against a joint energy/translation spectrum. Additional
 tests cover the original unscaled equations, finite-difference Jacobians,
 spin reversal, analytic N=2 and N=3 energies, invalid input, and iteration
-budgets. Native-precision checks reach `Delta=-1+128*epsilon` through N=64,
+budgets. Native-precision checks reach $\Delta =-1+128\,\epsilon$ through N=64,
 and ensure that the zero-step seed does not falsely pass the scaled residual.
 
 An independent first-order check uses the staggered rotation to the isotropic
 ferromagnet at Delta=-1. In its symmetric fixed-Sz state,
-`<Sz_i*Sz_j>=[(N-2M)^2-N]/[4*N*(N-1)]` for distinct sites, fixing the
+$<S^z_{i} \,S^z_{j} \ge [(N -2M)^{2}-N]/[4\,N \,(N -1)]$ for distinct sites, fixing the
 energy slope as Delta increases. This distinguishes the sector minimum from
 merely returning the polarized limiting energy.
 

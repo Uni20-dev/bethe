@@ -20,10 +20,10 @@ Neither the input coefficients nor Delta are changed.
 For a recovered root x in affine coordinates `z=center+scale*x`, use its
 recovery diagnostic's largest root-uncertainty estimate, transformed to z,
 plus a native rounding allowance. For a radius rho around z, the momentum
-factor `v=-(1-i*z)/(1+i*z)` has the variation estimate
+factor $v =-(1-i \,z)/(1+i \,z)$ has the variation estimate
 
-```text
-radius_v = 2*rho / (abs(1+i*z)*(abs(1+i*z)-rho)).
+```math
+\mathrm{radius}_v=\frac{2\rho}{|1+iz|(|1+iz|-\rho)}.
 ```
 
 The denominator must be positive. Conversion roundoff is added separately.
@@ -36,9 +36,9 @@ variation through the plane powers, pair factors, and subset recurrence.
 For two uncertain factors, the product radius is
 `abs(a)*radius_b + abs(b)*radius_a + radius_a*radius_b`. For the pair factor,
 
-```text
-radius_F(i,j) = abs(v_i)*radius_j + abs(v_j)*radius_i
-                + radius_i*radius_j + 2*abs(Delta)*radius_i.
+```math
+\mathrm{radius}_F(i,j)=|v_i|\mathrm{radius}_j+|v_j|\mathrm{radius}_i
++\mathrm{radius}_i\mathrm{radius}_j+2|\Delta|\mathrm{radius}_i.
 ```
 
 Divide by the **nominal** pair normalization, holding that common global
@@ -51,11 +51,12 @@ uses ordinary rounding, not outward-rounded interval arithmetic.
 The dressing sum accumulates the finite-amplitude variations and all
 absolute permutation terms. A separate heuristic arithmetic allowance is
 
-```text
-amplitude_tolerance * (1 + N*M + r*r + binomial(M,p)) * absolute_term_sum.
+```math
+\mathrm{amplitude\_tolerance}
+\left[1+NM+r^2+\binom Mp\right]\mathrm{absolute\_term\_sum}.
 ```
 
-The default `amplitude_tolerance` is `128*epsilon`. This allowance accounts
+The default `amplitude_tolerance` is $128\,\epsilon$. This allowance accounts
 for the extent of phase powers and finite sums at a conservative numerical
 scale; it is **not a derived interval error bound**. Delta and the nominal
 phantom phase are fixed in the input-variation calculation. None of these

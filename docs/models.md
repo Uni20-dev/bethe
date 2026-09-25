@@ -128,7 +128,7 @@ integrable boundaries in the literature.
 
 ### `lieb-liniger`: the simplest new interacting family
 
-The continuum Bose gas has contact interactions. In units `hbar^2/(2m)=1`,
+The continuum Bose gas has contact interactions. In units $\hbar ^{2}/(2m)=1$,
 one common convention is `H=-sum_j d_j^2 + 2c sum_(i<j) delta(x_i-x_j)`.
 For c>0 its finite-ring Bethe momenta are real, with `E=sum_j k_j^2`.
 The original solution and the two excitation branches are in
@@ -174,7 +174,7 @@ neighboring colors. This is the SU(n) permutation chain associated with
 It is a direct lattice benchmark for non-Abelian tensor-network calculations.
 
 SU(3) is especially attractive: in a spin-1 basis,
-`P = S_i.S_j + (S_i.S_j)^2 - 1`. Thus it also supplies the
+$P = S_{i} .S_{j} + (S_{i} .S_{j})^{2} - 1$. Thus it also supplies the
 Uimin–Lai–Sutherland (ULS) bilinear–biquadratic point, after an explicit
 per-bond energy shift. The identity follows from the two-site total-spin
 eigenvalues; this is not the generic spin-1 Heisenberg chain.
@@ -258,9 +258,9 @@ alternative nested Bethe ansätze in
 [Essler–Korepin](../CITATIONS.md#essler-korepin-1992).
 
 Implemented in [tj.hpp](../include/bethe/tj.hpp) and `bethe-tj-pbc`, using
-Sutherland's BFF grading: `M1=N_h+min(N_up,N_down)`, `M2=N_h`. The doped
+Sutherland's BFF grading: $M_1 =N_{h} +\min (N_{\mathrm{up}},N_{\mathrm{down}})$, $M_2 =N_{h}$. The doped
 real-root family requires odd populations of both spins, on odd or even L.
-No-hole states use `H_tJ=2*H_XXX-L/2`; fully polarized states are exact free
+No-hole states use $H_{\mathrm{tJ}} =2\,H_{\mathrm{XXX}} -L /2$; fully polarized states are exact free
 fermions for every particle count. The [guide](tj.md) derives the label
 parities, energy shift, and fermionic translation phase and states the
 unsupported sectors explicitly.
@@ -310,10 +310,10 @@ ground-state implementation.
 ### `temperley-lieb`: shared energies, different representation multiplicities
 
 The spin-1 pure biquadratic chain `H=-sum(S.S)^2` realizes the open TL
-algebra at loop weight 3, with `e_i=(S_i.S_(i+1))^2-1`. The corresponding
+algebra at loop weight 3, with $e_{i} =(S_{i} .S _{i +1})^{2}-1$. The corresponding
 spin-1/2 XXZ representation has Delta=3/2 **and opposite end fields**:
 ordinary zero-field `bethe-xxz-obc` is not the reference Hamiltonian.
-The physical energy is `2*E_ref-7*(N-1)/4` in our spin-half exchange-1
+The physical energy is $2\,E_{\mathrm{ref}} -7\,(N -1)/4$ in our spin-half exchange-1
 normalization. Within a TL module the energies agree after this mapping,
 but representation multiplicities and physical spin labels do not.
 
@@ -508,7 +508,7 @@ two-leg Heisenberg ladder at generic couplings is not integrable here.
 ## Extensions of current models, rather than new solvers
 
 - **Wider XXZ anisotropy:** the [periodic ground-state/sector path](xxz.md#easy-axis-ground-states-delta1)
-  now includes `Delta>1`, retaining a continuous atan2 scattering phase in
+  now includes $\Delta >1$, retaining a continuous atan2 scattering phase in
   scaled real coordinates. The source is [Dugave et al.](../CITATIONS.md#dugave-2015),
   Eqs. (1.1)-(1.2), with energy normalized from Pauli matrices to spin operators.
   Tests cover odd/even sector energies and momentum against ED, original
@@ -517,7 +517,7 @@ two-leg Heisenberg ladder at generic couplings is not integrable here.
   ground-state sectors through the same ground-state API and `bethe-xxz-obc`,
   retaining the finite-size boundary-root deviation explicitly.
   The [negative-anisotropy engine](xxz-negative.md) now covers
-  `-1<Delta<0` sector ground roots for even rings and open chains, with
+  $-1<\Delta <0$ sector ground roots for even rings and open chains, with
   rank-subtracted equations scaled to remain discriminating near Delta=-1.
   Both paths are exposed through the ground-state APIs and existing frontends,
   with explicit hyperbolic coordinates and scaled residuals. The periodic
@@ -562,7 +562,7 @@ two-leg Heisenberg ladder at generic couplings is not integrable here.
   classification remains a separate later extension.
   The broader family is established by [Yang–Yang](../CITATIONS.md#yang-yang-1966), but the
   old real-coordinate domain and excitation window do not extend unchanged.
-  Treat `Delta<=-1` and polarized/degenerate limits separately. These remain
+  Treat $\Delta \le -1$ and polarized/degenerate limits separately. These remain
   XXZ-module extensions, not differently named models.
 - **Spinless t–V fermions / nearest-neighbor hard-core bosons:** useful physical
   interfaces to XXZ, not independent Bethe engines. Under the usual convention
@@ -571,7 +571,7 @@ two-leg Heisenberg ladder at generic couplings is not integrable here.
   derived for the declared Hamiltonian. Never reuse a spin-chain energy or
   momentum without this translation.
 - **Uniform fields and chemical potential:** a commuting term gives
-  `E(h,mu)=E(0,0)-h*Sz-mu*N` within a solved sector. The global minimum still
+  $E (h,\mu)=E (0,0)-h \,S^z -\mu \,N$ within a solved sector. The global minimum still
   requires comparison across all relevant sectors; incomplete PBC Hubbard
   coverage cannot give an unrestricted grand-canonical minimum. This needs
   sector scanning/reporting, not new Bethe equations.

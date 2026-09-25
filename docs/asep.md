@@ -22,16 +22,16 @@ if (state.converged && state.gap) {
 ```
 
 The arithmetic is native fp64, long-double or fp128. Reflection and particle–hole
-symmetry reduce the calculation to `n=min(N,L-N)` and
-`x=min(r,s)/max(r,s)`. We select the conjugate eigenvalue with nonnegative
+symmetry reduce the calculation to $n =\min (N,L -N)$ and
+$x =\min (r,s)/\max (r,s)$. We select the conjugate eigenvalue with nonnegative
 imaginary part, without assigning it a physical momentum in the original sector.
 For empty/full sectors there is only a stationary state: `stationary_only` is
 successful, but both `gap` and `eigenvalue` are absent.
 
 One-particle/one-hole results are analytic:
 
-```text
-lambda = -2(r+s) sin²(pi/L) + i |r-s| sin(2pi/L).
+```math
+\lambda=-2(r+s)\sin^2(\pi/L)+i\lvert r-s\rvert\sin(2\pi/L).
 ```
 
 At r=s the gap is `4r sin²(pi/L)` for every nontrivial filling, with zero
@@ -76,10 +76,12 @@ exports, apply. Invalid inputs exit 1 before touching files, including existing
 
 With the larger rate factored out, the Bethe equations are
 
-```text
-z_i^L = (-1)^(n-1) product_(j != i)
-        [x z_i z_j -(1+x) z_i +1] / [x z_i z_j -(1+x) z_j +1]
-lambda / max(r,s) = sum_j [x z_j +1/z_j -1-x].
+```math
+\begin{aligned}
+z_i^L&=(-1)^{n-1}\prod_{j\ne i}
+\frac{xz_iz_j-(1+x)z_i+1}{xz_iz_j-(1+x)z_j+1},\\
+\frac{\lambda}{\max(r,s)}&=\sum_j\left(xz_j+\frac1{z_j}-1-x\right).
+\end{aligned}
 ```
 
 These are the rate-rescaled equations (66) and (69) of
@@ -94,17 +96,19 @@ Near symmetric hopping, n-1 roots approach one. Ordinary z coordinates lose
 the small bias and can give a converged-looking but inaccurate frequency.
 We instead store finite scaled coordinates v:
 
-```text
-delta = (max(r,s)-min(r,s))/max(r,s)
-z_j = 1 + delta v_j                     (ordinary roots)
-z_wave = z0 + delta v_wave              (one finite-wave root)
-z0 = exp(±2 pi i/L).
+```math
+\begin{aligned}
+\delta&=\frac{\max(r,s)-\min(r,s)}{\max(r,s)},\\
+z_j&=1+\delta v_j&&\text{(ordinary roots)},\\
+z_{\mathrm{wave}}&=z_0+\delta v_{\mathrm{wave}}&&\text{(one finite-wave root)},\\
+z_0&=e^{\pm2\pi i/L}.
+\end{aligned}
 ```
 
 `scaled_roots`, `wave_index`, and `wave_base=z0-1` expose this representation.
 The rescaled residual divides the logarithmic equations by delta and L;
 the first-harmonic driving phase is removed analytically. A shared stable
-complex `log(1+z)` helper retains tiny increments. The eigenvalue is evaluated
+complex $\log (1+z)$ helper retains tiny increments. The eigenvalue is evaluated
 as an analytic finite-wave contribution plus small corrections, preserving
 frequencies even when the bias is only a few native epsilons. Root separation
 and the translation factor are checked before publishing an observable.

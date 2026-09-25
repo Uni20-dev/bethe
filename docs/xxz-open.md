@@ -9,9 +9,12 @@ doubling the periodic chain length would miss that phase.
 
 ## Model and first calculations
 
-```text
-H = sum_(i=0)^(N-2) [Sx_i Sx_(i+1) + Sy_i Sy_(i+1) + Delta Sz_i Sz_(i+1)],
-J=1, h=0, Delta > -1 (ground states), no boundary fields, N >= 2.
+```math
+\begin{aligned}
+H&=\sum_{i=0}^{N-2}\left(S_i^xS_{i+1}^x+S_i^yS_{i+1}^y+\Delta S_i^zS_{i+1}^z\right),\\
+J&=1,\quad h=0,\quad \Delta>-1\ \text{(ground states)},\quad N\ge2,
+\quad\text{no boundary fields}.
+\end{aligned}
 ```
 
 ```sh
@@ -31,17 +34,17 @@ lattice momentum for free ends, and generic XXZ states are not classified
 by total spin S or SU(2) multiplets. There is no `--spin`, `--spinons`, or
 boundary-selection option.
 
-For `-1<Delta<0`, the solver uses positive hyperbolic lambda coordinates
+For $-1<\Delta <0$, the solver uses positive hyperbolic lambda coordinates
 and Newton iteration. `--roots` prints both lambda and
-`z=s*tanh(lambda)`, with `s=sqrt((1+Delta)/(1-Delta))`. The reported residual
+$z =s \,\tanh (\lambda)$, with $s =\sqrt{(1+\Delta)/(1-\Delta)}$. The reported residual
 uses **rank-subtracted equations divided by N*s**, not the nonnegative
-solver's `max|F|/(2*N)`. This scaling keeps the stopping test meaningful as
+solver's $\max \lvert F \rvert /(2\,N)$. This scaling keeps the stopping test meaningful as
 Delta approaches -1, where the z roots shrink. See the
 [negative-anisotropy guide](xxz-negative.md) for the equations and derivation.
 Exactly Delta=-1 and lower anisotropies are not included by this extension.
 
-For `Delta>1`, even zero-magnetization ground states need a distinguished
-boundary root. `--roots` prints its inverse square `y=1/z_B^2` and logarithmic
+For $\Delta >1$, even zero-magnetization ground states need a distinguished
+boundary root. `--roots` prints its inverse square $y =1/z_{B} ^{2}$ and logarithmic
 distance w separately from the bulk real roots. Negative y means that z_B is
 imaginary; it is not a real rapidity or a failed solve. See the
 [massive boundary-root guide](xxz-open-massive.md) for the coordinate crossing,
@@ -54,7 +57,7 @@ precision in parameters, roots, energies, gaps, and output. See the shared
 ## Real-root excitations
 
 Both excitation scans and specified quantum-number lists still require
-`0<=Delta<=1`; negative and massive ground-state support do not extend that family.
+$0\le \Delta \le 1$; negative and massive ground-state support do not extend that family.
 
 ```sh
 build/bethe-xxz-obc 16 --delta 0.5 --excitations 10 --sz 1
@@ -69,18 +72,19 @@ Gaps are relative to the **global ground energy**, not the sector minimum.
 
 For M=N/2-|Sz|, the supported labels are distinct increasing positive integers:
 
-```text
-1 <= I <= N-M,
-I < I_infinity,
-I_infinity = N-M+1 - (N-2*M+1)*gamma/pi,
-gamma = acos(Delta).
+```math
+\begin{aligned}
+1&\le I\le N-M,\qquad I<I_\infty,\\
+I_\infty&=N-M+1-\frac{(N-2M+1)\gamma}{\pi},\\
+\gamma&=\arccos\Delta.
+\end{aligned}
 ```
 
 The strict second bound comes from sending one rapidity to infinity with the
 others finite. The implementation uses the equivalent expression
-`I_infinity=(N+1)/2+(N-2*M+1)*asin(Delta)/pi`. For 0<Delta<1 it also excludes
-a conservative `32*epsilon*max(1,I_infinity)` band below this threshold.
-At Delta=0, the exact integer condition is `2*I<N+1`; at Delta=1, the existing
+$I_{\mathrm{infinity}} =(N +1)/2+(N -2\,M +1)\,\arcsin (\Delta)/\pi$. For 0<Delta<1 it also excludes
+a conservative $32\,\epsilon \,\max (1,I_{\mathrm{infinity}})$ band below this threshold.
+At Delta=0, the exact integer condition is $2\,I <N +1$; at Delta=1, the existing
 open XXX window `1..N-M` is used exactly. The vacuum M=0 is a single empty
 configuration.
 
@@ -139,7 +143,7 @@ root and its label. `log_rapidities` stores the solver's lambda coordinates
 only for negative Delta; do not reconstruct them from rounded z values.
 The convention tag distinguishes `logarithmic_phase` (0<=Delta<=1),
 `negative_rank_scaled` (-1<Delta<0), and `massive_regularized` (Delta>1).
-At `Delta<=1`, `boundary_root` is empty. At `0<=Delta<=1`, all numerical
+At $\Delta \le 1$, `boundary_root` is empty. At $0\le \Delta \le 1$, all numerical
 results retain the original real-root solver's values. Always check
 `converged`: on failure, the reported energy is an unconverged estimate,
 with the residual evaluated at the returned coordinates and requested Delta.
@@ -154,40 +158,42 @@ are shared with the other models. Numerical code has no presentation dependency.
 
 ## Boundary equations and limiting cases
 
-This section describes the all-real solver for `0<=Delta<=1`; the
+This section describes the all-real solver for $0\le \Delta \le 1$; the
 [massive equations and regularization](xxz-open-massive.md) are separate.
 The [negative-Delta scaled equations](xxz-negative.md) are also separate;
 the excitation labels below must not be extrapolated to that regime.
 
 Use the same scaled coordinate as periodic XXZ:
-`z=tanh(lambda)/tan(gamma/2)`, not the conventional rapidity lambda. Physical
-roots are positive and satisfy `(1-Delta)*z^2<1+Delta`. Writing
-`p=1+Delta`, `q=1-Delta`, and `c=q/p`, the equations and energy are
+$z =\tanh (\lambda)/\tan (\gamma /2)$, not the conventional rapidity lambda. Physical
+roots are positive and satisfy $(1-\Delta)\,z ^{2}<1+\Delta$. Writing
+$p =1+\Delta$, $q =1-\Delta$, and $c =q /p$, the equations and energy are
 
-```text
-A_ij = Delta*(z_i-z_j)/(p-q*z_i*z_j),
-B_ij = Delta*(z_i+z_j)/(p+q*z_i*z_j),
-F_i  = 4*N*atan(z_i) + 4*atan(c*z_i) - 2*pi*I_i
-       - 2*sum_(j != i) [atan(A_ij) + atan(B_ij)],
-E    = (N-1)*Delta/4 - sum_i (p-q*z_i^2)/(1+z_i^2).
+```math
+\begin{aligned}
+A_{ij}&=\frac{\Delta(z_i-z_j)}{p-qz_iz_j},&
+B_{ij}&=\frac{\Delta(z_i+z_j)}{p+qz_iz_j},\\
+F_i&=4N\arctan z_i+4\arctan(cz_i)-2\pi I_i
+-2\sum_{j\ne i}(\arctan A_{ij}+\arctan B_{ij}),\\
+E&=\frac{(N-1)\Delta}{4}-\sum_i\frac{p-qz_i^2}{1+z_i^2}.
+\end{aligned}
 ```
 
 Both direct and reflected self-scattering terms are excluded. The boundary
 term `4*atan(c*z)` is essential even with zero boundary fields. At Delta=0
 scattering vanishes but the boundary term does not: the roots become
-`z_i=tan(pi*I_i/[2*(N+1)])`, with energy `-sum_i cos(pi*I_i/(N+1))`.
+$z_{i} =\tan (\pi \,I_{i} /[2\,(N +1)])$, with energy `-sum_i cos(pi*I_i/(N+1))`.
 These are the open-chain standing waves, with denominator **N+1**, not N.
 
 The sector minimum fills I=1,...,M. Simultaneous updates start at zero unless
 finite nonnegative in-branch guesses are supplied. The implementation moves
 the boundary correction to the right using
-`atan(z)-atan(c*z)=atan(2*Delta*z/(p+q*z^2))`; the resulting driving denominator
-is `2*(N+1)`. This keeps updates on the supported positive finite branch and
+$\arctan (z)-\arctan (c \,z)=\arctan (2\,\Delta \,z /(p +q \,z ^{2}))$; the resulting driving denominator
+is $2\,(N +1)$. This keeps updates on the supported positive finite branch and
 solves Delta=0 in at most one update. At **exactly** Delta=1 it delegates to
-the open XXX solver, preserving its roots `z=2*lambda_XXX` and diagnostics.
+the open XXX solver, preserving its roots $z =2\,\lambda_{\mathrm{XXX}}$ and diagnostics.
 Nearby anisotropies are not snapped to the endpoint.
 
-Convergence uses `max|F|/(2*N)`, with default tolerance 32 times the selected
+Convergence uses $\max \lvert F \rvert /(2\,N)$, with default tolerance 32 times the selected
 type's epsilon. It is not an energy-error bound. Both residual and energy
 describe the returned iterate, even on budget exhaustion. Work per update
 is O(M^2), or O(M) at Delta=0, with O(M) state storage. Retaining all sectors
@@ -198,9 +204,9 @@ O(min(COUNT,candidates)*M+N), including their ground reference.
 
 Independent small-chain exact diagonalization checks sector minima and every
 enumerated excitation, including multiplicities, through N=9. Analytic checks
-include `E0(N=2)=-1/2-Delta/4`, its root
-`z=sqrt((1+Delta)/(3-Delta))`, and
-`E0(N=3)=-(Delta+sqrt(Delta^2+8))/4`. Irrational-energy and gap tests discriminate
+include $E_0 (N =2)=-1/2-\Delta /4$, its root
+$z =\sqrt{(1+\Delta)/(3-\Delta)}$, and
+$E_0 (N =3)=-(\Delta +\sqrt{\Delta ^{2}+8})/4$. Irrational-energy and gap tests discriminate
 against narrowing higher precision to double. Further checks cover independent
 hyperbolic residuals, the XX and XXX limits, both sides of an infinity threshold,
 larger chains, exhausted budgets, and full-precision plain/pretty output.
@@ -209,7 +215,7 @@ The negative-Delta public API is checked separately against all spin-basis
 sector minima through N=9 at four couplings. Tests also check spin reversal,
 the global ground-state selection, the residual-convention tags, independent
 scaled residuals at successful and failed iterates, and native-precision
-two-/three-site energies. Endpoint tests reach `Delta=-1+128*epsilon` on
+two-/three-site energies. Endpoint tests reach $\Delta =-1+128\,\epsilon$ on
 even and odd open chains. CLI tests retain all printed z/lambda digits in
 both wide and narrow terminal reports, and keep negative excitations rejected.
 

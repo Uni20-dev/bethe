@@ -38,15 +38,15 @@ output files, including with `--force`.
 
 ## Hamiltonian and supported sectors
 
-In units `hbar^2/(2m)=1`, circumference `ell`, the first-quantized Hamiltonian is
+In units $\hbar ^{2}/(2m)=1$, circumference $\ell$, the first-quantized Hamiltonian is
 
-```text
-H = -sum_j d_j^2 + 2c sum_(i<j) delta(x_i-x_j),  c>=0.
+```math
+H=-\sum_j\partial_j^2+2c\sum_{i<j}\delta(x_i-x_j),\qquad c\ge0.
 ```
 
 Antisymmetry removes the contact interaction between identical fermions.
-For `c>0` and both species present, the current branch requires **odd N_f**;
-`N_b` may be odd or even. Pure bosons, pure fermions, vacuum, and `c=0` accept
+For $c >0$ and both species present, the current branch requires **odd N_f**;
+$N_{b}$ may be odd or even. Pure bosons, pure fermions, vacuum, and $c =0$ accept
 arbitrary counts. Unequal masses/couplings, attraction, other interacting
 periodic shells, excitations, boundaries, and thermodynamics are not supported.
 
@@ -56,17 +56,19 @@ equations (3), (28)–(34); the original short report is
 [Phys. Rev. A (2006)](../CITATIONS.md#imambekov-demler-2006).
 For N=N_b+N_f charge roots k and M=N_b auxiliary roots lambda:
 
-```text
-ell*k_j + sum_a 2 atan(2(k_j-lambda_a)/c) = 2*pi*I_j
-sum_j 2 atan(2(lambda_a-k_j)/c) = 2*pi*J_a
-E = sum_j k_j^2.
+```math
+\begin{aligned}
+\ell k_j+\sum_a2\arctan\!\left(\frac{2(k_j-\lambda_a)}c\right)&=2\pi I_j,\\
+\sum_j2\arctan\!\left(\frac{2(\lambda_a-k_j)}c\right)&=2\pi J_a,\\
+E&=\sum_jk_j^2.
+\end{aligned}
 ```
 
-Our `J` is the negative of the paper's auxiliary logarithmic label. There is
+Our $J$ is the negative of the paper's auxiliary logarithmic label. There is
 **no auxiliary–auxiliary scattering term**.
 
 Our parity audit gives `2I = M (mod 2)` and `2J = N (mod 2)` from the rational
-equations. The centered choices `I_j=j-(N-1)/2`, `J_a=a-(M-1)/2` satisfy both
+equations. The centered choices $I_{j} =j -(N -1)/2$, $J_{a} =a -(M -1)/2$ satisfy both
 precisely when N_f is odd. We reject even interacting mixed shells rather
 than treating a centered solution with incompatible parity as periodic.
 This branch has zero total momentum. At c=0, even fermion populations have
@@ -102,7 +104,7 @@ no auxiliary roots are introduced for this reduction.
 
 ## Numerical method and verification
 
-Our mixed solver uses dimensionless roots `q=ell*k`, `g=c*ell`, and auxiliary
+Our mixed solver uses dimensionless roots $q =\ell \,k$, $g =c \,\ell$, and auxiliary
 coordinates scaled by `max(1,g)`. Reflection reduction enforces exact paired
 roots and explicit central zeros. The analytic Jacobian couples only the two
 root families. It uses the shared rational scattering kernel, compensated

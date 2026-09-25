@@ -2,18 +2,22 @@
 
 **Status: ground-branch library and `bethe-xyz-pbc` frontend; no excited-spectrum coverage.**
 Native fp64, long-double and fp128 implementations cover the symmetric regular-root
-branch of even periodic chains with real `0<eta<1` and rectangular `tau=i*t`,
-`t>0`. Independent small-chain diagonalization validates the ground-state selection
+branch of even periodic chains with real $0<\eta <1$ and rectangular `tau=i*t`,
+$t >0$. Independent small-chain diagonalization validates the ground-state selection
 on the tested parameter grid; convergence is not a general completeness proof.
 
 ## Convention and initial target
 
-Use spin operators `S=sigma/2` and
+Use spin operators $S =\sigma /2$ and
 
-```text
-H = sum_j (Jx Sx_j Sx_(j+1) + Jy Sy_j Sy_(j+1) + Jz Sz_j Sz_(j+1)).
-Jx=theta4(eta)/theta4(0), Jy=theta3(eta)/theta3(0), Jz=theta2(eta)/theta2(0)
-theta_j(u) = vartheta_j(pi*u | i*t), t>0.
+```math
+\begin{aligned}
+H&=\sum_j\left(J_xS_j^xS_{j+1}^x+J_yS_j^yS_{j+1}^y+J_zS_j^zS_{j+1}^z\right),\\
+J_x&=\frac{\theta_4(\eta)}{\theta_4(0)},\qquad
+J_y=\frac{\theta_3(\eta)}{\theta_3(0)},\qquad
+J_z=\frac{\theta_2(\eta)}{\theta_2(0)},\\
+\theta_j(u)&=\vartheta_j(\pi u\mid it),\qquad t>0.
+\end{aligned}
 ```
 
 The parametrization is equation (2) of
@@ -64,8 +68,9 @@ Odd rings, `--sz` sectors and `--excitations` are not supported.
 first two derivatives at complex u. Derivatives are with respect to **u**, not
 pi*u. Its `ThetaJet` stores a common real `log_scale`:
 
-```text
-actual derivative[r] = exp(log_scale) * derivative[r],  r=0,1,2.
+```math
+\mathrm{actual\ derivative}[r]=e^{\mathrm{log\_scale}}\,\mathrm{derivative}[r],
+\qquad r=0,1,2.
 ```
 
 Keep this representation for quotients: `theta_ratio` reconstructs only the
@@ -95,9 +100,11 @@ complex tau is not supported.
 `candidate_energy<Real>(N,roots,eta,t)` evaluates the regular expression for
 even N>=2, N/2 supplied roots, and real 0<eta<1:
 
-```text
-g(u) = theta1(eta)/theta1'(0) * theta1'(u)/theta1(u)
-E = N*g(eta)/4 + sum_j [g(lambda_j-eta/2)-g(lambda_j+eta/2)]/2.
+```math
+\begin{aligned}
+g(u)&=\frac{\theta_1(\eta)}{\theta_1'(0)}\frac{\theta_1'(u)}{\theta_1(u)},\\
+E&=\frac N4g(\eta)+\frac12\sum_j[g(\lambda_j-\eta/2)-g(\lambda_j+\eta/2)].
+\end{aligned}
 ```
 
 This follows equations (8), (22), (26), and section VI of the cited paper with
@@ -133,20 +140,22 @@ auto state = bethe::xyz::ground_state(16, 0.4, 0.7);
 if (state.converged) { /* *state.energy is the total energy */ }
 ```
 
-The solver fixes `M=N/2`, `xi=0`, and pairs imaginary roots `lambda=i*x`
+The solver fixes $M =N /2$, `xi=0`, and pairs imaginary roots $\lambda =i \,x$
 with their negatives (including zero for odd M). Thus their sum is exactly
-zero. Positive roots remain ordered in `0<x<t/2`; no independent period
+zero. Positive roots remain ordered in $0<x <t /2$; no independent period
 folding is performed. With centered integer/half-integer labels I, it solves
 
-```text
-N phi_(eta/2)(x_j) - sum_(k!=j) phi_eta(x_j-x_k) = 2*pi*I_j
-phi_a(x) = 2 arg theta1(a+i*x).
+```math
+\begin{aligned}
+N\phi_{\eta/2}(x_j)-\sum_{k\ne j}\phi_\eta(x_j-x_k)&=2\pi I_j,\\
+\phi_a(x)&=2\arg\theta_1(a+ix).
+\end{aligned}
 ```
 
 These are the regular equations (46)–(48) of the cited paper on this branch.
 An analytic reflection-reduced Jacobian feeds the same physical-domain damped
 Newton driver used by the continuum models. The reported residual is
-`max(abs(F))/(N*(1-eta))`: the extra scale prevents accepting a small raw
+$\max (\lvert F \rvert)/(N \,(1-\eta))$: the extra scale prevents accepting a small raw
 residual simply because the equations flatten near eta=1. Cancellation there
 can still cause stagnation; use higher precision or inspect a failure, rather
 than interpreting retained diagnostic roots as a solved state.

@@ -18,16 +18,19 @@ build/bethe-haldane-shastry-pbc 6 --motif 3 --spin-content --format json
 
 We use spin-1/2 operators, lattice spacing one, `J=1`, zero field, and
 
-```text
-H = (pi/N)^2 sum_{i<j} S_i.S_j / sin^2(pi*(i-j)/N).
+```math
+H=\left(\frac\pi N\right)^2\sum_{i<j}
+\frac{\mathbf S_i\cdot\mathbf S_j}{\sin^2[\pi(i-j)/N]}.
 ```
 
-Each unordered pair occurs once, including at `N=2`. The fully polarized
-energy is `E_F=pi^2*(N^2-1)/(24*N)`. Ground energies are
+Each unordered pair occurs once, including at $N =2$. The fully polarized
+energy is $E_{F} =\pi ^{2}\,(N ^{2}-1)/(24\,N)$. Ground energies are
 
-```text
-even N: E0 = -pi^2*(N^2+5)/(24*N)
-odd  N: E0 = -pi^2*(N^2-1)/(24*N).
+```math
+E_0=\begin{cases}
+-\dfrac{\pi^2(N^2+5)}{24N},&N\text{ even},\\
+-\dfrac{\pi^2(N^2-1)}{24N},&N\text{ odd}.
+\end{cases}
 ```
 
 Even rings have one singlet ground state. Odd rings have two opposite-momentum
@@ -36,30 +39,32 @@ These are finite-ring formulas, not thermodynamic approximations.
 
 ## Motifs, energies and counting
 
-An admissible motif is an increasing list of positions `m` in `[1,N-1]`,
+An admissible motif is an increasing list of positions $m$ in $[1,N -1]$,
 with no adjacent occupied positions. For example, `1,3,6` is allowed at
-`N=8`, while `1,2` is not. An empty motif is the ferromagnetic multiplet.
+$N =8$, while `1,2` is not. An empty motif is the ferromagnetic multiplet.
 The spectral rules and Yangian counting are reviewed in
 [Jiang–Lamers–Miao, Secs. 2.2–2.3](https://arxiv.org/html/2606.20168v2).
-Their Hamiltonian uses `(1-P_ij)/(4*sin^2)`; convert by
-`H_ours=E_F-2*(pi/N)^2*H_theirs`.
+Their Hamiltonian uses $(1-P_{\mathrm{ij}})/(4\,\sin ^{2})$; convert by
+$H_{\mathrm{ours}} =E_{F} -2\,(\pi /N)^{2}\,H_{\mathrm{theirs}}$.
 
-For a motif with `M` entries:
+For a motif with $M$ entries:
 
-```text
-E = E_F - (pi/N)^2 sum_m m*(N-m)
-momentum_index = sum_m m modulo N
-P = 2*pi*momentum_index/N
-spinons = N-2*M; S_max = (N-2*M)/2.
+```math
+\begin{aligned}
+E&=E_F-\left(\frac\pi N\right)^2\sum_m m(N-m),\\
+\mathrm{momentum\_index}&=\sum_m m\pmod N,\\
+P&=\frac{2\pi}{N}\,\mathrm{momentum\_index},\\
+\mathrm{spinons}&=N-2M,\qquad S_{\max}=\frac{N-2M}{2}.
+\end{aligned}
 ```
 
 One row denotes a **Yangian multiplet**, generally containing several ordinary
 SU(2) multiplets. `S_max` is its maximum total spin, not a claim that every
 state in that row has that spin. The full dimension is
-`(N+1)` for the empty motif, otherwise
+$(N +1)$ for the empty motif, otherwise
 `m_first*(N-m_last)*product(neighboring_gap-1)`.
-For example, motif `{2}` at `N=4` contains a singlet and a triplet: its
-dimension is four and `S_max=1`, not `3/2`.
+For example, motif `{2}` at $N =4$ contains a singlet and a triplet: its
+dimension is four and $S_{\mathrm{max}} =1$, not `3/2`.
 
 ### Resolving ordinary total-spin multiplets
 
@@ -124,9 +129,9 @@ build/bethe-haldane-shastry-pbc 8 --levels all --spin-content \
 ## Ground sectors and excitation scans
 
 `--sz` selects an allowed half-integer spin projection. The minimizing motif
-has `M=N/2-|Sz|` entries, packed with spacing two as symmetrically about
-`N/2` as the integer lattice allows. Odd rings have two placements unless
-`M=0`. Returned dimensions still describe the **whole** Yangian multiplet,
+has $M =N /2-\lvert S^z \rvert$ entries, packed with spacing two as symmetrically about
+$N /2$ as the integer lattice allows. Odd rings have two placements unless
+$M =0$. Returned dimensions still describe the **whole** Yangian multiplet,
 not just the selected projection. Every reported gap references the global
 ground energy, including when selecting a nonminimal spin sector.
 
@@ -136,11 +141,11 @@ Hilbert-space spectrum with multiplicities. Equal energies remain separate
 rows; COUNT can cut through a degeneracy. Ordering uses exact integer energy
 coefficients, then momentum index, then the motif list.
 
-The number of motifs grows as `F_(N+1)`. Before enumeration we check it
+The number of motifs grows as $F _{N +1}$. Before enumeration we check it
 against `--max-motifs` (default 100,000). If the budget is insufficient,
 exit status 2 reports the refusal and publishes no alleged lowest levels.
 Ground-sector and specified-motif calculations do not require a spectrum scan.
-The explicit size range `2<=N<=1,000,000` keeps energy numerators in signed
+The explicit size range $2\le N \le 1,000,000$ keeps energy numerators in signed
 64-bit arithmetic and bounds single-motif storage. A multiplet dimension that
 exceeds unsigned 64-bit range is unavailable, not wrapped; its energy remains
 valid. This is separate from scalar rounding of energies and momenta.
@@ -165,9 +170,9 @@ auto all = hs::spectrum<double>(12); // Check all.complete.
 ```
 
 Tests compare the complete motif spectrum and momentum cosines against an
-independently constructed spin-basis Hamiltonian through `N=8`, check every
-magnetization-sector minimum through `N=9`, and verify that motif dimensions
-sum to `2^N`. Native-precision tests cover even/odd formulas, exact ordering,
+independently constructed spin-basis Hamiltonian through $N =8$, check every
+magnetization-sector minimum through $N =9$, and verify that motif dimensions
+sum to $2^N$. Native-precision tests cover even/odd formulas, exact ordering,
 invalid labels, count overflow and budget refusal. Spin-content tests compare
 the complete magnetization-resolved energy and momentum-cosine spectra with
 independent spin-basis diagonalization through N=8. Across all motifs through

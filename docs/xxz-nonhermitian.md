@@ -64,10 +64,12 @@ confusing fermion-mode labels with regular Bethe labels.
 
 Use spin-half operators, J=1, N>=2, and opposite imaginary end fields:
 
-```text
-H = sum_{j=1}^{N-1} (Sx_j Sx_{j+1} + Sy_j Sy_{j+1} + Delta Sz_j Sz_{j+1})
-    + i*sqrt(1-Delta^2)/2 * (Sz_1-Sz_N).
-Delta = cos(gamma), 0<gamma<pi/2.
+```math
+\begin{aligned}
+H&=\sum_{j=1}^{N-1}\left(S_j^xS_{j+1}^x+S_j^yS_{j+1}^y+\Delta S_j^zS_{j+1}^z\right)
++\frac{i\sqrt{1-\Delta^2}}2(S_1^z-S_N^z),\\
+\Delta&=\cos\gamma,\qquad 0<\gamma<\frac\pi2.
+\end{aligned}
 ```
 
 The source equations are [Gainutdinov–Hao–Nepomechie–Sommese (2015),
@@ -79,34 +81,38 @@ momentum for this open chain.
 
 With eta=i*gamma, the multiplicative Bethe equations are
 
-```text
-[sinh(lambda_i+i*gamma/2)/sinh(lambda_i-i*gamma/2)]^(2N)
- = product_{j!=i} sinh(lambda_i-lambda_j+i*gamma)/sinh(lambda_i-lambda_j-i*gamma)
-                 * sinh(lambda_i+lambda_j+i*gamma)/sinh(lambda_i+lambda_j-i*gamma).
-E = E_F - sum_i sin(gamma)^2/(cosh(2*lambda_i)-cos(gamma)).
+```math
+\begin{aligned}
+\left[\frac{\sinh(\lambda_i+i\gamma/2)}{\sinh(\lambda_i-i\gamma/2)}\right]^{2N}
+&=\prod_{j\ne i}
+\frac{\sinh(\lambda_i-\lambda_j+i\gamma)}{\sinh(\lambda_i-\lambda_j-i\gamma)}
+\frac{\sinh(\lambda_i+\lambda_j+i\gamma)}{\sinh(\lambda_i+\lambda_j-i\gamma)},\\
+E&=E_F-\sum_i\frac{\sin^2\gamma}{\cosh(2\lambda_i)-\cos\gamma}.
+\end{aligned}
 ```
 
 ## Implemented regular branch
 
 `bethe/xxz_quantum_group_critical.hpp` uses
-`z=tanh(lambda)/tan(gamma/2)`, with ordered positive roots and
-`(1-Delta)*z^2 < 1+Delta`. Writing p=1+Delta, q=1-Delta, its logarithmic residual is
+$z =\tanh (\lambda)/\tan (\gamma /2)$, with ordered positive roots and
+$(1-\Delta)\,z ^{2} < 1+\Delta$. Writing p=1+Delta, q=1-Delta, its logarithmic residual is
 
-```text
-F_i = 4*N*atan(z_i) - 2*pi*I_i
-      - 2*sum_{j!=i} [atan(Delta*(z_i-z_j)/(p-q*z_i*z_j))
-                     +atan(Delta*(z_i+z_j)/(p+q*z_i*z_j))].
+```math
+F_i=4N\arctan z_i-2\pi I_i
+-2\sum_{j\ne i}\left[
+\arctan\!\left(\frac{\Delta(z_i-z_j)}{p-qz_iz_j}\right)
++\arctan\!\left(\frac{\Delta(z_i+z_j)}{p+qz_iz_j}\right)\right].
 ```
 
 Unlike the free-end model, there is no additional boundary phase in this
-equation. A simultaneous iteration solves for `atan(z_i)` from the remaining
-terms. The residual norm is `max(abs(F))/(2*N)`, not an energy-error estimate.
+equation. A simultaneous iteration solves for $\arctan (z_{i})$ from the remaining
+terms. The residual norm is $\max (\lvert F \rvert)/(2\,N)$, not an energy-error estimate.
 Energy is evaluated directly as
 `E_F-sum((p-q*z^2)/(1+z^2))` to avoid unnecessary hyperbolic reconstruction.
 
 `solve_real(N, Delta, labels, options)` accepts increasing positive integer
 labels, M<=floor(N/2), I<=N-M and
-`I < N-M+1-(N-2*M+2)*gamma/pi`. The last condition excludes a conservative
+$I < N -M +1-(N -2\,M +2)\,\gamma /\pi$. The last condition excludes a conservative
 32-epsilon relative band at the infinity threshold. These necessary bounds
 do not establish completeness or guarantee convergence for every label set.
 `sea_state(N, Delta, ell, options)` chooses I=1,...,(N-ell)/2; ell must have
@@ -142,7 +148,7 @@ and the defective two-site Delta=0 endpoint. The script also compares an
 exploratory real-root iteration with independent eigenvalues.
 
 The one-down-spin spectrum is E_F together with
-`E_F-Delta+cos(pi*k/N)`, k=1,...,N-1. Small-chain direct calculations through
+$E_{F} -\Delta +\cos (\pi \,k /N)$, k=1,...,N-1. Small-chain direct calculations through
 N=8 agree with the selected sea at Delta=0.25, 0.6 and 0.9. Native tests use
 two-, three- and four-site analytic energies, independent five-/six-/eight-site
 matrix references and direct substitution into the complex Bethe equations
@@ -241,8 +247,8 @@ at Delta=0 using its number-conserving Jordan–Wigner fermions. This is not
 the ordinary Hermitian open XX chain. Its one-particle matrix has hopping
 1/2 and endpoint potentials -i/2 and +i/2. The characteristic polynomial is
 
-```text
-det(x I-h) = 2^(1-N) x U_{N-1}(x),
+```math
+\det(xI-h)=2^{1-N}xU_{N-1}(x).
 ```
 
 where U is the Chebyshev polynomial of the second kind. Thus the energies
@@ -288,7 +294,7 @@ Native fp64, long-double and fp128 use the same formulas and shared compensated
 summation; these mode labels are not regular real-root Bethe labels.
 
 Tests check all sector dimensions through N=16 and native half-filled minimum
-energies `(1-cot(pi/(2N)))/2` for even N and `(1-csc(pi/(2N)))/2` for odd N.
+energies $(1-\cot (\pi /(2N)))/2$ for even N and $(1-\csc (\pi /(2N)))/2$ for odd N.
 Independent complex spin matrices through N=8 test nullities of H-E,
 (H-E)^2 and (H-E)^3 for every energy in every magnetization sector. This
 checks eigenvector counts and generalized eigenspace dimensions, not merely

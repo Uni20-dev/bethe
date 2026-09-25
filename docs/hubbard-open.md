@@ -26,9 +26,9 @@ build/bethe-hubbard-obc 32 --u 4 --precision fp128
 even N and 1/2 for odd N. Explicit spin projections accept fractions such as
 `-3/2` or decimals such as `1.5`. The physical constraints are simply
 
-```text
-N_up = N/2 + Sz,   N_down = N/2 - Sz,
-0 <= N_up,N_down <= L, with both counts integral.
+```math
+N_\uparrow=\frac N2+S^z,\qquad N_\downarrow=\frac N2-S^z,\qquad
+0\le N_\uparrow,N_\downarrow\le L,\qquad N_\uparrow,N_\downarrow\in\mathbb Z.
 ```
 
 Unlike periodic rings, open chains have no shell-parity exclusions in the
@@ -41,20 +41,21 @@ convergence controls follow the [common CLI guide](command-line.md).
 
 With hopping t=1 and sites j=1,...,L, we use
 
-```text
-H = -sum_(j=1..L-1,sigma) (c^dagger_(j,sigma) c_(j+1,sigma) + h.c.)
-    + U sum_(j=1..L) n_(j,up) n_(j,down).
+```math
+H=-\sum_{j=1}^{L-1}\sum_\sigma
+\left(c^\dagger_{j,\sigma}c_{j+1,\sigma}+\mathrm{h.c.}\right)
++U\sum_{j=1}^{L}n_{j,\uparrow}n_{j,\downarrow}.
 ```
 
 The reported energy is total and unshifted. To convert to the convention
-`U*(n_up-1/2)*(n_down-1/2)`, subtract `U*N/2` and add `U*L/4`.
+$U \,(n_{\mathrm{up}} -1/2)\,(n_{\mathrm{down}} -1/2)$, subtract $U \,N /2$ and add $U \,L /4$.
 For L=1 there is no hopping: empty or singly occupied states have energy zero,
 and the doubly occupied state has energy U.
 
 L=2 is the ordinary **single-bond dimer**. Its two-electron Sz=0 ground energy is
 
-```text
-E = (U - sqrt(U^2+16))/2.
+```math
+E=\frac{U-\sqrt{U^2+16}}2.
 ```
 
 For example, U=4 gives E approximately `-0.8284271247461901`. This differs
@@ -62,8 +63,8 @@ from the periodic L=2 convention, whose site sum counts that bond twice.
 
 At U=0, fill the lowest standing-wave levels independently for each spin:
 
-```text
-k_j = pi*j/(L+1),   epsilon_j = -2*cos(k_j),   j=1,...,L.
+```math
+k_j=\frac{\pi j}{L+1},\qquad \epsilon_j=-2\cos k_j,\qquad j=1,\ldots,L.
 ```
 
 This path is exact up to arithmetic rounding and needs no Newton updates.
@@ -76,22 +77,21 @@ energy in the implementation.
 ## Reflected scattering and ground-state labels
 
 First consider a repulsive sector, U>0, N<=L, and M=N_down<=N/2.
-Set `u=U/4`. All charge roots obey `0<k_j<pi`, all spin rapidities are
+Set $u =U /4$. All charge roots obey $0<k_{j} <\pi$, all spin rapidities are
 positive, and each family is strictly increasing. We solve
 
-```text
-F_charge(j) = 2*(L+1)*k_j - 2*pi*I_j
-              + 2*sum_a [atan((sin(k_j)-Lambda_a)/u)
-                         + atan((sin(k_j)+Lambda_a)/u)] = 0,
-
-F_spin(a) = 2*sum_j [atan((Lambda_a-sin(k_j))/u)
-                    + atan((Lambda_a+sin(k_j))/u)]
-            - 2*sum_(b!=a) [atan((Lambda_a-Lambda_b)/(2*u))
-                            + atan((Lambda_a+Lambda_b)/(2*u))]
-            - 2*pi*J_a = 0,
-
-I_j = j,  j=1,...,N;    J_a = a,  a=1,...,M,
-E_roots = -2*sum_j cos(k_j).
+```math
+\begin{aligned}
+F_{\mathrm{charge}}(j)&=2(L+1)k_j-2\pi I_j\\
+&\quad+2\sum_a\left[\arctan\!\left(\frac{\sin k_j-\Lambda_a}{u}\right)
++\arctan\!\left(\frac{\sin k_j+\Lambda_a}{u}\right)\right]=0,\\
+F_{\mathrm{spin}}(a)&=2\sum_j\left[\arctan\!\left(\frac{\Lambda_a-\sin k_j}{u}\right)
++\arctan\!\left(\frac{\Lambda_a+\sin k_j}{u}\right)\right]\\
+&\quad-2\sum_{b\ne a}\left[\arctan\!\left(\frac{\Lambda_a-\Lambda_b}{2u}\right)
++\arctan\!\left(\frac{\Lambda_a+\Lambda_b}{2u}\right)\right]-2\pi J_a=0,\\
+I_j&=j,\quad j=1,\ldots,N,\qquad J_a=a,\quad a=1,\ldots,M,\\
+E_{\mathrm{roots}}&=-2\sum_j\cos k_j.
+\end{aligned}
 ```
 
 The plus-rapidity terms describe scattering off reflected partners. Both
@@ -104,7 +104,7 @@ These consecutive integer labels select the sector ground state. For the
 open nearest-neighbor chain, spin ordering places the lowest state at the
 smallest total spin compatible with Sz; the periodic shell-parity issue
 does not arise. Labels use Uni20's exact `half_int`, despite being integers
-for this boundary condition. `Lambda` in returned states is the conventional
+for this boundary condition. $\Lambda$ in returned states is the conventional
 Hubbard rapidity, not the internally scaled Newton variable.
 
 ## Doping, attraction, and auxiliary roots
@@ -119,9 +119,11 @@ therefore reduce every physical request to the repulsive sector above:
 
 For g=|U|, their unshifted-energy relations are
 
-```text
-E_-g(N_up,N_down) = E_+g(N_up,L-N_down) - g*N_up,
-E_U(N_up,N_down)  = E_U(L-N_up,L-N_down) + U*(N-L).
+```math
+\begin{aligned}
+E_{-g}(N_\uparrow,N_\downarrow)&=E_{+g}(N_\uparrow,L-N_\downarrow)-gN_\uparrow,\\
+E_U(N_\uparrow,N_\downarrow)&=E_U(L-N_\uparrow,L-N_\downarrow)+U(N-L).
+\end{aligned}
 ```
 
 There is no approximation to attractive strings here: the **energy** is
@@ -146,9 +148,9 @@ There are N+M positive-root unknowns, requiring O((N+M)^2) dense storage and
 O((N+M)^3) work per update. This is a moderate-chain solver, not a matrix-free
 large-system implementation.
 
-Internally we solve for `Lambda/max(1,u)`. For U<8, continuation starts at
+Internally we solve for $\Lambda /\max (1,u)$. For U<8, continuation starts at
 U=8 and halves U down to the target; for U>=8 it starts directly at U.
-The reported charge and spin residuals are `max|F|/[2*(L+1)]`, with default
+The reported charge and spin residuals are $\max \lvert F \rvert /[2\,(L +1)]$, with default
 tolerance 32 times the selected precision's epsilon. The update budget is
 shared by all stages. Even a stopped solve reports residuals at the requested
 root-sector interaction, not an intermediate continuation value.
@@ -161,8 +163,8 @@ residual is **not an energy-error bound**.
 
 At half filling and large positive U, virtual hopping gives the open XXX chain:
 
-```text
-(U/4)*E_Hubbard -> E_XXX_open(J=1) - (L-1)/4.
+```math
+\frac U4 E_{\mathrm{Hubbard}}\longrightarrow E_{\mathrm{XXX,open}}(J=1)-\frac{L-1}{4}.
 ```
 
 Tests compare this limit with the existing XXX solver, independently fill

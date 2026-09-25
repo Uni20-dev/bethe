@@ -3,7 +3,7 @@
 [Hubbard equations and numerical method](hubbard.md) · [Overview](../README.md)
 
 Use `--particles N` and `--sz VALUE` to select the physical sector. The two
-spin populations are `N_up=N/2+Sz` and `N_down=N/2-Sz`; each must be an integer
+spin populations are $N_{\mathrm{up}} =N /2+S^z$ and $N_{\mathrm{down}} =N /2-S^z$; each must be an integer
 between zero and L. Half-integers can be written as `1/2` or `0.5`.
 The defaults remain N=L and Sz=0, and L must be even.
 This guide describes `bethe-hubbard-pbc`. The [free-end solver](hubbard-open.md)
@@ -52,17 +52,19 @@ No complex-string or general excited-state solver is implied here.
 
 On an even bipartite ring, the down-spin particle-hole transformation
 
-```text
-c_(j,down) -> (-1)^j c^dagger_(j,down)
+```math
+c_{j,\downarrow}\longrightarrow(-1)^j c^\dagger_{j,\downarrow}.
 ```
 
 preserves hopping and exchanges the sign of U. This is the Shiba mapping;
 see [rylands-2022](../CITATIONS.md#rylands-2022), Sec. II. For our **unshifted**
 Hamiltonian, writing g=|U|,
 
-```text
-(N_up, N_down) -> (N_up, L-N_down),
-E_-g(N_up,N_down) = E_+g(N_up,L-N_down) - g*N_up.
+```math
+\begin{aligned}
+(N_\uparrow,N_\downarrow)&\longrightarrow(N_\uparrow,L-N_\downarrow),\\
+E_{-g}(N_\uparrow,N_\downarrow)&=E_{+g}(N_\uparrow,L-N_\downarrow)-gN_\uparrow.
+\end{aligned}
 ```
 
 Thus balanced attraction maps to N'=L with `Sz'=(N-L)/2`. The attractive
@@ -73,9 +75,11 @@ do not reconstruct the physical attractive roots or wavefunction.
 
 Above half filling, a particle-hole transformation on **both** species gives
 
-```text
-(N_up,N_down) -> (L-N_up,L-N_down),
-E_U(N_up,N_down) = E_U(L-N_up,L-N_down) + U*(N-L).
+```math
+\begin{aligned}
+(N_\uparrow,N_\downarrow)&\longrightarrow(L-N_\uparrow,L-N_\downarrow),\\
+E_U(N_\uparrow,N_\downarrow)&=E_U(L-N_\uparrow,L-N_\downarrow)+U(N-L).
+\end{aligned}
 ```
 
 Finally, spin reversal exchanges N_up and N_down without changing energy.
@@ -87,11 +91,11 @@ would change the periodic boundary condition.
 ## Momentum and root metadata
 
 Momentum also transforms. In the convention `P=sum(k) mod 2*pi`, for even L,
-the down-spin Shiba step adds `pi*(N_down-1)` when converting auxiliary
+the down-spin Shiba step adds $\pi \,(N_{\mathrm{down}} -1)$ when converting auxiliary
 momentum back to the physical sector. The full particle-hole step adds
-`pi*N`. Counts in these expressions belong to the sector **before that step**;
+$\pi \,N$. Counts in these expressions belong to the sector **before that step**;
 spin reversal adds nothing. These offsets follow by replacing each occupied
-down-spin momentum by its complementary hole at `pi-k`; a filled one-spin
+down-spin momentum by its complementary hole at $\pi -k$; a filled one-spin
 band has momentum pi. Tests check the resulting physical momenta directly
 against translation in Fock space, including degenerate ground eigenspaces.
 

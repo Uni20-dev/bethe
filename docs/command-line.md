@@ -10,8 +10,8 @@ and state-selection details live in the linked guides.
 `bethe-xxx-obc` program described in the [open-chain guide](open-chains.md).
 For anisotropy, use [`bethe-xxz-pbc`](xxz.md) or the free-end
 [`bethe-xxz-obc`](xxz-open.md); both require `--delta`.
-Both support ground states and sector minima for finite `Delta>=0`;
-their excitation and specified-real-root modes still require `0<=Delta<=1`.
+Both support ground states and sector minima for finite $\Delta \ge 0$;
+their excitation and specified-real-root modes still require $0\le \Delta \le 1$.
 Massive free-end ground states report an explicit boundary-root coordinate
 where needed; see the [boundary-root guide](xxz-open-massive.md).
 For electrons, [`bethe-hubbard-pbc`](hubbard.md) requires `--u` and supports
@@ -137,10 +137,10 @@ build/bethe-xxx-pbc 16 --precision fp128 --tolerance 1e-30
 ```
 
 The default is a ground state; odd lengths return one of the degenerate
-`Sz=1/2` representatives. `--sz` accepts integers, fractions such as `-3/2`,
+$S^z =1/2$ representatives. `--sz` accepts integers, fractions such as `-3/2`,
 or half-integer decimals. `--sectors` reports one lowest-energy representative
 in each sector, including spin-reversed partners. `--spinons` requires odd
-`N>=3` and reports the one-spinon family, not the full `Sz=1/2` spectrum.
+$N \ge 3$ and reports the one-spinon family, not the full $S^z =1/2$ spectrum.
 `--quantum-numbers` takes a strictly increasing comma-separated list;
 an empty string selects the fully polarized state. `--excitations COUNT|all`
 scans a restricted real-root family, described in the [XXX excitation guide](excitations.md).

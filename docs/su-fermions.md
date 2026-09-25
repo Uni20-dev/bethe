@@ -8,10 +8,12 @@ count from the particle count N, this guide calls it κ. All particles have
 the same mass and every pair of different components has the same contact
 repulsion:
 
-```text
-H = -sum_j d²/dx_j² + 2c sum_(i<j) delta(x_i-x_j),
-hbar²/(2m)=1,  c>=0,  circumference ell>0,
-E=sum_j k_j²,  P=sum_j k_j.
+```math
+\begin{aligned}
+H&=-\sum_j\frac{\partial^2}{\partial x_j^2}+2c\sum_{i<j}\delta(x_i-x_j),\\
+\frac{\hbar^2}{2m}&=1,\quad c\ge0,\quad \ell>0\ \text{(circumference)},\\
+E&=\sum_jk_j^2,\qquad P=\sum_jk_j.
+\end{aligned}
 ```
 
 Identical-component contact interactions vanish by antisymmetry. There
@@ -65,26 +67,29 @@ thermodynamic approximation is made in the finite-size solver.
 
 After sorting the occupied populations `N_1>=...>=N_κ`, let
 
-```text
-M_0=N,  M_a=N_(a+1)+...+N_κ,  M_κ=0,
-x^(0)=q=k*ell,  x^(a)=lambda^(a)*ell for a>=1,  g=c*ell,
-theta_w(d)=2 atan(d/w).
+```math
+\begin{aligned}
+M_0&=N,\quad M_a=N_{a+1}+\cdots+N_\kappa,\quad M_\kappa=0,\\
+x^{(0)}&=q=k\ell,\quad x^{(a)}=\lambda^{(a)}\ell\quad(a\ge1),\quad g=c\ell,\\
+\theta_w(d)&=2\arctan(d/w).
+\end{aligned}
 ```
 
 The charge and spin equations are
 
-```text
-q_j + sum_b theta_(g/2)(q_j-x_b^(1)) = 2*pi*I_j,
-
-sum_b theta_(g/2)(x_j^(a)-x_b^(a-1))
-+ sum_b theta_(g/2)(x_j^(a)-x_b^(a+1))
-- sum_(b!=j) theta_g(x_j^(a)-x_b^(a)) = 2*pi*J_j^(a).
+```math
+\begin{aligned}
+q_j+\sum_b\theta_{g/2}(q_j-x_b^{(1)})&=2\pi I_j,\\
+\sum_b\theta_{g/2}(x_j^{(a)}-x_b^{(a-1)})
++\sum_b\theta_{g/2}(x_j^{(a)}-x_b^{(a+1)})
+-\sum_{b\ne j}\theta_g(x_j^{(a)}-x_b^{(a)})&=2\pi J_j^{(a)}.
+\end{aligned}
 ```
 
 There is no next-level sum at a=κ-1. Energy depends only on the charge
 momenta; auxiliary roots describe the internal component state.
 
-Every sea uses centered consecutive labels `j-(M_a-1)/2`, stored as
+Every sea uses centered consecutive labels $j -(M_{a} -1)/2$, stored as
 Uni20 `half_int`. The rational equations require charge-label parity
 `2I=M_1 mod 2`, and spin-label parity
 `2J^(a)=M_(a-1)+M_(a+1)-M_a+1 mod 2`. Centering the charge sea therefore
@@ -106,7 +111,7 @@ Newton corrections which preserve the order and positivity of each sea.
 Storage is O(d²), with O(d³) linear solves. There is no compiled-in maximum
 κ, but this is a dense finite-system tool, not a large-κ thermodynamics code.
 
-Continuation starts at `g=max(c*ell,64N)` and halves g down to the requested
+Continuation starts at $g =\max (c \,\ell,64N)$ and halves g down to the requested
 value. Charge roots start from a centered impenetrable-gas sea; spin roots
 use the inverse balanced SU(κ) spin-chain density only as an initial guess.
 All finite-size equations are solved, also for imbalanced populations.
@@ -115,7 +120,7 @@ physical roots. At weak coupling, exact integer multiples of pi are
 subtracted before the small complementary phases are summed.
 
 Residual normalization is N for g>=1. For g<1 it is
-`max(sqrt(g),abs(x_j^(a)))` **at every nesting level**. Scaling the spin
+$\max (\sqrt{g },\lvert x_{j} ^{a }\rvert)$ **at every nesting level**. Scaling the spin
 equations too is essential when an entire small root cluster shrinks as
 sqrt(g). The zero-root equations follow exactly from reflection symmetry;
 tests separately check the original rational equations for every root.
@@ -151,7 +156,7 @@ budget exhaustion and all three arithmetic types. Physical checks include:
   energies approaching the Bethe result; a finite cutoff is not exact.
 - The balanced SU(3) strong-coupling spin-chain limit:
   `E_infinity=pi²*N*(N²-1)/(3ell²)` and
-  `E/E_infinity=1-2*(N-E_permutation)/(c*ell)+O((c*ell)^-2)`.
+  $E /E_{\mathrm{infinity}} =1-2\,(N -E_{\mathrm{permutation}})/(c \,\ell)+O ((c \,\ell)^{-2})$.
   The scaled nested spin roots approach those of the permutation chain.
 - Weak-to-strong sweeps through six occupied components and 30 particles,
   plus a tiny-c three-particle test that resolves the leading interaction

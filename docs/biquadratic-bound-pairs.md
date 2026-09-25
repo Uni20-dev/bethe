@@ -28,12 +28,11 @@ with other state selectors; it fixes the through-line sector automatically.
 
 ## Excitation structure
 
-The gap is measured from the entire exact ground manifold, `E0=N-1`.
+The gap is measured from the entire exact ground manifold, $E_0 =N -1$.
 For N=4 there is one bound-pair mode:
 
-```text
-E = (15-sqrt(17))/2,
-E-E0 = (9-sqrt(17))/2 = 2.438447187...
+```math
+E=\frac{15-\sqrt{17}}2,\qquad E-E_0=\frac{9-\sqrt{17}}2=2.438447187\ldots
 ```
 
 This is the complex-root singlet missed by the all-real scan. At larger N,
@@ -46,8 +45,8 @@ gap 1). This is a bound-pair threshold, not the global positive gap, which
 remains 1. The droplet theorem of
 [Nachtergaele, Spitzer and Starr](../CITATIONS.md#nachtergaele-spitzer-starr-2007),
 Theorem 2.1, gives the thermodynamic module-edge limit. Rescaling their
-Hamiltonian by `2*Delta=3`, with eta=acosh(3/2), gives
-`2*sinh(eta)*tanh(eta)=5/3` for two defects.
+Hamiltonian by $2\,\Delta =3$, with eta=acosh(3/2), gives
+$2\,\sinh (\eta)\,\tanh (\eta)=5/3$ for two defects.
 
 The lowest mode matches the module minimum in independent ED checks for
 N=4,...,10. We do not use that finite validation as a proof of finite-N
@@ -62,21 +61,23 @@ Use the auxiliary XXZ chain with Delta=3/2 and opposite end fields, not the
 ordinary zero-field open XXZ chain. Our regularization of
 [Bajnok et al., Eq. (5.12)](../CITATIONS.md#bajnok-2020) writes the two roots as
 
-```text
-u_± = (eta+d)/2 ± i*a/2,        0<a<pi, |d|<eta,
-d = sigma*exp(-L),              L=-log|d|,
-J = N-2-mode,                   mode=1,...,N-3,
-sigma = (-1)^(mode+1).
+```math
+\begin{aligned}
+u_\pm&=\frac{\eta+d}{2}\pm\frac{ia}{2},\quad 0<a<\pi,\quad |d|<\eta,\\
+d&=\sigma e^{-L},\qquad L=-\log|d|,\\
+J&=N-2-\mathrm{mode},\quad \mathrm{mode}=1,\ldots,N-3,\\
+\sigma&=(-1)^{\mathrm{mode}+1}.
+\end{aligned}
 ```
 
 There is **no real-root sea**. Using Theta, C and G from the
 [two-string derivation](xxz-open-two-string.md), the two equations are
 
-```text
-2N [Theta(a;eta+d/2)+C(a;d)] - 2 Theta(2a;eta) = 2 pi J,
-
-2N [G(a;eta+d/2)-G(a;d/2)] - log(sinh(2eta+d)) - L
- + log(sinh(d)/d) = 0.
+```math
+\begin{aligned}
+2N[\Theta(a;\eta+d/2)+C(a;d)]-2\Theta(2a;\eta)&=2\pi J,\\
+2N[G(a;\eta+d/2)-G(a;d/2)]-\log\sinh(2\eta+d)-L+\log\frac{\sinh d}{d}&=0.
+\end{aligned}
 ```
 
 Both signs of d are essential. The reflected scattering factor has a

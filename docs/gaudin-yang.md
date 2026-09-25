@@ -12,11 +12,13 @@ odd-population restriction. The two-component frontend here remains available.
 
 ## Units and first calculations
 
-We use equal masses, a ring of physical circumference `ell`, and
+We use equal masses, a ring of physical circumference $\ell$, and
 
-```text
-H = -sum_j d²/dx_j² + 2c sum_(i<j) delta(x_i-x_j),
-hbar²/(2m) = 1,      E = sum_j k_j²,      P = sum_j k_j.
+```math
+\begin{aligned}
+H&=-\sum_j\frac{\partial^2}{\partial x_j^2}+2c\sum_{i<j}\delta(x_i-x_j),\\
+\frac{\hbar^2}{2m}&=1,\qquad E=\sum_jk_j^2,\qquad P=\sum_jk_j.
+\end{aligned}
 ```
 
 The particle count N is **not** a lattice length. The coupling c has units
@@ -37,9 +39,9 @@ build/bethe-gaudin-yang-pbc 6 --length 6 --c 1 --precision fp128
 
 ## Supported sectors
 
-`Sz=(N_up-N_down)/2`. The default is 0 for even N and 1/2 for odd N;
+$S^z =(N_{\mathrm{up}} -N_{\mathrm{down}})/2$. The default is 0 for even N and 1/2 for odd N;
 `--sz` accepts Uni20's exact integer/half-integer notation, including negative
-values. Invalid population parity or `|2Sz|>N` is rejected.
+values. Invalid population parity or $\lvert 2S^z \rvert >N$ is rejected.
 
 The first interacting implementation requires **both N_up and N_down odd**.
 Equivalently, N is even and the minority count M is odd. This includes
@@ -73,15 +75,16 @@ In particular, the Hubbard Shiba mapping does not supply a continuum c<0 solver.
 
 ## Two nested equations
 
-Let `q=k*ell`, `l=lambda*ell`, and `g=c*ell`. The implementation solves
+Let $q =k \,\ell$, $l =\lambda \,\ell$, and $g =c \,\ell$. The implementation solves
 
-```text
-q_j + sum_a 2 atan(2(q_j-l_a)/g) = 2*pi*I_j,
-sum_j 2 atan(2(l_a-q_j)/g)
-    - sum_(b!=a) 2 atan((l_a-l_b)/g) = 2*pi*J_a.
-
-I_j = j-(N-1)/2,  j=0,...,N-1,
-J_a = a-(M-1)/2,  a=0,...,M-1.
+```math
+\begin{aligned}
+q_j+\sum_a2\arctan\!\left(\frac{2(q_j-l_a)}g\right)&=2\pi I_j,\\
+\sum_j2\arctan\!\left(\frac{2(l_a-q_j)}g\right)
+-\sum_{b\ne a}2\arctan\!\left(\frac{l_a-l_b}g\right)&=2\pi J_a,\\
+I_j&=j-\frac{N-1}{2},\quad j=0,\ldots,N-1,\\
+J_a&=a-\frac{M-1}{2},\quad a=0,\ldots,M-1.
+\end{aligned}
 ```
 
 Here the I labels are half-odd integers and the J labels are integers.
@@ -102,11 +105,11 @@ literature's full coverage. Reflection symmetry leaves N/2 positive charge
 roots and (M-1)/2 positive spin roots; the central spin root is exactly zero.
 The solver builds an analytic reduced Jacobian and uses Uni20's dense linear
 solve with backtracking to preserve ordered positive roots. For reduced
-order `d=(N+M-1)/2`, storage is O(d²) and a dense Newton solve is O(d³).
+order $d =(N +M -1)/2$, storage is O(d²) and a dense Newton solve is O(d³).
 
-Continuation begins at `g=max(c*ell,64N)` and halves g towards the requested
+Continuation begins at $g =\max (c \,\ell,64N)$ and halves g towards the requested
 value after each converged stage. Spin coordinates are stored as
-`l/max(1,g)` to accommodate their large-c growth. Changing that scale preserves
+$l /\max (1,g)$ to accommodate their large-c growth. Changing that scale preserves
 the physical spin roots; it does not move them towards zero at weak coupling.
 At g<1 the code subtracts integer multiples of pi analytically before summing
 complementary phases, resolving the central charge pair of size sqrt(g).
@@ -114,7 +117,7 @@ complementary phases, resolving the central charge pair of size sqrt(g).
 The residual is the maximum over the independent positive-root equations:
 
 - For g>=1, both families' absolute residuals are divided by N.
-- For g<1, each charge residual is divided by `max(sqrt(g),abs(q_j))`;
+- For g<1, each charge residual is divided by $\max (\sqrt{g },\lvert q_{j} \rvert)$;
   spin residuals remain divided by N.
 
 Thus residuals on opposite sides of g=1 have different normalizations.
@@ -130,7 +133,7 @@ set must not be used as an eigenstate at the requested interaction.
 
 fp64, platform-native long double, and optional fp128 run the same equations
 without narrowing parameters or output. Finite positive ell, finite c>=0,
-and a finite positive tolerance are required; interacting `c*ell/2` must be
+and a finite positive tolerance are required; interacting $c \,\ell /2$ must be
 finite and nonzero. Particle-label and dense-matrix allocation sizes are
 checked before allocation. Nonfinite physical roots/observables and complete
 underflow of a nonzero root or individual kinetic term raise errors: change
@@ -145,17 +148,17 @@ its analytic Jacobian with central finite differences. It also checks:
 
 - Exact free-fermion occupation energies, polarization, vacuum, and spin reversal.
 - The two-body contact jump condition: at ell=1 the positive root obeys
-  `q*tan(q/2)=c/2`. At c=pi, `q=pi/2` and `E=pi²/2`, providing an
+  $q \,\tan (q /2)=c /2$. At c=pi, $q =\pi /2$ and `E=pi²/2`, providing an
   independent native-precision oracle. The two-body energies also agree
   with the bosonic contact problem.
 - The first-order weak-coupling shift `E-E_free = 2c*N_up*N_down/ell + O(c²)`.
 - The strong-coupling charge energy `E_infinity=pi²*N*(N²-1)/(3ell²)` and
   its leading correction `E/E_infinity=1-2*Omega/(c*ell)+O(c^-2)`, where
   `Omega=N/2-2E_XXX` for the N-site XXX sector with M overturned spins.
-  Spin roots satisfy `lambda/c -> z_XXX/2`. The weak/strong expansions are
+  Spin roots satisfy $\lambda /c \to z_{\mathrm{XXX}} /2$. The weak/strong expansions are
   checked against Eqs. (12), (15)-(16) of Oelkers et al.
 - A controlled dilute-Hubbard discretization: with lattice spacing a,
-  `U_lattice=2c*a` and hopping set to 1, the continuum energy is approached
+  $U_{\mathrm{lattice}} =2c \,a$ and hopping set to 1, the continuum energy is approached
   by `(E_Hubbard+2N)/a²`. Doubling the lattice resolution checks convergence;
   this is not a claim that the two finite models have identical energies.
 - Unit rescaling, continuation budgets, weak-to-strong sweeps through N=32,

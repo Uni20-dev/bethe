@@ -24,7 +24,7 @@ with other state selectors, including `--bound-pairs`.
 
 ## Where this branch lies
 
-The gap is measured from the entire exact ground space, `E0=N-1`. Its
+The gap is measured from the entire exact ground space, $E_0 =N -1$. Its
 lowest mode approaches **E-E0=2**, compared with 3 for three widely
 separated lowest one-defect excitations, or 8/3 for a separated bound pair
 and one defect. Two separated single defects also have threshold 2, but
@@ -34,9 +34,9 @@ The thermodynamic droplet limit follows from
 [Nachtergaele, Spitzer and Starr, Theorem 2.1](../CITATIONS.md#nachtergaele-spitzer-starr-2007).
 In our normalization, at eta=acosh(3/2),
 
-```text
-g_M = 2*sinh(eta)*tanh(M*eta/2),
-g_1 = 1,    g_2 = 5/3,    g_3 = 2,    g_infinity = sqrt(5).
+```math
+g_M=2\sinh\eta\,\tanh(M\eta/2),\qquad
+g_1=1,\quad g_2=\frac53,\quad g_3=2,\quad g_\infty=\sqrt5.
 ```
 
 That theorem supplies a thermodynamic module-edge limit, not a proof of
@@ -45,8 +45,8 @@ independent ED for N=6,...,10. Other modules and scattering levels can
 interleave these modes. The global positive gap still approaches 1.
 
 At N=6 the three-defect module has dimension five. Its TL characteristic
-polynomial is `(g-6)(g-7)(g^3-17g^2+80g-106)`. The targeted droplet is the
-smallest cubic root, `g=2.28668884804195...`, with physical energy `5+g`.
+polynomial is $(g -6)(g -7)(g ^{3}-17g ^{2}+80g -106)$. The targeted droplet is the
+smallest cubic root, `g=2.28668884804195...`, with physical energy $5+g$.
 This makes a useful native-precision check independent of the Bethe equations.
 At N=128 the first gap is approximately `2.00008198366582`.
 
@@ -56,47 +56,53 @@ The reference is quantum-group XXZ with opposite end fields, Delta=3/2,
 not ordinary zero-field open XXZ. A canonical representative of its three
 roots is
 
-```text
-u0 = i*a/2,
-u+ = eta + Re(z) + i*(a/2 + Im(z)),    u- = conjugate(u+),
-z = exp(-L + i*phi),                  eta = acosh(Delta),
-J = N-4-mode,                        mode=1,...,N-5.
+```math
+\begin{aligned}
+u_0&=\frac{ia}{2},\\
+u_+&=\eta+\operatorname{Re}z+i(a/2+\operatorname{Im}z),\qquad u_-=\overline{u_+},\\
+z&=e^{-L+i\phi},\qquad \eta=\operatorname{arcosh}\Delta,\\
+J&=N-4-\mathrm{mode},\quad \mathrm{mode}=1,\ldots,N-5.
+\end{aligned}
 ```
 
 The central root and conjugate pair together make the three-string; there
 is no additional real-root sea. Unlike a two-string's signed real deviation,
-`z` generally has both real and imaginary parts. Setting its phase to zero
-does not solve the finite-chain equations. `L=-log|z|` and `phi` remain
+$z$ generally has both real and imaginary parts. Setting its phase to zero
+does not solve the finite-chain equations. $L =-\log \lvert z \rvert$ and $\phi$ remain
 authoritative even when adding z to eta rounds away the correction, or
 exp(-L) underflows.
 
 Here is our regularization of the original complex equations
-[Bajnok et al., Eq. (5.12)](../CITATIONS.md#bajnok-2020). Put `u=u+`,
+[Bajnok et al., Eq. (5.12)](../CITATIONS.md#bajnok-2020). Put $u =u +$,
 `b=a+2 Im(z)` and define
 
-```text
-Theta(beta;w) = 2 atan2(sin(beta/2), tanh(w)*cos(beta/2)),
-D = log sinh(u+eta/2) - log sinh(u-eta/2),
-A = log sinh(2eta+z),
-B = log sinh(2eta+z+i*a) - log sinh(z+i*a),
-C = log sinh(eta+i*b) - log sinh(-eta+i*b),
-R = log sinh(3eta+2 Re(z)) - log sinh(eta+2 Re(z)),
-c = log(sinh(z)/z),                   c(0)=0.
+```math
+\begin{aligned}
+\Theta(\beta;w)&=2\operatorname{atan2}\!\left(\sin(\beta/2),\tanh w\cos(\beta/2)\right),\\
+D&=\log\sinh(u+\eta/2)-\log\sinh(u-\eta/2),\\
+A&=\log\sinh(2\eta+z),\\
+B&=\log\sinh(2\eta+z+ia)-\log\sinh(z+ia),\\
+C&=\log\sinh(\eta+ib)-\log\sinh(-\eta+ib),\\
+R&=\log\sinh(3\eta+2\operatorname{Re}z)-\log\sinh(\eta+2\operatorname{Re}z),\\
+c&=\log\frac{\sinh z}{z},\qquad c(0)=0.
+\end{aligned}
 ```
 
 With `wrap(t)=atan2(sin(t),cos(t))`, the three residuals are
 
-```text
-f0 = Theta(a;eta/2) + 2 Im(D)
-     - [2 Im(B) + Theta(2b;eta) + pi*(J+1)]/N,
-f1 = Re(D) - [Re(A) + L - Re(c) + Re(B) + R]/(2N),
-f2 = wrap(2N Im(D) - Im(A) + phi + Im(c) - Im(B) - Im(C))/(2N).
+```math
+\begin{aligned}
+f_0&=\Theta(a;\eta/2)+2\operatorname{Im}D
+-\frac{2\operatorname{Im}B+\Theta(2b;\eta)+\pi(J+1)}{N},\\
+f_1&=\operatorname{Re}D-\frac{\operatorname{Re}A+L-\operatorname{Re}c+\operatorname{Re}B+R}{2N},\\
+f_2&=\frac{\operatorname{wrap}(2N\operatorname{Im}D-\operatorname{Im}A+\phi+\operatorname{Im}c-\operatorname{Im}B-\operatorname{Im}C)}{2N}.
+\end{aligned}
 ```
 
 The first equation is the product phase with the singular internal
 scattering cancelled; the other two retain the original outer-root equation.
 For tiny z, the regular correction c is evaluated by its Taylor series.
-The search stays in `0<a<pi`, `0<b<pi`, `|z|<eta/4`.
+The search stays in $0<a <\pi$, $0<b <\pi$, $\lvert z \rvert <\eta /4$.
 
 An ideal-string stage initializes the solve. Its center satisfies
 `N*Theta(a;3eta/2)-Theta(2a;eta)-Theta(2a;2eta)=pi*J`.

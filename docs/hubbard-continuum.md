@@ -37,9 +37,11 @@ give additive two-spinon energies and momenta, an endpoint spinon at the
 lower boundary, and equal rapidities at the upper boundary. For a requested
 total momentum P in [-pi,pi], put q=|P|. In terms of the existing spinon line:
 
-```text
-E_lower(P) = epsilon_s(q)
-E_upper(P) = 2*epsilon_s(q/2).
+```math
+\begin{aligned}
+E_{\mathrm{lower}}(P)&=\epsilon_s(q),\\
+E_{\mathrm{upper}}(P)&=2\epsilon_s(q/2).
+\end{aligned}
 ```
 
 For P>=0, constituent momenta are (0,q) and (q/2,q/2).

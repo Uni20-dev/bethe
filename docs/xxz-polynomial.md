@@ -7,7 +7,7 @@ The internal building block
 [xxz_polynomial.hpp](../include/bethe/xxz_polynomial.hpp) expresses the
 periodic Bethe equations in coefficients rather than individually labelled
 roots. It includes analytic coefficient derivatives, energy, and momentum.
-It accepts `-1<Delta<=0`, including the free-fermion point for initialization.
+It accepts $-1<\Delta \le 0$, including the free-fermion point for initialization.
 
 This is **not yet a production ground-state solver**. The polynomial can
 represent real roots and conjugate pairs, and the tests follow small-ring
@@ -20,24 +20,26 @@ This polynomial path is not exposed by the public APIs or frontends.
 
 Use the coordinate Bethe ansatz in
 [Caux's notes](../CITATIONS.md#caux-xxz-coordinate), Eqs. `xxz.be` and `xxz.e`,
-at zero twist, J=1. We restore the ferromagnetic energy `N*Delta/4` to the
+at zero twist, J=1. We restore the ferromagnetic energy $N \,\Delta /4$ to the
 notes' shifted Hamiltonian. Set
 
-```text
-exp(i*k_j) = -(1-i*z_j)/(1+i*z_j),
-D(z,w) = 1+Delta-(1-Delta)*z*w,
-f_±(z,w) = D(z,w) ± i*Delta*(z-w),
-sigma = (-1)^(N-M-1).
+```math
+\begin{aligned}
+e^{ik_j}&=-\frac{1-iz_j}{1+iz_j},\\
+D(z,w)&=1+\Delta-(1-\Delta)zw,\\
+f_\pm(z,w)&=D(z,w)\pm i\Delta(z-w),\\
+\sigma&=(-1)^{N-M-1}.
+\end{aligned}
 ```
 
 Clearing the scattering denominators gives, for each root,
 
-```text
-(1+i*z_j)^N * product_(l!=j) f_-(z_j,z_l)
-  - sigma*(1-i*z_j)^N * product_(l!=j) f_+(z_j,z_l) = 0.
+```math
+(1+iz_j)^N\prod_{l\ne j}f_-(z_j,z_l)
+-\sigma(1-iz_j)^N\prod_{l\ne j}f_+(z_j,z_l)=0.
 ```
 
-The `(-1)^N` in the momentum parametrization is essential on odd rings.
+The $(-1)^N$ in the momentum parametrization is essential on odd rings.
 This equation comes from the periodic coordinate ansatz; it does not rely
 on an even-ring ground-state identification theorem. Clearing denominators
 alone is not a proof of admissibility at singular configurations.
@@ -46,17 +48,19 @@ alone is not a proof of admissibility at singular configurations.
 
 Write the monic root polynomial with **real** coefficients in ascending order:
 
-```text
-Q(z) = product_j (z-z_j) = z^M + sum_(r=0)^(M-1) c_r*z^r.
+```math
+Q(z)=\prod_j(z-z_j)=z^M+\sum_{r=0}^{M-1}c_rz^r.
 ```
 
 Real coefficients allow conjugate pairs. They do not represent arbitrary
 non-self-conjugate complex root configurations. Define
 
-```text
-A_±(z) = 1+Delta ± i*Delta*z,
-B_±(z) = (1-Delta)*z ± i*Delta,
-D_self(z) = A_±(z)-B_±(z)*z = 1+Delta-(1-Delta)*z^2.
+```math
+\begin{aligned}
+A_\pm(z)&=1+\Delta\pm i\Delta z,\\
+B_\pm(z)&=(1-\Delta)z\pm i\Delta,\\
+D_{\mathrm{self}}(z)&=A_\pm(z)-B_\pm(z)z=1+\Delta-(1-\Delta)z^2.
+\end{aligned}
 ```
 
 The product over **all** roots is `B_±^M Q(A_±/B_±)`. At a root it includes
@@ -66,16 +70,16 @@ factor would introduce false roots at
 
 Instead form the polynomial divided difference
 
-```text
-K_±(z) = [B_±(z)^M*Q(A_±(z)/B_±(z)) - B_±(z)^M*Q(z)] / D_self(z).
+```math
+K_\pm(z)=\frac{B_\pm(z)^M Q(A_\pm(z)/B_\pm(z))-B_\pm(z)^M Q(z)}{D_{\mathrm{self}}(z)}.
 ```
 
 This is a polynomial identity, not a numerical division by a possibly zero
-quantity. For a simple root `z_j`, it evaluates to the required product
-over `l!=j`. The equations become divisibility by Q of
+quantity. For a simple root $z_{j}$, it evaluates to the required product
+over $l \ne j$. The equations become divisibility by Q of
 
-```text
-F(z) = (1+i*z)^N*K_-(z) - sigma*(1-i*z)^N*K_+(z).
+```math
+F(z)=(1+iz)^NK_-(z)-\sigma(1-iz)^NK_+(z).
 ```
 
 At multiple roots, divisibility also imposes derivative conditions. These
@@ -86,24 +90,28 @@ classification of all singular Bethe solutions.
 ## Evaluation and derivatives
 
 All computations are in the quotient algebra modulo Q. For either sign,
-initialize `K=0`, `Z=1`, `P=1`. For `r=0,...,M-1`, using the previous values
+initialize $K =0$, $Z =1$, $P =1$. For `r=0,...,M-1`, using the previous values
 on each right-hand side, update
 
-```text
-K <- A*K + P*Z,
-Z <- z*Z + c_(M-r-1),
-P <- B*P.
+```math
+\begin{aligned}
+K&\leftarrow AK+PZ,\\
+Z&\leftarrow zZ+c_{M-r-1},\\
+P&\leftarrow BP.
+\end{aligned}
 ```
 
 Reduce each result modulo Q. This divided-Horner recurrence constructs K
 without forming high-degree polynomials or dividing by `D_self`. Repeated
-multiplication by `1+i*z` gives
+multiplication by $1+i \,z$ gives
 `G=(1+i*z)^N*K_- mod Q`. Since Q is real, the other term is its
 coefficient-wise complex conjugate. Thus the M raw residuals are
 
-```text
-Im(G_r), sigma=+1;
-Re(G_r), sigma=-1.
+```math
+\begin{cases}
+\operatorname{Im}G_r,&\sigma=+1,\\
+\operatorname{Re}G_r,&\sigma=-1.
+\end{cases}
 ```
 
 The factor of two (or 2i) does not affect their zeros. Directional forward
@@ -112,7 +120,7 @@ the reduction modulo Q too: treating that reduction as constant would omit
 part of the derivative. No finite differences are used by the module.
 
 The diagnostic `norm` is the largest absolute raw residual divided by
-`max_r |G_r|`. A vanishing denominator raises an error; it is not interpreted
+$\max_{r} \lvert G_{r} \rvert$. A vanishing denominator raises an error; it is not interpreted
 as convergence. The Jacobian differentiates the **raw residual**, not this
 normalization. This coefficient diagnostic is neither a rootwise phase error
 nor an energy error estimate.
@@ -126,17 +134,19 @@ not yet a public arbitrary-flux solver.
 
 The same coefficients give
 
-```text
-E = N*Delta/4 + M*(1-Delta) + 2*Im[Q'(i)/Q(i)],
-exp(i*P_total) = Q(-i)/Q(i) = conjugate(Q(i))/Q(i).
+```math
+\begin{aligned}
+E&=\frac{N\Delta}{4}+M(1-\Delta)+2\operatorname{Im}\frac{Q'(i)}{Q(i)},\\
+e^{iP_{\mathrm{total}}}&=\frac{Q(-i)}{Q(i)}=\frac{\overline{Q(i)}}{Q(i)}.
+\end{aligned}
 ```
 
 Evaluating Q and Q' uses compensated sums of the coefficients with exact
 powers of i. Complex division is scaled to avoid squaring large components.
-`Q(i)=0` is rejected as an observable pole. Root extraction is unnecessary
+$Q (i)=0$ is rejected as an observable pole. Root extraction is unnecessary
 for these quantities and would be ill-conditioned at a collision.
 
-`momentum_defect` returns `|exp(i*N*P_total)-1|`, a necessary translation
+`momentum_defect` returns $\lvert \exp (i \,N \,P_{\mathrm{total}})-1\rvert$, a necessary translation
 check. It is **not sufficient** to prove a nonzero physical Bethe vector or
 to identify a sector minimum. A recorded 21-site failed continuation has
 raw coefficient residuals below 1e-7 but a momentum defect above 0.1;
@@ -144,24 +154,26 @@ the regression explicitly retains this counterexample.
 
 ## Independent collision benchmark
 
-For N=5, M=2, momentum `2*pi/5`, write `C=cos(pi/5)`. In a relative-separation
-basis `r=1,2`, direct reduction of the spin Hamiltonian gives
+For N=5, M=2, momentum $2\,\pi /5$, write $C =\cos (\pi /5)$. In a relative-separation
+basis $r =1,2$, direct reduction of the spin Hamiltonian gives
 
-```text
-H - E_ferro = [[-Delta, C], [C, -2*Delta-C]],
-e = (-3*Delta-C-sqrt((Delta+C)^2+4*C^2))/2,
-u = 4*C^2/(2*C^2-2*Delta-e),
-Q(z) = z^2 + tan(pi/5)*u*z + 1-u.
+```math
+\begin{aligned}
+H-E_{\mathrm{ferro}}&=\begin{pmatrix}-\Delta&C\\C&-2\Delta-C\end{pmatrix},\\
+e&=\frac{-3\Delta-C-\sqrt{(\Delta+C)^2+4C^2}}2,\\
+u&=\frac{4C^2}{2C^2-2\Delta-e},\\
+Q(z)&=z^2+\tan(\pi/5)uz+1-u.
+\end{aligned}
 ```
 
-At `Delta=-C`, the two roots coincide at `-tan(pi/10)`. They are real above
+At $\Delta =-C$, the two roots coincide at $-\tan (\pi /10)$. They are real above
 that value and a conjugate pair below it. The tests check the discriminant,
 energy, polynomial residual, quantized momentum, and nonsingular coefficient
 Jacobian on both sides and at the collision, in all three precisions.
 
 Other tests compare the reduced equations with direct scattering products at
 arbitrary real/conjugate roots, check analytic Jacobians against finite
-differences, and follow every `M<=N/2` sector for N=3,5,7,9 through 41 couplings
+differences, and follow every $M \le N /2$ sector for N=3,5,7,9 through 41 couplings
 from 0 to -0.999. Exact spin-basis diagonalization supplies energies and joint
 energy/translation checks. The continuation loop is test-only: it is not an
 API or a claimed large-chain algorithm.

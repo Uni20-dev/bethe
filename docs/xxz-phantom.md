@@ -12,39 +12,39 @@ not make an unresolved entry in the sector scan acceptable; a separate
 
 ## The extra condition left by infinite roots
 
-Write `Delta=cos(gamma)` with `0<gamma<pi`. Suppose M roots consist of
+Write $\Delta =\cos (\gamma)$ with $0<\gamma <\pi$. Suppose M roots consist of
 p phantom roots at the same infinity and r=M-p finite roots.
 [Popkov, Zhang and Klümper](../CITATIONS.md#popkov-2021), equation (15) and
 the following reduced equations, give a commensurability condition and a
 twisted finite-root problem. In our momentum and endpoint conventions:
 
-```text
-chi = +1 or -1,
-z_phantom = chi*sqrt((1+Delta)/(1-Delta)),
-exp(i*k_phantom) = exp(i*chi*gamma),
-exp(i*(N-2*r)*gamma) = 1,
-exp(i*N*k_j) = exp(-2*i*chi*p*gamma) * product_(l!=j) S(k_j,k_l).
+```math
+\begin{aligned}
+\chi&=\pm1,\qquad z_{\mathrm{phantom}}=\chi\sqrt{\frac{1+\Delta}{1-\Delta}},\\
+e^{ik_{\mathrm{phantom}}}&=e^{i\chi\gamma},\qquad e^{i(N-2r)\gamma}=1,\\
+e^{iNk_j}&=e^{-2i\chi p\gamma}\prod_{l\ne j}S(k_j,k_l).
+\end{aligned}
 ```
 
 The integer p counts roots at **one** endpoint, not an arbitrary mixture
 of the two infinities. The commensurability condition depends on the
-number of finite roots r; testing only whether `exp(i*N*gamma)=1` would
-miss mixed states. At odd N and minimal `|Sz|=1/2`, a single phantom root
-has `N-2*r=3`, hence the familiar Delta=-1/2 exception.
+number of finite roots r; testing only whether $\exp (i \,N \,\gamma)=1$ would
+miss mixed states. At odd N and minimal $\lvert S^z \rvert =1/2$, a single phantom root
+has $N -2\,r =3$, hence the familiar Delta=-1/2 exception.
 
 For our minimal-|Sz| continuation, successive candidate clusters occur at
-`Delta=-cos(pi/(2*p+1))`. This equation-level observation does not identify
+$\Delta =-\cos (\pi /(2\,p +1))$. This equation-level observation does not identify
 every possible singular branch or establish a sector minimum.
 
 ## Deflation and the rotated polynomial equations
 
-For input `F(x)` with `z=o+s*x`, monic synthetic division removes p copies
-of `x-(z_phantom-o)/s`. The code reconstructs the full polynomial and
+For input `F(x)` with $z =o +s \,x$, monic synthetic division removes p copies
+of $x -(z_{\mathrm{phantom}} -o)/s$. The code reconstructs the full polynomial and
 compares every coefficient, with error
 
-```text
-max_j |original_j-reconstructed_j|
-      / max(1,|original_j|,|reconstructed_j|).
+```math
+\max_j\frac{|\mathrm{original}_j-\mathrm{reconstructed}_j|}
+{\max(1,|\mathrm{original}_j|,|\mathrm{reconstructed}_j|)}.
 ```
 
 Thus a guessed multiplicity is not accepted just because F is small at an
@@ -57,14 +57,14 @@ The [polynomial engine](xxz-polynomial.md) now has
 same parity-selected real or imaginary component as before, but of
 `rotation*G`, where `G=(1+i*z)^N*K_- mod F`. For a boundary phase phi,
 
-```text
-rotation = exp(i*phi/2),
-rotation*G - sigma*conjugate(rotation*G) = 0,
-sigma = (-1)^(N-M-1).
+```math
+\mathrm{rotation}=e^{i\phi/2},\qquad
+\mathrm{rotation}\,G-\sigma\,\overline{\mathrm{rotation}\,G}=0,\qquad
+\sigma=(-1)^{N-M-1}.
 ```
 
 Phantom reduction uses `rotation=exp(-i*chi*p*gamma)`. Integer powers of
-`Delta+i*chi*sqrt(1-Delta^2)` generate the required phases without an
+$\Delta +i \,\chi \,\sqrt{1-\Delta ^{2}}$ generate the required phases without an
 inverse trigonometric function. The separate commensurability residual is
 checked before normalizing radial roundoff in the rotation.
 
@@ -86,7 +86,7 @@ singular map that adds phantom roots back.
 commensurability condition, and a `regular_on_shell` reduced state.
 Other statuses distinguish `no_endpoint_factor`, `phase_mismatch`,
 `unresolved_reduced_state`, and `nonfinite`. Invalid arguments throw.
-The function supports `0<p<M` and `-1<Delta<=0`; the all-phantom construction
+The function supports $0<p <M$ and $-1<\Delta \le 0$; the all-phantom construction
 already has its own [helix implementation](xxz-spin-helix.md).
 
 The output retains the finite coefficients, rotation, reconstruction and
@@ -95,26 +95,26 @@ between full and reduced energies. Infinite roots contribute zero energy
 on the exact limiting solution. That energy difference is an additional
 diagnostic, not an independently certified energy-error bound.
 
-The factor/phase tolerance defaults to `128*epsilon`; the reduced
-coefficient-residual tolerance defaults to `32*epsilon`. Neither is
+The factor/phase tolerance defaults to $128\,\epsilon$; the reduced
+coefficient-residual tolerance defaults to $32\,\epsilon$. Neither is
 loosened automatically, and the requested coupling is never replaced.
 Deflation and the changed residual normalization can amplify roundoff:
 for example, the N=21, p=9 fp64 audit has a reduced residual about
 2.65e-14, above its default 7.11e-15 threshold. It correctly stays
-unresolved at that tolerance. A separate regression requests `512*epsilon`
+unresolved at that tolerance. A separate regression requests $512\,\epsilon$
 for the larger-cluster audit and checks that the coefficients do not change.
 This is not a hidden fallback or evidence of exact commensurability.
 
 ## An independent mixed-state wavefunction
 
 For r=1, our coordinate-ansatz deduction gives an explicit useful check.
-Put `k0=chi*gamma`, `M=p+1`, and choose the finite momentum k satisfying
+Put `k0=chi*gamma`, $M =p +1$, and choose the finite momentum k satisfying
 `exp(i*N*k)=exp(-2*i*p*k0)`. On ordered occupied sites, with rank a starting
 at zero, the unnormalized wavefunction is
 
-```text
-psi(j_0,...,j_p) = exp(i*k0*sum j_a)
-                * sum_(a=0)^p exp(2*i*k0*a + i*(k-k0)*j_a).
+```math
+\psi(j_0,\ldots,j_p)=e^{ik_0\sum_a j_a}
+\sum_{a=0}^{p}e^{2ik_0a+i(k-k_0)j_a}.
 ```
 
 The rank factor is the amplitude ratio for moving the finite magnon past

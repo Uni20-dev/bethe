@@ -32,10 +32,12 @@ TL layer. These are not the ordinary zero-boundary-field XXZ equations.
 Starting from [Bajnok et al., equation (5.12)](https://arxiv.org/html/1910.07805v2#S5),
 write
 
-```text
-u_j = i*alpha_j/2,          0<alpha_1<...<alpha_r<pi, r=N/2-2,
-u_± = (eta+d)/2 ± i*a/2,   0<a<pi, 0<d<eta,
-L = -log(d).
+```math
+\begin{aligned}
+u_j&=\frac{i\alpha_j}{2},\qquad 0<\alpha_1<\cdots<\alpha_r<\pi,\quad r=N/2-2,\\
+u_\pm&=\frac{\eta+d}{2}\pm\frac{ia}{2},\qquad 0<a<\pi,\quad 0<d<\eta,\\
+L&=-\log d.
+\end{aligned}
 ```
 
 The real labels are I_j=j and the two-string label is 1. The positive-deviation
@@ -44,40 +46,43 @@ The separate bound-pair API allows negative deviations and other string labels.
 The equations below are our regularization of the
 published equations, not a claim that the paper proves its energy ordering.
 
-For a nearly ideal string, forming `u_+ + u_- - eta` can give zero by rounding,
+For a nearly ideal string, forming $u _+ + u _- - \eta$ can give zero by rounding,
 although the true deviation is positive. We therefore solve for **L**, and
 evaluate the singular factor through
-`log(sinh(d)) = -L + log(sinh(d)/d)`. The latter correction has a regular
-small-d limit. Even if `exp(-L)` underflows, L remains finite and meaningful.
+$\log (\sinh (d)) = -L + \log (\sinh (d)/d)$. The latter correction has a regular
+small-d limit. Even if $\exp (-L)$ underflows, L remains finite and meaningful.
 We never set d=0 as a physical approximation to obtain convergence.
 
 Define
 
-```text
-Theta(beta;w) = 2 atan2(sin(beta/2), tanh(w)*cos(beta/2)),
-G(beta;w) = log|sinh(w+i*beta/2)|,
-w_+ = (3 eta+d)/2,  w_- = (eta-d)/2,
-S(beta) = Theta(beta;w_+) + Theta(beta;w_-),
-C(a;d) = 2 atan2(tanh(d/2)*cos(a/2), sin(a/2)).
+```math
+\begin{aligned}
+\Theta(\beta;w)&=2\operatorname{atan2}\!\left(\sin(\beta/2),\tanh w\cos(\beta/2)\right),\\
+G(\beta;w)&=\log|\sinh(w+i\beta/2)|,\\
+w_+&=\frac{3\eta+d}{2},\qquad w_-=\frac{\eta-d}{2},\\
+S(\beta)&=\Theta(\beta;w_+)+\Theta(\beta;w_-),\\
+C(a;d)&=2\operatorname{atan2}\!\left(\tanh(d/2)\cos(a/2),\sin(a/2)\right).
+\end{aligned}
 ```
 
 The real-root equations are
 
-```text
-2N Theta(alpha_j;eta/2)
- - sum_(k!=j) [Theta(alpha_j-alpha_k;eta)+Theta(alpha_j+alpha_k;eta)]
- - S(alpha_j-a) - S(alpha_j+a) = 2 pi j.
+```math
+2N\Theta(\alpha_j;\eta/2)
+-\sum_{k\ne j}\left[\Theta(\alpha_j-\alpha_k;\eta)+\Theta(\alpha_j+\alpha_k;\eta)\right]
+-S(\alpha_j-a)-S(\alpha_j+a)=2\pi j.
 ```
 
 The pair's phase and log-modulus equations are
 
-```text
-2N [Theta(a;eta+d/2)+C(a;d)] - 2 Theta(2a;eta)
- - sum_j [S(a-alpha_j)+S(a+alpha_j)] = 2 pi,
-
-2N [G(a;eta+d/2)-G(a;d/2)] - log(sinh(2eta+d)) - L
- + log(sinh(d)/d)
- - sum_(j,sign=±) [G(a+sign*alpha_j;w_+)-G(a+sign*alpha_j;w_-)] = 0.
+```math
+\begin{aligned}
+2N[\Theta(a;\eta+d/2)+C(a;d)]-2\Theta(2a;\eta)
+-\sum_j[S(a-\alpha_j)+S(a+\alpha_j)]&=2\pi,\\
+2N[G(a;\eta+d/2)-G(a;d/2)]-\log\sinh(2\eta+d)-L+\log\frac{\sinh d}{d}
+&\\[-1ex]
+{}-\sum_{j,\,s=\pm1}[G(a+s\alpha_j;w_+)-G(a+s\alpha_j;w_-)]&=0.
+\end{aligned}
 ```
 
 These retain the finite deviation. The reflected self-scattering is essential:
@@ -108,7 +113,7 @@ E-E0, multiplicity, and separate phase/modulus diagnostics. Gaps are emitted
 only if both the excitation and global ground reference converge.
 
 The energy and multiplicity maps are unchanged:
-`E_biquadratic = 2 E_ref - 7(N-1)/4`, ell=0, multiplicity=1.
+$E_{\mathrm{biquadratic}} = 2 E_{\mathrm{ref}} - 7(N -1)/4$, ell=0, multiplicity=1.
 
 ```cpp
 #include <bethe/biquadratic_two_string.hpp>

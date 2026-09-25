@@ -6,9 +6,10 @@
 periodic t–J chain at **t=1, J=2**. Each site is empty, spin up, or spin down:
 double occupancy is excluded. This is not a solver at arbitrary J/t.
 
-```text
-H = -sum_(j,sigma) P*(c^dagger_(j,sigma)*c_(j+1,sigma)+h.c.)*P
-    + 2*sum_j [S_j.S_(j+1)-n_j*n_(j+1)/4].
+```math
+H=-\sum_{j,\sigma}\mathcal P
+\left(c^\dagger_{j,\sigma}c_{j+1,\sigma}+\mathrm{h.c.}\right)\mathcal P
++2\sum_j\left[\mathbf S_j\cdot\mathbf S_{j+1}-\frac{n_jn_{j+1}}4\right].
 ```
 
 P projects out double occupancy. Fermions have periodic boundary conditions,
@@ -30,7 +31,7 @@ build/bethe-tj-pbc 7 --particles 4 --sz 2 --roots
 ```
 
 `--particles N` defaults to L. `--sz` defaults to 0 for even N or 1/2 for
-odd N, and fixes `N_up=N/2+Sz`, `N_down=N/2-Sz`. Every returned energy is
+odd N, and fixes $N_{\mathrm{up}} =N /2+S^z$, $N_{\mathrm{down}} =N /2-S^z$. Every returned energy is
 a minimum **within those populations**, not a minimization over filling.
 Three branches are supported:
 
@@ -52,29 +53,33 @@ parities, strings, open boundaries, and J!=2t are not implemented.
 [Essler–Korepin](../CITATIONS.md#essler-korepin-1992) present three nested
 gradings. The Sutherland/BFF form, their Eq. (3.73), gives two real-root
 families for the branch used here. With spin reversal folded so N_up>=N_down,
-their counts are `M1=N_h+N_down`, `M2=N_h`, not N_e and N_down. At no holes
+their counts are $M_1 =N_{h} +N_{\mathrm{down}}$, $M_2 =N_{h}$, not N_e and N_down. At no holes
 the second family disappears and the first equations reduce to XXX. The
 Lai/FFB and alternative FBF gradings are not additional implemented solvers.
 
-Define `e_a(x)=(x+i*a/2)/(x-i*a/2)`. The original equations are
+Define $e_{a} (x)=(x +i \,a /2)/(x -i \,a /2)$. The original equations are
 
-```text
-e_1(lambda_j)^L = product_(k!=j) e_2(lambda_j-lambda_k)
-                 / product_alpha e_1(lambda_j-mu_alpha),
-1 = product_j e_1(mu_alpha-lambda_j).
+```math
+\begin{aligned}
+e_1(\lambda_j)^L&=\frac{\prod_{k\ne j}e_2(\lambda_j-\lambda_k)}
+{\prod_\alpha e_1(\lambda_j-\mu_\alpha)},\\
+1&=\prod_j e_1(\mu_\alpha-\lambda_j).
+\end{aligned}
 ```
 
 There is **no mu–mu self-scattering**. It would be incorrect to copy the
-SU(3) equations unchanged. In logarithmic form, with `theta_a(x)=2*atan(2*x/a)`,
+SU(3) equations unchanged. In logarithmic form, with $\theta_{a} (x)=2\,\arctan (2\,x /a)$,
 
-```text
-L*theta_1(lambda_j) - sum_(k!=j) theta_2(lambda_j-lambda_k)
-                    + sum_alpha theta_1(lambda_j-mu_alpha) = 2*pi*I_j,
-sum_j theta_1(mu_alpha-lambda_j) = 2*pi*J_alpha.
+```math
+\begin{aligned}
+L\theta_1(\lambda_j)-\sum_{k\ne j}\theta_2(\lambda_j-\lambda_k)
++\sum_\alpha\theta_1(\lambda_j-\mu_\alpha)&=2\pi I_j,\\
+\sum_j\theta_1(\mu_\alpha-\lambda_j)&=2\pi J_\alpha.
+\end{aligned}
 ```
 
 We use consecutive centered labels at each level:
-`I_j=j-(M1-1)/2`, `J_alpha=alpha-(M2-1)/2`, with zero-based indices.
+$I_{j} =j -(M_1 -1)/2$, $J_{\alpha} =\alpha -(M_2 -1)/2$, with zero-based indices.
 Taking the signs of the original rational equations into account requires
 `2I = L-M1+1-M2 (mod 2)` and `2J = M1 (mod 2)`. For these centered seas,
 these conditions require both spin populations to be odd. This is a branch
@@ -84,17 +89,17 @@ logarithmic and original multiplicative equations are tested independently.
 ## Energy and momentum conventions
 
 The paper's supersymmetric Hamiltonian includes a chemical-potential shift:
-`H_susy=H+2*N_e-L`, Eq. (1.5). Removing it from Eq. (3.75) gives our energy
+$H_{\mathrm{susy}} =H +2\,N_{e} -L$, Eq. (1.5). Removing it from Eq. (3.75) gives our energy
 
-```text
-E = 2*N_h - sum_j 1/(lambda_j^2+1/4).
+```math
+E=2N_h-\sum_j\frac1{\lambda_j^2+1/4}.
 ```
 
 The primary rapidities are conventional lambda, not the XXX executable's
 z=2*lambda. For no holes,
 
-```text
-H_tJ = 2*H_XXX - L/2.
+```math
+H_{tJ}=2H_{\mathrm{XXX}}-\frac L2.
 ```
 
 Numerically we sum the root contributions directly, rather than subtracting
@@ -103,11 +108,11 @@ even when L is large enough for that subtraction to lose it in fp64.
 
 This energy reduction does not permit copying spin-chain momentum blindly.
 Translation of the fully occupied fermionic reference has sign
-`(-1)^(L-1)`. Add pi to the XXX spin momentum on even L, and zero on odd L.
+$(-1)^{L -1}$. Add pi to the XXX spin momentum on even L, and zero on odd L.
 The centered doped family has total fermionic momentum zero. These conventions
 are checked against translation in the projected Fock-space ground eigenspace.
 
-Fully polarized states fill integer modes closest to zero, `k=2*pi*j/L`.
+Fully polarized states fill integer modes closest to zero, $k =2\,\pi \,j /L$.
 For even particle count we choose the sea with positive total momentum;
 its reflected partner is degenerate (and coincides modulo L at full filling).
 The root report prints those free modes instead of manufacturing nested roots.

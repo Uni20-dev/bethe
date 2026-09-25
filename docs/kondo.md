@@ -36,8 +36,8 @@ magnetic field on impurity and host with equal g factors. This does not
 cover ferromagnetic exchange, multiple channels, other impurity spins,
 anisotropy, finite bandwidth, or a Kondo lattice.
 
-The input `b` is the full Zeeman splitting in energy units:
-`H_field=-b*(S_imp^z+S_host^z)`. The positive scale `T_B` is defined below,
+The input $b$ is the full Zeeman splitting in energy units:
+$H_{\mathrm{field}} =-b \,(S_{\mathrm{imp}} ^z +S_{\mathrm{host}} ^z)$. The positive scale $T_{B}$ is defined below,
 not an unspecified "Kondo temperature". Both are energies; set k_B=1.
 
 Define `E_imp(b)=E_with_impurity(b)-E_clean_host(b)`, using the same host
@@ -48,16 +48,16 @@ including the host change, not an arbitrary finite-band local spin expectation.
 
 [Barcza et al.](../CITATIONS.md#barcza-2020), Sec. VII, discuss why absolute
 Bethe-ansatz ground energies cannot simply be compared with a tight-binding
-host. Their Eqs. (4)-(5) use `B=b/2`. In Eqs. (124)-(126), set
+host. Their Eqs. (4)-(5) use $B =b /2$. In Eqs. (124)-(126), set
 `T_B=2*T1`, hence `x=|b|/T_B=B/T1`. Missing this factor of two would give
 the wrong energy derivative and susceptibility normalization.
 
 The exact zero-field scale calibration is
 
-```text
-a0 = 1/sqrt(2*pi*e)
-chi0 = dM_imp/db at b=0 = a0/T_B
-T_chi = 1/(4*chi0), so T_B = 4*a0*T_chi.
+```math
+a_0=\frac1{\sqrt{2\pi e}},\qquad
+\chi_0=\left.\frac{dM_{\mathrm{imp}}}{db}\right|_{b=0}=\frac{a_0}{T_B},
+\qquad T_\chi=\frac1{4\chi_0},\quad T_B=4a_0T_\chi.
 ```
 
 No automatic conversion from a bare exchange J and bandwidth D is planned:
@@ -65,34 +65,36 @@ that would require a specified regularization and scale-matching convention.
 
 ## Source equations
 
-For x>=0, write `m(x)=M_imp(|b|)`. Eqs. (124)-(125) give
+For x>=0, write $m (x)=M_{\mathrm{imp}} (\lvert b \rvert)$. Eqs. (124)-(125) give
 
-```text
-a_n = (n+1/2)^(n-1/2) * exp(-n-1/2) / (2*sqrt(pi)*n!)
-m(x) = sum_(n>=0) (-1)^n a_n x^(2n+1),                  0<=x<=1
-
-A(w) = Gamma(w+1/2) * exp(w) * w^(-w),   A(0)=sqrt(pi)
-C = 1/(2*pi^(3/2))
-m(x) = 1/2 - C * integral_0^infinity sin(pi*w)/w * A(w) * x^(-2w) dw,
-                                                              x>=1.
+```math
+\begin{aligned}
+a_n&=\frac{(n+1/2)^{n-1/2}e^{-n-1/2}}{2\sqrt\pi\,n!},\\
+m(x)&=\sum_{n\ge0}(-1)^na_nx^{2n+1},\qquad 0\le x\le1,\\
+A(w)&=\Gamma(w+1/2)e^ww^{-w},
+\qquad A(0)=\sqrt\pi,\qquad C=\frac1{2\pi^{3/2}},\\
+m(x)&=\frac12-C\int_0^\infty\frac{\sin(\pi w)}{w}
+A(w)x^{-2w}\,dw,\qquad x\ge1.
+\end{aligned}
 ```
 
 The magnetization is odd in b. The x=1 integral is only conditionally
-convergent: `A(w)->sqrt(2*pi)`, so its tail is proportional to
-`sin(pi*w)/w`. Ordinary finite-cutoff quadrature is not a sufficient
+convergent: $A (w)\to \sqrt{2\,\pi }$, so its tail is proportional to
+$\sin (\pi \,w)/w$. Ordinary finite-cutoff quadrature is not a sufficient
 crossover algorithm. It is not acceptable to leave an unreported hole
 around x=1 or publish a slowly truncated integral as converged.
 
 ## Energy derived from the response
 
-Set `e(x)=Delta E_imp/T_B`. Integrating `e'(x)=-m(x)` gives
+Set $e (x)=\Delta E_{\mathrm{imp}} /T_{B}$. Integrating `e'(x)=-m(x)` gives
 
-```text
-e(x) = -sum_(n>=0) (-1)^n a_n x^(2n+2)/(2n+2),          0<=x<=1
-
-e(x) = e(1) - (x-1)/2
-       + C * integral_0^infinity sin(pi*w)/w * A(w)
-             * (x^(1-2w)-1)/(1-2w) dw,                 x>=1.
+```math
+\begin{aligned}
+e(x)&=-\sum_{n\ge0}\frac{(-1)^na_nx^{2n+2}}{2n+2},\qquad 0\le x\le1,\\
+e(x)&=e(1)-\frac{x-1}{2}
++C\int_0^\infty\frac{\sin(\pi w)}{w}A(w)
+\frac{x^{1-2w}-1}{1-2w}\,dw,\qquad x\ge1.
+\end{aligned}
 ```
 
 The apparent singularity at w=1/2 is removable, with value `log(x)`.
@@ -160,12 +162,12 @@ solvers. No mpmath, Gamma-library or double-precision fallback is used at run ti
    [DLMF 5.11.1 and 5.11(ii)](https://dlmf.nist.gov/5.11).
    For large w, the leading part
    is `w*log1p(1/(2*w))-1/2+log(2*pi)/2`, avoiding cancellation of
-   `w*log(w)` terms. This is a model-specific scaled amplitude, not a new
+   $w \,\log (w)$ terms. This is a model-specific scaled amplitude, not a new
    general-purpose Gamma function.
 4. **Large ratios:** high-field evaluation uses logarithmic ratios and
-   `e(x)/x`; b/T_B itself need not fit the scalar. The energy integrand uses
-   `(x^(-2w)-x^(-1))/(1-2w)`, evaluated with `expm1` near its removable
-   singularity. Physical energy is recovered as `|b|*e(x)/x`.
+   $e (x)/x$; b/T_B itself need not fit the scalar. The energy integrand uses
+   $(x ^{-2w }-x ^{-1})/(1-2w)$, evaluated with `expm1` near its removable
+   singularity. Physical energy is recovered as $\lvert b \rvert \,e (x)/x$.
 
 The frontend uses the common CLI, run context, tables and citations.
 Finite-temperature TBA and excited/finite-size states

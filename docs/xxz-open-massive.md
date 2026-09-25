@@ -3,7 +3,7 @@
 [Open XXZ guide](xxz-open.md) | [Model catalogue](models.md)
 
 The library module `bethe/xxz_open_massive.hpp` implements sector minima at
-`Delta>1`, for either chain parity and either sign of Sz. It uses the same
+$\Delta >1$, for either chain parity and either sign of Sz. It uses the same
 spin-1/2 Hamiltonian, J=1 and zero boundary fields as the gapless open solver.
 The existing `bethe-xxz-obc` executable and the three ground-state functions in
 `bethe::xxz::open` select this module for Delta>1. The gapless and exact XXX
@@ -24,17 +24,16 @@ does not implement excited states, boundary fields, or general complex strings.
 
 ## Why extending the real interval is insufficient
 
-Write `M=N/2-|Sz|` and `Delta=cosh(eta)`. Bulk roots use
-`z=tan(lambda)/tanh(eta/2)`. When `M<N/2`, the ground state has M positive
+Write $M =N /2-\lvert S^z \rvert$ and $\Delta =\cosh (\eta)$. Bulk roots use
+$z =\tan (\lambda)/\tanh (\eta /2)$. When $M <N /2$, the ground state has M positive
 bulk roots. For even N with Sz=0, its last root must be tracked separately:
 as anisotropy grows it passes through infinity in z and becomes purely
 imaginary. This is not a singularity of the energy.
 
 The two-site example makes the issue explicit:
 
-```text
-z_B^2 = (1+Delta)/(3-Delta),
-E0    = -1/2-Delta/4.
+```math
+z_B^2=\frac{1+\Delta}{3-\Delta},\qquad E_0=-\frac12-\frac\Delta4.
 ```
 
 The root is real below Delta=3, infinite at Delta=3, and imaginary above it.
@@ -46,7 +45,7 @@ Eqs. (11)-(12). The massive boundary-root interpretation and exponentially
 small finite-size deviations are discussed by
 [Grijalva, De Nardis, and Terras](../CITATIONS.md#grijalva-2019), Sec. 4.3.2.
 Their Pauli-matrix Hamiltonian at zero boundary fields is divided by four
-and shifted by `(N-1)*Delta/4` to obtain ours. The regularization below is
+and shifted by $(N -1)\,\Delta /4$ to obtain ours. The regularization below is
 an algebraic implementation of the finite-size equations, not an ideal-string
 or thermodynamic approximation.
 
@@ -54,16 +53,15 @@ or thermodynamic approximation.
 
 For the distinguished root, define
 
-```text
-r = (Delta-1)/(Delta+1),
-y = 1/z_B^2,
-w = -log(1+y/r^2),    y = r^2*expm1(-w).
+```math
+r=\frac{\Delta-1}{\Delta+1},\qquad y=\frac1{z_B^2},\qquad
+w=-\log(1+y/r^2),\qquad y=r^2\operatorname{expm1}(-w).
 ```
 
-The ground-state branch has `y>-r^2`. Negative w describes a real z_B; w=0
+The ground-state branch has $y >-r ^{2}$. Negative w describes a real z_B; w=0
 is its crossing through infinity; positive w describes an imaginary z_B.
 Large positive w retains the deviation from the boundary pole even when
-`y` rounds to `-r^2`. Do not reconstruct w from that rounded value.
+$y$ rounds to $-r ^{2}$. Do not reconstruct w from that rounded value.
 
 `GroundState::rapidities` and `quantum_numbers` contain only bulk roots and their
 labels `1,...,M-1` when a boundary root is present, or `1,...,M` otherwise.
@@ -73,43 +71,48 @@ the real branch; it does not assert that the continued root is real.
 
 ## Coupled equations
 
-Set `P=1+1/Delta`, `Q=1/Delta-1`. For bulk roots, the half scattering phases
+Set $P =1+1/\Delta$, $Q =1/\Delta -1$. For bulk roots, the half scattering phases
 are evaluated with `atan2`, retaining their winding. A bulk root z sees the
 distinguished root and its reflection through their combined phase
 
-```text
-S_B(z,y) = atan2(2*z*(P*y-Q), (P^2-z^2)*y+1-Q^2*z^2).
+```math
+S_B(z,y)=\operatorname{atan2}\!\left(2z(Py-Q),(P^2-z^2)y+1-Q^2z^2\right).
 ```
 
 Near the pole at strong anisotropy, both arguments in this expression suffer
-cancellation. The implementation expands them in `1/Delta` and
-`r^2*exp(-w)` before evaluation; it does not evaluate the displayed differences
+cancellation. The implementation expands them in $1/\Delta$ and
+$r ^{2}\,\exp (-w)$ before evaluation; it does not evaluate the displayed differences
 naively.
 
 The bulk residual used in the solver is
 
-```text
-R_i = [2*N*atan(z_i) - 2*atan(r*z_i) - pi*I_i
-       - sum_(j != i, bulk) {atan2(z_i-z_j,P-Q*z_i*z_j)
-                           +atan2(z_i+z_j,P+Q*z_i*z_j)}
-       - S_B(z_i,y)] / N.
+```math
+\begin{aligned}
+R_i=\frac1N\biggl[&2N\arctan z_i-2\arctan(rz_i)-\pi I_i\\
+&-\sum_{\substack{j\ne i\\j\ \mathrm{bulk}}}
+\left\{\operatorname{atan2}(z_i-z_j,P-Qz_iz_j)
++\operatorname{atan2}(z_i+z_j,P+Qz_iz_j)\right\}-S_B(z_i,y)\biggr].
+\end{aligned}
 ```
 
-Omit `S_B` if there is no distinguished root. Direct and reflected
+Omit $S_{B}$ if there is no distinguished root. Direct and reflected
 self-scattering are both excluded.
 
 For even N=2M, the unregularized equation for the last root vanishes at
-`1/z_B=0` regardless of Delta. Divide out that vanishing factor **before**
+$1/z_{B} =0$ regardless of Delta. Divide out that vanishing factor **before**
 taking the limit, or infinity becomes a spurious solution. Define the analytic
 continuation
 
-```text
-A(y,a) = atan(sqrt(y)*a)/sqrt(y),       y>0,
-         a,                           y=0,
-         atanh(sqrt(-y)*a)/sqrt(-y),   y<0,
-a_j    = (P+i*z_j)/(1-i*Q*z_j).
-
-R_B = [-N*A(y,1) + A(y,1/r) + sum_bulk Re A(y,a_j)] / N.
+```math
+\begin{aligned}
+A(y,a)&=\begin{cases}
+\arctan(\sqrt y\,a)/\sqrt y,&y>0,\\
+a,&y=0,\\
+\operatorname{artanh}(\sqrt{-y}\,a)/\sqrt{-y},&y<0,
+\end{cases}\\
+a_j&=\frac{P+iz_j}{1-iQz_j},\\
+R_B&=\frac1N\left[-NA(y,1)+A(y,1/r)+\sum_{\mathrm{bulk}}\operatorname{Re}A(y,a_j)\right].
+\end{aligned}
 ```
 
 The implementation evaluates the real parts without complex transcendental
@@ -120,19 +123,19 @@ avoid manufacturing a tiny residual through cancellation.
 
 The energy is
 
-```text
-E = [(N-1)/4-M]*Delta + sum_bulk (z_j^2-1)/(z_j^2+1)
-    + (1-y)/(1+y),
+```math
+E=\left(\frac{N-1}{4}-M\right)\Delta
++\sum_{\mathrm{bulk}}\frac{z_j^2-1}{z_j^2+1}+\frac{1-y}{1+y}.
 ```
 
 with the last term omitted if there is no boundary root. Evaluate its
-denominator as `1+y=4/Delta/(1+1/Delta)^2+r^2*exp(-w)` near the pole.
+denominator as $1+y =4/\Delta /(1+1/\Delta)^{2}+r ^{2}\,\exp (-w)$ near the pole.
 
 ## Iteration and diagnostics
 
 Damped Newton uses bulk angles `atan(z)` and w, with a central-difference
 Jacobian in native precision. Continuation starts at `min(Delta,1.1)` and
-increases `Delta-1` by a factor of 1.25 per converged stage. Ordered bulk
+increases $\Delta -1$ by a factor of 1.25 per converged stage. Ordered bulk
 roots and, while real, a largest distinguished root are enforced during
 backtracking. After the crossing, continuation carries w relative to the
 moving pole rather than rounding away the small deviation.
@@ -143,7 +146,7 @@ are still evaluated for the requested Delta at the returned roots.
 `root_delta` records the continuation stage reached. `status` distinguishes
 convergence, budget exhaustion, and a stalled line search.
 
-The residual is `max(|R_i|,|R_B|)`, with the boundary entry absent when
+The residual is $\max (\lvert R_{i} \rvert,\lvert R_{B} \rvert)$, with the boundary entry absent when
 appropriate. Its boundary component is **regularized**, unlike the old
 all-real logarithmic residual. The default tolerance is 32 native epsilons.
 It is not an energy-error bound, or a bound on the exponentially small

@@ -13,8 +13,9 @@ coordinate. This building block is independent of the XXZ Hamiltonian.
 
 The Ehrlich-Aberth step is
 
-```text
-x_j <- x_j - Q(x_j) / [Q'(x_j) - Q(x_j)*sum_(k!=j) 1/(x_j-x_k)].
+```math
+x_j\leftarrow x_j-\frac{Q(x_j)}
+{Q'(x_j)-Q(x_j)\displaystyle\sum_{k\ne j}\frac1{x_j-x_k}}.
 ```
 
 We use Gauss-Seidel sweeps, so later roots see earlier updates in the same
@@ -38,12 +39,12 @@ round-to-nearest arithmetic without fast-math reassociation. The error-free
 transform identities also assume no underflow or overflow; nonfinite
 arithmetic is reported, but the routine is not a general underflow detector.
 
-Before iteration, set `x=s*y` with a power-of-two s at least one, chosen
-from the coefficient root bound `max_k abs(c_k)^(1/(n-k))`. This keeps the
+Before iteration, set $x =s \,y$ with a power-of-two s at least one, chosen
+from the coefficient root bound $\max_{k} \lvert c_{k} \rvert^(1/(n -k))$. This keeps the
 working polynomial moderate without rounding normal coefficients during
 rescaling. If rounding s upward overflows, retain the preceding power of
 two. Reject scaling that makes any nonzero coefficient subnormal or zero.
-Automatic seeds lie on `|y|=4`, with phase offset `1/3` of a seed spacing;
+Automatic seeds lie on $\lvert y \rvert =4$, with phase offset `1/3` of a seed spacing;
 the constant and linear cases need no automatic iteration. Optional caller
 seeds are supplied in the original x coordinate.
 
@@ -62,10 +63,10 @@ seeds are supplied in the original x coordinate.
   carries rounding corrections.
 - Root estimates are separated relative to a numerical uncertainty model.
   With `B=sum abs(c_k)*abs(y)^k`, its derivative-magnitude polynomial B',
-  and `u=16*n*epsilon`, use
+  and $u =16\,n \,\epsilon$, use
   `rho=(abs(Q)+u*B)/(abs(Q')-u*B')`. A nonpositive denominator gives infinite
   uncertainty. Every pair must have distance greater than
-  `8*(rho_i+rho_j)`, and the largest radius in original coordinates must
+  $8\,(\rho_{i} +\rho_{j})$, and the largest radius in original coordinates must
   be finite.
 
 The last check deliberately includes a coefficient/roundoff scale even
@@ -100,7 +101,7 @@ full-root sweeps, including a failed partial sweep. Per-sweep work is O(n²)
 and scratch memory O(n). Root order is unspecified.
 
 For the XXZ continuation's affine polynomial, convert each recovered root
-with `z=center+coordinate_scale*x`, then `v=-(1-i*z)/(1+i*z)` and pass the
+with `z=center+coordinate_scale*x`, then $v =-(1-i \,z)/(1+i \,z)$ and pass the
 momentum factors to [CoordinateBetheWave](xxz-coordinate-wave.md). Check
 the original Bethe equations and any singular factors separately; recovering
 Q's roots is not proof of a physical Bethe vector or a sector minimum.
@@ -116,7 +117,7 @@ failures of uncorrected evaluation and naive factor multiplication.
 The full connection is also tested, not just polynomial residuals:
 
 - Recover continued odd-ring polynomials at N=5,7,9,11 in every sector
-  with 2 through floor(N/2) roots, at `Delta=-0.2,-0.7,-0.9,-0.999`;
+  with 2 through floor(N/2) roots, at $\Delta =-0.2,-0.7,-0.9,-0.999$;
   build nonzero coordinate vectors and apply the periodic spin Hamiltonian.
 - Reduce mixed phantom polynomials at `(N,r,p)=(9,3,1),(11,4,1),(11,3,2),
   (13,4,2),(13,3,3)`. Recovered finite vectors satisfy the twisted Hamiltonian;
