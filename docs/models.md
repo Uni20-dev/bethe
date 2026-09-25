@@ -122,7 +122,7 @@ integrable boundaries in the literature.
 | `sutherland` | Periodic bosonic inverse-square gas, exact pseudomomentum energies and bounded label scans | [Implemented](sutherland.md) | First slice complete |
 | `kondo` | The integrable continuum single-impurity Kondo problem | Watch | Large; different physical scope |
 | `sine-gordon` | Integrable quantum field theory, finite-volume ground energy via nonlinear integral equations | Watch | Large |
-| `asep` | Periodic asymmetric exclusion process, relaxation spectrum | Watch | Large; non-Hermitian, not an energy spectrum |
+| `asep` | Periodic asymmetric exclusion process, relaxation spectrum | [TASEP relaxation-gap library implemented](tasep.md), arbitrary filling | Frontend next; partial asymmetry remains |
 
 ## Leading proposals
 
@@ -606,7 +606,7 @@ initial deliverable, rather than an unqualified claim of model support.
 | `sutherland` | The trigonometric inverse-square gas, [Sutherland](../CITATIONS.md#sutherland-1971), in the Calogero–Sutherland family | [Implemented](sutherland.md): periodic scalar bosons on the specified Jastrow collision branch, exact ground and explicit-label energies, and bounded label-window spectra. Spinful/statistics variants, wavefunctions and other collision domains remain future work |
 | `kondo` | Integrable continuum single-impurity Kondo Hamiltonian, [Andrei](../CITATIONS.md#andrei-1980) | Impurity ground-energy/thermodynamic benchmarks after fixing band regularization and bulk subtraction; not a generic finite-band Anderson impurity or Kondo lattice |
 | `sine-gordon` | Continuum sine-Gordon theory, e.g. [Destri–de Vega](../CITATIONS.md#destri-de-vega-1992) | Finite-volume ground-state scaling function; requires integral/functional equations, mass/coupling conventions, and vacuum-energy subtraction. Large-volume Bethe–Yang quantization alone omits finite-volume corrections |
-| `asep` | Periodic asymmetric simple exclusion process, [Gwa–Spohn](../CITATIONS.md#gwa-spohn-1992) | Relaxation gap at fixed particle number; eigenvalues can be complex and are decay rates, not Hermitian energies. Requires a separate spectral-state/reporting contract |
+| `asep` | Periodic asymmetric simple exclusion process, [Gwa–Spohn](../CITATIONS.md#gwa-spohn-1992) and [Golinelli–Mallick](../CITATIONS.md#golinelli-mallick-2005) | [TASEP relaxation-gap library implemented](tasep.md) at arbitrary filling, with separate complex eigenvalue and positive decay gap; frontend and partial asymmetry remain. These are rates, not Hermitian energies |
 
 Other recognized families can be added as research needs arise: anisotropic
 multicomponent/Perk–Schultz chains, integrable higher-spin anisotropic chains,

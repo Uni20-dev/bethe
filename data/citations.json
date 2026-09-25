@@ -754,6 +754,17 @@
         {"label": "DOI", "url": "https://doi.org/10.1088/1751-8113/44/10/102001"},
         {"label": "arXiv", "url": "https://arxiv.org/abs/1010.4842"}
       ]
+    },
+    {
+      "id": "golinelli-mallick-2005",
+      "authors": "O. Golinelli and K. Mallick",
+      "title": "Spectral gap of the totally asymmetric exclusion process at arbitrary filling",
+      "publication": "J. Phys. A: Math. Gen. 38, 1419-1425",
+      "year": 2005,
+      "links": [
+        {"label": "DOI", "url": "https://doi.org/10.1088/0305-4470/38/7/001"},
+        {"label": "arXiv", "url": "https://arxiv.org/abs/cond-mat/0411505"}
+      ]
     }
   ],
   "tools": [
