@@ -478,6 +478,7 @@ Phys. Rev. 130, 1605 (1963).
 
 Relevant tool modes:
 
+- `bethe-lieb-liniger-dispersion`: Repulsive zero-temperature root-density equation and bulk ground-state energy, in units hbar=2m=1.
 - `bethe-lieb-liniger-pbc`: Repulsive Bose gas on a ring, H=-sum d\_j^2+2c sum delta, and its ground state; c\>0.
 
 ### lieb-1963-excitations
@@ -489,6 +490,7 @@ Phys. Rev. 130, 1616 (1963).
 
 Relevant tool modes:
 
+- `bethe-lieb-liniger-dispersion`: Thermodynamic type-I particle and type-II hole excitation branches; energies are fixed-N gaps relative to the ground state. No spectral weights or finite-temperature TBA.
 - `bethe-lieb-liniger-pbc`: Excited-state background; we solve finite-volume states in explicit label windows, not a thermodynamic dispersion calculation.
 
 ### gaudin-1971
@@ -912,11 +914,19 @@ SISSA lecture notes, May 15, 2011 (2011).
 
 [Open lecture notes](<https://people.sissa.it/~ffranchi/BAnotes.pdf>).
 
+Relevant tool modes:
+
+- `bethe-lieb-liniger-dispersion`: Dressed-energy equation and Fermi boundary condition (2.87)-(2.88), related particle-hole energies (2.95); our phase is +2 atan(k/c).
+
 ### caux-lieb-liniger
 
 Jean-Sébastien Caux. *The Bethe Ansatz: The ground state and the Lieb equation*.
 Online lecture notes, integrability.org.
 
 [Lieb equation](<https://integrability.org/g_l_Le.html>).
+
+Relevant tool modes:
+
+- `bethe-lieb-liniger-dispersion`: Pedagogical ground-state integral equation and normalization at fixed density.
 
 <!-- END GENERATED BIBLIOGRAPHY -->

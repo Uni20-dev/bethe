@@ -13,12 +13,14 @@ enum class Status
   converged,
   mesh_limit,
   density_limit,
+  momentum_limit,
   precision_limit
 };
 template <uni20::Real Real> struct Options
 {
     Real tolerance = Real{4096} * uni20::numeric_limits<Real>::epsilon();
     std::size_t initial_nodes = 16, max_nodes = 256, max_iterations = 128;
+    std::size_t max_momentum_iterations = 160;
 };
 template <uni20::Real Real> struct Background
 {
@@ -86,12 +88,12 @@ std::optional<Mesh<Real>> mesh(Real gamma, Real q, bethe::detail::GaussLegendreR
     return std::nullopt;
   return out;
 }
-} // namespace detail
-
 /// Repulsive zero-temperature Lieb equation, H=-sum d^2+2c sum delta.
 /// Only mesh-verified observables are populated. Weak coupling can require
 /// more nodes than the configured budget; no asymptotic formula is substituted.
-template <uni20::Real Real> Background<Real> ground_state(Real interaction, Real density, Options<Real> options = {})
+template <uni20::Real Real>
+Background<Real> background(Real interaction, Real density, Options<Real> options,
+                            std::optional<Mesh<Real>>* fine = nullptr, std::optional<Mesh<Real>>* coarse = nullptr)
 {
   if (!uni20::isfinite(interaction) || !(interaction > Real{0}) || !uni20::isfinite(density) || !(density > Real{0}))
     throw std::invalid_argument("Lieb-Liniger thermodynamics require finite c>0 and density>0");
@@ -166,6 +168,8 @@ template <uni20::Real Real> Background<Real> ground_state(Real interaction, Real
         out.chemical_potential = mu;
         out.converged = true;
         out.status = Status::converged;
+        if (fine) *fine = std::move(candidate);
+        if (coarse) *coarse = std::move(previous);
         return out;
       }
     }
@@ -173,4 +177,203 @@ template <uni20::Real Real> Background<Real> ground_state(Real interaction, Real
     if (nodes > options.max_nodes / 2) return out;
   }
 }
+} // namespace detail
+
+template <uni20::Real Real> Background<Real> ground_state(Real interaction, Real density, Options<Real> options = {})
+{
+  return detail::background(interaction, density, options);
+}
+
+enum class Branch
+{
+  type_i,
+  type_ii
+};
+template <uni20::Real Real> struct Point
+{
+    Branch branch = Branch::type_i;
+    Real momentum{}, energy_error{}, momentum_error{};
+    std::optional<Real> energy, rapidity, edge_distance;
+    std::size_t iterations = 0;
+    bool converged = false;
+    Status status = Status::mesh_limit;
+};
+
+/// Fixed-particle-number elementary branches: particle/hole relative to a
+/// Fermi-edge particle/hole. Energies are excitation gaps, not absolute energies.
+template <uni20::Real Real> class Solver {
+  public:
+    Solver(Real interaction, Real density, Options<Real> options = {}) : options_(options)
+    {
+      info_ = detail::background(interaction, density, options, &fine_, &coarse_);
+    }
+    Background<Real> const& background() const { return info_; }
+    std::pair<Real, Real> momentum_range(Branch branch) const
+    {
+      if (branch == Branch::type_i) return {Real{0}, uni20::numeric_limits<Real>::infinity()};
+      if (branch == Branch::type_ii) return {Real{0}, Real{2} * pi() * info_.density};
+      throw std::invalid_argument("invalid Lieb-Liniger excitation branch");
+    }
+    Point<Real> at_momentum(Branch branch, Real momentum) const
+    {
+      auto const [lo, hi] = momentum_range(branch);
+      if (!uni20::isfinite(momentum) || momentum < lo || momentum > hi)
+        throw std::invalid_argument("momentum outside Lieb-Liniger branch range");
+      Point<Real> out;
+      out.branch = branch;
+      out.momentum = momentum;
+      if (!info_.converged)
+      {
+        out.status = info_.status;
+        return out;
+      }
+      bool const hole = branch == Branch::type_ii;
+      bool const reflected = hole && momentum > hi / Real{2};
+      Real const target = (reflected ? hi - momentum : momentum) / info_.density;
+      if (momentum == Real{0} || (hole && momentum == hi))
+      {
+        out.energy = Real{0};
+        out.rapidity = reflected ? -*info_.fermi_rapidity : *info_.fermi_rapidity;
+        out.edge_distance = Real{0};
+        out.converged = true;
+        out.status = Status::converged;
+        return out;
+      }
+      if (!(target > Real{0}) || !uni20::isfinite(target) || !(options_.tolerance * target / Real{16} > Real{0}))
+      {
+        out.status = Status::precision_limit;
+        return out;
+      }
+      auto const f = invert(*fine_, hole, target, out.iterations);
+      if (f.status != Status::converged)
+      {
+        out.status = f.status;
+        return out;
+      }
+      auto const c = invert(*coarse_, hole, target, out.iterations);
+      if (c.status != Status::converged)
+      {
+        out.status = c.status;
+        return out;
+      }
+      Real const rounding = Real{64} * uni20::numeric_limits<Real>::epsilon();
+      Real const error = Real{8} * std::abs(f.energy - c.energy) + rounding * f.energy +
+                         Real{2} * (f.error * std::abs(f.velocity) + c.error * std::abs(c.velocity));
+      Real const subnormal_floor =
+          (uni20::numeric_limits<Real>::min() * uni20::numeric_limits<Real>::epsilon()) * Real{8};
+      out.energy_error = std::max(error * info_.density * info_.density, subnormal_floor);
+      out.momentum_error = std::max(f.error, c.error) * info_.density;
+      Real const energy = f.energy * info_.density * info_.density;
+      Real const distance = f.distance * info_.density;
+      Real const rapidity =
+          (reflected ? -Real{1} : Real{1}) * (fine_->q + (hole ? -f.distance : f.distance)) * info_.density;
+      if (!(energy > Real{0}) || !(options_.tolerance * energy >= subnormal_floor) || !(distance > Real{0}) ||
+          !uni20::isfinite(energy) || !uni20::isfinite(distance) || !uni20::isfinite(rapidity) ||
+          !uni20::isfinite(out.energy_error))
+      {
+        out.status = Status::precision_limit;
+        return out;
+      }
+      if (error > options_.tolerance * f.energy)
+      {
+        out.status = Status::mesh_limit;
+        return out;
+      }
+      out.energy = energy;
+      out.rapidity = rapidity;
+      out.edge_distance = distance;
+      out.converged = true;
+      out.status = Status::converged;
+      return out;
+    }
+
+  private:
+    static Real pi() { return Real{4} * std::atan(Real{1}); }
+    struct Evaluation
+    {
+        Real momentum{}, energy{}, dp{}, de{};
+    };
+    Evaluation evaluate(detail::Mesh<Real> const& mesh, bool hole, Real distance) const
+    {
+      using bethe::detail::CompensatedSum;
+      Real const gamma = info_.interaction / info_.density, sign = hole ? -Real{1} : Real{1};
+      Real const shift = sign * distance;
+      CompensatedSum<Real> momentum, energy, dp, de;
+      momentum.add(distance);
+      energy.add(distance * (Real{2} * mesh.q + shift));
+      dp.add(Real{1});
+      de.add(Real{2} * (mesh.q + shift));
+      for (std::size_t j = 0; j < mesh.k.size(); ++j)
+      {
+        Real const a = mesh.q - mesh.k[j], b = a + shift;
+        Real const scale = std::max({gamma, std::abs(a), std::abs(b)});
+        Real const gs = gamma / scale, as = a / scale, bs = b / scale;
+        Real const phase = std::atan2((distance / scale) * gs, gs * gs + as * bs);
+        momentum.add(Real{2} * mesh.w[j] * mesh.rho[j] * phase);
+        Real const cb = bethe::detail::rational_scattering_kernel(b, gamma) / pi();
+        Real difference;
+        Real const sa = std::max(gamma, std::abs(a));
+        if (distance < sa / Real{4})
+        {
+          // Difference of kernels factored by the displacement, even when
+          // Q +/- distance rounds back to Q. No subtraction of dressed energies.
+          Real const ga = gamma / sa, aa = a / sa;
+          difference = -(shift / sa) * ((Real{2} * a + shift) / sa) / (ga * ga + aa * aa) * cb;
+        }
+        else
+          difference = cb - bethe::detail::rational_scattering_kernel(a, gamma) / pi();
+        energy.add(sign * mesh.w[j] * mesh.epsilon[j] * difference);
+        dp.add(Real{2} * pi() * mesh.w[j] * mesh.rho[j] * cb);
+        Real const sb = std::max(gamma, std::abs(b)), gb = gamma / sb, bb = b / sb;
+        Real const derivative = -Real{2} * (bb / sb) / (gb * gb + bb * bb) * cb;
+        de.add(mesh.w[j] * mesh.epsilon[j] * derivative);
+      }
+      return {momentum.value(), energy.value(), dp.value(), de.value()};
+    }
+    struct Inversion
+    {
+        Real energy{}, distance{}, error{}, velocity{};
+        Status status = Status::precision_limit;
+    };
+    Inversion invert(detail::Mesh<Real> const& mesh, bool hole, Real target, std::size_t& iterations) const
+    {
+      Inversion out;
+      Real low{0}, high = hole ? mesh.q : target;
+      auto const edge = evaluate(mesh, hole, Real{0});
+      Real x = std::min(high, target / edge.dp);
+      for (;;)
+      {
+        auto const value = evaluate(mesh, hole, x);
+        out.energy = value.energy;
+        out.distance = x;
+        out.error = std::abs(value.momentum - target);
+        out.velocity = value.de / value.dp;
+        if (!uni20::isfinite(value.energy) || !uni20::isfinite(out.error) || !uni20::isfinite(out.velocity) ||
+            !(value.energy > Real{0}) || !(value.dp > Real{0}))
+          return out;
+        if (out.error <= options_.tolerance * target / Real{16})
+        {
+          out.status = Status::converged;
+          return out;
+        }
+        if (iterations == options_.max_momentum_iterations)
+        {
+          out.status = Status::momentum_limit;
+          return out;
+        }
+        ++iterations;
+        if (value.momentum > target)
+          high = x;
+        else
+          low = x;
+        Real next = x - (value.momentum - target) / value.dp;
+        if (!(next > low && next < high)) next = low + (high - low) / Real{2};
+        if (next == x || next == low || next == high) return out;
+        x = next;
+      }
+    }
+    Options<Real> options_;
+    Background<Real> info_;
+    std::optional<detail::Mesh<Real>> fine_, coarse_;
+};
 } // namespace bethe::lieb_liniger::thermo

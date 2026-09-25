@@ -164,9 +164,11 @@ thermodynamics solver. A separate [public bulk ground-state API](lieb-liniger-th
 now provides the Fermi rapidity, energy per length, and chemical potential.
 
 Attractive interactions/bound states, exactly zero or infinite
-coupling, thermodynamic excitation curves, finite-temperature TBA, and matrix
+coupling, finite-temperature TBA, and matrix
 elements are not implemented. The separate [hard-wall frontend](lieb-liniger-open.md)
 implements reflection equations, not a boundary toggle on the ring frontend;
 negative `c` must not be treated as a sign switch in this real-root solver.
+For thermodynamic type-I/type-II curves, use the separate
+[dispersion frontend](lieb-liniger-thermo.md), not a finite label scan.
 See the [catalogue](models.md#lieb-liniger-the-simplest-new-interacting-family)
 and [bibliography](../CITATIONS.md) for the next extensions and references.

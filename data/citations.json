@@ -714,6 +714,16 @@
   ],
   "tools": [
     {
+      "id": "lieb_liniger_dispersion",
+      "executable": "bethe-lieb-liniger-dispersion",
+      "references": [
+        {"id": "lieb-liniger-1963", "context": "Repulsive zero-temperature root-density equation and bulk ground-state energy, in units hbar=2m=1."},
+        {"id": "lieb-1963-excitations", "context": "Thermodynamic type-I particle and type-II hole excitation branches; energies are fixed-N gaps relative to the ground state. No spectral weights or finite-temperature TBA."},
+        {"id": "franchini-2011", "context": "Dressed-energy equation and Fermi boundary condition (2.87)-(2.88), related particle-hole energies (2.95); our phase is +2 atan(k/c)."},
+        {"id": "caux-lieb-liniger", "context": "Pedagogical ground-state integral equation and normalization at fixed density."}
+      ]
+    },
+    {
       "id": "biquadratic_obc",
       "executable": "bethe-biquadratic-obc",
       "references": [

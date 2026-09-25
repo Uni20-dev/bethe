@@ -329,6 +329,12 @@ inline constexpr std::array<Reference, 68> references{{
   {"caux-lieb-liniger", "Jean-Sébastien Caux", "The Bethe Ansatz: The ground state and the Lieb equation", "Online lecture notes, integrability.org", 0, links_67},
 }};
 
+inline constexpr std::array<Use, 4> uses_lieb_liniger_dispersion{{
+  {&references[21], "Repulsive zero-temperature root-density equation and bulk ground-state energy, in units hbar=2m=1."},
+  {&references[22], "Thermodynamic type-I particle and type-II hole excitation branches; energies are fixed-N gaps relative to the ground state. No spectral weights or finite-temperature TBA."},
+  {&references[66], "Dressed-energy equation and Fermi boundary condition (2.87)-(2.88), related particle-hole energies (2.95); our phase is +2 atan(k/c)."},
+  {&references[67], "Pedagogical ground-state integral equation and normalization at fixed density."},
+}};
 inline constexpr std::array<Use, 7> uses_biquadratic_obc{{
   {&references[0], "Original free-end spin-1 biquadratic/TL spectral correspondence. Even-chain ground states, TL module minima and restricted real-root excitations of H=-sum (S.S)^2, with representation multiplicities."},
   {&references[1], "Hamiltonians and energy shift (2)-(5), real-root Bethe equations (6)-(10), and integer-label window 1<=I<=N-M. Our spin-half reference is half of (3), after a staggered rotation. The odd-chain spinon band is not implemented."},
@@ -426,12 +432,13 @@ inline constexpr std::array<Use, 3> uses_gaudin_yang_pbc{{
   {&references[55], "Hamiltonian and periodic fermion equations (1), (2), (7), (8), (25); even N, odd minority population as in Sec. 5. Weak and strong limits (12), (15)-(16) provide checks. Hard walls, attraction and excitations are not implemented."},
 }};
 
-enum class Tool { biquadratic_obc, xxx_pbc, xxx_obc, xxz_pbc, xxz_obc, hubbard_dispersion, hubbard_pbc, hubbard_obc, lieb_liniger_pbc, lieb_liniger_obc, su3_pbc, tj_pbc, tb_pbc, richardson, central_spin, sun_fermions_pbc, ladder_pbc, haldane_shastry_pbc, sutherland_pbc, gaudin_yang_pbc };
+enum class Tool { lieb_liniger_dispersion, biquadratic_obc, xxx_pbc, xxx_obc, xxz_pbc, xxz_obc, hubbard_dispersion, hubbard_pbc, hubbard_obc, lieb_liniger_pbc, lieb_liniger_obc, su3_pbc, tj_pbc, tb_pbc, richardson, central_spin, sun_fermions_pbc, ladder_pbc, haldane_shastry_pbc, sutherland_pbc, gaudin_yang_pbc };
 
 [[nodiscard]] constexpr std::span<Use const> for_tool(Tool tool)
 {
   switch (tool)
   {
+    case Tool::lieb_liniger_dispersion: return uses_lieb_liniger_dispersion;
     case Tool::biquadratic_obc: return uses_biquadratic_obc;
     case Tool::xxx_pbc: return uses_xxx_pbc;
     case Tool::xxx_obc: return uses_xxx_obc;

@@ -27,12 +27,27 @@ TEST(Citations, RegistryUniqueIdsAndLookup)
 
 TEST(Citations, ToolReferenceSelections)
 {
-  for (auto tool : {refs::Tool::xxx_pbc, refs::Tool::xxx_obc, refs::Tool::xxz_pbc, refs::Tool::xxz_obc,
-                    refs::Tool::hubbard_pbc, refs::Tool::hubbard_obc, refs::Tool::lieb_liniger_pbc, refs::Tool::su3_pbc,
-                    refs::Tool::gaudin_yang_pbc, refs::Tool::tj_pbc, refs::Tool::tb_pbc, refs::Tool::richardson,
-                    refs::Tool::central_spin, refs::Tool::sun_fermions_pbc, refs::Tool::ladder_pbc,
-                    refs::Tool::hubbard_dispersion, refs::Tool::haldane_shastry_pbc, refs::Tool::sutherland_pbc,
-                    refs::Tool::biquadratic_obc, refs::Tool::lieb_liniger_obc})
+  for (auto tool : {refs::Tool::xxx_pbc,
+                    refs::Tool::xxx_obc,
+                    refs::Tool::xxz_pbc,
+                    refs::Tool::xxz_obc,
+                    refs::Tool::hubbard_pbc,
+                    refs::Tool::hubbard_obc,
+                    refs::Tool::lieb_liniger_pbc,
+                    refs::Tool::su3_pbc,
+                    refs::Tool::gaudin_yang_pbc,
+                    refs::Tool::tj_pbc,
+                    refs::Tool::tb_pbc,
+                    refs::Tool::richardson,
+                    refs::Tool::central_spin,
+                    refs::Tool::sun_fermions_pbc,
+                    refs::Tool::ladder_pbc,
+                    refs::Tool::hubbard_dispersion,
+                    refs::Tool::haldane_shastry_pbc,
+                    refs::Tool::sutherland_pbc,
+                    refs::Tool::biquadratic_obc,
+                    refs::Tool::lieb_liniger_obc,
+                    refs::Tool::lieb_liniger_dispersion})
   {
     SCOPED_TRACE(static_cast<int>(tool));
     std::set<std::string_view> ids;

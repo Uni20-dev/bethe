@@ -134,4 +134,154 @@ TYPED_TEST(LiebLinigerThermo, FailureContracts)
   EXPECT_EQ(overflow.status, model::Status::precision_limit);
   EXPECT_FALSE(overflow.energy_per_length);
 }
+TYPED_TEST(LiebLinigerThermo, DispersionsBackflowAndReflection)
+{
+  using Real = TypeParam;
+  Real const pi = Real{4} * std::atan(Real{1});
+  for (Real gamma : {Real{1}, Real{4}, Real{20}})
+  {
+    model::Solver<Real> solver(gamma, Real{1});
+    ASSERT_TRUE(solver.background().converged);
+    auto const& bg = solver.background();
+    auto const mesh = model::detail::mesh(gamma, *bg.fermi_rapidity, bethe::detail::gauss_legendre<Real>(bg.nodes));
+    ASSERT_TRUE(mesh);
+    auto const n = mesh->k.size();
+    for (auto branch : {model::Branch::type_i, model::Branch::type_ii})
+      for (Real p : {pi / Real{4}, pi / Real{2}, pi, Real{2} * pi})
+      {
+        auto const point = solver.at_momentum(branch, p);
+        ASSERT_TRUE(point.converged) << int(point.status) << " gamma=" << uni20::format_real(gamma)
+                                     << " p=" << uni20::format_real(p) << " branch=" << int(branch);
+        bool const hole = branch == model::Branch::type_ii;
+        if (hole && p == Real{2} * pi)
+        {
+          EXPECT_EQ(*point.energy, Real{0});
+          continue;
+        }
+        EXPECT_GT(*point.energy, Real{0});
+        Real const lambda = *point.rapidity, q = *bg.fermi_rapidity;
+        std::vector<Real> a(n * n), d(n);
+        for (std::size_t i = 0; i < n; ++i)
+        {
+          d[i] = (std::atan((mesh->k[i] - q) / gamma) - std::atan((mesh->k[i] - lambda) / gamma)) / pi;
+          for (std::size_t j = 0; j < n; ++j)
+          {
+            Real const x = mesh->k[i] - mesh->k[j];
+            a[i * n + j] = Real(i == j) - mesh->w[j] * gamma / (pi * (gamma * gamma + x * x));
+          }
+        }
+        ASSERT_TRUE(bethe::detail::newton_step(a, d));
+        Real momentum = lambda - q, energy = lambda * lambda - q * q;
+        for (std::size_t j = 0; j < n; ++j)
+        {
+          momentum += mesh->w[j] * d[j];
+          energy += Real{2} * mesh->w[j] * mesh->k[j] * d[j];
+        }
+        Real const tolerance = Real{32768} * uni20::numeric_limits<Real>::epsilon();
+        EXPECT_REAL_NEAR((hole ? -momentum : momentum), p, tolerance * (Real{1} + p));
+        EXPECT_REAL_NEAR((hole ? -energy : energy), *point.energy, tolerance * (Real{1} + *point.energy));
+        if (hole)
+        {
+          auto const mirror = solver.at_momentum(branch, Real{2} * pi - p);
+          ASSERT_TRUE(mirror.converged);
+          EXPECT_REAL_NEAR(*mirror.energy, *point.energy, tolerance * *point.energy);
+        }
+      }
+  }
+}
+
+TYPED_TEST(LiebLinigerThermo, DispersionLimitsScalingAndTinyGaps)
+{
+  using Real = TypeParam;
+  Real const pi = Real{4} * std::atan(Real{1}), eps = uni20::numeric_limits<Real>::epsilon();
+  model::Solver<Real> solver(Real{4}, Real{1}), scaled(Real{8}, Real{2});
+  Real const tiny = eps * eps;
+  for (auto branch : {model::Branch::type_i, model::Branch::type_ii})
+  {
+    auto const a = solver.at_momentum(branch, pi / Real{2});
+    auto const b = scaled.at_momentum(branch, pi);
+    ASSERT_TRUE(a.converged);
+    ASSERT_TRUE(b.converged);
+    EXPECT_EQ(*b.energy, Real{4} * *a.energy);
+    auto const near = solver.at_momentum(branch, tiny);
+    ASSERT_TRUE(near.converged) << int(near.status);
+    EXPECT_GT(*near.energy, Real{0});
+    EXPECT_GT(*near.edge_distance, Real{0});
+    auto const zero = solver.at_momentum(branch, Real{0});
+    ASSERT_TRUE(zero.converged);
+    EXPECT_EQ(*zero.energy, Real{0});
+  }
+  auto const particle = solver.at_momentum(model::Branch::type_i, tiny);
+  auto const hole = solver.at_momentum(model::Branch::type_ii, tiny);
+  EXPECT_REAL_NEAR(*particle.energy / tiny, *hole.energy / tiny, Real{8192} * eps);
+  Real const gamma = Real{1} / std::sqrt(std::sqrt(eps));
+  model::Solver<Real> strong(gamma, Real{1});
+  for (auto branch : {model::Branch::type_i, model::Branch::type_ii})
+    for (Real p : {pi / Real{4}, pi, Real{2} * pi})
+    {
+      auto const a = strong.at_momentum(branch, p);
+      ASSERT_TRUE(a.converged) << int(a.status);
+      Real const exact = p * (Real{2} * pi + (branch == model::Branch::type_i ? p : -p));
+      EXPECT_REAL_NEAR(*a.energy, exact, Real{1000} / gamma);
+    }
+}
+
+TYPED_TEST(LiebLinigerThermo, DispersionsAgainstFiniteRings)
+{
+  using Real = TypeParam;
+  Real const pi = Real{4} * std::atan(Real{1});
+  model::Solver<Real> solver(Real{4}, Real{1});
+  for (auto branch : {model::Branch::type_i, model::Branch::type_ii})
+  {
+    auto const point = solver.at_momentum(branch, pi / Real{2});
+    ASSERT_TRUE(point.converged);
+    Real previous_error{};
+    for (std::size_t n : {24u, 48u, 96u})
+    {
+      auto const ground = bethe::lieb_liniger::ground_state(n, Real(n), Real{4});
+      ASSERT_TRUE(ground.converged);
+      auto numbers = ground.quantum_numbers;
+      if (branch == model::Branch::type_i)
+        numbers.back() += uni20::half_int(n / 4);
+      else
+        for (std::size_t j = n - n / 4; j < n; ++j)
+          numbers[j] += uni20::half_int(1);
+      auto const state = bethe::lieb_liniger::solve_real(Real(n), Real{4}, numbers);
+      ASSERT_TRUE(state.converged);
+      Real const error = std::abs(state.energy - ground.energy - *point.energy);
+      if (n > 24) EXPECT_LT(error, previous_error * Real{3} / Real{5});
+      previous_error = error;
+      EXPECT_REAL_NEAR(state.momentum, pi / Real{2}, Real{64} * uni20::numeric_limits<Real>::epsilon());
+    }
+    EXPECT_LT(previous_error, Real{1} / Real{5});
+  }
+}
+
+TYPED_TEST(LiebLinigerThermo, DispersionFailureContracts)
+{
+  using Real = TypeParam;
+  model::Solver<Real> solver(Real{4}, Real{1});
+  EXPECT_THROW(solver.at_momentum(model::Branch::type_i, Real{-1}), std::invalid_argument);
+  EXPECT_THROW(solver.at_momentum(model::Branch::type_ii, Real{7}), std::invalid_argument);
+  EXPECT_THROW(solver.at_momentum(static_cast<model::Branch>(123), Real{0}), std::invalid_argument);
+  EXPECT_THROW(solver.at_momentum(model::Branch::type_i, uni20::numeric_limits<Real>::infinity()),
+               std::invalid_argument);
+  model::Solver<Real> failed(Real{4}, Real{1}, {.max_iterations = 0});
+  auto const no_background = failed.at_momentum(model::Branch::type_i, Real{0});
+  EXPECT_FALSE(no_background.energy);
+  EXPECT_EQ(no_background.status, model::Status::density_limit);
+  model::Solver<Real> budget(Real{4}, Real{1}, {.max_momentum_iterations = 0});
+  auto const limited = budget.at_momentum(model::Branch::type_i, Real{1});
+  EXPECT_FALSE(limited.energy);
+  EXPECT_EQ(limited.status, model::Status::momentum_limit);
+  auto const huge = solver.at_momentum(model::Branch::type_i, uni20::numeric_limits<Real>::max() / Real{4});
+  EXPECT_FALSE(huge.energy);
+  EXPECT_EQ(huge.status, model::Status::precision_limit);
+  // A nonzero subnormal input need not resolve its requested relative error.
+  Real const subnormal = uni20::numeric_limits<Real>::min() * uni20::numeric_limits<Real>::epsilon();
+  ASSERT_GT(subnormal, Real{0});
+  auto const underresolved = solver.at_momentum(model::Branch::type_i, subnormal);
+  EXPECT_FALSE(underresolved.energy);
+  EXPECT_EQ(underresolved.status, model::Status::precision_limit);
+}
 } // namespace
