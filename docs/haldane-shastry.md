@@ -60,6 +60,46 @@ state in that row has that spin. The full dimension is
 For example, motif `{2}` at `N=4` contains a singlet and a triplet: its
 dimension is four and `S_max=1`, not `3/2`.
 
+### Resolving ordinary total-spin multiplets
+
+The library now supplies `spin_decomposition(N, motif)`. The CLI still reports
+whole Yangian multiplets; spin-resolved export is a separate follow-up.
+Remove the sites in `motif` and `motif+1` from the ordered list `1,...,N`.
+Each remaining consecutive run of length l contributes one spin-l/2 factor.
+The Yangian multiplet's SU(2) content is the tensor product of these factors,
+decomposed by the usual Clebsch–Gordan rule. This is the Drinfeld-polynomial
+string construction in [Jiang–Lamers–Miao, Eqs. (2.16)–(2.18)](https://arxiv.org/html/2606.20168v2#S2.SS3).
+These strings label representation factors, not bound-state Bethe strings.
+
+For example, at N=6 motif `{3}` leaves two runs of length two, so its content
+is spin-1 tensor spin-1: one singlet, one triplet and one quintet. All nine
+states have the motif's energy and momentum. An empty motif instead gives
+one spin-N/2 irrep, even for a very large ring.
+
+```cpp
+auto content = bethe::haldane_shastry::spin_decomposition(6, {3});
+if (content.complete) {
+  for (auto const& term : content.multiplets) {
+    // term.spin is a native half_int; term.multiplicity counts SU(2) irreps.
+    // Each such irrep contributes one state to every allowed Sz in [-S,S].
+  }
+}
+```
+
+The reusable `bethe/spin_multiplets.hpp` helper owns the integer spin coupling;
+the Haldane–Shastry module only constructs its motif-dependent factors.
+`bethe::spin::tensor_product(factors, options)` accepts nonnegative `half_int`
+spins and returns increasing-spin multiplicities. Its empty product is a
+singlet. There is no floating-point rounding in this calculation.
+
+`DecompositionOptions::max_updates` defaults to 1000000 and counts individual
+Clebsch–Gordan multiplicity additions, independently of motif-enumeration
+budgets. On `work_limit` or `count_overflow`, `complete` is false and no
+partial spin decomposition is published. Counts use uint64; a total dimension
+can overflow even when each multiplicity fits, in which case `dimension` is
+absent but the completed decomposition remains valid. Negative factors and
+unrepresentable sums of twice-spin are invalid arguments.
+
 ## Ground sectors and excitation scans
 
 `--sz` selects an allowed half-integer spin projection. The minimizing motif
@@ -107,8 +147,13 @@ Tests compare the complete motif spectrum and momentum cosines against an
 independently constructed spin-basis Hamiltonian through `N=8`, check every
 magnetization-sector minimum through `N=9`, and verify that motif dimensions
 sum to `2^N`. Native-precision tests cover even/odd formulas, exact ordering,
-invalid labels, count overflow and budget refusal. Gaps are formed from exact
+invalid labels, count overflow and budget refusal. Spin-content tests compare
+the complete magnetization-resolved energy and momentum-cosine spectra with
+independent spin-basis diagonalization through N=8. Across all motifs through
+N=16, the multiplicities also reproduce the SU(2) decomposition obtained by
+counting spin words and subtracting adjacent magnetization-sector dimensions.
+Gaps are formed from exact
 integer differences before floating conversion.
 
-Wavefunctions, SU(2) decomposition of each Yangian multiplet, correlations,
+Wavefunctions, CLI export of SU(2) decompositions, correlations,
 open-chain variants and a thermodynamic spinon frontend are not implemented.

@@ -3,6 +3,7 @@
 #pragma once
 #include <algorithm>
 #include <bethe/solver.hpp>
+#include <bethe/spin_multiplets.hpp>
 #include <cstdint>
 #include <limits>
 #include <optional>
@@ -20,6 +21,17 @@ namespace detail
 inline void validate_sites(std::size_t n)
 {
   if (n < 2 || n > max_sites) throw std::invalid_argument("Haldane-Shastry requires 2<=sites<=1000000");
+}
+inline void validate_motif(std::size_t n, std::vector<std::size_t> const& motif)
+{
+  validate_sites(n);
+  std::size_t previous = 0;
+  for (auto m : motif)
+  {
+    if (m == 0 || m >= n || (previous && (m <= previous || m - previous < 2)))
+      throw std::invalid_argument("motif positions must increase in [1,N-1] with gaps >=2");
+    previous = m;
+  }
 }
 inline std::int64_t ground_numerator(std::size_t n)
 {
@@ -57,7 +69,7 @@ template <uni20::Real Real> struct Level
 /// Motif positions are increasing in [1,N-1], with separation at least two.
 template <uni20::Real Real> Level<Real> evaluate(std::size_t n, std::vector<std::size_t> motif)
 {
-  detail::validate_sites(n);
+  detail::validate_motif(n, motif);
   std::int64_t weight = 0;
   std::size_t momentum = 0, previous = 0;
   std::optional<std::uint64_t> dimension{1};
@@ -71,8 +83,6 @@ template <uni20::Real Real> Level<Real> evaluate(std::size_t n, std::vector<std:
   for (std::size_t i = 0; i < motif.size(); ++i)
   {
     auto const m = motif[i];
-    if (m == 0 || m >= n || (i && (m <= previous || m - previous < 2)))
-      throw std::invalid_argument("motif positions must increase in [1,N-1] with gaps >=2");
     weight += static_cast<std::int64_t>(m) * static_cast<std::int64_t>(n - m);
     momentum = (momentum + m) % n;
     multiply_dimension(i ? m - previous - 1 : m);
@@ -94,6 +104,23 @@ template <uni20::Real Real> Level<Real> evaluate(std::size_t n, std::vector<std:
   out.gap = scale * Real(out.energy_numerator - detail::ground_numerator(n)) / Real{24};
   out.momentum = Real{2} * pi * Real(momentum) / Real(n);
   return out;
+}
+
+/// SU(2) content of one Yangian multiplet. Consecutive unpaired sites in
+/// the complement of motif U (motif+1) form symmetric spin-l/2 factors.
+inline spin::Decomposition spin_decomposition(std::size_t n, std::vector<std::size_t> const& motif,
+                                              spin::DecompositionOptions const& options = {})
+{
+  detail::validate_motif(n, motif);
+  std::vector<uni20::half_int> factors;
+  std::size_t first = 1;
+  for (auto m : motif)
+  {
+    if (m > first) factors.push_back(uni20::from_twice(static_cast<std::int64_t>(m - first)));
+    first = m + 2;
+  }
+  if (first <= n) factors.push_back(uni20::from_twice(static_cast<std::int64_t>(n - first + 1)));
+  return spin::tensor_product(factors, options);
 }
 
 /// Return all minimizing motifs in a fixed Sz sector (one, or two chiral partners).

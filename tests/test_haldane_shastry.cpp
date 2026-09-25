@@ -159,4 +159,114 @@ TEST(HaldaneShastryOracles, EveryMagnetizationSector)
         EXPECT_NEAR(s.energy, exact.front(), 2.e-11);
     }
 }
+
+TEST(SpinMultiplets, ClebschGordanAndBudgets)
+{
+  namespace spin = bethe::spin;
+  auto const empty = spin::tensor_product({});
+  ASSERT_TRUE(empty.complete);
+  ASSERT_EQ(empty.multiplets.size(), 1);
+  EXPECT_EQ(empty.multiplets[0].spin, uni20::half_int{0});
+  EXPECT_EQ(empty.dimension, 1);
+  auto const half = uni20::from_twice(1);
+  auto const triple = spin::tensor_product({half, half, half});
+  ASSERT_TRUE(triple.complete);
+  ASSERT_EQ(triple.multiplets.size(), 2);
+  EXPECT_EQ(triple.multiplets[0].spin, half);
+  EXPECT_EQ(triple.multiplets[0].multiplicity, 2);
+  EXPECT_EQ(triple.multiplets[1].spin, uni20::from_twice(3));
+  EXPECT_EQ(triple.multiplets[1].multiplicity, 1);
+  EXPECT_EQ(triple.dimension, 8);
+  auto const limited = spin::tensor_product({half, half, half}, {.max_updates = triple.updates - 1});
+  EXPECT_FALSE(limited.complete);
+  EXPECT_EQ(limited.status, spin::DecompositionStatus::work_limit);
+  EXPECT_EQ(limited.updates, triple.updates - 1);
+  EXPECT_TRUE(limited.multiplets.empty());
+  EXPECT_FALSE(limited.dimension);
+  EXPECT_TRUE(spin::tensor_product({half, half, half}, {.max_updates = triple.updates}).complete);
+  EXPECT_THROW(spin::tensor_product({uni20::half_int{-1}}), std::invalid_argument);
+  auto const huge = uni20::from_twice(std::numeric_limits<std::int64_t>::max());
+  EXPECT_THROW(spin::tensor_product({huge, half}), std::invalid_argument);
+  auto const singleton = spin::tensor_product({huge});
+  ASSERT_TRUE(singleton.complete);
+  EXPECT_EQ(singleton.multiplets[0].spin, huge);
+  EXPECT_EQ(singleton.updates, 1);
+  // Total dimension can overflow before the individual irrep counts do.
+  auto const many = spin::tensor_product(std::vector<uni20::half_int>(64, half));
+  EXPECT_TRUE(many.complete);
+  EXPECT_FALSE(many.dimension);
+  auto const overflow = spin::tensor_product(std::vector<uni20::half_int>(100, half));
+  EXPECT_FALSE(overflow.complete);
+  EXPECT_EQ(overflow.status, spin::DecompositionStatus::count_overflow);
+  EXPECT_TRUE(overflow.multiplets.empty());
+}
+
+TEST(HaldaneShastrySpinContent, MotifsAndHilbertSpace)
+{
+  auto const reducible = model::spin_decomposition(4, {2});
+  ASSERT_TRUE(reducible.complete);
+  ASSERT_EQ(reducible.multiplets.size(), 2);
+  EXPECT_EQ(reducible.multiplets[0].spin, uni20::half_int{0});
+  EXPECT_EQ(reducible.multiplets[1].spin, uni20::half_int{1});
+  EXPECT_EQ(reducible.multiplets[0].multiplicity, 1);
+  EXPECT_EQ(reducible.multiplets[1].multiplicity, 1);
+  EXPECT_EQ(reducible.dimension, 4);
+  for (unsigned n = 2; n <= 16; ++n)
+  {
+    std::vector<std::uint64_t> counts(n + 1);
+    for (auto const& level : model::spectrum<double>(n).levels)
+    {
+      auto const content = model::spin_decomposition(n, level.motif);
+      ASSERT_TRUE(content.complete);
+      EXPECT_EQ(content.dimension, level.degeneracy);
+      ASSERT_FALSE(content.multiplets.empty());
+      EXPECT_EQ(content.multiplets.back().spin, level.maximum_spin);
+      for (auto const& term : content.multiplets)
+        counts[term.spin.twice()] += term.multiplicity;
+    }
+    // Independently count spin words with fixed Sz, then subtract adjacent weights.
+    std::vector<std::uint64_t> weights(n + 3);
+    for (unsigned word = 0; word < (1u << n); ++word)
+    {
+      int const twice = int(n) - 2 * std::popcount(word);
+      if (twice >= 0) ++weights[twice];
+    }
+    for (unsigned twice = n % 2; twice <= n; twice += 2)
+      EXPECT_EQ(counts[twice], weights[twice] - weights[twice + 2]);
+  }
+  for (auto motif : {std::vector<std::size_t>{0}, {6}, {1, 2}, {3, 2}})
+    EXPECT_THROW(model::spin_decomposition(6, motif), std::invalid_argument);
+  auto const refused = model::spin_decomposition(4, {2}, {.max_updates = 0});
+  EXPECT_FALSE(refused.complete);
+  EXPECT_TRUE(refused.multiplets.empty());
+  auto const large = model::spin_decomposition(model::max_sites, {});
+  ASSERT_TRUE(large.complete);
+  EXPECT_EQ(large.dimension, model::max_sites + 1);
+  EXPECT_EQ(large.updates, 1);
+}
+
+TEST(HaldaneShastryOracles, FullMagnetizationResolvedSpectrumAndTranslation)
+{
+  for (unsigned n = 2; n <= 8; ++n)
+    for (unsigned down = 0; down <= n / 2; ++down)
+      for (double shift : {0., .137})
+      {
+        SCOPED_TRACE(::testing::Message() << n << ',' << down << ',' << shift);
+        std::vector<double> expected;
+        for (auto const& level : model::spectrum<double>(n).levels)
+        {
+          auto const content = model::spin_decomposition(n, level.motif);
+          ASSERT_TRUE(content.complete);
+          for (auto const& term : content.multiplets)
+            if (term.spin.twice() >= n - 2 * down)
+              for (std::uint64_t i = 0; i < term.multiplicity; ++i)
+                expected.push_back(level.energy + shift * std::cos(level.momentum));
+        }
+        std::sort(expected.begin(), expected.end());
+        auto const exact = exact_energies(n, down, shift);
+        ASSERT_EQ(expected.size(), exact.size());
+        for (std::size_t i = 0; i < exact.size(); ++i)
+          EXPECT_NEAR(expected[i], exact[i], 2.e-11);
+      }
+}
 } // namespace
