@@ -161,11 +161,55 @@ to these parameters. Do not replace this chain with a Hermitian matrix having
 the same real eigenvalues. Even in the implemented interval, regular-root
 solutions do not by themselves specify the full root-of-unity spectrum.
 
-The next stages are admissible-label scans and additional complex-root branches.
+The next stages are frontend access to regular-state scans and additional
+complex-root branches.
 CFT fitting must identify boundary sectors and distinguish c from an effective
 central charge; a numerical Casimir coefficient is not automatically c.
 RSOS restrictions and periodic loop realizations are separate representations,
 not a boundary-field toggle on this open spin-chain solver.
+
+## Regular-state excitation scans (library)
+
+For 0<Delta<1, `real_quantum_number_window(N,Delta,ell)` reports the necessary
+finite-root window I=1,...,slots for M=(N-ell)/2 roots. It shares the strict
+infinity-threshold test and precision margin with `solve_real`; it is not
+a completeness theorem or a guarantee that every configuration converges.
+`real_excitation_count(N,Delta,ell,limit)` performs allocation-free bounded
+binomial counting. At very small positive Delta, finite precision can exclude
+the last sea label and leave no supported configuration; that is a refusal,
+not a continuation to the exact Delta=0 construction.
+
+```cpp
+namespace qg = bethe::xxz::quantum_group::critical;
+auto scan = qg::real_excitations<long double>(12, 0.6L, 8,
+    {.count = 10, .max_candidates = 10000});
+// scan.levels: lowest converged states, including the sea if retained
+// scan.candidate_count, scan.converged_count, scan.first_unconverged
+```
+
+Every label combination in the window is attempted; `count` only limits the
+number retained, not the search. Use `count=real_excitation_count(...)` to
+retain all candidates, subject to the same `max_candidates` budget. The
+shared bounded-heap scanner orders converged levels by their energy shifts
+from the polarized reference, with lexicographic labels breaking exact ties.
+This avoids losing small differences to a common extensive energy offset.
+
+The shared result field named `ground_state` is specifically the
+**consecutive-label sea in the selected sector**, not a claim about the
+global ground state. Each optional gap subtracts this sea's energy shift.
+If the sea fails, gaps are absent; other converged energies can still be
+returned. Failed candidates are excluded from the ranked list, counted, and
+represented by `first_unconverged` as a diagnostic example. `converged()`
+requires every candidate and the reference to converge. Even then, only this
+regular-root family has been scanned: complex roots, descendants and
+root-of-unity multiplicities are not supplied.
+
+Native tests verify threshold crossings, analytic one-root energies,
+all-pairs enumeration and direct substitution of every returned two-root
+state into the original complex Bethe equations. Zero-budget and mixed
+success/failure scans test that no failed energies or unsupported gaps are
+published. The existing CLI still selects one regular state at a time;
+its complete-spectrum mode remains specific to Delta=0.
 
 ## Exact Delta=0 spectrum and Jordan blocks
 
