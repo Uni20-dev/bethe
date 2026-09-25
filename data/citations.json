@@ -780,6 +780,15 @@
   ],
   "tools": [
     {
+      "id": "asep_pbc",
+      "executable": "bethe-asep-pbc",
+      "references": [
+        {"id": "golinelli-mallick-2006", "context": "Periodic ASEP Bethe equations (66) and Markov eigenvalues (69), with arbitrary nonnegative hopping rates. Leading relaxation branch followed by continuation; no full-spectrum claim."},
+        {"id": "golinelli-mallick-2005", "context": "Finite-size TASEP leading-relaxation branch used as the continuation seed."},
+        {"id": "gwa-spohn-1992", "context": "Original periodic asymmetric-exclusion relaxation-gap analysis."}
+      ]
+    },
+    {
       "id": "tasep_pbc",
       "executable": "bethe-tasep-pbc",
       "references": [

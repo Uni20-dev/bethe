@@ -6,6 +6,7 @@ import sys
 
 env = dict(os.environ, UNI20_COLOR="never", COLUMNS="4096")
 base_arguments = {
+    "bethe-asep-pbc": ["5", "--particles", "2", "--left-rate", "0.5"],
     "bethe-tasep-pbc": ["5", "--particles", "2"],
     "bethe-xyz-pbc": ["4", "--eta", "0.4", "--t", "0.7"],
     "bethe-xxz-pbc": ["4", "--delta", "0.5"],

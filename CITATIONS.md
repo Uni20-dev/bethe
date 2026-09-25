@@ -789,6 +789,7 @@ Phys. Rev. A 46, 844 (1992).
 
 Relevant tool modes:
 
+- `bethe-asep-pbc`: Original periodic asymmetric-exclusion relaxation-gap analysis.
 - `bethe-tasep-pbc`: Original periodic asymmetric-exclusion relaxation-gap analysis. This frontend restricts hopping to the totally asymmetric case.
 
 ### yang-yang-1966
@@ -1002,6 +1003,10 @@ J. Phys. A: Math. Gen. 39, 12679-12705 (2006).
 
 [DOI](<https://doi.org/10.1088/0305-4470/39/41/S03>), [arXiv](<https://arxiv.org/abs/cond-mat/0611701>).
 
+Relevant tool modes:
+
+- `bethe-asep-pbc`: Periodic ASEP Bethe equations (66) and Markov eigenvalues (69), with arbitrary nonnegative hopping rates. Leading relaxation branch followed by continuation; no full-spectrum claim.
+
 ### golinelli-mallick-2005
 
 O. Golinelli and K. Mallick. *Spectral gap of the totally asymmetric exclusion process at arbitrary filling*.
@@ -1011,6 +1016,7 @@ J. Phys. A: Math. Gen. 38, 1419-1425 (2005).
 
 Relevant tool modes:
 
+- `bethe-asep-pbc`: Finite-size TASEP leading-relaxation branch used as the continuation seed.
 - `bethe-tasep-pbc`: Periodic TASEP finite-size Bethe equations (2)-(8) and leading relaxation branch (12)-(14) at arbitrary filling. Complex Markov eigenvalues, not energies; no partial asymmetry or full-spectrum claim.
 
 <!-- END GENERATED BIBLIOGRAPHY -->

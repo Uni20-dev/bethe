@@ -64,8 +64,8 @@ Thermodynamic dispersion tools use `bethe-<model>-dispersion`.
   of Jz. Generic XYZ has no conserved Sz sector; excitations are not yet exposed.
 - [Periodic TASEP](docs/tasep.md): `bethe-tasep-pbc` gives the leading relaxation
   gap and complex decay eigenvalue at arbitrary filling. These are stochastic
-  rates, not quantum energies. The [bidirectional ASEP library](docs/asep.md)
-  also supports unequal rates and symmetric hopping; its frontend is pending.
+  rates, not quantum energies. [Bidirectional ASEP](docs/asep.md),
+  `bethe-asep-pbc`, also supports unequal rates and symmetric hopping.
 - [Periodic SU(3)](docs/su3.md): `bethe-su3-pbc` gives the balanced singlet
   ground state of the permutation chain for lengths divisible by three,
   also covering the spin-1 ULS point through an energy shift.

@@ -1,6 +1,6 @@
 # Periodic ASEP: two hopping rates
 
-**Status: native-precision relaxation-gap library implemented; frontend pending.**
+**Status: native-precision relaxation-gap library and `bethe-asep-pbc` frontend implemented.**
 This extends [TASEP](tasep.md) to nonnegative right and left hopping rates,
 including the symmetric endpoint. It does not enumerate the full spectrum or
 implement open reservoirs.
@@ -37,6 +37,40 @@ lambda = -2(r+s) sin²(pi/L) + i |r-s| sin(2pi/L).
 At r=s the gap is `4r sin²(pi/L)` for every nontrivial filling, with zero
 frequency. These analytic cases require no iterative roots. At L=2 both
 directions reach the same neighbouring site and their rates add.
+
+## Command-line use
+
+```sh
+bethe-asep-pbc 32 --particles 8 --right-rate 1 --left-rate 0.5 --roots
+bethe-asep-pbc 64 --particles 32 --left-rate 1 --precision long-double
+bethe-asep-pbc 32 --particles 8 --left-rate 0.5 --roots --json rates.json \
+  --csv-table relaxation=rates.csv --tsv-table roots=roots.tsv
+bethe-asep-pbc --references
+```
+
+L and `--particles` are required. Rates default to right=1, left=0 (TASEP).
+The shared `--precision` choices are fp64, long-double and fp128 when enabled.
+The `relaxation` schema is shared with TASEP: `has_mode`, `lambda_real`,
+`lambda_imag`, `gap`, `frequency`, `residual`, `iterations`, `seed_iterations`,
+`converged`, `status`. Frequency is angular frequency, not cycles per time.
+
+`--roots` adds `index,v_real,v_imag`, the scaled coordinates described below.
+Metadata records the wave root index and complex wave base needed to reconstruct
+z, the input rates, all numerical controls, continuation attempts, seed Newton
+updates, last reached rate ratio, provenance and CPU time. Analytic results have
+no root rows or wave-base metadata values. Failed iterative calculations have
+null root coordinates and null physical observables; they exit 2. Empty/full
+sectors succeed with `has_mode=false` and null observables.
+
+`--max-iterations` limits each continuation corrector; `--max-continuation-steps`
+limits all attempts. `--max-seed-iterations`, `--max-seed-newton-iterations`,
+`--seed-tolerance` and `--max-sites` control the TASEP seed. `--tolerance` controls
+the ASEP rescaled residual. The two residual normalizations differ: at the exact
+TASEP endpoint the reported residual is the seed's logarithmic residual.
+
+All [shared output options](output.md), including streaming and no-retain
+exports, apply. Invalid inputs exit 1 before touching files, including existing
+`--force` targets. References appear only with `--references`.
 
 ## Equations and continuation
 
@@ -109,5 +143,11 @@ Jacobian, rate scaling, reflection/particle–hole symmetry, selected rings thro
 32 sites, failure budgets, and a bias only eight native epsilons from symmetry.
 Dense diagonalization is never a production fallback.
 
-Next: a frontend with both rates, shared run metadata and table exports.
-`bethe-tasep-pbc` remains right-only; its options have not silently changed.
+Frontend regressions additionally cover native rate parsing, rate/reflection
+symmetry, analytic and TASEP endpoints, all exposed iteration budgets, tiny bias,
+overflow, shared help/reference policy, JSON/CSV/TSV exports, streaming/no-retain
+output and invalid-input file protection. `bethe-tasep-pbc` remains right-only;
+its options have not silently changed.
+
+Further work includes other relaxation branches and open-reservoir boundaries;
+neither is included in this leading periodic mode calculation.

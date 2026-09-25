@@ -3,7 +3,7 @@
 **Status: native-precision library and `bethe-tasep-pbc` frontend implemented.** This is the
 totally asymmetric member of the ASEP family. It is not yet a solver for
 bidirectional hopping, open reservoirs, or a complete non-Hermitian spectrum.
-Bidirectional hopping is available in the separate [ASEP library](asep.md).
+Bidirectional hopping is available in the separate [ASEP library/frontend](asep.md).
 
 ## Physical convention
 
@@ -130,5 +130,5 @@ The frontend also tests all precision modes against the independent five-site
 reference, rate scaling, exact one-particle/one-hole limits, empty/full sectors,
 budget/range failures, exports, citation policy and invalid-input file protection.
 
-The [ASEP library](asep.md) now uses this TASEP seed with its own bidirectional
-equations and branch continuation. Its frontend is the next checkpoint.
+The [ASEP library/frontend](asep.md) uses this TASEP seed with its own bidirectional
+equations and branch continuation.

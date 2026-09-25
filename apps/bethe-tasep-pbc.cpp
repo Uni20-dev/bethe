@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Copyright (C) 2026 Ian McCulloch
+#include "exclusion-output.hpp"
 #include "program-options.hpp"
-#include "result-output.hpp"
 #include <bethe/tasep.hpp>
 
 namespace
@@ -110,16 +110,7 @@ template <uni20::Real Real> int run(Arguments const& a, int argc, char** argv)
   if (a.roots) tables.push_back("roots");
   cli::ResultOutput output(report, a.output, tables);
   using cli::column;
-  output.table(
-      "relaxation", "Leading relaxation mode",
-      [&](auto& table) {
-        table.append(has_mode, real, imag, state.gap, imag, state.residual_norm, state.iterations,
-                     state.seed_iterations, state.converged, std::string(name(state.status)));
-      },
-      column<bool>("has_mode"), column<Optional>("lambda_real"), column<Optional>("lambda_imag"),
-      column<Optional>("gap"), column<Optional>("frequency"), column<Real>("residual"),
-      column<std::size_t>("iterations"), column<std::size_t>("seed_iterations"), column<bool>("converged"),
-      column<std::string>("status"));
+  cli::relaxation_table(output, state, name(state.status));
   if (a.roots)
     output.table(
         "roots", "Reduced-filling fugacity roots",

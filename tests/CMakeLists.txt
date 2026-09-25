@@ -153,6 +153,15 @@ if(BETHE_BUILD_APPS)
     add_test(NAME XYZ.cli
       COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_xyz.py"
         "$<TARGET_FILE:bethe-xyz-pbc>" "${UNI20_ENABLE_MPLAPACK}")
+    add_test(NAME ASEP.cli
+      COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_asep.py"
+        "$<TARGET_FILE:bethe-asep-pbc>" "${UNI20_ENABLE_MPLAPACK}")
+    add_test(NAME Arguments.bethe-asep-pbc.cli
+      COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_shared_arguments.py"
+        "$<TARGET_FILE:bethe-asep-pbc>")
+    add_test(NAME Citations.bethe-asep-pbc.cli
+      COMMAND "${CMAKE_COMMAND}" "-DPROGRAM=$<TARGET_FILE:bethe-asep-pbc>"
+        "-DTOOL=bethe-asep-pbc" -P "${CMAKE_CURRENT_SOURCE_DIR}/check_citations_cli.cmake")
     add_test(NAME TASEP.cli
       COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_tasep.py"
         "$<TARGET_FILE:bethe-tasep-pbc>" "${UNI20_ENABLE_MPLAPACK}")

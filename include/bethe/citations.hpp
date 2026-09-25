@@ -359,6 +359,11 @@ inline constexpr std::array<Reference, 74> references{{
   {"golinelli-mallick-2005", "O. Golinelli and K. Mallick", "Spectral gap of the totally asymmetric exclusion process at arbitrary filling", "J. Phys. A: Math. Gen. 38, 1419-1425", 2005, links_73},
 }};
 
+inline constexpr std::array<Use, 3> uses_asep_pbc{{
+  {&references[72], "Periodic ASEP Bethe equations (66) and Markov eigenvalues (69), with arbitrary nonnegative hopping rates. Leading relaxation branch followed by continuation; no full-spectrum claim."},
+  {&references[73], "Finite-size TASEP leading-relaxation branch used as the continuation seed."},
+  {&references[50], "Original periodic asymmetric-exclusion relaxation-gap analysis."},
+}};
 inline constexpr std::array<Use, 2> uses_tasep_pbc{{
   {&references[73], "Periodic TASEP finite-size Bethe equations (2)-(8) and leading relaxation branch (12)-(14) at arbitrary filling. Complex Markov eigenvalues, not energies; no partial asymmetry or full-spectrum claim."},
   {&references[50], "Original periodic asymmetric-exclusion relaxation-gap analysis. This frontend restricts hopping to the totally asymmetric case."},
@@ -484,12 +489,13 @@ inline constexpr std::array<Use, 3> uses_gaudin_yang_pbc{{
   {&references[57], "Hamiltonian and periodic fermion equations (1), (2), (7), (8), (25); even N, odd minority population as in Sec. 5. Weak and strong limits (12), (15)-(16) provide checks. Hard walls, attraction and excitations are not implemented."},
 }};
 
-enum class Tool { tasep_pbc, xyz_pbc, bose_fermi_pbc, q_boson_pbc, lieb_liniger_thermal, lieb_liniger_dispersion, biquadratic_obc, xxx_pbc, xxx_obc, xxz_pbc, xxz_obc, hubbard_dispersion, hubbard_pbc, hubbard_obc, lieb_liniger_pbc, lieb_liniger_obc, su3_pbc, tj_pbc, tb_pbc, richardson, central_spin, sun_fermions_pbc, ladder_pbc, haldane_shastry_pbc, sutherland_pbc, gaudin_yang_pbc };
+enum class Tool { asep_pbc, tasep_pbc, xyz_pbc, bose_fermi_pbc, q_boson_pbc, lieb_liniger_thermal, lieb_liniger_dispersion, biquadratic_obc, xxx_pbc, xxx_obc, xxz_pbc, xxz_obc, hubbard_dispersion, hubbard_pbc, hubbard_obc, lieb_liniger_pbc, lieb_liniger_obc, su3_pbc, tj_pbc, tb_pbc, richardson, central_spin, sun_fermions_pbc, ladder_pbc, haldane_shastry_pbc, sutherland_pbc, gaudin_yang_pbc };
 
 [[nodiscard]] constexpr std::span<Use const> for_tool(Tool tool)
 {
   switch (tool)
   {
+    case Tool::asep_pbc: return uses_asep_pbc;
     case Tool::tasep_pbc: return uses_tasep_pbc;
     case Tool::xyz_pbc: return uses_xyz_pbc;
     case Tool::bose_fermi_pbc: return uses_bose_fermi_pbc;
