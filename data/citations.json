@@ -964,6 +964,36 @@
         {"label": "DOI", "url": "https://doi.org/10.1016/S0375-9601(98)00825-1"},
         {"label": "arXiv", "url": "https://arxiv.org/abs/cond-mat/9803381"}
       ]
+    },
+    {
+      "id": "feher-takacs-2011",
+      "authors": "G. Feher and G. Takacs",
+      "title": "Sine-Gordon form factors in finite volume",
+      "publication": "Nucl. Phys. B 852, 441-467",
+      "year": 2011,
+      "links": [
+        {"label": "DOI", "url": "https://doi.org/10.1016/j.nuclphysb.2011.06.020"},
+        {"label": "arXiv", "url": "https://arxiv.org/abs/1106.1901"}
+      ]
+    },
+    {
+      "id": "feher-palmai-takacs-2012",
+      "authors": "G. Z. Feher, T. Palmai, and G. Takacs",
+      "title": "Sine-Gordon multi-soliton form factors in finite volume",
+      "publication": "Phys. Rev. D 85, 085005",
+      "year": 2012,
+      "links": [
+        {"label": "DOI", "url": "https://doi.org/10.1103/PhysRevD.85.085005"},
+        {"label": "arXiv", "url": "https://arxiv.org/abs/1112.6322"}
+      ]
+    },
+    {
+      "id": "itou-matsumoto-tanizaki-2024",
+      "authors": "Etsuko Itou, Akira Matsumoto, and Yuya Tanizaki",
+      "title": "DMRG study of the theta-dependent mass spectrum in the 2-flavor Schwinger model",
+      "publication": "arXiv:2407.11391",
+      "year": 2024,
+      "links": [{"label": "arXiv", "url": "https://arxiv.org/abs/2407.11391"}]
     }
   ],
   "tools": [
@@ -1004,6 +1034,22 @@
       "references": [
         {"id": "andrei-1980", "context": "Exact solution of the single-channel Kondo problem."},
         {"id": "barcza-2020", "context": "Universal zero-temperature magnetization, equations (124)-(126). Full Zeeman splitting b=2B and T_B=2T1; impurity energy change obtained by integrating the response."}
+      ]
+    },
+    {
+      "id": "sine_gordon_dispersion",
+      "executable": "bethe-sine-gordon-dispersion",
+      "references": [
+        {"id": "feher-takacs-2011", "context": "Physical soliton mass and exact breather masses, Eq. (2.2). Stable-particle dispersions and fixed-content threshold kinematics only; no form factors or spectral weights."},
+        {"id": "itou-matsumoto-tanizaki-2024", "context": "Leading light-sector sine-Gordon description of two equal small-mass Schwinger flavours at theta=0: p=1/3, triplet and singlet with mass ratio sqrt(3). Not an exact solution of the full massive or finite-spacing Schwinger model."}
+      ]
+    },
+    {
+      "id": "sine_gordon_bethe_yang",
+      "executable": "bethe-sine-gordon-bethe-yang",
+      "references": [
+        {"id": "feher-palmai-takacs-2012", "context": "Eq. (2.1) fixes S_ss=-exp(i*chi); Sec. 3 describes scattering quantization. We implement opposite-rapidity same-charge pairs at p>=1, with half-odd Bethe numbers and no wrapping corrections. Numerical convergence is not exact finite-volume accuracy."},
+        {"id": "rutkevich-2020", "context": "The existing vacuum Fourier kernel fixes chi'=2*pi*G in the same physical p and soliton-mass convention. Vacuum finite-volume energies are separate from this asymptotic excitation calculation."}
       ]
     },
     {

@@ -34,6 +34,8 @@ TEST(Citations, ToolReferenceSelections)
                     refs::Tool::hubbard_continuum,
                     refs::Tool::kondo_response,
                     refs::Tool::sine_gordon_vacuum,
+                    refs::Tool::sine_gordon_dispersion,
+                    refs::Tool::sine_gordon_bethe_yang,
                     refs::Tool::lee_yang_vacuum,
                     refs::Tool::lee_yang_excited,
                     refs::Tool::xyz_pbc,

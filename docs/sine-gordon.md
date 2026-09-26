@@ -4,6 +4,10 @@
 theory calculation, not a classical sine-Gordon PDE evolution or a finite-site
 spin-chain diagonalization.
 
+For particle lines, breather masses, continuum onsets and selected asymptotic
+Bethe–Yang levels, see [sine-Gordon excitations](sine-gordon-excitations.md).
+Those tools do not turn the vacuum NLIE into an exact excited-state solver.
+
 ## Running the vacuum solver
 
 ```sh

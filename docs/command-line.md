@@ -6,6 +6,12 @@ The programs share precision selection, convergence controls, and
 report formatting. The periodic XXX chain is a useful first example; model
 and state-selection details live in the linked guides.
 
+For [sine-Gordon excitations](sine-gordon-excitations.md),
+`bethe-sine-gordon-dispersion --p P` supplies particle lines and pair thresholds;
+`bethe-sine-gordon-bethe-yang --p P --length L` supplies asymptotic same-charge
+pair levels for P>=1. The latter omits wrapping corrections and is distinct
+from the [finite-volume vacuum](sine-gordon.md) calculation.
+
 `bethe-xxx-pbc` is the periodic XXX front end. For free-end OBC, use the separate
 `bethe-xxx-obc` program described in the [open-chain guide](open-chains.md).
 For anisotropy, use [`bethe-xxz-pbc`](xxz.md) or the free-end

@@ -818,6 +818,7 @@ J. Stat. Mech. 2020, 103101 (2020).
 
 Relevant tool modes:
 
+- `bethe-sine-gordon-bethe-yang`: The existing vacuum Fourier kernel fixes chi'=2\*pi\*G in the same physical p and soliton-mass convention. Vacuum finite-volume energies are separate from this asymptotic excitation calculation.
 - `bethe-sine-gordon-vacuum`: Bulk-subtracted finite-ring vacuum scaling function and shifted-contour NLIE; soliton-mass convention.
 
 ### destri-de-vega-1992
@@ -1236,5 +1237,38 @@ Phys. Lett. A 250, 293-299 (1998).
 Relevant tool modes:
 
 - `bethe-tb-dispersion`: Spin-1/2 elementary spinons and non-Abelian state counting in higher-spin integrable chains. We report spin labels and energy bounds, not a finite-size counting formula or fusion multiplicities; TB's SU(2)\_2 content is not XXX's SU(2)\_1.
+
+### feher-takacs-2011
+
+G. Feher and G. Takacs. *Sine-Gordon form factors in finite volume*.
+Nucl. Phys. B 852, 441-467 (2011).
+
+[DOI](<https://doi.org/10.1016/j.nuclphysb.2011.06.020>), [arXiv](<https://arxiv.org/abs/1106.1901>).
+
+Relevant tool modes:
+
+- `bethe-sine-gordon-dispersion`: Physical soliton mass and exact breather masses, Eq. (2.2). Stable-particle dispersions and fixed-content threshold kinematics only; no form factors or spectral weights.
+
+### feher-palmai-takacs-2012
+
+G. Z. Feher, T. Palmai, and G. Takacs. *Sine-Gordon multi-soliton form factors in finite volume*.
+Phys. Rev. D 85, 085005 (2012).
+
+[DOI](<https://doi.org/10.1103/PhysRevD.85.085005>), [arXiv](<https://arxiv.org/abs/1112.6322>).
+
+Relevant tool modes:
+
+- `bethe-sine-gordon-bethe-yang`: Eq. (2.1) fixes S\_ss=-exp(i\*chi); Sec. 3 describes scattering quantization. We implement opposite-rapidity same-charge pairs at p\>=1, with half-odd Bethe numbers and no wrapping corrections. Numerical convergence is not exact finite-volume accuracy.
+
+### itou-matsumoto-tanizaki-2024
+
+Etsuko Itou, Akira Matsumoto, and Yuya Tanizaki. *DMRG study of the theta-dependent mass spectrum in the 2-flavor Schwinger model*.
+arXiv:2407.11391 (2024).
+
+[arXiv](<https://arxiv.org/abs/2407.11391>).
+
+Relevant tool modes:
+
+- `bethe-sine-gordon-dispersion`: Leading light-sector sine-Gordon description of two equal small-mass Schwinger flavours at theta=0: p=1/3, triplet and singlet with mass ratio sqrt(3). Not an exact solution of the full massive or finite-spacing Schwinger model.
 
 <!-- END GENERATED BIBLIOGRAPHY -->

@@ -93,6 +93,9 @@ Thermodynamic dispersion tools use `bethe-<model>-dispersion`.
 - [Sine-Gordon vacuum](docs/sine-gordon.md): `bethe-sine-gordon-vacuum` gives
   the bulk-subtracted finite-volume vacuum energy, scaling function and effective
   central charge, for attractive and repulsive coupling in native precision.
+- [Sine-Gordon excitations](docs/sine-gordon-excitations.md): soliton/breather
+  lines and pair thresholds, plus explicitly asymptotic same-charge
+  two-soliton Bethe–Yang levels.
 - [Scaling Lee–Yang](docs/lee-yang.md): `bethe-lee-yang-vacuum` gives the
   bulk-subtracted periodic ground-state energy of the non-unitary model,
   with native fp64/long-double/fp128 and separate convergence diagnostics.

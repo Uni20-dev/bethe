@@ -78,10 +78,10 @@ guide's 16 math expressions.
 
 ## 3. Sine-Gordon excitations
 
-- [ ] Extend the [sine-Gordon vacuum calculation](sine-gordon.md) with soliton,
+- [x] Extend the [sine-Gordon vacuum calculation](sine-gordon.md) with soliton,
   antisoliton and stable breather masses/dispersion branches, existence conditions,
   topological charges and multiparticle thresholds.
-- [ ] Expose the scattering data needed for selected excited sectors and add
+- [x] Expose the scattering data needed for selected excited sectors and add
   large-volume Bethe–Yang levels as an explicitly asymptotic first checkpoint.
 - [ ] Implement selected finite-volume excited levels using an appropriate
   excited-state NLIE/TBA, with an audited coupling/sector domain and state-selection
@@ -89,7 +89,7 @@ guide's 16 math expressions.
 - [ ] Validate against the free-fermion point, exact breather mass ratios,
   large-volume scattering quantization and appropriate ultraviolet conformal
   limits; retain separate quadrature, cutoff and nonlinear-solve diagnostics.
-- [ ] Document the two-flavour Schwinger connection at equal small fermion masses:
+- [x] Document the two-flavour Schwinger connection at equal small fermion masses:
   at theta=0 the leading light-sector theory has p=1/3, a triplet and a singlet
   with mass ratio sqrt(3). Label this as a scaling-limit benchmark, not an exact
   solution of the full massive or finite-spacing lattice Schwinger model.
@@ -99,6 +99,20 @@ the thermodynamic/scattering and finite-volume stages as separate checkpoints;
 both are required, but a complete finite-volume spectrum is not. Starting points:
 [existing sine-Gordon references](sine-gordon.md#physical-convention) and the
 [two-flavour Schwinger DMRG study](https://arxiv.org/abs/2407.11391).
+
+First checkpoint implemented: [particle/scattering guide](sine-gordon-excitations.md),
+`ParticleSpectrum`, `soliton_phase`, `same_charge_pair`, and the
+`bethe-sine-gordon-dispersion` / `bethe-sine-gordon-bethe-yang` frontends.
+Stable soliton/antisoliton/breather lines and pair thresholds cover both regimes;
+Bethe–Yang currently selects opposite-rapidity same-charge pairs at p>=1.
+All exports label its omitted wrapping corrections. The Schwinger connection is
+explicitly a leading light-sector scaling benchmark.
+Validation: 1140 full-suite tests, 18 targeted checks in the fp128-enabled build,
+pinned-Uni20 frontend/export checks, closed phases and independent 90-digit
+rapidity-space references. GitHub preserves the guide's five math expressions.
+The remaining validation checkbox includes the ultraviolet checks of the
+**exact excited-state NLIE/TBA milestone**, which is not replaced by this
+asymptotic checkpoint.
 
 ## Completed sequence
 
