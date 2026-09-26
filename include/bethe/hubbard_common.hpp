@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Copyright (C) 2026 Ian McCulloch
 #pragma once
+#include <bethe/detail/newton_backtracking.hpp>
 
 #include <algorithm>
 #include <bethe/solver.hpp>
@@ -186,30 +187,18 @@ StateType solve_ground_system(System const& system, Real interaction, SolverOpti
     for (std::size_t i = 0; i < system.order; ++i)
       step[i, 0] = -evaluation.residual[i];
     uni20::linalg::solve_inplace(jacobian, step);
-    bool accepted = false;
-    auto trial = x;
-    Real damping = Real{1};
-    for (int backtrack = 0; backtrack <= uni20::numeric_limits<Real>::digits; ++backtrack)
-    {
-      for (std::size_t i = 0; i < system.order; ++i)
-        trial[i] = x[i] + damping * step[i, 0];
-      if (system.physical(trial))
-      {
-        auto const norm = system.evaluate(trial, u).norm();
-        if (norm <= options.residual_tolerance || norm < (Real{1} - damping / Real{10000}) * evaluation.norm())
-        {
-          accepted = true;
-          break;
-        }
-      }
-      damping /= Real{2};
-    }
+    bool const accepted = bethe::detail::backtrack_newton(
+        x, [&](std::size_t j) { return step[j, 0]; },
+        [&](auto const& trial, Real damping) {
+          return system.physical(trial) &&
+                 bethe::detail::newton_decreases(system.evaluate(trial, u).norm(), evaluation.norm(), damping,
+                                                 options.residual_tolerance);
+        });
     if (!accepted)
     {
       result.status = SolveStatus::stalled;
       break;
     }
-    x = std::move(trial);
     ++result.iterations;
   }
   // Preserve conventional Lambda while reevaluating at the requested U.

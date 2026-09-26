@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Copyright (C) 2026 Ian McCulloch
 #pragma once
+#include <bethe/detail/newton_backtracking.hpp>
 
 #include <algorithm>
 #include <array>
@@ -223,30 +224,18 @@ template <uni20::Real Real> State<Real> solve(GroundSystem<Real> const& system, 
     for (std::size_t j = 0; j < system.order; ++j)
       step[j, 0] = -evaluation.residual[j];
     uni20::linalg::solve_inplace(jacobian, step);
-    bool accepted = false;
-    Real damping = Real{1};
-    auto trial = x;
-    for (int backtrack = 0; backtrack <= uni20::numeric_limits<Real>::digits; ++backtrack)
-    {
-      for (std::size_t j = 0; j < system.order; ++j)
-        trial[j] = x[j] + damping * step[j, 0];
-      if (system.physical(trial))
-      {
-        Real const norm = system.evaluate(trial).norm();
-        if (norm <= options.residual_tolerance || norm < (Real{1} - damping / Real{10000}) * result.residual_norm)
-        {
-          accepted = true;
-          break;
-        }
-      }
-      damping /= Real{2};
-    }
+    bool const accepted = bethe::detail::backtrack_newton(
+        x, [&](std::size_t j) { return step[j, 0]; },
+        [&](auto const& trial, Real damping) {
+          return system.physical(trial) &&
+                 bethe::detail::newton_decreases(system.evaluate(trial).norm(), result.residual_norm, damping,
+                                                 options.residual_tolerance);
+        });
     if (!accepted)
     {
       result.status = SolveStatus::stalled;
       break;
     }
-    x = std::move(trial);
     ++result.iterations;
   }
   result.rapidities = system.expand(x);

@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Copyright (C) 2026 Ian McCulloch
 #pragma once
+#include <bethe/detail/newton_backtracking.hpp>
 
 #include <algorithm>
 #include <array>
@@ -316,30 +317,18 @@ State<Real> ground_state(std::size_t up, std::size_t down, Real length, Real c, 
     for (std::size_t j = 0; j < order; ++j)
       step[j, 0] = -evaluation.residual[j];
     uni20::linalg::solve_inplace(jacobian, step);
-    auto trial = x;
-    Real damping = Real{1};
-    bool accepted = false;
-    for (int backtrack = 0; backtrack <= uni20::numeric_limits<Real>::digits; ++backtrack)
-    {
-      for (std::size_t j = 0; j < order; ++j)
-        trial[j] = x[j] + damping * step[j, 0];
-      if (system.physical(trial, g))
-      {
-        Real const norm = system.evaluate(trial, g).norm();
-        if (norm <= options.residual_tolerance || norm < (Real{1} - damping / Real{10000}) * evaluation.norm())
-        {
-          accepted = true;
-          break;
-        }
-      }
-      damping /= Real{2};
-    }
+    bool const accepted = bethe::detail::backtrack_newton(
+        x, [&](std::size_t j) { return step[j, 0]; },
+        [&](auto const& trial, Real damping) {
+          return system.physical(trial, g) &&
+                 bethe::detail::newton_decreases(system.evaluate(trial, g).norm(), evaluation.norm(), damping,
+                                                 options.residual_tolerance);
+        });
     if (!accepted)
     {
       state.status = SolveStatus::stalled;
       break;
     }
-    x = std::move(trial);
     ++state.iterations;
   }
   auto const roots = system.expand(x, g);

@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Copyright (C) 2026 Ian McCulloch
 #pragma once
+#include <bethe/detail/newton_backtracking.hpp>
 #include <bethe/xxz_quantum_group.hpp>
 
 namespace bethe::xxz::quantum_group::detail
@@ -84,31 +85,24 @@ StringIteration<Real> solve_log_string(System const& system, SolverOptions<Real>
     if (!scales.empty())
       for (std::size_t j = 0; j < system.order; ++j)
         step[j] *= scales[j];
-    auto trial = x;
-    Real damping{1};
-    bool accepted = false;
-    for (int backtrack = 0; backtrack <= uni20::numeric_limits<Real>::digits; ++backtrack)
-    {
-      for (std::size_t i = 0; i < system.order; ++i)
-        trial[i] = x[i] + damping * step[i];
-      if constexpr (requires { system.normalize(trial, ideal); })
-        system.normalize(trial, ideal);
-      else if constexpr (requires { system.normalize(trial); })
-        system.normalize(trial);
-      if (system.physical(trial) &&
-          system.evaluate(trial, nullptr, ideal).norm < (Real{1} - damping / Real{10000}) * evaluation.norm)
-      {
-        accepted = true;
-        break;
-      }
-      damping /= Real{2};
-    }
+    bool const accepted = bethe::detail::backtrack_newton(
+        x, [&](std::size_t i) { return step[i]; },
+        [&](auto const& trial, Real damping) {
+          // String solves deliberately require strict decrease, even below tolerance.
+          return system.physical(trial) &&
+                 system.evaluate(trial, nullptr, ideal).norm < (Real{1} - damping / Real{10000}) * evaluation.norm;
+        },
+        [&](auto& trial) {
+          if constexpr (requires { system.normalize(trial, ideal); })
+            system.normalize(trial, ideal);
+          else if constexpr (requires { system.normalize(trial); })
+            system.normalize(trial);
+        });
     if (!accepted)
     {
       result.status = SolveStatus::stalled;
       break;
     }
-    x = std::move(trial);
     ++result.iterations;
   }
   return result;
