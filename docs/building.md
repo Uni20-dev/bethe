@@ -122,13 +122,20 @@ An existing standalone cache with `UNI20_BUILD_CLI=OFF` likewise needs
 command-line front ends; `tests/` contains the regression suite. We currently
 link `uni20_core` for scalar facilities, `uni20_common` for `half_int` and
 the CLI presentation layer, and `uni20_linalg` for the Hubbard Newton solves.
-The latter uses Uni20's native-precision dense-solve dispatch, including its
-generic CPU path where needed; no separate linear algebra implementation is
-vendored here. Formatting stays in `apps/`, separate from the
-numerical API and any future Python bindings.
+Hubbard uses Uni20's native-precision dense-solve dispatch, including its
+generic CPU path where needed. Other solvers also use the recoverable native
+Newton/least-squares routines in `detail/newton.hpp`; consolidation of those
+linear solves is deferred to coordinated work with Uni20. Formatting stays in
+`apps/`, separate from the numerical API and any future Python bindings.
 Generic CLI, precision dispatch, and report rendering live in
 `apps/cli-common.hpp`, `apps/report-common.hpp`, and `apps/excitation-report.hpp`;
 model-specific arguments and report metadata stay in their respective front ends.
+The biquadratic executable delegates to private headers in `apps/biquadratic/`:
+`options.hpp` owns option declarations and validation; `report.hpp` owns common
+metadata, spin-content and real-root table writers; `real.hpp`, `analytic.hpp`,
+`qsystem.hpp`, `singlet.hpp` and `clusters.hpp` implement the calculation families.
+These are frontend implementation details, not public numerical APIs. The
+executable keeps its existing name, options and output schemas.
 `apps/program-options.hpp` supplies the shared parse/information/error lifecycle,
 exact option adapters, Bethe identity and citations. `apps/data-output-options.hpp`
 declares the shared export flags for typed-table frontends. `apps/run-metadata.hpp`
@@ -140,6 +147,17 @@ link the private `bethe_cli` helper target; numerical headers and
 the existing data-output unit tests remain parser-independent.
 The repository's `.clang-format` is copied from Uni20; use `clang-format -i`
 on changed C++ files to apply the shared style.
+
+Within the numerical library, `detail/newton_backtracking.hpp` shares trial
+construction, normalization and damping. Models retain their linear-solve
+backend, admissible domain, residual acceptance and iteration-counter meaning.
+The string solver still requires strict decrease even below tolerance.
+`detail/eigenvalue_continuation.hpp` shares the Richardson/central-spin adaptive
+predictor-corrector controller and trust-box correction, including attempted-step
+budgets and rejected-stage handling. Tangents, trust-radius selection, physical
+energy bounds and final diagnostics remain model-specific. The tests exercise
+these contracts in each enabled precision; this does not change the linear-solve
+policy or move it to Uni20.
 
 Literature metadata is centralized in `data/citations.json`; see
 [maintaining citations](citations.md) to regenerate the C++ registry and the
