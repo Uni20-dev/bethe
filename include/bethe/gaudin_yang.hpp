@@ -316,7 +316,11 @@ State<Real> ground_state(std::size_t up, std::size_t down, Real length, Real c, 
     if (state.iterations == options.max_iterations) break;
     for (std::size_t j = 0; j < order; ++j)
       step[j, 0] = -evaluation.residual[j];
-    uni20::linalg::solve_inplace(jacobian, step);
+    if (!uni20::linalg::solve_inplace_with_info(jacobian, step).succeeded())
+    {
+      state.status = SolveStatus::stalled;
+      break;
+    }
     bool const accepted = bethe::detail::backtrack_newton(
         x, [&](std::size_t j) { return step[j, 0]; },
         [&](auto const& trial, Real damping) {

@@ -1,13 +1,148 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Copyright (C) 2026 Ian McCulloch
 #include "test_support.hpp"
+#include <bethe/detail/continuum_newton.hpp>
 #include <bethe/detail/eigenvalue_continuation.hpp>
 #include <bethe/detail/newton_backtracking.hpp>
+#include <bethe/hubbard.hpp>
 
 namespace
 {
 template <typename Real> class NewtonControl : public ::testing::Test {};
 TYPED_TEST_SUITE(NewtonControl, test_support::RealTypes, test_support::PrecisionNames);
+
+TYPED_TEST(NewtonControl, SquareSolvePreservesCoefficientsAndRowMajorMeaning)
+{
+  using Real = TypeParam;
+  // Nonsymmetric and requiring a row swap: a missed row/column-major
+  // conversion would produce a different answer, not just roundoff.
+  std::vector<Real> const a{Real{0}, Real{2}, Real{1}, Real{3}};
+  std::vector<Real> b{Real{4}, Real{7}};
+  ASSERT_TRUE(bethe::detail::newton_step(a, b));
+  test_support::expect_exact(b[0], Real{1}, "pivoted x");
+  test_support::expect_exact(b[1], Real{2}, "pivoted y");
+  EXPECT_EQ(a, (std::vector<Real>{Real{0}, Real{2}, Real{1}, Real{3}}));
+}
+
+TYPED_TEST(NewtonControl, SquareSolveRejectsShapesSingularityAndSmallPivots)
+{
+  using Real = TypeParam;
+  std::vector<Real> empty;
+  EXPECT_TRUE(bethe::detail::newton_step(empty, empty));
+  EXPECT_FALSE(bethe::detail::newton_step(std::vector<Real>{Real{1}}, empty));
+  std::vector<Real> b{Real{1}, Real{2}};
+  EXPECT_FALSE(bethe::detail::newton_step(std::vector<Real>{Real{1}}, b));
+  EXPECT_FALSE(bethe::detail::newton_step(std::vector<Real>{Real{1}, Real{2}, Real{2}, Real{4}}, b));
+  Real const eps = uni20::numeric_limits<Real>::epsilon();
+  for (Real scale : {Real{1}, uni20::numeric_limits<Real>::max() / Real{4}, uni20::numeric_limits<Real>::min() / eps})
+    for (int multiple : {32, 64, 128})
+    {
+      Real const diagonal = scale * (Real(multiple) * eps);
+      b = {scale, diagonal};
+      bool const solved = bethe::detail::newton_step(std::vector<Real>{scale, Real{0}, Real{0}, diagonal}, b);
+      EXPECT_EQ(solved, multiple > 64);
+      if (solved)
+      {
+        test_support::expect_exact(b[0], Real{1}, "scaled x");
+        test_support::expect_exact(b[1], Real{1}, "scaled y");
+      }
+    }
+}
+
+TYPED_TEST(NewtonControl, SquareSolveRetainsNativePrecision)
+{
+  using Real = TypeParam;
+  Real const gap = Real{1024} * uni20::numeric_limits<Real>::epsilon();
+  std::vector<Real> b{Real{2}, Real{2} + gap};
+  ASSERT_TRUE(bethe::detail::newton_step(std::vector<Real>{Real{1}, Real{1}, Real{1}, Real{1} + gap}, b));
+  test_support::expect_exact(b[0], Real{1}, "native x");
+  test_support::expect_exact(b[1], Real{1}, "native y");
+}
+
+TYPED_TEST(NewtonControl, SquareSolveRecoversFromNonfiniteInputsAndResults)
+{
+  using Real = TypeParam;
+  for (Real invalid : {uni20::numeric_limits<Real>::infinity(), uni20::numeric_limits<Real>::quiet_NaN()})
+  {
+    std::vector<Real> b{Real{3}};
+    EXPECT_FALSE(bethe::detail::newton_step(std::vector<Real>{invalid}, b));
+    test_support::expect_exact(b[0], Real{3}, "nonfinite input preserves rhs");
+    b[0] = invalid;
+    EXPECT_FALSE(bethe::detail::newton_step(std::vector<Real>{Real{1}}, b));
+  }
+  std::vector<Real> b{uni20::numeric_limits<Real>::max() / Real{2}};
+  EXPECT_FALSE(bethe::detail::newton_step(std::vector<Real>{Real{0.25}}, b));
+}
+
+template <typename Real> struct FailedContinuumSystem
+{
+    Real coefficient;
+    unsigned* trials;
+    struct Evaluation
+    {
+        std::vector<Real> residual{Real{1}};
+        Real norm = Real{1};
+    };
+    Evaluation evaluate(std::vector<Real> const&, uni20::DenseMatrix<Real>* jacobian = nullptr) const
+    {
+      if (jacobian) (*jacobian)[0, 0] = coefficient;
+      return {};
+    }
+    bool physical(std::vector<Real> const&) const
+    {
+      ++*trials;
+      return true;
+    }
+};
+
+TYPED_TEST(NewtonControl, FailedContinuumSolveKeepsIterateAndSkipsBacktracking)
+{
+  using Real = TypeParam;
+  for (Real coefficient : {Real{0}, uni20::numeric_limits<Real>::infinity()})
+  {
+    unsigned trials = 0;
+    std::vector<Real> q{Real{2}};
+    auto const iterations = bethe::detail::continuum_newton(FailedContinuumSystem<Real>{coefficient, &trials}, q,
+                                                            bethe::SolverOptions<Real>{});
+    EXPECT_EQ(iterations, 0u);
+    EXPECT_EQ(trials, 0u);
+    test_support::expect_exact(q[0], Real{2}, "failed linear solve retains iterate");
+  }
+}
+
+// Exercise the real Hubbard driver's failure path without relying on a
+// particular physical parameter accidentally generating a singular Jacobian.
+template <typename Real> struct SingularHubbardSystem : bethe::hubbard::detail::GroundSystem<Real>
+{
+    using Base = bethe::hubbard::detail::GroundSystem<Real>;
+    using Base::Base;
+    auto evaluate(std::vector<Real> const& x, Real u, uni20::DenseMatrix<Real>* jacobian = nullptr) const
+    {
+      auto result = Base::evaluate(x, u, jacobian);
+      if (jacobian)
+        for (std::size_t i = 0; i < this->order; ++i)
+          for (std::size_t j = 0; j < this->order; ++j)
+            (*jacobian)[i, j] = Real{0};
+      return result;
+    }
+};
+
+TYPED_TEST(NewtonControl, FailedHubbardSolveReportsStalledAtRequestedInteraction)
+{
+  using Real = TypeParam;
+  SingularHubbardSystem<Real> system(6);
+  auto const state = bethe::hubbard::detail::solve_ground_system<Real, bethe::hubbard::State<Real>>(
+      system, Real{1}, bethe::SolverOptions<Real>{});
+  EXPECT_EQ(state.status, bethe::hubbard::SolveStatus::stalled);
+  EXPECT_FALSE(state.converged);
+  EXPECT_EQ(state.iterations, 0u);
+  auto x = system.seed();
+  // The driver seeds at U=8 and reports residuals at the requested U=1.
+  for (std::size_t a = 0; a < system.ns; ++a)
+    x[system.nk + a] *= Real{2};
+  test_support::expect_exact(state.residual_norm, system.evaluate(x, Real{0.25}).norm(), "target-U residual");
+  EXPECT_TRUE(uni20::isfinite(state.energy));
+}
 
 enum class ControlStatus
 {

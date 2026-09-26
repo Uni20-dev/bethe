@@ -9,10 +9,11 @@ need the extra precision.
 CMake 3.28+, a C++23 compiler supported by Uni20 (GCC 13+ or Clang 19+),
 and Uni20's numerical dependencies are required. Uni20 is pinned to a tested
 commit and fetched automatically unless a parent already supplies `uni20_core`.
-The current pin is the merged run-context implementation at `5aee9d3`
-([Uni20 PR56](https://github.com/Uni20-dev/uni20/pull/56)), including typed
-run metadata and timing, data-table APIs, exact CLI conversions, and
-token-preserving help. Local overrides must provide these APIs too.
+The current pin is `a25159c`, including recoverable square solves
+([Uni20 PR57](https://github.com/Uni20-dev/uni20/pull/57)) and their documented
+contracts, along with typed run metadata and timing, data-table APIs, exact
+CLI conversions, and token-preserving help. Local overrides must provide these
+APIs too; configuration rejects checkouts without the recoverable-solve header.
 Application builds also enable Uni20's
 optional CLI11 dependency; library-only builds do not require it.
 
@@ -62,7 +63,7 @@ For binary128, use a separate build directory and add
 `-DUNI20_ENABLE_MPLAPACK=ON`. To use an installed MPLAPACK 3.0+ binary128
 package, add `-DUNI20_USE_SYSTEM_MPLAPACK=ON` and
 `-Dmplapack_DIR=/path/to/lib/cmake/mplapack`; otherwise Uni20 can fetch it.
-See [Uni20's provider setup](https://github.com/Uni20-dev/uni20/blob/5aee9d35c39c74f7d4b16e6b976db36836b6acf3/docs/linalg/mplapack_binary128.md).
+See [Uni20's provider setup](https://github.com/Uni20-dev/uni20/blob/a25159cc19c97c43ca43754c46fb9bdef8c41bda/docs/linalg/mplapack_binary128.md).
 
 `UNI20_USE_SYSTEM_MPLAPACK=OFF` forces a v3.0.0 source fetch. Alternatively,
 build MPLAPACK v3.0.0 separately and pass its **build directory** as
@@ -121,11 +122,25 @@ An existing standalone cache with `UNI20_BUILD_CLI=OFF` likewise needs
 `include/bethe/` contains the scalar-templated library; `apps/` contains thin
 command-line front ends; `tests/` contains the regression suite. We currently
 link `uni20_core` for scalar facilities, `uni20_common` for `half_int` and
-the CLI presentation layer, and `uni20_linalg` for the Hubbard Newton solves.
-Hubbard uses Uni20's native-precision dense-solve dispatch, including its
-generic CPU path where needed. Other solvers also use the recoverable native
-Newton/least-squares routines in `detail/newton.hpp`; consolidation of those
-linear solves is deferred to coordinated work with Uni20. Formatting stays in
+the CLI presentation layer, and `uni20_linalg` for square linear solves.
+Square Newton and dressing-equation solves use Uni20's recoverable
+`solve_inplace_with_info`, with LAPACK/MPLAPACK for compatible column-major
+workspaces and native CPU arithmetic for long double. The row-major vector
+adapter in `detail/newton.hpp` rearranges its owned coefficient copy in place
+and exposes non-owning column-major views; the caller's coefficients are
+preserved without an additional matrix allocation.
+
+That adapter retains Bethe's explicit `64 * epsilon<Real>()` relative-pivot
+threshold. Models already using Uni20 matrix workspaces retain the default
+zero threshold and their own residual/condition checks. Neither policy is a
+condition-number guarantee. Singular, rejected-pivot and nonfinite failures
+return to the model's stalled/ill-conditioned or continuation-rejection path;
+failed workspaces never become accepted iterates. Shape errors remain distinct
+from numerical failures. No process-global error policy is changed.
+
+The overdetermined Givens least-squares helper in `detail/newton.hpp` remains
+local pending a corresponding Uni20 API; it does not form normal equations.
+Formatting stays in
 `apps/`, separate from the numerical API and any future Python bindings.
 Generic CLI, precision dispatch, and report rendering live in
 `apps/cli-common.hpp`, `apps/report-common.hpp`, and `apps/excitation-report.hpp`;
@@ -149,15 +164,15 @@ The repository's `.clang-format` is copied from Uni20; use `clang-format -i`
 on changed C++ files to apply the shared style.
 
 Within the numerical library, `detail/newton_backtracking.hpp` shares trial
-construction, normalization and damping. Models retain their linear-solve
-backend, admissible domain, residual acceptance and iteration-counter meaning.
+construction, normalization and damping. Models retain their pivot policy,
+admissible domain, residual acceptance and iteration-counter meaning.
 The string solver still requires strict decrease even below tolerance.
 `detail/eigenvalue_continuation.hpp` shares the Richardson/central-spin adaptive
 predictor-corrector controller and trust-box correction, including attempted-step
 budgets and rejected-stage handling. Tangents, trust-radius selection, physical
 energy bounds and final diagnostics remain model-specific. The tests exercise
-these contracts in each enabled precision; this does not change the linear-solve
-policy or move it to Uni20.
+these contracts in each enabled precision; continuation policy remains in
+Bethe while square factorization and numerical solve diagnostics belong to Uni20.
 
 Literature metadata is centralized in `data/citations.json`; see
 [maintaining citations](citations.md) to regenerate the C++ registry and the

@@ -223,7 +223,11 @@ template <uni20::Real Real> State<Real> solve(GroundSystem<Real> const& system, 
     if (result.iterations == options.max_iterations) break;
     for (std::size_t j = 0; j < system.order; ++j)
       step[j, 0] = -evaluation.residual[j];
-    uni20::linalg::solve_inplace(jacobian, step);
+    if (!uni20::linalg::solve_inplace_with_info(jacobian, step).succeeded())
+    {
+      result.status = SolveStatus::stalled;
+      break;
+    }
     bool const accepted = bethe::detail::backtrack_newton(
         x, [&](std::size_t j) { return step[j, 0]; },
         [&](auto const& trial, Real damping) {

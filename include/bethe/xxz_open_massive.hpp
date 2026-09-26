@@ -246,7 +246,11 @@ template <uni20::Real Real = double>
         jacobian[i, j] = (fp.residual[i] - fm.residual[i]) / (Real{2} * h);
       step[j, 0] = -evaluation.residual[j];
     }
-    uni20::linalg::solve_inplace(jacobian, step);
+    if (!uni20::linalg::solve_inplace_with_info(jacobian, step).succeeded())
+    {
+      state.status = SolveStatus::stalled;
+      break;
+    }
     auto trial = x;
     Real damping = Real{1};
     bool accepted = false;

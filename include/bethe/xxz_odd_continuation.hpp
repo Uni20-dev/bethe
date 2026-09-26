@@ -184,32 +184,40 @@ OddPolynomialBranch<Real> continue_odd_polynomial(std::size_t sites, Real delta,
         }
         // The same factorization gives a condition estimate; no normal
         // equations or loss of long-double arithmetic is introduced.
-        uni20::linalg::solve_inplace(matrix, rhs);
-        Real inverse_norm = Real{0};
-        for (std::size_t i = 0; i < r; ++i)
-        {
-          Real row = Real{0};
-          correction[i] = rhs[i, 0];
-          if (!uni20::isfinite(correction[i])) throw std::runtime_error("nonfinite polynomial Newton correction");
-          for (std::size_t j = 0; j < r; ++j)
-          {
-            if (!uni20::isfinite(rhs[i, j + 1])) throw std::runtime_error("nonfinite inverse polynomial Jacobian");
-            row += std::abs(rhs[i, j + 1]);
-          }
-          inverse_norm = std::max(inverse_norm, row);
-        }
-        coordinates.impose_momentum(correction, weights);
-        state.reciprocal_condition = (Real{1} / matrix_norm) / inverse_norm;
-        for (std::size_t i = 0; i < m; ++i)
-        {
-          if (!uni20::isfinite(correction[i])) throw std::runtime_error("nonfinite constrained Newton correction");
-          state.correction_norm = std::max(state.correction_norm, std::abs(correction[i]) / (Real{1} + std::abs(c[i])));
-        }
-        if (!uni20::isfinite(state.reciprocal_condition) || state.reciprocal_condition <= Real{64} * eps ||
-            !uni20::isfinite(state.correction_norm))
+        if (!uni20::linalg::solve_inplace_with_info(matrix, rhs).succeeded())
         {
           failure = PolynomialContinuationStatus::ill_conditioned;
           numerical_failure = true;
+        }
+        else
+        {
+          Real inverse_norm = Real{0};
+          for (std::size_t i = 0; i < r; ++i)
+          {
+            Real row = Real{0};
+            correction[i] = rhs[i, 0];
+            if (!uni20::isfinite(correction[i])) throw std::runtime_error("nonfinite polynomial Newton correction");
+            for (std::size_t j = 0; j < r; ++j)
+            {
+              if (!uni20::isfinite(rhs[i, j + 1])) throw std::runtime_error("nonfinite inverse polynomial Jacobian");
+              row += std::abs(rhs[i, j + 1]);
+            }
+            inverse_norm = std::max(inverse_norm, row);
+          }
+          coordinates.impose_momentum(correction, weights);
+          state.reciprocal_condition = (Real{1} / matrix_norm) / inverse_norm;
+          for (std::size_t i = 0; i < m; ++i)
+          {
+            if (!uni20::isfinite(correction[i])) throw std::runtime_error("nonfinite constrained Newton correction");
+            state.correction_norm =
+                std::max(state.correction_norm, std::abs(correction[i]) / (Real{1} + std::abs(c[i])));
+          }
+          if (!uni20::isfinite(state.reciprocal_condition) || state.reciprocal_condition <= Real{64} * eps ||
+              !uni20::isfinite(state.correction_norm))
+          {
+            failure = PolynomialContinuationStatus::ill_conditioned;
+            numerical_failure = true;
+          }
         }
       }
       if (!numerical_failure && f.norm <= tolerance && state.momentum_error <= tolerance &&

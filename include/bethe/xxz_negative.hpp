@@ -158,7 +158,11 @@ NegativeGroundRoots<Real> negative_ground_roots(std::size_t sites, Real delta, u
     if (state.iterations == options.max_iterations) break;
     for (std::size_t i = 0; i < m; ++i)
       step[i, 0] = -evaluation.residual[i];
-    uni20::linalg::solve_inplace(jacobian, step);
+    if (!uni20::linalg::solve_inplace_with_info(jacobian, step).succeeded())
+    {
+      state.status = NegativeSolveStatus::stalled;
+      break;
+    }
     auto trial = x;
     bool accepted = false;
     Real damping = Real{1};

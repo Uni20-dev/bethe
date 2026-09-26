@@ -186,7 +186,11 @@ StateType solve_ground_system(System const& system, Real interaction, SolverOpti
     if (result.iterations == options.max_iterations) break;
     for (std::size_t i = 0; i < system.order; ++i)
       step[i, 0] = -evaluation.residual[i];
-    uni20::linalg::solve_inplace(jacobian, step);
+    if (!uni20::linalg::solve_inplace_with_info(jacobian, step).succeeded())
+    {
+      result.status = SolveStatus::stalled;
+      break;
+    }
     bool const accepted = bethe::detail::backtrack_newton(
         x, [&](std::size_t j) { return step[j, 0]; },
         [&](auto const& trial, Real damping) {

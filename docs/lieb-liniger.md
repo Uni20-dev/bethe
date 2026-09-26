@@ -120,8 +120,8 @@ The reported residual is $`\max_{j} \lvert F_{j} \rvert /s_{j}`$, with
 for $`g \lt 1`$, otherwise $`2\,\pi \,I_{j}`$. The vacuum's norm is zero. This measures the
 equations at the **returned physical momenta**, not just the internal iterate.
 The default tolerance is `32*epsilon(Real)`; `--max-iterations 0` evaluates
-only the initial guess. A stalled line search or exhausted budget is reported
-as an unconverged estimate. The residual is not an energy-error bound, and a
+only the initial guess. A failed linear solve, stalled line search or exhausted
+budget is reported as an unconverged estimate. The residual is not an energy-error bound, and a
 small absolute equation error need not resolve a tiny gap or a boosted cluster.
 
 All parameters are parsed directly into the selected arithmetic. Higher

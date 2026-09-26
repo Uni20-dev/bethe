@@ -161,11 +161,7 @@ WronskianCheck<Real> check_odd_wronskian(std::size_t sites, std::span<Real const
     }
     norm = std::max(norm, row);
   }
-  try
-  {
-    uni20::linalg::solve_inplace(square, rhs);
-  }
-  catch (std::runtime_error const&)
+  if (!uni20::linalg::solve_inplace_with_info(square, rhs).succeeded())
   {
     out.status = WronskianStatus::ill_conditioned;
     return out;

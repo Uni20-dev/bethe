@@ -125,8 +125,8 @@ Thus residuals on opposite sides of g=1 have different normalizations.
 energy-error bound**. Charge, spin, and maximum residuals are reported separately.
 
 `--max-iterations` counts accepted Newton updates across **all** continuation
-stages, not independently at each coupling. On exhaustion or a stalled line
-search, the tool returns exit status 2 and labels the result unconverged.
+stages, not independently at each coupling. On exhaustion, a failed linear solve
+or a stalled line search, the tool returns exit status 2 and labels the result unconverged.
 Even then, residuals are recomputed at the **requested** c; `Root coupling
 reached` records the intermediate continuation coupling. An unfinished root
 set must not be used as an eigenstate at the requested interaction.
