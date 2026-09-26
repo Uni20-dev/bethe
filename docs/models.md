@@ -2,44 +2,36 @@
 
 [Overview](../README.md) · [Bibliography](../CITATIONS.md)
 
-Initial literature survey: 2026-09-22. Original implementation baseline: `6a414cc`;
-the coverage below is updated as each implementation lands.
 This is a living, **non-exhaustive catalogue**, with an emphasis on models
 whose energies would be useful alongside Uni20 and MPToolkit. A model being
 exactly solvable in the literature does not mean this repository solves it,
 or that every boundary condition, coupling, or excited state is covered.
 
-The first new implementations are **repulsive periodic Lieb–Liniger**,
-the **periodic SU(3) balanced-singlet ground state**, and selected
-**repulsive Gaudin–Yang** ground-state sectors. Wider XXZ ground-state
-coverage is now public for massive anisotropy and for negative anisotropy
-on even rings and free-end chains. Negative-anisotropy **odd periodic rings
-are deferred until needed**, not a prerequisite for other models.
-The supersymmetric t–J chain now has a first periodic ground-state slice.
-The spin-1 Takhtajan–Babujian chain also has an even-ring singlet solver
-retaining finite-size complex-root deviations.
-The pure spin-1 biquadratic chain now has even, free-end ground states,
-TL module minima and restricted real-root excitations with physical multiplicities,
-plus selected complex-root levels, budgeted Q-system searches and a targeted
-long-chain two-string singlet branch.
-The ferromagnetic sign adds an exact odd/even one-defect band and positive
-gap, targeted odd/even long-chain two-/three-defect bound droplets and real-root
-scattering windows, plus sign-aware even-chain Q-system discoveries.
-Richardson pairing now supplies attractive ground energies in specified
-blocked-level sectors, using regular variables through pair-root collisions.
-The rational central-spin model now has fixed-magnetization ground states
-for distinct nonzero couplings, including exactly zero central field.
-The multicomponent continuum entry also has a repulsive SU(κ) fermion
-ground-state slice for odd occupied populations, with arbitrary nesting depth.
-Extending existing models' boundary/state
-coverage remains valuable as well.
-These priorities and difficulty assessments are our engineering judgments,
-not conclusions of the cited papers or a committed implementation schedule.
+Use this document according to the question you want to answer:
+
+- **What can I calculate?** Start with [current coverage](#current-coverage)
+  and the [candidate index](#candidate-index), then follow the model guide.
+- **What equations and limitations matter?** Read the
+  [model-by-model notes](#leading-proposals) and
+  [extensions of existing models](#extensions-of-current-models-rather-than-new-solvers).
+- **What could we add?** Browse the
+  [wider catalogue](#wider-catalogue-useful-but-not-the-next-default-targets),
+  [thermodynamics](#thermodynamics-is-a-separate-capability) and
+  [shared machinery](#shared-machinery-and-module-boundaries).
+- **What is the MPS excitation sequence?** See the separate
+  [goal and completion record](mps-excitation-goal.md).
+
+Initial survey: 2026-09-22, implementation baseline `6a414cc`. Coverage is
+updated as implementations land. Priorities and difficulty assessments are
+engineering judgments, not conclusions of the cited papers or a committed
+schedule.
 
 ## Reading and maintaining the catalogue
 
-The entry IDs below are stable handles for issues and future model guides.
-Status has a deliberately narrow meaning:
+### Status and effort labels
+
+Entry IDs are stable handles for issues and model guides. Status has a
+deliberately narrow meaning:
 
 - **Implemented (limited):** executable/API coverage exists; follow its guide.
 - **Proposed:** a useful first implementation is outlined, but no solver exists.
@@ -55,23 +47,36 @@ functional equations, or a different spectral problem. These are relative
 technical risks, not estimates in days. A small ground-state implementation
 can have a much harder excitation extension.
 
-When updating an entry, record the precise Hamiltonian and energy shift,
-statistics/local representation, integrable coupling restrictions, boundary
-conditions, supported sectors/root families, finite-size versus thermodynamic
-scope, reference IDs, tests, and the next unresolved step. Once code exists,
-link its guide and implementation commit here; do not turn an entire family
-green because one slice works. New entries should have at least one original
-solution or explicit Bethe-equation source. Before coding, do a separate
-equation-level audit of the chosen finite-size branch and normalization.
+### Updating an entry
+
+Record enough detail to distinguish a supported calculation from a solvable
+model family:
+
+- Hamiltonian, energy shift, statistics/local representation and integrable
+  coupling restrictions.
+- Boundary conditions, supported sectors/root families, and finite-size versus
+  thermodynamic scope.
+- Reference IDs, validation tests and the next unresolved step.
+- Once implemented, the model guide and implementation commit.
+
+Do not mark an entire family implemented because one slice works. New entries
+need an original solution or explicit Bethe-equation source; before coding,
+audit the chosen branch's equations and normalization separately.
+
+### Literature policy
 
 Bibliographic metadata belongs in [data/citations.json](../data/citations.json).
 Catalogue-only references appear in CITATIONS.md, **not in any executable's
-help**, until a supported method actually uses them. See
+`--references` output**, until a supported method actually uses them. See
 [citation maintenance](citations.md). The links in this document identify
 literature starting points; they are not a claim that we implement a cited
 paper's correlation functions, thermodynamics, or full spectrum.
 
 ## Current coverage
+
+This table focuses on finite-root model families and their extensions. The
+[candidate index](#candidate-index) also covers long-range models, field
+theories and stochastic processes. Follow the linked guides for exact domains.
 
 | ID | Model | Status and actual scope | Main missing pieces |
 | --- | --- | --- | --- |
@@ -101,8 +106,8 @@ family, not the entire Hilbert space.
 
 ## Candidate index
 
-Only entries marked **Implemented** are available; the other first scopes
-are proposals, not CLI capabilities.
+Entries with implementation/guide links have the stated limited coverage;
+proposed or watch entries are not CLI capabilities.
 Boundary conditions shown are starting targets, not a classification of all
 integrable boundaries in the literature.
 
@@ -129,6 +134,10 @@ integrable boundaries in the literature.
 | `asep` | Periodic asymmetric exclusion process, relaxation spectrum | [TASEP](tasep.md) and [bidirectional ASEP](asep.md) libraries/frontends, arbitrary filling | Other branches and open reservoirs remain |
 
 ## Leading proposals
+
+These are the original leading candidates, now mostly implemented in limited
+slices. Each entry preserves its equation sources, validation evidence and
+remaining extensions; it is not a new implementation queue.
 
 ### `lieb-liniger`: the simplest new interacting family
 

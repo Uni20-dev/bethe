@@ -119,10 +119,29 @@ An existing standalone cache with `UNI20_BUILD_CLI=OFF` likewise needs
 
 ## Source layout and development
 
-`include/bethe/` contains the scalar-templated library; `apps/` contains thin
-command-line front ends; `tests/` contains the regression suite. We currently
-link `uni20_core` for scalar facilities, `uni20_common` for `half_int` and
-the CLI presentation layer, and `uni20_linalg` for square linear solves.
+### Where code belongs
+
+| Location | Responsibility |
+| --- | --- |
+| `include/bethe/` | Scalar-templated numerical API, independent of CLI parsing and formatting |
+| `include/bethe/detail/` | Shared numerical implementation helpers |
+| `apps/` | Command-line frontends, model-specific arguments, formatting and report metadata |
+| `tests/` | Numerical regressions, independent reference checks and frontend tests |
+| `data/citations.json` | Literature metadata used to generate the C++ registry and bibliography |
+
+Formatting stays in `apps/`, separate from the numerical API and any future
+Python bindings. All executables link the private `bethe_cli` helper target;
+numerical headers and data-output unit tests remain parser-independent.
+
+The repository's `.clang-format` is copied from Uni20; use `clang-format -i`
+on changed C++ files to apply the shared style.
+
+### Linear solves and failure policy
+
+We link `uni20_core` for scalar facilities, `uni20_common` for `half_int` and
+presentation facilities, and `uni20_linalg` for square linear solves.
+Frontends additionally use `uni20_cli` for option parsing.
+
 Square Newton and dressing-equation solves use Uni20's recoverable
 `solve_inplace_with_info`, with LAPACK/MPLAPACK for compatible column-major
 workspaces and native CPU arithmetic for long double. The row-major vector
@@ -140,33 +159,14 @@ from numerical failures. No process-global error policy is changed.
 
 The overdetermined Givens least-squares helper in `detail/newton.hpp` remains
 local pending a corresponding Uni20 API; it does not form normal equations.
-Formatting stays in
-`apps/`, separate from the numerical API and any future Python bindings.
-Generic CLI, precision dispatch, and report rendering live in
-`apps/cli-common.hpp`, `apps/report-common.hpp`, and `apps/excitation-report.hpp`;
-model-specific arguments and report metadata stay in their respective front ends.
-The biquadratic executable delegates to private headers in `apps/biquadratic/`:
-`options.hpp` owns option declarations and validation; `report.hpp` owns common
-metadata, spin-content and real-root table writers; `real.hpp`, `analytic.hpp`,
-`qsystem.hpp`, `singlet.hpp` and `clusters.hpp` implement the calculation families.
-These are frontend implementation details, not public numerical APIs. The
-executable keeps its existing name, options and output schemas.
-`apps/program-options.hpp` supplies the shared parse/information/error lifecycle,
-exact option adapters, Bethe identity and citations. `apps/data-output-options.hpp`
-declares the shared export flags for typed-table frontends. `apps/run-metadata.hpp`
-projects Uni20's native run metadata into human overviews and legacy export keys;
-`apps/result-output.hpp` shares a frozen numerical summary across batch result
-tables. Models specify convergence and missing-value policy explicitly.
-All executables
-link the private `bethe_cli` helper target; numerical headers and
-the existing data-output unit tests remain parser-independent.
-The repository's `.clang-format` is copied from Uni20; use `clang-format -i`
-on changed C++ files to apply the shared style.
 
-Within the numerical library, `detail/newton_backtracking.hpp` shares trial
-construction, normalization and damping. Models retain their pivot policy,
+### Shared iteration and continuation
+
+`detail/newton_backtracking.hpp` shares trial construction, normalization
+and damping. Models retain their pivot policy,
 admissible domain, residual acceptance and iteration-counter meaning.
 The string solver still requires strict decrease even below tolerance.
+
 `detail/eigenvalue_continuation.hpp` shares the Richardson/central-spin adaptive
 predictor-corrector controller and trust-box correction, including attempted-step
 budgets and rejected-stage handling. Tangents, trust-radius selection, physical
@@ -174,7 +174,33 @@ energy bounds and final diagnostics remain model-specific. The tests exercise
 these contracts in each enabled precision; continuation policy remains in
 Bethe while square factorization and numerical solve diagnostics belong to Uni20.
 
-Literature metadata is centralized in `data/citations.json`; see
+### Frontend helpers
+
+Use the shared lifecycle and output helpers; keep scientific arguments,
+convergence criteria and missing-value policy in the model frontend.
+Paths below are relative to `apps/`.
+
+| Header | Responsibility |
+| --- | --- |
+| `cli-common.hpp` | Common CLI utilities and precision dispatch |
+| `program-options.hpp` | Parse/information/error lifecycle, exact option adapters, Bethe identity and citations |
+| `report-common.hpp`, `excitation-report.hpp` | Shared report rendering |
+| `data-output-options.hpp` | Export flags for typed-table frontends |
+| `run-metadata.hpp` | Uni20 run metadata projected into human overviews and legacy export keys |
+| `result-output.hpp` | A frozen numerical summary shared across batch result tables |
+
+The biquadratic frontend has private headers in `apps/biquadratic/`:
+
+- `options.hpp`: option declarations and validation.
+- `report.hpp`: common metadata, spin-content and real-root table writers.
+- `real.hpp`, `analytic.hpp`, `qsystem.hpp`, `singlet.hpp`, `clusters.hpp`:
+  individual calculation families.
+
+These are frontend implementation details, not public numerical APIs.
+
+### Citation maintenance
+
+Literature metadata is centralized in `data/citations.json`. See
 [maintaining citations](citations.md) to regenerate the C++ registry and the
 bibliography in `CITATIONS.md`. Generated files are checked in, so Python is
 needed only for regeneration and optional maintainer tests, not normal builds.
