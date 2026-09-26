@@ -5,8 +5,9 @@
 The source of truth is [data/citations.json](../data/citations.json). It contains
 stable reference IDs, bibliographic metadata, links, and each tool's selection
 of references with a short explanation of their relevance. A reference may
-also be library-only: the thermodynamic XXZ spinon notes, for example, belong
-in the bibliography without appearing as a mode of `bethe-xxz-pbc`.
+also be library-only, appearing in the bibliography without being selected
+by any executable. Thermodynamic XXZ references are selected by
+`bethe-xxz-dispersion`, not by the finite-chain `bethe-xxz-pbc`.
 References used only by the [model catalogue](models.md) follow the same rule:
 add bibliographic records, but no tool selection for an unimplemented model.
 Presence in the registry or bibliography does not imply solver support.

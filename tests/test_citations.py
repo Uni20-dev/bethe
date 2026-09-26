@@ -30,10 +30,17 @@ class CitationTests(unittest.TestCase):
         output = generator.header(self.data)
         self.assertIn("Müller", output)
         self.assertIn("uses_hubbard_pbc", output)
+        # Use an isolated library-only fixture: production citations may later
+        # acquire frontends (as the XXZ spinon reference now has).
+        library_only = copy.deepcopy(self.data["references"][0])
+        library_only["id"] = "library-only-test"
+        self.data["references"].append(library_only)
+        generator.validate(self.data)
         bibliography = generator.bibliography(self.data)
-        # A library-only citation is still part of the registry and bibliography.
         self.assertIn("### caux-xxz-spinons", bibliography)
-        self.assertNotIn("caux-xxz-spinons", str(self.data["tools"]))
+        self.assertIn("### library-only-test", bibliography)
+        self.assertIn("library-only-test", generator.header(self.data))
+        self.assertNotIn("library-only-test", str(self.data["tools"]))
 
     def test_validation(self):
         mutations = [

@@ -39,6 +39,7 @@ TEST(Citations, ToolReferenceSelections)
                     refs::Tool::xyz_pbc,
                     refs::Tool::xxx_obc,
                     refs::Tool::xxz_pbc,
+                    refs::Tool::xxz_dispersion,
                     refs::Tool::xxz_obc,
                     refs::Tool::hubbard_pbc,
                     refs::Tool::hubbard_obc,

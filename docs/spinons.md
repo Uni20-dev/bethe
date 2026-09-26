@@ -60,5 +60,10 @@ k=pi return exactly zero. These functions are analytic, distinct from the
 [finite-size XXZ solver](xxz.md).
 See [References and provenance](../CITATIONS.md) for the derivations.
 
+The separate [XXZ dispersion frontend and library](xxz-dispersion.md) extend
+this thermodynamic coverage to Δ>1 and add bulk energy, the single-spinon
+gap, and two-spinon continuum edges. That guide explains the topological
+vacuum sectors and two-site-unit-cell momentum folding needed for MPS comparisons.
+
 Related: [XXX excitation families](excitations.md) and
 [reading the numerical report](command-line.md#read-and-save-the-report).

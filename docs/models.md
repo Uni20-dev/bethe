@@ -76,7 +76,7 @@ paper's correlation functions, thermodynamics, or full spectrum.
 | ID | Model | Status and actual scope | Main missing pieces |
 | --- | --- | --- | --- |
 | `xxx` | Spin-1/2 nearest-neighbor XXX | Implemented (limited): [PBC](xxx.md), [free ends](open-chains.md), sector minima and restricted real-root excitations; periodic one-spinon family | Complex strings, full spectrum, twists/boundary fields |
-| `xxz` | Spin-1/2 nearest-neighbor XXZ | Implemented (limited): [PBC](xxz.md) ground states/sectors at `Delta>=0`, also `-1<Delta<0` on even rings; [free ends](xxz-open.md) at `Delta>-1`; restricted excitations at `0<=Delta<=1`; [massive boundary roots](xxz-open-massive.md) | Negative odd rings, massive/negative excitations, additional root families, twists/boundary fields |
+| `xxz` | Spin-1/2 nearest-neighbor XXZ | Implemented (limited): [PBC](xxz.md) ground states/sectors at `Delta>=0`, also `-1<Delta<0` on even rings; [free ends](xxz-open.md) at `Delta>-1`; restricted excitations at `0<=Delta<=1`; [massive boundary roots](xxz-open-massive.md); [thermodynamic spinons and continua](xxz-dispersion.md) at `Delta>-1` | Negative odd rings, finite-size massive/negative excitations, additional root families, twists/boundary fields |
 | `hubbard` | One-band Hubbard, hopping t=1 | Implemented (limited): [PBC](hubbard.md) and [free-end](hubbard-open.md) ground states; [half-filled](hubbard-dispersion.md) and [doped](hubbard-doped.md) thermodynamic spinon/charge lines, [two-spinon and charge-containing continuum edges](hubbard-continuum.md), for U>0, zero field | Doped continua, finite-field/string dispersions; finite-size excitations; remaining PBC shell branches and odd rings |
 | `lieb-liniger` | Continuum contact-interacting bosons | Implemented (limited): [repulsive PBC](lieb-liniger.md) and [hard walls](lieb-liniger-open.md), ground states, explicit labels, bounded excitation scans; [bulk ground state and type-I/type-II curves](lieb-liniger-thermo.md); [grand-canonical and fixed-density finite-T equilibrium and temperature scans](lieb-liniger-thermal.md) | Attraction, form factors |
 | `q-boson` | Deformed boson hopping on a lattice | Implemented (limited): [fixed-N PBC ground states and excitation scans](q-boson.md), eta>=0, free and phase limits | Open boundaries, thermodynamics |
@@ -91,8 +91,11 @@ paper's correlation functions, thermodynamics, or full spectrum.
 | `bose-fermi` | Equal-mass, equal-repulsion scalar Bose–Fermi gas | [Ground-state library/frontend](bose-fermi.md): PBC, odd fermion population; unrestricted pure/free limits | Other shells, excitations, thermodynamics |
 | `integrable-ladder` | Wang's spin-1/2 ladder with four-spin exchange | Implemented (limited): [PBC with longitudinal field](ladder.md), global, singlet-count and fixed-Sz sector minima, either sign of J_r and h, leg coefficient 1 and four-spin coefficient 4 | Excited-state enumeration, open ends, other integrable ladder families |
 
-Analytic thermodynamic XXX/XXZ spinon dispersions are separate existing
-facilities; they do not constitute a general thermodynamic Bethe ansatz
+The [XXZ thermodynamic frontend](xxz-dispersion.md) supplies zero-field bulk
+energy, single-spinon lines/gaps and unfolded or two-site-folded two-spinon
+continuum edges for Δ>-1, including the massive antiferromagnet. It is
+independent of the restricted finite-size excitation scans above. Analytic
+thermodynamic XXX/XXZ spinon facilities do not constitute a general thermodynamic Bethe ansatz
 (TBA) solver. Similarly, `--excitations all` covers the documented finite
 family, not the entire Hilbert space.
 

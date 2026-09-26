@@ -856,6 +856,39 @@
       ]
     },
     {
+      "id": "caux-mossel-perez-castillo-2008",
+      "authors": "Jean-Sébastien Caux, Jorn Mossel, and Isaac Pérez Castillo",
+      "title": "The two-spinon transverse structure factor of the gapped Heisenberg antiferromagnetic chain",
+      "publication": "J. Stat. Mech. 2008, P08006",
+      "year": 2008,
+      "links": [
+        {"label": "DOI", "url": "https://doi.org/10.1088/1742-5468/2008/08/P08006"},
+        {"label": "arXiv", "url": "https://arxiv.org/abs/0806.3069"}
+      ]
+    },
+    {
+      "id": "bortz-gohmann-2005",
+      "authors": "Michael Bortz and Frank Göhmann",
+      "title": "Exact thermodynamic limit of short-range correlation functions of the antiferromagnetic XXZ-chain at finite temperatures",
+      "publication": "Eur. Phys. J. B 46, 399-408",
+      "year": 2005,
+      "links": [
+        {"label": "DOI", "url": "https://doi.org/10.1140/epjb/e2005-00272-6"},
+        {"label": "arXiv", "url": "https://arxiv.org/abs/cond-mat/0504370"}
+      ]
+    },
+    {
+      "id": "zauner-stauber-2018",
+      "authors": "Valentin Zauner-Stauber, Laurens Vanderstraeten, Jutho Haegeman, Ian P. McCulloch, and Frank Verstraete",
+      "title": "Topological nature of spinons and holons: Elementary excitations from matrix product states with conserved symmetries",
+      "publication": "Phys. Rev. B 97, 235155",
+      "year": 2018,
+      "links": [
+        {"label": "DOI", "url": "https://doi.org/10.1103/PhysRevB.97.235155"},
+        {"label": "arXiv", "url": "https://arxiv.org/abs/1802.07197"}
+      ]
+    },
+    {
       "id": "dorey-tateo-1996",
       "authors": "Patrick Dorey and Roberto Tateo",
       "title": "Excited states by analytic continuation of TBA equations",
@@ -1018,6 +1051,16 @@
         {"id": "dugave-2015", "context": "Massive periodic XXZ Hamiltonian and trigonometric Bethe equations, Eqs. (1.1)-(1.2), with zero twist and field; Pauli exchange is divided by four. Used for Delta>1 sector ground states, not form factors, strings or excitations."},
         {"id": "karbach-1998", "context": "XXX limit at Delta=1 and the conventional real-root quantum-number window."},
         {"id": "caux-xxx-states", "context": "Background for the XXX window used to restrict the XXZ scan; not a complete XXZ state classification."}
+      ]
+    },
+    {
+      "id": "xxz_dispersion",
+      "executable": "bethe-xxz-dispersion",
+      "references": [
+        {"id": "caux-xxz-spinons", "context": "Zero-field gapless spinon dispersion, -1<Delta<=1; our positive spinon momentum reverses the notes' sign convention."},
+        {"id": "caux-mossel-perez-castillo-2008", "context": "Massive spinon dispersion, Eqs. (21)-(23), and two-spinon kinematics, Eq. (32). Both unfolded and two-site-folded continuum edges are implemented, not structure factors or spectral weights."},
+        {"id": "bortz-gohmann-2005", "context": "Zero-temperature bulk energy integral/series, with J*Delta/4 restored. Near Delta=1 the massive root density is Poisson-resummed for numerical evaluation; no finite-temperature correlations are implemented."},
+        {"id": "zauner-stauber-2018", "context": "Interpretation of a single spinon as a topological, symmetry-resolved MPS excitation; momentum folding and asymptotic-vacuum conventions, not an MPS implementation."}
       ]
     },
     {

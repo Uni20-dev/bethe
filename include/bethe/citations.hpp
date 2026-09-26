@@ -310,13 +310,25 @@ inline constexpr std::array<Link, 3> links_80{{
   {"arXiv", "https://arxiv.org/abs/1412.8494"},
   {"HTML", "https://arxiv.org/html/1412.8494"},
 }};
-inline constexpr std::array<Link, 3> links_81{{
+inline constexpr std::array<Link, 2> links_81{{
+  {"DOI", "https://doi.org/10.1088/1742-5468/2008/08/P08006"},
+  {"arXiv", "https://arxiv.org/abs/0806.3069"},
+}};
+inline constexpr std::array<Link, 2> links_82{{
+  {"DOI", "https://doi.org/10.1140/epjb/e2005-00272-6"},
+  {"arXiv", "https://arxiv.org/abs/cond-mat/0504370"},
+}};
+inline constexpr std::array<Link, 2> links_83{{
+  {"DOI", "https://doi.org/10.1103/PhysRevB.97.235155"},
+  {"arXiv", "https://arxiv.org/abs/1802.07197"},
+}};
+inline constexpr std::array<Link, 3> links_84{{
   {"DOI", "https://doi.org/10.1016/S0550-3213(96)00516-0"},
   {"arXiv", "https://arxiv.org/abs/hep-th/9607167"},
   {"HTML", "https://arxiv.org/html/hep-th/9607167"},
 }};
 
-inline constexpr std::array<Reference, 82> references{{
+inline constexpr std::array<Reference, 85> references{{
   {"barber-batchelor-1989", "Michael N. Barber and Murray T. Batchelor", "Spectrum of the biquadratic spin-1 antiferromagnetic chain", "Phys. Rev. B 40, 4621-4626", 1989, links_0},
   {"albertini-2000", "Giuseppe Albertini", "Is the purely biquadratic spin 1 chain always massive?", "arXiv:cond-mat/0012439", 2000, links_1},
   {"aufgebauer-klumper-2010", "Britta Aufgebauer and Andreas Klümper", "Quantum spin chains of Temperley-Lieb type: periodic boundary conditions, spectral multiplicities and finite temperature", "J. Stat. Mech. 2010, P05018", 2010, links_2},
@@ -398,11 +410,14 @@ inline constexpr std::array<Reference, 82> references{{
   {"gainutdinov-nepomechie-2016", "A. M. Gainutdinov and R. I. Nepomechie", "Algebraic Bethe ansatz for the quantum group invariant open XXZ chain at roots of unity", "Nucl. Phys. B 909, 796-839", 2016, links_78},
   {"essler-korepin-1994-scattering", "F. H. L. Essler and V. E. Korepin", "Scattering matrix and excitation spectrum of the Hubbard model", "Phys. Rev. Lett. 72, 908-911", 1994, links_79},
   {"bajnok-el-deeb-pearce-2015", "Zoltan Bajnok, Omar el Deeb, and Paul A. Pearce", "Finite-Volume Spectra of the Lee-Yang Model", "JHEP 04 (2015), 073", 2015, links_80},
-  {"dorey-tateo-1996", "Patrick Dorey and Roberto Tateo", "Excited states by analytic continuation of TBA equations", "Nucl. Phys. B 482, 639-659", 1996, links_81},
+  {"caux-mossel-perez-castillo-2008", "Jean-Sébastien Caux, Jorn Mossel, and Isaac Pérez Castillo", "The two-spinon transverse structure factor of the gapped Heisenberg antiferromagnetic chain", "J. Stat. Mech. 2008, P08006", 2008, links_81},
+  {"bortz-gohmann-2005", "Michael Bortz and Frank Göhmann", "Exact thermodynamic limit of short-range correlation functions of the antiferromagnetic XXZ-chain at finite temperatures", "Eur. Phys. J. B 46, 399-408", 2005, links_82},
+  {"zauner-stauber-2018", "Valentin Zauner-Stauber, Laurens Vanderstraeten, Jutho Haegeman, Ian P. McCulloch, and Frank Verstraete", "Topological nature of spinons and holons: Elementary excitations from matrix product states with conserved symmetries", "Phys. Rev. B 97, 235155", 2018, links_83},
+  {"dorey-tateo-1996", "Patrick Dorey and Roberto Tateo", "Excited states by analytic continuation of TBA equations", "Nucl. Phys. B 482, 639-659", 1996, links_84},
 }};
 
 inline constexpr std::array<Use, 2> uses_lee_yang_excited{{
-  {&references[81], "Periodic spin-zero one-particle source terms, quantization and energy, Eqs. (2.3)-(2.7). Only the regular infrared branch at 5<=mL<=30 is implemented, not continuation through the source collision near mL=2.53 or higher/moving states. Levels are bulk-subtracted; gaps subtract a separately converged vacuum."},
+  {&references[84], "Periodic spin-zero one-particle source terms, quantization and energy, Eqs. (2.3)-(2.7). Only the regular infrared branch at 5<=mL<=30 is implemented, not continuation through the source collision near mL=2.53 or higher/moving states. Levels are bulk-subtracted; gaps subtract a separately converged vacuum."},
   {&references[80], "Source-free periodic vacuum TBA and bulk-subtracted energy, Eqs. (133), (212), (218), used as the excitation-gap reference. The CFT central charge is not inferred from the excited level."},
 }};
 inline constexpr std::array<Use, 1> uses_lee_yang_vacuum{{
@@ -484,6 +499,12 @@ inline constexpr std::array<Use, 5> uses_xxz_pbc{{
   {&references[7], "XXX limit at Delta=1 and the conventional real-root quantum-number window."},
   {&references[12], "Background for the XXX window used to restrict the XXZ scan; not a complete XXZ state classification."},
 }};
+inline constexpr std::array<Use, 4> uses_xxz_dispersion{{
+  {&references[10], "Zero-field gapless spinon dispersion, -1<Delta<=1; our positive spinon momentum reverses the notes' sign convention."},
+  {&references[81], "Massive spinon dispersion, Eqs. (21)-(23), and two-spinon kinematics, Eq. (32). Both unfolded and two-site-folded continuum edges are implemented, not structure factors or spectral weights."},
+  {&references[82], "Zero-temperature bulk energy integral/series, with J*Delta/4 restored. Near Delta=1 the massive root density is Poisson-resummed for numerical evaluation; no finite-temperature correlations are implemented."},
+  {&references[83], "Interpretation of a single spinon as a topological, symmetry-resolved MPS excitation; momentum folding and asymptotic-vacuum conventions, not an MPS implementation."},
+}};
 inline constexpr std::array<Use, 2> uses_xxz_obc{{
   {&references[11], "Free-end XXZ equations and boundary reflection phase, Eqs. (11)-(12); our Hamiltonian is divided by four and shifted. Negative-Delta ground states use an algebraically rank-subtracted, rescaled form of these equations."},
   {&references[60], "Massive open XXZ boundary root and finite-size deviation, Sec. 4.3.2, specialized to zero boundary fields; used for Delta>1 ground states, not boundary correlations or excitation scans."},
@@ -555,7 +576,7 @@ inline constexpr std::array<Use, 3> uses_gaudin_yang_pbc{{
   {&references[59], "Hamiltonian and periodic fermion equations (1), (2), (7), (8), (25); even N, odd minority population as in Sec. 5. Weak and strong limits (12), (15)-(16) provide checks. Hard walls, attraction and excitations are not implemented."},
 }};
 
-enum class Tool { lee_yang_excited, lee_yang_vacuum, xxz_qg_obc, hubbard_continuum, kondo_response, sine_gordon_vacuum, asep_pbc, tasep_pbc, xyz_pbc, bose_fermi_pbc, q_boson_pbc, lieb_liniger_thermal, lieb_liniger_dispersion, biquadratic_obc, xxx_pbc, xxx_obc, xxz_pbc, xxz_obc, hubbard_dispersion, hubbard_pbc, hubbard_obc, lieb_liniger_pbc, lieb_liniger_obc, su3_pbc, tj_pbc, tb_pbc, richardson, central_spin, sun_fermions_pbc, ladder_pbc, haldane_shastry_pbc, sutherland_pbc, gaudin_yang_pbc };
+enum class Tool { lee_yang_excited, lee_yang_vacuum, xxz_qg_obc, hubbard_continuum, kondo_response, sine_gordon_vacuum, asep_pbc, tasep_pbc, xyz_pbc, bose_fermi_pbc, q_boson_pbc, lieb_liniger_thermal, lieb_liniger_dispersion, biquadratic_obc, xxx_pbc, xxx_obc, xxz_pbc, xxz_dispersion, xxz_obc, hubbard_dispersion, hubbard_pbc, hubbard_obc, lieb_liniger_pbc, lieb_liniger_obc, su3_pbc, tj_pbc, tb_pbc, richardson, central_spin, sun_fermions_pbc, ladder_pbc, haldane_shastry_pbc, sutherland_pbc, gaudin_yang_pbc };
 
 [[nodiscard]] constexpr std::span<Use const> for_tool(Tool tool)
 {
@@ -578,6 +599,7 @@ enum class Tool { lee_yang_excited, lee_yang_vacuum, xxz_qg_obc, hubbard_continu
     case Tool::xxx_pbc: return uses_xxx_pbc;
     case Tool::xxx_obc: return uses_xxx_obc;
     case Tool::xxz_pbc: return uses_xxz_pbc;
+    case Tool::xxz_dispersion: return uses_xxz_dispersion;
     case Tool::xxz_obc: return uses_xxz_obc;
     case Tool::hubbard_dispersion: return uses_hubbard_dispersion;
     case Tool::hubbard_pbc: return uses_hubbard_pbc;

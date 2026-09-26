@@ -32,11 +32,25 @@ solver concerns the unperturbed integrable chain, not the decay calculation.
 
 The zero-field thermodynamic XXX and gapless XXZ dispersions follow
 the notes [caux-xxx-spinons](#caux-xxx-spinons) and
-[caux-xxz-spinons](#caux-xxz-spinons). The thermodynamic XXZ curve is currently
-a library facility, not a mode of the finite-chain XXZ executable. We use positive spinon
+[caux-xxz-spinons](#caux-xxz-spinons). The thermodynamic XXZ curve has its own
+`bethe-xxz-dispersion` frontend, not a mode of the finite-chain XXZ executable. We use positive spinon
 momentum k in [0,pi], reversing the sign of the notes' convention. At finite
 odd N our explicit convention is k=pi/2-2*pi*I_h/N, related to lattice momentum
 by P=pi*M+pi/2-k modulo 2*pi. The bulk reference energy is J*(1/4-log(2)).
+
+The [massive XXZ dispersion](docs/xxz-dispersion.md) follows
+[caux-mossel-perez-castillo-2008](#caux-mossel-perez-castillo-2008), Eqs. (21)-(23).
+Our continuum bounds minimize/maximize Eq. (32), keeping unfolded constituent
+momentum and the pi-shifted union explicitly distinct. The endpoint lower
+branch is m+epsilon(Q), as described in the prose after Eq. (33); the printed
+omega-plus branch there is inconsistent with the endpoint construction.
+Native theta constants and modular transformation retain the small gap.
+The bulk-energy integral/series is the zero-temperature result in
+[bortz-gohmann-2005](#bortz-gohmann-2005), with J*Delta/4 restored; near the
+isotropic point we Poisson-resum the root density before integrating.
+[zauner-stauber-2018](#zauner-stauber-2018) supplies the symmetry-resolved
+topological-excitation interpretation for MPS comparisons. We implement
+neither structure factors nor an MPS solver.
 
 Research using these tools should acknowledge the Matrix Product Toolkit and
 Uni20 where relevant, and cite the methods used in the calculation.
@@ -359,6 +373,10 @@ Jean-Sébastien Caux. *The Bethe Ansatz: XXZ spinons*.
 Online notes.
 
 [XXZ spinons](<https://integrability.org/g_sc_p_e.html>).
+
+Relevant tool modes:
+
+- `bethe-xxz-dispersion`: Zero-field gapless spinon dispersion, -1\<Delta\<=1; our positive spinon momentum reverses the notes' sign convention.
 
 ### mei-2017
 
@@ -1105,6 +1123,39 @@ Relevant tool modes:
 
 - `bethe-lee-yang-excited`: Source-free periodic vacuum TBA and bulk-subtracted energy, Eqs. (133), (212), (218), used as the excitation-gap reference. The CFT central charge is not inferred from the excited level.
 - `bethe-lee-yang-vacuum`: Periodic source-free massive Lee-Yang ground-state TBA and bulk-subtracted finite-volume energy: equations (133), (212), (218). Equations (151)-(152) distinguish c\_eff=2/5 from c=-22/5 with h\_min=-1/5. No excited-state, boundary or defect equations are implemented.
+
+### caux-mossel-perez-castillo-2008
+
+Jean-Sébastien Caux, Jorn Mossel, and Isaac Pérez Castillo. *The two-spinon transverse structure factor of the gapped Heisenberg antiferromagnetic chain*.
+J. Stat. Mech. 2008, P08006 (2008).
+
+[DOI](<https://doi.org/10.1088/1742-5468/2008/08/P08006>), [arXiv](<https://arxiv.org/abs/0806.3069>).
+
+Relevant tool modes:
+
+- `bethe-xxz-dispersion`: Massive spinon dispersion, Eqs. (21)-(23), and two-spinon kinematics, Eq. (32). Both unfolded and two-site-folded continuum edges are implemented, not structure factors or spectral weights.
+
+### bortz-gohmann-2005
+
+Michael Bortz and Frank Göhmann. *Exact thermodynamic limit of short-range correlation functions of the antiferromagnetic XXZ-chain at finite temperatures*.
+Eur. Phys. J. B 46, 399-408 (2005).
+
+[DOI](<https://doi.org/10.1140/epjb/e2005-00272-6>), [arXiv](<https://arxiv.org/abs/cond-mat/0504370>).
+
+Relevant tool modes:
+
+- `bethe-xxz-dispersion`: Zero-temperature bulk energy integral/series, with J\*Delta/4 restored. Near Delta=1 the massive root density is Poisson-resummed for numerical evaluation; no finite-temperature correlations are implemented.
+
+### zauner-stauber-2018
+
+Valentin Zauner-Stauber, Laurens Vanderstraeten, Jutho Haegeman, Ian P. McCulloch, and Frank Verstraete. *Topological nature of spinons and holons: Elementary excitations from matrix product states with conserved symmetries*.
+Phys. Rev. B 97, 235155 (2018).
+
+[DOI](<https://doi.org/10.1103/PhysRevB.97.235155>), [arXiv](<https://arxiv.org/abs/1802.07197>).
+
+Relevant tool modes:
+
+- `bethe-xxz-dispersion`: Interpretation of a single spinon as a topological, symmetry-resolved MPS excitation; momentum folding and asymptotic-vacuum conventions, not an MPS implementation.
 
 ### dorey-tateo-1996
 

@@ -36,6 +36,11 @@ Exactly Delta=-1 and lower anisotropies are not included. The
 existing analytic thermodynamic `bethe::xxz::spinon_energy` retains its wider
 $`-1 \lt  \Delta \le 1`$ domain; it is independent of this finite-size solver.
 
+For zero-field infinite-chain curves, use the separate
+[`bethe-xxz-dispersion`](xxz-dispersion.md): it supports Δ>-1, including
+massive spinons, bulk energy and two-spinon continuum edges. This does not
+extend the finite-ring excitation family described here.
+
 A separate [spin-helix library API](xxz-spin-helix.md) constructs explicit
 eigenstates at commensurate couplings on either parity, including the
 isotropic endpoints. These are not general ground-state or excitation scans.

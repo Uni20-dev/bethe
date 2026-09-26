@@ -34,6 +34,9 @@ Thermodynamic dispersion tools use `bethe-<model>-dispersion`.
 - [Free-end XXZ](docs/xxz-open.md): `bethe-xxz-obc` supports ground states and
   sector minima for $`\Delta \gt  -1`$, including massive boundary roots, and restricted
   real-root excitations for $`0 \le \Delta \le 1`$, without lattice momentum.
+- [XXZ dispersions](docs/xxz-dispersion.md): `bethe-xxz-dispersion` gives zero-field
+  bulk energy, gapless/massive spinons and two-spinon continuum edges for Δ>-1,
+  with explicit two-site-cell folding for MPS comparisons.
 - [Periodic Hubbard](docs/hubbard.md): `bethe-hubbard-pbc` gives repulsive
   half-filled spin sectors, balanced attractive ground states at any even filling,
   and selected doped sectors on even rings, plus the unrestricted $`U=0`$ limit.
@@ -135,7 +138,8 @@ Thermodynamic dispersion tools use `bethe-<model>-dispersion`.
   periodic bosonic ground and excited energies for a specified collision
   exponent, with explicit integer labels or bounded label-window scans.
 
-The XXX and XXZ models use spin-$`1/2`$ operators, $`J=1`$, and zero magnetic field.
+The XXX and XXZ models use spin-$`1/2`$ operators, $`J=1`$, and zero magnetic field
+(the XXZ dispersion tool also accepts `--exchange`).
 Hubbard uses hopping $`t=1`$. Finite-system tools use the unshifted interaction
 $`U \,n_{\mathrm{up}} \,n_{\mathrm{down}}`$; the dispersion tool defaults to the symmetric convention.
 Spin-chain excitation scans cover explicitly supported real-root families, **not complete
@@ -143,8 +147,8 @@ spectra**: `--excitations all` means all states in that family. General complex-
 and infinite-root descendant scans are not implemented.
 
 [Analytic thermodynamic spinon dispersions](docs/spinons.md#thermodynamic-dispersion)
-are also available for XXX and gapless XXZ; these are distinct from finite-chain
-calculations.
+are also available for XXX; the [XXZ thermodynamic frontend](docs/xxz-dispersion.md)
+includes both gapless and massive branches. These are distinct from finite-chain calculations.
 An [explicit XXZ spin-helix library API](docs/xxz-spin-helix.md) also provides
 special eigenstates at commensurate couplings; these are not ground-state scans.
 
