@@ -100,8 +100,10 @@ Bethe–Yang omits wrapping/vacuum-polarization corrections. No minimum ML is
 enforced: small-volume output is still a solution of the stated asymptotic
 equation, **not** a certified approximation to the exact level there. Adding
 the separate vacuum energy does not restore the omitted excited-state dressing.
-Exact selected finite-volume levels using an excited-state NLIE/TBA remain the
-next required [goal checkpoint](mps-excitation-goal.md).
+For exact selected finite-volume levels, use the separate
+[excited-state NLIE solver](sine-gordon-excited.md): p>=1, opposite rapidities,
+I=0.5 or 1.5, charge +/-2. It resolves the sea and subtracts a separately
+converged vacuum to obtain a gap.
 
 ## Numerical diagnostics and checks
 

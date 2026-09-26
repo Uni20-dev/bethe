@@ -104,6 +104,10 @@ add_executable(bethe_sine_gordon_excitation_tests test_sine_gordon_excitations.c
 target_link_libraries(bethe_sine_gordon_excitation_tests PRIVATE bethe::bethe)
 bethe_discover_tests(bethe_sine_gordon_excitation_tests)
 
+add_executable(bethe_sine_gordon_excited_tests test_sine_gordon_excited.cpp)
+target_link_libraries(bethe_sine_gordon_excited_tests PRIVATE bethe::bethe)
+bethe_discover_tests(bethe_sine_gordon_excited_tests)
+
 add_executable(bethe_kondo_tests test_kondo.cpp)
 target_link_libraries(bethe_kondo_tests PRIVATE bethe::bethe)
 bethe_discover_tests(bethe_kondo_tests)
@@ -170,7 +174,7 @@ else()
 endif()
 
 if(BETHE_BUILD_APPS)
-  foreach(app IN ITEMS bethe-sine-gordon-dispersion bethe-sine-gordon-bethe-yang)
+  foreach(app IN ITEMS bethe-sine-gordon-dispersion bethe-sine-gordon-bethe-yang bethe-sine-gordon-excited)
     add_test(NAME Citations.${app}.cli
       COMMAND "${CMAKE_COMMAND}" "-DPROGRAM=$<TARGET_FILE:${app}>"
         "-DTOOL=${app}" -P "${CMAKE_CURRENT_SOURCE_DIR}/check_citations_cli.cmake")
@@ -183,6 +187,9 @@ if(BETHE_BUILD_APPS)
     add_test(NAME SineGordonExcitations.cli
       COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_sine_gordon_excitations.py"
         "$<TARGET_FILE:bethe-sine-gordon-dispersion>" "$<TARGET_FILE:bethe-sine-gordon-bethe-yang>" "${UNI20_ENABLE_MPLAPACK}")
+    add_test(NAME SineGordonExcited.cli
+      COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_sine_gordon_excited.py"
+        "$<TARGET_FILE:bethe-sine-gordon-excited>" "${UNI20_ENABLE_MPLAPACK}")
   endif()
   add_test(NAME Citations.bethe-tb-dispersion.cli
     COMMAND "${CMAKE_COMMAND}" "-DPROGRAM=$<TARGET_FILE:bethe-tb-dispersion>"

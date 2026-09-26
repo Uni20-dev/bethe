@@ -13,6 +13,7 @@ base_arguments = {
     "bethe-xxz-qg-obc": ["4", "--delta", "0.25"],
     "bethe-kondo-response": ["--field", "0", "--scale", "1"],
     "bethe-sine-gordon-vacuum": ["--length", "1", "--p", "1"],
+    "bethe-sine-gordon-excited": ["--length", "1", "--p", "1"],
     "bethe-sine-gordon-dispersion": ["--p", "0.4", "--points", "3"],
     "bethe-sine-gordon-bethe-yang": ["--length", "10", "--p", "1"],
     "bethe-lee-yang-vacuum": ["--length", "1"],

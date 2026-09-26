@@ -95,7 +95,8 @@ Thermodynamic dispersion tools use `bethe-<model>-dispersion`.
   central charge, for attractive and repulsive coupling in native precision.
 - [Sine-Gordon excitations](docs/sine-gordon-excitations.md): soliton/breather
   lines and pair thresholds, plus explicitly asymptotic same-charge
-  two-soliton Bethe–Yang levels.
+  two-soliton Bethe–Yang levels. [Exact finite-volume two-soliton levels](docs/sine-gordon-excited.md)
+  add selected charge-two states and vacuum-relative gaps with `bethe-sine-gordon-excited`.
 - [Scaling Lee–Yang](docs/lee-yang.md): `bethe-lee-yang-vacuum` gives the
   bulk-subtracted periodic ground-state energy of the non-unitary model,
   with native fp64/long-double/fp128 and separate convergence diagnostics.

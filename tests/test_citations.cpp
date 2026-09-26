@@ -36,6 +36,7 @@ TEST(Citations, ToolReferenceSelections)
                     refs::Tool::sine_gordon_vacuum,
                     refs::Tool::sine_gordon_dispersion,
                     refs::Tool::sine_gordon_bethe_yang,
+                    refs::Tool::sine_gordon_excited,
                     refs::Tool::lee_yang_vacuum,
                     refs::Tool::lee_yang_excited,
                     refs::Tool::xyz_pbc,

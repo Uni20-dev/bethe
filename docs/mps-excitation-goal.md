@@ -2,13 +2,16 @@
 
 Develop native-precision Bethe-ansatz reference data for momentum-resolved MPS
 excitation calculations, prioritizing short-range lattice Hamiltonians and
-thermodynamic dispersions. Next sequence: **SU(3)/ULS excitations → spin-1
-Takhtajan–Babujian excitations → sine-Gordon excitations**. ULS is the first
-priority because it is a particularly demanding non-Abelian benchmark for MPS.
+thermodynamic dispersions. Priority order:
 
-Goal statement: complete the required unchecked milestones below, following the
-checkpoint completion rules. The earlier XXZ, XYZ and Potts sequence is complete;
-the three new milestones below define the next goal.
+1. **SU(3)/ULS excitations** — a particularly demanding non-Abelian benchmark
+   for MPS.
+2. **Spin-1 Takhtajan–Babujian excitations.**
+3. **Sine-Gordon excitations.**
+
+Goal statement: complete the required milestones below, following the checkpoint
+completion rules. The ULS, TB and sine-Gordon sequence is complete; the earlier
+XXZ, XYZ and Potts sequence is recorded separately below.
 
 Unchecked milestones define proposed work, not existing capabilities. Mark
 milestones complete only when their documented public API/frontend and validation land.
@@ -83,10 +86,10 @@ guide's 16 math expressions.
   topological charges and multiparticle thresholds.
 - [x] Expose the scattering data needed for selected excited sectors and add
   large-volume Bethe–Yang levels as an explicitly asymptotic first checkpoint.
-- [ ] Implement selected finite-volume excited levels using an appropriate
+- [x] Implement selected finite-volume excited levels using an appropriate
   excited-state NLIE/TBA, with an audited coupling/sector domain and state-selection
   rules. Do not present Bethe–Yang levels as exact finite-volume results.
-- [ ] Validate against the free-fermion point, exact breather mass ratios,
+- [x] Validate against the free-fermion point, exact breather mass ratios,
   large-volume scattering quantization and appropriate ultraviolet conformal
   limits; retain separate quadrature, cutoff and nonlinear-solve diagnostics.
 - [x] Document the two-flavour Schwinger connection at equal small fermion masses:
@@ -110,9 +113,30 @@ explicitly a leading light-sector scaling benchmark.
 Validation: 1140 full-suite tests, 18 targeted checks in the fp128-enabled build,
 pinned-Uni20 frontend/export checks, closed phases and independent 90-digit
 rapidity-space references. GitHub preserves the guide's five math expressions.
-The remaining validation checkbox includes the ultraviolet checks of the
-**exact excited-state NLIE/TBA milestone**, which is not replaced by this
-asymptotic checkpoint.
+
+Exact checkpoint implemented: [two-hole NLIE guide](sine-gordon-excited.md),
+native `two_soliton_level` and `bethe-sine-gordon-excited`. The selected family
+has p>=1, opposite rapidities, I=1/2 or 3/2, charge +/-2 and momentum zero.
+The frontend separates bulk-subtracted levels, source diagnostics and gaps
+above a separately converged vacuum. Shared vacuum/seeded-NLIE iteration and
+CLI/output helpers preserve numerical controls, provenance and precision.
+This is not a Bethe–Yang approximation, neutral-pair solver, attractive excited
+solver or complete finite-volume spectrum.
+
+Closing validation: 1155 full-suite tests and 59 distinct targeted library
+checks in the fp128-enabled build (55 grouped checks, three native interacting
+levels, and the independent vacuum/D3-TBA regression), with pinned-Uni20 and
+fp128 frontend/export checks.
+The interacting p=2, ML=1 default-tolerance level converges in all three
+precisions; fp128 uses 5663 nonlinear updates, 98 hole trials and 1024 intervals.
+Independent closed-kernel Gauss-grid calculations check both selected levels;
+free-Dirac gaps, large-volume scattering and UV primary/descendant dimensions
+check the physical conventions. Failure-budget and changed-seed regressions
+ensure no unconverged level is published or coarse solution silently reused.
+Fresh independent ULS ED through L=12 and TB ED through L=10 reproduce the
+documented sectors and finite-size comparisons. GitHub preserves all 58 math
+expressions across the four excitation guides (31 ULS, 16 TB, 5 particle/
+scattering, 6 exact sine-Gordon); the model catalogue and citations are current.
 
 ## Completed sequence
 

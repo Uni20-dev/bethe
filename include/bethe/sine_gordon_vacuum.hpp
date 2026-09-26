@@ -4,6 +4,7 @@
 #include <bethe/detail/complex_math.hpp>
 #include <bethe/detail/gauss_legendre.hpp>
 #include <bethe/sine_gordon.hpp>
+#include <span>
 
 namespace bethe::sine_gordon
 {
@@ -130,13 +131,16 @@ KernelTable<Real> kernel_table(Real p, Real eta, Real h, std::size_t n, KernelOp
 template <uni20::Real Real> struct VacuumMesh
 {
     Real value{}, residual = uni20::numeric_limits<Real>::infinity();
+    Real counting_integral{};
     Real kernel_error = uni20::numeric_limits<Real>::infinity();
     bool converged = false;
     VacuumStatus status = VacuumStatus::iteration_limit;
 };
 template <uni20::Real Real>
-VacuumMesh<Real> vacuum_mesh(Real p, Real u, Real eta, Real cutoff, std::size_t n, VacuumOptions<Real> const& options,
-                             VacuumState<Real>& work)
+VacuumMesh<Real>
+nlie_mesh(Real p, Real u, Real eta, Real cutoff, std::size_t n, VacuumOptions<Real> const& options,
+          VacuumState<Real>& work, KernelTable<Real> const& kernel, std::span<std::complex<Real> const> source = {},
+          std::span<std::complex<Real> const> counting_kernel = {}, std::vector<std::complex<Real>>* seed = nullptr)
 {
   using C = std::complex<Real>;
   using bethe::detail::CompensatedSum;
@@ -147,9 +151,6 @@ VacuumMesh<Real> vacuum_mesh(Real p, Real u, Real eta, Real cutoff, std::size_t 
     out.status = VacuumStatus::precision_limit;
     return out;
   }
-  auto kernel_options = options.kernel;
-  kernel_options.tolerance = options.tolerance / (Real{64} * (Real{1} + cutoff));
-  auto const kernel = kernel_table(p, eta, h, n, kernel_options, work.kernel_evaluations);
   out.kernel_error = kernel.error;
   if (!kernel.converged)
   {
@@ -157,6 +158,9 @@ VacuumMesh<Real> vacuum_mesh(Real p, Real u, Real eta, Real cutoff, std::size_t 
     return out;
   }
   std::vector<C> bare(n + 1), correction(n + 1), a(n + 1), next(n + 1);
+  // A previous converged solution on THIS mesh may seed a nearby hole trial.
+  // It is still checked against the new source and the full residual below.
+  if (seed && seed->size() == n + 1) correction = *seed;
   std::vector<Real> weighted_real(n + 1), weighted_imag(n + 1);
   std::vector<Real> weight(n + 1, h);
   weight.front() /= Real{2};
@@ -168,10 +172,10 @@ VacuumMesh<Real> vacuum_mesh(Real p, Real u, Real eta, Real cutoff, std::size_t 
   }
   for (;;)
   {
-    CompensatedSum<Real> energy;
+    CompensatedSum<Real> energy, counting;
     for (std::size_t j = 0; j <= n; ++j)
     {
-      C const epsilon = bare[j] + correction[j];
+      C const epsilon = bare[j] + correction[j] + (source.empty() ? C{} : source[j]);
       if (!uni20::isfinite(epsilon.real()) || !uni20::isfinite(epsilon.imag()))
       {
         out.status = VacuumStatus::precision_limit;
@@ -191,8 +195,10 @@ VacuumMesh<Real> vacuum_mesh(Real p, Real u, Real eta, Real cutoff, std::size_t 
       weighted_real[j] = weight[j] * a[j].real();
       weighted_imag[j] = weight[j] * a[j].imag();
       energy.add(-weight[j] * (bare[j] * a[j]).real() / pi);
+      if (!counting_kernel.empty()) counting.add(Real{2} * weight[j] * (counting_kernel[j] * a[j]).imag());
     }
     out.value = energy.value();
+    out.counting_integral = counting.value();
     out.residual = Real{0};
     if (p == Real{1} && uni20::isfinite(out.value))
     {
@@ -200,7 +206,7 @@ VacuumMesh<Real> vacuum_mesh(Real p, Real u, Real eta, Real cutoff, std::size_t 
       out.status = VacuumStatus::converged;
       return out;
     }
-    // Vacuum parity epsilon(-theta)=conj(epsilon(theta)). Evaluate half
+    // Even-state parity epsilon(-theta)=conj(epsilon(theta)). Evaluate half
     // the convolution, using real components to avoid redundant products.
     for (std::size_t i = 0; i <= n / 2; ++i)
     {
@@ -224,6 +230,7 @@ VacuumMesh<Real> vacuum_mesh(Real p, Real u, Real eta, Real cutoff, std::size_t 
     }
     if (out.residual <= options.tolerance / (Real{32} * (Real{1} + cutoff)))
     {
+      if (seed) *seed = correction;
       out.converged = true;
       out.status = VacuumStatus::converged;
       return out;
@@ -233,6 +240,22 @@ VacuumMesh<Real> vacuum_mesh(Real p, Real u, Real eta, Real cutoff, std::size_t 
     for (std::size_t j = 0; j <= n; ++j)
       correction[j] = (correction[j] + next[j]) / Real{2};
   }
+}
+template <uni20::Real Real>
+VacuumMesh<Real> vacuum_mesh(Real p, Real u, Real eta, Real cutoff, std::size_t n, VacuumOptions<Real> const& options,
+                             VacuumState<Real>& work)
+{
+  Real const h = Real{2} * cutoff / Real(n);
+  if (!uni20::isfinite(h) || !(h > Real{0}) || !uni20::isfinite(u * std::cosh(cutoff)))
+  {
+    VacuumMesh<Real> failed;
+    failed.status = VacuumStatus::precision_limit;
+    return failed;
+  }
+  auto kernel_options = options.kernel;
+  kernel_options.tolerance = options.tolerance / (Real{64} * (Real{1} + cutoff));
+  auto const kernel = kernel_table(p, eta, h, n, kernel_options, work.kernel_evaluations);
+  return nlie_mesh(p, u, eta, cutoff, n, options, work, kernel);
 }
 template <uni20::Real Real>
 std::optional<Real> resolved_mesh(Real p, Real u, Real eta, Real cutoff, VacuumOptions<Real> const& options,

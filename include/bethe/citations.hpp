@@ -351,18 +351,22 @@ inline constexpr std::array<Link, 2> links_90{{
   {"arXiv", "https://arxiv.org/abs/cond-mat/9803381"},
 }};
 inline constexpr std::array<Link, 2> links_91{{
+  {"DOI", "https://doi.org/10.1016/S0550-3213(98)00747-0"},
+  {"arXiv", "https://arxiv.org/abs/hep-th/9805117"},
+}};
+inline constexpr std::array<Link, 2> links_92{{
   {"DOI", "https://doi.org/10.1016/j.nuclphysb.2011.06.020"},
   {"arXiv", "https://arxiv.org/abs/1106.1901"},
 }};
-inline constexpr std::array<Link, 2> links_92{{
+inline constexpr std::array<Link, 2> links_93{{
   {"DOI", "https://doi.org/10.1103/PhysRevD.85.085005"},
   {"arXiv", "https://arxiv.org/abs/1112.6322"},
 }};
-inline constexpr std::array<Link, 1> links_93{{
+inline constexpr std::array<Link, 1> links_94{{
   {"arXiv", "https://arxiv.org/abs/2407.11391"},
 }};
 
-inline constexpr std::array<Reference, 94> references{{
+inline constexpr std::array<Reference, 95> references{{
   {"barber-batchelor-1989", "Michael N. Barber and Murray T. Batchelor", "Spectrum of the biquadratic spin-1 antiferromagnetic chain", "Phys. Rev. B 40, 4621-4626", 1989, links_0},
   {"albertini-2000", "Giuseppe Albertini", "Is the purely biquadratic spin 1 chain always massive?", "arXiv:cond-mat/0012439", 2000, links_1},
   {"aufgebauer-klumper-2010", "Britta Aufgebauer and Andreas Klümper", "Quantum spin chains of Temperley-Lieb type: periodic boundary conditions, spectral multiplicities and finite temperature", "J. Stat. Mech. 2010, P05018", 2010, links_2},
@@ -454,9 +458,10 @@ inline constexpr std::array<Reference, 94> references{{
   {"fukai-kleinemuhl-pozsgay-vernier-2024", "Kohei Fukai, Raphael Kleinemuhl, Balazs Pozsgay, and Eric Vernier", "On correlation functions in models related to the Temperley-Lieb algebra", "SciPost Phys. 16, 003", 2024, links_88},
   {"dorey-tateo-1996", "Patrick Dorey and Roberto Tateo", "Excited states by analytic continuation of TBA equations", "Nucl. Phys. B 482, 639-659", 1996, links_89},
   {"frahm-stahlsmeier-1998", "Holger Frahm and Martin Stahlsmeier", "Spinon statistics in integrable spin-S Heisenberg chains", "Phys. Lett. A 250, 293-299", 1998, links_90},
-  {"feher-takacs-2011", "G. Feher and G. Takacs", "Sine-Gordon form factors in finite volume", "Nucl. Phys. B 852, 441-467", 2011, links_91},
-  {"feher-palmai-takacs-2012", "G. Z. Feher, T. Palmai, and G. Takacs", "Sine-Gordon multi-soliton form factors in finite volume", "Phys. Rev. D 85, 085005", 2012, links_92},
-  {"itou-matsumoto-tanizaki-2024", "Etsuko Itou, Akira Matsumoto, and Yuya Tanizaki", "DMRG study of the theta-dependent mass spectrum in the 2-flavor Schwinger model", "arXiv:2407.11391", 2024, links_93},
+  {"feverati-ravanini-takacs-1999", "G. Feverati, F. Ravanini, and G. Takacs", "Nonlinear Integral Equation and Finite Volume Spectrum of Sine-Gordon Theory", "Nucl. Phys. B 540, 543-586", 1999, links_91},
+  {"feher-takacs-2011", "G. Feher and G. Takacs", "Sine-Gordon form factors in finite volume", "Nucl. Phys. B 852, 441-467", 2011, links_92},
+  {"feher-palmai-takacs-2012", "G. Z. Feher, T. Palmai, and G. Takacs", "Sine-Gordon multi-soliton form factors in finite volume", "Phys. Rev. D 85, 085005", 2012, links_93},
+  {"itou-matsumoto-tanizaki-2024", "Etsuko Itou, Akira Matsumoto, and Yuya Tanizaki", "DMRG study of the theta-dependent mass spectrum in the 2-flavor Schwinger model", "arXiv:2407.11391", 2024, links_94},
 }};
 
 inline constexpr std::array<Use, 2> uses_lee_yang_excited{{
@@ -479,12 +484,16 @@ inline constexpr std::array<Use, 2> uses_kondo_response{{
   {&references[77], "Universal zero-temperature magnetization, equations (124)-(126). Full Zeeman splitting b=2B and T_B=2T1; impurity energy change obtained by integrating the response."},
 }};
 inline constexpr std::array<Use, 2> uses_sine_gordon_dispersion{{
-  {&references[91], "Physical soliton mass and exact breather masses, Eq. (2.2). Stable-particle dispersions and fixed-content threshold kinematics only; no form factors or spectral weights."},
-  {&references[93], "Leading light-sector sine-Gordon description of two equal small-mass Schwinger flavours at theta=0: p=1/3, triplet and singlet with mass ratio sqrt(3). Not an exact solution of the full massive or finite-spacing Schwinger model."},
+  {&references[92], "Physical soliton mass and exact breather masses, Eq. (2.2). Stable-particle dispersions and fixed-content threshold kinematics only; no form factors or spectral weights."},
+  {&references[94], "Leading light-sector sine-Gordon description of two equal small-mass Schwinger flavours at theta=0: p=1/3, triplet and singlet with mass ratio sqrt(3). Not an exact solution of the full massive or finite-spacing Schwinger model."},
 }};
 inline constexpr std::array<Use, 2> uses_sine_gordon_bethe_yang{{
-  {&references[92], "Eq. (2.1) fixes S_ss=-exp(i*chi); Sec. 3 describes scattering quantization. We implement opposite-rapidity same-charge pairs at p>=1, with half-odd Bethe numbers and no wrapping corrections. Numerical convergence is not exact finite-volume accuracy."},
+  {&references[93], "Eq. (2.1) fixes S_ss=-exp(i*chi); Sec. 3 describes scattering quantization. We implement opposite-rapidity same-charge pairs at p>=1, with half-odd Bethe numbers and no wrapping corrections. Numerical convergence is not exact finite-volume accuracy."},
   {&references[50], "The existing vacuum Fourier kernel fixes chi'=2*pi*G in the same physical p and soliton-mass convention. Vacuum finite-volume energies are separate from this asymptotic excitation calculation."},
+}};
+inline constexpr std::array<Use, 2> uses_sine_gordon_excited{{
+  {&references[91], "Eqs. (3.13), (3.15), (3.18) and Sec. 5.2.2: exact continuum two-hole NLIE, bulk-subtracted energy and UV weights. Selected symmetric same-charge pairs at p>=1, delta=0, I=1/2 or 3/2, winding charge +/-2, momentum zero; no complex/special roots or complete-spectrum claim."},
+  {&references[50], "Separately converged untwisted vacuum NLIE supplies the vacuum-relative gap, using the same physical soliton mass and bulk subtraction."},
 }};
 inline constexpr std::array<Use, 3> uses_sine_gordon_vacuum{{
   {&references[51], "Nonlinear integral equation approach to finite-volume sine-Gordon energies."},
@@ -644,7 +653,7 @@ inline constexpr std::array<Use, 3> uses_gaudin_yang_pbc{{
   {&references[60], "Hamiltonian and periodic fermion equations (1), (2), (7), (8), (25); even N, odd minority population as in Sec. 5. Weak and strong limits (12), (15)-(16) provide checks. Hard walls, attraction and excitations are not implemented."},
 }};
 
-enum class Tool { lee_yang_excited, lee_yang_vacuum, xxz_qg_obc, hubbard_continuum, kondo_response, sine_gordon_dispersion, sine_gordon_bethe_yang, sine_gordon_vacuum, asep_pbc, tasep_pbc, potts_pbc, xyz_dispersion, xyz_pbc, bose_fermi_pbc, q_boson_pbc, lieb_liniger_thermal, lieb_liniger_dispersion, biquadratic_obc, xxx_pbc, xxx_obc, xxz_pbc, xxz_dispersion, xxz_obc, hubbard_dispersion, hubbard_pbc, hubbard_obc, lieb_liniger_pbc, lieb_liniger_obc, su3_dispersion, su3_pbc, tj_pbc, tb_dispersion, tb_pbc, richardson, central_spin, sun_fermions_pbc, ladder_pbc, haldane_shastry_pbc, sutherland_pbc, gaudin_yang_pbc };
+enum class Tool { lee_yang_excited, lee_yang_vacuum, xxz_qg_obc, hubbard_continuum, kondo_response, sine_gordon_dispersion, sine_gordon_bethe_yang, sine_gordon_excited, sine_gordon_vacuum, asep_pbc, tasep_pbc, potts_pbc, xyz_dispersion, xyz_pbc, bose_fermi_pbc, q_boson_pbc, lieb_liniger_thermal, lieb_liniger_dispersion, biquadratic_obc, xxx_pbc, xxx_obc, xxz_pbc, xxz_dispersion, xxz_obc, hubbard_dispersion, hubbard_pbc, hubbard_obc, lieb_liniger_pbc, lieb_liniger_obc, su3_dispersion, su3_pbc, tj_pbc, tb_dispersion, tb_pbc, richardson, central_spin, sun_fermions_pbc, ladder_pbc, haldane_shastry_pbc, sutherland_pbc, gaudin_yang_pbc };
 
 [[nodiscard]] constexpr std::span<Use const> for_tool(Tool tool)
 {
@@ -657,6 +666,7 @@ enum class Tool { lee_yang_excited, lee_yang_vacuum, xxz_qg_obc, hubbard_continu
     case Tool::kondo_response: return uses_kondo_response;
     case Tool::sine_gordon_dispersion: return uses_sine_gordon_dispersion;
     case Tool::sine_gordon_bethe_yang: return uses_sine_gordon_bethe_yang;
+    case Tool::sine_gordon_excited: return uses_sine_gordon_excited;
     case Tool::sine_gordon_vacuum: return uses_sine_gordon_vacuum;
     case Tool::asep_pbc: return uses_asep_pbc;
     case Tool::tasep_pbc: return uses_tasep_pbc;

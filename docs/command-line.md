@@ -11,6 +11,10 @@ For [sine-Gordon excitations](sine-gordon-excitations.md),
 `bethe-sine-gordon-bethe-yang --p P --length L` supplies asymptotic same-charge
 pair levels for P>=1. The latter omits wrapping corrections and is distinct
 from the [finite-volume vacuum](sine-gordon.md) calculation.
+`bethe-sine-gordon-excited --p P --length L --number 0.5` instead solves the
+[exact two-hole NLIE](sine-gordon-excited.md) for P>=1, I=0.5 or 1.5. Its
+`gap` table subtracts a separately converged vacuum; use
+`--csv-table gap=gap.csv` to export that table directly.
 
 `bethe-xxx-pbc` is the periodic XXX front end. For free-end OBC, use the separate
 `bethe-xxx-obc` program described in the [open-chain guide](open-chains.md).

@@ -966,6 +966,17 @@
       ]
     },
     {
+      "id": "feverati-ravanini-takacs-1999",
+      "authors": "G. Feverati, F. Ravanini, and G. Takacs",
+      "title": "Nonlinear Integral Equation and Finite Volume Spectrum of Sine-Gordon Theory",
+      "publication": "Nucl. Phys. B 540, 543-586",
+      "year": 1999,
+      "links": [
+        {"label": "DOI", "url": "https://doi.org/10.1016/S0550-3213(98)00747-0"},
+        {"label": "arXiv", "url": "https://arxiv.org/abs/hep-th/9805117"}
+      ]
+    },
+    {
       "id": "feher-takacs-2011",
       "authors": "G. Feher and G. Takacs",
       "title": "Sine-Gordon form factors in finite volume",
@@ -1050,6 +1061,14 @@
       "references": [
         {"id": "feher-palmai-takacs-2012", "context": "Eq. (2.1) fixes S_ss=-exp(i*chi); Sec. 3 describes scattering quantization. We implement opposite-rapidity same-charge pairs at p>=1, with half-odd Bethe numbers and no wrapping corrections. Numerical convergence is not exact finite-volume accuracy."},
         {"id": "rutkevich-2020", "context": "The existing vacuum Fourier kernel fixes chi'=2*pi*G in the same physical p and soliton-mass convention. Vacuum finite-volume energies are separate from this asymptotic excitation calculation."}
+      ]
+    },
+    {
+      "id": "sine_gordon_excited",
+      "executable": "bethe-sine-gordon-excited",
+      "references": [
+        {"id": "feverati-ravanini-takacs-1999", "context": "Eqs. (3.13), (3.15), (3.18) and Sec. 5.2.2: exact continuum two-hole NLIE, bulk-subtracted energy and UV weights. Selected symmetric same-charge pairs at p>=1, delta=0, I=1/2 or 3/2, winding charge +/-2, momentum zero; no complex/special roots or complete-spectrum claim."},
+        {"id": "rutkevich-2020", "context": "Separately converged untwisted vacuum NLIE supplies the vacuum-relative gap, using the same physical soliton mass and bulk subtraction."}
       ]
     },
     {

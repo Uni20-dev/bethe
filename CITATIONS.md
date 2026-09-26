@@ -819,6 +819,7 @@ J. Stat. Mech. 2020, 103101 (2020).
 Relevant tool modes:
 
 - `bethe-sine-gordon-bethe-yang`: The existing vacuum Fourier kernel fixes chi'=2\*pi\*G in the same physical p and soliton-mass convention. Vacuum finite-volume energies are separate from this asymptotic excitation calculation.
+- `bethe-sine-gordon-excited`: Separately converged untwisted vacuum NLIE supplies the vacuum-relative gap, using the same physical soliton mass and bulk subtraction.
 - `bethe-sine-gordon-vacuum`: Bulk-subtracted finite-ring vacuum scaling function and shifted-contour NLIE; soliton-mass convention.
 
 ### destri-de-vega-1992
@@ -1237,6 +1238,17 @@ Phys. Lett. A 250, 293-299 (1998).
 Relevant tool modes:
 
 - `bethe-tb-dispersion`: Spin-1/2 elementary spinons and non-Abelian state counting in higher-spin integrable chains. We report spin labels and energy bounds, not a finite-size counting formula or fusion multiplicities; TB's SU(2)\_2 content is not XXX's SU(2)\_1.
+
+### feverati-ravanini-takacs-1999
+
+G. Feverati, F. Ravanini, and G. Takacs. *Nonlinear Integral Equation and Finite Volume Spectrum of Sine-Gordon Theory*.
+Nucl. Phys. B 540, 543-586 (1999).
+
+[DOI](<https://doi.org/10.1016/S0550-3213(98)00747-0>), [arXiv](<https://arxiv.org/abs/hep-th/9805117>).
+
+Relevant tool modes:
+
+- `bethe-sine-gordon-excited`: Eqs. (3.13), (3.15), (3.18) and Sec. 5.2.2: exact continuum two-hole NLIE, bulk-subtracted energy and UV weights. Selected symmetric same-charge pairs at p\>=1, delta=0, I=1/2 or 3/2, winding charge +/-2, momentum zero; no complex/special roots or complete-spectrum claim.
 
 ### feher-takacs-2011
 

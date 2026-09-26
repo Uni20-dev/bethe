@@ -6,7 +6,8 @@ spin-chain diagonalization.
 
 For particle lines, breather masses, continuum onsets and selected asymptotic
 Bethe–Yang levels, see [sine-Gordon excitations](sine-gordon-excitations.md).
-Those tools do not turn the vacuum NLIE into an exact excited-state solver.
+For selected exact same-charge two-soliton levels and vacuum-relative gaps,
+see the [excited-state NLIE solver](sine-gordon-excited.md).
 
 ## Running the vacuum solver
 
