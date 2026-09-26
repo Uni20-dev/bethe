@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Copyright (C) 2026 Ian McCulloch
 #pragma once
-#include <bethe/detail/newton.hpp>
+#include <bethe/detail/eigenvalue_continuation.hpp>
 #include <bethe/solver.hpp>
 #include <optional>
 #include <span>
@@ -203,14 +203,8 @@ template <uni20::Real Real = double>
   auto reduced_energy = [&](std::span<Real const> v, Real field_scaled) {
     return field_scaled * v[0] + v[0] / Real{2} + sum_a.value() / Real{4};
   };
-  while (reached < target && out.iterations < options.max_iterations && out.stages < options.max_stages)
-  {
-    std::vector<Real> slope;
-    if (!system.tangent(x, reached, p, slope))
-    {
-      out.status = SolveStatus::ill_conditioned;
-      break;
-    }
+  auto predict = [&](std::vector<Real>& slope) -> std::optional<bethe::detail::ContinuationPrediction<Real>> {
+    if (!system.tangent(x, reached, p, slope)) return std::nullopt;
     Real max_slope{}, max_value{};
     bethe::detail::CompensatedSum<Real> eliminated;
     eliminated.add(-Real(m));
@@ -222,62 +216,15 @@ template <uni20::Real Real = double>
     max_slope = std::max(max_slope, std::abs(eliminated.value()));
     for (Real v : system.expand(x, p))
       max_value = std::max(max_value, std::abs(v));
-    Real const trust = (Real{1} + max_value) / Real{16};
-    if (max_slope > Real{0}) step = std::min(step, trust / max_slope);
-    step = std::min(step, target - reached);
-    Real const next = step == target - reached ? target : reached + step;
+    return bethe::detail::ContinuationPrediction<Real>{(Real{1} + max_value) / Real{16}, max_slope};
+  };
+  auto correct = [&](std::vector<Real>& candidate, Real next, Real /* step */, std::vector<Real> const& slope,
+                     Real trust_radius) {
     Real const next_p = next == target ? target_p : Real{1} - next;
-    if (!(next > reached))
-    {
-      out.status = SolveStatus::stalled;
-      break;
-    }
-    ++out.stages;
-    auto candidate = x;
-    for (std::size_t j = 0; j < n - 1; ++j)
-      candidate[j] += step * slope[j];
-    auto const predictor = system.expand(candidate, next_p);
-    bool accepted = false;
-    for (unsigned update = 0; update < 12; ++update)
-    {
-      std::vector<Real> jac;
-      auto const evaluation = system.evaluate(candidate, next, next_p, &jac);
-      if (evaluation.norm <= options.residual_tolerance)
-      {
-        accepted = true;
-        break;
-      }
-      if (out.iterations == options.max_iterations) break;
-      ++out.iterations;
-      auto correction = evaluation.residual;
-      for (auto& v : correction)
-        v = -v;
-      if (!bethe::detail::least_squares_step(std::move(jac), correction, n - 1)) break;
-      bool improved = false;
-      Real damping{1};
-      for (int backtrack = 0; backtrack <= uni20::numeric_limits<Real>::digits; ++backtrack)
-      {
-        auto trial = candidate;
-        for (std::size_t j = 0; j < n - 1; ++j)
-          trial[j] += damping * correction[j];
-        auto const v = system.expand(trial, next_p);
-        bool near = true;
-        for (std::size_t j = 0; j < n; ++j)
-          if (!uni20::isfinite(v[j]) || std::abs(v[j] - predictor[j]) > trust) near = false;
-        if (near)
-        {
-          Real const norm = system.evaluate(trial, next, next_p).norm;
-          if (norm <= options.residual_tolerance || norm < (Real{1} - damping / Real{10000}) * evaluation.norm)
-          {
-            candidate = std::move(trial);
-            improved = true;
-            break;
-          }
-        }
-        damping /= Real{2};
-      }
-      if (!improved) break;
-    }
+    bool accepted = bethe::detail::correct_eigenvalue_stage(
+        candidate, trust_radius, options, out.iterations,
+        [&](auto const& trial, std::vector<Real>* jac) { return system.evaluate(trial, next, next_p, jac); },
+        [&](auto const& trial) { return system.expand(trial, next_p); });
     if (accepted)
     {
       // Work with E+|B|/2 to avoid losing the interaction energy at high field.
@@ -298,19 +245,10 @@ template <uni20::Real Real = double>
                    energy <= old_energy + dh * derivative + allowance;
       }
     }
-    if (accepted)
-    {
-      x = std::move(candidate);
-      reached = next;
-      p = next_p;
-      step *= Real{1.5};
-    }
-    else
-    {
-      ++out.rejected_stages;
-      step /= Real{2};
-    }
-  }
+    return accepted;
+  };
+  bethe::detail::continue_eigenvalues(x, reached, step, target, options, out, predict, correct,
+                                      [&](Real next) { p = next == target ? target_p : Real{1} - next; });
   out.continuation_parameter = reached;
   auto const v = system.expand(x, p);
   out.eigenvalue_variables.resize(n);

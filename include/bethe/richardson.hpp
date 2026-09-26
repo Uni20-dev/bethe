@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Copyright (C) 2026 Ian McCulloch
 #pragma once
-#include <bethe/detail/newton.hpp>
+#include <bethe/detail/eigenvalue_continuation.hpp>
 #include <bethe/solver.hpp>
 #include <span>
 #include <stdexcept>
@@ -221,14 +221,8 @@ template <uni20::Real Real = double>
     x[i] = Real{1};
   Real reached{}, step = std::min(target, gap / Real{16});
   Real const trust = Real{1} / Real{16}, eps = uni20::numeric_limits<Real>::epsilon();
-  while (reached < target && out.iterations < options.max_iterations && out.stages < options.max_stages)
-  {
-    std::vector<Real> slope;
-    if (!system.tangent(x, reached, slope))
-    {
-      out.status = SolveStatus::ill_conditioned;
-      break;
-    }
+  auto predict = [&](std::vector<Real>& slope) -> std::optional<bethe::detail::ContinuationPrediction<Real>> {
+    if (!system.tangent(x, reached, slope)) return std::nullopt;
     Real max_slope{};
     bethe::detail::CompensatedSum<Real> last;
     for (Real v : slope)
@@ -237,60 +231,14 @@ template <uni20::Real Real = double>
       last.add(v);
     }
     max_slope = std::max(max_slope, std::abs(last.value()));
-    if (max_slope > Real{0}) step = std::min(step, trust / max_slope);
-    step = std::min(step, target - reached);
-    Real const next = step == target - reached ? target : reached + step;
-    if (!(next > reached))
-    {
-      out.status = SolveStatus::stalled;
-      break;
-    }
-    ++out.stages;
-    auto candidate = x;
-    for (std::size_t i = 0; i < n - 1; ++i)
-      candidate[i] += step * slope[i];
-    auto const predictor = system.expand(candidate);
-    bool accepted = false;
-    for (unsigned update = 0; update < 12; ++update)
-    {
-      std::vector<Real> jac;
-      auto const evaluation = system.evaluate(candidate, next, &jac);
-      if (evaluation.norm <= options.residual_tolerance)
-      {
-        accepted = true;
-        break;
-      }
-      if (out.iterations == options.max_iterations) break;
-      ++out.iterations; // Attempted corrections, including failed/rejected stages.
-      auto correction = evaluation.residual;
-      for (auto& v : correction)
-        v = -v;
-      if (!bethe::detail::least_squares_step(std::move(jac), correction, n - 1)) break;
-      bool improved = false;
-      Real damping{1};
-      for (int backtrack = 0; backtrack <= uni20::numeric_limits<Real>::digits; ++backtrack)
-      {
-        auto trial = candidate;
-        for (std::size_t i = 0; i < n - 1; ++i)
-          trial[i] += damping * correction[i];
-        auto const y = system.expand(trial);
-        bool near = true;
-        for (std::size_t i = 0; i < n; ++i)
-          if (!uni20::isfinite(y[i]) || std::abs(y[i] - predictor[i]) > trust) near = false;
-        if (near)
-        {
-          Real const norm = system.evaluate(trial, next).norm;
-          if (norm <= options.residual_tolerance || norm < (Real{1} - damping / Real{10000}) * evaluation.norm)
-          {
-            candidate = std::move(trial);
-            improved = true;
-            break;
-          }
-        }
-        damping /= Real{2};
-      }
-      if (!improved) break;
-    }
+    return bethe::detail::ContinuationPrediction<Real>{trust, max_slope};
+  };
+  auto correct = [&](std::vector<Real>& candidate, Real next, Real step, std::vector<Real> const& slope,
+                     Real trust_radius) {
+    bool accepted = bethe::detail::correct_eigenvalue_stage(
+        candidate, trust_radius, options, out.iterations,
+        [&](auto const& trial, std::vector<Real>* jac) { return system.evaluate(trial, next, jac); },
+        [&](auto const& trial) { return system.expand(trial); });
     if (accepted)
     {
       // Necessary physical bounds: kinetic minimum plus the maximal pair
@@ -318,18 +266,9 @@ template <uni20::Real Real = double>
       accepted = accepted && energy <= old_energy + step * derivative.value() + allowance &&
                  energy >= old_energy - step * Real(pairs) * Real(n - pairs + 1) - allowance;
     }
-    if (accepted)
-    {
-      x = std::move(candidate);
-      reached = next;
-      step *= Real{3} / Real{2};
-    }
-    else
-    {
-      ++out.rejected_stages;
-      step /= Real{2};
-    }
-  }
+    return accepted;
+  };
+  bethe::detail::continue_eigenvalues(x, reached, step, target, options, out, predict, correct);
   out.reached_coupling = reached == target ? coupling : reached * scale;
   out.eigenvalue_variables = system.expand(x);
   out.residual_norm = system.evaluate(x, reached).norm;
