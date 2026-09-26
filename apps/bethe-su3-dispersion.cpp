@@ -88,11 +88,8 @@ template <uni20::Real Real> int run(Arguments const& a, int argc, char** argv)
       cli::column<Real>("p").unit("radians/site"), cli::column<Real>("p_over_pi"),
       cli::column<Real>("cell_momentum").unit("radians/cell"), cli::column<Optional>("energy"),
       cli::column<Optional>("lower"), cli::column<Optional>("upper"), cli::column<std::string>("status"));
-  cli::DataOutput output(a.output, {"dispersion"});
-  bool complete = true;
-  try
-  {
-    output.attach(table, "dispersion");
+  bool const complete = cli::stream_result_table(report, context, a.output, "dispersion", table, [&](auto& table) {
+    bool complete = true;
     for (std::string const branch : {"3", "bar3", "two-soliton", "four-soliton"})
     {
       if (a.branch != "all" && a.branch != branch) continue;
@@ -139,24 +136,8 @@ template <uni20::Real Real> int run(Arguments const& a, int argc, char** argv)
                      p, p / pi, cell, energy, lower, upper, status);
       }
     }
-    report.result(complete, complete ? "converged" : "precision_limit; unavailable quantities omitted");
-    auto const summary = report.finish();
-    output.overview(report.overview(summary));
-    output.finish(table, summary);
-    output.finish_document();
-  }
-  catch (...)
-  {
-    data::table_metadata aborted{{"Status", "aborted"}};
-    if (!context.finished()) try
-      {
-        aborted = cli::run_summary(context.finish(uni20::run_outcome::failed));
-      }
-      catch (...)
-      {}
-    output.abort(table, std::move(aborted));
-    throw;
-  }
+    return complete;
+  });
   return complete ? 0 : 2;
 }
 } // namespace

@@ -21,6 +21,10 @@ This is not the generic bilinear spin-1 Heisenberg chain, and not the
 Odd lengths, other spin representations, magnetization sectors, excitations,
 fields and open boundaries are not yet supported here.
 
+The separate [`bethe-tb-dispersion` frontend](tb-dispersion.md) now supplies
+thermodynamic spinon lines and two-/four-spinon bounds, with spin labels and
+two-site-cell folding. These do not enumerate finite-ring excited roots.
+
 ## First calculations
 
 ```sh

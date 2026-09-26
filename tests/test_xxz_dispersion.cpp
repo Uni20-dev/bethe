@@ -115,7 +115,15 @@ TYPED_TEST(XXZDispersion, ContinuumAgainstIndependentMomentumScan)
       EXPECT_REAL_NEAR(edge.upper, high, Real{2} * pi / Real{2048});
       auto const shifted = band.continuum(pi - q);
       auto const folded = band.continuum(q, bethe::SpinonMomentum::folded);
-      EXPECT_EQ(folded.lower, std::min(edge.lower, shifted.lower));
+      if (mass == Real{0})
+      {
+        // The two gapless lower edges agree analytically. Preserve the
+        // original Q instead of demanding bitwise agreement after pi-Q.
+        EXPECT_EQ(folded.lower, edge.lower);
+        EXPECT_REAL_NEAR(folded.lower, std::min(edge.lower, shifted.lower), Real{8} * eps);
+      }
+      else
+        EXPECT_EQ(folded.lower, std::min(edge.lower, shifted.lower));
       EXPECT_EQ(folded.upper, std::max(edge.upper, shifted.upper));
       auto const reflected = band.continuum(Real{2} * pi - q);
       EXPECT_REAL_NEAR(reflected.lower, edge.lower, Real{64} * eps);

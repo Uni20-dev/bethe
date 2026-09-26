@@ -43,6 +43,9 @@ For the spin-1 bilinear–biquadratic TB point,
 [`bethe-tb-pbc`](takhtajan-babujian.md) takes even L>=4 and selects the
 zero-field singlet ground state of `H=sum[S.S-(S.S)^2]`. Its `--roots` report
 retains finite deviations and the real and imaginary parts of each rapidity.
+[`bethe-tb-dispersion`](tb-dispersion.md) instead supplies infinite-chain
+spinon lines and two-/four-spinon bounds, with explicit spin labels and
+optional two-site momentum folding.
 For the pure spin-1 biquadratic chain,
 [`bethe-biquadratic-obc`](biquadratic.md) takes even N>=2 and selects the
 free-end singlet ground state of `H=-sum(S.S)^2` by default. `--through-lines`

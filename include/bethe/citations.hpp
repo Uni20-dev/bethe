@@ -346,8 +346,12 @@ inline constexpr std::array<Link, 3> links_89{{
   {"arXiv", "https://arxiv.org/abs/hep-th/9607167"},
   {"HTML", "https://arxiv.org/html/hep-th/9607167"},
 }};
+inline constexpr std::array<Link, 2> links_90{{
+  {"DOI", "https://doi.org/10.1016/S0375-9601(98)00825-1"},
+  {"arXiv", "https://arxiv.org/abs/cond-mat/9803381"},
+}};
 
-inline constexpr std::array<Reference, 90> references{{
+inline constexpr std::array<Reference, 91> references{{
   {"barber-batchelor-1989", "Michael N. Barber and Murray T. Batchelor", "Spectrum of the biquadratic spin-1 antiferromagnetic chain", "Phys. Rev. B 40, 4621-4626", 1989, links_0},
   {"albertini-2000", "Giuseppe Albertini", "Is the purely biquadratic spin 1 chain always massive?", "arXiv:cond-mat/0012439", 2000, links_1},
   {"aufgebauer-klumper-2010", "Britta Aufgebauer and Andreas Klümper", "Quantum spin chains of Temperley-Lieb type: periodic boundary conditions, spectral multiplicities and finite temperature", "J. Stat. Mech. 2010, P05018", 2010, links_2},
@@ -438,6 +442,7 @@ inline constexpr std::array<Reference, 90> references{{
   {"nichols-2006", "A. Nichols", "The Temperley-Lieb algebra and its generalizations in the Potts and XXZ models", "J. Stat. Mech. 2006, P01003", 2006, links_87},
   {"fukai-kleinemuhl-pozsgay-vernier-2024", "Kohei Fukai, Raphael Kleinemuhl, Balazs Pozsgay, and Eric Vernier", "On correlation functions in models related to the Temperley-Lieb algebra", "SciPost Phys. 16, 003", 2024, links_88},
   {"dorey-tateo-1996", "Patrick Dorey and Roberto Tateo", "Excited states by analytic continuation of TBA equations", "Nucl. Phys. B 482, 639-659", 1996, links_89},
+  {"frahm-stahlsmeier-1998", "Holger Frahm and Martin Stahlsmeier", "Spinon statistics in integrable spin-S Heisenberg chains", "Phys. Lett. A 250, 293-299", 1998, links_90},
 }};
 
 inline constexpr std::array<Use, 2> uses_lee_yang_excited{{
@@ -578,6 +583,10 @@ inline constexpr std::array<Use, 2> uses_tj_pbc{{
   {&references[28], "Projected t-J Hamiltonian (1.3)-(1.5), Sutherland BFF equations (3.73), and energy (3.75). We remove the shift 2*N_e-L: E=2*N_h-sum 1/(lambda^2+1/4). Doped mixed-spin coverage is restricted to odd N_up and N_down; J=2t=2."},
   {&references[7], "No-hole reduction to the periodic XXX sector solver: H_tJ=2*H_XXX-L/2. Fermionic translation adds the filled-reference phase (-1)^(L-1)."},
 }};
+inline constexpr std::array<Use, 2> uses_tb_dispersion{{
+  {&references[30], "Hamiltonian (1.2), energy (1.4), and spinon construction in Sec. 2 fix the normalization and allowed spin sectors. Our H=J sum[S.S-(S.S)^2] has J_paper=4J and spinon energy 2*pi*J*sin(p). Two-/four-spinon envelopes are thermodynamic kinematics, not finite-size ideal-string levels or dynamical weights."},
+  {&references[90], "Spin-1/2 elementary spinons and non-Abelian state counting in higher-spin integrable chains. We report spin labels and energy bounds, not a finite-size counting formula or fusion multiplicities; TB's SU(2)_2 content is not XXX's SU(2)_1."},
+}};
 inline constexpr std::array<Use, 2> uses_tb_pbc{{
   {&references[29], "Original integrable higher-spin chain family; only the periodic even-length spin-1 singlet ground state is implemented."},
   {&references[30], "Spin-1 Hamiltonian and complex Bethe equations (1.2)-(1.4), filled two-string sea, and finite-deviation equations (3.8)-(3.11). Our bilinear coefficient is 1, i.e. J=4 in this paper. Equation (3.18) supplies only an initial guess; finite-size deviations are solved, not dropped. No dynamical correlations or excitations are implemented."},
@@ -613,7 +622,7 @@ inline constexpr std::array<Use, 3> uses_gaudin_yang_pbc{{
   {&references[60], "Hamiltonian and periodic fermion equations (1), (2), (7), (8), (25); even N, odd minority population as in Sec. 5. Weak and strong limits (12), (15)-(16) provide checks. Hard walls, attraction and excitations are not implemented."},
 }};
 
-enum class Tool { lee_yang_excited, lee_yang_vacuum, xxz_qg_obc, hubbard_continuum, kondo_response, sine_gordon_vacuum, asep_pbc, tasep_pbc, potts_pbc, xyz_dispersion, xyz_pbc, bose_fermi_pbc, q_boson_pbc, lieb_liniger_thermal, lieb_liniger_dispersion, biquadratic_obc, xxx_pbc, xxx_obc, xxz_pbc, xxz_dispersion, xxz_obc, hubbard_dispersion, hubbard_pbc, hubbard_obc, lieb_liniger_pbc, lieb_liniger_obc, su3_dispersion, su3_pbc, tj_pbc, tb_pbc, richardson, central_spin, sun_fermions_pbc, ladder_pbc, haldane_shastry_pbc, sutherland_pbc, gaudin_yang_pbc };
+enum class Tool { lee_yang_excited, lee_yang_vacuum, xxz_qg_obc, hubbard_continuum, kondo_response, sine_gordon_vacuum, asep_pbc, tasep_pbc, potts_pbc, xyz_dispersion, xyz_pbc, bose_fermi_pbc, q_boson_pbc, lieb_liniger_thermal, lieb_liniger_dispersion, biquadratic_obc, xxx_pbc, xxx_obc, xxz_pbc, xxz_dispersion, xxz_obc, hubbard_dispersion, hubbard_pbc, hubbard_obc, lieb_liniger_pbc, lieb_liniger_obc, su3_dispersion, su3_pbc, tj_pbc, tb_dispersion, tb_pbc, richardson, central_spin, sun_fermions_pbc, ladder_pbc, haldane_shastry_pbc, sutherland_pbc, gaudin_yang_pbc };
 
 [[nodiscard]] constexpr std::span<Use const> for_tool(Tool tool)
 {
@@ -648,6 +657,7 @@ enum class Tool { lee_yang_excited, lee_yang_vacuum, xxz_qg_obc, hubbard_continu
     case Tool::su3_dispersion: return uses_su3_dispersion;
     case Tool::su3_pbc: return uses_su3_pbc;
     case Tool::tj_pbc: return uses_tj_pbc;
+    case Tool::tb_dispersion: return uses_tb_dispersion;
     case Tool::tb_pbc: return uses_tb_pbc;
     case Tool::richardson: return uses_richardson;
     case Tool::central_spin: return uses_central_spin;

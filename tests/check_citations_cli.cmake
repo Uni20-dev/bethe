@@ -87,7 +87,7 @@ if(NOT status EQUAL 1 OR NOT output STREQUAL "" OR NOT error STREQUAL usage)
 endif()
 
 set(args 4)
-if(TOOL STREQUAL "bethe-su3-dispersion")
+if(TOOL STREQUAL "bethe-su3-dispersion" OR TOOL STREQUAL "bethe-tb-dispersion")
   set(args --points 3)
 elseif(TOOL STREQUAL "bethe-xxz-dispersion")
   set(args --delta 2 --points 3)

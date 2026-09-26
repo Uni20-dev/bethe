@@ -80,6 +80,10 @@ for precision in precisions:
     assert all(x["energy"] is None and x["lower"] is None and x["upper"] is None and x["status"] == "precision_limit"
                for x in records(underflow))
 
+tiny = records(table(["--delta", "1", "--exchange", "1e-300", "--branch", "spinon",
+                      "--momentum", "1e-100", "--precision", "fp64"], 2))[0]
+assert tiny["energy"] is None and tiny["status"] == "precision_limit"
+
 for args in (["--delta", "-1"], ["--delta", "nan"], ["--delta", "inf"], ["--delta", "2", "--exchange", "0"],
              ["--delta", "2", "--points", "1"], ["--delta", "2", "--points", "-1"],
              ["--delta", "2", "--momentum", "-1"], ["--delta", "2", "--momentum", "4"],

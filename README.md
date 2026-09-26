@@ -40,6 +40,9 @@ Thermodynamic dispersion tools use `bethe-<model>-dispersion`.
 - [SU(3)/ULS excitations](docs/su3-dispersion.md): `bethe-su3-dispersion` gives
   elementary 3/bar3 lines and distinct two- and four-soliton continuum bounds,
   with representation labels and three-site folding for iMPS comparisons.
+- [Takhtajan–Babujian excitations](docs/tb-dispersion.md): `bethe-tb-dispersion`
+  gives spin-1/2 spinons above the spin-1 TB ground state, two-/four-spinon
+  bounds, spin selection rules and optional two-site folding.
 - [Periodic Hubbard](docs/hubbard.md): `bethe-hubbard-pbc` gives repulsive
   half-filled spin sectors, balanced attractive ground states at any even filling,
   and selected doped sectors on even rings, plus the unrestricted $`U=0`$ limit.

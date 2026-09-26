@@ -595,6 +595,7 @@ J. Stat. Mech. 2014, P05009 (2014).
 
 Relevant tool modes:
 
+- `bethe-tb-dispersion`: Hamiltonian (1.2), energy (1.4), and spinon construction in Sec. 2 fix the normalization and allowed spin sectors. Our H=J sum\[S.S-(S.S)^2\] has J\_paper=4J and spinon energy 2\*pi\*J\*sin(p). Two-/four-spinon envelopes are thermodynamic kinematics, not finite-size ideal-string levels or dynamical weights.
 - `bethe-tb-pbc`: Spin-1 Hamiltonian and complex Bethe equations (1.2)-(1.4), filled two-string sea, and finite-deviation equations (3.8)-(3.11). Our bilinear coefficient is 1, i.e. J=4 in this paper. Equation (3.18) supplies only an initial guess; finite-size deviations are solved, not dropped. No dynamical correlations or excitations are implemented.
 
 ### dukelsky-2004
@@ -1224,5 +1225,16 @@ Nucl. Phys. B 482, 639-659 (1996).
 Relevant tool modes:
 
 - `bethe-lee-yang-excited`: Periodic spin-zero one-particle source terms, quantization and energy, Eqs. (2.3)-(2.7). Only the regular infrared branch at 5\<=mL\<=30 is implemented, not continuation through the source collision near mL=2.53 or higher/moving states. Levels are bulk-subtracted; gaps subtract a separately converged vacuum.
+
+### frahm-stahlsmeier-1998
+
+Holger Frahm and Martin Stahlsmeier. *Spinon statistics in integrable spin-S Heisenberg chains*.
+Phys. Lett. A 250, 293-299 (1998).
+
+[DOI](<https://doi.org/10.1016/S0375-9601(98)00825-1>), [arXiv](<https://arxiv.org/abs/cond-mat/9803381>).
+
+Relevant tool modes:
+
+- `bethe-tb-dispersion`: Spin-1/2 elementary spinons and non-Abelian state counting in higher-spin integrable chains. We report spin labels and energy bounds, not a finite-size counting formula or fusion multiplicities; TB's SU(2)\_2 content is not XXX's SU(2)\_1.
 
 <!-- END GENERATED BIBLIOGRAPHY -->

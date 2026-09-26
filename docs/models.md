@@ -83,7 +83,7 @@ paper's correlation functions, thermodynamics, or full spectrum.
 | `su-n` | Fundamental SU(n) permutation chain | Implemented (limited): [SU(3) PBC](su3.md), balanced singlet ground state for L>=3 divisible by three, J=1; [SU(3)/ULS thermodynamic excitations](su3-dispersion.md), elementary 3/bar3 lines and two-/four-soliton envelopes | Other populations/lengths, finite-size excitations, general n, fields, open boundaries |
 | `gaudin-yang` | Equal-mass spin-1/2 continuum delta-interacting fermions | Implemented (limited): [repulsive PBC](gaudin-yang.md), odd populations of both spins; unrestricted free and fully polarized limits | Other periodic shell branches, excitations, attraction, hard walls, thermodynamics |
 | `tj-susy` | Projected t–J electrons, J=2t | Implemented (limited): [PBC](tj.md), t=1, doped odd N_up and N_down on either length parity; every no-hole and fully polarized sector | Other doped shell branches, excitations, open boundaries |
-| `spin-s-tb` | Integrable spin-1 bilinear–biquadratic chain | Implemented (limited): [even PBC](takhtajan-babujian.md), singlet ground state of H=sum[S.S-(S.S)^2], with finite two-string deviations | Odd lengths, sectors, excitations, higher spins, open boundaries |
+| `spin-s-tb` | Integrable spin-1 bilinear–biquadratic chain | Implemented (limited): [even PBC](takhtajan-babujian.md), singlet ground state of H=sum[S.S-(S.S)^2], with finite two-string deviations; [thermodynamic spinons and two-/four-spinon bounds](tb-dispersion.md) | Odd lengths, finite-size excited sectors, fields, higher spins, open boundaries |
 | `temperley-lieb` | TL singlet-projector chains; spin-1 pure biquadratic model | Implemented (limited): [even free ends](biquadratic.md), AF ground state, module minima, real-root excitations, Q-system searches and targeted two-string singlet; [ferro one-defect band](biquadratic-ferromagnetic.md), [bound pairs](biquadratic-bound-pairs.md), [three-defect droplets](biquadratic-bound-triples.md), [real-root scattering windows](biquadratic-scattering.md) and [mixed pair-plus-defect scans](biquadratic-pair-defect.md) (odd/even), sign-aware Q-system levels; representation multiplicities, [physical-spin content API and CLI](biquadratic-spin-content.md), and generic lambda>2 TL API | More general mixed strings and larger droplets, other complex-root families, singlet ranks, odd-chain AF spinon branch, PBC twists, other representations |
 | `richardson` | Reduced BCS pairing | Implemented (limited): [attractive pairing](richardson.md), distinct doublet levels, fixed pair count and blocked levels, ground energy through root collisions | Repeated levels/higher degeneracies, excitations, pair-root output, repulsive coupling |
 | `gaudin-magnet` | Rational spin-1/2 central spin | Implemented (limited): [sector minima](central-spin.md), distinct nonzero bath couplings of either sign, central field of either sign or zero | Repeated/zero couplings, higher local spins, excitations, general Gaudin charges |
@@ -112,7 +112,7 @@ integrable boundaries in the literature.
 | `su-n` | Fundamental SU(3) antiferromagnetic permutation chain | [Balanced PBC ground state](su3.md); [thermodynamic elementary lines and continua](su3-dispersion.md) | Finite-size excited enumeration remains |
 | `gaudin-yang` | Equal-mass repulsive spin-1/2 delta-interacting Fermi gas, PBC, selected ground-state sectors | [Implemented (limited)](gaudin-yang.md) | First slice complete |
 | `tj-susy` | Projected t–J chain at J=2t, PBC, selected ground-state sectors | [Implemented (limited)](tj.md) | First slice complete |
-| `spin-s-tb` | Spin-1 Takhtajan–Babujian chain, PBC ground state with finite-size string deviations | [Implemented (limited)](takhtajan-babujian.md) | First slice complete |
+| `spin-s-tb` | Spin-1 Takhtajan–Babujian chain | [PBC ground state with finite string deviations](takhtajan-babujian.md); [thermodynamic excitations](tb-dispersion.md) | Finite-size excited strings remain |
 | `temperley-lieb` | Spin-1 pure biquadratic even free-end ground and real-root excited levels, with TL multiplicities | [Implemented (limited)](biquadratic.md) | Ground/excitation slice complete |
 | `richardson` | Reduced BCS pairing Hamiltonian, specified levels and pair number | [Implemented (limited)](richardson.md) | First slice complete |
 | `gaudin-magnet` | Rational spin-1/2 central-spin sector ground energies at specified couplings and field | [Implemented (limited)](central-spin.md) | First slice complete |
@@ -311,7 +311,13 @@ Tests check original complex equations through L=128 in all scalar types,
 independent spin-basis energies and translation at L=4,6,8, native-precision
 E_4=-11-sqrt(41), the Jacobian and incomplete-solve diagnostics.
 
-**Next slice:** broken-string excitations require real and three-string
+The [thermodynamic frontend](tb-dispersion.md), `bethe-tb-dispersion`, supplies
+native-precision spin-1/2 spinon lines and two-/four-spinon energy envelopes,
+with total-spin selection rules, two-site folding and the explicit factor-four
+conversion from Vlijm–Caux. It reuses the common spinon-band kinematics;
+SU(2)_2 state counting and spectral weights are not inferred from those bounds.
+
+**Next slice:** finite-ring broken-string excitations require real and three-string
 roots, singular-solution handling and new label branches. Other spin,
 magnetization, odd lengths and open boundaries are not covered by this
 ground-state implementation.

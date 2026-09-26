@@ -179,6 +179,11 @@ template <uni20::Real Real> int run(Arguments const& a, int argc, char** argv)
             status = "precision_limit";
             complete = false;
           }
+          catch (std::underflow_error const&)
+          {
+            status = "precision_limit";
+            complete = false;
+          }
         }
         Real const cell = Real{2} * (p < pi ? p : p < Real{2} * pi ? p - pi : Real{0});
         table.append(branch, p, p / pi, cell, energy, lower, upper, status);

@@ -51,6 +51,7 @@ TEST(Citations, ToolReferenceSelections)
                     refs::Tool::gaudin_yang_pbc,
                     refs::Tool::tj_pbc,
                     refs::Tool::tb_pbc,
+                    refs::Tool::tb_dispersion,
                     refs::Tool::richardson,
                     refs::Tool::central_spin,
                     refs::Tool::sun_fermions_pbc,

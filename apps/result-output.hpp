@@ -40,4 +40,38 @@ class ResultOutput {
     data::table_metadata summary_;
     DataOutput output_;
 };
+
+// Streaming calculations finish their numerical report only after the last
+// row. Keep table/document completion and exception cleanup identical across
+// frontends. The fill callback returns the model's scientific success flag.
+template <typename Table, typename Fill>
+bool stream_result_table(RunReport& report, uni20::run_context& context, DataOutputOptions const& options,
+                         std::string name, Table& table, Fill&& fill,
+                         std::string failure_status = "precision_limit; unavailable quantities omitted")
+{
+  DataOutput output(options, {name});
+  try
+  {
+    output.attach(table, name);
+    bool const complete = std::forward<Fill>(fill)(table);
+    report.result(complete, complete ? "converged" : std::move(failure_status));
+    auto const summary = report.finish();
+    output.overview(report.overview(summary));
+    output.finish(table, summary);
+    output.finish_document();
+    return complete;
+  }
+  catch (...)
+  {
+    data::table_metadata aborted{{"Status", "aborted"}};
+    if (!context.finished()) try
+      {
+        aborted = run_summary(context.finish(uni20::run_outcome::failed));
+      }
+      catch (...)
+      {}
+    output.abort(table, std::move(aborted));
+    throw;
+  }
+}
 } // namespace bethe::cli

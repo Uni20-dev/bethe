@@ -8,7 +8,7 @@ import itertools
 import json
 import numpy as np
 from scipy.sparse import coo_matrix, eye
-from scipy.sparse.linalg import eigsh
+from spin_chain_ed import momentum_basis, lowest_eigenpair
 
 
 def sector(length, populations, momentum, target_casimir):
@@ -24,27 +24,7 @@ def sector(length, populations, momentum, target_casimir):
     words = np.array(sorted(words), dtype=np.int64)
     index = {word: i for i, word in enumerate(words)}
     digits = (words[:, None] // powers) % 3
-    translated = (words * 3) % (3 ** length) + words // (3 ** (length - 1))
-    translation = np.array([index[word] for word in translated])
-    seen = set()
-    rows, columns, values = [], [], []
-    count = 0
-    for start in range(len(words)):
-        if start in seen:
-            continue
-        orbit, current = [], start
-        while current not in seen:
-            seen.add(current)
-            orbit.append(current)
-            current = translation[current]
-        period = len(orbit)
-        if momentum * period % length:
-            continue
-        rows.extend(orbit)
-        columns.extend([count] * period)
-        values.extend(np.exp(-2j * np.pi * momentum * np.arange(period) / length) / np.sqrt(period))
-        count += 1
-    basis = coo_matrix((values, (rows, columns)), shape=(len(words), count)).tocsr()
+    basis, translation = momentum_basis(words, length, momentum)
 
     def swaps(pairs):
         rows = []
@@ -61,14 +41,7 @@ def sector(length, populations, momentum, target_casimir):
     casimir_operator += (9 * length - length * length) / 6 * eye(len(words))
     selected = h + length * (casimir_operator - target_casimir * eye(len(words)))
     reduced = basis.conj().T @ selected @ basis
-    assert np.max(np.abs((reduced - reduced.conj().T).data), initial=0) < 1e-12
-    if count <= 16:
-        energies, vectors = np.linalg.eigh(reduced.toarray())
-        energy, vector = energies[0], vectors[:, 0]
-    else:
-        energies, vectors = eigsh(reduced, k=1, which="SA", tol=2e-12,
-                                 v0=np.random.default_rng(42).normal(size=count))
-        energy, vector = energies[0], vectors[:, 0]
+    _, vector = lowest_eigenpair(reduced)
     state = basis @ vector
     energy = float(np.vdot(state, h @ state).real)
     residual = np.linalg.norm(h @ state - energy * state)
@@ -80,7 +53,7 @@ def sector(length, populations, momentum, target_casimir):
     assert residual < 1e-9 and casimir_residual < 1e-8
     assert abs(phase - np.exp(2j * np.pi * momentum / length)) < 1e-10
     return dict(energy=float(energy), casimir=casimir, residual=float(residual),
-                casimir_residual=casimir_residual, dimension=count)
+                casimir_residual=casimir_residual, dimension=basis.shape[1])
 
 
 def main():

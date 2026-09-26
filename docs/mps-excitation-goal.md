@@ -47,22 +47,34 @@ curves. GitHub preserves the guide's 31 math expressions.
 
 ## 2. Spin-1 Takhtajan–Babujian excitations
 
-- [ ] Extend the [TB calculation](takhtajan-babujian.md) to zero-field
+- [x] Extend the [TB calculation](takhtajan-babujian.md) to zero-field
   thermodynamic spinon dispersions and the lowest relevant multiparticle
   continuum boundaries, with spin labels and physical momentum conventions.
-- [ ] Preserve the existing bilinear-minus-biquadratic Hamiltonian normalization;
+- [x] Preserve the existing bilinear-minus-biquadratic Hamiltonian normalization;
   distinguish elementary fractional excitations from allowed periodic-chain
   multiplets and local-response sectors.
-- [ ] Validate exact dispersions and velocities independently, and compare
+- [x] Validate exact dispersions and velocities independently, and compare
   continuum predictions with selected finite-size BA/ED levels. Account for
   finite-size effects and string deviations rather than treating ideal strings
   as exact finite-chain solutions.
-- [ ] Provide a public native-precision API/frontend and an MPS comparison guide,
+- [x] Provide a public native-precision API/frontend and an MPS comparison guide,
   sharing kinematic and output helpers with ULS and the existing spinon tools.
 
 General finite-size excited-string enumeration and dynamical spectral weights are
 follow-ups, not prerequisites. Starting reference:
 [Vlijm–Caux](../CITATIONS.md#vlijm-caux-2014).
+
+Implemented: [TB excitation guide](tb-dispersion.md), native-precision
+`SpinonDispersion` and `bethe-tb-dispersion`, with spin-1/2 lines, two-/four-spinon
+envelopes, two-site folding and CSV/TSV/JSON exports. The guide distinguishes
+local spin and quadrupole sectors, SU(2)_2 state counting, and the factor-four
+Hamiltonian conversion from Vlijm–Caux. Shared helpers handle spinon kinematics,
+streaming output completion and independent ED translation projection.
+Validation: 1126 full-suite tests, 71 targeted checks in the fp128-enabled build,
+and pinned-Uni20 TB/ULS frontend export checks. Independent spin/momentum-resolved
+ED through L=10 checks normalization and finite-size scaling; native rapidity
+identities and momentum scans check the analytic bounds. GitHub preserves the
+guide's 16 math expressions.
 
 ## 3. Sine-Gordon excitations
 
