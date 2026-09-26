@@ -717,6 +717,7 @@ Phys. Rev. B 109, 115411 (2024).
 
 Relevant tool modes:
 
+- `bethe-xyz-dispersion`: Theta-ratio coupling convention, Eq. (2), divided by four for S=sigma/2; same Hamiltonian as bethe-xyz-pbc, not that frontend's finite-size root solver.
 - `bethe-xyz-pbc`: Rectangular XYZ coupling convention (2), regular Bethe equations (46)-(48), and energy normalized to S=sigma/2. Even periodic symmetric ground branch only; no singular-pair or excited-spectrum completeness claim.
 
 ### baxter-1973
@@ -1156,6 +1157,17 @@ Phys. Rev. B 97, 235155 (2018).
 Relevant tool modes:
 
 - `bethe-xxz-dispersion`: Interpretation of a single spinon as a topological, symmetry-resolved MPS excitation; momentum folding and asymptotic-vacuum conventions, not an MPS implementation.
+
+### johnson-krinsky-mccoy-1973
+
+James D. Johnson, Samuel Krinsky, and Barry M. McCoy. *Vertical-Arrow Correlation Length in the Eight-Vertex Model and the Low-Lying Excitations of the X-Y-Z Hamiltonian*.
+Phys. Rev. A 8, 2526-2547 (1973).
+
+[DOI](<https://doi.org/10.1103/PhysRevA.8.2526>), [Publisher full text](<https://harvest.aps.org/v2/journals/articles/10.1103/PhysRevA.8.2526/fulltext>).
+
+Relevant tool modes:
+
+- `bethe-xyz-dispersion`: Thermodynamic XYZ spinons, Eq. (7.8), and bound branches, Eqs. (7.11)-(7.12); exchange signs, axis labels and Pauli normalization are mapped to our theta-ratio Hamiltonian. Bound existence and parity/momentum shifts are explicit; no structure factors or complete finite-ring enumeration.
 
 ### dorey-tateo-1996
 

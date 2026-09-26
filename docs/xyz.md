@@ -1,10 +1,15 @@
 # XYZ: even periodic ground branch
 
-**Status: ground-branch library and `bethe-xyz-pbc` frontend; no excited-spectrum coverage.**
+**Status: ground-branch library and `bethe-xyz-pbc` frontend; no finite-ring excited-spectrum coverage.**
 Native fp64, long-double and fp128 implementations cover the symmetric regular-root
 branch of even periodic chains with real $`0\lt \eta \lt 1`$ and rectangular `tau=i*t`,
 $`t \gt 0`$. Independent small-chain diagonalization validates the ground-state selection
 on the tested parameter grid; convergence is not a general completeness proof.
+
+For infinite-chain spinons, two-spinon envelopes and bound branches, use the
+separate [thermodynamic excitation guide](xyz-dispersion.md) and
+`bethe-xyz-dispersion`. It shares these coupling conventions but does not
+extend the finite-size root enumeration of this frontend.
 
 ## Convention and initial target
 

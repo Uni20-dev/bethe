@@ -5,6 +5,9 @@ excitation calculations, prioritizing short-range lattice Hamiltonians and
 thermodynamic dispersions. Main sequence: **massive XXZ → XYZ excitations →
 critical three-state Potts**, with an optional integrable-ladder checkpoint.
 
+Goal statement: complete the required unchecked milestones below, following the
+checkpoint completion rules. The optional ladder work does not block completion.
+
 Unchecked milestones define proposed work, not existing capabilities. Mark
 milestones complete only when their documented public API/frontend and validation land.
 
@@ -18,7 +21,7 @@ milestones complete only when their documented public API/frontend and validatio
   two-site-unit-cell folding. Distinguish a topological single spinon connecting
   different asymptotic vacua from a two-spinon excitation in a fixed vacuum sector.
 - [x] Validate against independent exact expressions and isotropic/Ising limits,
-including precision-sensitive cases near Δ=1.
+  including precision-sensitive cases near Δ=1.
 
 Implemented: [XXZ dispersion guide](xxz-dispersion.md), native-precision
 `SpinonDispersion` and bulk-energy APIs, shared elliptic-band continuum
@@ -32,17 +35,23 @@ and the [symmetry-resolved MPS excitation framework](https://arxiv.org/abs/1802.
 
 ## 2. XYZ thermodynamic excitations
 
-- [ ] Audit the exact excitation formulas and select an explicitly documented
+- [x] Audit the exact excitation formulas and select an explicitly documented
   parameter region; map its elliptic conventions to our existing XYZ Hamiltonian.
-- [ ] Add elementary thermodynamic dispersion branches, gaps and sector labels,
+- [x] Add elementary thermodynamic dispersion branches, gaps and sector labels,
   reusing the native-precision elliptic-function infrastructure.
-- [ ] Add the bound-state branches present in the supported region, with
+- [x] Add the bound-state branches present in the supported region, with
   explicit existence conditions and continuum thresholds.
-- [ ] Validate normalization and branches against XXZ/XY limits and independent
+- [x] Validate normalization and branches against XXZ/XY limits and independent
   references; use finite-size spectra as checks with finite-size effects identified.
 
 Do not require a complete finite-ring XYZ spectrum or support for every coupling
 region. Starting reference: [Johnson–Krinsky–McCoy](https://journals.aps.org/pra/abstract/10.1103/PhysRevA.8.2526).
+
+Implemented: [XYZ excitation guide](xyz-dispersion.md), native-precision spinon
+and bound-branch API, and `bethe-xyz-dispersion` with parity/momentum labels and
+CSV/TSV/JSON exports. Validation: 1084 full-suite tests, 21 targeted checks in
+the fp128-enabled build, independent complex-rapidity references, XY and both
+massive XXZ limits, and finite-ring checks with the splitting retained.
 
 ## Optional checkpoint: integrable-ladder excitations
 

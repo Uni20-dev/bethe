@@ -64,7 +64,10 @@ Thermodynamic dispersion tools use `bethe-<model>-dispersion`.
   including free-boson and phase-model limits. This is not the Bose–Hubbard model.
 - [Periodic XYZ](docs/xyz.md): `bethe-xyz-pbc` gives even-chain regular ground
   states in the rectangular elliptic parametrization, including either sign
-  of Jz. Generic XYZ has no conserved Sz sector; excitations are not yet exposed.
+  of Jz. Generic XYZ has no conserved Sz sector.
+  [Thermodynamic XYZ excitations](docs/xyz-dispersion.md) use `bethe-xyz-dispersion`
+  for spinons, two-spinon envelopes and the attractive region's bound branches,
+  with explicit parity labels and physical/two-site-cell momentum conventions.
 - [Non-Hermitian quantum-group XXZ](docs/xxz-nonhermitian.md):
   `bethe-xxz-qg-obc` evaluates regular positive-real Bethe states at
   `0<Delta<1` with opposite imaginary end fields, including bounded
