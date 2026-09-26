@@ -141,7 +141,7 @@ namespace detail
 template <uni20::Real Real>
 [[nodiscard]] RealState<Real> solve_validated(std::size_t sites, Real delta, std::span<uni20::half_int const> numbers,
                                               SolverOptions<Real> const& options,
-                                              std::span<Real const> initial_roots = {})
+                                              std::span<Real const> initial_roots = {}, Real twist = Real{0})
 {
   using std::abs;
   using std::atan;
@@ -149,6 +149,11 @@ template <uni20::Real Real>
   auto const m = numbers.size();
   if (!uni20::isfinite(options.residual_tolerance) || options.residual_tolerance <= Real{0})
     throw std::invalid_argument("residual tolerance must be finite and positive");
+  // Internal twisted-XXZ use (e.g. Potts): the caller owns the physical label
+  // selection. Public XXZ entry points still use twist=0 and their old windows.
+  // Momentum below is the canonical translation label in the homogeneous gauge.
+  if (!uni20::isfinite(twist) || (twist != Real{0} && (delta <= Real{0} || delta >= Real{1})))
+    throw std::invalid_argument("nonzero XXZ twist requires finite 0<Delta<1");
 
   RealState<Real> result;
   result.delta = delta;
@@ -213,7 +218,7 @@ template <uni20::Real Real>
             }
           }
       Real const number = static_cast<Real>(result.quantum_numbers[i].twice()) / Real{2};
-      angles[i] = (pi * number + phase.value()) / n;
+      angles[i] = (pi * number + twist / Real{2} + phase.value()) / n;
       Real const residual = Real{2} * abs(atan(result.rapidities[i]) - angles[i]);
       if (!uni20::isfinite(residual)) throw std::runtime_error("nonfinite XXZ equation residual");
       result.residual_norm = std::max(result.residual_norm, residual);

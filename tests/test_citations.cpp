@@ -37,6 +37,8 @@ TEST(Citations, ToolReferenceSelections)
                     refs::Tool::lee_yang_vacuum,
                     refs::Tool::lee_yang_excited,
                     refs::Tool::xyz_pbc,
+                    refs::Tool::xyz_dispersion,
+                    refs::Tool::potts_pbc,
                     refs::Tool::xxx_obc,
                     refs::Tool::xxz_pbc,
                     refs::Tool::xxz_dispersion,

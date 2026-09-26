@@ -1169,6 +1169,39 @@ Relevant tool modes:
 
 - `bethe-xyz-dispersion`: Thermodynamic XYZ spinons, Eq. (7.8), and bound branches, Eqs. (7.11)-(7.12); exchange signs, axis labels and Pauli normalization are mapped to our theta-ratio Hamiltonian. Bound existence and parity/momentum shifts are explicit; no structure factors or complete finite-ring enumeration.
 
+### dasmahapatra-kedem-mccoy-melzer-1994
+
+Srinandan Dasmahapatra, Rinat Kedem, Barry M. McCoy, and Ezer Melzer. *Virasoro Characters from Bethe Equations for the Critical Ferromagnetic Three-State Potts Model*.
+J. Stat. Phys. 74, 239-274 (1994).
+
+[DOI](<https://doi.org/10.1007/BF02186814>), [arXiv](<https://arxiv.org/abs/hep-th/9304150>).
+
+Relevant tool modes:
+
+- `bethe-potts-pbc`: Critical ferromagnetic Hamiltonian, physical versus ghost excitations and c=4/5 conformal spectrum. Our clock Hamiltonian is sqrt(3)/2 times the paper's normalization. Direct Potts complex-root enumeration is not used by this frontend.
+
+### nichols-2006
+
+A. Nichols. *The Temperley-Lieb algebra and its generalizations in the Potts and XXZ models*.
+J. Stat. Mech. 2006, P01003 (2006).
+
+[DOI](<https://doi.org/10.1088/1742-5468/2006/01/P01003>), [arXiv](<https://arxiv.org/abs/hep-th/0509069>).
+
+Relevant tool modes:
+
+- `bethe-potts-pbc`: Sections 6.1-6.2 distinguish periodic Potts from the unprojected twisted-XXZ spectrum and identify the pi/3 and pi twist sectors. Extra XXZ states must not be counted as Potts levels.
+
+### fukai-kleinemuhl-pozsgay-vernier-2024
+
+Kohei Fukai, Raphael Kleinemuhl, Balazs Pozsgay, and Eric Vernier. *On correlation functions in models related to the Temperley-Lieb algebra*.
+SciPost Phys. 16, 003 (2024).
+
+[DOI](<https://doi.org/10.21468/SciPostPhys.16.1.003>), [arXiv](<https://arxiv.org/abs/2309.07472>).
+
+Relevant tool modes:
+
+- `bethe-potts-pbc`: Sections 2.2-2.3 give the twisted-XXZ and Potts Temperley-Lieb representations. Published XXZ root/Potts level comparisons in Tables 3 and 11 check the charged family at four clock sites. Only the vacuum and a selected real-root one-hole family are implemented, not a complete TL-module decomposition or correlation functions.
+
 ### dorey-tateo-1996
 
 Patrick Dorey and Roberto Tateo. *Excited states by analytic continuation of TBA equations*.

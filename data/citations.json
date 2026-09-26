@@ -900,6 +900,39 @@
       ]
     },
     {
+      "id": "dasmahapatra-kedem-mccoy-melzer-1994",
+      "authors": "Srinandan Dasmahapatra, Rinat Kedem, Barry M. McCoy, and Ezer Melzer",
+      "title": "Virasoro Characters from Bethe Equations for the Critical Ferromagnetic Three-State Potts Model",
+      "publication": "J. Stat. Phys. 74, 239-274",
+      "year": 1994,
+      "links": [
+        {"label": "DOI", "url": "https://doi.org/10.1007/BF02186814"},
+        {"label": "arXiv", "url": "https://arxiv.org/abs/hep-th/9304150"}
+      ]
+    },
+    {
+      "id": "nichols-2006",
+      "authors": "A. Nichols",
+      "title": "The Temperley-Lieb algebra and its generalizations in the Potts and XXZ models",
+      "publication": "J. Stat. Mech. 2006, P01003",
+      "year": 2006,
+      "links": [
+        {"label": "DOI", "url": "https://doi.org/10.1088/1742-5468/2006/01/P01003"},
+        {"label": "arXiv", "url": "https://arxiv.org/abs/hep-th/0509069"}
+      ]
+    },
+    {
+      "id": "fukai-kleinemuhl-pozsgay-vernier-2024",
+      "authors": "Kohei Fukai, Raphael Kleinemuhl, Balazs Pozsgay, and Eric Vernier",
+      "title": "On correlation functions in models related to the Temperley-Lieb algebra",
+      "publication": "SciPost Phys. 16, 003",
+      "year": 2024,
+      "links": [
+        {"label": "DOI", "url": "https://doi.org/10.21468/SciPostPhys.16.1.003"},
+        {"label": "arXiv", "url": "https://arxiv.org/abs/2309.07472"}
+      ]
+    },
+    {
       "id": "dorey-tateo-1996",
       "authors": "Patrick Dorey and Roberto Tateo",
       "title": "Excited states by analytic continuation of TBA equations",
@@ -976,6 +1009,15 @@
       "references": [
         {"id": "golinelli-mallick-2005", "context": "Periodic TASEP finite-size Bethe equations (2)-(8) and leading relaxation branch (12)-(14) at arbitrary filling. Complex Markov eigenvalues, not energies; no partial asymmetry or full-spectrum claim."},
         {"id": "gwa-spohn-1992", "context": "Original periodic asymmetric-exclusion relaxation-gap analysis. This frontend restricts hopping to the totally asymmetric case."}
+      ]
+    },
+    {
+      "id": "potts_pbc",
+      "executable": "bethe-potts-pbc",
+      "references": [
+        {"id": "fukai-kleinemuhl-pozsgay-vernier-2024", "context": "Sections 2.2-2.3 give the twisted-XXZ and Potts Temperley-Lieb representations. Published XXZ root/Potts level comparisons in Tables 3 and 11 check the charged family at four clock sites. Only the vacuum and a selected real-root one-hole family are implemented, not a complete TL-module decomposition or correlation functions."},
+        {"id": "nichols-2006", "context": "Sections 6.1-6.2 distinguish periodic Potts from the unprojected twisted-XXZ spectrum and identify the pi/3 and pi twist sectors. Extra XXZ states must not be counted as Potts levels."},
+        {"id": "dasmahapatra-kedem-mccoy-melzer-1994", "context": "Critical ferromagnetic Hamiltonian, physical versus ghost excitations and c=4/5 conformal spectrum. Our clock Hamiltonian is sqrt(3)/2 times the paper's normalization. Direct Potts complex-root enumeration is not used by this frontend."}
       ]
     },
     {

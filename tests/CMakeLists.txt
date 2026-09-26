@@ -42,6 +42,10 @@ add_executable(bethe_xyz_dispersion_tests test_xyz_dispersion.cpp)
 target_link_libraries(bethe_xyz_dispersion_tests PRIVATE bethe::bethe)
 bethe_discover_tests(bethe_xyz_dispersion_tests)
 
+add_executable(bethe_potts_tests test_potts.cpp)
+target_link_libraries(bethe_potts_tests PRIVATE bethe::bethe)
+bethe_discover_tests(bethe_potts_tests)
+
 foreach(module IN ITEMS heisenberg sectors open excitations xxz xxz_open xxz_open_massive xxz_open_negative xxz_periodic_negative xxz_negative xxz_polynomial xxz_open_qsystem xxz_open_two_string xxz_odd_continuation xxz_odd_bounds xxz_wronskian xxz_odd_sectors xxz_regularity xxz_spin_helix xxz_phantom xxz_phantom_wave xxz_phantom_check xxz_coordinate_wave polynomial_roots hubbard hubbard_open hubbard_thermo hubbard_doped lieb_liniger su3 gaudin_yang tj takhtajan_babujian temperley_lieb biquadratic_ferromagnetic biquadratic_bound_pair biquadratic_bound_triple biquadratic_scattering richardson central_spin su_fermions ladder haldane_shastry sutherland support)
   add_executable(bethe_${module}_tests test_${module}.cpp)
   target_link_libraries(bethe_${module}_tests PRIVATE bethe::bethe)
@@ -154,6 +158,17 @@ else()
 endif()
 
 if(BETHE_BUILD_APPS)
+  add_test(NAME Citations.bethe-potts-pbc.cli
+    COMMAND "${CMAKE_COMMAND}" "-DPROGRAM=$<TARGET_FILE:bethe-potts-pbc>"
+      "-DTOOL=bethe-potts-pbc" -P "${CMAKE_CURRENT_SOURCE_DIR}/check_citations_cli.cmake")
+  if(Python3_Interpreter_FOUND)
+    add_test(NAME Potts.cli
+      COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_potts.py"
+        "$<TARGET_FILE:bethe-potts-pbc>" "${UNI20_ENABLE_MPLAPACK}")
+    add_test(NAME Arguments.bethe-potts-pbc.cli
+      COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_shared_arguments.py"
+        "$<TARGET_FILE:bethe-potts-pbc>")
+  endif()
   add_test(NAME Citations.bethe-xyz-dispersion.cli
     COMMAND "${CMAKE_COMMAND}" "-DPROGRAM=$<TARGET_FILE:bethe-xyz-dispersion>"
       "-DTOOL=bethe-xyz-dispersion" -P "${CMAKE_CURRENT_SOURCE_DIR}/check_citations_cli.cmake")

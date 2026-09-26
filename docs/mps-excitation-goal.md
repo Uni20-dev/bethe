@@ -66,16 +66,29 @@ blocking the main sequence. Reference: [Wang](https://arxiv.org/abs/cond-mat/990
 
 ## 3. Critical ferromagnetic three-state Potts chain
 
-- [ ] Fix the critical Hamiltonian, normalization and boundary conditions;
+- [x] Fix the critical Hamiltonian, normalization and boundary conditions;
   implement the ground state and selected low-lying momentum/Z₃-resolved levels.
-- [ ] Audit physical-root selection and state counting before defining any
+- [x] Audit physical-root selection and state counting before defining any
   excited-state enumeration or completeness claim.
-- [ ] Validate small chains against independent exact diagonalization and
+- [x] Validate small chains against independent exact diagonalization and
   finite-size scaling against the known conformal spectrum.
 
 This adds a discrete-symmetry, local-dimension-three benchmark. Generic off-critical
 or chiral Potts models are outside this first scope. Starting reference:
 [Dasmahapatra et al.](https://arxiv.org/abs/hep-th/9304150).
+
+Implemented: [Potts guide and selection audit](potts.md), native-precision
+vacuum/charged-one-hole API and `bethe-potts-pbc`, with physical momentum/Z₃
+labels, finite-ring gaps, scaled dimensions and CSV/TSV/JSON exports. This is
+2L selected charged levels, not a complete spectrum; neutral excitations remain
+a follow-up. Independent charge/momentum-resolved clock diagonalization,
+75-digit references, an excluded-XXZ-state counterexample and c=4/5 scaling
+validate the selection. Closing regression: 1100 full-suite tests, 83 targeted
+checks in the fp128-enabled build across the three checkpoints and shared XXZ
+solver, and a pinned-Uni20/no-tests frontend build. Separate L=8,9 oracle audits
+agree for every selected level. All three guides pass GitHub math rendering.
+
+The required sequence is complete. The optional ladder checkpoint remains open.
 
 ## Completion rules for every checkpoint
 
