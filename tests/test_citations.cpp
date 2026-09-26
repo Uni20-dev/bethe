@@ -47,6 +47,7 @@ TEST(Citations, ToolReferenceSelections)
                     refs::Tool::hubbard_obc,
                     refs::Tool::lieb_liniger_pbc,
                     refs::Tool::su3_pbc,
+                    refs::Tool::su3_dispersion,
                     refs::Tool::gaudin_yang_pbc,
                     refs::Tool::tj_pbc,
                     refs::Tool::tb_pbc,

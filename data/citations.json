@@ -605,6 +605,16 @@
       ]
     },
     {
+      "id": "voros-penc-2021",
+      "authors": "Dániel Vörös and Karlo Penc",
+      "title": "The dynamical structure factor of the SU(3) Heisenberg chain: The variational Monte Carlo approach",
+      "publication": "arXiv:2107.09588",
+      "year": 2021,
+      "links": [
+        {"label": "arXiv", "url": "https://arxiv.org/abs/2107.09588"}
+      ]
+    },
+    {
       "id": "doikou-nepomechie-1998",
       "authors": "Anastasia Doikou and Rafael I. Nepomechie",
       "title": "Bulk and Boundary S Matrices for the SU(N) Chain",
@@ -1174,6 +1184,14 @@
       "references": [
         {"id": "gaudin-1971", "context": "Repulsive Bose gas with Dirichlet walls, positive real roots and reflected scattering. We implement finite-volume states and bounded label windows, not general boundary potentials."},
         {"id": "reichert-2019", "context": "Equations (7)-(8) fix the hard-wall ground-state convention and exclusion of self-image scattering; the finite-volume solver extends the logarithmic labels to selected excitations. No boundary-energy integral-equation or thermodynamics API is implemented."}
+      ]
+    },
+    {
+      "id": "su3_dispersion",
+      "executable": "bethe-su3-dispersion",
+      "references": [
+        {"id": "doikou-nepomechie-1998", "context": "Sec. 2.3 fixes the elementary hole representations, triality constraint and additive thermodynamic energies. H=J sum P has twice the excitation energies of their Hamiltonian at J=1. No finite-size excited-state enumeration or scattering matrices are implemented here."},
+        {"id": "voros-penc-2021", "context": "Eq. (64) fixes the two elementary dispersions; Eq. (14) gives the factor-two exchange conversion. Use Eq. (64)'s momentum ranges, not the interchanged ranges in the prose below Eq. (65). Two- and four-soliton kinematic envelopes are derived from these bands; no spectral intensities are calculated."}
       ]
     },
     {

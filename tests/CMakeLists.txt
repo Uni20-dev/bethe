@@ -42,6 +42,10 @@ add_executable(bethe_xyz_dispersion_tests test_xyz_dispersion.cpp)
 target_link_libraries(bethe_xyz_dispersion_tests PRIVATE bethe::bethe)
 bethe_discover_tests(bethe_xyz_dispersion_tests)
 
+add_executable(bethe_su3_dispersion_tests test_su3_dispersion.cpp)
+target_link_libraries(bethe_su3_dispersion_tests PRIVATE bethe::bethe)
+bethe_discover_tests(bethe_su3_dispersion_tests)
+
 add_executable(bethe_potts_tests test_potts.cpp)
 target_link_libraries(bethe_potts_tests PRIVATE bethe::bethe)
 bethe_discover_tests(bethe_potts_tests)
@@ -158,6 +162,17 @@ else()
 endif()
 
 if(BETHE_BUILD_APPS)
+  add_test(NAME Citations.bethe-su3-dispersion.cli
+    COMMAND "${CMAKE_COMMAND}" "-DPROGRAM=$<TARGET_FILE:bethe-su3-dispersion>"
+      "-DTOOL=bethe-su3-dispersion" -P "${CMAKE_CURRENT_SOURCE_DIR}/check_citations_cli.cmake")
+  if(Python3_Interpreter_FOUND)
+    add_test(NAME SU3Dispersion.cli
+      COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_su3_dispersion.py"
+        "$<TARGET_FILE:bethe-su3-dispersion>" "${UNI20_ENABLE_MPLAPACK}")
+    add_test(NAME Arguments.bethe-su3-dispersion.cli
+      COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_shared_arguments.py"
+        "$<TARGET_FILE:bethe-su3-dispersion>")
+  endif()
   add_test(NAME Citations.bethe-potts-pbc.cli
     COMMAND "${CMAKE_COMMAND}" "-DPROGRAM=$<TARGET_FILE:bethe-potts-pbc>"
       "-DTOOL=bethe-potts-pbc" -P "${CMAKE_CURRENT_SOURCE_DIR}/check_citations_cli.cmake")

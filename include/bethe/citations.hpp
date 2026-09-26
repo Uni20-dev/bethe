@@ -220,131 +220,134 @@ inline constexpr std::array<Link, 2> links_56{{
 inline constexpr std::array<Link, 1> links_57{{
   {"DOI", "https://doi.org/10.1063/1.1664947"},
 }};
-inline constexpr std::array<Link, 2> links_58{{
+inline constexpr std::array<Link, 1> links_58{{
+  {"arXiv", "https://arxiv.org/abs/2107.09588"},
+}};
+inline constexpr std::array<Link, 2> links_59{{
   {"DOI", "https://doi.org/10.1016/S0550-3213(98)00239-9"},
   {"arXiv", "https://arxiv.org/abs/hep-th/9803118"},
 }};
-inline constexpr std::array<Link, 2> links_59{{
+inline constexpr std::array<Link, 2> links_60{{
   {"DOI", "https://doi.org/10.1088/0305-4470/39/5/005"},
   {"arXiv v2", "https://arxiv.org/abs/cond-mat/0511694v2"},
 }};
-inline constexpr std::array<Link, 2> links_60{{
+inline constexpr std::array<Link, 2> links_61{{
   {"DOI", "https://doi.org/10.21468/SciPostPhys.7.2.023"},
   {"arXiv v4", "https://arxiv.org/abs/1901.10932v4"},
 }};
-inline constexpr std::array<Link, 2> links_61{{
+inline constexpr std::array<Link, 2> links_62{{
   {"DOI", "https://doi.org/10.1088/1742-5468/2015/05/P05037"},
   {"arXiv v2", "https://arxiv.org/abs/1412.8217v2"},
 }};
-inline constexpr std::array<Link, 2> links_62{{
+inline constexpr std::array<Link, 2> links_63{{
   {"General M", "https://integrability.org/c_h_s_m.html"},
   {"Two-magnon scattering", "https://integrability.org/c_h_s_2.html"},
 }};
-inline constexpr std::array<Link, 3> links_63{{
+inline constexpr std::array<Link, 3> links_64{{
   {"arXiv", "https://arxiv.org/abs/0911.1881"},
   {"HTML", "https://arxiv.org/html/0911.1881v1"},
   {"Original 1982 paper", "https://doi.org/10.1007/BF01212176"},
 }};
-inline constexpr std::array<Link, 1> links_64{{
+inline constexpr std::array<Link, 1> links_65{{
   {"Author manuscript", "https://web.dm.unipi.it/robol/assets/pdf/secular-paper.pdf"},
 }};
-inline constexpr std::array<Link, 2> links_65{{
+inline constexpr std::array<Link, 2> links_66{{
   {"DOI", "https://doi.org/10.1553/etna_vol55s401"},
   {"Open-access article", "https://etna.ricam.oeaw.ac.at/vol.55.2022/pp401-423.dir/pp401-423.pdf"},
 }};
-inline constexpr std::array<Link, 1> links_66{{
+inline constexpr std::array<Link, 1> links_67{{
   {"arXiv", "https://arxiv.org/abs/cond-mat/9512120"},
 }};
-inline constexpr std::array<Link, 2> links_67{{
+inline constexpr std::array<Link, 2> links_68{{
   {"DOI", "https://doi.org/10.1088/1751-8121/ae05d9"},
   {"arXiv", "https://arxiv.org/abs/2302.13126"},
 }};
-inline constexpr std::array<Link, 2> links_68{{
+inline constexpr std::array<Link, 2> links_69{{
   {"DOI", "https://doi.org/10.1007/s00023-006-0304-6"},
   {"arXiv", "https://arxiv.org/abs/math-ph/0508049"},
 }};
-inline constexpr std::array<Link, 2> links_69{{
+inline constexpr std::array<Link, 2> links_70{{
   {"DOI", "https://doi.org/10.1103/PhysRevLett.123.250602"},
   {"arXiv", "https://arxiv.org/abs/1908.08172"},
 }};
-inline constexpr std::array<Link, 1> links_70{{
+inline constexpr std::array<Link, 1> links_71{{
   {"Open lecture notes", "https://people.sissa.it/~ffranchi/BAnotes.pdf"},
 }};
-inline constexpr std::array<Link, 1> links_71{{
+inline constexpr std::array<Link, 1> links_72{{
   {"Lieb equation", "https://integrability.org/g_l_Le.html"},
 }};
-inline constexpr std::array<Link, 2> links_72{{
+inline constexpr std::array<Link, 2> links_73{{
   {"DOI", "https://doi.org/10.1088/1742-5468/2014/10/P10045"},
   {"arXiv", "https://arxiv.org/abs/1407.8344"},
 }};
-inline constexpr std::array<Link, 2> links_73{{
+inline constexpr std::array<Link, 2> links_74{{
   {"DOI", "https://doi.org/10.1088/1751-8113/44/10/102001"},
   {"arXiv", "https://arxiv.org/abs/1010.4842"},
 }};
-inline constexpr std::array<Link, 2> links_74{{
+inline constexpr std::array<Link, 2> links_75{{
   {"DOI", "https://doi.org/10.1088/0305-4470/39/41/S03"},
   {"arXiv", "https://arxiv.org/abs/cond-mat/0611701"},
 }};
-inline constexpr std::array<Link, 2> links_75{{
+inline constexpr std::array<Link, 2> links_76{{
   {"DOI", "https://doi.org/10.1088/0305-4470/38/7/001"},
   {"arXiv", "https://arxiv.org/abs/cond-mat/0411505"},
 }};
-inline constexpr std::array<Link, 2> links_76{{
+inline constexpr std::array<Link, 2> links_77{{
   {"DOI", "https://doi.org/10.1103/PhysRevB.101.075132"},
   {"arXiv", "https://arxiv.org/abs/1911.08279"},
 }};
-inline constexpr std::array<Link, 2> links_77{{
+inline constexpr std::array<Link, 2> links_78{{
   {"DOI", "https://doi.org/10.1088/1751-8113/48/49/494003"},
   {"arXiv", "https://arxiv.org/abs/1505.02104"},
 }};
-inline constexpr std::array<Link, 2> links_78{{
+inline constexpr std::array<Link, 2> links_79{{
   {"DOI", "https://doi.org/10.1016/j.nuclphysb.2016.06.007"},
   {"arXiv", "https://arxiv.org/abs/1603.09249"},
 }};
-inline constexpr std::array<Link, 2> links_79{{
+inline constexpr std::array<Link, 2> links_80{{
   {"DOI", "https://doi.org/10.1103/PhysRevLett.72.908"},
   {"arXiv", "https://arxiv.org/abs/cond-mat/9308004"},
 }};
-inline constexpr std::array<Link, 3> links_80{{
+inline constexpr std::array<Link, 3> links_81{{
   {"DOI", "https://doi.org/10.1007/JHEP04(2015)073"},
   {"arXiv", "https://arxiv.org/abs/1412.8494"},
   {"HTML", "https://arxiv.org/html/1412.8494"},
 }};
-inline constexpr std::array<Link, 2> links_81{{
+inline constexpr std::array<Link, 2> links_82{{
   {"DOI", "https://doi.org/10.1088/1742-5468/2008/08/P08006"},
   {"arXiv", "https://arxiv.org/abs/0806.3069"},
 }};
-inline constexpr std::array<Link, 2> links_82{{
+inline constexpr std::array<Link, 2> links_83{{
   {"DOI", "https://doi.org/10.1140/epjb/e2005-00272-6"},
   {"arXiv", "https://arxiv.org/abs/cond-mat/0504370"},
 }};
-inline constexpr std::array<Link, 2> links_83{{
+inline constexpr std::array<Link, 2> links_84{{
   {"DOI", "https://doi.org/10.1103/PhysRevB.97.235155"},
   {"arXiv", "https://arxiv.org/abs/1802.07197"},
 }};
-inline constexpr std::array<Link, 2> links_84{{
+inline constexpr std::array<Link, 2> links_85{{
   {"DOI", "https://doi.org/10.1103/PhysRevA.8.2526"},
   {"Publisher full text", "https://harvest.aps.org/v2/journals/articles/10.1103/PhysRevA.8.2526/fulltext"},
 }};
-inline constexpr std::array<Link, 2> links_85{{
+inline constexpr std::array<Link, 2> links_86{{
   {"DOI", "https://doi.org/10.1007/BF02186814"},
   {"arXiv", "https://arxiv.org/abs/hep-th/9304150"},
 }};
-inline constexpr std::array<Link, 2> links_86{{
+inline constexpr std::array<Link, 2> links_87{{
   {"DOI", "https://doi.org/10.1088/1742-5468/2006/01/P01003"},
   {"arXiv", "https://arxiv.org/abs/hep-th/0509069"},
 }};
-inline constexpr std::array<Link, 2> links_87{{
+inline constexpr std::array<Link, 2> links_88{{
   {"DOI", "https://doi.org/10.21468/SciPostPhys.16.1.003"},
   {"arXiv", "https://arxiv.org/abs/2309.07472"},
 }};
-inline constexpr std::array<Link, 3> links_88{{
+inline constexpr std::array<Link, 3> links_89{{
   {"DOI", "https://doi.org/10.1016/S0550-3213(96)00516-0"},
   {"arXiv", "https://arxiv.org/abs/hep-th/9607167"},
   {"HTML", "https://arxiv.org/html/hep-th/9607167"},
 }};
 
-inline constexpr std::array<Reference, 89> references{{
+inline constexpr std::array<Reference, 90> references{{
   {"barber-batchelor-1989", "Michael N. Barber and Murray T. Batchelor", "Spectrum of the biquadratic spin-1 antiferromagnetic chain", "Phys. Rev. B 40, 4621-4626", 1989, links_0},
   {"albertini-2000", "Giuseppe Albertini", "Is the purely biquadratic spin 1 chain always massive?", "arXiv:cond-mat/0012439", 2000, links_1},
   {"aufgebauer-klumper-2010", "Britta Aufgebauer and Andreas Klümper", "Quantum spin chains of Temperley-Lieb type: periodic boundary conditions, spectral multiplicities and finite temperature", "J. Stat. Mech. 2010, P05018", 2010, links_2},
@@ -403,57 +406,58 @@ inline constexpr std::array<Reference, 89> references{{
   {"de-vega-gonzalez-ruiz-1994", "H. J. de Vega and A. González-Ruiz", "Boundary K-matrices for the XYZ, XXZ and XXX spin chains", "J. Phys. A: Math. Gen. 27, 6129-6138", 1994, links_55},
   {"essler-de-klerk-2023", "F. H. L. Essler and A. J. J. M. de Klerk", "Statistics of matrix elements of local operators in integrable models", "arXiv:2307.12410v1", 2023, links_56},
   {"yang-yang-1969", "C. N. Yang and C. P. Yang", "Thermodynamics of a One-Dimensional System of Bosons with Repulsive Delta-Function Interaction", "J. Math. Phys. 10, 1115", 1969, links_57},
-  {"doikou-nepomechie-1998", "Anastasia Doikou and Rafael I. Nepomechie", "Bulk and Boundary S Matrices for the SU(N) Chain", "Nucl. Phys. B 521, 547-572", 1998, links_58},
-  {"oelkers-2006", "N. Oelkers, M. T. Batchelor, M. Bortz, and X.-W. Guan", "Bethe Ansatz study of one-dimensional Bose and Fermi gases with periodic and hard wall boundary conditions", "J. Phys. A 39, 1073-1098", 2006, links_59},
-  {"grijalva-2019", "Sebastian Grijalva, Jacopo De Nardis, and Veronique Terras", "Open XXZ chain and boundary modes at zero temperature", "SciPost Phys. 7, 023", 2019, links_60},
-  {"dugave-2015", "M. Dugave, F. Göhmann, K. K. Kozlowski, and J. Suzuki", "On form-factor expansions for the XXZ chain in the massive regime", "J. Stat. Mech. (2015) P05037", 2015, links_61},
-  {"caux-xxz-coordinate", "Jean-Sébastien Caux", "The Bethe Ansatz: coordinate wavefunctions and periodic XXZ equations", "Online notes", 0, links_62},
-  {"korepin-2009", "Vladimir E. Korepin", "Norm of Bethe Wave Function as a Determinant", "arXiv:0911.1881 (historical account of the 1982 norm formula)", 2009, links_63},
-  {"bini-robol-2013", "Dario A. Bini and Leonardo Robol", "Solving secular and polynomial equations: a multiprecision algorithm", "Author manuscript, May 10, 2013", 2013, links_64},
-  {"cameron-graillat-2022", "Thomas R. Cameron and Stef Graillat", "On a compensated Ehrlich-Aberth method for the accurate computation of all polynomial roots", "Electronic Transactions on Numerical Analysis 55, 401-423", 2022, links_65},
-  {"koma-nachtergaele-1997", "Tohru Koma and Bruno Nachtergaele", "The spectral gap of the ferromagnetic XXZ chain", "Lett. Math. Phys. 40, 1-16", 1997, links_66},
-  {"zhou-2025-biquadratic", "Huan-Qiang Zhou, Qian-Qian Shi, Ian P. McCulloch, and Murray T. Batchelor", "Goldstone modes and the golden spiral in the ferromagnetic spin-1 biquadratic model", "J. Phys. A: Math. Theor. 58, 39LT01", 2025, links_67},
-  {"nachtergaele-spitzer-starr-2007", "Bruno Nachtergaele, Wolfgang Spitzer, and Shannon Starr", "Droplet Excitations for the Spin-1/2 XXZ Chain with Kink Boundary Conditions", "Ann. Henri Poincare 8, 165-201", 2007, links_68},
-  {"reichert-2019", "Benjamin Reichert, Grigori E. Astrakharchik, Aleksandra Petkovic, and Zoran Ristivojevic", "Exact Results for the Boundary Energy of One-Dimensional Bosons", "Phys. Rev. Lett. 123, 250602", 2019, links_69},
-  {"franchini-2011", "Fabio Franchini", "Notes on Bethe Ansatz Techniques", "SISSA lecture notes, May 15, 2011", 2011, links_70},
-  {"caux-lieb-liniger", "Jean-Sébastien Caux", "The Bethe Ansatz: The ground state and the Lieb equation", "Online lecture notes, integrability.org", 0, links_71},
-  {"pozsgay-2014-q-boson", "B. Pozsgay", "Quantum quenches and Generalized Gibbs Ensemble in a Bethe Ansatz solvable lattice model of interacting bosons", "J. Stat. Mech. (2014) P10045", 2014, links_72},
-  {"guan-batchelor-2011", "X.-W. Guan and M. T. Batchelor", "Polylogs, thermodynamics and scaling functions of one-dimensional quantum many-body systems", "J. Phys. A: Math. Theor. 44, 102001", 2011, links_73},
-  {"golinelli-mallick-2006", "O. Golinelli and K. Mallick", "The asymmetric simple exclusion process: an integrable model for non-equilibrium statistical mechanics", "J. Phys. A: Math. Gen. 39, 12679-12705", 2006, links_74},
-  {"golinelli-mallick-2005", "O. Golinelli and K. Mallick", "Spectral gap of the totally asymmetric exclusion process at arbitrary filling", "J. Phys. A: Math. Gen. 38, 1419-1425", 2005, links_75},
-  {"barcza-2020", "G. Barcza, K. Bauerbach, F. Eickhoff, F. B. Anders, F. Gebhard, and O. Legeza", "Symmetric single-impurity Kondo model on a tight-binding chain: A comparison of analytical and numerical ground-state approaches", "Phys. Rev. B 101, 075132", 2020, links_76},
-  {"gainutdinov-hao-nepomechie-sommese-2015", "A. M. Gainutdinov, W. Hao, R. I. Nepomechie, and A. J. Sommese", "Counting solutions of the Bethe equations of the quantum group invariant open XXZ chain at roots of unity", "J. Phys. A: Math. Theor. 48, 494003", 2015, links_77},
-  {"gainutdinov-nepomechie-2016", "A. M. Gainutdinov and R. I. Nepomechie", "Algebraic Bethe ansatz for the quantum group invariant open XXZ chain at roots of unity", "Nucl. Phys. B 909, 796-839", 2016, links_78},
-  {"essler-korepin-1994-scattering", "F. H. L. Essler and V. E. Korepin", "Scattering matrix and excitation spectrum of the Hubbard model", "Phys. Rev. Lett. 72, 908-911", 1994, links_79},
-  {"bajnok-el-deeb-pearce-2015", "Zoltan Bajnok, Omar el Deeb, and Paul A. Pearce", "Finite-Volume Spectra of the Lee-Yang Model", "JHEP 04 (2015), 073", 2015, links_80},
-  {"caux-mossel-perez-castillo-2008", "Jean-Sébastien Caux, Jorn Mossel, and Isaac Pérez Castillo", "The two-spinon transverse structure factor of the gapped Heisenberg antiferromagnetic chain", "J. Stat. Mech. 2008, P08006", 2008, links_81},
-  {"bortz-gohmann-2005", "Michael Bortz and Frank Göhmann", "Exact thermodynamic limit of short-range correlation functions of the antiferromagnetic XXZ-chain at finite temperatures", "Eur. Phys. J. B 46, 399-408", 2005, links_82},
-  {"zauner-stauber-2018", "Valentin Zauner-Stauber, Laurens Vanderstraeten, Jutho Haegeman, Ian P. McCulloch, and Frank Verstraete", "Topological nature of spinons and holons: Elementary excitations from matrix product states with conserved symmetries", "Phys. Rev. B 97, 235155", 2018, links_83},
-  {"johnson-krinsky-mccoy-1973", "James D. Johnson, Samuel Krinsky, and Barry M. McCoy", "Vertical-Arrow Correlation Length in the Eight-Vertex Model and the Low-Lying Excitations of the X-Y-Z Hamiltonian", "Phys. Rev. A 8, 2526-2547", 1973, links_84},
-  {"dasmahapatra-kedem-mccoy-melzer-1994", "Srinandan Dasmahapatra, Rinat Kedem, Barry M. McCoy, and Ezer Melzer", "Virasoro Characters from Bethe Equations for the Critical Ferromagnetic Three-State Potts Model", "J. Stat. Phys. 74, 239-274", 1994, links_85},
-  {"nichols-2006", "A. Nichols", "The Temperley-Lieb algebra and its generalizations in the Potts and XXZ models", "J. Stat. Mech. 2006, P01003", 2006, links_86},
-  {"fukai-kleinemuhl-pozsgay-vernier-2024", "Kohei Fukai, Raphael Kleinemuhl, Balazs Pozsgay, and Eric Vernier", "On correlation functions in models related to the Temperley-Lieb algebra", "SciPost Phys. 16, 003", 2024, links_87},
-  {"dorey-tateo-1996", "Patrick Dorey and Roberto Tateo", "Excited states by analytic continuation of TBA equations", "Nucl. Phys. B 482, 639-659", 1996, links_88},
+  {"voros-penc-2021", "Dániel Vörös and Karlo Penc", "The dynamical structure factor of the SU(3) Heisenberg chain: The variational Monte Carlo approach", "arXiv:2107.09588", 2021, links_58},
+  {"doikou-nepomechie-1998", "Anastasia Doikou and Rafael I. Nepomechie", "Bulk and Boundary S Matrices for the SU(N) Chain", "Nucl. Phys. B 521, 547-572", 1998, links_59},
+  {"oelkers-2006", "N. Oelkers, M. T. Batchelor, M. Bortz, and X.-W. Guan", "Bethe Ansatz study of one-dimensional Bose and Fermi gases with periodic and hard wall boundary conditions", "J. Phys. A 39, 1073-1098", 2006, links_60},
+  {"grijalva-2019", "Sebastian Grijalva, Jacopo De Nardis, and Veronique Terras", "Open XXZ chain and boundary modes at zero temperature", "SciPost Phys. 7, 023", 2019, links_61},
+  {"dugave-2015", "M. Dugave, F. Göhmann, K. K. Kozlowski, and J. Suzuki", "On form-factor expansions for the XXZ chain in the massive regime", "J. Stat. Mech. (2015) P05037", 2015, links_62},
+  {"caux-xxz-coordinate", "Jean-Sébastien Caux", "The Bethe Ansatz: coordinate wavefunctions and periodic XXZ equations", "Online notes", 0, links_63},
+  {"korepin-2009", "Vladimir E. Korepin", "Norm of Bethe Wave Function as a Determinant", "arXiv:0911.1881 (historical account of the 1982 norm formula)", 2009, links_64},
+  {"bini-robol-2013", "Dario A. Bini and Leonardo Robol", "Solving secular and polynomial equations: a multiprecision algorithm", "Author manuscript, May 10, 2013", 2013, links_65},
+  {"cameron-graillat-2022", "Thomas R. Cameron and Stef Graillat", "On a compensated Ehrlich-Aberth method for the accurate computation of all polynomial roots", "Electronic Transactions on Numerical Analysis 55, 401-423", 2022, links_66},
+  {"koma-nachtergaele-1997", "Tohru Koma and Bruno Nachtergaele", "The spectral gap of the ferromagnetic XXZ chain", "Lett. Math. Phys. 40, 1-16", 1997, links_67},
+  {"zhou-2025-biquadratic", "Huan-Qiang Zhou, Qian-Qian Shi, Ian P. McCulloch, and Murray T. Batchelor", "Goldstone modes and the golden spiral in the ferromagnetic spin-1 biquadratic model", "J. Phys. A: Math. Theor. 58, 39LT01", 2025, links_68},
+  {"nachtergaele-spitzer-starr-2007", "Bruno Nachtergaele, Wolfgang Spitzer, and Shannon Starr", "Droplet Excitations for the Spin-1/2 XXZ Chain with Kink Boundary Conditions", "Ann. Henri Poincare 8, 165-201", 2007, links_69},
+  {"reichert-2019", "Benjamin Reichert, Grigori E. Astrakharchik, Aleksandra Petkovic, and Zoran Ristivojevic", "Exact Results for the Boundary Energy of One-Dimensional Bosons", "Phys. Rev. Lett. 123, 250602", 2019, links_70},
+  {"franchini-2011", "Fabio Franchini", "Notes on Bethe Ansatz Techniques", "SISSA lecture notes, May 15, 2011", 2011, links_71},
+  {"caux-lieb-liniger", "Jean-Sébastien Caux", "The Bethe Ansatz: The ground state and the Lieb equation", "Online lecture notes, integrability.org", 0, links_72},
+  {"pozsgay-2014-q-boson", "B. Pozsgay", "Quantum quenches and Generalized Gibbs Ensemble in a Bethe Ansatz solvable lattice model of interacting bosons", "J. Stat. Mech. (2014) P10045", 2014, links_73},
+  {"guan-batchelor-2011", "X.-W. Guan and M. T. Batchelor", "Polylogs, thermodynamics and scaling functions of one-dimensional quantum many-body systems", "J. Phys. A: Math. Theor. 44, 102001", 2011, links_74},
+  {"golinelli-mallick-2006", "O. Golinelli and K. Mallick", "The asymmetric simple exclusion process: an integrable model for non-equilibrium statistical mechanics", "J. Phys. A: Math. Gen. 39, 12679-12705", 2006, links_75},
+  {"golinelli-mallick-2005", "O. Golinelli and K. Mallick", "Spectral gap of the totally asymmetric exclusion process at arbitrary filling", "J. Phys. A: Math. Gen. 38, 1419-1425", 2005, links_76},
+  {"barcza-2020", "G. Barcza, K. Bauerbach, F. Eickhoff, F. B. Anders, F. Gebhard, and O. Legeza", "Symmetric single-impurity Kondo model on a tight-binding chain: A comparison of analytical and numerical ground-state approaches", "Phys. Rev. B 101, 075132", 2020, links_77},
+  {"gainutdinov-hao-nepomechie-sommese-2015", "A. M. Gainutdinov, W. Hao, R. I. Nepomechie, and A. J. Sommese", "Counting solutions of the Bethe equations of the quantum group invariant open XXZ chain at roots of unity", "J. Phys. A: Math. Theor. 48, 494003", 2015, links_78},
+  {"gainutdinov-nepomechie-2016", "A. M. Gainutdinov and R. I. Nepomechie", "Algebraic Bethe ansatz for the quantum group invariant open XXZ chain at roots of unity", "Nucl. Phys. B 909, 796-839", 2016, links_79},
+  {"essler-korepin-1994-scattering", "F. H. L. Essler and V. E. Korepin", "Scattering matrix and excitation spectrum of the Hubbard model", "Phys. Rev. Lett. 72, 908-911", 1994, links_80},
+  {"bajnok-el-deeb-pearce-2015", "Zoltan Bajnok, Omar el Deeb, and Paul A. Pearce", "Finite-Volume Spectra of the Lee-Yang Model", "JHEP 04 (2015), 073", 2015, links_81},
+  {"caux-mossel-perez-castillo-2008", "Jean-Sébastien Caux, Jorn Mossel, and Isaac Pérez Castillo", "The two-spinon transverse structure factor of the gapped Heisenberg antiferromagnetic chain", "J. Stat. Mech. 2008, P08006", 2008, links_82},
+  {"bortz-gohmann-2005", "Michael Bortz and Frank Göhmann", "Exact thermodynamic limit of short-range correlation functions of the antiferromagnetic XXZ-chain at finite temperatures", "Eur. Phys. J. B 46, 399-408", 2005, links_83},
+  {"zauner-stauber-2018", "Valentin Zauner-Stauber, Laurens Vanderstraeten, Jutho Haegeman, Ian P. McCulloch, and Frank Verstraete", "Topological nature of spinons and holons: Elementary excitations from matrix product states with conserved symmetries", "Phys. Rev. B 97, 235155", 2018, links_84},
+  {"johnson-krinsky-mccoy-1973", "James D. Johnson, Samuel Krinsky, and Barry M. McCoy", "Vertical-Arrow Correlation Length in the Eight-Vertex Model and the Low-Lying Excitations of the X-Y-Z Hamiltonian", "Phys. Rev. A 8, 2526-2547", 1973, links_85},
+  {"dasmahapatra-kedem-mccoy-melzer-1994", "Srinandan Dasmahapatra, Rinat Kedem, Barry M. McCoy, and Ezer Melzer", "Virasoro Characters from Bethe Equations for the Critical Ferromagnetic Three-State Potts Model", "J. Stat. Phys. 74, 239-274", 1994, links_86},
+  {"nichols-2006", "A. Nichols", "The Temperley-Lieb algebra and its generalizations in the Potts and XXZ models", "J. Stat. Mech. 2006, P01003", 2006, links_87},
+  {"fukai-kleinemuhl-pozsgay-vernier-2024", "Kohei Fukai, Raphael Kleinemuhl, Balazs Pozsgay, and Eric Vernier", "On correlation functions in models related to the Temperley-Lieb algebra", "SciPost Phys. 16, 003", 2024, links_88},
+  {"dorey-tateo-1996", "Patrick Dorey and Roberto Tateo", "Excited states by analytic continuation of TBA equations", "Nucl. Phys. B 482, 639-659", 1996, links_89},
 }};
 
 inline constexpr std::array<Use, 2> uses_lee_yang_excited{{
-  {&references[88], "Periodic spin-zero one-particle source terms, quantization and energy, Eqs. (2.3)-(2.7). Only the regular infrared branch at 5<=mL<=30 is implemented, not continuation through the source collision near mL=2.53 or higher/moving states. Levels are bulk-subtracted; gaps subtract a separately converged vacuum."},
-  {&references[80], "Source-free periodic vacuum TBA and bulk-subtracted energy, Eqs. (133), (212), (218), used as the excitation-gap reference. The CFT central charge is not inferred from the excited level."},
+  {&references[89], "Periodic spin-zero one-particle source terms, quantization and energy, Eqs. (2.3)-(2.7). Only the regular infrared branch at 5<=mL<=30 is implemented, not continuation through the source collision near mL=2.53 or higher/moving states. Levels are bulk-subtracted; gaps subtract a separately converged vacuum."},
+  {&references[81], "Source-free periodic vacuum TBA and bulk-subtracted energy, Eqs. (133), (212), (218), used as the excitation-gap reference. The CFT central charge is not inferred from the excited level."},
 }};
 inline constexpr std::array<Use, 1> uses_lee_yang_vacuum{{
-  {&references[80], "Periodic source-free massive Lee-Yang ground-state TBA and bulk-subtracted finite-volume energy: equations (133), (212), (218). Equations (151)-(152) distinguish c_eff=2/5 from c=-22/5 with h_min=-1/5. No excited-state, boundary or defect equations are implemented."},
+  {&references[81], "Periodic source-free massive Lee-Yang ground-state TBA and bulk-subtracted finite-volume energy: equations (133), (212), (218). Equations (151)-(152) distinguish c_eff=2/5 from c=-22/5 with h_min=-1/5. No excited-state, boundary or defect equations are implemented."},
 }};
 inline constexpr std::array<Use, 2> uses_xxz_qg_obc{{
-  {&references[77], "Quantum-group-invariant open XXZ Hamiltonian and Bethe equations (1.1)-(1.3). Our spin-half Hamiltonian is one quarter of the Pauli normalization with spatially reflected boundary fields. Positive finite-real roots at 0<Delta<1 have no completeness claim; at Delta=0, a separate free-fermion construction gives complete fixed-Sz spectra and Jordan-block sizes, consistent with Appendices C and D."},
-  {&references[78], "Root-of-unity complete strings and generalized eigenvectors explain why regular eigenvalues alone do not determine Jordan structure. Delta=0 Hamiltonian block sizes are implemented separately; explicit generalized eigenvectors and other root-of-unity extensions remain follow-ups."},
+  {&references[78], "Quantum-group-invariant open XXZ Hamiltonian and Bethe equations (1.1)-(1.3). Our spin-half Hamiltonian is one quarter of the Pauli normalization with spatially reflected boundary fields. Positive finite-real roots at 0<Delta<1 have no completeness claim; at Delta=0, a separate free-fermion construction gives complete fixed-Sz spectra and Jordan-block sizes, consistent with Appendices C and D."},
+  {&references[79], "Root-of-unity complete strings and generalized eigenvectors explain why regular eigenvalues alone do not determine Jordan structure. Delta=0 Hamiltonian block sizes are implemented separately; explicit generalized eigenvectors and other root-of-unity extensions remain follow-ups."},
 }};
 inline constexpr std::array<Use, 2> uses_hubbard_continuum{{
   {&references[3], "Half-filled spinon line Eq. (4), two-spinon continuum edges Eq. (18) and following paragraph; our U is four times the paper's U. No form factors or spectral weights."},
-  {&references[79], "Elementary SO(4) spinon and charge doublets and additive spinon-holon, spinon-antiholon and neutral holon-antiholon scattering energies and momenta. Charge-family extrema are resolved numerically, not certified global bounds; our U is four times the paper's U."},
+  {&references[80], "Elementary SO(4) spinon and charge doublets and additive spinon-holon, spinon-antiholon and neutral holon-antiholon scattering energies and momenta. Charge-family extrema are resolved numerically, not certified global bounds; our U is four times the paper's U."},
 }};
 inline constexpr std::array<Use, 2> uses_kondo_response{{
   {&references[48], "Exact solution of the single-channel Kondo problem."},
-  {&references[76], "Universal zero-temperature magnetization, equations (124)-(126). Full Zeeman splitting b=2B and T_B=2T1; impurity energy change obtained by integrating the response."},
+  {&references[77], "Universal zero-temperature magnetization, equations (124)-(126). Full Zeeman splitting b=2B and T_B=2T1; impurity energy change obtained by integrating the response."},
 }};
 inline constexpr std::array<Use, 3> uses_sine_gordon_vacuum{{
   {&references[51], "Nonlinear integral equation approach to finite-volume sine-Gordon energies."},
@@ -461,21 +465,21 @@ inline constexpr std::array<Use, 3> uses_sine_gordon_vacuum{{
   {&references[49], "Integer-coupling D-type TBA used for independent p=2 vacuum validation, equations (2.6)-(2.8)."},
 }};
 inline constexpr std::array<Use, 3> uses_asep_pbc{{
-  {&references[74], "Periodic ASEP Bethe equations (66) and Markov eigenvalues (69), with arbitrary nonnegative hopping rates. Leading relaxation branch followed by continuation; no full-spectrum claim."},
-  {&references[75], "Finite-size TASEP leading-relaxation branch used as the continuation seed."},
+  {&references[75], "Periodic ASEP Bethe equations (66) and Markov eigenvalues (69), with arbitrary nonnegative hopping rates. Leading relaxation branch followed by continuation; no full-spectrum claim."},
+  {&references[76], "Finite-size TASEP leading-relaxation branch used as the continuation seed."},
   {&references[52], "Original periodic asymmetric-exclusion relaxation-gap analysis."},
 }};
 inline constexpr std::array<Use, 2> uses_tasep_pbc{{
-  {&references[75], "Periodic TASEP finite-size Bethe equations (2)-(8) and leading relaxation branch (12)-(14) at arbitrary filling. Complex Markov eigenvalues, not energies; no partial asymmetry or full-spectrum claim."},
+  {&references[76], "Periodic TASEP finite-size Bethe equations (2)-(8) and leading relaxation branch (12)-(14) at arbitrary filling. Complex Markov eigenvalues, not energies; no partial asymmetry or full-spectrum claim."},
   {&references[52], "Original periodic asymmetric-exclusion relaxation-gap analysis. This frontend restricts hopping to the totally asymmetric case."},
 }};
 inline constexpr std::array<Use, 3> uses_potts_pbc{{
-  {&references[87], "Sections 2.2-2.3 give the twisted-XXZ and Potts Temperley-Lieb representations. Published XXZ root/Potts level comparisons in Tables 3 and 11 check the charged family at four clock sites. Only the vacuum and a selected real-root one-hole family are implemented, not a complete TL-module decomposition or correlation functions."},
-  {&references[86], "Sections 6.1-6.2 distinguish periodic Potts from the unprojected twisted-XXZ spectrum and identify the pi/3 and pi twist sectors. Extra XXZ states must not be counted as Potts levels."},
-  {&references[85], "Critical ferromagnetic Hamiltonian, physical versus ghost excitations and c=4/5 conformal spectrum. Our clock Hamiltonian is sqrt(3)/2 times the paper's normalization. Direct Potts complex-root enumeration is not used by this frontend."},
+  {&references[88], "Sections 2.2-2.3 give the twisted-XXZ and Potts Temperley-Lieb representations. Published XXZ root/Potts level comparisons in Tables 3 and 11 check the charged family at four clock sites. Only the vacuum and a selected real-root one-hole family are implemented, not a complete TL-module decomposition or correlation functions."},
+  {&references[87], "Sections 6.1-6.2 distinguish periodic Potts from the unprojected twisted-XXZ spectrum and identify the pi/3 and pi twist sectors. Extra XXZ states must not be counted as Potts levels."},
+  {&references[86], "Critical ferromagnetic Hamiltonian, physical versus ghost excitations and c=4/5 conformal spectrum. Our clock Hamiltonian is sqrt(3)/2 times the paper's normalization. Direct Potts complex-root enumeration is not used by this frontend."},
 }};
 inline constexpr std::array<Use, 2> uses_xyz_dispersion{{
-  {&references[84], "Thermodynamic XYZ spinons, Eq. (7.8), and bound branches, Eqs. (7.11)-(7.12); exchange signs, axis labels and Pauli normalization are mapped to our theta-ratio Hamiltonian. Bound existence and parity/momentum shifts are explicit; no structure factors or complete finite-ring enumeration."},
+  {&references[85], "Thermodynamic XYZ spinons, Eq. (7.8), and bound branches, Eqs. (7.11)-(7.12); exchange signs, axis labels and Pauli normalization are mapped to our theta-ratio Hamiltonian. Bound existence and parity/momentum shifts are explicit; no structure factors or complete finite-ring enumeration."},
   {&references[41], "Theta-ratio coupling convention, Eq. (2), divided by four for S=sigma/2; same Hamiltonian as bethe-xyz-pbc, not that frontend's finite-size root solver."},
 }};
 inline constexpr std::array<Use, 2> uses_xyz_pbc{{
@@ -488,28 +492,28 @@ inline constexpr std::array<Use, 3> uses_bose_fermi_pbc{{
   {&references[21], "Pure-boson ground-state reduction on a ring."},
 }};
 inline constexpr std::array<Use, 2> uses_q_boson_pbc{{
-  {&references[72], "Periodic q-boson Hamiltonian (2.1), Bethe equations (2.13), and shifted energy 4 sum sin^2(k/2). Fixed-N ground states and canonical real-root excitation scans; no quenches or correlation functions."},
+  {&references[73], "Periodic q-boson Hamiltonian (2.1), Bethe equations (2.13), and shifted energy 4 sum sin^2(k/2). Fixed-N ground states and canonical real-root excitation scans; no quenches or correlation functions."},
   {&references[40], "Deformed Fock algebra (1.2)-(1.8), free/phase limits, and exact phase-model momenta (3.4). Our Hamiltonian is twice (1.1), with the +2N shift included."},
 }};
 inline constexpr std::array<Use, 3> uses_lieb_liniger_thermal{{
   {&references[57], "Finite-temperature thermodynamics of repulsive continuum bosons, at fixed chemical potential or by inversion at fixed density; hbar=2m=k_B=1."},
-  {&references[73], "Yang-Yang pseudoenergy, root density and pressure equations (2)-(5). We solve the full integral equations, not the finite-c polylog expansion."},
-  {&references[70], "Section 2.11: thermal filling and entropy of Lieb-Liniger Bethe states. No attractive strings, trapped gases or dynamical correlations."},
+  {&references[74], "Yang-Yang pseudoenergy, root density and pressure equations (2)-(5). We solve the full integral equations, not the finite-c polylog expansion."},
+  {&references[71], "Section 2.11: thermal filling and entropy of Lieb-Liniger Bethe states. No attractive strings, trapped gases or dynamical correlations."},
 }};
 inline constexpr std::array<Use, 4> uses_lieb_liniger_dispersion{{
   {&references[21], "Repulsive zero-temperature root-density equation and bulk ground-state energy, in units hbar=2m=1."},
   {&references[22], "Thermodynamic type-I particle and type-II hole excitation branches; energies are fixed-N gaps relative to the ground state. No spectral weights or finite-temperature TBA."},
-  {&references[70], "Dressed-energy equation and Fermi boundary condition (2.87)-(2.88), related particle-hole energies (2.95); our phase is +2 atan(k/c)."},
-  {&references[71], "Pedagogical ground-state integral equation and normalization at fixed density."},
+  {&references[71], "Dressed-energy equation and Fermi boundary condition (2.87)-(2.88), related particle-hole energies (2.95); our phase is +2 atan(k/c)."},
+  {&references[72], "Pedagogical ground-state integral equation and normalization at fixed density."},
 }};
 inline constexpr std::array<Use, 7> uses_biquadratic_obc{{
   {&references[0], "Original free-end spin-1 biquadratic/TL spectral correspondence. Even-chain ground states, TL module minima and restricted real-root excitations of H=-sum (S.S)^2, with representation multiplicities."},
   {&references[1], "Hamiltonians and energy shift (2)-(5), real-root Bethe equations (6)-(10), and integer-label window 1<=I<=N-M. Our spin-half reference is half of (3), after a staggered rotation. The odd-chain spinon band is not implemented."},
   {&references[2], "TL loop weight and quantum-group XXZ end fields, Sec. 2.3; open spin-chain module multiplicities, Sec. 3, especially (48)-(55). Periodic twists, physical-spin decomposition and thermodynamics are not implemented."},
-  {&references[66], "Ferromagnetic OBC gap and one-defect band: Proposition 2 and Eq. (3.30), transferred through TL equivalence at Delta=3/2 and multiplied by 2*Delta=3. Gap above the entire ground space is 3-2*cos(pi/N), not a zero-mode splitting."},
-  {&references[67], "Ferromagnetic convention H=+sum (S.S)^2, Eq. (3), and Fibonacci ground-space multiplicities under free ends. Ground-space zero modes are distinct from the positive-energy TL defect band; entanglement and ground-state wavefunctions are not implemented."},
+  {&references[67], "Ferromagnetic OBC gap and one-defect band: Proposition 2 and Eq. (3.30), transferred through TL equivalence at Delta=3/2 and multiplied by 2*Delta=3. Gap above the entire ground space is 3-2*cos(pi/N), not a zero-mode splitting."},
+  {&references[68], "Ferromagnetic convention H=+sum (S.S)^2, Eq. (3), and Fibonacci ground-space multiplicities under free ends. Ground-space zero modes are distinct from the positive-energy TL defect band; entanglement and ground-state wavefunctions are not implemented."},
   {&references[14], "Open quantum-group-invariant XXZ Q-system, Sec. 5: Wronskian (5.17), Bethe equations (5.12), and admissibility conditions. Used for Q-system module searches (validated through N=8; larger sizes experimental), the regularized AF two-string singlet, and empty-sea two-/three-string ferro branches on odd/even long chains. Original equations also underlie odd/even selected real roots and our restricted high-label scattering windows. Two-strings retain signed real deviations; three-strings retain complex deviations. Neither numerical completeness nor long-chain energy ordering is rigorously certified."},
-  {&references[68], "Droplet interpretation and thermodynamic module-edge limit, Theorem 2.1; rescaling by 2*Delta=3 gives thresholds 5/3 for two defects and 2 for three. Finite-chain pair/triple modes solve the original Bethe equations with finite deviations, not a bulk/ideal-string substitution. No form factors or physical-spin decomposition are implemented."},
+  {&references[69], "Droplet interpretation and thermodynamic module-edge limit, Theorem 2.1; rescaling by 2*Delta=3 gives thresholds 5/3 for two defects and 2 for three. Finite-chain pair/triple modes solve the original Bethe equations with finite deviations, not a bulk/ideal-string substitution. No form factors or physical-spin decomposition are implemented."},
 }};
 inline constexpr std::array<Use, 4> uses_xxx_pbc{{
   {&references[7], "Periodic XXX equations, energy normalization, and sector quantum numbers; Eqs. (6)-(9), (16), Table I."},
@@ -524,19 +528,19 @@ inline constexpr std::array<Use, 2> uses_xxx_obc{{
 inline constexpr std::array<Use, 5> uses_xxz_pbc{{
   {&references[13], "Massless periodic XXZ equations, energy, and momentum, Eqs. (1), (3)-(5); our energy includes the N*Delta/4 shift."},
   {&references[16], "Even-ring negative-anisotropy sector ground states: Eqs. (0.4), (0.7), with Pauli exchange divided by four. We use rank-subtracted equations scaled near Delta=-1; the reference explicitly assumes even length and does not justify odd-ring ground-state selection."},
-  {&references[61], "Massive periodic XXZ Hamiltonian and trigonometric Bethe equations, Eqs. (1.1)-(1.2), with zero twist and field; Pauli exchange is divided by four. Used for Delta>1 sector ground states, not form factors, strings or excitations."},
+  {&references[62], "Massive periodic XXZ Hamiltonian and trigonometric Bethe equations, Eqs. (1.1)-(1.2), with zero twist and field; Pauli exchange is divided by four. Used for Delta>1 sector ground states, not form factors, strings or excitations."},
   {&references[7], "XXX limit at Delta=1 and the conventional real-root quantum-number window."},
   {&references[12], "Background for the XXX window used to restrict the XXZ scan; not a complete XXZ state classification."},
 }};
 inline constexpr std::array<Use, 4> uses_xxz_dispersion{{
   {&references[10], "Zero-field gapless spinon dispersion, -1<Delta<=1; our positive spinon momentum reverses the notes' sign convention."},
-  {&references[81], "Massive spinon dispersion, Eqs. (21)-(23), and two-spinon kinematics, Eq. (32). Both unfolded and two-site-folded continuum edges are implemented, not structure factors or spectral weights."},
-  {&references[82], "Zero-temperature bulk energy integral/series, with J*Delta/4 restored. Near Delta=1 the massive root density is Poisson-resummed for numerical evaluation; no finite-temperature correlations are implemented."},
-  {&references[83], "Interpretation of a single spinon as a topological, symmetry-resolved MPS excitation; momentum folding and asymptotic-vacuum conventions, not an MPS implementation."},
+  {&references[82], "Massive spinon dispersion, Eqs. (21)-(23), and two-spinon kinematics, Eq. (32). Both unfolded and two-site-folded continuum edges are implemented, not structure factors or spectral weights."},
+  {&references[83], "Zero-temperature bulk energy integral/series, with J*Delta/4 restored. Near Delta=1 the massive root density is Poisson-resummed for numerical evaluation; no finite-temperature correlations are implemented."},
+  {&references[84], "Interpretation of a single spinon as a topological, symmetry-resolved MPS excitation; momentum folding and asymptotic-vacuum conventions, not an MPS implementation."},
 }};
 inline constexpr std::array<Use, 2> uses_xxz_obc{{
   {&references[11], "Free-end XXZ equations and boundary reflection phase, Eqs. (11)-(12); our Hamiltonian is divided by four and shifted. Negative-Delta ground states use an algebraically rank-subtracted, rescaled form of these equations."},
-  {&references[60], "Massive open XXZ boundary root and finite-size deviation, Sec. 4.3.2, specialized to zero boundary fields; used for Delta>1 ground states, not boundary correlations or excitation scans."},
+  {&references[61], "Massive open XXZ boundary root and finite-size deviation, Sec. 4.3.2, specialized to zero boundary fields; used for Delta>1 ground states, not boundary correlations or excitation scans."},
 }};
 inline constexpr std::array<Use, 4> uses_hubbard_dispersion{{
   {&references[3], "Half-filled spinon and holon dispersions, Eqs. (4)-(5), with our U equal to four times the paper's U; no form factors or spectral weights are implemented."},
@@ -560,11 +564,15 @@ inline constexpr std::array<Use, 3> uses_lieb_liniger_pbc{{
 }};
 inline constexpr std::array<Use, 2> uses_lieb_liniger_obc{{
   {&references[23], "Repulsive Bose gas with Dirichlet walls, positive real roots and reflected scattering. We implement finite-volume states and bounded label windows, not general boundary potentials."},
-  {&references[69], "Equations (7)-(8) fix the hard-wall ground-state convention and exclusion of self-image scattering; the finite-volume solver extends the logarithmic labels to selected excitations. No boundary-energy integral-equation or thermodynamics API is implemented."},
+  {&references[70], "Equations (7)-(8) fix the hard-wall ground-state convention and exclusion of self-image scattering; the finite-volume solver extends the logarithmic labels to selected excitations. No boundary-energy integral-equation or thermodynamics API is implemented."},
+}};
+inline constexpr std::array<Use, 2> uses_su3_dispersion{{
+  {&references[59], "Sec. 2.3 fixes the elementary hole representations, triality constraint and additive thermodynamic energies. H=J sum P has twice the excitation energies of their Hamiltonian at J=1. No finite-size excited-state enumeration or scattering matrices are implemented here."},
+  {&references[58], "Eq. (64) fixes the two elementary dispersions; Eq. (14) gives the factor-two exchange conversion. Use Eq. (64)'s momentum ranges, not the interchanged ranges in the prose below Eq. (65). Two- and four-soliton kinematic envelopes are derived from these bands; no spectral intensities are calculated."},
 }};
 inline constexpr std::array<Use, 2> uses_su3_pbc{{
   {&references[27], "Original multicomponent permutation-chain solution; the implementation selects only the fundamental SU(3) periodic balanced ground state."},
-  {&references[58], "Nested equations and energy, Eqs. (2.17)-(2.19), logarithmic labels (2.24)-(2.29), and the filled-sea singlet in Sec. 2.3. Our H=sum P gives E=2*E_paper+L. No strings, S matrices or boundary fields are implemented."},
+  {&references[59], "Nested equations and energy, Eqs. (2.17)-(2.19), logarithmic labels (2.24)-(2.29), and the filled-sea singlet in Sec. 2.3. Our H=sum P gives E=2*E_paper+L. No strings, S matrices or boundary fields are implemented."},
 }};
 inline constexpr std::array<Use, 2> uses_tj_pbc{{
   {&references[28], "Projected t-J Hamiltonian (1.3)-(1.5), Sutherland BFF equations (3.73), and energy (3.75). We remove the shift 2*N_e-L: E=2*N_h-sum 1/(lambda^2+1/4). Doped mixed-spin coverage is restricted to odd N_up and N_down; J=2t=2."},
@@ -602,10 +610,10 @@ inline constexpr std::array<Use, 2> uses_sutherland_pbc{{
 inline constexpr std::array<Use, 3> uses_gaudin_yang_pbc{{
   {&references[24], "Original spin-1/2 continuum fermion solution; we implement repulsive periodic ground states in selected sectors, not attraction."},
   {&references[25], "Original multicomponent delta-gas solution; our implementation has two spin components only."},
-  {&references[59], "Hamiltonian and periodic fermion equations (1), (2), (7), (8), (25); even N, odd minority population as in Sec. 5. Weak and strong limits (12), (15)-(16) provide checks. Hard walls, attraction and excitations are not implemented."},
+  {&references[60], "Hamiltonian and periodic fermion equations (1), (2), (7), (8), (25); even N, odd minority population as in Sec. 5. Weak and strong limits (12), (15)-(16) provide checks. Hard walls, attraction and excitations are not implemented."},
 }};
 
-enum class Tool { lee_yang_excited, lee_yang_vacuum, xxz_qg_obc, hubbard_continuum, kondo_response, sine_gordon_vacuum, asep_pbc, tasep_pbc, potts_pbc, xyz_dispersion, xyz_pbc, bose_fermi_pbc, q_boson_pbc, lieb_liniger_thermal, lieb_liniger_dispersion, biquadratic_obc, xxx_pbc, xxx_obc, xxz_pbc, xxz_dispersion, xxz_obc, hubbard_dispersion, hubbard_pbc, hubbard_obc, lieb_liniger_pbc, lieb_liniger_obc, su3_pbc, tj_pbc, tb_pbc, richardson, central_spin, sun_fermions_pbc, ladder_pbc, haldane_shastry_pbc, sutherland_pbc, gaudin_yang_pbc };
+enum class Tool { lee_yang_excited, lee_yang_vacuum, xxz_qg_obc, hubbard_continuum, kondo_response, sine_gordon_vacuum, asep_pbc, tasep_pbc, potts_pbc, xyz_dispersion, xyz_pbc, bose_fermi_pbc, q_boson_pbc, lieb_liniger_thermal, lieb_liniger_dispersion, biquadratic_obc, xxx_pbc, xxx_obc, xxz_pbc, xxz_dispersion, xxz_obc, hubbard_dispersion, hubbard_pbc, hubbard_obc, lieb_liniger_pbc, lieb_liniger_obc, su3_dispersion, su3_pbc, tj_pbc, tb_pbc, richardson, central_spin, sun_fermions_pbc, ladder_pbc, haldane_shastry_pbc, sutherland_pbc, gaudin_yang_pbc };
 
 [[nodiscard]] constexpr std::span<Use const> for_tool(Tool tool)
 {
@@ -637,6 +645,7 @@ enum class Tool { lee_yang_excited, lee_yang_vacuum, xxz_qg_obc, hubbard_continu
     case Tool::hubbard_obc: return uses_hubbard_obc;
     case Tool::lieb_liniger_pbc: return uses_lieb_liniger_pbc;
     case Tool::lieb_liniger_obc: return uses_lieb_liniger_obc;
+    case Tool::su3_dispersion: return uses_su3_dispersion;
     case Tool::su3_pbc: return uses_su3_pbc;
     case Tool::tj_pbc: return uses_tj_pbc;
     case Tool::tb_pbc: return uses_tb_pbc;

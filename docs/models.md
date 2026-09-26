@@ -80,7 +80,7 @@ paper's correlation functions, thermodynamics, or full spectrum.
 | `hubbard` | One-band Hubbard, hopping t=1 | Implemented (limited): [PBC](hubbard.md) and [free-end](hubbard-open.md) ground states; [half-filled](hubbard-dispersion.md) and [doped](hubbard-doped.md) thermodynamic spinon/charge lines, [two-spinon and charge-containing continuum edges](hubbard-continuum.md), for U>0, zero field | Doped continua, finite-field/string dispersions; finite-size excitations; remaining PBC shell branches and odd rings |
 | `lieb-liniger` | Continuum contact-interacting bosons | Implemented (limited): [repulsive PBC](lieb-liniger.md) and [hard walls](lieb-liniger-open.md), ground states, explicit labels, bounded excitation scans; [bulk ground state and type-I/type-II curves](lieb-liniger-thermo.md); [grand-canonical and fixed-density finite-T equilibrium and temperature scans](lieb-liniger-thermal.md) | Attraction, form factors |
 | `q-boson` | Deformed boson hopping on a lattice | Implemented (limited): [fixed-N PBC ground states and excitation scans](q-boson.md), eta>=0, free and phase limits | Open boundaries, thermodynamics |
-| `su-n` | Fundamental SU(n) permutation chain | Implemented (limited): [SU(3) PBC](su3.md), balanced singlet ground state for L>=3 divisible by three, J=1 | Other populations/lengths, excitations, general n, open boundaries |
+| `su-n` | Fundamental SU(n) permutation chain | Implemented (limited): [SU(3) PBC](su3.md), balanced singlet ground state for L>=3 divisible by three, J=1; [SU(3)/ULS thermodynamic excitations](su3-dispersion.md), elementary 3/bar3 lines and two-/four-soliton envelopes | Other populations/lengths, finite-size excitations, general n, fields, open boundaries |
 | `gaudin-yang` | Equal-mass spin-1/2 continuum delta-interacting fermions | Implemented (limited): [repulsive PBC](gaudin-yang.md), odd populations of both spins; unrestricted free and fully polarized limits | Other periodic shell branches, excitations, attraction, hard walls, thermodynamics |
 | `tj-susy` | Projected t–J electrons, J=2t | Implemented (limited): [PBC](tj.md), t=1, doped odd N_up and N_down on either length parity; every no-hole and fully polarized sector | Other doped shell branches, excitations, open boundaries |
 | `spin-s-tb` | Integrable spin-1 bilinear–biquadratic chain | Implemented (limited): [even PBC](takhtajan-babujian.md), singlet ground state of H=sum[S.S-(S.S)^2], with finite two-string deviations | Odd lengths, sectors, excitations, higher spins, open boundaries |
@@ -109,7 +109,7 @@ integrable boundaries in the literature.
 | ID | Candidate and first scope | Status | Relative effort |
 | --- | --- | --- | --- |
 | `lieb-liniger` | Repulsive one-component Bose gas on a ring; ground state and bounded real-root excitation scans | [Implemented (limited)](lieb-liniger.md) | First slice complete |
-| `su-n` | Fundamental SU(3) antiferromagnetic permutation chain, PBC, balanced ground state | [Implemented (limited)](su3.md) | First slice complete |
+| `su-n` | Fundamental SU(3) antiferromagnetic permutation chain | [Balanced PBC ground state](su3.md); [thermodynamic elementary lines and continua](su3-dispersion.md) | Finite-size excited enumeration remains |
 | `gaudin-yang` | Equal-mass repulsive spin-1/2 delta-interacting Fermi gas, PBC, selected ground-state sectors | [Implemented (limited)](gaudin-yang.md) | First slice complete |
 | `tj-susy` | Projected t–J chain at J=2t, PBC, selected ground-state sectors | [Implemented (limited)](tj.md) | First slice complete |
 | `spin-s-tb` | Spin-1 Takhtajan–Babujian chain, PBC ground state with finite-size string deviations | [Implemented (limited)](takhtajan-babujian.md) | First slice complete |
@@ -201,7 +201,12 @@ energy density. The implementation checkpoint passed 315 tests with GCC 13
 and fp128, 219 with Clang 20 Release without MPLAPACK, and the new frontend
 and citation checks against the published Uni20 pin in an app-only build.
 
-**Next slice:** audit other color sectors and hole/excitation families,
+The [thermodynamic excitation frontend](su3-dispersion.md) now supplies native
+3/bar3 dispersions, distinct two- and four-soliton bounds, representation labels
+and three-site folding. It retains the lower multiparticle threshold between
+the soft momenta; a two-particle envelope is not the full local-response spectrum.
+
+**Next slice:** audit other finite-ring color sectors and excited-root families,
 including lengths not divisible by three. General n adds n-1 nesting levels;
 complex strings, descendants, twists, and open ends need their own state and
 equation treatment. The two-level SU(3) state does not change the Hubbard API

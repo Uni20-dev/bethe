@@ -27,8 +27,10 @@ Its excitation scans also require a finite `--padding P` window; continuum
 momentum is not reduced to a Brillouin zone.
 For three-state sites, [`bethe-su3-pbc`](su3.md) takes L divisible by three
 and selects the balanced SU(3) singlet ground state of `H=sum P`. It reports
-two nested rapidity families; arbitrary sectors and excitations are not yet
-available for this model.
+two nested rapidity families; arbitrary sectors and finite-ring excitations are
+not yet available in that frontend. [`bethe-su3-dispersion`](su3-dispersion.md)
+provides thermodynamic elementary lines and two-/four-soliton continuum bounds,
+with optional three-site-cell folding.
 For spin-1/2 continuum fermions, [`bethe-gaudin-yang-pbc`](gaudin-yang.md)
 takes N and requires `--length ELL --c C`. Select the populations with `--sz`;
 interacting mixed-spin sectors require odd populations of both spins. The

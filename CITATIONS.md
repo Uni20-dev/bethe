@@ -885,6 +885,17 @@ Relevant tool modes:
 
 - `bethe-lieb-liniger-thermal`: Finite-temperature thermodynamics of repulsive continuum bosons, at fixed chemical potential or by inversion at fixed density; hbar=2m=k\_B=1.
 
+### voros-penc-2021
+
+Dániel Vörös and Karlo Penc. *The dynamical structure factor of the SU(3) Heisenberg chain: The variational Monte Carlo approach*.
+arXiv:2107.09588 (2021).
+
+[arXiv](<https://arxiv.org/abs/2107.09588>).
+
+Relevant tool modes:
+
+- `bethe-su3-dispersion`: Eq. (64) fixes the two elementary dispersions; Eq. (14) gives the factor-two exchange conversion. Use Eq. (64)'s momentum ranges, not the interchanged ranges in the prose below Eq. (65). Two- and four-soliton kinematic envelopes are derived from these bands; no spectral intensities are calculated.
+
 ### doikou-nepomechie-1998
 
 Anastasia Doikou and Rafael I. Nepomechie. *Bulk and Boundary S Matrices for the SU(N) Chain*.
@@ -894,6 +905,7 @@ Nucl. Phys. B 521, 547-572 (1998).
 
 Relevant tool modes:
 
+- `bethe-su3-dispersion`: Sec. 2.3 fixes the elementary hole representations, triality constraint and additive thermodynamic energies. H=J sum P has twice the excitation energies of their Hamiltonian at J=1. No finite-size excited-state enumeration or scattering matrices are implemented here.
 - `bethe-su3-pbc`: Nested equations and energy, Eqs. (2.17)-(2.19), logarithmic labels (2.24)-(2.29), and the filled-sea singlet in Sec. 2.3. Our H=sum P gives E=2\*E\_paper+L. No strings, S matrices or boundary fields are implemented.
 
 ### oelkers-2006

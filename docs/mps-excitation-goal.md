@@ -2,16 +2,98 @@
 
 Develop native-precision Bethe-ansatz reference data for momentum-resolved MPS
 excitation calculations, prioritizing short-range lattice Hamiltonians and
-thermodynamic dispersions. Main sequence: **massive XXZ → XYZ excitations →
-critical three-state Potts**, with an optional integrable-ladder checkpoint.
+thermodynamic dispersions. Next sequence: **SU(3)/ULS excitations → spin-1
+Takhtajan–Babujian excitations → sine-Gordon excitations**. ULS is the first
+priority because it is a particularly demanding non-Abelian benchmark for MPS.
 
 Goal statement: complete the required unchecked milestones below, following the
-checkpoint completion rules. The optional ladder work does not block completion.
+checkpoint completion rules. The earlier XXZ, XYZ and Potts sequence is complete;
+the three new milestones below define the next goal.
 
 Unchecked milestones define proposed work, not existing capabilities. Mark
 milestones complete only when their documented public API/frontend and validation land.
 
-## 1. Massive XXZ dispersions
+## 1. SU(3)/ULS excitations
+
+- [x] Extend the [SU(3) permutation-chain calculation](su3.md) from its balanced
+  singlet ground state to zero-field thermodynamic elementary excitation branches,
+  with physical momentum ranges and SU(3) representation labels.
+- [x] Provide the relevant multiparticle continuum boundaries, auditing which
+  combinations belong to physical periodic-chain sectors and which are accessible
+  to local spin or quadrupolar operators. Do not equate an elementary branch with
+  an isolated pole in a local response.
+- [x] Document the conversion between permutation and spin-1 ULS Hamiltonians,
+  including additive constants, energy scales and one-site versus three-site
+  momentum folding for iMPS comparisons.
+- [x] Validate dispersions, velocities and continuum edges against independent
+  exact results; use selected finite-size BA/ED spectra as checks, with their
+  finite-size corrections and representation content identified.
+
+First deliverable: a public native-precision dispersion/continuum API and frontend,
+not general finite-size excited-state enumeration. Reuse the existing nested-model
+conventions and common continuum machinery where applicable. Starting references:
+[Sutherland](../CITATIONS.md#sutherland-1975),
+[Doikou–Nepomechie](../CITATIONS.md#doikou-nepomechie-1998), and
+[SU(3) dynamical-spectrum comparisons](https://arxiv.org/abs/2107.09588).
+
+Implemented: [ULS excitation guide](su3-dispersion.md), native-precision
+`ExcitationDispersion` and `bethe-su3-dispersion`, with elementary 3/bar3 lines,
+two-/four-soliton envelopes, three-site folding and CSV/TSV/JSON exports.
+Validation: 1114 full-suite tests, 20 targeted checks in the fp128-enabled build,
+and a pinned-Uni20 frontend build/export check. Independent momentum/Casimir ED
+through L=12 verifies adjoint sectors and scaling, including a level below the
+two-soliton onset; density identities and constrained scans check the analytic
+curves. GitHub preserves the guide's 31 math expressions.
+
+## 2. Spin-1 Takhtajan–Babujian excitations
+
+- [ ] Extend the [TB calculation](takhtajan-babujian.md) to zero-field
+  thermodynamic spinon dispersions and the lowest relevant multiparticle
+  continuum boundaries, with spin labels and physical momentum conventions.
+- [ ] Preserve the existing bilinear-minus-biquadratic Hamiltonian normalization;
+  distinguish elementary fractional excitations from allowed periodic-chain
+  multiplets and local-response sectors.
+- [ ] Validate exact dispersions and velocities independently, and compare
+  continuum predictions with selected finite-size BA/ED levels. Account for
+  finite-size effects and string deviations rather than treating ideal strings
+  as exact finite-chain solutions.
+- [ ] Provide a public native-precision API/frontend and an MPS comparison guide,
+  sharing kinematic and output helpers with ULS and the existing spinon tools.
+
+General finite-size excited-string enumeration and dynamical spectral weights are
+follow-ups, not prerequisites. Starting reference:
+[Vlijm–Caux](../CITATIONS.md#vlijm-caux-2014).
+
+## 3. Sine-Gordon excitations
+
+- [ ] Extend the [sine-Gordon vacuum calculation](sine-gordon.md) with soliton,
+  antisoliton and stable breather masses/dispersion branches, existence conditions,
+  topological charges and multiparticle thresholds.
+- [ ] Expose the scattering data needed for selected excited sectors and add
+  large-volume Bethe–Yang levels as an explicitly asymptotic first checkpoint.
+- [ ] Implement selected finite-volume excited levels using an appropriate
+  excited-state NLIE/TBA, with an audited coupling/sector domain and state-selection
+  rules. Do not present Bethe–Yang levels as exact finite-volume results.
+- [ ] Validate against the free-fermion point, exact breather mass ratios,
+  large-volume scattering quantization and appropriate ultraviolet conformal
+  limits; retain separate quadrature, cutoff and nonlinear-solve diagnostics.
+- [ ] Document the two-flavour Schwinger connection at equal small fermion masses:
+  at theta=0 the leading light-sector theory has p=1/3, a triplet and a singlet
+  with mass ratio sqrt(3). Label this as a scaling-limit benchmark, not an exact
+  solution of the full massive or finite-spacing lattice Schwinger model.
+
+Reuse the native-precision vacuum kernel and mass/coupling conventions. Publish
+the thermodynamic/scattering and finite-volume stages as separate checkpoints;
+both are required, but a complete finite-volume spectrum is not. Starting points:
+[existing sine-Gordon references](sine-gordon.md#physical-convention) and the
+[two-flavour Schwinger DMRG study](https://arxiv.org/abs/2407.11391).
+
+## Completed sequence
+
+The following milestones record the earlier completed goal. Their validation
+counts are historical checkpoint results, not a claim about the current suite.
+
+### Massive XXZ dispersions
 
 - [x] Add `bethe-xxz-dispersion`, reusing the existing gapless zero-field
   formulas and extending to the zero-field antiferromagnet at Δ>1.
@@ -33,7 +115,7 @@ Finite-field/dressed dispersions are a follow-up, not required for this mileston
 Starting references: [Caux–Mossel–Pérez Castillo](https://arxiv.org/abs/0806.3069)
 and the [symmetry-resolved MPS excitation framework](https://arxiv.org/abs/1802.07197).
 
-## 2. XYZ thermodynamic excitations
+### XYZ thermodynamic excitations
 
 - [x] Audit the exact excitation formulas and select an explicitly documented
   parameter region; map its elliptic conventions to our existing XYZ Hamiltonian.
@@ -53,18 +135,7 @@ CSV/TSV/JSON exports. Validation: 1084 full-suite tests, 21 targeted checks in
 the fp128-enabled build, independent complex-rapidity references, XY and both
 massive XXZ limits, and finite-ring checks with the splitting retained.
 
-## Optional checkpoint: integrable-ladder excitations
-
-- [ ] For Wang's ladder in its rung-singlet regime, expose the one-triplon
-  dispersion, then selected two-triplon scattering/bound branches.
-- [ ] Keep the required four-spin interaction and translation-by-one-rung
-  momentum convention explicit; validate against small-system Hamiltonians.
-
-This provides a conventional-particle benchmark alongside the topological
-branches. It is not the generic Heisenberg ladder. Insert it when useful without
-blocking the main sequence. Reference: [Wang](https://arxiv.org/abs/cond-mat/9901168).
-
-## 3. Critical ferromagnetic three-state Potts chain
+### Critical ferromagnetic three-state Potts chain
 
 - [x] Fix the critical Hamiltonian, normalization and boundary conditions;
   implement the ground state and selected low-lying momentum/Z₃-resolved levels.
@@ -88,8 +159,6 @@ checks in the fp128-enabled build across the three checkpoints and shared XXZ
 solver, and a pinned-Uni20/no-tests frontend build. Separate L=8,9 oracle audits
 agree for every selected level. All three guides pass GitHub math rendering.
 
-The required sequence is complete. The optional ladder checkpoint remains open.
-
 ## Completion rules for every checkpoint
 
 - Preserve fp64, native long-double and optional fp128 arithmetic throughout;
@@ -103,6 +172,6 @@ The required sequence is complete. The optional ladder checkpoint remains open.
 - Run relevant regressions, update the [model catalogue](models.md), and commit
   and push after each model or major user-facing checkpoint.
 
-SU(3)/ULS and spin-1 TB excitations remain later candidates. Spectral weights,
-general finite-temperature dynamics and complete finite-size spectra are not
-requirements of this goal.
+Wang-ladder excitations are deferred outside this goal. Spectral weights, general
+finite-temperature dynamics, complete finite-size spectra and a general massive
+Schwinger solver are not requirements of this goal.

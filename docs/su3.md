@@ -32,6 +32,11 @@ families of finite real roots, and no excited-state enumeration in this
 frontend. Other lengths, unequal populations, descendants, complex strings,
 twists, open ends, and general SU(n) are separate extensions.
 
+For infinite-chain excitation benchmarks, use the separate
+[`bethe-su3-dispersion` frontend](su3-dispersion.md): elementary 3/bar3 lines,
+two- and four-soliton bounds, and three-site-cell folding. These are not
+finite-ring levels from the ground-state solver described here.
+
 The six-site result is $`E =-1-\sqrt{13}`$, approximately -4.605551275463989.
 The report includes populations, both root counts, total and per-site energy,
 momentum, residuals for each equation family, Newton updates, and solver CPU
