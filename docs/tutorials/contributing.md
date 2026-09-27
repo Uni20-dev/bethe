@@ -12,15 +12,19 @@ and convergence information, check unsuccessful exit codes and missing values,
 and explain energy, momentum and symmetry conventions in the tutorial.
 Do not imply spectral weights when a solver supplies only kinematic bounds.
 
-For the first example:
+Validate the saved numerical examples:
 
 ```sh
 python3 scripts/plot_xxz_tutorial.py --check
+python3 scripts/plot_hubbard_tutorial.py --check
 python3 -m unittest discover -s scripts -p 'test_tutorial*.py'
 ```
 
-Neither check requires plotting packages or a C++ build. To redraw or regenerate,
-follow the [XXZ tutorial](xxz-spinons.md#5-reproduce-the-figures).
+These checks require neither plotting packages nor a C++ build. To redraw or
+regenerate, follow the [XXZ tutorial](xxz-spinons.md#5-reproduce-the-figures) or
+the [Hubbard tutorial](hubbard-half-filled.md#5-reproduce-and-check).
+`scripts/tutorial_common.py` shares CSV/provenance validation and deterministic
+SVG writing; each model's script and tests own its schema and physics checks.
 
 ## Build the site locally
 

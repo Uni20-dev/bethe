@@ -1,5 +1,8 @@
 # Doped Hubbard spinon and charge lines
 
+For a worked example at U=4 and n=0.75, see the
+[doped-chain tutorial](tutorials/hubbard-doped.md).
+
 Use the same `bethe-hubbard-dispersion` frontend with `--density n` for
 `0<n<1`, `U>0`, zero magnetic field, and hopping `t=1`. This is a
 thermodynamic calculation, not a sequence of finite-ring shell fillings.

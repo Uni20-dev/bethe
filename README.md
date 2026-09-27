@@ -19,10 +19,15 @@ then explore magnetization sectors, excitation families, and spinons.
 
 ## Tutorials with plots
 
-Start with [XXZ spinons and two-spinon continua](docs/tutorials/xxz-spinons.md):
-export reference curves, compare gapless and gapped chains, and match momentum
-conventions to a two-site iMPS calculation. Figures, source data and a short
-Python plotting script are included; Python is not needed to run the solvers.
+- [XXZ spinons and two-spinon continua](docs/tutorials/xxz-spinons.md): compare
+  gapless and gapped chains and match momentum conventions to a two-site iMPS.
+- [Hubbard at half filling](docs/tutorials/hubbard-half-filled.md): plot spinons,
+  holons and antiholons, and compare symmetric and unshifted interactions.
+- [Doping the Hubbard chain](docs/tutorials/hubbard-doped.md): follow gapless
+  spin and charge lines and choose the energy zero for an iMPS calculation.
+
+Figures, source data and Python plotting scripts are included; Python is not
+needed to run the solvers.
 
 Browse the [documentation site](https://uni20-dev.github.io/bethe/) or read the
 same Markdown here on GitHub.

@@ -6,11 +6,11 @@ Without it, use the checked-in data. No Bethe formulas are used to draw curves.
 """
 
 import argparse
-import csv
-import io
 import math
 from pathlib import Path
 import subprocess
+
+from tutorial_common import finite_number, read_csv_export, save_svg
 
 ROOT = Path(__file__).resolve().parents[1]
 DATA = ROOT / "docs/tutorials/data"
@@ -22,26 +22,15 @@ COLUMNS = ["branch", "p", "p_over_pi", "cell_momentum", "energy", "lower", "uppe
 
 
 def read_export(text, delta, folded):
-    metadata = dict(line[2:].split(": ", 1) for line in text.splitlines()
-                    if line.startswith("# ") and ": " in line)
     expected = {"Program": "bethe-xxz-dispersion", "Delta": str(delta),
                 "Exchange J": "1", "Precision": "fp64", "Branches": "all",
                 "Points per branch": str(POINTS), "Bulk status": "converged",
                 "Spinon status": "converged", "Outcome": "success", "Status": "converged",
                 "Continuum momentum": ("Q modulo pi; union of both translation branches"
                                        if folded else "p1+p2=Q modulo 2*pi; unfolded")}
-    for key, value in expected.items():
-        if metadata.get(key) != value:
-            raise ValueError(f"{key}: expected {value!r}, got {metadata.get(key)!r}")
-    for key in ("Bethe revision", "Uni20 revision", "Command"):
-        if not metadata.get(key):
-            raise ValueError(f"Missing provenance: {key}")
-    reader = csv.DictReader(io.StringIO("\n".join(
-        line for line in text.splitlines() if not line.startswith("#"))))
-    if reader.fieldnames != COLUMNS:
-        raise ValueError(f"Unexpected schema: {reader.fieldnames}")
+    _, rows = read_csv_export(text, COLUMNS, expected)
     branches = {"spinon": [], "two-spinon": []}
-    for row in reader:
+    for row in rows:
         branch = row["branch"]
         if branch not in branches or row["status"] != "converged" or None in row:
             raise ValueError(f"Invalid/incomplete row: {row}")
@@ -49,9 +38,7 @@ def read_export(text, delta, folded):
         absent = ("lower", "upper") if branch == "spinon" else ("energy",)
         if any(row[key] != "" for key in absent):
             raise ValueError("Non-applicable energy columns must be empty")
-        numbers = {key: float(row[key]) for key in ("p", "p_over_pi", "cell_momentum", *required)}
-        if not all(math.isfinite(v) for v in numbers.values()):
-            raise ValueError("Non-finite numerical data")
+        numbers = {key: finite_number(row, key) for key in ("p", "p_over_pi", "cell_momentum", *required)}
         if branch == "two-spinon" and not 0 <= numbers["lower"] <= numbers["upper"]:
             raise ValueError("Invalid continuum bounds")
         if branch == "spinon" and numbers["energy"] < 0:
@@ -99,14 +86,6 @@ def plot(cases):
     FIGURES.mkdir(parents=True, exist_ok=True)
     colors = ["#0072B2", "#D55E00"]
 
-    def save(fig, name):
-        output = io.StringIO()
-        fig.savefig(output, format="svg", metadata={"Date": None})
-        # Matplotlib puts trailing spaces in path coordinates. Normalize the
-        # generated text so data/figure updates remain clean Git diffs.
-        (FIGURES / name).write_text('\n'.join(
-            line.rstrip() for line in output.getvalue().splitlines()) + '\n')
-
     def continuum(ax, rows, color, label):
         x = [row["p_over_pi"] for row in rows]
         low = [row["lower"] for row in rows]
@@ -129,7 +108,7 @@ def plot(cases):
         ax.grid(alpha=.15)
         continuum(axes[1, col], rows["two-spinon"], colors[col], "Kinematically allowed")
         axes[1, col].set_title(rf"$\Delta={delta}$ · two spinons, unfolded")
-    save(fig, "xxz-spinons.svg")
+    save_svg(fig, FIGURES / "xxz-spinons.svg")
     plt.close(fig)
 
     fig, axes = plt.subplots(1, 2, figsize=(10, 3.8), layout="constrained")
@@ -139,7 +118,7 @@ def plot(cases):
         ax.set_title(label)
         ax.axvline(1, color="0.4", linestyle=":", linewidth=1)
     axes[1].set_xlabel(r"Representative $Q/\pi$ (repeats every 1)")
-    save(fig, "xxz-folding.svg")
+    save_svg(fig, FIGURES / "xxz-folding.svg")
     plt.close(fig)
 
 

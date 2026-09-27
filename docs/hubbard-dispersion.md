@@ -1,5 +1,8 @@
 # Hubbard spinon and charge dispersions
 
+For a worked example with plots and downloadable data, start with the
+[half-filled tutorial](tutorials/hubbard-half-filled.md).
+
 `bethe-hubbard-dispersion` evaluates elementary excitation lines of the infinite,
 repulsive Hubbard chain at zero field, at or below half filling. Unlike the
 [finite-ring](hubbard.md) and [free-end](hubbard-open.md) solvers, it takes no

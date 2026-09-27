@@ -164,6 +164,6 @@ and [Zauner-Stauber et al.](../../CITATIONS.md#zauner-stauber-2018);
 [The integrability.org notes](https://integrability.org/) provide broader
 Bethe-ansatz background.
 
-The next tutorial will use the same export-and-plot workflow for Hubbard
-spinons and holons, where particle number and the interaction-energy
-convention also matter.
+Next: use the same export-and-plot workflow for
+[Hubbard spinons and holons](hubbard-half-filled.md), where particle number
+and the interaction-energy convention also matter.

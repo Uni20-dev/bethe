@@ -8,7 +8,11 @@ docs_dir = "source"
 site_dir = "site"
 nav = [
   { "Home" = "index.md" },
-  { "Tutorials" = [{ "XXZ spinons and continua" = "docs/tutorials/xxz-spinons.md" }] },
+  { "Tutorials" = [
+    { "XXZ spinons and continua" = "docs/tutorials/xxz-spinons.md" },
+    { "Hubbard at half filling" = "docs/tutorials/hubbard-half-filled.md" },
+    { "Doping the Hubbard chain" = "docs/tutorials/hubbard-doped.md" },
+  ] },
   { "Using Bethe" = [
     { "Building" = "docs/building.md" },
     { "Command line" = "docs/command-line.md" },
