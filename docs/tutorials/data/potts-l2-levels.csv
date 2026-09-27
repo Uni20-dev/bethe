@@ -1,0 +1,38 @@
+# Bethe revision: 03bdaca982b9cd2080976ec984b85e0ce9c02a45
+# Bethe version: 0.1.0
+# Branches: all
+# Build type: Release
+# Bulk energy density: -2.4359911241769172
+# Charge convention: global clock rotation exp(2*pi*i*q/3); q=0,+1,-1
+# Command: build_codex/gtest_clang20_release/bethe-potts-pbc 2 --precision fp64 --format csv --csv-table levels=/tmp/bethe-tutorial-1u3bjbsn/levels.csv
+# Compiler: Clang 20.1.2
+# Date: 2026-09-27T22:55:42Z
+# Hamiltonian: H=-sum(X+X^dagger+ZZ^dagger+Z^dagger Z); critical, J=1, PBC
+# Max sweeps per solve: 10000
+# Momentum convention: p=2*pi*k/L; physical one-clock-site translation
+# Platform: Linux x86_64
+# Precision: fp64
+# Program: bethe-potts-pbc
+# Residual convention: max|F|/(2L), auxiliary logarithmic equations
+# Residual tolerance: 7.1054273576010019e-15
+# Root convention: auxiliary 2L-site XXZ at Delta=sqrt(3)/2; twists pi/3,pi
+# Selected charged rows: both
+# Site budget: 512
+# Sites: 2
+# State selection: vacuum and charged one-hole family; not a complete spectrum
+# Uni20 revision: a25159cc19c97c43ca43754c46fb9bdef8c41bda
+# Vacuum energy: -5.4641016151377713
+# Vacuum status: converged
+# Velocity: 2.598076211353316
+# First row: 0
+branch,charge,k,momentum,energy,gap,x_scaled,residual,iterations,status
+ground,0,0,0,-5.4641016151377713,0,0,2.2204460492503131e-15,23,converged
+charged-one-hole,1,0,0,-4.2749172176354033,1.1891843975023679,0.1456959378506244,4.7184478546569153e-15,26,converged
+charged-one-hole,-1,0,0,-4.2749172176354033,1.1891843975023679,0.1456959378506244,4.7184478546569153e-15,26,converged
+charged-one-hole,1,1,3.1415926535897931,0.99999999999995193,6.4641016151377233,0.79196577852624517,6.2172489379008766e-15,20,converged
+charged-one-hole,-1,1,3.1415926535897931,0.99999999999995193,6.4641016151377233,0.79196577852624517,6.2172489379008766e-15,20,converged
+# CPU time: 0.000015 s
+# Elapsed seconds: 0.000186134999992759730958
+# Outcome: success
+# Run CPU seconds: 0.00018399999999999999972
+# Status: converged

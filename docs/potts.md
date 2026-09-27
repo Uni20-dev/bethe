@@ -1,5 +1,8 @@
 # Critical three-state Potts levels
 
+The [worked tutorial](tutorials/potts.md) plots the charged branch and vacuum
+finite-size scaling, with downloadable data and charge/momentum checks.
+
 `bethe-potts-pbc` computes the finite-ring vacuum and a selected charged
 one-hole branch at every lattice momentum. These are solutions of finite-size
 Bethe equations, not energies obtained by inserting conformal dimensions into

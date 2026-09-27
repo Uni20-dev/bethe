@@ -29,6 +29,7 @@ python3 scripts/plot_field_theory_tutorial.py --check
 python3 scripts/plot_exclusion_tutorial.py --check
 python3 scripts/plot_fermion_tutorial.py --check
 python3 scripts/plot_multicomponent_tutorial.py --check
+python3 scripts/plot_potts_qg_tutorial.py --check
 python3 -m unittest discover -s scripts -p 'test_tutorial*.py'
 ```
 
@@ -64,6 +65,11 @@ The [SU(n) fermion](su-fermions.md#5-reproduce-and-validate) and
 [Bose–Fermi mixture](bose-fermi.md#5-reproduce-and-validate) examples share
 multicomponent export validation, checking population-to-sea mappings, graded
 equations and independent Gaudin–Yang/Lieb–Liniger reductions.
+The [Potts](potts.md#5-reproduce-and-validate) and
+[non-Hermitian XXZ](xxz-nonhermitian.md#5-reproduce-and-validate) examples
+distinguish selected regular families from complete endpoint sectors. Their
+shared script checks charge/momentum selection, root joins and Jordan-block
+dimensions; `--oracle` adds independent small clock/spin matrices using NumPy.
 `scripts/tutorial_common.py` shares CSV/provenance validation and deterministic
 SVG writing; each model's script and tests own its schema and physics checks.
 

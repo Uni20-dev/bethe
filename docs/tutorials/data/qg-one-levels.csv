@@ -1,0 +1,45 @@
+# Bethe revision: 03bdaca982b9cd2080976ec984b85e0ce9c02a45
+# Bethe roots: 1
+# Bethe version: 0.1.0
+# Build type: Release
+# Candidates: 5
+# Command: build_codex/gtest_clang20_release/bethe-xxz-qg-obc 8 --delta .6 --through-lines 6 --excitations all --precision fp64 --format csv --csv-table levels=/tmp/bethe-tutorial-tafz02ju/levels.csv --csv-table reference=/tmp/bethe-tutorial-tafz02ju/reference.csv --csv-table roots=/tmp/bethe-tutorial-tafz02ju/roots.csv
+# Compiler: Clang 20.1.2
+# Converged candidates: 5
+# Date: 2026-09-27T22:55:43Z
+# Delta: 0.59999999999999998
+# Energy reference: absolute Hamiltonian energy; shift is relative to E_F=(N-1)*Delta/4
+# Exclusive label threshold: 5.6386621175930278
+# Gap reference: selected sector consecutive-label sea; not a proven global ground state
+# Hamiltonian: sum(SxSx+SySy+Delta SzSz)+i*sqrt(1-Delta^2)/2*(Sz_1-Sz_N); spin-half J=1
+# Imaginary end-field coefficient: 0.40000000000000002
+# Label slots: 5
+# Max candidates: 10000
+# Max iterations: 10000
+# Ordering: converged states by energy shift then labels; failed candidates excluded
+# Platform: Linux x86_64
+# Precision: fp64
+# Program: bethe-xxz-qg-obc
+# Requested levels: all
+# Residual convention: max|F|/(2N), not an energy error
+# Residual tolerance: 7.1054273576010019e-15
+# Returned levels: 5
+# Root coordinates: z=tanh(lambda)/tan(gamma/2), Delta=cos(gamma); failed roots are provisional
+# Scope: regular positive-real family only; no full-spectrum completeness, multiplicity or Jordan claim
+# Sea reference converged: 1
+# Sites: 8
+# Sz: 3
+# Uni20 revision: a25159cc19c97c43ca43754c46fb9bdef8c41bda
+# ell=N-2M: 6
+# First row: 0
+state_id,numbers,energy,energy_shift,gap_from_sea,residual,iterations,converged,status
+0,1,-0.473879532511287,-1.523879532511287,0,0,0,true,converged
+1,2,-0.25710678118654751,-1.3071067811865476,0.2167727513247395,0,0,true,converged
+2,3,0.067316567634910118,-0.98268343236508993,0.54119610014619712,0,0,true,converged
+3,4,0.44999999999999984,-0.6000000000000002,0.92387953251128685,0,0,true,converged
+4,5,0.83268343236508979,-0.21731656763491028,1.3065629648763768,0,0,true,converged
+# CPU time: 0.000016 s
+# Elapsed seconds: 0.000267309999998133207555
+# Outcome: success
+# Run CPU seconds: 0.000264999999999999999655
+# Status: family converged

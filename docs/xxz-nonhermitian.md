@@ -1,5 +1,9 @@
 # Non-Hermitian quantum-group XXZ chain
 
+The [worked tutorial](tutorials/xxz-nonhermitian.md) compares regular scans with
+complete endpoint sectors, explains Jordan blocks and plots parity-dependent
+Casimir estimators.
+
 **Status: native positive finite-real-root library and frontend implemented
 for 0<Delta<1; complex-root branches and root-of-unity representation
 accounting remain follow-ups.** This is not the existing free-end XXZ model.

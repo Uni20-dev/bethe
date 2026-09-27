@@ -1,0 +1,50 @@
+# Bethe revision: 03bdaca982b9cd2080976ec984b85e0ce9c02a45
+# Bethe roots: 2
+# Bethe version: 0.1.0
+# Build type: Release
+# Candidates: 10
+# Command: build_codex/gtest_clang20_release/bethe-xxz-qg-obc 8 --delta .6 --through-lines 4 --excitations all --precision fp64 --format csv --csv-table levels=/tmp/bethe-tutorial-2y4nbfom/levels.csv --csv-table reference=/tmp/bethe-tutorial-2y4nbfom/reference.csv --csv-table roots=/tmp/bethe-tutorial-2y4nbfom/roots.csv
+# Compiler: Clang 20.1.2
+# Converged candidates: 10
+# Date: 2026-09-27T22:55:43Z
+# Delta: 0.59999999999999998
+# Energy reference: absolute Hamiltonian energy; shift is relative to E_F=(N-1)*Delta/4
+# Exclusive label threshold: 5.2289965881947635
+# Gap reference: selected sector consecutive-label sea; not a proven global ground state
+# Hamiltonian: sum(SxSx+SySy+Delta SzSz)+i*sqrt(1-Delta^2)/2*(Sz_1-Sz_N); spin-half J=1
+# Imaginary end-field coefficient: 0.40000000000000002
+# Label slots: 5
+# Max candidates: 10000
+# Max iterations: 10000
+# Ordering: converged states by energy shift then labels; failed candidates excluded
+# Platform: Linux x86_64
+# Precision: fp64
+# Program: bethe-xxz-qg-obc
+# Requested levels: all
+# Residual convention: max|F|/(2N), not an energy error
+# Residual tolerance: 7.1054273576010019e-15
+# Returned levels: 10
+# Root coordinates: z=tanh(lambda)/tan(gamma/2), Delta=cos(gamma); failed roots are provisional
+# Scope: regular positive-real family only; no full-spectrum completeness, multiplicity or Jordan claim
+# Sea reference converged: 1
+# Sites: 8
+# Sz: 2
+# Uni20 revision: a25159cc19c97c43ca43754c46fb9bdef8c41bda
+# ell=N-2M: 4
+# First row: 0
+state_id,numbers,energy,energy_shift,gap_from_sea,residual,iterations,converged,status
+0,"1,2",-1.7450217044621954,-2.7950217044621954,0,4.4408920985006262e-16,11,true,converged
+1,"1,3",-1.389832591960616,-2.4398325919606161,0.35518911250157936,6.4392935428259079e-15,11,true,converged
+2,"2,3",-1.1581665081450809,-2.208166508145081,0.58685519631711447,6.8833827526759706e-15,11,true,converged
+3,"1,4",-0.9724598702253846,-2.0224598702253846,0.7725618342368108,2.2204460492503131e-15,13,true,converged
+4,"2,4",-0.74583741191934472,-1.7958374119193448,0.99918429254285068,3.5527136788005009e-15,13,true,converged
+5,"1,5",-0.55998999422769646,-1.6099899942276965,1.1850317102344989,1.7763568394002505e-15,16,true,converged
+6,"3,4",-0.40733374571527392,-1.457333745715274,1.3376879587469215,1.1102230246251565e-15,14,true,converged
+7,"2,5",-0.34078865154735483,-1.3907886515473549,1.4042330529148406,4.8849813083506888e-15,16,true,converged
+8,"3,5",-0.012742040762161233,-1.0627420407621613,1.7322796637000342,6.6613381477509392e-15,17,true,converged
+9,"4,5",0.37414992562343341,-0.67585007437656663,2.1191716300856287,2.6645352591003757e-15,21,true,converged
+# CPU time: 0.000071 s
+# Elapsed seconds: 0.000318516999996631966496
+# Outcome: success
+# Run CPU seconds: 0.000316999999999999999843
+# Status: family converged

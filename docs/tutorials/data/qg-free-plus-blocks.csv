@@ -1,0 +1,44 @@
+# Bethe revision: 03bdaca982b9cd2080976ec984b85e0ce9c02a45
+# Bethe version: 0.1.0
+# Block semantics: one row per Jordan block, not distinct energy; size is algebraic dimension
+# Build type: Release
+# Command: build_codex/gtest_clang20_release/bethe-xxz-qg-obc 6 --delta 0 --sz 1 --precision fp64 --format csv --csv-table blocks=/tmp/bethe-tutorial-gre35_r3/blocks.csv
+# Compiler: Clang 20.1.2
+# Date: 2026-09-27T22:55:43Z
+# Delta: 0
+# Down spins: 2
+# Energy reference: absolute Hamiltonian energy; polarized energy is zero
+# Hamiltonian: sum(SxSx+SySy)+i/2*(Sz_1-Sz_N); spin-half J=1
+# Imaginary end-field coefficient: 0.5
+# Jordan blocks: 11
+# Max blocks: 100000
+# Max mode entries: 1000000
+# Mode labels: occupied k with energy cos(pi*k/N); exclude k=N/2 for even N; comma-separated
+# Ordering: zero occupation then lexicographic modes; not energy sorted
+# Platform: Linux x86_64
+# Precision: fp64
+# Program: bethe-xxz-qg-obc
+# Scope: complete fixed-Sz Hamiltonian spectrum and block sizes; no Jordan vectors or CFT fit
+# Sector dimension: 15
+# Sites: 6
+# Size-two blocks: 4
+# Sz: 1
+# Uni20 revision: a25159cc19c97c43ca43754c46fb9bdef8c41bda
+# First row: 0
+block_id,energy,block_size,zero_occupation,modes
+0,1.3660254037844388,1,0,"1,2"
+1,0.3660254037844386,1,0,"1,4"
+2,0,1,0,"1,5"
+3,0,1,0,"2,4"
+4,-0.3660254037844386,1,0,"2,5"
+5,-1.3660254037844388,1,0,"4,5"
+6,0.86602540378443871,2,1,1
+7,0.50000000000000011,2,1,2
+8,-0.50000000000000011,2,1,4
+9,-0.86602540378443871,2,1,5
+10,0,1,2,""
+# CPU time: 0.000008 s
+# Elapsed seconds: 8.96629999971310098772e-05
+# Outcome: success
+# Run CPU seconds: 8.99999999999999999507e-05
+# Status: complete

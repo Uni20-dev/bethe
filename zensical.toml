@@ -31,6 +31,8 @@ nav = [
     { "Supersymmetric t–J fillings" = "docs/tutorials/tj.md" },
     { "SU(n) fermion components and seas" = "docs/tutorials/su-fermions.md" },
     { "Bose–Fermi compositions" = "docs/tutorials/bose-fermi.md" },
+    { "Potts charged levels and CFT" = "docs/tutorials/potts.md" },
+    { "Non-Hermitian XXZ and Jordan blocks" = "docs/tutorials/xxz-nonhermitian.md" },
   ] },
   { "Using Bethe" = [
     { "Building" = "docs/building.md" },

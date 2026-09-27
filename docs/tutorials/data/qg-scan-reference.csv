@@ -1,0 +1,41 @@
+# Bethe revision: 03bdaca982b9cd2080976ec984b85e0ce9c02a45
+# Bethe roots: 2
+# Bethe version: 0.1.0
+# Build type: Release
+# Candidates: 10
+# Command: build_codex/gtest_clang20_release/bethe-xxz-qg-obc 8 --delta .6 --through-lines 4 --excitations all --precision fp64 --format csv --csv-table levels=/tmp/bethe-tutorial-2y4nbfom/levels.csv --csv-table reference=/tmp/bethe-tutorial-2y4nbfom/reference.csv --csv-table roots=/tmp/bethe-tutorial-2y4nbfom/roots.csv
+# Compiler: Clang 20.1.2
+# Converged candidates: 10
+# Date: 2026-09-27T22:55:43Z
+# Delta: 0.59999999999999998
+# Energy reference: absolute Hamiltonian energy; shift is relative to E_F=(N-1)*Delta/4
+# Exclusive label threshold: 5.2289965881947635
+# Gap reference: selected sector consecutive-label sea; not a proven global ground state
+# Hamiltonian: sum(SxSx+SySy+Delta SzSz)+i*sqrt(1-Delta^2)/2*(Sz_1-Sz_N); spin-half J=1
+# Imaginary end-field coefficient: 0.40000000000000002
+# Label slots: 5
+# Max candidates: 10000
+# Max iterations: 10000
+# Ordering: converged states by energy shift then labels; failed candidates excluded
+# Platform: Linux x86_64
+# Precision: fp64
+# Program: bethe-xxz-qg-obc
+# Requested levels: all
+# Residual convention: max|F|/(2N), not an energy error
+# Residual tolerance: 7.1054273576010019e-15
+# Returned levels: 10
+# Root coordinates: z=tanh(lambda)/tan(gamma/2), Delta=cos(gamma); failed roots are provisional
+# Scope: regular positive-real family only; no full-spectrum completeness, multiplicity or Jordan claim
+# Sea reference converged: 1
+# Sites: 8
+# Sz: 2
+# Uni20 revision: a25159cc19c97c43ca43754c46fb9bdef8c41bda
+# ell=N-2M: 4
+# First row: 0
+state_id,numbers,energy,energy_shift,gap_from_sea,residual,iterations,converged,status
+0,"1,2",-1.7450217044621954,-2.7950217044621954,0,4.4408920985006262e-16,11,true,converged
+# CPU time: 0.000071 s
+# Elapsed seconds: 0.000318516999996631966496
+# Outcome: success
+# Run CPU seconds: 0.000316999999999999999843
+# Status: family converged

@@ -29,6 +29,8 @@ model below.
 - [Supersymmetric t–J](tj.md): selected dopings, projected fermions and the no-hole XXX limit.
 - [SU(n) fermions](su-fermions.md): component populations, nested seas and cross-model reductions.
 - [Bose–Fermi mixtures](bose-fermi.md): equal-coupling composition benchmarks and particle statistics.
+- [Three-state Potts](potts.md): charged branches, discrete symmetries and finite-size CFT estimators.
+- [Non-Hermitian XXZ](xxz-nonhermitian.md): regular-root families, Jordan blocks and parity-dependent Casimir terms.
 
 ## Coverage of implemented models
 
@@ -48,8 +50,8 @@ in the [model survey](../models.md) are outside this inventory.
 | Hubbard | [Half filling](hubbard-half-filled.md), [doping](hubbard-doped.md) | — |
 | Lieb–Liniger | [Tutorial](lieb-liniger.md) | — |
 | q-boson | [Tutorial](q-boson.md) | — |
-| Three-state Potts | [Guide](../potts.md); planned | Charged branch and finite-size scaling |
-| Non-Hermitian quantum-group XXZ | [Guide](../xxz-nonhermitian.md); planned | Boundary fields and non-diagonalizable spectra |
+| Three-state Potts | [Tutorial](potts.md) | — |
+| Non-Hermitian quantum-group XXZ | [Tutorial](xxz-nonhermitian.md) | — |
 | Kondo | [Guide](../kondo.md); planned | Impurity magnetization and susceptibility |
 | Sine-Gordon | [Tutorial](sine-gordon.md) | — |
 | Scaling Lee–Yang | [Tutorial](lee-yang.md) | — |
