@@ -1,0 +1,34 @@
+# Bethe revision: 36e33039f8fb51c592819cf862800549da4a92a8
+# Bethe version: 0.1.0
+# Build type: Release
+# Calculation: selected complex-root singlet excitation
+# Command: /home/ian/build/codex/bethe/gtest_clang20_release/bethe-biquadratic-obc 64 --singlet-excitation --precision fp64 --format csv --csv-table states=/tmp/bethe-tutorial-j58nsz1n/states.csv --csv-table reference=/tmp/bethe-tutorial-j58nsz1n/reference.csv
+# Compiler: Clang 20.1.2
+# Date: 2026-09-27T21:47:30Z
+# Family: one positive-deviation two-string; real I=1,...,N/2-2; string label 1
+# Gap reference: E-E0; global singlet ground state
+# Hamiltonian: H=-sum_i (S_i.S_(i+1))^2
+# Multiplicity meaning: one physical singlet per TL eigenvector
+# Ordering: targeted branch, not an exhaustive search or a global first-excitation guarantee
+# Platform: Linux x86_64
+# Precision: fp64
+# Program: bethe-biquadratic-obc
+# Residual convention: max phase/log-modulus equation residual divided by 2N; not an energy-error bound
+# Residual tolerance: 7.1054273576010019e-15
+# Sites: 64
+# Spin: 1
+# String coordinate: u=(eta+d)/2 +/- i*a/2; d=exp(-L)>0; L is authoritative
+# String deviation: resolved in rounded u; L=-log(d) also retained
+# TL loop weight: 3
+# TL through-lines: 0
+# Uni20 revision: a25159cc19c97c43ca43754c46fb9bdef8c41bda
+# XXZ Delta: 1.5
+# XXZ reference: spin-half exchange 1; +sqrt(5)/4*(sz_1-sz_N)
+# First row: 0
+state_id,energy,residual,converged,status
+1,-177.34429413676469,1.457167719820518e-16,true,converged
+# CPU time: 0.002073 s
+# Elapsed seconds: 0.00214258100000108697714
+# Outcome: success
+# Run CPU seconds: 0.00213500000000000000016
+# Status: converged

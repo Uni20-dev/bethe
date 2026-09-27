@@ -291,7 +291,7 @@ J. Stat. Mech. 2010, P05018 (2010).
 
 Relevant tool modes:
 
-- `bethe-biquadratic-obc`: TL loop weight and quantum-group XXZ end fields, Sec. 2.3; open spin-chain module multiplicities, Sec. 3, especially (48)-(55). Periodic twists, physical-spin decomposition and thermodynamics are not implemented.
+- `bethe-biquadratic-obc`: TL loop weight and quantum-group XXZ end fields, Sec. 2.3; open spin-chain module multiplicities, Sec. 3, especially (48)-(55). Physical-spin decomposition is available for multiplicity spaces whose dimension fits uint64. Periodic twists and thermodynamics are not implemented.
 
 ### essler-korepin-1999
 
@@ -1009,7 +1009,7 @@ Ann. Henri Poincare 8, 165-201 (2007).
 
 Relevant tool modes:
 
-- `bethe-biquadratic-obc`: Droplet interpretation and thermodynamic module-edge limit, Theorem 2.1; rescaling by 2\*Delta=3 gives thresholds 5/3 for two defects and 2 for three. Finite-chain pair/triple modes solve the original Bethe equations with finite deviations, not a bulk/ideal-string substitution. No form factors or physical-spin decomposition are implemented.
+- `bethe-biquadratic-obc`: Droplet interpretation and thermodynamic module-edge limit, Theorem 2.1; rescaling by 2\*Delta=3 gives thresholds 5/3 for two defects and 2 for three. Finite-chain pair/triple modes solve the original Bethe equations with finite deviations, not a bulk/ideal-string substitution. Physical-spin decomposition is available within uint64 dimension limits; form factors are not implemented.
 
 ### reichert-2019
 

@@ -1,0 +1,53 @@
+# Attempt budget: 4000
+# Attempts: 10
+# Bethe revision: 36e33039f8fb51c592819cf862800549da4a92a8
+# Bethe version: 0.1.0
+# Build type: Release
+# Calculation: Q-system spectrum search (real and complex roots)
+# Command: /home/ian/build/codex/bethe/gtest_clang20_release/bethe-biquadratic-obc 4 --ferromagnetic --q-spectrum --through-lines 2 --precision fp64 --format csv --csv-table states=/tmp/bethe-tutorial-g4r_ra74/states.csv --csv-table spin_content=/tmp/bethe-tutorial-g4r_ra74/spin_content.csv
+# Compiler: Clang 20.1.2
+# Date: 2026-09-27T21:47:30Z
+# Defect meaning: M=(N-ell)/2; TL singlet defects, not physical spin flips
+# Discovered levels: 3
+# Exact gap above ground space: 1.5857864376269051
+# Expected module dimension: 3
+# Failed attempts: 0
+# Gap reference: E-(N-1); exact degenerate ferro ground space
+# Hamiltonian: H=+sum_i (S_i.S_(i+1))^2
+# Multiplicity meaning: physical states per TL eigenvector, not SU(2) multiplets
+# Ordering: numerically complete TL module; count matched, not a rigorous certificate
+# Platform: Linux x86_64
+# Precision: fp64
+# Program: bethe-biquadratic-obc
+# Q-system validation: within small-chain regression range
+# Residual convention: Q-system Wronskian coefficient backward error; not an energy-error bound
+# Residual tolerance: 7.1054273576010019e-15
+# Root coordinate: x=cosh(2u)=cos(alpha); Bajnok u, alpha=-2iu
+# Sites: 4
+# Spin: 1
+# Spin content: physical SU(2) multiplets per TL eigenvector, independent of solver convergence; not spectral weights; null when total dimension exceeds uint64
+# TL convention: tl_energy=+sum e_i=E-(N-1); auxiliary XXZ reference is unchanged
+# TL defects M: 1
+# TL loop weight: 3
+# TL through-lines: 2
+# Uni20 revision: a25159cc19c97c43ca43754c46fb9bdef8c41bda
+# XXZ Delta: 1.5
+# XXZ reference: spin-half exchange 1; +sqrt(5)/4*(sz_1-sz_N)
+# First row: 0
+state_id,through_lines,spin,multiplets,magnetic_states,status
+0,2,1,1,3,exact
+0,2,2,1,5,exact
+1,2,1,1,3,exact
+1,2,2,1,5,exact
+2,2,1,1,3,exact
+2,2,2,1,5,exact
+3,4,0,1,1,exact
+3,4,1,3,9,exact
+3,4,2,3,15,exact
+3,4,3,3,21,exact
+3,4,4,1,9,exact
+# CPU time: 0.000078 s
+# Elapsed seconds: 0.000160053000001880718628
+# Outcome: success
+# Run CPU seconds: 0.000159999999999999999959
+# Status: converged

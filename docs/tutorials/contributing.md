@@ -24,6 +24,7 @@ python3 scripts/plot_xxx_tutorial.py --check
 python3 scripts/plot_haldane_shastry_tutorial.py --check
 python3 scripts/plot_xyz_tutorial.py --check
 python3 scripts/plot_q_boson_tutorial.py --check
+python3 scripts/plot_biquadratic_tutorial.py --check
 python3 -m unittest discover -s scripts -p 'test_tutorial*.py'
 ```
 
@@ -42,6 +43,9 @@ temporary-file capture helper and validate all exports before saving them.
 The [XYZ](xyz.md#5-reproduce-and-check) tutorial checks branch/parity copies;
 the [q-boson](q-boson.md#5-reproduce-the-figures) tutorial joins roots and state
 tables and checks spectral moments against occupation-basis hopping.
+Both [biquadratic sign tutorials](biquadratic.md#6-reproduce-both-sign-tutorials)
+share one export/plot script, checking physical-spin counts, sign conventions,
+Q-system completeness diagnostics and targeted finite-string branches.
 `scripts/tutorial_common.py` shares CSV/provenance validation and deterministic
 SVG writing; each model's script and tests own its schema and physics checks.
 

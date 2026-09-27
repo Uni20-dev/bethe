@@ -2,6 +2,9 @@
 
 [Overview](../README.md) · [Biquadratic/TL conventions](biquadratic.md) · [Output and exports](output.md)
 
+For plots, downloadable examples and an MPS-oriented introduction, see the
+[defect and droplet tutorial](tutorials/biquadratic-ferromagnetic.md).
+
 The ferromagnetic option uses **H=+sum (S_i.S_(i+1))^2**, the opposite sign
 to this tool's default. The spins are 1 and the physical chain has free ends.
 There is no bilinear term or added constant. With $`e_{i} =3\,P_{\mathrm{singlet}}`$,

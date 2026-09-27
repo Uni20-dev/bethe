@@ -1,0 +1,40 @@
+# Bethe revision: 36e33039f8fb51c592819cf862800549da4a92a8
+# Bethe version: 0.1.0
+# Build type: Release
+# Calculation: restricted real-root excitations
+# Candidates: 1
+# Command: /home/ian/build/codex/bethe/gtest_clang20_release/bethe-biquadratic-obc 4 --excitations all --through-lines 0 --precision fp64 --format csv --csv-table states=/tmp/bethe-tutorial-b1nx8f_k/states.csv
+# Compiler: Clang 20.1.2
+# Converged candidates: 1
+# Date: 2026-09-27T21:47:30Z
+# Family: positive finite roots; complex-root levels excluded; NOT the complete TL spectrum
+# Gap reference: E-E0; global singlet ground state
+# Ground energy: -9.5615528128088307
+# Ground iterations: 4
+# Ground residual: 5.5511151231257827e-17
+# Ground status: converged
+# Hamiltonian: H=-sum_i (S_i.S_(i+1))^2
+# Multiplicity meaning: physical states, not SU(2) multiplets; not an accidental-degeneracy sum
+# Multiplicity per TL eigenvector: 1
+# Ordering: complete within supported family
+# Platform: Linux x86_64
+# Precision: fp64
+# Program: bethe-biquadratic-obc
+# Residual tolerance: 7.1054273576010019e-15
+# Returned levels: 1
+# Sites: 4
+# Spin: 1
+# TL defects M: 2
+# TL loop weight: 3
+# TL through-lines: 0
+# Uni20 revision: a25159cc19c97c43ca43754c46fb9bdef8c41bda
+# XXZ Delta: 1.5
+# XXZ reference: spin-half exchange 1; +sqrt(5)/4*(sz_1-sz_N)
+# First row: 0
+state_id,through_lines,multiplicity,energy,gap,tl_energy,reference_energy,residual,iterations,converged,status
+0,0,1,-9.5615528128088307,0,-6.5615528128088307,-2.1557764064044154,5.5511151231257827e-17,4,true,converged
+# CPU time: 0.001267 s
+# Elapsed seconds: 0.00170084500000200478098
+# Outcome: success
+# Run CPU seconds: 0.00142199999999999999981
+# Status: converged

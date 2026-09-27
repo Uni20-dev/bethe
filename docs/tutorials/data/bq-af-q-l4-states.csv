@@ -1,0 +1,40 @@
+# Attempt budget: 4000
+# Attempts: 1
+# Bethe revision: 36e33039f8fb51c592819cf862800549da4a92a8
+# Bethe version: 0.1.0
+# Build type: Release
+# Calculation: Q-system spectrum search (real and complex roots)
+# Command: /home/ian/build/codex/bethe/gtest_clang20_release/bethe-biquadratic-obc 4 --q-spectrum --through-lines 4 --precision fp64 --format csv --csv-table states=/tmp/bethe-tutorial-rz9dv0su/states.csv --csv-table spin_content=/tmp/bethe-tutorial-rz9dv0su/spin_content.csv
+# Compiler: Clang 20.1.2
+# Date: 2026-09-27T21:47:30Z
+# Discovered levels: 1
+# Expected module dimension: 1
+# Failed attempts: 0
+# Gap reference: E-E0; global singlet ground state
+# Hamiltonian: H=-sum_i (S_i.S_(i+1))^2
+# Multiplicity meaning: physical states per TL eigenvector, not SU(2) multiplets
+# Ordering: numerically complete TL module; count matched, not a rigorous certificate
+# Platform: Linux x86_64
+# Precision: fp64
+# Program: bethe-biquadratic-obc
+# Q-system validation: within small-chain regression range
+# Residual convention: Q-system Wronskian coefficient backward error; not an energy-error bound
+# Residual tolerance: 7.1054273576010019e-15
+# Root coordinate: x=cosh(2u)=cos(alpha); Bajnok u, alpha=-2iu
+# Sites: 4
+# Spin: 1
+# Spin content: physical SU(2) multiplets per TL eigenvector, independent of solver convergence; not spectral weights; null when total dimension exceeds uint64
+# TL defects M: 0
+# TL loop weight: 3
+# TL through-lines: 4
+# Uni20 revision: a25159cc19c97c43ca43754c46fb9bdef8c41bda
+# XXZ Delta: 1.5
+# XXZ reference: spin-half exchange 1; +sqrt(5)/4*(sz_1-sz_N)
+# First row: 0
+state_id,through_lines,multiplicity,energy,gap,tl_energy,reference_energy,residual,bethe_residual,bethe_residual_bound,iterations,converged,status
+0,4,55,-3,6.5615528128088307,0,1.125,4.0902953538821554e-17,0,0,0,true,converged; numerical admissibility checks passed
+# CPU time: 0.000036 s
+# Elapsed seconds: 0.000107666000005224304914
+# Outcome: success
+# Run CPU seconds: 0.000106000000000000000074
+# Status: converged

@@ -19,6 +19,8 @@ model below.
 - [Haldane–Shastry](haldane-shastry.md): motifs, spin multiplicities and complete finite spectra.
 - [XYZ](xyz.md): gapped spinons, bound branches and discrete parity copies.
 - [q-bosons](q-boson.md): occupation-dependent hopping from free bosons to the phase limit.
+- [Negative biquadratic chain](biquadratic.md): TL sectors, spin multiplicities and complex-root singlets.
+- [Ferromagnetic biquadratic chain](biquadratic-ferromagnetic.md): one-defect bands and bound droplets.
 
 ## Coverage of implemented models
 
@@ -47,8 +49,8 @@ in the [model survey](../models.md) are outside this inventory.
 | ASEP | [Guide](../asep.md); planned | Drift and relaxation as hopping becomes symmetric |
 | Gaudin–Yang | [Guide](../gaudin-yang.md); planned | Interaction dependence of continuum fermions |
 | Supersymmetric t–J | [Guide](../tj.md); planned | Doping with double occupancy excluded |
-| Negative biquadratic | [Guide](../biquadratic.md); planned | TL sectors, spin content and low excitations |
-| Ferromagnetic biquadratic sign | [Guide](../biquadratic-ferromagnetic.md); planned | Defects and bound droplets above the vacuum |
+| Negative biquadratic | [Tutorial](biquadratic.md) | — |
+| Ferromagnetic biquadratic sign | [Tutorial](biquadratic-ferromagnetic.md) | — |
 | Richardson pairing | [Guide](../richardson.md); planned | Pair binding and blocked levels |
 | Central spin | [Guide](../central-spin.md); planned | Field response in a fixed spin sector |
 | SU(n) fermion gas | [Guide](../su-fermions.md); planned | Populations, repulsion and the free limit |

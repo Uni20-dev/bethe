@@ -1,0 +1,42 @@
+# Available two-string labels: 125
+# Bethe revision: 36e33039f8fb51c592819cf862800549da4a92a8
+# Bethe version: 0.1.0
+# Build type: Release
+# Bulk bound-pair threshold: 1.6666666666666667
+# Calculation: targeted two-defect bound-pair modes
+# Command: /home/ian/build/codex/bethe/gtest_clang20_release/bethe-biquadratic-obc 128 --ferromagnetic --bound-pairs 1 --precision fp64 --format csv --csv-table states=/tmp/bethe-tutorial-zw_qgv_x/states.csv
+# Compiler: Clang 20.1.2
+# Coverage: selected two-string family only; NOT the full two-defect or excited spectrum
+# Date: 2026-09-27T21:47:30Z
+# Defect meaning: M=(N-ell)/2; TL singlet defects, not physical spin flips
+# Exact gap above ground space: 1.0006023626075915
+# Family: one two-string, no real sea; J=N-2-mode, sign(d)=(-1)^(mode+1)
+# Gap reference: E-(N-1); exact degenerate ferro ground space
+# Hamiltonian: H=+sum_i (S_i.S_(i+1))^2
+# Multiplicity meaning: physical states per TL eigenvector, not SU(2) multiplets
+# Ordering: mode order from the low-energy branch edge; not a global excitation rank
+# Platform: Linux x86_64
+# Precision: fp64
+# Program: bethe-biquadratic-obc
+# Residual convention: max phase/log-modulus residual divided by 2N; not an energy-error bound
+# Residual tolerance: 7.1054273576010019e-15
+# Selected modes: 1
+# Sites: 128
+# Spin: 1
+# String coordinate: pair u=(eta+d)/2 +/- i*a/2; d=sign*exp(-L); real roots u=i*alpha/2; L is authoritative
+# TL convention: tl_energy=+sum e_i=E-(N-1); auxiliary XXZ reference is unchanged
+# TL loop weight: 3
+# TL singlet insertions M: 2
+# TL through-lines: 124
+# Uni20 revision: a25159cc19c97c43ca43754c46fb9bdef8c41bda
+# Wave number: mode and string center are branch coordinates, not lattice momentum
+# XXZ Delta: 1.5
+# XXZ reference: spin-half exchange 1; +sqrt(5)/4*(sz_1-sz_N)
+# First row: 0
+state_id,mode,through_lines,multiplicity,energy,gap,tl_energy,reference_energy,residual,phase_residual,modulus_residual,iterations,converged,status
+0,1,124,,128.66687923858544,1.6668792385854474,1.6668792385854474,46.791560380707274,6.6058269965196814e-15,0,6.6058269965196814e-15,2,true,converged
+# CPU time: 0.000094 s
+# Elapsed seconds: 0.000341481999996062768332
+# Outcome: success
+# Run CPU seconds: 0.000339000000000000000118
+# Status: converged targeted branches

@@ -2,6 +2,9 @@
 
 [Overview](../README.md) · [Model catalogue](models.md) · [Precision and CLI controls](command-line.md)
 
+The [worked negative-sign tutorial](tutorials/biquadratic.md) plots small-chain
+sectors and follows a complex-root singlet to longer chains.
+
 For the opposite sign, `--ferromagnetic`, see
 [ferromagnetic excitations](biquadratic-ferromagnetic.md): an exact one-defect
 band, targeted two-/three-defect bound droplets, sign-aware real-root scans

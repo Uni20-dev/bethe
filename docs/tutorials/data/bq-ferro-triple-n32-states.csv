@@ -1,0 +1,49 @@
+# Available three-string labels: 27
+# Bethe revision: 36e33039f8fb51c592819cf862800549da4a92a8
+# Bethe version: 0.1.0
+# Build type: Release
+# Bulk bound-triple threshold: 2
+# Calculation: targeted three-defect bound-triple modes
+# Command: /home/ian/build/codex/bethe/gtest_clang20_release/bethe-biquadratic-obc 32 --ferromagnetic --bound-triples 8 --precision fp64 --format csv --csv-table states=/tmp/bethe-tutorial-9j6ydows/states.csv
+# Compiler: Clang 20.1.2
+# Coverage: selected three-string family only; NOT the full three-defect or excited spectrum
+# Date: 2026-09-27T21:47:30Z
+# Defect meaning: M=(N-ell)/2; TL singlet defects, not physical spin flips
+# Exact gap above ground space: 1.0096305466556061
+# Family: one three-string, no real sea; J=N-4-mode, complex deviation z=exp(-L+i*phi)
+# Gap reference: E-(N-1); exact degenerate ferro ground space
+# Hamiltonian: H=+sum_i (S_i.S_(i+1))^2
+# Multiplicity meaning: physical states per TL eigenvector, not SU(2) multiplets
+# Ordering: mode order from the low-energy branch edge; not a global excitation rank
+# Platform: Linux x86_64
+# Precision: fp64
+# Program: bethe-biquadratic-obc
+# Residual convention: max phase/log-modulus residual divided by 2N; not an energy-error bound
+# Residual tolerance: 7.1054273576010019e-15
+# Selected modes: 8
+# Sites: 32
+# Spin: 1
+# String coordinate: u0=i*a/2; u+/-=eta+Re(z) +/- i*(a/2+Im(z)); L and phi are authoritative
+# TL convention: tl_energy=+sum e_i=E-(N-1); auxiliary XXZ reference is unchanged
+# TL loop weight: 3
+# TL singlet insertions M: 3
+# TL through-lines: 26
+# Uni20 revision: a25159cc19c97c43ca43754c46fb9bdef8c41bda
+# Wave number: mode and string center are branch coordinates, not lattice momentum
+# XXZ Delta: 1.5
+# XXZ reference: spin-half exchange 1; +sqrt(5)/4*(sz_1-sz_N)
+# First row: 0
+state_id,mode,through_lines,multiplicity,energy,gap,tl_energy,reference_energy,residual,phase_residual,modulus_residual,iterations,converged,status
+0,1,26,86267571272,33.001730756255455,2.0017307562554549,2.0017307562554549,10.624134621872273,1.1102230246251565e-16,8.7093748094222214e-17,1.1102230246251565e-16,3,true,converged
+1,2,26,86267571272,33.006874942768356,2.0068749427683557,2.0068749427683557,10.621562528615822,1.9811605055673787e-16,1.9811605055673787e-16,0,3,true,converged
+2,3,26,86267571272,33.015298474528038,2.0152984745280342,2.0152984745280342,10.617350762735983,4.4408920985006262e-16,4.4408920985006262e-16,1.1102230246251565e-16,3,true,converged
+3,4,26,86267571272,33.026805012428802,2.026805012428802,2.026805012428802,10.611597493785599,4.4408920985006262e-16,4.4408920985006262e-16,2.2204460492503131e-16,3,true,converged
+4,5,26,86267571272,33.041160297703314,2.041160297703311,2.041160297703311,10.604419851148345,4.4408920985006262e-16,4.4408920985006262e-16,1.1102230246251565e-16,3,true,converged
+5,6,26,86267571272,33.058109008187017,2.0581090081870173,2.0581090081870173,10.595945495906491,4.4408920985006262e-16,4.4408920985006262e-16,1.1102230246251565e-16,3,true,converged
+6,7,26,86267571272,33.077383515289725,2.0773835152897218,2.0773835152897218,10.586308242355139,4.4408920985006262e-16,4.4408920985006262e-16,1.1102230246251565e-16,3,true,converged
+7,8,26,86267571272,33.09870740986436,2.0987074098643608,2.0987074098643608,10.57564629506782,4.4408920985006262e-16,4.4408920985006262e-16,3.3306690738754696e-16,3,true,converged
+# CPU time: 0.000405 s
+# Elapsed seconds: 0.000675714999999854626367
+# Outcome: success
+# Run CPU seconds: 0.00067300000000000000025
+# Status: converged targeted branches

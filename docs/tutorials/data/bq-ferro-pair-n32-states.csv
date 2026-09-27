@@ -1,0 +1,49 @@
+# Available two-string labels: 29
+# Bethe revision: 36e33039f8fb51c592819cf862800549da4a92a8
+# Bethe version: 0.1.0
+# Build type: Release
+# Bulk bound-pair threshold: 1.6666666666666667
+# Calculation: targeted two-defect bound-pair modes
+# Command: /home/ian/build/codex/bethe/gtest_clang20_release/bethe-biquadratic-obc 32 --ferromagnetic --bound-pairs 8 --precision fp64 --format csv --csv-table states=/tmp/bethe-tutorial-rst6jex8/states.csv
+# Compiler: Clang 20.1.2
+# Coverage: selected two-string family only; NOT the full two-defect or excited spectrum
+# Date: 2026-09-27T21:47:30Z
+# Defect meaning: M=(N-ell)/2; TL singlet defects, not physical spin flips
+# Exact gap above ground space: 1.0096305466556061
+# Family: one two-string, no real sea; J=N-2-mode, sign(d)=(-1)^(mode+1)
+# Gap reference: E-(N-1); exact degenerate ferro ground space
+# Hamiltonian: H=+sum_i (S_i.S_(i+1))^2
+# Multiplicity meaning: physical states per TL eigenvector, not SU(2) multiplets
+# Ordering: mode order from the low-energy branch edge; not a global excitation rank
+# Platform: Linux x86_64
+# Precision: fp64
+# Program: bethe-biquadratic-obc
+# Residual convention: max phase/log-modulus residual divided by 2N; not an energy-error bound
+# Residual tolerance: 7.1054273576010019e-15
+# Selected modes: 8
+# Sites: 32
+# Spin: 1
+# String coordinate: pair u=(eta+d)/2 +/- i*a/2; d=sign*exp(-L); real roots u=i*alpha/2; L is authoritative
+# TL convention: tl_energy=+sum e_i=E-(N-1); auxiliary XXZ reference is unchanged
+# TL loop weight: 3
+# TL singlet insertions M: 2
+# TL through-lines: 28
+# Uni20 revision: a25159cc19c97c43ca43754c46fb9bdef8c41bda
+# Wave number: mode and string center are branch coordinates, not lattice momentum
+# XXZ Delta: 1.5
+# XXZ reference: spin-half exchange 1; +sqrt(5)/4*(sz_1-sz_N)
+# First row: 0
+state_id,mode,through_lines,multiplicity,energy,gap,tl_energy,reference_energy,residual,phase_residual,modulus_residual,iterations,converged,status
+0,1,28,591286729879,32.670734619092535,1.670734619092537,1.670734619092537,10.789632690453731,1.6653345369377348e-16,0,1.6653345369377348e-16,3,true,converged
+1,2,28,591286729879,32.682813472355122,1.6828134723551202,1.6828134723551202,10.783593263822439,0,0,0,3,true,converged
+2,3,28,591286729879,32.702567477022896,1.7025674770228971,1.7025674770228971,10.773716261488552,5.5511151231257827e-17,0,5.5511151231257827e-17,4,true,converged
+3,4,28,591286729879,32.729534290071314,1.7295342900713138,1.7295342900713138,10.760232854964343,5.5511151231257827e-17,0,5.5511151231257827e-17,4,true,converged
+4,5,28,591286729879,32.763196915378018,1.763196915378018,1.763196915378018,10.743401542310991,5.5511151231257827e-17,0,5.5511151231257827e-17,4,true,converged
+5,6,28,591286729879,32.803019826602672,1.8030198266026729,1.8030198266026729,10.723490086698664,5.5511151231257827e-17,0,5.5511151231257827e-17,4,true,converged
+6,7,28,591286729879,32.848457854916099,1.8484578549161008,1.8484578549161008,10.700771072541949,0,0,0,4,true,converged
+7,8,28,591286729879,32.898953132037242,1.8989531320372388,1.8989531320372388,10.675523433981381,4.4408920985006262e-16,4.4408920985006262e-16,0,4,true,converged
+# CPU time: 0.000123 s
+# Elapsed seconds: 0.00028333600000962633203
+# Outcome: success
+# Run CPU seconds: 0.000281999999999999999944
+# Status: converged targeted branches
