@@ -3,6 +3,20 @@
 import csv
 import io
 import math
+from pathlib import Path
+import subprocess
+import tempfile
+
+
+def capture_csv_tables(command, names):
+    """Capture named frontend tables, including export-only auxiliary tables."""
+    with tempfile.TemporaryDirectory(prefix='bethe-tutorial-') as directory:
+        paths = {name: Path(directory) / f'{name}.csv' for name in names}
+        args = [str(arg) for arg in command] + ['--precision', 'fp64', '--format', 'csv']
+        for name, path in paths.items():
+            args += ['--csv-table', f'{name}={path}']
+        subprocess.run(args, check=True, capture_output=True, text=True)
+        return {name: path.read_text() for name, path in paths.items()}
 
 
 def read_csv_export(text, columns, expected, *, row_status='status'):

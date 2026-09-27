@@ -1,0 +1,36 @@
+# Bethe revision: b0edc1a1b610fe4d180f400d232c6dc183fdd673
+# Bethe version: 0.1.0
+# Build type: Release
+# Candidates: 3
+# Command: /home/ian/build/codex/bethe/gtest_clang20_release/bethe-xxx-pbc 4 --excitations all --spin 1 --precision fp64 --format csv
+# Compiler: Clang 20.1.2
+# Converged candidates: 3
+# Date: 2026-09-27T21:23:51Z
+# Family: restricted real-root highest-weight multiplets; NOT a complete spectrum
+# Gap reference: E-E0; global ground state
+# Ground converged: 1
+# Ground energy: -2.0000000000000067
+# Ground iterations: 24
+# Ground residual: 2.886579864025407e-15
+# Ground status: converged
+# Model: periodic spin-1/2, J=1, h=0
+# Multiplet size: 3
+# Ordering: complete within supported family
+# Platform: Linux x86_64
+# Precision: fp64
+# Program: bethe-xxx-pbc
+# Residual tolerance: 7.1054273576010019e-15
+# Returned multiplets: 3
+# S: 1
+# Sites: 4
+# Uni20 revision: a25159cc19c97c43ca43754c46fb9bdef8c41bda
+# First row: 0
+state_id,sz,spin_reversed,energy,gap,residual,iterations,converged,status,momentum_index,p
+0,1,false,-1,1.0000000000000067,0,0,true,converged,2,3.1415926535897931
+1,1,false,-2.2204460492503131e-16,2.0000000000000062,0,1,true,converged,3,4.7123889803846897
+2,1,false,-2.2204460492503131e-16,2.0000000000000062,0,1,true,converged,1,1.5707963267948966
+# CPU time: 0.000051 s
+# Elapsed seconds: 0.000134450000004449066182
+# Outcome: success
+# Run CPU seconds: 0.00013499999999999999982
+# Status: converged

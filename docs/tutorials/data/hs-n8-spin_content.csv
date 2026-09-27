@@ -1,0 +1,92 @@
+# Bethe revision: b0edc1a1b610fe4d180f400d232c6dc183fdd673
+# Bethe version: 0.1.0
+# Build type: Release
+# Calculation: energy-ordered motif spectrum
+# Command: /home/ian/build/codex/bethe/gtest_clang20_release/bethe-haldane-shastry-pbc 8 --levels all --precision fp64 --format csv --csv-table levels=/tmp/bethe-tutorial-te_gj9cs/levels.csv --csv-table spin_content=/tmp/bethe-tutorial-te_gj9cs/spin_content.csv
+# Compiler: Clang 20.1.2
+# Date: 2026-09-27T21:23:50Z
+# Degeneracy: whole Yangian multiplet; S_max is not a unique total spin
+# Hamiltonian: H=(pi/N)^2 sum_{i<j} S_i.S_j/sin^2(pi*(i-j)/N); J=1
+# Max spin updates per motif: 1000000
+# Momentum: P=2*pi*momentum_index/N modulo 2*pi
+# Motifs enumerated: 34
+# Platform: Linux x86_64
+# Precision: fp64
+# Program: bethe-haldane-shastry-pbc
+# Sites: 8
+# Spin content: whole Yangian multiplet; multiplicity counts SU(2) irreps
+# Uni20 revision: a25159cc19c97c43ca43754c46fb9bdef8c41bda
+# First row: 0
+state_id,spin,multiplicity,updates,complete,status
+0,0,1,0,true,complete
+1,0,1,3,true,complete
+1,1,1,3,true,complete
+2,1,1,1,true,complete
+3,1,1,1,true,complete
+4,0,1,3,true,complete
+4,1,1,3,true,complete
+5,0,1,3,true,complete
+5,1,1,3,true,complete
+6,0,1,3,true,complete
+6,1,1,3,true,complete
+7,0,1,3,true,complete
+7,1,1,3,true,complete
+8,0,1,4,true,complete
+8,1,1,4,true,complete
+8,2,1,4,true,complete
+9,0,1,3,true,complete
+9,1,1,3,true,complete
+10,1,1,1,true,complete
+11,1,1,1,true,complete
+12,1,1,3,true,complete
+12,2,1,3,true,complete
+13,1,1,3,true,complete
+13,2,1,3,true,complete
+14,0,1,7,true,complete
+14,1,2,7,true,complete
+14,2,1,7,true,complete
+15,0,1,7,true,complete
+15,1,2,7,true,complete
+15,2,1,7,true,complete
+16,0,1,7,true,complete
+16,1,2,7,true,complete
+16,2,1,7,true,complete
+17,1,1,3,true,complete
+17,2,1,3,true,complete
+18,1,1,3,true,complete
+18,2,1,3,true,complete
+19,0,1,4,true,complete
+19,1,1,4,true,complete
+19,2,1,4,true,complete
+20,2,1,1,true,complete
+21,2,1,1,true,complete
+22,0,1,4,true,complete
+22,1,1,4,true,complete
+22,2,1,4,true,complete
+23,1,1,3,true,complete
+23,2,1,3,true,complete
+24,1,1,3,true,complete
+24,2,1,3,true,complete
+25,0,1,5,true,complete
+25,1,1,5,true,complete
+25,2,1,5,true,complete
+25,3,1,5,true,complete
+26,1,1,4,true,complete
+26,2,1,4,true,complete
+26,3,1,4,true,complete
+27,1,1,4,true,complete
+27,2,1,4,true,complete
+27,3,1,4,true,complete
+28,2,1,1,true,complete
+29,2,1,3,true,complete
+29,3,1,3,true,complete
+30,2,1,3,true,complete
+30,3,1,3,true,complete
+31,3,1,1,true,complete
+32,3,1,1,true,complete
+33,4,1,1,true,complete
+# CPU time: 0.000043 s
+# Elapsed seconds: 0.000619563000000766805897
+# Outcome: success
+# Run CPU seconds: 0.000617999999999999999563
+# Status: exact spectral rules

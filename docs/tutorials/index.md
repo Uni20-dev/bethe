@@ -15,6 +15,8 @@ model below.
 - [Takhtajan–Babujian](takhtajan-babujian.md): spin selection rules and quadrupolar continua.
 - [Lieb–Liniger](lieb-liniger.md): particle/hole branches and density scaling.
 - [Sutherland](sutherland.md): collision exponents, excitation labels and bounded scans.
+- [XXX](xxx.md): finite-ring spinons and periodic/free-end excitation scans.
+- [Haldane–Shastry](haldane-shastry.md): motifs, spin multiplicities and complete finite spectra.
 
 ## Coverage of implemented models
 
@@ -26,7 +28,7 @@ in the [model survey](../models.md) are outside this inventory.
 
 | Model family | Tutorial or reference guide | Worked topic still to add where planned |
 | --- | --- | --- |
-| XXX | [Guide](../xxx.md); planned | Finite-ring excitations and free-end comparison |
+| XXX | [Tutorial](xxx.md) | — |
 | XXZ | [Tutorial](xxz-spinons.md) | — |
 | XYZ | [Guide](../xyz-dispersion.md); planned | Gapped bands and bound branches |
 | SU(3)/ULS | [Tutorial](su3-uls.md) | — |
@@ -50,7 +52,7 @@ in the [model survey](../models.md) are outside this inventory.
 | SU(n) fermion gas | [Guide](../su-fermions.md); planned | Populations, repulsion and the free limit |
 | Bose–Fermi mixture | [Guide](../bose-fermi.md); planned | Composition at equal masses/couplings |
 | Integrable ladder | [Guide](../ladder.md); planned | Rung exchange and magnetization sectors |
-| Haldane–Shastry | [Guide](../haldane-shastry.md); planned | Exact motifs, energies and multiplicities |
+| Haldane–Shastry | [Tutorial](haldane-shastry.md) | — |
 | Sutherland | [Tutorial](sutherland.md) | — |
 
 A model tutorial introduces a useful supported calculation; it does not imply

@@ -1,0 +1,34 @@
+# Bethe revision: b0edc1a1b610fe4d180f400d232c6dc183fdd673
+# Bethe version: 0.1.0
+# Build type: Release
+# Bulk reference: e_inf = 1/4 - log(2)
+# Command: /home/ian/build/codex/bethe/gtest_clang20_release/bethe-xxx-pbc 15 --spinons --precision fp64 --format csv --csv-table states=/tmp/bethe-tutorial-1cz32ky0/states.csv --csv-table spinons=/tmp/bethe-tutorial-1cz32ky0/spinons.csv
+# Compiler: Clang 20.1.2
+# Date: 2026-09-27T21:23:51Z
+# Finite-size energy: E - N*e_inf retains finite-size corrections
+# Lattice momentum: P = 2*pi*momentum_index/N (mod 2*pi)
+# Model: periodic spin-1/2, J=1, h=0
+# Platform: Linux x86_64
+# Precision: fp64
+# Program: bethe-xxx-pbc
+# Residual tolerance: 7.1054273576010019e-15
+# Sites: 15
+# Spinon momentum: k = pi/2 - 2*pi*hole/N
+# Sz: 0.5
+# Thermodynamic curve: epsilon_inf = (pi/2)*sin(k)
+# Uni20 revision: a25159cc19c97c43ca43754c46fb9bdef8c41bda
+# First row: 0
+state_id,hole,k,bulk_subtracted_energy,epsilon_inf
+0,3.5,0.10471975511965977,0.11354013593342493,0.16419292614634531
+1,2.5,0.52359877559829882,0.73930962339623285,0.78539816339744817
+2,1.5,0.94247779607693793,1.2275917871152284,1.2708009230788149
+3,0.5,1.3613568165555772,1.4947760500275198,1.5364706582959031
+4,-0.5,1.780235837034216,1.4947760500275198,1.5364706582959031
+5,-1.5,2.1991148575128552,1.2275917871152284,1.2708009230788149
+6,-2.5,2.6179938779914944,0.73930962339623285,0.78539816339744817
+7,-3.5,3.0368728984701332,0.11354013593342493,0.16419292614634576
+# CPU time: 0.000524 s
+# Elapsed seconds: 0.000740020999998591832991
+# Outcome: success
+# Run CPU seconds: 0.000739999999999999999548
+# Status: converged

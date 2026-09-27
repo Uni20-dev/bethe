@@ -6,6 +6,8 @@ This guide connects a numerical result to the periodic spin-1/2 Heisenberg
 model it represents. Start with the Hamiltonian normalization, then follow
 the quantum numbers through to rapidities, energy, and momentum. For a first
 command-line run, see [the CLI guide](command-line.md).
+For plotted finite-size and boundary comparisons, see the
+[XXX tutorial](tutorials/xxx.md).
 
 ## Hamiltonian and normalization
 

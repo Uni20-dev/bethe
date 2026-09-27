@@ -5,6 +5,9 @@ spin-1/2 antiferromagnetic inverse-chord-square chain. This is not the
 nearest-neighbor XXX model: there are no nonlinear root solves or convergence
 tolerances. Arithmetic supports fp64, long-double and optional fp128.
 
+The [worked motif tutorial](tutorials/haldane-shastry.md) plots complete small
+rings and shows how their SU(2) multiplets account for every spin state.
+
 ```sh
 build/bethe-haldane-shastry-pbc 16
 build/bethe-haldane-shastry-pbc 15 --sz 3/2

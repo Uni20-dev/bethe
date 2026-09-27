@@ -1,0 +1,138 @@
+# Bethe revision: b0edc1a1b610fe4d180f400d232c6dc183fdd673
+# Bethe version: 0.1.0
+# Build type: Release
+# Calculation: energy-ordered motif spectrum
+# Command: /home/ian/build/codex/bethe/gtest_clang20_release/bethe-haldane-shastry-pbc 9 --levels all --precision fp64 --format csv --csv-table levels=/tmp/bethe-tutorial-rjw98bjr/levels.csv --csv-table spin_content=/tmp/bethe-tutorial-rjw98bjr/spin_content.csv
+# Compiler: Clang 20.1.2
+# Date: 2026-09-27T21:23:50Z
+# Degeneracy: whole Yangian multiplet; S_max is not a unique total spin
+# Hamiltonian: H=(pi/N)^2 sum_{i<j} S_i.S_j/sin^2(pi*(i-j)/N); J=1
+# Max spin updates per motif: 1000000
+# Momentum: P=2*pi*momentum_index/N modulo 2*pi
+# Motifs enumerated: 55
+# Platform: Linux x86_64
+# Precision: fp64
+# Program: bethe-haldane-shastry-pbc
+# Sites: 9
+# Spin content: whole Yangian multiplet; multiplicity counts SU(2) irreps
+# Uni20 revision: a25159cc19c97c43ca43754c46fb9bdef8c41bda
+# First row: 0
+state_id,spin,multiplicity,updates,complete,status
+0,0.5,1,1,true,complete
+1,0.5,1,1,true,complete
+2,0.5,1,1,true,complete
+3,0.5,1,1,true,complete
+4,0.5,1,1,true,complete
+5,0.5,1,3,true,complete
+5,1.5,1,3,true,complete
+6,0.5,1,3,true,complete
+6,1.5,1,3,true,complete
+7,0.5,2,6,true,complete
+7,1.5,1,6,true,complete
+8,0.5,2,6,true,complete
+8,1.5,1,6,true,complete
+9,1.5,1,1,true,complete
+10,1.5,1,1,true,complete
+11,0.5,1,3,true,complete
+11,1.5,1,3,true,complete
+12,0.5,1,3,true,complete
+12,1.5,1,3,true,complete
+13,0.5,1,3,true,complete
+13,1.5,1,3,true,complete
+14,0.5,1,3,true,complete
+14,1.5,1,3,true,complete
+15,0.5,2,6,true,complete
+15,1.5,1,6,true,complete
+16,0.5,1,3,true,complete
+16,1.5,1,3,true,complete
+17,0.5,1,3,true,complete
+17,1.5,1,3,true,complete
+18,0.5,2,6,true,complete
+18,1.5,1,6,true,complete
+19,0.5,1,3,true,complete
+19,1.5,1,3,true,complete
+20,0.5,1,3,true,complete
+20,1.5,1,3,true,complete
+21,0.5,1,4,true,complete
+21,1.5,1,4,true,complete
+21,2.5,1,4,true,complete
+22,0.5,1,4,true,complete
+22,1.5,1,4,true,complete
+22,2.5,1,4,true,complete
+23,0.5,2,8,true,complete
+23,1.5,2,8,true,complete
+23,2.5,1,8,true,complete
+24,0.5,1,3,true,complete
+24,1.5,1,3,true,complete
+25,0.5,1,3,true,complete
+25,1.5,1,3,true,complete
+26,0.5,1,7,true,complete
+26,1.5,2,7,true,complete
+26,2.5,1,7,true,complete
+27,1.5,1,1,true,complete
+28,1.5,1,3,true,complete
+28,2.5,1,3,true,complete
+29,1.5,1,1,true,complete
+30,1.5,1,3,true,complete
+30,2.5,1,3,true,complete
+31,0.5,1,7,true,complete
+31,1.5,2,7,true,complete
+31,2.5,1,7,true,complete
+32,0.5,2,9,true,complete
+32,1.5,2,9,true,complete
+32,2.5,1,9,true,complete
+33,0.5,2,8,true,complete
+33,1.5,2,8,true,complete
+33,2.5,1,8,true,complete
+34,0.5,1,7,true,complete
+34,1.5,2,7,true,complete
+34,2.5,1,7,true,complete
+35,0.5,1,4,true,complete
+35,1.5,1,4,true,complete
+35,2.5,1,4,true,complete
+36,1.5,1,3,true,complete
+36,2.5,1,3,true,complete
+37,1.5,1,3,true,complete
+37,2.5,1,3,true,complete
+38,0.5,1,4,true,complete
+38,1.5,1,4,true,complete
+38,2.5,1,4,true,complete
+39,0.5,1,4,true,complete
+39,1.5,1,4,true,complete
+39,2.5,1,4,true,complete
+40,2.5,1,1,true,complete
+41,2.5,1,1,true,complete
+42,0.5,1,4,true,complete
+42,1.5,1,4,true,complete
+42,2.5,1,4,true,complete
+43,1.5,1,3,true,complete
+43,2.5,1,3,true,complete
+44,1.5,1,3,true,complete
+44,2.5,1,3,true,complete
+45,0.5,1,5,true,complete
+45,1.5,1,5,true,complete
+45,2.5,1,5,true,complete
+45,3.5,1,5,true,complete
+46,0.5,1,5,true,complete
+46,1.5,1,5,true,complete
+46,2.5,1,5,true,complete
+46,3.5,1,5,true,complete
+47,1.5,1,4,true,complete
+47,2.5,1,4,true,complete
+47,3.5,1,4,true,complete
+48,1.5,1,4,true,complete
+48,2.5,1,4,true,complete
+48,3.5,1,4,true,complete
+49,2.5,1,1,true,complete
+50,2.5,1,3,true,complete
+50,3.5,1,3,true,complete
+51,2.5,1,3,true,complete
+51,3.5,1,3,true,complete
+52,3.5,1,1,true,complete
+53,3.5,1,1,true,complete
+54,4.5,1,1,true,complete
+# CPU time: 0.000022 s
+# Elapsed seconds: 7.87119999898777678027e-05
+# Outcome: success
+# Run CPU seconds: 7.8000000000000000282e-05
+# Status: exact spectral rules

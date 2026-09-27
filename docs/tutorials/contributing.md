@@ -20,6 +20,8 @@ python3 scripts/plot_hubbard_tutorial.py --check
 python3 scripts/plot_spin1_tutorial.py --check
 python3 scripts/plot_lieb_liniger_tutorial.py --check
 python3 scripts/plot_sutherland_tutorial.py --check
+python3 scripts/plot_xxx_tutorial.py --check
+python3 scripts/plot_haldane_shastry_tutorial.py --check
 python3 -m unittest discover -s scripts -p 'test_tutorial*.py'
 ```
 
@@ -31,6 +33,10 @@ also describes regenerating the ULS and TB figures together.
 The [Lieb–Liniger](lieb-liniger.md#5-reproduce-the-figures) and
 [Sutherland](sutherland.md#6-reproduce-and-check) tutorials each have a
 standalone export-and-plot script.
+The [XXX](xxx.md#5-reproduce-and-validate) and
+[Haldane–Shastry](haldane-shastry.md#6-reproduce-the-figures) examples also show
+how to join named auxiliary tables. Their regeneration scripts share a
+temporary-file capture helper and validate all exports before saving them.
 `scripts/tutorial_common.py` shares CSV/provenance validation and deterministic
 SVG writing; each model's script and tests own its schema and physics checks.
 

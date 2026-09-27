@@ -1,0 +1,42 @@
+# Bethe revision: b0edc1a1b610fe4d180f400d232c6dc183fdd673
+# Bethe version: 0.1.0
+# Build type: Release
+# Bulk reference: e_inf = 1/4 - log(2)
+# Command: /home/ian/build/codex/bethe/gtest_clang20_release/bethe-xxx-pbc 31 --spinons --precision fp64 --format csv --csv-table states=/tmp/bethe-tutorial-8obn4g8s/states.csv --csv-table spinons=/tmp/bethe-tutorial-8obn4g8s/spinons.csv
+# Compiler: Clang 20.1.2
+# Date: 2026-09-27T21:23:51Z
+# Finite-size energy: E - N*e_inf retains finite-size corrections
+# Lattice momentum: P = 2*pi*momentum_index/N (mod 2*pi)
+# Model: periodic spin-1/2, J=1, h=0
+# Platform: Linux x86_64
+# Precision: fp64
+# Program: bethe-xxx-pbc
+# Residual tolerance: 7.1054273576010019e-15
+# Sites: 31
+# Spinon momentum: k = pi/2 - 2*pi*hole/N
+# Sz: 0.5
+# Thermodynamic curve: epsilon_inf = (pi/2)*sin(k)
+# Uni20 revision: a25159cc19c97c43ca43754c46fb9bdef8c41bda
+# First row: 0
+state_id,sz,spin_reversed,energy,gap,residual,iterations,converged,status,momentum_index,p
+0,0.5,false,-13.683165245201327,,6.2172489379008766e-15,61,true,converged,23,4.6617181311332416
+1,0.5,false,-13.367932633772522,,6.6613381477509392e-15,62,true,converged,22,4.4590347341274486
+2,0.5,false,-13.069189564310207,,6.6613381477509392e-15,62,true,converged,21,4.2563513371216546
+3,0.5,false,-12.7988946593366,,6.6613381477509392e-15,62,true,converged,20,4.0536679401158624
+4,0.5,false,-12.568068356189304,,6.2172489379008766e-15,62,true,converged,19,3.8509845431100689
+5,0.5,false,-12.386143981602313,,6.6613381477509392e-15,62,true,converged,18,3.6483011461042762
+6,0.5,false,-12.260561793532037,,6.2172489379008766e-15,62,true,converged,17,3.4456177490984823
+7,0.5,false,-12.196459324542342,,6.2172489379008766e-15,62,true,converged,16,3.2429343520926897
+8,0.5,false,-12.196459324542342,,6.2172489379008766e-15,62,true,converged,15,3.0402509550868966
+9,0.5,false,-12.260561793532037,,6.2172489379008766e-15,62,true,converged,14,2.8375675580811035
+10,0.5,false,-12.386143981602313,,6.6613381477509392e-15,62,true,converged,13,2.6348841610753104
+11,0.5,false,-12.568068356189304,,6.2172489379008766e-15,62,true,converged,12,2.4322007640695174
+12,0.5,false,-12.7988946593366,,6.6613381477509392e-15,62,true,converged,11,2.2295173670637243
+13,0.5,false,-13.069189564310207,,6.6613381477509392e-15,62,true,converged,10,2.0268339700579312
+14,0.5,false,-13.367932633772522,,6.6613381477509392e-15,62,true,converged,9,1.8241505730521381
+15,0.5,false,-13.683165245201327,,6.6613381477509392e-15,61,true,converged,8,1.6214671760463448
+# CPU time: 0.002006 s
+# Elapsed seconds: 0.00216044500000123207428
+# Outcome: success
+# Run CPU seconds: 0.00214799999999999999978
+# Status: converged
