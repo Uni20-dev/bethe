@@ -31,13 +31,26 @@ export at an input, source file or other valuable data with `--force`.
 
 ## Named tables
 
-All except Hubbard dispersion use a named-table document: Haldane–Shastry has `levels`;
-Sutherland has `states` and, with `--pseudomomenta`, `pseudomomenta`.
+All except Hubbard dispersion use a named-table document. Each frontend's
+`--help` lists its table names, primary table, availability conditions and
+screen-display flags under **Output tables**.
+
+Screen selection and file selection are independent: `--roots` shows roots
+on screen; `--csv-table roots=roots.csv` requests their production and exports
+them without adding them to the screen report. The same applies to
+`--variables`, `--pseudomomenta` and `--spin-content`. These flags are **not
+required** for a named file export. They also select the auxiliary tables in
+ordinary JSON documents; a CSV/TSV-only request does not add tables to a separate
+JSON export or JSON stdout.
+
+Haldane–Shastry has `levels` and optional `spin_content`; Sutherland has `states`
+and optional `pseudomomenta`.
 The zero-based `state_id` links auxiliary rows to state records. Sutherland's
 old space-separated pseudomomenta cell is replaced by typed `state_id,index,label,k`
 rows; this avoids parsing numeric lists out of strings.
 
-The remaining models use these tables:
+The remaining models use these tables. Flags in the last column select
+screen/ordinary JSON output, not prerequisites for named CSV/TSV exports.
 
 | Frontend | Primary table | Optional auxiliary tables |
 | --- | --- | --- |
@@ -51,8 +64,8 @@ The remaining models use these tables:
 | `bethe-ladder-pbc` | `states` | always `representations`; selected-state `roots` with `--roots` |
 | `bethe-hubbard-pbc`, `bethe-hubbard-obc` | `states` | `charge_roots`, `spin_roots`, or `free_modes` with `--roots` |
 | `bethe-xxx-pbc`, `bethe-xxx-obc` | `states` | `roots` with `--roots`; periodic `--spinons` also has `spinons` |
-| `bethe-xxz-pbc`, `bethe-xxz-obc` | `states` | `roots` with `--roots`; open ground-state modes also have `boundary_roots` |
-| `bethe-lieb-liniger-pbc` | `states` | `roots` with `--roots` |
+| `bethe-xxz-pbc`, `bethe-xxz-obc` | `states` | `roots` with `--roots`; that flag also shows `boundary_roots` for the open ground/sector representation |
+| `bethe-lieb-liniger-pbc`, `bethe-lieb-liniger-obc` | `states` | `roots` with `--roots` |
 | `bethe-lieb-liniger-dispersion` | `dispersion` | none; bulk background in metadata |
 | `bethe-lieb-liniger-thermal` | `thermodynamics` | none; one row per temperature |
 | `bethe-q-boson-pbc` | `states` | `roots` with `--roots`; null momenta on failure |
@@ -60,7 +73,15 @@ The remaining models use these tables:
 | `bethe-tasep-pbc` | `relaxation` | `roots` with `--roots`, reduced-filling Z coordinates; rates/frequency, not energies; absent modes in empty/full sectors |
 | `bethe-asep-pbc` | `relaxation` | `roots` with `--roots`, scaled reduced-filling v coordinates; wave base in metadata; analytic cases have no roots; rates/frequency, not energies |
 | `bethe-sine-gordon-vacuum` | `vacuum` | Bulk-subtracted continuum energy E_C, Y=L*E_C, c_eff and separate numerical error/work diagnostics; no roots or absolute bulk energy |
-| `bethe-biquadratic-obc` | `states` | real modes: `quantum_numbers`; Q-system: `reference`, `q_coefficients`; two-string singlet / ferro bound pairs and triples: `reference`, `string`; ferro analytic modes: `reference`; numerical `roots` with `--roots` |
+| `bethe-biquadratic-obc` | `states` | real modes: `quantum_numbers`; Q-system: `reference`, `q_coefficients`; singlet/bound clusters: `reference`, `string`; mixed clusters also have `labels`; ferro analytic modes: `reference`; numerical `roots` with `--roots`; `spin_content` with `--spin-content` |
+| `bethe-su3-dispersion`, `bethe-tb-dispersion`, `bethe-xxz-dispersion`, `bethe-xyz-dispersion`, `bethe-sine-gordon-dispersion` | `dispersion` | none; branches are rows, not separate tables |
+| `bethe-sine-gordon-bethe-yang`, `bethe-potts-pbc` | `levels` | none |
+| `bethe-sine-gordon-excited`, `bethe-lee-yang-excited` | `levels` | always `source`, `gap`; failed observables are missing values, not absent tables |
+| `bethe-lee-yang-vacuum` | `vacuum` | none |
+| `bethe-hubbard-continuum` | `two_spinon` or `charge_continuum` | selected by `--channel`; only that channel's table exists |
+| `bethe-kondo-response` | `response` | none |
+| `bethe-bose-fermi-pbc` | `states` | `charge_roots`, `auxiliary_roots`, or `free_modes` with `--roots` |
+| `bethe-xxz-qg-obc` | `state` (regular), `levels` (scan), or `blocks` (Delta=0) | regular `roots` with `--roots`; scans have `reference` and, only on candidate failure, `failed` |
 
 Excitation scans additionally write `reference` (the ground state used for gaps)
 and, if a candidate fails, `failed` (the first unranked estimate). State IDs are
@@ -113,7 +134,8 @@ The final human report keeps the model's compact overview once, followed by
 its tables. Each exported table independently carries full provenance and
 physical metadata so a selected auxiliary CSV file remains interpretable.
 
-Human output shows all requested tables. JSON stores them in a single object:
+Human output shows the screen-selected tables, not file-only auxiliaries.
+JSON stores the screen-selected table collection in a single object:
 `{"tables":{"states":{...},"pseudomomenta":{...}},"status":"complete"}`.
 Each table has the Uni20 schema described below. The document status records
 output completion, **not** numerical convergence or spectral completeness;
@@ -136,9 +158,20 @@ build/bethe-sutherland-pbc 3 --length 4 --lambda 2 \
   --pseudomomenta --table pseudomomenta --format csv
 ```
 
-Selecting an unavailable table is an error before any export is opened; e.g.
-`--table pseudomomenta` requires `--pseudomomenta`. The `--table` selector affects
-only CSV/TSV, not the screen or JSON table collection.
+Table selection is strict:
+
+- Unknown or removed names are rejected during option parsing.
+- A known table must apply to the selected calculation. For example, requesting
+  `spinons` does not select the XXX `--spinons` calculation for you.
+- Outcome-dependent tables must actually exist. Requesting `failed` from a scan
+  with no failed candidate is an error, not an empty-file fallback.
+- A genuinely available table may have zero rows, such as roots of a polarized
+  state. This is different from an unavailable table.
+
+All selections are checked before export files are opened or overwritten;
+outcome-dependent availability is checked after solving. `--table pseudomomenta`
+requests that table without requiring `--pseudomomenta`. The `--table` selector
+affects only CSV/TSV, not the human screen report or JSON table collection.
 
 ## Metadata and reproducibility
 

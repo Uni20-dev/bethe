@@ -28,7 +28,7 @@ auto program_info()
                 "Delta E_imp=E_imp(b)-E_imp(0); M_imp=-d Delta E_imp/db includes the host response change.",
                 "No finite-band absolute energy, bare J/bandwidth matching, or finite-size excited states.",
                 "Tolerance is absolute in M_imp and Delta E_imp/|b|; default 1048576 epsilon.",
-                "Failed observables are missing, with exit status 2. Table: response.",
+                "Failed observables are missing, with exit status 2.",
                 "See docs/kondo.md; --references for literature."};
   return info;
 }
@@ -44,7 +44,8 @@ void add_options(CLI::App& app, Arguments& a)
   cli::count_option(app, "--max-quadrature-levels", a.levels, "Quadrature refinement levels per lobe")
       ->capture_default_str();
   cli::precision_option(app, a.precision);
-  cli::add_data_output_options(app, a.output, true);
+  cli::add_data_output_options(app, a.output,
+                               {{.name = "response", .description = "Impurity response", .primary = true}});
 }
 char const* name(model::Status status)
 {

@@ -58,7 +58,9 @@ void add_options(CLI::App& app, Arguments& a)
       ->capture_default_str();
   cli::count_option(app, "--max-evaluations", a.evaluations, "Equilibrium solves per fixed-density point")
       ->capture_default_str();
-  cli::add_data_output_options(app, a.output, true);
+  cli::add_data_output_options(
+      app, a.output,
+      {{.name = "thermodynamics", .description = "Equilibrium observables, one row per temperature", .primary = true}});
 }
 char const* name(model::Status status)
 {

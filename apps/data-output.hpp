@@ -2,6 +2,7 @@
 // Copyright (C) 2026 Ian McCulloch
 #pragma once
 #include "report-common.hpp"
+#include "table-descriptors.hpp"
 #include <filesystem>
 #include <fstream>
 #include <memory>
@@ -22,6 +23,28 @@ struct DataOutputOptions
     std::vector<DataFile> files;
     std::string table;
     bool quiet = false, preamble = true, force = false, stream = false, retain = true;
+    TableCatalogue catalogue;
+    std::vector<std::string> screen_options;
+
+    bool requested(std::string_view name) const
+    {
+      if (table == name) return true;
+      return std::ranges::any_of(files, [&](auto const& file) { return file.table == name; });
+    }
+    // Production may be shared by several auxiliary tables. This never changes
+    // the original screen flag; routing below remains per table/destination.
+    bool needs(std::string_view screen_option, bool screen) const
+    {
+      return screen || std::ranges::any_of(catalogue, [&](auto const& t) {
+               return t.screen_option == screen_option && requested(t.name);
+             });
+    }
+    bool screen_table(std::string_view name) const
+    {
+      if (catalogue.empty()) return true;
+      auto const& t = table_descriptor(catalogue, name);
+      return t.screen_option.empty() || std::ranges::find(screen_options, t.screen_option) != screen_options.end();
+    }
 
     bool human() const { return format == "auto" || format == "pretty" || format == "plain"; }
     void validate() const
@@ -33,6 +56,12 @@ struct DataOutputOptions
       for (auto const& file : files)
         if (file.format != "csv" && file.format != "tsv" && file.format != "json")
           throw std::invalid_argument("unknown export format: " + file.format);
+      if (!catalogue.empty())
+      {
+        if (!table.empty()) (void)table_descriptor(catalogue, table);
+        for (auto const& file : files)
+          if (!file.table.empty()) (void)table_descriptor(catalogue, file.table);
+      }
     }
 };
 // Keep every metadata field on one comment line; argv may contain real newlines.
@@ -151,6 +180,9 @@ class DataOutput {
         : options_(std::move(options)), tables_(std::move(tables)), json_files_(options_.files.size())
     {
       options_.validate();
+      validate_table_catalogue(options_.catalogue);
+      if (!options_.catalogue.empty() && tables_.empty())
+        throw std::logic_error("named output requires an actual result-table plan");
       if (!tables_.empty())
       {
         for (auto const& name : tables_)
@@ -160,14 +192,43 @@ class DataOutput {
           if (std::count(tables_.begin(), tables_.end(), name) != 1)
             throw std::logic_error("duplicate output table identifier: " + name);
         }
-        if (options_.table.empty()) options_.table = tables_.front();
+        if (!options_.catalogue.empty())
+        {
+          std::string primary;
+          for (auto const& name : tables_)
+            if (table_descriptor(options_.catalogue, name).primary)
+            {
+              if (!primary.empty()) throw std::logic_error("multiple primary output tables");
+              primary = name;
+            }
+          if (primary.empty()) throw std::logic_error("no primary output table in result");
+          if (options_.table.empty()) options_.table = primary;
+        }
+        else if (options_.table.empty())
+          options_.table = tables_.front();
         auto check = [&](std::string const& name) {
           if (std::find(tables_.begin(), tables_.end(), name) == tables_.end())
-            throw std::invalid_argument("output table is unavailable in this calculation: " + name);
+          {
+            std::string valid;
+            for (auto const& t : tables_)
+              valid += (valid.empty() ? "" : ", ") + t;
+            std::string reason = options_.catalogue.empty()
+                                     ? ""
+                                     : "; availability: " + table_descriptor(options_.catalogue, name).availability;
+            throw std::invalid_argument("output table is unavailable in this calculation: " + name + reason +
+                                        "; available tables: " + valid);
+          }
         };
         check(options_.table);
         for (auto const& file : options_.files)
           if (!file.table.empty()) check(file.table);
+        // A shared producer may have constructed siblings of a file-only table.
+        // They are not part of this output document unless separately requested.
+        std::erase_if(tables_, [&](auto const& name) {
+          bool const omit = !options_.screen_table(name) && !options_.requested(name);
+          if (omit) omitted_.push_back(name);
+          return omit;
+        });
       }
       this->check_paths(); // Reject collisions/existing files before opening any target.
       for (auto const& file : options_.files)
@@ -194,6 +255,12 @@ class DataOutput {
     // Keep a compact, model-authored human overview. Export metadata still
     // carries the complete provenance on every independently readable table.
     void overview(report_builder report) { overview_ = std::move(report); }
+    bool accepts(std::string_view name) const
+    {
+      // Only explicitly planned but unrequested siblings may be skipped. An
+      // unplanned/renamed writer must still reach attach() and fail visibly.
+      return std::ranges::find(omitted_, name) == omitted_.end();
+    }
     template <typename Table> void attach(Table& table, std::string name = {})
     {
       if (!tables_.empty())
@@ -210,16 +277,17 @@ class DataOutput {
       for (std::size_t i = 0; i < files_.size(); ++i)
       {
         auto const& file = options_.files[i];
-        if (tables_.empty() || file.format == "json" || name == (file.table.empty() ? options_.table : file.table))
+        if (tables_.empty() || (file.format == "json" ? options_.screen_table(name)
+                                                      : name == (file.table.empty() ? options_.table : file.table)))
           this->attach_stream(table, *files_[i], file.format, file.path, name, json_files_[i]);
       }
       if (options_.quiet) return;
       if (!options_.human())
       {
-        if (tables_.empty() || options_.format == "json" || name == options_.table)
+        if (tables_.empty() || (options_.format == "json" ? options_.screen_table(name) : name == options_.table))
           this->attach_stream(table, std::cout, options_.format, "stdout", name, json_stdout_);
       }
-      else if (options_.stream)
+      else if (options_.stream && options_.screen_table(name))
       {
         if (options_.format == "plain" && !plain_router_)
           plain_router_.emplace([](uni20::display::event const& event) {
@@ -245,9 +313,10 @@ class DataOutput {
       {
         failure = std::current_exception();
       }
+      bool const show = active_table_.empty() || options_.screen_table(active_table_);
       active_table_.clear();
       if (tables_.empty()) this->close_files(failure);
-      if (!failure && !options_.quiet && options_.human() && !options_.stream)
+      if (!failure && show && !options_.quiet && options_.human() && !options_.stream)
       {
         report_builder report(table.title());
         if (overview_)
@@ -294,6 +363,7 @@ class DataOutput {
     template <typename Table, typename Fill>
     void write_table(std::string name, Table& table, Fill&& fill, data::table_metadata summary = {})
     {
+      if (!accepts(name)) return;
       try
       {
         attach(table, std::move(name));
@@ -464,7 +534,7 @@ class DataOutput {
       }
     }
     DataOutputOptions options_;
-    std::vector<std::string> tables_, delivered_;
+    std::vector<std::string> tables_, delivered_, omitted_;
     std::string active_table_;
     std::vector<JsonDocument> json_files_;
     JsonDocument json_stdout_;

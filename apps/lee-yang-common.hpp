@@ -31,7 +31,6 @@ inline void add_options(CLI::App& app, Arguments& a, char const* tolerance_help)
   count_option(app, "--max-kernel-products", a.products, "Maximum folded kernel-times-logarithm terms per state")
       ->capture_default_str();
   precision_option(app, a.precision);
-  add_data_output_options(app, a.output, true);
 }
 template <uni20::Real Real, typename Options> Options options_from(Arguments const& a, Options options)
 {

@@ -28,8 +28,7 @@ auto program_info()
                 "This is not the generic spin-1 Heisenberg chain or the SU(3) ULS point.",
                 "See docs/takhtajan-babujian.md for normalization and numerical conventions.",
                 "Use --references for literature and applicability; see CITATIONS.md."};
-  info.notes.push_back(
-      "Tables: states; strings and roots with --roots. Complex roots have separate real/imaginary columns.");
+  info.notes.push_back("Complex roots have separate real/imaginary columns.");
   return info;
 }
 void add_options(CLI::App& app, Arguments& args)
@@ -41,7 +40,16 @@ void add_options(CLI::App& app, Arguments& args)
   bethe::cli::option(app, "--max-iterations", args.max_iterations, "accepted Newton updates (default: 10000)")
       ->capture_default_str();
   bethe::cli::precision_option(app, args.precision);
-  cli::add_data_output_options(app, args.output, true);
+  cli::add_data_output_options(app, args.output,
+                               {{.name = "states", .description = "Selected states and diagnostics", .primary = true},
+                                {.name = "strings",
+                                 .description = "Root coordinates and labels",
+                                 .availability = "finite-deviation two-strings",
+                                 .screen_option = "--roots"},
+                                {.name = "roots",
+                                 .description = "Root coordinates and labels",
+                                 .availability = "selected root representation",
+                                 .screen_option = "--roots"}});
 }
 
 void validate(Arguments const& args) { args.output.validate(); }
@@ -91,7 +99,7 @@ template <uni20::Real Real> int run(Arguments const& args, int argc, char** argv
       .field("iterations", "Iterations", state.iterations);
   using cli::column;
   std::vector<std::string> names{"states"};
-  if (args.roots)
+  if (args.output.needs("--roots", args.roots))
   {
     names.push_back("strings");
     names.push_back("roots");
@@ -106,7 +114,7 @@ template <uni20::Real Real> int run(Arguments const& args, int argc, char** argv
       column<std::size_t>("state_id"), column<Real>("energy"), column<std::size_t>("momentum_index"), column<Real>("p"),
       column<Real>("phase_residual"), column<Real>("modulus_residual"), column<Real>("residual"),
       column<std::size_t>("iterations"), column<bool>("converged"), column<std::string>("status"));
-  if (args.roots)
+  if (args.output.needs("--roots", args.roots))
   {
     output.table(
         "strings", "Deviated two-strings",

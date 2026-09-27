@@ -29,7 +29,7 @@ auto program_info()
       "Free even fermion shells select the positive-momentum degenerate representative. Momentum is not folded.",
       "No auxiliary-auxiliary scattering; this is not an extra color of the SU(n) Fermi gas.",
       "Default tolerance: 32 epsilon. Failed energies/roots are missing, with exit status 2.",
-      "Tables: states; --roots adds charge_roots and auxiliary_roots, or free_modes in free limits.",
+      "Root coordinates use the interacting or free representation selected by the calculation.",
       "See docs/bose-fermi.md for branches and conventions; --references for literature. fp128 requires MPLAPACK."};
   return info;
 }
@@ -46,7 +46,20 @@ void add_options(CLI::App& app, Arguments& a)
       ->capture_default_str();
   app.add_flag("--roots", a.roots, "Export charge/auxiliary roots or exact free modes");
   cli::precision_option(app, a.precision);
-  cli::add_data_output_options(app, a.output, true);
+  cli::add_data_output_options(app, a.output,
+                               {{.name = "states", .description = "Selected states and diagnostics", .primary = true},
+                                {.name = "charge_roots",
+                                 .description = "Root coordinates and labels",
+                                 .availability = "interacting representation",
+                                 .screen_option = "--roots"},
+                                {.name = "auxiliary_roots",
+                                 .description = "Root coordinates and labels",
+                                 .availability = "interacting representation",
+                                 .screen_option = "--roots"},
+                                {.name = "free_modes",
+                                 .description = "Root coordinates and labels",
+                                 .availability = "free representation",
+                                 .screen_option = "--roots"}});
 }
 char const* name(model::Status status)
 {
@@ -96,7 +109,7 @@ template <uni20::Real Real> int run(Arguments const& a, int argc, char** argv)
       .field("iterations", "Newton updates", state.iterations)
       .result(state.converged, name(state.status));
   std::vector<std::string> tables{"states"};
-  if (a.roots)
+  if (a.output.needs("--roots", a.roots))
   {
     if (free)
       tables.push_back("free_modes");
@@ -114,7 +127,7 @@ template <uni20::Real Real> int run(Arguments const& a, int argc, char** argv)
       column<std::size_t>("state_id"), column<Optional>("energy"), column<std::int64_t>("momentum_index"),
       column<Optional>("momentum"), column<Real>("residual"), column<std::size_t>("iterations"),
       column<bool>("converged"), column<std::string>("status"));
-  if (a.roots && free)
+  if (a.output.needs("--roots", a.roots) && free)
     output.table(
         "free_modes", "Free occupation modes",
         [&](auto& table) {
@@ -127,7 +140,7 @@ template <uni20::Real Real> int run(Arguments const& a, int argc, char** argv)
         },
         column<std::size_t>("state_id"), column<std::string>("species"), column<std::size_t>("index"),
         column<std::int64_t>("mode"), column<Optional>("k"));
-  else if (a.roots)
+  else if (a.output.needs("--roots", a.roots))
     for (bool auxiliary : {false, true})
     {
       auto const& numbers = auxiliary ? state.auxiliary_numbers : state.charge_numbers;

@@ -19,7 +19,7 @@ auto program_info()
       "Bulk-subtracted E_C=E0-L*e_bulk; Y=L*E_C. No absolute bulk energy, excited states, boundaries or defects.",
       "Computed c_eff(r)=-6Y/pi approaches 2/5 in the UV; it is not the theory's c=-22/5 (h_min=-1/5).",
       "Tolerance is absolute in Y, default 8192 epsilon. Nonlinear, mesh and cutoff checks are separate.",
-      "Failed observables and unavailable diagnostics are missing; incomplete solves exit 2. Table: vacuum.",
+      "Failed observables and unavailable diagnostics are missing; incomplete solves exit 2.",
       "See docs/lee-yang.md; --references for literature and conventions."};
   info.examples = {
       {"bethe-lee-yang-vacuum --length 1", "Unit-mass periodic ground state"},
@@ -29,6 +29,8 @@ auto program_info()
 void add_options(CLI::App& app, Arguments& a)
 {
   cli::lee_yang::add_options(app, a, "Absolute Y tolerance; default 8192 epsilon");
+  bethe::cli::add_data_output_options(
+      app, a.output, {{.name = "vacuum", .description = "Vacuum energy and numerical diagnostics", .primary = true}});
 }
 template <uni20::Real Real> int run(Arguments const& a, int argc, char** argv)
 {

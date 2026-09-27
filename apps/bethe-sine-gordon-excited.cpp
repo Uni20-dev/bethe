@@ -31,7 +31,7 @@ auto program_info()
       "Y=L*E_C; scaled_gap=L*gap/(2*pi), tending to Delta+ + Delta- in the ultraviolet.",
       "UV weights: Delta+=Delta-=(p+1)/(4*p)+I-0.5. No complete spectrum or spectral weights.",
       "Tolerance is absolute in Y=L*E_C per state, default 16777216 epsilon. fp128 may take many minutes.",
-      "Tables: levels, source, gap. Failed observables are missing; exit 2 if either solve is incomplete.",
+      "Failed observables are missing; exit 2 if either solve is incomplete.",
       "See docs/sine-gordon-excited.md for scope and controls; --references prints literature."};
   return info;
 }
@@ -130,6 +130,11 @@ int main(int argc, char** argv)
       [&](auto& app) {
         cli::sine_gordon::add_options(app, a, "Sine-Gordon coupling p>=1",
                                       "Absolute Y tolerance per state; default 16777216 epsilon");
+        bethe::cli::add_data_output_options(
+            app, a.output,
+            {{.name = "levels", .description = "Vacuum and excited levels", .primary = true},
+             {.name = "source", .description = "Excited-source quantization and diagnostics"},
+             {.name = "gap", .description = "Vacuum-relative gap; values missing if either solve fails"}});
         app.add_option("--number", a.number, "Positive half-odd Bethe number: 0.5 or 1.5")->capture_default_str();
         app.add_option("--charge", a.charge, "Pair winding charge")
             ->check(CLI::IsMember({-2, 2}))

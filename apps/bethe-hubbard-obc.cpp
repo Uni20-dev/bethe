@@ -49,7 +49,20 @@ void add_options(CLI::App& app, Arguments& args)
   bethe::cli::option(app, "--max-iterations", args.max_iterations, "total Newton update budget, including continuation")
       ->capture_default_str();
   bethe::cli::precision_option(app, args.precision);
-  cli::add_data_output_options(app, args.output, true);
+  cli::add_data_output_options(app, args.output,
+                               {{.name = "states", .description = "Selected states and diagnostics", .primary = true},
+                                {.name = "charge_roots",
+                                 .description = "Root coordinates and labels",
+                                 .availability = "interacting representation",
+                                 .screen_option = "--roots"},
+                                {.name = "spin_roots",
+                                 .description = "Root coordinates and labels",
+                                 .availability = "interacting representation",
+                                 .screen_option = "--roots"},
+                                {.name = "free_modes",
+                                 .description = "Root coordinates and labels",
+                                 .availability = "free representation",
+                                 .screen_option = "--roots"}});
 }
 
 void validate(Arguments const& args)
@@ -70,7 +83,7 @@ template <uni20::Real Real> int run(Arguments const& args, int argc, char** argv
   auto const state = model::sector_ground_state<Real>(args.sites, particles, sz, interaction, options);
   computation.finish();
   return bethe::cli::print_hubbard_state(state, sz, args.precision, args.output, options.residual_tolerance, context,
-                                         args.roots);
+                                         args.output.needs("--roots", args.roots));
 }
 } // namespace
 int main(int argc, char** argv)

@@ -28,7 +28,7 @@ inline char const* status(bethe::xxz::quantum_group::SolveStatus value)
 }
 inline std::vector<std::string> table_names(Arguments const& args, std::vector<std::string> names)
 {
-  if (args.spin_content) names.push_back("spin_content");
+  if (args.output.needs("--spin-content", args.spin_content)) names.push_back("spin_content");
   return names;
 }
 
@@ -37,7 +37,7 @@ inline std::vector<std::string> table_names(Arguments const& args, std::vector<s
 template <typename ThroughLines>
 void write_spin_content(cli::ResultOutput& output, Arguments const& args, std::size_t count, ThroughLines ell_of)
 {
-  if (!args.spin_content) return;
+  if (!args.output.needs("--spin-content", args.spin_content)) return;
   output.table(
       "spin_content", "Physical SU(2) content per TL eigenvector (not spectral weights)",
       [&](auto& table) {
@@ -73,7 +73,7 @@ void write_output(cli::RunReport& report, Arguments const& args, std::vector<mod
   std::vector<std::string> names{"states", "quantum_numbers"};
   if (reference) names.push_back("reference");
   if (failed) names.push_back("failed");
-  if (args.roots) names.push_back("roots");
+  if (args.output.needs("--roots", args.roots)) names.push_back("roots");
   cli::ResultOutput output(report, args.output, table_names(args, names));
   auto write_states = [&](std::string name, std::string title, auto const& rows, std::size_t offset, bool ranked) {
     output.table(
@@ -121,7 +121,7 @@ void write_output(cli::RunReport& report, Arguments const& args, std::vector<mod
       },
       cli::column<std::size_t>("state_id"), cli::column<std::size_t>("index", "Index"),
       cli::column<uni20::half_int>("quantum_number", "I"));
-  if (args.roots)
+  if (args.output.needs("--roots", args.roots))
     output.table(
         "roots", "Reference XXZ roots (not physical spin-1 quantum numbers)",
         [&](auto& table) {
@@ -150,7 +150,7 @@ auto preamble(uni20::run_context& context, Arguments const& args, bethe::SolverO
       .field("xxz_reference", "XXZ reference", "spin-half exchange 1; +sqrt(5)/4*(sz_1-sz_N)")
       .field("precision", "Precision", args.precision)
       .field("residual_tolerance", "Residual tolerance", options.residual_tolerance);
-  if (args.spin_content)
+  if (args.output.needs("--spin-content", args.spin_content))
     report.field("spin_content_convention", "Spin content",
                  "physical SU(2) multiplets per TL eigenvector, independent of solver convergence; "
                  "not spectral weights; null when total dimension exceeds uint64");

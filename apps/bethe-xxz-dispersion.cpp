@@ -56,7 +56,9 @@ void add_options(CLI::App& app, Arguments& a)
   cli::count_option(app, "--max-evaluations", a.evaluations, "Bulk integral/series evaluation budget")
       ->capture_default_str();
   cli::count_option(app, "--max-levels", a.levels, "Bulk quadrature refinement budget, <=30")->capture_default_str();
-  cli::add_data_output_options(app, a.output, true);
+  cli::add_data_output_options(
+      app, a.output,
+      {{.name = "dispersion", .description = "Excitation branches and/or continuum bounds", .primary = true}});
 }
 char const* name(bethe::xxz::BulkStatus status)
 {

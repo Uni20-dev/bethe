@@ -8,8 +8,10 @@
 namespace bethe::cli
 {
 // Register configuration only. Files are opened by DataOutput after validation.
-inline void add_data_output_options(CLI::App& app, DataOutputOptions& options, bool named_tables = false)
+inline void add_data_output_options(CLI::App& app, DataOutputOptions& options, TableCatalogue catalogue)
 {
+  options.catalogue = std::move(catalogue);
+  validate_table_catalogue(options.catalogue);
   auto* output = app.add_option_group("Output");
   output->add_option("--format", options.format, "Stdout format; file exports are independent")
       ->check(CLI::IsMember({"auto", "pretty", "plain", "csv", "tsv", "json"}))
@@ -31,14 +33,26 @@ inline void add_data_output_options(CLI::App& app, DataOutputOptions& options, b
   output->add_flag("--force", options.force, "Permit replacing existing regular files");
   output->add_flag("--stream", options.stream, "Display rows as delivered (spectral scans sort before delivery)");
   output->add_flag("!--no-retain", options.retain, "Discard rows after delivery; needs live output or --quiet");
-  if (named_tables)
+  if (!options.catalogue.empty())
   {
-    output
+    std::string description = "Table names are strict; requesting an export does not enable screen output.\n";
+    std::vector<std::string> names;
+    for (auto const& t : options.catalogue)
+    {
+      names.push_back(t.name);
+      description +=
+          t.name + (t.primary ? " [primary when available]" : "") + ": " + t.description + "; " + t.availability;
+      if (!t.screen_option.empty()) description += "; screen: " + t.screen_option + " (not required for file export)";
+      description += '\n';
+    }
+    auto* tables = app.add_option_group("Output tables", description);
+    tables
         ->add_option("--table", options.table,
                      "Table for CSV/TSV stdout and unqualified exports; default: primary table")
-        ->type_name("NAME");
+        ->type_name("NAME")
+        ->check(CLI::IsMember(names));
     for (std::string const format : {"csv", "tsv"})
-      output
+      tables
           ->add_option_function<std::vector<std::string>>(
               "--" + format + "-table",
               [&options, format](std::vector<std::string> const& selections) {
@@ -47,6 +61,7 @@ inline void add_data_output_options(CLI::App& app, DataOutputOptions& options, b
                   auto const equal = selection.find('=');
                   if (equal == std::string::npos || equal == 0 || equal + 1 == selection.size())
                     throw CLI::ValidationError("--" + format + "-table", "expected TABLE=FILE");
+                  (void)table_descriptor(options.catalogue, selection.substr(0, equal));
                   options.files.push_back({format, selection.substr(equal + 1), selection.substr(0, equal)});
                 }
               },
@@ -54,6 +69,24 @@ inline void add_data_output_options(CLI::App& app, DataOutputOptions& options, b
           ->type_name("TABLE=FILE")
           ->expected(1)
           ->take_all();
+    app.parse_complete_callback([&app, &options] {
+      options.screen_options.clear();
+      for (auto const& t : options.catalogue)
+      {
+        if (!t.screen_option.empty())
+        {
+          auto const* flag = app.get_option_no_throw(t.screen_option);
+          if (!flag) throw std::logic_error("table screen option is not registered: " + t.screen_option);
+          if (flag->count() && flag->as<bool>()) options.screen_options.push_back(t.screen_option);
+        }
+        if (options.requested(t.name) && !t.required_option.empty())
+        {
+          auto const* required = app.get_option_no_throw(t.required_option);
+          if (!required || !required->count())
+            throw CLI::ValidationError("output table " + t.name, "requires calculation option " + t.required_option);
+        }
+      }
+    });
   }
 }
 } // namespace bethe::cli

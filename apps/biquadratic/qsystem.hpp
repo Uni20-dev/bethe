@@ -100,7 +100,7 @@ int run_qsystem(Arguments const& args, bethe::SolverOptions<Real> const& options
                                           : "unavailable; ground solve failed")
       .result(complete, complete ? "converged" : "incomplete or unverified");
   std::vector<std::string> names{"states", "reference", "q_coefficients"};
-  if (args.roots) names.push_back("roots");
+  if (args.output.needs("--roots", args.roots)) names.push_back("roots");
   cli::ResultOutput output(report, args.output, table_names(args, names));
   output.table(
       "states", "Q-system levels",
@@ -145,7 +145,7 @@ int run_qsystem(Arguments const& args, bethe::SolverOptions<Real> const& options
             table.append(i, k, states[i].reference.coefficients[k]);
       },
       cli::column<std::size_t>("state_id"), cli::column<std::size_t>("power"), cli::column<Real>("coefficient"));
-  if (args.roots)
+  if (args.output.needs("--roots", args.roots))
     output.table(
         "roots", "Complex Q-system roots (x=cosh(2u))",
         [&](auto& table) {

@@ -34,7 +34,7 @@ int run_singlet(Arguments const& args, bethe::SolverOptions<Real> const& options
              ground.reference.converged ? "E-E0; global singlet ground state" : "unavailable; ground solve failed")
       .result(complete, complete ? "converged" : "incomplete; unconverged estimate");
   std::vector<std::string> names{"states", "reference", "string"};
-  if (args.roots) names.push_back("roots");
+  if (args.output.needs("--roots", args.roots)) names.push_back("roots");
   cli::ResultOutput output(report, args.output, table_names(args, names));
   output.table(
       "states", "Selected two-string singlet",
@@ -65,7 +65,7 @@ int run_singlet(Arguments const& args, bethe::SolverOptions<Real> const& options
       cli::column<std::size_t>("state_id"), cli::column<Real>("center", "a"),
       cli::column<Real>("log_deviation", "L=-log(d)"),
       cli::column<std::optional<Real>>("deviation", "d (null if underflow)"));
-  if (args.roots)
+  if (args.output.needs("--roots", args.roots))
     output.table(
         "roots", "Reference roots (rounded u; use L for the string deviation)",
         [&](auto& table) {

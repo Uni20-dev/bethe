@@ -23,7 +23,7 @@ auto program_info()
       "Regular one-particle branch only: no UV continuation, moving particles, higher levels or boundaries.",
       "E1_C and E0_C are bulk-subtracted levels; the excitation gap is E1_C-E0_C, not E1_C.",
       "Tolerance is absolute in each Y=L*E_C, default 65536 epsilon; work limits apply separately to each state.",
-      "Tables: levels (both states), source (one-particle quantization), gap (requires both states converged).",
+      "Gap values require both states converged; failed values are missing.",
       "Failures exit 2 with missing affected observables. See docs/lee-yang.md; --references for literature."};
   info.examples = {{"bethe-lee-yang-excited --length 5", "Unit-mass zero-momentum one-particle gap"},
                    {"bethe-lee-yang-excited --length 10 --precision fp128 --json levels.json", "Native fp128 export"}};
@@ -133,6 +133,11 @@ int main(int argc, char** argv)
       argc, argv, program_info(),
       [&](auto& app) {
         cli::lee_yang::add_options(app, a, "Absolute Y tolerance per state; default 65536 epsilon");
+        bethe::cli::add_data_output_options(
+            app, a.output,
+            {{.name = "levels", .description = "Vacuum and excited levels", .primary = true},
+             {.name = "source", .description = "Excited-source quantization and diagnostics"},
+             {.name = "gap", .description = "Vacuum-relative gap; values missing if either solve fails"}});
         cli::count_option(app, "--max-root-iterations", a.root_iterations, "Source-root updates per grid")
             ->capture_default_str();
       },

@@ -53,7 +53,8 @@ void add_options(CLI::App& app, Arguments& a)
   cli::text_option(app, "--tolerance", a.tolerance, "Normalized residual tolerance (default 32 epsilon)")
       ->type_name("REAL");
   cli::precision_option(app, a.precision);
-  cli::add_data_output_options(app, a.output, true);
+  cli::add_data_output_options(app, a.output,
+                               {{.name = "levels", .description = "Selected energy levels", .primary = true}});
 }
 
 template <uni20::Real Real> int run(Arguments const& a, int argc, char** argv)

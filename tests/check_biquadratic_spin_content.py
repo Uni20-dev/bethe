@@ -113,4 +113,6 @@ with tempfile.TemporaryDirectory() as tmp:
         for a, b in zip(data, original):
             for key in ("state_id", "through_lines", "spin", "multiplets", "magnetic_states"):
                 assert Decimal(a[key]) == Decimal(str(b[key]))
-    run(["6", "--csv-table", f"spin_content={base / 'disabled.csv'}"], 1)
+    # An explicit file request produces spin content without its screen flag.
+    run(["6", "--csv-table", f"spin_content={base / 'file-only.csv'}"])
+    assert (base / "file-only.csv").is_file()

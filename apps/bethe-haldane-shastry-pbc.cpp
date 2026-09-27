@@ -28,7 +28,7 @@ auto program_info()
                 "Motifs obey 1<=m<=N-1; neighboring positions differ by at least 2. A row is a Yangian multiplet, "
                 "not one state or one distinct energy. S_max is its largest SU(2) spin; degeneracy counts all spin "
                 "projections even with --sz. Missing degeneracy means uint64 overflow.",
-                "Gaps reference the global ground energy. No Newton solves or wavefunctions. Table: levels. "
+                "Gaps reference the global ground energy. No Newton solves or wavefunctions. "
                 "Enumeration-budget refusal publishes no levels and exits 2.",
                 "--spin-content adds SU(2) irreps for each selected Yangian multiplet, including all projections "
                 "even with --sz. Decomposition failure leaves energies valid but omits spin counts (exit 2).",
@@ -46,10 +46,14 @@ void add_options(CLI::App& app, Arguments& a)
   cli::count_option(app, "--max-motifs", a.max_motifs, "Enumeration budget; refusal exits 2")->capture_default_str();
   app.add_flag("--spin-content", a.spin_content, "Add the spin_content table of SU(2) irrep multiplicities");
   cli::count_option(app, "--max-spin-updates", a.max_spin_updates, "Clebsch-Gordan addition budget per motif")
-      ->capture_default_str()
-      ->needs("--spin-content");
+      ->capture_default_str();
   cli::precision_option(app, a.precision);
-  cli::add_data_output_options(app, a.output, true);
+  cli::add_data_output_options(app, a.output,
+                               {{.name = "levels", .description = "Yangian multiplets", .primary = true},
+                                {.name = "spin_content",
+                                 .description = "SU(2) content of each multiplet",
+                                 .availability = "selected multiplets",
+                                 .screen_option = "--spin-content"}});
 }
 std::vector<std::size_t> parse_motif(std::string_view text)
 {
@@ -83,7 +87,7 @@ template <uni20::Real Real> int run(Arguments const& a, int argc, char** argv)
     levels = model::ground_levels<Real>(a.sites);
   std::vector<bethe::spin::Decomposition> contents;
   bool complete = !scan || scan->complete;
-  if (a.spin_content)
+  if (a.output.needs("--spin-content", a.spin_content))
     for (auto const& level : levels)
     {
       contents.push_back(model::spin_decomposition(a.sites, level.motif, {.max_updates = a.max_spin_updates}));
@@ -104,13 +108,13 @@ template <uni20::Real Real> int run(Arguments const& a, int argc, char** argv)
       .result(complete, complete                  ? "exact spectral rules"
                         : scan && !scan->complete ? "motif budget exceeded; no levels published"
                                                   : "spin decomposition incomplete; energies remain valid");
-  if (a.spin_content)
+  if (a.output.needs("--spin-content", a.spin_content))
     report.field("spin_content", "Spin content", "whole Yangian multiplet; multiplicity counts SU(2) irreps")
         .field("max_spin_updates", "Max spin updates per motif", a.max_spin_updates);
   if (a.sz) report.field("selected_sz", "Selected Sz", uni20::half_int::parse(*a.sz));
   if (scan && scan->complete) report.field("motifs_enumerated", "Motifs enumerated", scan->total_motifs);
   std::vector<std::string> names{"levels"};
-  if (a.spin_content) names.push_back("spin_content");
+  if (a.output.needs("--spin-content", a.spin_content)) names.push_back("spin_content");
   cli::ResultOutput output(report, a.output, std::move(names), false);
   output.table(
       "levels", "Haldane-Shastry Yangian multiplets",
@@ -134,7 +138,7 @@ template <uni20::Real Real> int run(Arguments const& a, int argc, char** argv)
       data::data_column<std::size_t>("momentum_index"), data::data_column<Real>("p").unit("radians").round_trip(),
       data::data_column<std::size_t>("spinons"), data::data_column<uni20::half_int>("s_max"),
       data::data_column<std::optional<std::uint64_t>>("degeneracy"));
-  if (a.spin_content)
+  if (a.output.needs("--spin-content", a.spin_content))
     output.table(
         "spin_content", "SU(2) content of selected Yangian multiplets",
         [&](auto& table) {
@@ -170,8 +174,10 @@ int main(int argc, char** argv)
   Arguments a;
   return cli::program_main(
       argc, argv, program_info(), [&](auto& app) { add_options(app, a); },
-      [&](auto&) {
+      [&](auto& app) {
         a.output.validate();
+        if (app.count("--max-spin-updates") && !a.output.needs("--spin-content", a.spin_content))
+          throw std::invalid_argument("--max-spin-updates requires a spin_content output request");
         return cli::dispatch_precision(a.precision, [&]<typename Real>() { return run<Real>(a, argc, argv); });
       });
 }

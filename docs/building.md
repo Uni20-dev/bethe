@@ -189,6 +189,21 @@ Paths below are relative to `apps/`.
 | `run-metadata.hpp` | Uni20 run metadata projected into human overviews and legacy export keys |
 | `result-output.hpp` | A frozen numerical summary shared across batch result tables |
 
+Each frontend declares its own `TableDescriptor` list when registering output
+options. The shared `table-descriptors.hpp` defines only the descriptor type and
+generic validation: it has no executable-name registry or model-specific tables.
+Declarations supply help, parser choices, screen flags, availability notes and
+explicit primary-table eligibility. Result construction supplies the actual
+available tables, which must match those declarations before exports are opened.
+
+Keep display flags separate from production requirements. Use
+`output.needs("--roots", roots)` when deciding whether root data is needed;
+the unchanged `roots` flag controls display, while a named export can request
+the same producer independently. Shared producers may construct sibling tables,
+but only requested destinations receive them. Never manufacture an empty table
+to satisfy an unavailable name. `Output.table_contracts` checks frontend help,
+selection errors and auxiliary-file/screen separation.
+
 The biquadratic frontend has private headers in `apps/biquadratic/`:
 
 - `options.hpp`: option declarations and validation.

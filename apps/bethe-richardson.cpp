@@ -30,8 +30,7 @@ auto program_info()
                 "Pair rapidities are not reconstructed; no lattice momentum or PBC/OBC applies.",
                 "See docs/richardson.md for energy shifts, blocking and continuation controls.",
                 "Use --references for literature and applicability; see CITATIONS.md."};
-  info.notes.push_back(
-      "Tables: states; variables with --variables. Exported energy belongs to reached_g, not necessarily requested_g.");
+  info.notes.push_back("Exported energy belongs to reached_g, not necessarily requested_g.");
   return info;
 }
 void add_options(CLI::App& app, Arguments& args)
@@ -47,7 +46,10 @@ void add_options(CLI::App& app, Arguments& args)
   bethe::cli::option(app, "--max-iterations", args.max_iterations, "attempted Newton corrections, including retries")
       ->capture_default_str();
   bethe::cli::precision_option(app, args.precision);
-  cli::add_data_output_options(app, args.output, true);
+  cli::add_data_output_options(
+      app, args.output,
+      {{.name = "states", .description = "Selected states and diagnostics", .primary = true},
+       {.name = "variables", .description = "Regularized eigenvalue variables", .screen_option = "--variables"}});
 }
 
 void validate(Arguments const& args)
@@ -124,7 +126,7 @@ template <uni20::Real Real> int run(Arguments const& args, int argc, char** argv
       .field("rejected_stages", "Rejected stages", state.rejected_stages);
   using cli::column;
   std::vector<std::string> names{"states"};
-  if (args.variables) names.push_back("variables");
+  if (args.output.needs("--variables", args.variables)) names.push_back("variables");
   cli::ResultOutput output(report, args.output, names);
   output.table(
       "states", "State",
@@ -137,7 +139,7 @@ template <uni20::Real Real> int run(Arguments const& args, int argc, char** argv
       column<Real>("residual"), column<Real>("target_residual"), column<Real>("pair_number_error"),
       column<std::size_t>("iterations"), column<std::size_t>("stages"), column<std::size_t>("rejected_stages"),
       column<bool>("converged"), column<std::string>("status"));
-  if (args.variables)
+  if (args.output.needs("--variables", args.variables))
     output.table(
         "variables", "Level data and eigenvalue variables (not occupations)",
         [&](auto& t) {

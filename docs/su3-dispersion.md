@@ -20,6 +20,12 @@ arithmetic, input parsing and output precision. `--branch all` samples each
 branch over its own momentum interval; a single `--momentum` must lie in every
 selected interval. `--references` prints the literature. CSV/TSV/JSON exports
 include Hamiltonian, precision, momentum conventions, provenance and CPU time.
+
+The only output table is `dispersion`, which is also the primary table.
+`--csv uls.csv` and `--csv-table dispersion=uls.csv` are equivalent. The
+`3`, `bar3`, `two-soliton` and `four-soliton` branches are rows within this table,
+selected with `--branch`, not separate table names.
+
 Unrepresentable continuum bounds or underflowing positive energies are omitted,
 with `precision_limit` and exit 2;
 invalid parameters exit 1. No optimization tolerance is needed: the bounds below

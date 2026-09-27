@@ -60,7 +60,28 @@ void add_options(CLI::App& app, Arguments& args)
   cli::text_option(app, "--tolerance", args.tolerance, "Normalized equation residual in native precision");
   cli::count_option(app, "--max-iterations", args.max_iterations, "Update budget")->capture_default_str();
   cli::precision_option(app, args.precision);
-  cli::add_data_output_options(app, args.output, true);
+  cli::add_data_output_options(app, args.output,
+                               {{.name = "states", .description = "Selected states and diagnostics", .primary = true},
+                                {.name = "reference",
+                                 .description = "Reference used for excitation gaps",
+                                 .availability = "excitation scans",
+                                 .required_option = "--excitations"},
+                                {.name = "failed",
+                                 .description = "First failed, unranked candidate",
+                                 .availability = "excitation scan with a failed candidate",
+                                 .required_option = "--excitations"},
+                                {.name = "quantum_numbers",
+                                 .description = "Exact Bethe labels",
+                                 .availability = "excitation scans",
+                                 .required_option = "--excitations"},
+                                {.name = "roots",
+                                 .description = "Root coordinates and labels",
+                                 .availability = "selected root representation",
+                                 .screen_option = "--roots"},
+                                {.name = "spinons",
+                                 .description = "One-spinon branch coordinates",
+                                 .availability = "--spinons",
+                                 .required_option = "--spinons"}});
 }
 
 template <uni20::Real Real> int run(Arguments const& args, int argc, char** argv)
@@ -86,20 +107,21 @@ template <uni20::Real Real> int run(Arguments const& args, int argc, char** argv
          .sector_label = "S",
          .sector = scan.spin,
          .multiplet_size = scan.spin.twice() + 1},
-        args.print_roots, args.output));
+        args.output.needs("--roots", args.print_roots), args.output));
   }
   if (args.sectors)
   {
     auto const states = model::sector_ground_states<Real>(args.sites, options);
     computation.finish();
-    return finish(cli::spin_sectors<Real>(header("sector minima"), states, args.print_roots, args.output));
+    return finish(cli::spin_sectors<Real>(header("sector minima"), states,
+                                          args.output.needs("--roots", args.print_roots), args.output));
   }
   if (args.spinons)
   {
     auto const branch = model::one_spinon_branch<Real>(args.sites, options);
     computation.finish();
-    return finish(
-        cli::print_spinons(args.sites, args.precision, options, branch, args.print_roots, context, args.output));
+    return finish(cli::print_spinons(args.sites, args.precision, options, branch,
+                                     args.output.needs("--roots", args.print_roots), context, args.output));
   }
   auto const state = args.quantum_numbers
                          ? model::solve_real<Real>(args.sites, parse_quantum_numbers(*args.quantum_numbers), options)
@@ -109,7 +131,7 @@ template <uni20::Real Real> int run(Arguments const& args, int argc, char** argv
   return finish(cli::spin_state<Real>(header(args.quantum_numbers ? "specified real-root state"
                                              : args.sz            ? "sector minimum"
                                                                   : "ground state"),
-                                      args.sites, state, args.print_roots, args.output));
+                                      args.sites, state, args.output.needs("--roots", args.print_roots), args.output));
 }
 } // namespace
 

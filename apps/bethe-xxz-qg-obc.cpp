@@ -35,10 +35,10 @@ auto program_info()
       "ground.",
       "Regular-root branch has no completeness or degeneracy claim. Neither branch returns Jordan vectors or CFT fits.",
       "Tolerance controls max|F|/(2N), not energy error; default 32 epsilon. Failed energies are missing (exit 2).",
-      "Tables: state; optional roots contains last-iterate coordinates even on failure.",
-      "Scan tables: levels, reference, optional failed and roots. Failed candidates are unranked; partial scans exit "
+      "Root tables contain last-iterate coordinates even on failure.",
+      "Failed candidates are unranked; partial scans exit "
       "2.",
-      "Delta=0 table: blocks, ordered by zero occupation then mode labels, not energy. Equal energies are not merged.",
+      "Delta=0 blocks are ordered by zero occupation then mode labels, not energy. Equal energies are not merged.",
       "See docs/xxz-nonhermitian.md; --references for literature."};
   info.examples = {
       {"bethe-xxz-qg-obc 32 --delta 0.25 --roots", "Consecutive-label sea"},
@@ -69,7 +69,31 @@ void add_options(CLI::App& app, Arguments& a)
       ->default_str("1000000");
   app.add_flag("--roots", a.roots, "Export last-iterate roots with convergence status");
   cli::precision_option(app, a.precision);
-  cli::add_data_output_options(app, a.output, true);
+  cli::add_data_output_options(app, a.output,
+                               {{.name = "state",
+                                 .description = "Selected regular-root state",
+                                 .availability = "0<Delta<1, without --excitations",
+                                 .primary = true},
+                                {.name = "levels",
+                                 .description = "Ranked regular-root levels",
+                                 .availability = "--excitations",
+                                 .primary = true},
+                                {.name = "blocks",
+                                 .description = "Free-fermion Jordan-block spectrum",
+                                 .availability = "Delta=0",
+                                 .primary = true},
+                                {.name = "reference",
+                                 .description = "Reference used for excitation gaps",
+                                 .availability = "excitation scans",
+                                 .required_option = "--excitations"},
+                                {.name = "failed",
+                                 .description = "First failed, unranked candidate",
+                                 .availability = "excitation scan with a failed candidate",
+                                 .required_option = "--excitations"},
+                                {.name = "roots",
+                                 .description = "Root coordinates and labels",
+                                 .availability = "0<Delta<1",
+                                 .screen_option = "--roots"}});
 }
 char const* name(model::Status s)
 {
@@ -87,7 +111,8 @@ char const* name(model::Status s)
 template <uni20::Real Real> int run_free(Arguments const& a, uni20::run_context& context)
 {
   namespace free = bethe::xxz::quantum_group::free;
-  if (a.through_lines || a.numbers || a.tolerance || a.iterations || a.roots || a.excitations || a.max_candidates)
+  if (a.through_lines || a.numbers || a.tolerance || a.iterations || a.output.needs("--roots", a.roots) ||
+      a.excitations || a.max_candidates)
     throw std::invalid_argument("Delta=0 uses --sz; regular-root labels, roots and solver controls do not apply");
   auto const n = bethe::xxz::detail::checked_sites(a.sites);
   auto const sz = a.sz ? uni20::half_int::parse(*a.sz) : uni20::from_twice(n % 2);
@@ -192,7 +217,7 @@ int run_scan(Arguments const& a, Real delta, bethe::SolverOptions<Real> const& c
       .result(scan.converged(), scan.converged() ? "family converged" : "incomplete family or sea reference");
   std::vector<std::string> names{"levels", "reference"};
   if (scan.first_unconverged) names.push_back("failed");
-  if (a.roots) names.push_back("roots");
+  if (a.output.needs("--roots", a.roots)) names.push_back("roots");
   cli::ResultOutput output(report, a.output, std::move(names));
   using cli::column;
   using Optional = std::optional<Real>;
@@ -216,7 +241,7 @@ int run_scan(Arguments const& a, Real delta, bethe::SolverOptions<Real> const& c
   if (scan.first_unconverged)
     rows("failed", "First failed candidate (unranked)",
          [&](auto& table) { append(table, 0, *scan.first_unconverged, std::nullopt); });
-  if (a.roots)
+  if (a.output.needs("--roots", a.roots))
     output.table(
         "roots", "Bethe roots by table and state",
         [&](auto& table) {
@@ -274,7 +299,7 @@ template <uni20::Real Real> int run(Arguments const& a, int argc, char** argv)
       .field("max_iterations", "Max iterations", controls.max_iterations)
       .result(s.converged, name(s.status));
   std::vector<std::string> tables{"state"};
-  if (a.roots) tables.push_back("roots");
+  if (a.output.needs("--roots", a.roots)) tables.push_back("roots");
   cli::ResultOutput output(report, a.output, std::move(tables));
   using cli::column;
   using Optional = std::optional<Real>;
@@ -285,7 +310,7 @@ template <uni20::Real Real> int run(Arguments const& a, int argc, char** argv)
       },
       column<Optional>("energy"), column<Optional>("energy_shift"), column<Real>("residual"),
       column<std::size_t>("iterations"), column<bool>("converged"), column<std::string>("status"));
-  if (a.roots)
+  if (a.output.needs("--roots", a.roots))
     output.table(
         "roots", "Last-iterate Bethe roots",
         [&](auto& table) {

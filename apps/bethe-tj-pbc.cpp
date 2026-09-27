@@ -45,7 +45,20 @@ void add_options(CLI::App& app, Arguments& args)
   bethe::cli::option(app, "--max-iterations", args.max_iterations, "accepted updates (default: 10000)")
       ->capture_default_str();
   bethe::cli::precision_option(app, args.precision);
-  cli::add_data_output_options(app, args.output, true);
+  cli::add_data_output_options(app, args.output,
+                               {{.name = "states", .description = "Selected states and diagnostics", .primary = true},
+                                {.name = "first_roots",
+                                 .description = "Root coordinates and labels",
+                                 .availability = "nested interacting representation",
+                                 .screen_option = "--roots"},
+                                {.name = "second_roots",
+                                 .description = "Root coordinates and labels",
+                                 .availability = "nested interacting representation",
+                                 .screen_option = "--roots"},
+                                {.name = "free_modes",
+                                 .description = "Root coordinates and labels",
+                                 .availability = "free representation",
+                                 .screen_option = "--roots"}});
 }
 
 void validate(Arguments const& args) { args.output.validate(); }
@@ -108,7 +121,7 @@ template <uni20::Real Real> int run(Arguments const& args, int argc, char** argv
       .field("iterations", "Iterations", state.iterations);
   std::vector<std::string> tables{"states"};
   bool const free = state.branch == model::Branch::polarized_free;
-  if (args.roots)
+  if (args.output.needs("--roots", args.roots))
   {
     if (free)
       tables.push_back("free_modes");
@@ -126,7 +139,7 @@ template <uni20::Real Real> int run(Arguments const& args, int argc, char** argv
       cli::column<Real>("energy", "Energy"), cli::column<std::size_t>("momentum_index"), cli::column<Real>("p", "P"),
       cli::column<Real>("residual"), cli::column<std::size_t>("iterations"), cli::column<bool>("converged"),
       cli::column<std::string>("status"));
-  if (args.roots && free)
+  if (args.output.needs("--roots", args.roots) && free)
     output.table(
         "free_modes", "Occupied free modes",
         [&](auto& table) {
@@ -135,7 +148,7 @@ template <uni20::Real Real> int run(Arguments const& args, int argc, char** argv
         },
         cli::column<std::size_t>("state_id"), cli::column<std::size_t>("index", "Index"),
         cli::column<std::int64_t>("mode", "j (k=2*pi*j/L)"));
-  else if (args.roots)
+  else if (args.output.needs("--roots", args.roots))
     for (std::size_t a = 0; a < 2; ++a)
       output.table(
           a ? "second_roots" : "first_roots", a ? "Second-level rapidities" : "First-level rapidities",

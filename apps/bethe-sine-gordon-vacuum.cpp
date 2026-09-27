@@ -20,7 +20,7 @@ auto program_info()
                 "Bulk-subtracted energy E_C=E0-L*e_bulk; Y=L*E_C; c_eff=-6*Y/pi. No absolute bulk energy.",
                 "Untwisted zero-topological-charge vacuum only; no excited states or Bethe-Yang approximation.",
                 "Tolerance is absolute in Y, default 262144 epsilon. Two contours are independently resolved.",
-                "Failed observables are missing, with exit status 2. Table: vacuum. fp128 solves can take minutes.",
+                "Failed observables are missing, with exit status 2. fp128 solves can take minutes.",
                 "See docs/sine-gordon.md for numerical controls; --references for literature."};
   return info;
 }
@@ -28,6 +28,8 @@ void add_options(CLI::App& app, Arguments& a)
 {
   cli::sine_gordon::add_options(app, a, "Positive sine-Gordon coupling p",
                                 "Absolute tolerance in Y; default 262144 epsilon");
+  bethe::cli::add_data_output_options(
+      app, a.output, {{.name = "vacuum", .description = "Vacuum energy and numerical diagnostics", .primary = true}});
 }
 template <uni20::Real Real> int run(Arguments const& a, int argc, char** argv)
 {

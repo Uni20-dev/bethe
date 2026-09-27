@@ -48,7 +48,9 @@ void add_options(CLI::App& app, Arguments& a)
       ->excludes(count)
       ->excludes(maximum);
   cli::precision_option(app, a.precision);
-  cli::add_data_output_options(app, a.output, true);
+  cli::add_data_output_options(
+      app, a.output,
+      {{.name = "dispersion", .description = "Excitation branches and/or continuum bounds", .primary = true}});
 }
 std::string name(model::Particle particle)
 {

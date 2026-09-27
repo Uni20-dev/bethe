@@ -93,7 +93,10 @@ void add_options(CLI::App& app, Arguments& args)
   options::add_count_option(*mesh, "--max-background-iterations", args.max_background_iterations,
                             "Density solves across all meshes")
       ->capture_default_str();
-  cli::add_data_output_options(app, args.output);
+  cli::add_data_output_options(app, args.output,
+                               {
+
+                               });
 }
 char const* name(model::Branch b)
 {

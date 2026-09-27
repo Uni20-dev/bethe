@@ -43,7 +43,6 @@ inline void add_xxz_options(CLI::App& app, XxzArguments& args)
   text_option(app, "--tolerance", args.tolerance, "Residual in the reported convention; default: 32 epsilon");
   count_option(app, "--max-iterations", args.max_iterations, "Update budget")->capture_default_str();
   precision_option(app, args.precision);
-  add_data_output_options(app, args.output, true);
 }
 inline void validate_xxz_arguments(XxzArguments const& args)
 {

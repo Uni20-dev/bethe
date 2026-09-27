@@ -27,7 +27,7 @@ auto program_info()
       "Even L, 0<eta<1, t>0 only. Symmetric imaginary regular roots; no excited states or conserved Sz sectors.",
       "t->infinity gives XXZ with Delta=cos(pi*eta); eta=1/2 gives the anisotropic XY chain.",
       "Residual=max|F|/[L*(1-eta)], default tolerance 32 epsilon. Extreme parameters may stall or exceed range.",
-      "Failed energies/roots are missing, with exit status 2. Tables: states; --roots adds roots.",
+      "Failed energies/roots are missing, with exit status 2.",
       "See docs/xyz.md for conventions and limits; --references for literature. fp128 requires MPLAPACK."};
   return info;
 }
@@ -41,7 +41,12 @@ void add_options(CLI::App& app, Arguments& a)
       ->capture_default_str();
   app.add_flag("--roots", a.roots, "Export labels and converged complex roots as real/imaginary columns");
   cli::precision_option(app, a.precision);
-  cli::add_data_output_options(app, a.output, true);
+  cli::add_data_output_options(app, a.output,
+                               {{.name = "states", .description = "Selected states and diagnostics", .primary = true},
+                                {.name = "roots",
+                                 .description = "Root coordinates and labels",
+                                 .availability = "selected root representation",
+                                 .screen_option = "--roots"}});
 }
 char const* name(model::Status status)
 {
@@ -90,7 +95,7 @@ template <uni20::Real Real> int run(Arguments const& a, int argc, char** argv)
       .field("iterations", "Newton updates", state.iterations)
       .result(state.converged, name(state.status));
   std::vector<std::string> tables{"states"};
-  if (a.roots) tables.push_back("roots");
+  if (a.output.needs("--roots", a.roots)) tables.push_back("roots");
   cli::ResultOutput output(report, a.output, tables);
   using cli::column;
   output.table(
@@ -102,7 +107,7 @@ template <uni20::Real Real> int run(Arguments const& a, int argc, char** argv)
       column<std::size_t>("state_id"), column<Optional>("energy"), column<Optional>("energy_per_site"),
       column<Optional>("momentum"), column<Real>("residual"), column<std::size_t>("iterations"),
       column<bool>("converged"), column<std::string>("status"));
-  if (a.roots)
+  if (a.output.needs("--roots", a.roots))
     output.table(
         "roots", "Regular Bethe roots",
         [&](auto& table) {

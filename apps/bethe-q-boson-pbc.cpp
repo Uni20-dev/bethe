@@ -34,7 +34,7 @@ auto program_info()
       "Default: fixed-N ground state. --excitations COUNT|all scans all binomial(L+N-1,N) canonical mode patterns. "
       "COUNT limits retained levels, not solves. --max-candidates defaults to 10000.",
       "The default residual tolerance is 32 epsilon in the selected precision. Failed energies/roots are omitted "
-      "(JSON null, CSV/TSV empty), with exit status 2. Tables: states, plus roots with --roots.",
+      "(JSON null, CSV/TSV empty), with exit status 2.",
       "See docs/q-boson.md for equations and limits. Use --references for literature. fp128 requires MPLAPACK."};
   return info;
 }
@@ -53,7 +53,20 @@ void add_options(CLI::App& app, Arguments& a)
   cli::count_option(app, "--max-iterations", a.iterations, "Accepted Newton updates; zero only checks the seed")
       ->capture_default_str();
   cli::precision_option(app, a.precision);
-  cli::add_data_output_options(app, a.output, true);
+  cli::add_data_output_options(app, a.output,
+                               {{.name = "states", .description = "Selected states and diagnostics", .primary = true},
+                                {.name = "reference",
+                                 .description = "Reference used for excitation gaps",
+                                 .availability = "excitation scans",
+                                 .required_option = "--excitations"},
+                                {.name = "failed",
+                                 .description = "First failed, unranked candidate",
+                                 .availability = "excitation scan with a failed candidate",
+                                 .required_option = "--excitations"},
+                                {.name = "roots",
+                                 .description = "Root coordinates and labels",
+                                 .availability = "selected root representation",
+                                 .screen_option = "--roots"}});
 }
 char const* name(model::Status status)
 {
@@ -120,7 +133,7 @@ template <uni20::Real Real> int run(Arguments const& a, int argc, char** argv)
   std::vector<std::string> names{"states"};
   if (scan) names.push_back("reference");
   if (scan && scan->first_unconverged) names.push_back("failed");
-  if (a.roots) names.push_back("roots");
+  if (a.output.needs("--roots", a.roots)) names.push_back("roots");
   cli::ResultOutput output(report, a.output, names);
   std::vector<model::State<Real> const*> all;
   std::vector<Optional> gaps;
@@ -164,7 +177,7 @@ template <uni20::Real Real> int run(Arguments const& a, int argc, char** argv)
       write_states("failed", "First failed candidate (unranked)", all.size() - 1, all.size(), false);
     }
   }
-  if (a.roots)
+  if (a.output.needs("--roots", a.roots))
     output.table(
         "roots", "Lifted Bethe momenta: k=2*pi*m/L+deviation",
         [&](auto& table) {

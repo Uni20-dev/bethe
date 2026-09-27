@@ -31,7 +31,7 @@ auto program_info()
                 "P is NOT modulo 2*pi.",
                 "A finite label window is not the infinite spectrum or a global low-energy guarantee. "
                 "Enumeration-budget refusal publishes no states and exits 2. No root solving, wavefunctions or spin.",
-                "Tables: states; pseudomomenta with --pseudomomenta (joined by state_id). "
+                "Pseudomomenta join states by state_id. "
                 "See docs/sutherland.md and docs/output.md. Use --references for literature and applicability."};
   info.examples = {{"bethe-sutherland-pbc 3 --length 4 --lambda 2 --levels all --window 2 --json spectrum.json",
                     "All states within a finite label window"}};
@@ -53,7 +53,11 @@ void add_options(CLI::App& app, Arguments& a)
   cli::count_option(app, "--max-states", a.max_states, "Enumeration budget; refusal exits 2")->capture_default_str();
   app.add_flag("--pseudomomenta", a.pseudomomenta, "Include exact-rule k_j values in a separate table");
   cli::precision_option(app, a.precision);
-  cli::add_data_output_options(app, a.output, true);
+  cli::add_data_output_options(app, a.output,
+                               {{.name = "states", .description = "Selected states and diagnostics", .primary = true},
+                                {.name = "pseudomomenta",
+                                 .description = "Exact-rule pseudomomenta and labels",
+                                 .screen_option = "--pseudomomenta"}});
 }
 std::vector<std::int64_t> parse_labels(std::string_view text)
 {
@@ -114,7 +118,7 @@ template <uni20::Real Real> int run(Arguments const& a, int argc, char** argv)
     if (complete) report.field("states_enumerated", "States enumerated", scan->total_states);
   }
   std::vector<std::string> names{"states"};
-  if (a.pseudomomenta) names.push_back("pseudomomenta");
+  if (a.output.needs("--pseudomomenta", a.pseudomomenta)) names.push_back("pseudomomenta");
   cli::ResultOutput output(report, a.output, names, false);
   output.table(
       "states", "Sutherland states",
@@ -134,7 +138,7 @@ template <uni20::Real Real> int run(Arguments const& a, int argc, char** argv)
       data::data_column<std::size_t>("state_id"), data::data_column<std::string>("labels"),
       data::data_column<Real>("energy").round_trip(), data::data_column<Real>("gap").round_trip(),
       data::data_column<std::int64_t>("momentum_index"), data::data_column<Real>("p").round_trip());
-  if (a.pseudomomenta)
+  if (a.output.needs("--pseudomomenta", a.pseudomomenta))
   {
     output.table(
         "pseudomomenta", "Sutherland pseudomomenta",

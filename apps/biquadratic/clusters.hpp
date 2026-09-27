@@ -260,7 +260,7 @@ int run_bound_clusters(Arguments const& args, std::size_t requested, bethe::Solv
       .result(complete, complete ? "converged targeted branches" : "incomplete; unconverged estimates");
   std::vector<std::string> names{"states", "reference", "string"};
   if constexpr (Mixed) names.push_back("labels");
-  if (args.roots) names.push_back("roots");
+  if (args.output.needs("--roots", args.roots)) names.push_back("roots");
   cli::ResultOutput output(report, args.output, table_names(args, names));
   output.table(
       "states",
@@ -385,7 +385,7 @@ int run_bound_clusters(Arguments const& args, std::size_t requested, bethe::Solv
         cli::column<Real>("deviation_phase", "phi (radians)"),
         cli::column<std::optional<Real>>("deviation_real", "Re(z) (null if underflow)"),
         cli::column<std::optional<Real>>("deviation_imag", "Im(z) (null if underflow)"));
-  if (args.roots)
+  if (args.output.needs("--roots", args.roots))
     output.table(
         "roots", "Reference cluster roots (rounded u; string parameters retain the deviation)",
         [&](auto& table) {

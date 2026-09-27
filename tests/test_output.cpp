@@ -214,4 +214,59 @@ TEST(DataOutput, NamedTablesValidateSelectionAndDelivery)
   EXPECT_THROW(output.finish_document(), std::logic_error);
   output.finish_document(true);
 }
+
+TEST(DataOutput, FrontendCatalogueIsStrictAndPrimaryIsNotPositional)
+{
+  cli::DataOutputOptions options;
+  options.quiet = true;
+  options.catalogue = {{.name = "aux", .description = "auxiliary"},
+                       {.name = "main", .description = "primary", .primary = true}};
+  EXPECT_NO_THROW(cli::validate_table_catalogue(options.catalogue));
+  EXPECT_THROW(cli::table_descriptor(options.catalogue, "removed"), std::invalid_argument);
+  auto duplicate = options.catalogue;
+  duplicate.push_back(duplicate.front());
+  EXPECT_THROW(cli::validate_table_catalogue(duplicate), std::logic_error);
+  EXPECT_THROW(cli::validate_table_catalogue({{.name = "main", .description = "no primary"}}), std::logic_error);
+  EXPECT_THROW((cli::DataOutput(options, {"renamed", "main"})), std::invalid_argument);
+  EXPECT_THROW((cli::DataOutput(options, {"aux"})), std::logic_error);
+  // An explicit primary is required even if the result order changes.
+  cli::DataOutput output(options, {"aux", "main"});
+  EXPECT_TRUE(output.accepts("unplanned")); // Must reach attach(), not silently skip an invalid writer.
+  auto table = data::make_data_table("Auxiliary", {}, data::data_column<int>("id"));
+  EXPECT_THROW(output.attach(table, "unplanned"), std::logic_error);
+  output.finish_document(true);
+}
+
+TEST(DataOutput, FileRequestsDoNotChangeScreenSelection)
+{
+  cli::DataOutputOptions options;
+  options.catalogue = {{.name = "states", .description = "States", .primary = true},
+                       {.name = "roots", .description = "Roots", .screen_option = "--roots"},
+                       {.name = "strings", .description = "Strings", .screen_option = "--roots"}};
+  options.files.push_back({"csv", "unused.csv", "roots"});
+  EXPECT_TRUE(options.needs("--roots", false));
+  EXPECT_TRUE(options.screen_table("states"));
+  EXPECT_FALSE(options.screen_table("roots"));
+  EXPECT_FALSE(options.requested("strings"));
+  options.screen_options.push_back("--roots");
+  EXPECT_TRUE(options.screen_table("roots"));
+  EXPECT_TRUE(options.screen_table("strings"));
+}
+
+TEST(DataOutput, DeclaredPrimaryControlsDelimitedOutputRegardlessOfResultOrder)
+{
+  CaptureStdout capture;
+  cli::DataOutputOptions options;
+  options.format = "csv";
+  options.preamble = false;
+  options.catalogue = {{.name = "aux", .description = "Auxiliary"},
+                       {.name = "main", .description = "Primary", .primary = true}};
+  cli::DataOutput output(options, {"aux", "main"});
+  auto aux = data::make_data_table("Auxiliary", {}, data::data_column<int>("other"));
+  auto main = data::make_data_table("Primary", {}, data::data_column<int>("value"));
+  output.write_table("aux", aux, [](auto& t) { t.append(99); });
+  output.write_table("main", main, [](auto& t) { t.append(42); });
+  output.finish_document();
+  EXPECT_EQ(capture.stream.str(), "value\n42\n");
+}
 } // namespace

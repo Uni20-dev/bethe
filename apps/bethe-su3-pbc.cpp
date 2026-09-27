@@ -29,8 +29,7 @@ auto program_info()
                 "Other color sectors, excitations, complex strings, twists and open ends",
                 "are not implemented. See docs/su3.md, including the spin-1 ULS mapping.",
                 "Use --references for literature and applicability; see CITATIONS.md."};
-  info.notes.push_back(
-      "Tables: states; first_roots and second_roots with --roots. See docs/output.md for file exports.");
+  info.notes.push_back("See docs/output.md for file exports.");
   return info;
 }
 void add_options(CLI::App& app, Arguments& args)
@@ -42,7 +41,16 @@ void add_options(CLI::App& app, Arguments& args)
   bethe::cli::option(app, "--max-iterations", args.max_iterations, "accepted Newton updates (default: 10000)")
       ->capture_default_str();
   bethe::cli::precision_option(app, args.precision);
-  cli::add_data_output_options(app, args.output, true);
+  cli::add_data_output_options(app, args.output,
+                               {{.name = "states", .description = "Selected states and diagnostics", .primary = true},
+                                {.name = "first_roots",
+                                 .description = "Root coordinates and labels",
+                                 .availability = "nested interacting representation",
+                                 .screen_option = "--roots"},
+                                {.name = "second_roots",
+                                 .description = "Root coordinates and labels",
+                                 .availability = "nested interacting representation",
+                                 .screen_option = "--roots"}});
 }
 
 void validate(Arguments const& args) { args.output.validate(); }
@@ -92,7 +100,7 @@ template <uni20::Real Real> int run(Arguments const& args, int argc, char** argv
       .field("iterations", "Iterations", state.iterations);
   using cli::column;
   std::vector<std::string> names{"states"};
-  if (args.roots)
+  if (args.output.needs("--roots", args.roots))
   {
     names.push_back("first_roots");
     names.push_back("second_roots");
@@ -108,7 +116,7 @@ template <uni20::Real Real> int run(Arguments const& args, int argc, char** argv
       column<std::size_t>("state_id"), column<Real>("energy"), column<std::size_t>("momentum_index"), column<Real>("p"),
       column<Real>("first_residual"), column<Real>("second_residual"), column<Real>("residual"),
       column<std::size_t>("iterations"), column<bool>("converged"), column<std::string>("status"));
-  if (args.roots)
+  if (args.output.needs("--roots", args.roots))
     for (std::size_t a = 0; a < 2; ++a)
       output.table(
           a ? "second_roots" : "first_roots", a ? "Second-level rapidities" : "First-level rapidities",

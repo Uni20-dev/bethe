@@ -62,7 +62,9 @@ void add_options(CLI::App& app, Arguments& a)
       ->capture_default_str();
   cli::count_option(app, "--max-iterations", a.iterations, "Momentum inversion updates per point, both meshes")
       ->capture_default_str();
-  cli::add_data_output_options(app, a.output, true);
+  cli::add_data_output_options(
+      app, a.output,
+      {{.name = "dispersion", .description = "Excitation branches and/or continuum bounds", .primary = true}});
 }
 char const* name(model::Branch branch) { return branch == model::Branch::type_i ? "type-i" : "type-ii"; }
 char const* name(model::Status status)

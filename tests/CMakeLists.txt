@@ -174,6 +174,11 @@ else()
 endif()
 
 if(BETHE_BUILD_APPS)
+  if(Python3_Interpreter_FOUND)
+    add_test(NAME Output.table_contracts
+      COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_table_contracts.py"
+        "$<TARGET_FILE_DIR:bethe-su3-dispersion>")
+  endif()
   foreach(app IN ITEMS bethe-sine-gordon-dispersion bethe-sine-gordon-bethe-yang bethe-sine-gordon-excited)
     add_test(NAME Citations.${app}.cli
       COMMAND "${CMAKE_COMMAND}" "-DPROGRAM=$<TARGET_FILE:${app}>"

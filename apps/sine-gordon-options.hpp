@@ -37,7 +37,6 @@ inline void add_options(CLI::App& app, Arguments& a, std::string coupling_help, 
   count_option(app, "--max-fourier-cutoffs", a.fourier_cutoffs, "Fourier cutoff attempts per table")
       ->capture_default_str();
   precision_option(app, a.precision);
-  add_data_output_options(app, a.output, true);
 }
 template <uni20::Real Real> void configure(Arguments const& a, bethe::sine_gordon::VacuumOptions<Real>& controls)
 {

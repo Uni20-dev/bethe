@@ -32,7 +32,7 @@ auto program_info()
       "Empty/full sectors have no relaxation mode: observables are missing, not zero.",
       "Reflection/particle-hole reduction uses min(N,L-N) roots; no physical momentum assignment.",
       "TASEP seed followed by bounded continuation. Equal rates and one particle/hole are analytic, with no root rows.",
-      "Tables: relaxation; --roots adds scaled roots v, not ordinary z. See metadata for reconstruction.",
+      "Root coordinates are scaled v, not ordinary z. See metadata for reconstruction.",
       "Failed observables/root coordinates are missing; exit status 2. No open reservoirs or spectrum scan.",
       "See docs/asep.md; --references for literature. fp128 requires MPLAPACK."};
   return info;
@@ -58,7 +58,13 @@ void add_options(CLI::App& app, Arguments& a)
   cli::count_option(app, "--max-sites", a.max_sites, "Explicit site/work budget")->capture_default_str();
   app.add_flag("--roots", a.roots, "Export scaled reduced-filling roots v; analytic cases have no root rows");
   cli::precision_option(app, a.precision);
-  cli::add_data_output_options(app, a.output, true);
+  cli::add_data_output_options(
+      app, a.output,
+      {{.name = "relaxation", .description = "Relaxation mode and diagnostics", .primary = true},
+       {.name = "roots",
+        .description = "Root coordinates and labels",
+        .availability = "selected root representation",
+        .screen_option = "--roots"}});
 }
 char const* name(model::Status s)
 {
@@ -141,10 +147,10 @@ template <uni20::Real Real> int run(Arguments const& a, int argc, char** argv)
       .field("seed_newton_iterations", "Seed Newton updates", state.seed_newton_iterations)
       .result(state.converged, name(state.status));
   std::vector<std::string> tables{"relaxation"};
-  if (a.roots) tables.push_back("roots");
+  if (a.output.needs("--roots", a.roots)) tables.push_back("roots");
   cli::ResultOutput output(report, a.output, tables);
   cli::relaxation_table(output, state, name(state.status));
-  if (a.roots)
+  if (a.output.needs("--roots", a.roots))
     output.table(
         "roots", "Scaled reduced-filling roots",
         [&](auto& table) {

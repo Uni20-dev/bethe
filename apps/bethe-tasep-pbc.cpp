@@ -29,7 +29,7 @@ auto program_info()
       "Empty/full sectors have no relaxation mode: eigenvalue, gap and frequency are missing, not zero.",
       "Particle-hole reduction uses min(N,L-N) roots; no physical momentum is assigned to this representative.",
       "Default tolerance: 128 epsilon. Separate seed/Newton budgets; one particle or hole is analytic.",
-      "Tables: relaxation; --roots adds roots. Failed observables and roots are missing, with exit status 2.",
+      "Failed observables and roots are missing, with exit status 2.",
       "Only totally asymmetric PBC gaps: no backward hopping, reservoirs or full-spectrum scan.",
       "See docs/tasep.md; --references for literature. fp128 requires MPLAPACK."};
   return info;
@@ -46,7 +46,13 @@ void add_options(CLI::App& app, Arguments& a)
   cli::count_option(app, "--max-sites", a.max_sites, "Explicit site/work budget")->capture_default_str();
   app.add_flag("--roots", a.roots, "Export converged reduced-filling fugacity roots Z");
   cli::precision_option(app, a.precision);
-  cli::add_data_output_options(app, a.output, true);
+  cli::add_data_output_options(
+      app, a.output,
+      {{.name = "relaxation", .description = "Relaxation mode and diagnostics", .primary = true},
+       {.name = "roots",
+        .description = "Root coordinates and labels",
+        .availability = "selected root representation",
+        .screen_option = "--roots"}});
 }
 char const* name(model::Status s)
 {
@@ -107,11 +113,11 @@ template <uni20::Real Real> int run(Arguments const& a, int argc, char** argv)
       .field("seed_iterations", "Seed sweeps", state.seed_iterations)
       .result(state.converged, name(state.status));
   std::vector<std::string> tables{"relaxation"};
-  if (a.roots) tables.push_back("roots");
+  if (a.output.needs("--roots", a.roots)) tables.push_back("roots");
   cli::ResultOutput output(report, a.output, tables);
   using cli::column;
   cli::relaxation_table(output, state, name(state.status));
-  if (a.roots)
+  if (a.output.needs("--roots", a.roots))
     output.table(
         "roots", "Reduced-filling fugacity roots",
         [&](auto& table) {

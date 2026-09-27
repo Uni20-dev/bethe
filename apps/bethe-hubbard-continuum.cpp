@@ -34,7 +34,7 @@ auto program_info()
       "Default tolerance 256 epsilon. Energy quadrature errors exclude momentum-inversion errors.",
       "Charge channels use numerical extrema searches, not certified global bounds; native fp128 can be slow.",
       "Failed energies are missing (exit 2). Charge search tolerance applies to E/max(1,U).",
-      "Tables: two_spinon or charge_continuum. Exports stream; --no-retain discards delivered rows.",
+      "Exports stream; --no-retain discards delivered rows.",
       "See docs/hubbard-continuum.md; --references for literature."};
   return info;
 }
@@ -75,7 +75,15 @@ void add_options(CLI::App& app, Arguments& a)
   cli::count_option(app, "--max-iterations", a.iterations, "Momentum inversion updates per constituent")
       ->capture_default_str();
   cli::precision_option(app, a.precision);
-  cli::add_data_output_options(app, a.output, true);
+  cli::add_data_output_options(app, a.output,
+                               {{.name = "two_spinon",
+                                 .description = "Two-spinon continuum edges",
+                                 .availability = "--channel two-spinon",
+                                 .primary = true},
+                                {.name = "charge_continuum",
+                                 .description = "Charge-containing continuum edges",
+                                 .availability = "other --channel values",
+                                 .primary = true}});
 }
 char const* name(model::Status status)
 {

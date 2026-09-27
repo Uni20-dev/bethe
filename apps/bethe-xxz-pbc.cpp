@@ -77,20 +77,22 @@ template <uni20::Real Real> int run(Arguments const& args, int argc, char** argv
                                       .sector_label = "Sz",
                                       .sector = sz,
                                       .multiplet_size = std::nullopt},
-                                     args.print_roots, args.output));
+                                     args.output.needs("--roots", args.print_roots), args.output));
   }
   if (args.sectors)
   {
     auto const states = model::sector_ground_states<Real>(args.sites, delta, options);
     computation.finish();
-    return finish(cli::spin_sectors<Real>(header("sector minima"), states, args.print_roots, args.output));
+    return finish(cli::spin_sectors<Real>(header("sector minima"), states,
+                                          args.output.needs("--roots", args.print_roots), args.output));
   }
   auto report_one = [&](auto const& state) {
     computation.finish();
     return finish(cli::spin_state<Real>(header(args.quantum_numbers ? "specified real-root state"
                                                : args.sz            ? "sector minimum"
                                                                     : "ground state"),
-                                        args.sites, state, args.print_roots, args.output));
+                                        args.sites, state, args.output.needs("--roots", args.print_roots),
+                                        args.output));
   };
   if (args.quantum_numbers)
     return report_one(model::solve_real<Real>(args.sites, delta, *args.quantum_numbers, options));
@@ -103,7 +105,29 @@ int main(int argc, char** argv)
 {
   Arguments args;
   return bethe::cli::program_main(
-      argc, argv, program_info(), [&](auto& app) { bethe::cli::add_xxz_options(app, args); },
+      argc, argv, program_info(),
+      [&](auto& app) {
+        bethe::cli::add_xxz_options(app, args);
+        bethe::cli::add_data_output_options(
+            app, args.output,
+            {{.name = "states", .description = "Selected states and diagnostics", .primary = true},
+             {.name = "reference",
+              .description = "Reference used for excitation gaps",
+              .availability = "excitation scans",
+              .required_option = "--excitations"},
+             {.name = "failed",
+              .description = "First failed, unranked candidate",
+              .availability = "excitation scan with a failed candidate",
+              .required_option = "--excitations"},
+             {.name = "quantum_numbers",
+              .description = "Exact Bethe labels",
+              .availability = "excitation scans",
+              .required_option = "--excitations"},
+             {.name = "roots",
+              .description = "Root coordinates and labels",
+              .availability = "selected root representation",
+              .screen_option = "--roots"}});
+      },
       [&](auto&) {
         bethe::cli::validate_xxz_arguments(args);
         return bethe::cli::dispatch_precision(args.precision,

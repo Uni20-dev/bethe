@@ -45,7 +45,24 @@ void add_options(CLI::App& app, Arguments& args)
   bethe::cli::option(app, "--max-iterations", args.max_iterations, "accepted Newton updates (default: 10000)")
       ->capture_default_str();
   bethe::cli::precision_option(app, args.precision);
-  cli::add_data_output_options(app, args.output, true);
+  cli::add_data_output_options(app, args.output,
+                               {{.name = "states", .description = "Selected states and diagnostics", .primary = true},
+                                {.name = "charge_roots",
+                                 .description = "Root coordinates and labels",
+                                 .availability = "interacting representation",
+                                 .screen_option = "--roots"},
+                                {.name = "spin_roots",
+                                 .description = "Root coordinates and labels",
+                                 .availability = "interacting representation",
+                                 .screen_option = "--roots"},
+                                {.name = "free_up",
+                                 .description = "Root coordinates and labels",
+                                 .availability = "free representation",
+                                 .screen_option = "--roots"},
+                                {.name = "free_down",
+                                 .description = "Root coordinates and labels",
+                                 .availability = "free representation",
+                                 .screen_option = "--roots"}});
 }
 
 void validate(Arguments const& args)
@@ -112,7 +129,7 @@ template <uni20::Real Real> int run(Arguments const& args, int argc, char** argv
     report.field("reference_spin", "Reference spin", state.spin_reversed ? "down (spin reversed)" : "up")
         .field("spin_roots", "Spin roots", state.spin_rapidities.size());
   std::vector<std::string> tables{"states"};
-  if (args.roots)
+  if (args.output.needs("--roots", args.roots))
   {
     if (state.free)
       tables.insert(tables.end(), {"free_up", "free_down"});
@@ -132,7 +149,7 @@ template <uni20::Real Real> int run(Arguments const& args, int argc, char** argv
       cli::column<Real>("charge_residual"), cli::column<Real>("spin_residual"), cli::column<Real>("residual"),
       cli::column<Real>("root_c"), cli::column<std::size_t>("iterations"), cli::column<bool>("converged"),
       cli::column<std::string>("status"));
-  if (args.roots && state.free)
+  if (args.output.needs("--roots", args.roots) && state.free)
   {
     Real const pi = Real{4} * std::atan(Real{1});
     for (std::size_t a = 0; a < 2; ++a)
@@ -144,7 +161,7 @@ template <uni20::Real Real> int run(Arguments const& args, int argc, char** argv
           },
           cli::column<std::size_t>("state_id"), cli::column<std::int64_t>("mode", "Mode"), cli::column<Real>("k"));
   }
-  else if (args.roots)
+  else if (args.output.needs("--roots", args.roots))
   {
     output.table(
         "charge_roots", "Charge momenta",

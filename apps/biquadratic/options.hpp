@@ -120,7 +120,29 @@ inline void add_options(CLI::App& app, Arguments& args)
   bethe::cli::option(app, "--max-iterations", args.max_iterations, "accepted Newton updates (default: 10000)")
       ->capture_default_str();
   bethe::cli::precision_option(app, args.precision);
-  cli::add_data_output_options(app, args.output, true);
+  cli::add_data_output_options(
+      app, args.output,
+      {{.name = "states", .description = "Selected states and diagnostics", .primary = true},
+       {.name = "quantum_numbers", .description = "Exact real-root labels", .availability = "real-root modes"},
+       {.name = "reference",
+        .description = "Reference used for gaps",
+        .availability = "scans, analytic, Q-system or string modes"},
+       {.name = "failed",
+        .description = "First failed candidate",
+        .availability = "real-root scan with a failed candidate",
+        .required_option = "--excitations"},
+       {.name = "q_coefficients", .description = "Q-polynomial coefficients", .availability = "Q-system modes"},
+       {.name = "string",
+        .description = "String coordinates and deviations",
+        .availability = "singlet or bound-cluster modes"},
+       {.name = "labels", .description = "Mixed-cluster quantum labels", .availability = "mixed bound-cluster modes"},
+       {.name = "roots",
+        .description = "Root coordinates and labels",
+        .availability = "numerical root modes; not analytic ferro modes",
+        .screen_option = "--roots"},
+       {.name = "spin_content",
+        .description = "Physical SU(2) content per TL eigenvector",
+        .screen_option = "--spin-content"}});
 }
 
 inline void validate(Arguments const& args)
@@ -220,7 +242,7 @@ inline void validate(Arguments const& args)
     if (analytic && args.through_lines && *args.through_lines != args.sites && *args.through_lines != args.sites - 2)
       throw std::invalid_argument(
           "ferromagnetic module minima are analytic only for ELL=N or N-2; use --q-spectrum --through-lines ELL");
-    if (analytic && args.roots)
+    if (analytic && args.output.needs("--roots", args.roots))
       throw std::invalid_argument(
           "analytic ferro modes have no root table; use --quantum-numbers or --excitations for XXZ roots");
   }

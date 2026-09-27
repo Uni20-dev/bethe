@@ -56,7 +56,9 @@ void add_options(CLI::App& app, Arguments& a)
       ->type_name("REAL")
       ->excludes(points);
   cli::precision_option(app, a.precision);
-  cli::add_data_output_options(app, a.output, true);
+  cli::add_data_output_options(
+      app, a.output,
+      {{.name = "dispersion", .description = "Excitation branches and/or continuum bounds", .primary = true}});
 }
 template <uni20::Real Real> int run(Arguments const& a, int argc, char** argv)
 {

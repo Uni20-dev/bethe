@@ -53,7 +53,14 @@ void add_options(CLI::App& app, Arguments& args)
   bethe::cli::option(app, "--max-iterations", args.max_iterations, "total attempted Newton corrections (10000)")
       ->capture_default_str();
   bethe::cli::precision_option(app, args.precision);
-  cli::add_data_output_options(app, args.output, true);
+  cli::add_data_output_options(
+      app, args.output,
+      {{.name = "states", .description = "Selected states and diagnostics", .primary = true},
+       {.name = "representations", .description = "Physical populations and highest-weight representatives"},
+       {.name = "roots",
+        .description = "Root coordinates and labels",
+        .availability = "selected root representation",
+        .screen_option = "--roots"}});
 }
 
 void validate(Arguments const& args)
@@ -156,7 +163,7 @@ template <uni20::Real Real> int run(Arguments const& args, int argc, char** argv
       .field("sea_branches_attempted", "Sea branches attempted", state.branches)
       .field("newton_corrections", "Newton corrections", state.iterations);
   std::vector<std::string> tables{"states", "representations"};
-  if (args.roots) tables.push_back("roots");
+  if (args.output.needs("--roots", args.roots)) tables.push_back("roots");
   cli::ResultOutput output(report, args.output, tables);
   // Scan rows retain their sector identity; roots below belong only to the selected row.
   auto const selected_id = scan ? state.singlets : std::size_t{0};
@@ -200,7 +207,7 @@ template <uni20::Real Real> int run(Arguments const& args, int argc, char** argv
       cli::column<std::size_t>("state_id"), cli::column<std::size_t>("component", "Component (s,t+,t0,t-)"),
       cli::column<std::size_t>("population", "Physical population"),
       cli::column<std::size_t>("highest_weight", "Highest-weight row"));
-  if (args.roots)
+  if (args.output.needs("--roots", args.roots))
     output.table(
         "roots", "Highest-weight rapidities (selected state)",
         [&](auto& table) {

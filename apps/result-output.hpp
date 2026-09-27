@@ -30,6 +30,7 @@ class ResultOutput {
     template <typename Fill, data::DataTableValue... Ts>
     void table(std::string name, std::string title, Fill&& fill, data::data_column<Ts>... columns)
     {
+      if (!output_.accepts(name)) return;
       auto table = data::make_data_table(std::move(title), options_, std::move(columns)...);
       output_.write_table(std::move(name), table, std::forward<Fill>(fill), summary_);
     }

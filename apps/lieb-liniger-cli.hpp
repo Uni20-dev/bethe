@@ -67,7 +67,20 @@ template <bool HardWalls> void add_options(CLI::App& app, Arguments& args)
   bethe::cli::option(app, "--max-iterations", args.max_iterations, "Newton updates per state (default: 10000)")
       ->capture_default_str();
   bethe::cli::precision_option(app, args.precision);
-  cli::add_data_output_options(app, args.output, true);
+  cli::add_data_output_options(app, args.output,
+                               {{.name = "states", .description = "Selected states and diagnostics", .primary = true},
+                                {.name = "reference",
+                                 .description = "Reference used for excitation gaps",
+                                 .availability = "excitation scans",
+                                 .required_option = "--excitations"},
+                                {.name = "failed",
+                                 .description = "First failed, unranked candidate",
+                                 .availability = "excitation scan with a failed candidate",
+                                 .required_option = "--excitations"},
+                                {.name = "roots",
+                                 .description = "Root coordinates and labels",
+                                 .availability = "selected root representation",
+                                 .screen_option = "--roots"}});
 }
 
 inline void validate(Arguments const& args)
@@ -120,7 +133,7 @@ void write_output(cli::RunReport& report, Arguments const& args,
   std::vector<std::string> names{"states"};
   if (reference) names.push_back("reference");
   if (failed) names.push_back("failed");
-  if (args.roots) names.push_back("roots");
+  if (args.output.needs("--roots", args.roots)) names.push_back("roots");
   cli::ResultOutput output(report, args.output, names);
   auto write_states = [&](std::string name, std::string title, auto const& rows, std::size_t offset, bool ranked) {
     auto emit = [&](auto... momentum_columns) {
@@ -160,7 +173,7 @@ void write_output(cli::RunReport& report, Arguments const& args,
     write_states("failed", "First failed state (unranked estimate)", std::vector{failed}, all.size(), false);
     all.push_back(failed);
   }
-  if (args.roots)
+  if (args.output.needs("--roots", args.roots))
     output.table(
         "roots",
         HardWalls        ? "Positive Bethe wave numbers (not total momentum)"

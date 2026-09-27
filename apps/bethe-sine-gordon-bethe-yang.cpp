@@ -51,7 +51,8 @@ void add_options(CLI::App& app, Arguments& a)
       ->capture_default_str();
   cli::count_option(app, "--max-fourier-cutoffs", a.cutoffs, "Fourier cutoff attempts")->capture_default_str();
   cli::precision_option(app, a.precision);
-  cli::add_data_output_options(app, a.output, true);
+  cli::add_data_output_options(app, a.output,
+                               {{.name = "levels", .description = "Selected energy levels", .primary = true}});
 }
 char const* name(model::BetheYangStatus status)
 {

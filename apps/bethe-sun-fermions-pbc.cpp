@@ -45,7 +45,17 @@ void add_options(CLI::App& app, Arguments& args)
   bethe::cli::option(app, "--max-iterations", args.max_iterations, "attempted Newton corrections (default: 10000)")
       ->capture_default_str();
   bethe::cli::precision_option(app, args.precision);
-  cli::add_data_output_options(app, args.output, true);
+  cli::add_data_output_options(app, args.output,
+                               {{.name = "states", .description = "Selected states and diagnostics", .primary = true},
+                                {.name = "components", .description = "Physical-to-nesting component mapping"},
+                                {.name = "roots",
+                                 .description = "Root coordinates and labels",
+                                 .availability = "interacting representation",
+                                 .screen_option = "--roots"},
+                                {.name = "free_modes",
+                                 .description = "Root coordinates and labels",
+                                 .availability = "free representation",
+                                 .screen_option = "--roots"}});
 }
 
 void validate(Arguments const& args)
@@ -122,7 +132,7 @@ template <uni20::Real Real> int run(Arguments const& args, int argc, char** argv
       .field("newton_corrections", "Newton corrections", state.iterations)
       .field("continuation_stages", "Continuation stages", state.stages);
   std::vector<std::string> tables{"states", "components"};
-  if (args.roots) tables.push_back(state.free ? "free_modes" : "roots");
+  if (args.output.needs("--roots", args.roots)) tables.push_back(state.free ? "free_modes" : "roots");
   cli::ResultOutput output(report, args.output, tables);
   output.table(
       "states", "State",
@@ -155,7 +165,7 @@ template <uni20::Real Real> int run(Arguments const& args, int argc, char** argv
       cli::column<std::size_t>("state_id"), cli::column<std::size_t>("component", "Component"),
       cli::column<std::size_t>("particles", "Particles"),
       cli::column<std::optional<std::size_t>>("nesting_rank", "Nesting rank"));
-  if (args.roots && state.free)
+  if (args.output.needs("--roots", args.roots) && state.free)
   {
     Real const pi = Real{4} * std::atan(Real{1});
     output.table(
@@ -168,7 +178,7 @@ template <uni20::Real Real> int run(Arguments const& args, int argc, char** argv
         cli::column<std::size_t>("state_id"), cli::column<std::size_t>("component", "Component"),
         cli::column<std::int64_t>("mode", "Mode"), cli::column<Real>("k"));
   }
-  else if (args.roots)
+  else if (args.output.needs("--roots", args.roots))
     output.table(
         "roots", "Nested rapidities (level 0: charge; higher levels: spin)",
         [&](auto& table) {
