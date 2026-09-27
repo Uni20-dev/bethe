@@ -13,6 +13,8 @@ model below.
 - [Doped Hubbard](hubbard-doped.md): gapless charge branches and chemical-potential subtraction.
 - [SU(3)/ULS](su3-uls.md): representations, two-/four-soliton thresholds and three-site folding.
 - [Takhtajan–Babujian](takhtajan-babujian.md): spin selection rules and quadrupolar continua.
+- [Lieb–Liniger](lieb-liniger.md): particle/hole branches and density scaling.
+- [Sutherland](sutherland.md): collision exponents, excitation labels and bounded scans.
 
 ## Coverage of implemented models
 
@@ -30,7 +32,7 @@ in the [model survey](../models.md) are outside this inventory.
 | SU(3)/ULS | [Tutorial](su3-uls.md) | — |
 | Spin-1 TB | [Tutorial](takhtajan-babujian.md) | — |
 | Hubbard | [Half filling](hubbard-half-filled.md), [doping](hubbard-doped.md) | — |
-| Lieb–Liniger | [Guide](../lieb-liniger-thermo.md); planned | Type-I/II curves and interaction strength |
+| Lieb–Liniger | [Tutorial](lieb-liniger.md) | — |
 | q-boson | [Guide](../q-boson.md); planned | Deformation from free bosons to the phase limit |
 | Three-state Potts | [Guide](../potts.md); planned | Charged branch and finite-size scaling |
 | Non-Hermitian quantum-group XXZ | [Guide](../xxz-nonhermitian.md); planned | Boundary fields and non-diagonalizable spectra |
@@ -49,7 +51,7 @@ in the [model survey](../models.md) are outside this inventory.
 | Bose–Fermi mixture | [Guide](../bose-fermi.md); planned | Composition at equal masses/couplings |
 | Integrable ladder | [Guide](../ladder.md); planned | Rung exchange and magnetization sectors |
 | Haldane–Shastry | [Guide](../haldane-shastry.md); planned | Exact motifs, energies and multiplicities |
-| Sutherland | [Guide](../sutherland.md); planned | Collision exponent and excitation labels |
+| Sutherland | [Tutorial](sutherland.md) | — |
 
 A model tutorial introduces a useful supported calculation; it does not imply
 that every frontend mode or every physical sector is implemented. Boundary

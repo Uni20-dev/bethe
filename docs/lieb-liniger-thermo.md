@@ -4,6 +4,9 @@
 Lieb's type-I and type-II excitation curves at fixed density. The underlying
 C++ API supports fp64, native long double, and enabled fp128 throughout.
 
+For plots and a worked density-scaling comparison, start with the
+[particle and hole tutorial](tutorials/lieb-liniger.md).
+
 Use the same units as the [finite ring](lieb-liniger.md):
 `H = -sum d²/dx² + 2c sum delta(x_i-x_j)`, with $`c \gt 0`$ and density $`n \gt 0`$.
 The bulk energy is extensive: the result is **energy per length**, not energy

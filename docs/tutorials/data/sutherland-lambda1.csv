@@ -1,0 +1,44 @@
+# Bethe revision: f95fcd12b5f53327e0f344fd96b59efb79767028
+# Bethe version: 0.1.0
+# Build type: Release
+# Calculation: label-window spectrum
+# Command: /home/ian/build/codex/bethe/gtest_clang20_release/bethe-sutherland-pbc 4 --length 4 --lambda 1 --levels all --window 1 --precision fp64 --format csv
+# Compiler: Clang 20.1.2
+# Coverage: window only; no global low-energy completeness claimed
+# Date: 2026-09-27T21:09:59Z
+# Ground energy: 12.337005501361697
+# Hamiltonian: H=-sum d_i^2+2*lambda*(lambda-1)*(pi/L)^2 sum_{i<j} csc^2(pi*(x_i-x_j)/L)
+# Label window: [-1,1]
+# Lambda: 1
+# Length: 4
+# Momentum: P=2*pi*momentum_index/L; not reduced modulo 2*pi
+# Particles: 4
+# Platform: Linux x86_64
+# Precision: fp64
+# Program: bethe-sutherland-pbc
+# States enumerated: 15
+# Statistics/domain: periodic bosons; collision branch |x_i-x_j|^lambda
+# Uni20 revision: a25159cc19c97c43ca43754c46fb9bdef8c41bda
+# Units: hbar=2m=1
+# First row: 0
+state_id,labels,energy,gap,momentum_index,p
+0,0 0 0 0,12.337005501361697,0,0,0
+1,-1 -1 -1 -1,22.206609902451056,9.869604401089358,-4,-6.2831853071795862
+2,-1 0 0 0,22.206609902451056,9.869604401089358,-1,-1.5707963267948966
+3,0 0 0 1,22.206609902451056,9.869604401089358,1,1.5707963267948966
+4,1 1 1 1,22.206609902451056,9.869604401089358,4,6.2831853071795862
+5,-1 -1 -1 0,27.141412102995734,14.804406601634037,-3,-4.7123889803846897
+6,-1 -1 0 0,27.141412102995734,14.804406601634037,-2,-3.1415926535897931
+7,0 0 1 1,27.141412102995734,14.804406601634037,2,3.1415926535897931
+8,0 1 1 1,27.141412102995734,14.804406601634037,3,4.7123889803846897
+9,-1 0 0 1,32.076214303540411,19.739208802178716,0,0
+10,-1 -1 0 1,37.011016504085092,24.674011002723393,-1,-1.5707963267948966
+11,-1 0 1 1,37.011016504085092,24.674011002723393,1,1.5707963267948966
+12,-1 -1 -1 1,37.011016504085092,24.674011002723397,-2,-3.1415926535897931
+13,-1 1 1 1,37.011016504085092,24.674011002723397,2,3.1415926535897931
+14,-1 -1 1 1,41.945818704629772,29.608813203268074,0,0
+# CPU time: 0.000016 s
+# Elapsed seconds: 0.000210541999990709882695
+# Outcome: success
+# Run CPU seconds: 0.000207000000000000000162
+# Status: exact spectral rules

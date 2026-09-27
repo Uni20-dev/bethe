@@ -6,6 +6,9 @@ Calogero–Sutherland family, not the Uimin–Lai–Sutherland spin chain. Energ
 follow explicit spectral rules: there are no iterative root solves or
 convergence tolerances. fp64, long-double and optional fp128 are supported.
 
+The [collision-branch tutorial](tutorials/sutherland.md) compares small-ring
+spectra, explains the labels and illustrates the limits of a bounded scan.
+
 ```sh
 build/bethe-sutherland-pbc 8 --length 8 --lambda 2
 build/bethe-sutherland-pbc 4 --length 4 --lambda 0.5 --labels -1,0,0,2

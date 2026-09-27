@@ -5,7 +5,7 @@ import io
 import math
 
 
-def read_csv_export(text, columns, expected):
+def read_csv_export(text, columns, expected, *, row_status='status'):
     metadata = dict(line[2:].split(': ', 1) for line in text.splitlines()
                     if line.startswith('# ') and ': ' in line)
     for key, value in {'Outcome': 'success', 'Status': 'converged', **expected}.items():
@@ -20,7 +20,8 @@ def read_csv_export(text, columns, expected):
         raise ValueError(f'Unexpected schema: {reader.fieldnames}')
     rows = list(reader)
     for row in rows:
-        if None in row or None in row.values() or row['status'] != 'converged':
+        if (None in row or None in row.values()
+                or (row_status is not None and row[row_status] != 'converged')):
             raise ValueError(f'Invalid/incomplete row: {row}')
     return metadata, rows
 

@@ -18,6 +18,8 @@ Validate the saved numerical examples:
 python3 scripts/plot_xxz_tutorial.py --check
 python3 scripts/plot_hubbard_tutorial.py --check
 python3 scripts/plot_spin1_tutorial.py --check
+python3 scripts/plot_lieb_liniger_tutorial.py --check
+python3 scripts/plot_sutherland_tutorial.py --check
 python3 -m unittest discover -s scripts -p 'test_tutorial*.py'
 ```
 
@@ -26,6 +28,9 @@ regenerate, follow the [XXZ tutorial](xxz-spinons.md#5-reproduce-the-figures) or
 the [Hubbard tutorial](hubbard-half-filled.md#5-reproduce-and-check).
 The [ULS tutorial](su3-uls.md#5-reproduce-the-plots-and-check-the-comparison)
 also describes regenerating the ULS and TB figures together.
+The [Lieb–Liniger](lieb-liniger.md#5-reproduce-the-figures) and
+[Sutherland](sutherland.md#6-reproduce-and-check) tutorials each have a
+standalone export-and-plot script.
 `scripts/tutorial_common.py` shares CSV/provenance validation and deterministic
 SVG writing; each model's script and tests own its schema and physics checks.
 
