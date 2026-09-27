@@ -19,12 +19,17 @@ then explore magnetization sectors, excitation families, and spinons.
 
 ## Tutorials with plots
 
+See the [tutorial index and model coverage](docs/tutorials/index.md) for the full collection.
+
 - [XXZ spinons and two-spinon continua](docs/tutorials/xxz-spinons.md): compare
   gapless and gapped chains and match momentum conventions to a two-site iMPS.
 - [Hubbard at half filling](docs/tutorials/hubbard-half-filled.md): plot spinons,
   holons and antiholons, and compare symmetric and unshifted interactions.
 - [Doping the Hubbard chain](docs/tutorials/hubbard-doped.md): follow gapless
   spin and charge lines and choose the energy zero for an iMPS calculation.
+- [SU(3)/ULS](docs/tutorials/su3-uls.md) and
+  [Takhtajan–Babujian](docs/tutorials/takhtajan-babujian.md): match spin-1
+  excitation sectors and distinguish two- from four-particle continua.
 
 Figures, source data and Python plotting scripts are included; Python is not
 needed to run the solvers.

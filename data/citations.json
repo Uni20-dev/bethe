@@ -1005,6 +1005,17 @@
       "publication": "arXiv:2407.11391",
       "year": 2024,
       "links": [{"label": "arXiv", "url": "https://arxiv.org/abs/2407.11391"}]
+    },
+    {
+      "id": "osborne-mcculloch-2025",
+      "authors": "Jesse J. Osborne and Ian P. McCulloch",
+      "title": "Efficient and systematic calculation of arbitrary observables for the matrix product state excitation ansatz",
+      "publication": "Phys. Rev. Research 7, 023018",
+      "year": 2025,
+      "links": [
+        {"label": "DOI", "url": "https://doi.org/10.1103/PhysRevResearch.7.023018"},
+        {"label": "arXiv", "url": "https://arxiv.org/abs/2408.17117"}
+      ]
     }
   ],
   "tools": [

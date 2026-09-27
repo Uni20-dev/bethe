@@ -2,6 +2,8 @@
 
 [Overview](../README.md) · [Finite-ring ground states](takhtajan-babujian.md) · [Output](output.md)
 
+Start with the [worked TB tutorial](tutorials/takhtajan-babujian.md) for plots and example exports.
+
 `bethe-tb-dispersion` supplies zero-field excitation references for the critical
 spin-1 Takhtajan–Babujian (TB) chain: an elementary spinon line and two-/four-spinon
 energy bounds. These are **infinite-chain kinematic curves**, not finite-ring

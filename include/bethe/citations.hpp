@@ -365,8 +365,12 @@ inline constexpr std::array<Link, 2> links_93{{
 inline constexpr std::array<Link, 1> links_94{{
   {"arXiv", "https://arxiv.org/abs/2407.11391"},
 }};
+inline constexpr std::array<Link, 2> links_95{{
+  {"DOI", "https://doi.org/10.1103/PhysRevResearch.7.023018"},
+  {"arXiv", "https://arxiv.org/abs/2408.17117"},
+}};
 
-inline constexpr std::array<Reference, 95> references{{
+inline constexpr std::array<Reference, 96> references{{
   {"barber-batchelor-1989", "Michael N. Barber and Murray T. Batchelor", "Spectrum of the biquadratic spin-1 antiferromagnetic chain", "Phys. Rev. B 40, 4621-4626", 1989, links_0},
   {"albertini-2000", "Giuseppe Albertini", "Is the purely biquadratic spin 1 chain always massive?", "arXiv:cond-mat/0012439", 2000, links_1},
   {"aufgebauer-klumper-2010", "Britta Aufgebauer and Andreas Klümper", "Quantum spin chains of Temperley-Lieb type: periodic boundary conditions, spectral multiplicities and finite temperature", "J. Stat. Mech. 2010, P05018", 2010, links_2},
@@ -462,6 +466,7 @@ inline constexpr std::array<Reference, 95> references{{
   {"feher-takacs-2011", "G. Feher and G. Takacs", "Sine-Gordon form factors in finite volume", "Nucl. Phys. B 852, 441-467", 2011, links_92},
   {"feher-palmai-takacs-2012", "G. Z. Feher, T. Palmai, and G. Takacs", "Sine-Gordon multi-soliton form factors in finite volume", "Phys. Rev. D 85, 085005", 2012, links_93},
   {"itou-matsumoto-tanizaki-2024", "Etsuko Itou, Akira Matsumoto, and Yuya Tanizaki", "DMRG study of the theta-dependent mass spectrum in the 2-flavor Schwinger model", "arXiv:2407.11391", 2024, links_94},
+  {"osborne-mcculloch-2025", "Jesse J. Osborne and Ian P. McCulloch", "Efficient and systematic calculation of arbitrary observables for the matrix product state excitation ansatz", "Phys. Rev. Research 7, 023018", 2025, links_95},
 }};
 
 inline constexpr std::array<Use, 2> uses_lee_yang_excited{{

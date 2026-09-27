@@ -2,6 +2,8 @@
 
 [Overview](../README.md) · [Finite rings](su3.md) · [Output](output.md)
 
+Start with the [worked ULS tutorial](tutorials/su3-uls.md) for plots and example exports.
+
 `bethe-su3-dispersion` gives zero-field, infinite-chain reference curves for
 the fundamental SU(3) permutation chain. Its principal application is comparing
 momentum-resolved MPS excitations at the spin-1 Uimin–Lai–Sutherland point.

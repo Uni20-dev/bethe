@@ -127,6 +127,40 @@ For a useful comparison:
 For neutral pairs, the separate [Hubbard continuum tool](../hubbard-continuum.md)
 provides half-filled two-spinon bounds.
 
+### An elementary line inside a continuum
+
+[Osborne–McCulloch](../../CITATIONS.md#osborne-mcculloch-2025), Secs. III D and
+IV B and Fig. 5, demonstrates this distinction at **U=5t**, half filling, with
+the symmetric interaction. A chargon can overlap a chargon–two-spinon continuum
+in the same charge and spin-projection sector. Energy minimization then favours
+lower continuum states, not the elementary chargon.
+
+Instead, the paper follows the chargon by minimizing its **excitation energy
+variance**, using the previous momentum's optimized state to initialize the
+next. For a normalized finite-system state, the underlying diagnostic is
+
+```math
+\sigma_H^2=\langle H^2\rangle-\langle H\rangle^2.
+```
+
+The infinite-MPS construction isolates the excitation contribution from the
+background; do not directly subtract two divergent extensive expectations.
+Small variance tests eigenstate quality, not whether an energy is the sector
+minimum. Branch continuity and quantum numbers remain important.
+
+To obtain Bethe reference lines at the paper's coupling:
+
+```sh
+build/bethe-hubbard-dispersion --u 5 --density 1 --points 129 \
+  --convention symmetric --reference hamiltonian --csv hubbard-u5.csv
+```
+
+Align the domain-wall momentum origin and unit-cell convention before comparing
+with Fig. 5; its quoted crossing momentum is not automatically our `p`.
+This command supplies elementary energies, **not** MPS variances or the
+three-particle continuum. The figures above remain U=4 examples, not a
+reproduction of the paper's numerical MPS data.
+
 ## 5. Reproduce and check
 
 Download the exports: [symmetric Hamiltonian](data/hubbard-half-symmetric.csv),

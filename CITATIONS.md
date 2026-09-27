@@ -188,6 +188,12 @@ of both parity branches. The reflection reduction, analytic Jacobian, and
 damped-Newton continuation are our numerical implementation. We implement
 neither the full excited-state string classification nor correlation functions.
 
+The [Hubbard tutorial](docs/tutorials/hubbard-half-filled.md#an-elementary-line-inside-a-continuum)
+uses [osborne-mcculloch-2025](#osborne-mcculloch-2025), Secs. III D and IV B,
+to explain how excitation-variance minimization can target an elementary
+chargon embedded in a multiparticle continuum. This is an MPS comparison
+reference, not a method implemented by the Bethe energy solvers.
+
 The Hubbard full and partial particle-hole transformations are reviewed in
 [rylands-2022](#rylands-2022), Sec. II, Eqs. (4)-(7). We apply them to fixed
 particle/spin sectors on even rings and open chains of either length parity.
@@ -1282,5 +1288,12 @@ arXiv:2407.11391 (2024).
 Relevant tool modes:
 
 - `bethe-sine-gordon-dispersion`: Leading light-sector sine-Gordon description of two equal small-mass Schwinger flavours at theta=0: p=1/3, triplet and singlet with mass ratio sqrt(3). Not an exact solution of the full massive or finite-spacing Schwinger model.
+
+### osborne-mcculloch-2025
+
+Jesse J. Osborne and Ian P. McCulloch. *Efficient and systematic calculation of arbitrary observables for the matrix product state excitation ansatz*.
+Phys. Rev. Research 7, 023018 (2025).
+
+[DOI](<https://doi.org/10.1103/PhysRevResearch.7.023018>), [arXiv](<https://arxiv.org/abs/2408.17117>).
 
 <!-- END GENERATED BIBLIOGRAPHY -->

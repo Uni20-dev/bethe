@@ -9,9 +9,12 @@ site_dir = "site"
 nav = [
   { "Home" = "index.md" },
   { "Tutorials" = [
+    { "Overview and model coverage" = "docs/tutorials/index.md" },
     { "XXZ spinons and continua" = "docs/tutorials/xxz-spinons.md" },
     { "Hubbard at half filling" = "docs/tutorials/hubbard-half-filled.md" },
     { "Doping the Hubbard chain" = "docs/tutorials/hubbard-doped.md" },
+    { "SU(3)/ULS excitations" = "docs/tutorials/su3-uls.md" },
+    { "Takhtajan–Babujian spinons" = "docs/tutorials/takhtajan-babujian.md" },
   ] },
   { "Using Bethe" = [
     { "Building" = "docs/building.md" },

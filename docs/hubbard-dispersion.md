@@ -99,6 +99,11 @@ shift the momentum origin; no universal shift is imposed. The
 [MPSKit Hubbard example](https://quantumkithub.github.io/MPSKit.jl/stable/examples/quantum1d/6.hubbard/#Excitations)
 illustrates the comparison.
 
+For an elementary chargon embedded in a multiparticle continuum, see
+[Osborne–McCulloch](../CITATIONS.md#osborne-mcculloch-2025) and the
+[tutorial discussion](tutorials/hubbard-half-filled.md#an-elementary-line-inside-a-continuum).
+The MPS variance-targeting method is not part of this Bethe frontend.
+
 ## Method and accuracy
 
 The reference formulas are the Fourier-Bessel dispersions in
