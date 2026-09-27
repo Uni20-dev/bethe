@@ -1,5 +1,8 @@
 # Equal-coupling Bose–Fermi mixture
 
+The [worked tutorial](tutorials/bose-fermi.md) compares repulsion and selected
+compositions, with plots, downloadable roots and Lieb–Liniger checks.
+
 The library `bethe/bose_fermi.hpp` implements periodic ground states of an
 equal-mass gas containing scalar bosons and spinless fermions. Bose–Bose and
 Bose–Fermi contact strengths must be equal and repulsive. This is a distinct

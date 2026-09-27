@@ -1,0 +1,39 @@
+# Bethe revision: dbd6b939034fcaa5f4a83117140418df2d168948
+# Bethe version: 0.1.0
+# Build type: Release
+# Calculation: odd-population sector ground state
+# Charge residual: 9.2518585385429718e-16
+# Command: build_codex/gtest_clang20_release/bethe-gaudin-yang-pbc 6 --sz 0.0 --length 6 --c 1 --precision fp64 --format csv --csv-table states=/tmp/bethe-tutorial-f66rdith/states.csv --csv-table charge_roots=/tmp/bethe-tutorial-f66rdith/charge_roots.csv --csv-table spin_roots=/tmp/bethe-tutorial-f66rdith/spin_roots.csv
+# Compiler: Clang 20.1.2
+# Date: 2026-09-27T22:39:04Z
+# Iterations: 35
+# Length: 6
+# Momentum P: 0
+# Momentum index: 0
+# N_down: 3
+# N_up: 3
+# Particles: 6
+# Platform: Linux x86_64
+# Precision: fp64
+# Program: bethe-gaudin-yang-pbc
+# Reference spin: up
+# Residual norm: 9.2518585385429718e-16
+# Residual tolerance: 7.1054273576010019e-15
+# Root coupling reached: 1
+# Spin residual: 8.1416355139178143e-16
+# Spin roots: 3
+# Sz: 0
+# Total energy: 6.9506437436213595
+# Uni20 revision: a25159cc19c97c43ca43754c46fb9bdef8c41bda
+# Units: hbar^2/(2m)=1; interaction 2c delta
+# c: 1
+# First row: 0
+state_id,index,quantum_number,rapidity
+0,0,-1,-1.3104807822249411
+0,1,0,0
+0,2,1,1.3104807822249411
+# CPU time: 0.000262 s
+# Elapsed seconds: 0.000868394999997690320015
+# Outcome: success
+# Run CPU seconds: 0.000866999999999999999942
+# Status: converged

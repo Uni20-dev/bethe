@@ -28,6 +28,7 @@ python3 scripts/plot_biquadratic_tutorial.py --check
 python3 scripts/plot_field_theory_tutorial.py --check
 python3 scripts/plot_exclusion_tutorial.py --check
 python3 scripts/plot_fermion_tutorial.py --check
+python3 scripts/plot_multicomponent_tutorial.py --check
 python3 -m unittest discover -s scripts -p 'test_tutorial*.py'
 ```
 
@@ -59,6 +60,10 @@ stationary-only sectors, original Bethe equations and a small Markov-matrix chec
 The [Gaudin–Yang](gaudin-yang.md#5-reproduce-and-validate) and
 [t–J](tj.md#5-reproduce-and-validate) examples share nested-table checks while
 keeping their equations, free-shell branches, units and momentum conventions distinct.
+The [SU(n) fermion](su-fermions.md#5-reproduce-and-validate) and
+[Bose–Fermi mixture](bose-fermi.md#5-reproduce-and-validate) examples share
+multicomponent export validation, checking population-to-sea mappings, graded
+equations and independent Gaudin–Yang/Lieb–Liniger reductions.
 `scripts/tutorial_common.py` shares CSV/provenance validation and deterministic
 SVG writing; each model's script and tests own its schema and physics checks.
 

@@ -2,6 +2,9 @@
 
 [Overview](../README.md) · [Gaudin–Yang](gaudin-yang.md) · [Model catalogue](models.md)
 
+For a plotted coupling scan and a worked component-to-root mapping, see the
+[SU(n) fermion tutorial](tutorials/su-fermions.md).
+
 `bethe-sun-fermions-pbc` generalizes the two-component Gaudin–Yang gas to
 an arbitrary number of internal components. To distinguish the component
 count from the particle count N, this guide calls it κ. All particles have

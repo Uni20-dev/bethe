@@ -29,6 +29,8 @@ nav = [
     { "ASEP bias and symmetric limit" = "docs/tutorials/asep.md" },
     { "Gaudin–Yang repulsion and roots" = "docs/tutorials/gaudin-yang.md" },
     { "Supersymmetric t–J fillings" = "docs/tutorials/tj.md" },
+    { "SU(n) fermion components and seas" = "docs/tutorials/su-fermions.md" },
+    { "Bose–Fermi compositions" = "docs/tutorials/bose-fermi.md" },
   ] },
   { "Using Bethe" = [
     { "Building" = "docs/building.md" },

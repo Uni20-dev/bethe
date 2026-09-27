@@ -27,6 +27,8 @@ model below.
 - [ASEP](asep.md): a fixed-total-rate bias scan and the symmetric limit.
 - [Gaudin–Yang](gaudin-yang.md): repulsion, nested roots and finite-ring shell conventions.
 - [Supersymmetric t–J](tj.md): selected dopings, projected fermions and the no-hole XXX limit.
+- [SU(n) fermions](su-fermions.md): component populations, nested seas and cross-model reductions.
+- [Bose–Fermi mixtures](bose-fermi.md): equal-coupling composition benchmarks and particle statistics.
 
 ## Coverage of implemented models
 
@@ -59,8 +61,8 @@ in the [model survey](../models.md) are outside this inventory.
 | Ferromagnetic biquadratic sign | [Tutorial](biquadratic-ferromagnetic.md) | — |
 | Richardson pairing | [Guide](../richardson.md); planned | Pair binding and blocked levels |
 | Central spin | [Guide](../central-spin.md); planned | Field response in a fixed spin sector |
-| SU(n) fermion gas | [Guide](../su-fermions.md); planned | Populations, repulsion and the free limit |
-| Bose–Fermi mixture | [Guide](../bose-fermi.md); planned | Composition at equal masses/couplings |
+| SU(n) fermion gas | [Tutorial](su-fermions.md) | — |
+| Bose–Fermi mixture | [Tutorial](bose-fermi.md) | — |
 | Integrable ladder | [Guide](../ladder.md); planned | Rung exchange and magnetization sectors |
 | Haldane–Shastry | [Tutorial](haldane-shastry.md) | — |
 | Sutherland | [Tutorial](sutherland.md) | — |

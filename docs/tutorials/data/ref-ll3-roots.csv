@@ -1,0 +1,32 @@
+# Bethe revision: dbd6b939034fcaa5f4a83117140418df2d168948
+# Bethe version: 0.1.0
+# Build type: Release
+# Calculation: ground state
+# Command: build_codex/gtest_clang20_release/bethe-lieb-liniger-pbc 3 --length 3 --c 1 --precision fp64 --format csv --csv-table states=/tmp/bethe-tutorial-cffjo7my/states.csv --csv-table roots=/tmp/bethe-tutorial-cffjo7my/roots.csv
+# Compiler: Clang 20.1.2
+# Date: 2026-09-27T22:39:04Z
+# Iterations: 4
+# Length: 3
+# Momentum: 0
+# Momentum convention: P=2*pi*sum(I)/length; no modular reduction
+# Momentum index: 0
+# Particles: 3
+# Platform: Linux x86_64
+# Precision: fp64
+# Program: bethe-lieb-liniger-pbc
+# Residual norm: 3.5339496460705743e-17
+# Residual tolerance: 7.1054273576010019e-15
+# Total energy: 1.6129939442665715
+# Uni20 revision: a25159cc19c97c43ca43754c46fb9bdef8c41bda
+# Units: hbar^2/(2m)=1; interaction 2c delta
+# c: 1
+# First row: 0
+state_id,index,quantum_number,k
+0,0,-1,-0.89805176472923087
+0,1,0,-3.4872139785297094e-18
+0,2,1,0.89805176472923076
+# CPU time: 0.000090 s
+# Elapsed seconds: 0.000284524999997870509105
+# Outcome: success
+# Run CPU seconds: 0.000283000000000000000534
+# Status: converged

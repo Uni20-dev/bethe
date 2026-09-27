@@ -1,0 +1,32 @@
+# Bethe revision: dbd6b939034fcaa5f4a83117140418df2d168948
+# Bethe version: 0.1.0
+# Bosons N_b: 2
+# Build type: Release
+# Calculation: odd-fermion mixed ground state
+# Circumference: 5
+# Command: build_codex/gtest_clang20_release/bethe-bose-fermi-pbc --bosons 2 --fermions 3 --length 5 --c 10 --precision fp64 --format csv --csv-table states=/tmp/bethe-tutorial-_4hdt7qm/states.csv --csv-table charge_roots=/tmp/bethe-tutorial-_4hdt7qm/charge_roots.csv --csv-table auxiliary_roots=/tmp/bethe-tutorial-_4hdt7qm/auxiliary_roots.csv
+# Compiler: Clang 20.1.2
+# Contact parameter c: 10
+# Date: 2026-09-27T22:39:04Z
+# Energy: 12.185020659736219
+# Fermions N_f: 3
+# Hamiltonian: -sum d_j^2+2c sum delta; equal masses, equal BB/BF couplings
+# Max Newton updates: 10000
+# Momentum: 0
+# Momentum convention: P=2*pi*index/ell; no folding; positive representative for free even N_f
+# Newton updates: 3
+# Platform: Linux x86_64
+# Precision: fp64
+# Program: bethe-bose-fermi-pbc
+# Residual tolerance: 7.1054273576010019e-15
+# Scaled equation residual: 5.5511151231257827e-17
+# Uni20 revision: a25159cc19c97c43ca43754c46fb9bdef8c41bda
+# Units: hbar^2/(2m)=1; physical circumference, not lattice sites
+# First row: 0
+state_id,energy,momentum_index,momentum,residual,iterations,converged,status
+0,12.185020659736219,0,0,5.5511151231257827e-17,3,true,converged
+# CPU time: 0.000087 s
+# Elapsed seconds: 0.0002596329999988711279
+# Outcome: success
+# Run CPU seconds: 0.000257000000000000000017
+# Status: converged

@@ -1,0 +1,40 @@
+# Bethe revision: dbd6b939034fcaa5f4a83117140418df2d168948
+# Bethe version: 0.1.0
+# Build type: Release
+# Calculation: exact free-fermion ground state
+# Command: build_codex/gtest_clang20_release/bethe-sun-fermions-pbc --populations 3,3,3 --length 9 --c 0 --precision fp64 --format csv --csv-table states=/tmp/bethe-tutorial-vsob458p/states.csv --csv-table components=/tmp/bethe-tutorial-vsob458p/components.csv --csv-table free_modes=/tmp/bethe-tutorial-vsob458p/free_modes.csv
+# Compiler: Clang 20.1.2
+# Components: 3
+# Continuation stages: 0
+# Date: 2026-09-27T22:39:04Z
+# Energy evaluated at c: 0
+# Length: 9
+# Momentum P: 0
+# Momentum index: 0
+# Newton corrections: 0
+# Occupied components: 3
+# Particles: 9
+# Platform: Linux x86_64
+# Precision: fp64
+# Program: bethe-sun-fermions-pbc
+# Requested c: 0
+# Residual tolerance: 7.1054273576010019e-15
+# Total energy: 2.9243272299524024
+# Uni20 revision: a25159cc19c97c43ca43754c46fb9bdef8c41bda
+# Units: hbar^2/(2m)=1; interaction 2c delta
+# First row: 0
+state_id,component,mode,k
+0,0,-1,-0.69813170079773179
+0,0,0,0
+0,0,1,0.69813170079773179
+0,1,-1,-0.69813170079773179
+0,1,0,0
+0,1,1,0.69813170079773179
+0,2,-1,-0.69813170079773179
+0,2,0,0
+0,2,1,0.69813170079773179
+# CPU time: 0.000003 s
+# Elapsed seconds: 6.29940000038686775952e-05
+# Outcome: success
+# Run CPU seconds: 6.19999999999999999472e-05
+# Status: converged

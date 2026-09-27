@@ -1,0 +1,39 @@
+# Bethe revision: dbd6b939034fcaa5f4a83117140418df2d168948
+# Bethe version: 0.1.0
+# Build type: Release
+# Calculation: odd-population sector ground state
+# Command: build_codex/gtest_clang20_release/bethe-sun-fermions-pbc --populations 1,1,1 --length 3 --c 1 --precision fp64 --format csv --csv-table states=/tmp/bethe-tutorial-djom3dzi/states.csv --csv-table components=/tmp/bethe-tutorial-djom3dzi/components.csv --csv-table roots=/tmp/bethe-tutorial-djom3dzi/roots.csv
+# Compiler: Clang 20.1.2
+# Components: 3
+# Continuation stages: 7
+# Date: 2026-09-27T22:39:04Z
+# Energy evaluated at c: 1
+# Length: 3
+# Momentum P: 0
+# Momentum index: 0
+# Newton corrections: 34
+# Occupied components: 3
+# Particles: 3
+# Platform: Linux x86_64
+# Precision: fp64
+# Program: bethe-sun-fermions-pbc
+# Reached residual: 1.4802973661668753e-16
+# Requested c: 1
+# Residual tolerance: 7.1054273576010019e-15
+# Target residual: 1.4802973661668753e-16
+# Total energy: 1.6129939442665713
+# Uni20 revision: a25159cc19c97c43ca43754c46fb9bdef8c41bda
+# Units: hbar^2/(2m)=1; interaction 2c delta
+# First row: 0
+state_id,level,index,quantum_number,rapidity
+0,0,0,-1,-0.89805176472923076
+0,0,1,0,0
+0,0,2,1,0.89805176472923076
+0,1,0,-0.5,-0.59343547027268417
+0,1,1,0.5,0.59343547027268417
+0,2,0,0,0
+# CPU time: 0.000046 s
+# Elapsed seconds: 0.000111382000000048719812
+# Outcome: success
+# Run CPU seconds: 0.000112000000000000000014
+# Status: converged
