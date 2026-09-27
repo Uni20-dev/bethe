@@ -1,0 +1,54 @@
+# Angular frequency: 0
+# Bethe revision: adec595c95f9970318173a537ba57381387c1f4d
+# Bethe version: 0.1.0
+# Build type: Release
+# Calculation: leading relaxation pair; representative Im(lambda)>=0
+# Command: build_codex/gtest_clang20_release/bethe-tasep-pbc 32 --particles 16 --rate 1 --precision fp64 --format csv --csv-table relaxation=/tmp/bethe-tutorial-2g9cxfws/relaxation.csv --csv-table roots=/tmp/bethe-tutorial-2g9cxfws/roots.csv
+# Compiler: Clang 20.1.2
+# Date: 2026-09-27T22:14:02Z
+# Eigenvalue imaginary part: 0
+# Eigenvalue real part: -0.037770905787531117
+# Generator: dP/dt=M P; right hops only; columns sum to zero
+# Has relaxation mode: true
+# Max Newton updates: 100
+# Max seed sweeps: 1000
+# Newton updates: 3
+# Particles: 16
+# Platform: Linux x86_64
+# Precision: fp64
+# Program: bethe-tasep-pbc
+# Reduced root count: 16
+# Relaxation gap: 0.037770905787531117
+# Residual tolerance: 2.8421709430404007e-14
+# Right-hop rate: 1
+# Root convention: Z=2/z-1; particle-hole reduced filling min(N,L-N)
+# Scaled equation residual: 2.2377260456559048e-16
+# Seed sweeps: 17
+# Site budget: 256
+# Sites: 32
+# Stationary eigenvalue: 0
+# Uni20 revision: a25159cc19c97c43ca43754c46fb9bdef8c41bda
+# Units: inverse time; not quantum energies
+# First row: 0
+index,Z_real,Z_imag
+0,1.4902972488677426,0.081045132210413345
+1,1.4902972488677426,-0.081045132210413581
+2,1.4443826219950993,0.23813367988859818
+3,1.4443826219950993,-0.2381336798885984
+4,1.3537038394810099,0.38026541670254116
+5,1.3537038394810097,-0.38026541670254127
+6,1.2203091897736409,0.49758601619357834
+7,1.2203091897736407,-0.49758601619357845
+8,1.0464780052614948,0.58024037314778498
+9,1.046478005261495,-0.58024037314778498
+10,0.83303185478267527,0.61794366164589321
+11,0.83303185478267516,-0.61794366164589321
+12,0.57402633405080639,0.59919925017306253
+13,0.57402633405080628,-0.59919925017306253
+14,-0.2330021271434094,0.51837010695169561
+15,0.23300212714340937,-0.51837010695169561
+# CPU time: 0.000286 s
+# Elapsed seconds: 0.000357266999998273604433
+# Outcome: success
+# Run CPU seconds: 0.000355999999999999999984
+# Status: converged

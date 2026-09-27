@@ -25,6 +25,8 @@ nav = [
     { "Ferromagnetic biquadratic defects" = "docs/tutorials/biquadratic-ferromagnetic.md" },
     { "Sine-Gordon particles and finite volume" = "docs/tutorials/sine-gordon.md" },
     { "Scaling Lee–Yang vacuum and gap" = "docs/tutorials/lee-yang.md" },
+    { "TASEP relaxation and scaling" = "docs/tutorials/tasep.md" },
+    { "ASEP bias and symmetric limit" = "docs/tutorials/asep.md" },
   ] },
   { "Using Bethe" = [
     { "Building" = "docs/building.md" },

@@ -1,5 +1,8 @@
 # Periodic ASEP: two hopping rates
 
+The [worked bias-scan tutorial](tutorials/asep.md) separates relaxation and
+oscillation while keeping the total hopping rate fixed.
+
 **Status: native-precision relaxation-gap library and `bethe-asep-pbc` frontend implemented.**
 This extends [TASEP](tasep.md) to nonnegative right and left hopping rates,
 including the symmetric endpoint. It does not enumerate the full spectrum or

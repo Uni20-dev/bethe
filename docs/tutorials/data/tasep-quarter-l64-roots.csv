@@ -1,0 +1,54 @@
+# Angular frequency: 0.050844626288269579
+# Bethe revision: adec595c95f9970318173a537ba57381387c1f4d
+# Bethe version: 0.1.0
+# Build type: Release
+# Calculation: leading relaxation pair; representative Im(lambda)>=0
+# Command: build_codex/gtest_clang20_release/bethe-tasep-pbc 64 --particles 16 --rate 1 --precision fp64 --format csv --csv-table relaxation=/tmp/bethe-tutorial-vbbe7eje/relaxation.csv --csv-table roots=/tmp/bethe-tutorial-vbbe7eje/roots.csv
+# Compiler: Clang 20.1.2
+# Date: 2026-09-27T22:14:02Z
+# Eigenvalue imaginary part: 0.050844626288269579
+# Eigenvalue real part: -0.0114373897451997
+# Generator: dP/dt=M P; right hops only; columns sum to zero
+# Has relaxation mode: true
+# Max Newton updates: 100
+# Max seed sweeps: 1000
+# Newton updates: 3
+# Particles: 16
+# Platform: Linux x86_64
+# Precision: fp64
+# Program: bethe-tasep-pbc
+# Reduced root count: 16
+# Relaxation gap: 0.0114373897451997
+# Residual tolerance: 2.8421709430404007e-14
+# Right-hop rate: 1
+# Root convention: Z=2/z-1; particle-hole reduced filling min(N,L-N)
+# Scaled equation residual: 3.7488783099984686e-15
+# Seed sweeps: 23
+# Site budget: 256
+# Sites: 64
+# Stationary eigenvalue: 0
+# Uni20 revision: a25159cc19c97c43ca43754c46fb9bdef8c41bda
+# Units: inverse time; not quantum energies
+# First row: 0
+index,Z_real,Z_imag
+0,1.1950565644580342,0.033211782351029652
+1,1.1957432890449013,-0.0277375392609331
+2,1.1811472981553575,-0.087687124609454381
+3,1.1790756410744845,0.092962511701022058
+4,1.1475120614697529,0.14925395926120993
+5,1.1510084241219491,-0.14438684421309009
+6,1.0996610618943952,0.19962763895927951
+7,1.1046700475445057,-0.19540297483721555
+8,1.034015466876782,0.2412214705883601
+9,1.0407248577714812,-0.23792136068408226
+10,0.94721951872086063,0.27042381647354097
+11,0.95606389252911705,-0.26841659991538153
+12,0.83062234175265459,0.28251579904982133
+13,0.84281838622225569,-0.28225733459352131
+14,0.39687545349747866,0.35426598388614311
+15,0.67491091537559034,-0.2779839315801893
+# CPU time: 0.000749 s
+# Elapsed seconds: 0.000822309000000132073183
+# Outcome: success
+# Run CPU seconds: 0.000821999999999999999861
+# Status: converged

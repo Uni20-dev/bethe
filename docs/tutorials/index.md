@@ -23,6 +23,8 @@ model below.
 - [Ferromagnetic biquadratic chain](biquadratic-ferromagnetic.md): one-defect bands and bound droplets.
 - [Sine-Gordon](sine-gordon.md): breather thresholds and exact versus asymptotic finite-volume gaps.
 - [Scaling Lee–Yang](lee-yang.md): effective central charge and a nonunitary one-particle gap.
+- [TASEP](tasep.md): relaxation times, oscillation and density-dependent size scaling.
+- [ASEP](asep.md): a fixed-total-rate bias scan and the symmetric limit.
 
 ## Coverage of implemented models
 
@@ -47,8 +49,8 @@ in the [model survey](../models.md) are outside this inventory.
 | Kondo | [Guide](../kondo.md); planned | Impurity magnetization and susceptibility |
 | Sine-Gordon | [Tutorial](sine-gordon.md) | — |
 | Scaling Lee–Yang | [Tutorial](lee-yang.md) | — |
-| TASEP | [Guide](../tasep.md); planned | Relaxation gaps versus ring size |
-| ASEP | [Guide](../asep.md); planned | Drift and relaxation as hopping becomes symmetric |
+| TASEP | [Tutorial](tasep.md) | — |
+| ASEP | [Tutorial](asep.md) | — |
 | Gaudin–Yang | [Guide](../gaudin-yang.md); planned | Interaction dependence of continuum fermions |
 | Supersymmetric t–J | [Guide](../tj.md); planned | Doping with double occupancy excluded |
 | Negative biquadratic | [Tutorial](biquadratic.md) | — |

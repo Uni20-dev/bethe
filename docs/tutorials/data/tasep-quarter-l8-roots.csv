@@ -1,0 +1,40 @@
+# Angular frequency: 0.48108608841823625
+# Bethe revision: adec595c95f9970318173a537ba57381387c1f4d
+# Bethe version: 0.1.0
+# Build type: Release
+# Calculation: leading relaxation pair; representative Im(lambda)>=0
+# Command: build_codex/gtest_clang20_release/bethe-tasep-pbc 8 --particles 2 --rate 1 --precision fp64 --format csv --csv-table relaxation=/tmp/bethe-tutorial-cb3ybjlz/relaxation.csv --csv-table roots=/tmp/bethe-tutorial-cb3ybjlz/roots.csv
+# Compiler: Clang 20.1.2
+# Date: 2026-09-27T22:14:02Z
+# Eigenvalue imaginary part: 0.48108608841823625
+# Eigenvalue real part: -0.3185971609641951
+# Generator: dP/dt=M P; right hops only; columns sum to zero
+# Has relaxation mode: true
+# Max Newton updates: 100
+# Max seed sweeps: 1000
+# Newton updates: 4
+# Particles: 2
+# Platform: Linux x86_64
+# Precision: fp64
+# Program: bethe-tasep-pbc
+# Reduced root count: 2
+# Relaxation gap: 0.3185971609641951
+# Residual tolerance: 2.8421709430404007e-14
+# Right-hop rate: 1
+# Root convention: Z=2/z-1; particle-hole reduced filling min(N,L-N)
+# Scaled equation residual: 1.2412670766236366e-16
+# Seed sweeps: 5
+# Site budget: 256
+# Sites: 8
+# Stationary eigenvalue: 0
+# Uni20 revision: a25159cc19c97c43ca43754c46fb9bdef8c41bda
+# Units: inverse time; not quantum energies
+# First row: 0
+index,Z_real,Z_imag
+0,-0.025719643974928989,1.3371104152205471
+1,1.3885253220465388,-0.37493823838407458
+# CPU time: 0.000039 s
+# Elapsed seconds: 0.000111314999998057828634
+# Outcome: success
+# Run CPU seconds: 0.000110999999999999999847
+# Status: converged

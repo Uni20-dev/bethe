@@ -26,6 +26,7 @@ python3 scripts/plot_xyz_tutorial.py --check
 python3 scripts/plot_q_boson_tutorial.py --check
 python3 scripts/plot_biquadratic_tutorial.py --check
 python3 scripts/plot_field_theory_tutorial.py --check
+python3 scripts/plot_exclusion_tutorial.py --check
 python3 -m unittest discover -s scripts -p 'test_tutorial*.py'
 ```
 
@@ -51,6 +52,9 @@ The [Sine-Gordon](sine-gordon.md#5-reproduce-and-validate) and
 [Lee–Yang](lee-yang.md#5-reproduce-and-validate) tutorials share field-theory
 table validation, including independently converged levels, source diagnostics,
 vacuum subtraction and mass/circumference scaling.
+The [TASEP](tasep.md#5-reproduce-and-check) and [ASEP](asep.md#5-reproduce-and-validate)
+tutorials share relaxation/root validation, including analytic endpoints,
+stationary-only sectors, original Bethe equations and a small Markov-matrix check.
 `scripts/tutorial_common.py` shares CSV/provenance validation and deterministic
 SVG writing; each model's script and tests own its schema and physics checks.
 

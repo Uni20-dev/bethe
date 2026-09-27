@@ -1,0 +1,50 @@
+# Analytic result: false
+# Angular frequency: 0.10992505094360484
+# Bethe revision: adec595c95f9970318173a537ba57381387c1f4d
+# Bethe version: 0.1.0
+# Build type: Release
+# Calculation: leading relaxation pair; representative Im(lambda)>=0
+# Command: build_codex/gtest_clang20_release/bethe-asep-pbc 16 --particles 12 --right-rate 0.75 --left-rate 0.25 --precision fp64 --format csv --csv-table relaxation=/tmp/bethe-tutorial-6pf5q16s/relaxation.csv --csv-table roots=/tmp/bethe-tutorial-6pf5q16s/roots.csv
+# Compiler: Clang 20.1.2
+# Continuation Newton updates: 21
+# Continuation attempts: 7
+# Date: 2026-09-27T22:14:03Z
+# Eigenvalue imaginary part: 0.10992505094360484
+# Eigenvalue real part: -0.083072538547446825
+# Generator: dP/dt=M P; right/left hops; columns sum to zero
+# Has relaxation mode: true
+# Last reached rate ratio: 0.33333333333333331
+# Last reached residual: 5.9917057562595073e-17
+# Left-hop rate: 0.25
+# Max Newton updates per stage: 100
+# Max continuation attempts: 256
+# Max seed Newton updates: 100
+# Max seed sweeps: 1000
+# Particles: 12
+# Platform: Linux x86_64
+# Precision: fp64
+# Program: bethe-asep-pbc
+# Reduced root count: 4
+# Relaxation gap: 0.083072538547446825
+# Residual tolerance: 2.8421709430404007e-14
+# Right-hop rate: 0.75
+# Root convention: n=min(N,L-N); x=min(r,s)/max(r,s); delta=(max(r,s)-min(r,s))/max(r,s); z_j=1+delta*v_j+[j=wave_index]*wave_base
+# Seed Newton updates: 4
+# Seed residual tolerance: 2.8421709430404007e-14
+# Seed sweeps: 9
+# Site budget: 256
+# Sites: 16
+# Stationary eigenvalue: 0
+# Uni20 revision: a25159cc19c97c43ca43754c46fb9bdef8c41bda
+# Units: inverse time; not quantum energies
+# Wave base imaginary: -0.38268343236508978
+# Wave base real: -0.076120467488713234
+# Wave root index: 2
+# First row: 0
+has_mode,lambda_real,lambda_imag,gap,frequency,residual,iterations,seed_iterations,converged,status
+true,-0.083072538547446825,0.10992505094360484,0.083072538547446825,0.10992505094360484,5.9917057562595073e-17,21,9,true,converged
+# CPU time: 0.000591 s
+# Elapsed seconds: 0.000859837999996670987457
+# Outcome: success
+# Run CPU seconds: 0.000856999999999999999971
+# Status: converged

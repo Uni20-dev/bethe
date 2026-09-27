@@ -1,5 +1,8 @@
 # Periodic TASEP: relaxation gaps, not energies
 
+See the [worked relaxation and scaling tutorial](tutorials/tasep.md) for plots,
+downloadable exports and a comparison of fixed density with one particle.
+
 **Status: native-precision library and `bethe-tasep-pbc` frontend implemented.** This is the
 totally asymmetric member of the ASEP family. It is not yet a solver for
 bidirectional hopping, open reservoirs, or a complete non-Hermitian spectrum.
