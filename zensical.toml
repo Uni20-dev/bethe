@@ -1,0 +1,34 @@
+[project]
+site_name = "Bethe ansatz solvers"
+site_description = "High-precision reference spectra for MPS and iMPS calculations"
+site_url = "https://uni20-dev.github.io/bethe/"
+repo_url = "https://github.com/Uni20-dev/bethe"
+# scripts/build_docs.py supplies isolated staging/output paths.
+docs_dir = "source"
+site_dir = "site"
+nav = [
+  { "Home" = "index.md" },
+  { "Tutorials" = [{ "XXZ spinons and continua" = "docs/tutorials/xxz-spinons.md" }] },
+  { "Using Bethe" = [
+    { "Building" = "docs/building.md" },
+    { "Command line" = "docs/command-line.md" },
+    { "Output and exports" = "docs/output.md" },
+  ] },
+  { "Models" = "docs/models.md" },
+  { "References" = "CITATIONS.md" },
+  { "Contributing tutorials" = "docs/tutorials/contributing.md" },
+]
+extra_javascript = [
+  "docs/javascripts/mathjax.js",
+  "https://cdn.jsdelivr.net/npm/mathjax@3.2.2/es5/tex-mml-chtml.js",
+]
+
+[project.theme]
+features = ["navigation.sections", "content.code.copy"]
+font = false
+
+[project.markdown_extensions]
+tables = {}
+fenced_code = {}
+toc = { permalink = true }
+pymdownx.superfences = {}

@@ -17,6 +17,16 @@ uses them to calculate energies and, for periodic chains, momenta. You can
 begin with a ground state without choosing the quantum numbers yourself,
 then explore magnetization sectors, excitation families, and spinons.
 
+## Tutorials with plots
+
+Start with [XXZ spinons and two-spinon continua](docs/tutorials/xxz-spinons.md):
+export reference curves, compare gapless and gapped chains, and match momentum
+conventions to a two-site iMPS calculation. Figures, source data and a short
+Python plotting script are included; Python is not needed to run the solvers.
+
+Browse the [documentation site](https://uni20-dev.github.io/bethe/) or read the
+same Markdown here on GitHub.
+
 ## Choose a model
 
 Commands follow `bethe-<model>-<boundary>`: `pbc` means periodic boundaries,

@@ -2,6 +2,9 @@
 
 [Back to the overview](../README.md)
 
+For a worked example with downloadable data and plots, start with the
+[spinon tutorial](tutorials/xxz-spinons.md).
+
 `bethe-xxz-dispersion` supplies reference curves for infinite-chain excitation
 calculations, including symmetry-resolved MPS and iMPS ansätze. Unlike
 [`bethe-xxz-pbc`](xxz.md), it does not solve a finite ring. It supports zero

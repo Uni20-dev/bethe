@@ -1,0 +1,2 @@
+# Optional: only needed to regenerate the checked-in figures.
+matplotlib==3.11.2
