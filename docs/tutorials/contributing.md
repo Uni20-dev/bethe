@@ -22,6 +22,8 @@ python3 scripts/plot_lieb_liniger_tutorial.py --check
 python3 scripts/plot_sutherland_tutorial.py --check
 python3 scripts/plot_xxx_tutorial.py --check
 python3 scripts/plot_haldane_shastry_tutorial.py --check
+python3 scripts/plot_xyz_tutorial.py --check
+python3 scripts/plot_q_boson_tutorial.py --check
 python3 -m unittest discover -s scripts -p 'test_tutorial*.py'
 ```
 
@@ -37,6 +39,9 @@ The [XXX](xxx.md#5-reproduce-and-validate) and
 [Haldane–Shastry](haldane-shastry.md#6-reproduce-the-figures) examples also show
 how to join named auxiliary tables. Their regeneration scripts share a
 temporary-file capture helper and validate all exports before saving them.
+The [XYZ](xyz.md#5-reproduce-and-check) tutorial checks branch/parity copies;
+the [q-boson](q-boson.md#5-reproduce-the-figures) tutorial joins roots and state
+tables and checks spectral moments against occupation-basis hopping.
 `scripts/tutorial_common.py` shares CSV/provenance validation and deterministic
 SVG writing; each model's script and tests own its schema and physics checks.
 

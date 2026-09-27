@@ -19,6 +19,8 @@ nav = [
     { "Sutherland collision branches" = "docs/tutorials/sutherland.md" },
     { "XXX finite chains" = "docs/tutorials/xxx.md" },
     { "Haldane–Shastry motifs and spins" = "docs/tutorials/haldane-shastry.md" },
+    { "XYZ bound branches" = "docs/tutorials/xyz.md" },
+    { "q-bosons and the phase limit" = "docs/tutorials/q-boson.md" },
   ] },
   { "Using Bethe" = [
     { "Building" = "docs/building.md" },

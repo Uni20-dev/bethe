@@ -5,6 +5,9 @@ state and real-root excited states of the repulsive q-boson hopping model. The
 frontend `bethe-q-boson-pbc` exposes ground states and excitation scans. It is **not** the
 ordinary Bose–Hubbard model.
 
+The [worked tutorial](tutorials/q-boson.md) plots a small fixed-particle-number
+spectrum and follows its ground roots from free bosons to the phase limit.
+
 ## Command-line use
 
 ```sh
@@ -32,7 +35,8 @@ files are opened, including with `--force`.
 The shared [output options](output.md) provide the presentation-layer overview,
 CPU timing, metadata and JSON/CSV/TSV exports. To export multiple tables, use
 `--json result.json` or explicit destinations such as
-`--csv-table states=states.csv --csv-table roots=roots.csv` with `--roots`.
+`--csv-table states=states.csv --csv-table roots=roots.csv`. The named roots
+export computes that table without requiring `--roots` on screen.
 References are displayed only with `--references`.
 
 `--excitations COUNT|all` scans all `binomial(L+N-1,N)` canonical states,

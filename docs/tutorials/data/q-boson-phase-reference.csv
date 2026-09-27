@@ -1,0 +1,34 @@
+# Bethe revision: 23e3d4ab0b78e29166b3a71bf938b45d6f6b036d
+# Bethe version: 0.1.0
+# Build type: Release
+# Calculation: canonical fixed-N excitation scan
+# Candidate budget: 10000
+# Candidate count: 35
+# Command: /home/ian/build/codex/bethe/gtest_clang20_release/bethe-q-boson-pbc 5 --particles 3 --excitations all --phase --precision fp64 --format csv --csv-table states=/tmp/bethe-tutorial-j3y325b0/states.csv --csv-table reference=/tmp/bethe-tutorial-j3y325b0/reference.csv --csv-table roots=/tmp/bethe-tutorial-j3y325b0/roots.csv
+# Compiler: Clang 20.1.2
+# Converged count: 35
+# Date: 2026-09-27T21:35:09Z
+# Deformation: phase limit
+# Energy reference: +2N diagonal shift included; subtract 2N for pure hopping
+# Ground energy: 1.1715728752538099
+# Hamiltonian: -sum_j(B_j^dagger B_{j+1}+h.c.-2N_j); hopping=1, lattice spacing=1
+# Max Newton updates: 10000
+# Momentum convention: (-pi,pi]; index=sum(m) modulo L; lifted roots
+# Newton updates: 0
+# Particles N: 3
+# Platform: Linux x86_64
+# Precision: fp64
+# Program: bethe-q-boson-pbc
+# Residual tolerance: 7.1054273576010019e-15
+# Retained count: 35
+# Scaled equation residual: 2.8271597168564593e-17
+# Sites L: 5
+# Uni20 revision: a25159cc19c97c43ca43754c46fb9bdef8c41bda
+# First row: 0
+state_id,energy,energy_per_site,gap,momentum_index,momentum,residual,iterations,converged,status
+35,1.1715728752538099,0.23431457505076198,,0,0,2.8271597168564593e-17,0,true,converged
+# CPU time: 0.000096 s
+# Elapsed seconds: 0.000253774000000817068212
+# Outcome: success
+# Run CPU seconds: 0.000252000000000000000031
+# Status: converged canonical family

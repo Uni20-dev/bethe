@@ -5,6 +5,9 @@
 It does not enumerate finite-ring eigenstates. All arithmetic and exports use
 the selected fp64, native long-double, or optional fp128 precision.
 
+For a worked comparison of bands, bound branches and their momentum copies,
+see the [XYZ tutorial](tutorials/xyz.md).
+
 ## Hamiltonian and scope
 
 ```math

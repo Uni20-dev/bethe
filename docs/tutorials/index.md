@@ -17,6 +17,8 @@ model below.
 - [Sutherland](sutherland.md): collision exponents, excitation labels and bounded scans.
 - [XXX](xxx.md): finite-ring spinons and periodic/free-end excitation scans.
 - [Haldane–Shastry](haldane-shastry.md): motifs, spin multiplicities and complete finite spectra.
+- [XYZ](xyz.md): gapped spinons, bound branches and discrete parity copies.
+- [q-bosons](q-boson.md): occupation-dependent hopping from free bosons to the phase limit.
 
 ## Coverage of implemented models
 
@@ -30,12 +32,12 @@ in the [model survey](../models.md) are outside this inventory.
 | --- | --- | --- |
 | XXX | [Tutorial](xxx.md) | — |
 | XXZ | [Tutorial](xxz-spinons.md) | — |
-| XYZ | [Guide](../xyz-dispersion.md); planned | Gapped bands and bound branches |
+| XYZ | [Tutorial](xyz.md) | — |
 | SU(3)/ULS | [Tutorial](su3-uls.md) | — |
 | Spin-1 TB | [Tutorial](takhtajan-babujian.md) | — |
 | Hubbard | [Half filling](hubbard-half-filled.md), [doping](hubbard-doped.md) | — |
 | Lieb–Liniger | [Tutorial](lieb-liniger.md) | — |
-| q-boson | [Guide](../q-boson.md); planned | Deformation from free bosons to the phase limit |
+| q-boson | [Tutorial](q-boson.md) | — |
 | Three-state Potts | [Guide](../potts.md); planned | Charged branch and finite-size scaling |
 | Non-Hermitian quantum-group XXZ | [Guide](../xxz-nonhermitian.md); planned | Boundary fields and non-diagonalizable spectra |
 | Kondo | [Guide](../kondo.md); planned | Impurity magnetization and susceptibility |
