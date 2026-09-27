@@ -3,6 +3,9 @@
 [Overview](../README.md) · [Vacuum and conventions](sine-gordon.md) ·
 [Particle lines and Bethe–Yang](sine-gordon-excitations.md) · [Exports](output.md)
 
+The [worked tutorial](tutorials/sine-gordon.md#3-put-a-same-charge-pair-on-a-circle)
+plots a selected NLIE gap against Bethe–Yang and explains the energy subtraction.
+
 `bethe-sine-gordon-excited` solves an excited-state nonlinear integral equation
 (NLIE), including the finite-volume sea contribution. Unlike the Bethe–Yang
 tool, it does not discard wrapping corrections. “Exact” describes the continuum

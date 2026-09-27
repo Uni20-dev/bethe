@@ -1,0 +1,43 @@
+# Absolute Y tolerance per state: 9.9999999999999995e-08
+# Bethe revision: ef234a9e948bb0dea014b08b18c45f1b62bc056a
+# Bethe version: 0.1.0
+# Build type: Release
+# Calculation: exact continuum two-hole NLIE; not Bethe-Yang
+# Circumference: 10
+# Command: build_codex/gtest_clang20_release/bethe-sine-gordon-excited --mass 1 --p 2 --length 10 --tolerance 1e-7 --precision fp64 --format csv --csv-table levels=/tmp/bethe-tutorial-b7cpkit7/levels.csv --csv-table source=/tmp/bethe-tutorial-b7cpkit7/source.csv --csv-table gap=/tmp/bethe-tutorial-b7cpkit7/gap.csv
+# Compiler: Clang 20.1.2
+# Contour shift: 0.78539816339744828
+# Coupling convention: p=beta^2/(8*pi-beta^2); kinetic term (1/2)(partial phi)^2
+# Coupling p: 2
+# Date: 2026-09-27T22:02:56Z
+# Dimensionless observables: Y=L*E_C; scaled_gap=L*gap/(2*pi)
+# Energy convention: bulk-subtracted E_C=E-L*e_bulk; gap=E_C(excited)-E_C(vacuum)
+# Initial intervals: 64
+# Max Fourier cutoffs: 64
+# Max evaluations per kernel/source table: 100000
+# Max hole trials across meshes/contours: 1024
+# Max intervals: 2048
+# Max kernel levels: 16
+# Max rapidity cutoffs per contour: 3
+# Max total nonlinear updates per state: 32768
+# Platform: Linux x86_64
+# Positive Bethe number: 0.5
+# Precision: fp64
+# Program: bethe-sine-gordon-excited
+# Requested initial rapidity cutoff: unavailable
+# Scaled length u: 10
+# Sector: same-charge pair, delta=0, momentum zero; no complex/special roots
+# Soliton mass: 1
+# Topological winding charge: 2
+# UV weight Delta+=Delta-: 0.375
+# Uni20 revision: a25159cc19c97c43ca43754c46fb9bdef8c41bda
+# Units: velocity=hbar=1; M is the soliton mass
+# Verification contour shift: 0.58904862254808621
+# First row: 0
+number,charge,rapidity,quantization_residual,hole_error,source_quadrature_error,source_tail_bound,root_iterations,source_evaluations,converged,status
+0.5,2,0.29177038828108076,0,1.5337196118798716e-10,1.193731089097718e-13,1.0749677585452934e-14,45,45360,true,converged
+# CPU time: 0.073855 s
+# Elapsed seconds: 0.0740598330000068472145
+# Outcome: success
+# Run CPU seconds: 0.0740229999999999999921
+# Status: converged

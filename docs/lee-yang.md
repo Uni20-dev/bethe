@@ -1,5 +1,8 @@
 # Scaling Lee–Yang model: periodic finite-volume energies
 
+Start with the [worked vacuum and gap tutorial](tutorials/lee-yang.md) for
+plots, downloadable exports and an explanation of effective central charge.
+
 **Status: native fp64/long-double/fp128 periodic ground-state TBA library and
 frontend implemented and checked against an independent oracle.** This is a continuum
 field-theory calculation, not a finite spin-chain or RSOS Hamiltonian solver.

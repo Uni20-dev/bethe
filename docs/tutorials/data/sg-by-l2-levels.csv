@@ -1,0 +1,28 @@
+# Approximation: Bethe-Yang; wrapping corrections omitted; not exact finite-volume levels
+# Bethe revision: ef234a9e948bb0dea014b08b18c45f1b62bc056a
+# Bethe version: 0.1.0
+# Build type: Release
+# Circumference L: 2
+# Command: build_codex/gtest_clang20_release/bethe-sine-gordon-bethe-yang --mass 1 --p 2 --length 2 --precision fp64 --format csv --csv-table levels=/tmp/bethe-tutorial-a0ympjzr/levels.csv
+# Compiler: Clang 20.1.2
+# Counting tolerance: 3.637978807091713e-12
+# Coupling p: 2
+# Date: 2026-09-27T22:02:56Z
+# Energy reference: excitation energy above vacuum at Bethe-Yang order
+# First Bethe number: 0.5
+# Levels: 1
+# Platform: Linux x86_64
+# Precision: fp64
+# Program: bethe-sine-gordon-bethe-yang
+# Sector: same-charge pair; total momentum zero; winding charge +/-2
+# Soliton mass M: 1
+# Topological charge: 2
+# Uni20 revision: a25159cc19c97c43ca43754c46fb9bdef8c41bda
+# First row: 0
+number,charge,rapidity,energy,residual,quadrature_error,tail_bound,iterations,evaluations,phase_status,status
+0.5,2,1.0755369734567277,3.2726811881048388,6.3060667798708891e-13,9.8477287915215113e-16,7.9151034681838597e-16,39,34944,converged,converged
+# CPU time: 0.001811 s
+# Elapsed seconds: 0.00195586499999933494109
+# Outcome: success
+# Run CPU seconds: 0.001956
+# Status: converged

@@ -21,6 +21,8 @@ model below.
 - [q-bosons](q-boson.md): occupation-dependent hopping from free bosons to the phase limit.
 - [Negative biquadratic chain](biquadratic.md): TL sectors, spin multiplicities and complex-root singlets.
 - [Ferromagnetic biquadratic chain](biquadratic-ferromagnetic.md): one-defect bands and bound droplets.
+- [Sine-Gordon](sine-gordon.md): breather thresholds and exact versus asymptotic finite-volume gaps.
+- [Scaling Lee–Yang](lee-yang.md): effective central charge and a nonunitary one-particle gap.
 
 ## Coverage of implemented models
 
@@ -43,8 +45,8 @@ in the [model survey](../models.md) are outside this inventory.
 | Three-state Potts | [Guide](../potts.md); planned | Charged branch and finite-size scaling |
 | Non-Hermitian quantum-group XXZ | [Guide](../xxz-nonhermitian.md); planned | Boundary fields and non-diagonalizable spectra |
 | Kondo | [Guide](../kondo.md); planned | Impurity magnetization and susceptibility |
-| Sine-Gordon | [Guide](../sine-gordon-excitations.md); planned | Solitons, breathers and finite-volume interpretation |
-| Scaling Lee–Yang | [Guide](../lee-yang.md); planned | Vacuum scaling and a non-unitary excitation gap |
+| Sine-Gordon | [Tutorial](sine-gordon.md) | — |
+| Scaling Lee–Yang | [Tutorial](lee-yang.md) | — |
 | TASEP | [Guide](../tasep.md); planned | Relaxation gaps versus ring size |
 | ASEP | [Guide](../asep.md); planned | Drift and relaxation as hopping becomes symmetric |
 | Gaudin–Yang | [Guide](../gaudin-yang.md); planned | Interaction dependence of continuum fermions |

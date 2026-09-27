@@ -1,0 +1,35 @@
+# Absolute Y tolerance per state: 1.4551915228366852e-11
+# Bethe revision: ef234a9e948bb0dea014b08b18c45f1b62bc056a
+# Bethe version: 0.1.0
+# Build type: Release
+# Circumference: 6
+# Command: build_codex/gtest_clang20_release/bethe-lee-yang-excited --mass 1 --length 6 --precision fp64 --format csv --csv-table levels=/tmp/bethe-tutorial-yvnz27at/levels.csv --csv-table source=/tmp/bethe-tutorial-yvnz27at/source.csv --csv-table gap=/tmp/bethe-tutorial-yvnz27at/gap.csv
+# Compiler: Clang 20.1.2
+# Date: 2026-09-27T22:02:56Z
+# Energy convention: bulk-subtracted E_j_C=E_j-L*e_bulk; Y_j=L*E_j_C
+# Error convention: level errors in Y; source_error in Y1; gap_error in energy units sums both cutoff errors and rounding; estimates, not certificates
+# Gap convention: gap=E1_C-E0_C; scaled_gap=L*gap; requires both states converged
+# Initial intervals: 32
+# Max cutoff trials per state: 3
+# Max intervals: 2048
+# Max kernel products per state: 1000000000
+# Max source iterations per grid: 256
+# Max updates per source evaluation: 1000
+# Particle mass: 1
+# Platform: Linux x86_64
+# Precision: fp64
+# Program: bethe-lee-yang-excited
+# Requested initial cutoff: unavailable
+# Scaled length r: 6
+# Scope: periodic spin-zero one-particle regular branch; 5<=mL<=30; no UV continuation
+# Uni20 revision: a25159cc19c97c43ca43754c46fb9bdef8c41bda
+# Units: velocity=hbar=1; r=mL
+# First row: 0
+state,casimir_energy,scaling_function,nonlinear_residual,nonlinear_error,mesh_error,cutoff_error,direct_tail_bound,cutoff,intervals,iterations,cutoffs,kernel_products,converged,status
+vacuum,-0.00042709530035285695,-0.0025625718021171418,3.7910104742910899e-13,1.0467060784485793e-15,2.0934122050158015e-15,3.5970823624164766e-14,1.8602435241345872e-36,3.296074906443788,128,18,2,175640,true,converged
+one_particle,1.0127859555523624,6.0767157333141748,4.5286517591502928e-13,4.855836664983821e-13,9.7115744843793466e-13,2.9538355735965994e-12,1.8228488131152665e-34,3.296074906443788,128,288,2,2502870,true,converged
+# CPU time: 0.007165 s
+# Elapsed seconds: 0.00734026700000356413511
+# Outcome: success
+# Run CPU seconds: 0.00731600000000000000013
+# Status: converged

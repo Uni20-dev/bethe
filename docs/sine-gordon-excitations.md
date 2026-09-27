@@ -2,6 +2,9 @@
 
 [Overview](../README.md) · [Vacuum solver and conventions](sine-gordon.md) · [Exports](output.md)
 
+For a worked example with plots and downloadable data, see the
+[particles and finite-volume tutorial](tutorials/sine-gordon.md).
+
 Two tools cover the first excitation checkpoint:
 
 - `bethe-sine-gordon-dispersion`: infinite-volume particle dispersions and

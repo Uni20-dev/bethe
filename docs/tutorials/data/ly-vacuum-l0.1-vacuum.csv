@@ -1,0 +1,36 @@
+# Absolute Y tolerance: 1.8189894035458565e-12
+# Bethe revision: ef234a9e948bb0dea014b08b18c45f1b62bc056a
+# Bethe version: 0.1.0
+# Build type: Release
+# CFT central charge (theory): -22/5
+# Circumference: 0.10000000000000001
+# Command: build_codex/gtest_clang20_release/bethe-lee-yang-vacuum --mass 1 --length 0.1 --precision fp64 --format csv --csv-table vacuum=/tmp/bethe-tutorial-ltemq8ed/vacuum.csv
+# Compiler: Clang 20.1.2
+# Date: 2026-09-27T22:02:56Z
+# Effective charge convention: computed c_eff(r)=-6Y/pi; not the CFT central charge
+# Energy convention: bulk-subtracted E_C=E0-L*e_bulk; Y=L*E_C; no absolute bulk constant
+# Error convention: errors target absolute Y; residual is in pseudoenergy units; refinement estimates, not certificates
+# Initial intervals: 32
+# Lowest conformal weight (theory): -1/5
+# Max cutoff trials: 3
+# Max intervals: 2048
+# Max kernel products: 200000000
+# Max updates per grid: 1000
+# Particle mass: 1
+# Platform: Linux x86_64
+# Precision: fp64
+# Program: bethe-lee-yang-vacuum
+# Requested initial cutoff: unavailable
+# Scaled length r: 0.10000000000000001
+# Scope: periodic source-free ground-state TBA; no excited states, boundaries or defects
+# UV effective charge (theory): 2/5
+# Uni20 revision: a25159cc19c97c43ca43754c46fb9bdef8c41bda
+# Units: velocity=hbar=1; r=mL
+# First row: 0
+casimir_energy,scaling_function,effective_central_charge,nonlinear_residual,nonlinear_error,mesh_error,cutoff_error,direct_tail_bound,cutoff,intervals,iterations,cutoffs,kernel_products,converged,status
+-2.0835015785667785,-0.20835015785667785,0.39791949020240369,2.4480417692984702e-14,1.9105173258985766e-14,3.8210346669590649e-14,1.2235617648756471e-13,7.2737271484747399e-39,7.4578607494614211,128,156,2,1185570,true,converged
+# CPU time: 0.002094 s
+# Elapsed seconds: 0.00218633400000101119076
+# Outcome: success
+# Run CPU seconds: 0.00218500000000000000023
+# Status: converged
