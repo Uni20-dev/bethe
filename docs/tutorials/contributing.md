@@ -27,6 +27,7 @@ python3 scripts/plot_q_boson_tutorial.py --check
 python3 scripts/plot_biquadratic_tutorial.py --check
 python3 scripts/plot_field_theory_tutorial.py --check
 python3 scripts/plot_exclusion_tutorial.py --check
+python3 scripts/plot_fermion_tutorial.py --check
 python3 -m unittest discover -s scripts -p 'test_tutorial*.py'
 ```
 
@@ -55,6 +56,9 @@ vacuum subtraction and mass/circumference scaling.
 The [TASEP](tasep.md#5-reproduce-and-check) and [ASEP](asep.md#5-reproduce-and-validate)
 tutorials share relaxation/root validation, including analytic endpoints,
 stationary-only sectors, original Bethe equations and a small Markov-matrix check.
+The [Gaudin–Yang](gaudin-yang.md#5-reproduce-and-validate) and
+[t–J](tj.md#5-reproduce-and-validate) examples share nested-table checks while
+keeping their equations, free-shell branches, units and momentum conventions distinct.
 `scripts/tutorial_common.py` shares CSV/provenance validation and deterministic
 SVG writing; each model's script and tests own its schema and physics checks.
 

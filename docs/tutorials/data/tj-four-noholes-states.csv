@@ -1,0 +1,35 @@
+# Bethe revision: 1d199b3dcccddd1a9b832eb78552a9e8e1092f22
+# Bethe version: 0.1.0
+# Build type: Release
+# Calculation: no-hole XXX reduction
+# Command: build_codex/gtest_clang20_release/bethe-tj-pbc 4 --sz 0.0 --particles 4 --precision fp64 --format csv --csv-table states=/tmp/bethe-tutorial-s9oawn6z/states.csv --csv-table first_roots=/tmp/bethe-tutorial-s9oawn6z/first_roots.csv --csv-table second_roots=/tmp/bethe-tutorial-s9oawn6z/second_roots.csv
+# Compiler: Clang 20.1.2
+# Date: 2026-09-27T22:27:02Z
+# Energy per site: -1.5000000000000033
+# First-level roots: 2
+# Hamiltonian: t=1, J=2; projected hopping + 2*(S.S-nn/4)
+# Holes: 0
+# Iterations: 24
+# Momentum P: 3.1415926535897931
+# Momentum index: 2
+# N_down: 2
+# N_up: 2
+# Particles: 4
+# Platform: Linux x86_64
+# Precision: fp64
+# Program: bethe-tj-pbc
+# Residual norm: 2.886579864025407e-15
+# Residual tolerance: 7.1054273576010019e-15
+# Second-level roots: 0
+# Sites: 4
+# Sz: 0
+# Total energy: -6.0000000000000133
+# Uni20 revision: a25159cc19c97c43ca43754c46fb9bdef8c41bda
+# First row: 0
+state_id,sz,energy,momentum_index,p,residual,iterations,converged,status
+0,0,-6.0000000000000133,2,3.1415926535897931,2.886579864025407e-15,24,true,converged
+# CPU time: 0.000029 s
+# Elapsed seconds: 0.000252414000001977001375
+# Outcome: success
+# Run CPU seconds: 0.000248999999999999999955
+# Status: converged

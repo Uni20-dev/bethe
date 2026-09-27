@@ -1,0 +1,48 @@
+# Bethe revision: 1d199b3dcccddd1a9b832eb78552a9e8e1092f22
+# Bethe version: 0.1.0
+# Build type: Release
+# Calculation: Sutherland real-root sector
+# Command: build_codex/gtest_clang20_release/bethe-tj-pbc 16 --sz 0.0 --particles 2 --precision fp64 --format csv --csv-table states=/tmp/bethe-tutorial-cau3pwpn/states.csv --csv-table first_roots=/tmp/bethe-tutorial-cau3pwpn/first_roots.csv --csv-table second_roots=/tmp/bethe-tutorial-cau3pwpn/second_roots.csv
+# Compiler: Clang 20.1.2
+# Date: 2026-09-27T22:27:02Z
+# Energy per site: -0.25000000000000011
+# First-level roots: 15
+# Hamiltonian: t=1, J=2; projected hopping + 2*(S.S-nn/4)
+# Holes: 14
+# Iterations: 6
+# Momentum P: 0
+# Momentum index: 0
+# N_down: 1
+# N_up: 1
+# Particles: 2
+# Platform: Linux x86_64
+# Precision: fp64
+# Program: bethe-tj-pbc
+# Residual norm: 1.6653345369377348e-16
+# Residual tolerance: 7.1054273576010019e-15
+# Second-level roots: 14
+# Sites: 16
+# Sz: 0
+# Total energy: -4.0000000000000018
+# Uni20 revision: a25159cc19c97c43ca43754c46fb9bdef8c41bda
+# First row: 0
+state_id,index,quantum_number,rapidity
+0,0,-6.5,-2.9949431217384692
+0,1,-5.5,-1.9123900905564573
+0,2,-4.5,-1.2160152771577653
+0,3,-3.5,-0.82075083956829198
+0,4,-2.5,-0.53451065820087285
+0,5,-1.5,-0.30334668378084101
+0,6,-0.5,-0.098491403357164234
+0,7,0.5,0.098491403357164234
+0,8,1.5,0.30334668378084101
+0,9,2.5,0.53451065820087285
+0,10,3.5,0.82075083956829198
+0,11,4.5,1.2160152771577653
+0,12,5.5,1.9123900905564573
+0,13,6.5,2.9949431217384692
+# CPU time: 0.000278 s
+# Elapsed seconds: 0.00048604500000237749191
+# Outcome: success
+# Run CPU seconds: 0.000483999999999999999697
+# Status: converged

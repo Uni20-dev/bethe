@@ -1,0 +1,35 @@
+# Bethe revision: 1d199b3dcccddd1a9b832eb78552a9e8e1092f22
+# Bethe version: 0.1.0
+# Build type: Release
+# Calculation: exact free-fermion ground state
+# Charge residual: 0
+# Command: build_codex/gtest_clang20_release/bethe-gaudin-yang-pbc 6 --sz 3.0 --length 6 --c 1 --precision fp64 --format csv --csv-table states=/tmp/bethe-tutorial-gdd3bffq/states.csv --csv-table free_up=/tmp/bethe-tutorial-gdd3bffq/free_up.csv --csv-table free_down=/tmp/bethe-tutorial-gdd3bffq/free_down.csv
+# Compiler: Clang 20.1.2
+# Date: 2026-09-27T22:27:02Z
+# Iterations: 0
+# Length: 6
+# Momentum P: 3.1415926535897931
+# Momentum index: 3
+# N_down: 0
+# N_up: 6
+# Particles: 6
+# Platform: Linux x86_64
+# Precision: fp64
+# Program: bethe-gaudin-yang-pbc
+# Residual norm: 0
+# Residual tolerance: 7.1054273576010019e-15
+# Root coupling reached: 1
+# Spin residual: 0
+# Sz: 3
+# Total energy: 20.835831513410866
+# Uni20 revision: a25159cc19c97c43ca43754c46fb9bdef8c41bda
+# Units: hbar^2/(2m)=1; interaction 2c delta
+# c: 1
+# First row: 0
+state_id,sz,energy,momentum_index,p,charge_residual,spin_residual,residual,root_c,iterations,converged,status
+0,3,20.835831513410866,3,3.1415926535897931,0,0,0,1,0,true,converged
+# CPU time: 0.000004 s
+# Elapsed seconds: 0.000223550000001182525011
+# Outcome: success
+# Run CPU seconds: 0.000220999999999999999952
+# Status: converged

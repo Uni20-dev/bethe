@@ -2,6 +2,9 @@
 
 [Overview](../README.md) | [Model catalogue](models.md) | [Precision and CLI controls](command-line.md)
 
+The [worked filling tutorial](tutorials/tj.md) compares supported populations,
+explains the nested roots and checks the fermionic no-hole momentum convention.
+
 `bethe-tj-pbc` solves selected fixed-population ground states of the
 periodic t–J chain at **t=1, J=2**. Each site is empty, spin up, or spin down:
 double occupancy is excluded. This is not a solver at arbitrary J/t.

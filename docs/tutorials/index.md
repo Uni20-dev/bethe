@@ -25,6 +25,8 @@ model below.
 - [Scaling Lee–Yang](lee-yang.md): effective central charge and a nonunitary one-particle gap.
 - [TASEP](tasep.md): relaxation times, oscillation and density-dependent size scaling.
 - [ASEP](asep.md): a fixed-total-rate bias scan and the symmetric limit.
+- [Gaudin–Yang](gaudin-yang.md): repulsion, nested roots and finite-ring shell conventions.
+- [Supersymmetric t–J](tj.md): selected dopings, projected fermions and the no-hole XXX limit.
 
 ## Coverage of implemented models
 
@@ -51,8 +53,8 @@ in the [model survey](../models.md) are outside this inventory.
 | Scaling Lee–Yang | [Tutorial](lee-yang.md) | — |
 | TASEP | [Tutorial](tasep.md) | — |
 | ASEP | [Tutorial](asep.md) | — |
-| Gaudin–Yang | [Guide](../gaudin-yang.md); planned | Interaction dependence of continuum fermions |
-| Supersymmetric t–J | [Guide](../tj.md); planned | Doping with double occupancy excluded |
+| Gaudin–Yang | [Tutorial](gaudin-yang.md) | — |
+| Supersymmetric t–J | [Tutorial](tj.md) | — |
 | Negative biquadratic | [Tutorial](biquadratic.md) | — |
 | Ferromagnetic biquadratic sign | [Tutorial](biquadratic-ferromagnetic.md) | — |
 | Richardson pairing | [Guide](../richardson.md); planned | Pair binding and blocked levels |

@@ -1,0 +1,40 @@
+# Bethe revision: 1d199b3dcccddd1a9b832eb78552a9e8e1092f22
+# Bethe version: 0.1.0
+# Build type: Release
+# Calculation: exact polarized free fermions
+# Command: build_codex/gtest_clang20_release/bethe-tj-pbc 16 --sz 3.0 --particles 6 --precision fp64 --format csv --csv-table states=/tmp/bethe-tutorial-v872ulix/states.csv --csv-table free_modes=/tmp/bethe-tutorial-v872ulix/free_modes.csv
+# Compiler: Clang 20.1.2
+# Date: 2026-09-27T22:27:02Z
+# Energy per site: -0.58058200747009481
+# First-level roots: 0
+# Hamiltonian: t=1, J=2; projected hopping + 2*(S.S-nn/4)
+# Holes: 10
+# Iterations: 0
+# Momentum P: 1.1780972450961724
+# Momentum index: 3
+# N_down: 0
+# N_up: 6
+# Particles: 6
+# Platform: Linux x86_64
+# Precision: fp64
+# Program: bethe-tj-pbc
+# Residual norm: 0
+# Residual tolerance: 7.1054273576010019e-15
+# Second-level roots: 0
+# Sites: 16
+# Sz: 3
+# Total energy: -9.2893121195215169
+# Uni20 revision: a25159cc19c97c43ca43754c46fb9bdef8c41bda
+# First row: 0
+state_id,index,mode
+0,0,-2
+0,1,-1
+0,2,0
+0,3,1
+0,4,2
+0,5,3
+# CPU time: 0.000021 s
+# Elapsed seconds: 0.000273571999997557213646
+# Outcome: success
+# Run CPU seconds: 0.000270999999999999999807
+# Status: converged

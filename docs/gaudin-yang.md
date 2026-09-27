@@ -2,6 +2,9 @@
 
 [Overview](../README.md) · [Command-line controls](command-line.md) · [Model catalogue](models.md)
 
+Start with the [worked coupling and root tutorial](tutorials/gaudin-yang.md)
+for plots, downloadable data and finite-ring normalization checks.
+
 This is the spin-1/2 fermionic counterpart of the [Lieb–Liniger gas](lieb-liniger.md).
 The extra spin degree of freedom requires a second, auxiliary set of Bethe
 roots. Charge momenta determine the energy; spin rapidities determine how
