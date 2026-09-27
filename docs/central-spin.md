@@ -2,6 +2,9 @@
 
 [Overview](../README.md) · [Model catalogue](models.md) · [Bibliography](../CITATIONS.md)
 
+The [worked tutorial](tutorials/central-spin.md) compares field-dependent sector
+energies and estimates central polarization from energy differences.
+
 `bethe-central-spin` finds the lowest energy at a **specified total spin
 projection** for
 

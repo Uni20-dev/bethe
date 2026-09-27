@@ -33,6 +33,8 @@ nav = [
     { "Bose–Fermi compositions" = "docs/tutorials/bose-fermi.md" },
     { "Potts charged levels and CFT" = "docs/tutorials/potts.md" },
     { "Non-Hermitian XXZ and Jordan blocks" = "docs/tutorials/xxz-nonhermitian.md" },
+    { "Richardson pairing and blocking" = "docs/tutorials/richardson.md" },
+    { "Central-spin field response" = "docs/tutorials/central-spin.md" },
   ] },
   { "Using Bethe" = [
     { "Building" = "docs/building.md" },

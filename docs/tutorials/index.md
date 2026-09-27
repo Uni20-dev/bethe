@@ -31,6 +31,8 @@ model below.
 - [Bose–Fermi mixtures](bose-fermi.md): equal-coupling composition benchmarks and particle statistics.
 - [Three-state Potts](potts.md): charged branches, discrete symmetries and finite-size CFT estimators.
 - [Non-Hermitian XXZ](xxz-nonhermitian.md): regular-root families, Jordan blocks and parity-dependent Casimir terms.
+- [Richardson pairing](richardson.md): blocked sectors and regular variables through pair-root collisions.
+- [Central spin](central-spin.md): fixed-sector field response and energy-derived central polarization.
 
 ## Coverage of implemented models
 
@@ -61,8 +63,8 @@ in the [model survey](../models.md) are outside this inventory.
 | Supersymmetric t–J | [Tutorial](tj.md) | — |
 | Negative biquadratic | [Tutorial](biquadratic.md) | — |
 | Ferromagnetic biquadratic sign | [Tutorial](biquadratic-ferromagnetic.md) | — |
-| Richardson pairing | [Guide](../richardson.md); planned | Pair binding and blocked levels |
-| Central spin | [Guide](../central-spin.md); planned | Field response in a fixed spin sector |
+| Richardson pairing | [Tutorial](richardson.md) | — |
+| Central spin | [Tutorial](central-spin.md) | — |
 | SU(n) fermion gas | [Tutorial](su-fermions.md) | — |
 | Bose–Fermi mixture | [Tutorial](bose-fermi.md) | — |
 | Integrable ladder | [Guide](../ladder.md); planned | Rung exchange and magnetization sectors |

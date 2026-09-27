@@ -2,6 +2,9 @@
 
 [Overview](../README.md) | [Model catalogue](models.md) | [Precision and CLI controls](command-line.md)
 
+The [worked tutorial](tutorials/richardson.md) plots a specified blocked-sector
+energy cost and regular variables through a pair-root collision.
+
 `bethe-richardson` calculates the lowest energy of the reduced BCS pairing
 Hamiltonian in a **specified pair-number and blocked-level sector**:
 

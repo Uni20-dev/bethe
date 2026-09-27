@@ -1,0 +1,34 @@
+# Bath spins: 1
+# Bethe revision: c5f9c149f6bd222077b43ee0a81c7c3acb175727
+# Bethe version: 0.1.0
+# Build type: Release
+# Calculation: lowest state in the specified total-Sz sector
+# Command: build_codex/gtest_clang20_release/bethe-central-spin --couplings 1 --field 0 --sz 0 --precision fp64 --format csv --csv-table states=/tmp/bethe-tutorial-739hujga/states.csv --csv-table variables=/tmp/bethe-tutorial-739hujga/variables.csv
+# Compiler: Clang 20.1.2
+# Continuation stages: 14
+# Date: 2026-09-27T23:07:22Z
+# Energy evaluated at B: 0
+# Hamiltonian: B*S0^z+sum_j A_j*S0.Sj (all spins 1/2)
+# Newton corrections: 41
+# Number-constraint error: 0
+# Platform: Linux x86_64
+# Precision: fp64
+# Program: bethe-central-spin
+# Reached backward residual: 9.8686491077791401e-16
+# Reached field B: 0
+# Rejected stages: 0
+# Requested field B: 0
+# Residual tolerance: 7.1054273576010019e-15
+# Spin reversed: no
+# Total Sz: 0
+# Total energy: -0.75000000000000222
+# Uni20 revision: a25159cc19c97c43ca43754c46fb9bdef8c41bda
+# Up spins: 1
+# First row: 0
+state_id,sz,energy,requested_field,reached_field,residual,number_error,iterations,stages,rejected_stages,converged,status
+0,0,-0.75000000000000222,0,0,9.8686491077791401e-16,0,41,14,0,true,converged
+# CPU time: 0.000043 s
+# Elapsed seconds: 0.000245880999997893923137
+# Outcome: success
+# Run CPU seconds: 0.00024399999999999999997
+# Status: converged

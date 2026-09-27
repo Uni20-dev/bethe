@@ -1,0 +1,39 @@
+# Bethe revision: c5f9c149f6bd222077b43ee0a81c7c3acb175727
+# Bethe version: 0.1.0
+# Blocked levels: 2
+# Build type: Release
+# Calculation: lowest state in the specified pair/blocked sector
+# Command: build_codex/gtest_clang20_release/bethe-richardson --levels 0,1,2,3 --g 0.1 --pairs 1 --blocked 1,2 --precision fp64 --format csv --csv-table states=/tmp/bethe-tutorial-qr3nrv61/states.csv --csv-table variables=/tmp/bethe-tutorial-qr3nrv61/variables.csv
+# Compiler: Clang 20.1.2
+# Continuation stages: 1
+# Date: 2026-09-27T23:07:22Z
+# Energy evaluated at g: 0.10000000000000001
+# Fermions: 4
+# Hamiltonian: sum epsilon_i*n_i-g*sum_ij b_i^dagger*b_j (including i=j)
+# Levels: 4
+# Newton corrections: 2
+# Pair-number error: 0
+# Pairs: 1
+# Platform: Linux x86_64
+# Precision: fp64
+# Program: bethe-richardson
+# Reached backward residual: 5.747771357198921e-15
+# Reached coupling g: 0.10000000000000001
+# Rejected stages: 0
+# Requested coupling g: 0.10000000000000001
+# Residual tolerance: 7.1054273576010019e-15
+# Target backward residual: 5.747771357198921e-15
+# Total energy: 2.8983337960392377
+# Unblocked levels: 2
+# Uni20 revision: a25159cc19c97c43ca43754c46fb9bdef8c41bda
+# First row: 0
+state_id,index,epsilon,blocked,y
+0,0,0,false,0.98361103399346039
+0,1,1,true,
+0,2,2,true,
+0,3,3,false,0.016388966006539586
+# CPU time: 0.000007 s
+# Elapsed seconds: 7.78379999957223844831e-05
+# Outcome: success
+# Run CPU seconds: 7.69999999999999999037e-05
+# Status: converged
