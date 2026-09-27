@@ -35,6 +35,8 @@ nav = [
     { "Non-Hermitian XXZ and Jordan blocks" = "docs/tutorials/xxz-nonhermitian.md" },
     { "Richardson pairing and blocking" = "docs/tutorials/richardson.md" },
     { "Central-spin field response" = "docs/tutorials/central-spin.md" },
+    { "Kondo impurity response" = "docs/tutorials/kondo.md" },
+    { "Integrable ladder magnetization" = "docs/tutorials/ladder.md" },
   ] },
   { "Using Bethe" = [
     { "Building" = "docs/building.md" },

@@ -2,6 +2,9 @@
 
 [Overview](../README.md) · [SU(3) chain](su3.md) · [Model catalogue](models.md)
 
+The [worked tutorial](tutorials/ladder.md) reconstructs a finite-size field
+envelope and explains physical populations versus highest-weight roots.
+
 `bethe-ladder-pbc` implements Wang's periodic ladder, with **a particular
 four-spin interaction required for integrability**. It is not a solver for
 an ordinary two-leg Heisenberg ladder at arbitrary couplings. There are L

@@ -1,0 +1,30 @@
+# Absolute M and Delta E/|b| tolerance: 2.3283064365386963e-10
+# Bethe revision: 4adaf51d0a6e69456a729bbbb46f76c4a11377d4
+# Bethe version: 0.1.0
+# Build type: Release
+# Calculation: T=0; isotropic antiferromagnetic spin-1/2 single-channel scaling limit
+# Command: build_codex/gtest_clang20_release/bethe-kondo-response --field 1 --scale 1 --precision fp64 --format csv --csv-table response=/tmp/bethe-tutorial-5siyb94m/response.csv
+# Compiler: Clang 20.1.2
+# Date: 2026-09-27T23:22:00Z
+# Energy convention: Delta E_imp=E_imp(b)-E_imp(0); E_imp=E_with-E_clean_host
+# Field convention: H_field=-b*(S_imp^z+S_host^z); equal g factors
+# Full Zeeman splitting: 1
+# Max Fourier lobes: 256
+# Max quadrature evaluations: 200000
+# Max quadrature levels: 12
+# Max series terms: 256
+# Platform: Linux x86_64
+# Precision: fp64
+# Program: bethe-kondo-response
+# Response convention: Impurity-induced total magnetization, including host change
+# Scale convention: T_B=2*T1 (Barcza et al.); chi0=1/(sqrt(2*pi*e)*T_B)
+# Uni20 revision: a25159cc19c97c43ca43754c46fb9bdef8c41bda
+# Universal scale T_B: 1
+# First row: 0
+energy_change,magnetization,zero_field_susceptibility,magnetization_error,scaled_energy_error,series_terms,lobes,evaluations,converged,status
+-0.10679224230303531,0.19211164621093774,0.24197072451914337,5.6741673681685854e-14,4.8583544693378701e-15,64,0,0,true,converged
+# CPU time: 0.000016 s
+# Elapsed seconds: 7.4255999990668897226e-05
+# Outcome: success
+# Run CPU seconds: 7.40000000000000000395e-05
+# Status: converged

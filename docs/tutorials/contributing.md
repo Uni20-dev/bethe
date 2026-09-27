@@ -31,6 +31,7 @@ python3 scripts/plot_fermion_tutorial.py --check
 python3 scripts/plot_multicomponent_tutorial.py --check
 python3 scripts/plot_potts_qg_tutorial.py --check
 python3 scripts/plot_gaudin_tutorial.py --check
+python3 scripts/plot_kondo_ladder_tutorial.py --check
 python3 -m unittest discover -s scripts -p 'test_tutorial*.py'
 ```
 
@@ -76,6 +77,11 @@ The [Richardson](richardson.md#5-reproduce-and-validate) and
 Gaudin-variable validation but retain their distinct sectors and Hamiltonians.
 Their `--oracle` checks every saved example against independent occupation/spin
 matrices, including a central-polarization check of the energy derivative.
+The [Kondo](kondo.md#5-reproduce-and-validate) and
+[ladder](ladder.md#5-reproduce-and-validate) tutorials check subtracted-response
+units and fixed-sector field envelopes respectively. The ladder `--oracle`
+minimizes independent color matrices over all allowed populations; the
+separate `reference_kondo.py` uses mpmath for the continuum response.
 `scripts/tutorial_common.py` shares CSV/provenance validation and deterministic
 SVG writing; each model's script and tests own its schema and physics checks.
 

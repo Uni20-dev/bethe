@@ -1,0 +1,39 @@
+# Bethe revision: 4adaf51d0a6e69456a729bbbb46f76c4a11377d4
+# Bethe version: 0.1.0
+# Build type: Release
+# Calculation: fixed singlet-count sector
+# Command: build_codex/gtest_clang20_release/bethe-ladder-pbc 5 --rung 5 --field 0 --singlets 4 --precision fp64 --format csv --csv-table states=/tmp/bethe-tutorial-oq_v7c23/states.csv --csv-table representations=/tmp/bethe-tutorial-oq_v7c23/representations.csv --csv-table roots=/tmp/bethe-tutorial-oq_v7c23/roots.csv
+# Compiler: Clang 20.1.2
+# Date: 2026-09-27T23:22:01Z
+# Energy per rung: -2.7236067977499792
+# Hamiltonian: H=sum[S.S_next+T.T_next+4(S.S_next)(T.T_next)]+J_r*sum S.T-h*sum(Sz+Tz)
+# Highest weights visited: 2
+# Highest-weight rows: 4, 1, 0, 0
+# Magnetic field h: 0
+# Magnetization convention: M=N_t+ - N_t-; total Sz, one minimizing representative, not a degeneracy average
+# Momentum index: 3
+# Newton corrections: 4
+# Permutation energy: 1.3819660112501047
+# Platform: Linux x86_64
+# Populations (s,t+,t0,t-): 4, 1, 0, 0
+# Precision: fp64
+# Program: bethe-ladder-pbc
+# Reflected momentum index: 2
+# Residual tolerance: 7.1054273576010019e-15
+# Rung coupling J_r: 5
+# Rungs: 5
+# SU(4) descendant: no (up to color permutation)
+# Sea branches attempted: 2
+# Selected branch residual: 0
+# Singlets N_s: 4
+# Total energy: -13.618033988749895
+# Total magnetization M: 1
+# Uni20 revision: a25159cc19c97c43ca43754c46fb9bdef8c41bda
+# First row: 0
+state_id,level,index,quantum_number,rapidity
+0,1,0,-0.5,-0.16245984811645314
+# CPU time: 0.000077 s
+# Elapsed seconds: 0.000312065000002803571988
+# Outcome: success
+# Run CPU seconds: 0.000310000000000000000371
+# Status: converged

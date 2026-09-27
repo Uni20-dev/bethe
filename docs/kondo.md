@@ -1,5 +1,8 @@
 # Kondo: universal zero-temperature impurity energy
 
+The [worked tutorial](tutorials/kondo.md) plots the universal response and
+explains host subtraction and susceptibility-based scale matching for MPS.
+
 **Status: native-precision zero-temperature response library and frontend implemented.**
 
 This is a scaling-limit impurity response, not a finite-band or finite-size

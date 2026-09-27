@@ -33,43 +33,45 @@ model below.
 - [Non-Hermitian XXZ](xxz-nonhermitian.md): regular-root families, Jordan blocks and parity-dependent Casimir terms.
 - [Richardson pairing](richardson.md): blocked sectors and regular variables through pair-root collisions.
 - [Central spin](central-spin.md): fixed-sector field response and energy-derived central polarization.
+- [Kondo](kondo.md): host subtraction, susceptibility calibration and universal impurity response.
+- [Integrable ladder](ladder.md): field envelopes, magnetization steps and highest-weight descendants.
 
 ## Coverage of implemented models
 
-The aim is a pedagogical tutorial for **every implemented model family**, not
-only the thermodynamic excitation tools. This table tracks the remaining
-work. A reference guide is not a substitute for a worked tutorial; rows marked
-*planned* currently link to the guide only. Proposed but unimplemented models
-in the [model survey](../models.md) are outside this inventory.
+All **26 implemented model families** have worked tutorials, with 27 pages
+because Hubbard has separate half-filled and doped examples. This inventory
+includes finite systems and impurity response, not only thermodynamic
+excitation tools. Proposed but unimplemented models in the
+[model survey](../models.md) are outside this inventory.
 
-| Model family | Tutorial or reference guide | Worked topic still to add where planned |
-| --- | --- | --- |
-| XXX | [Tutorial](xxx.md) | — |
-| XXZ | [Tutorial](xxz-spinons.md) | — |
-| XYZ | [Tutorial](xyz.md) | — |
-| SU(3)/ULS | [Tutorial](su3-uls.md) | — |
-| Spin-1 TB | [Tutorial](takhtajan-babujian.md) | — |
-| Hubbard | [Half filling](hubbard-half-filled.md), [doping](hubbard-doped.md) | — |
-| Lieb–Liniger | [Tutorial](lieb-liniger.md) | — |
-| q-boson | [Tutorial](q-boson.md) | — |
-| Three-state Potts | [Tutorial](potts.md) | — |
-| Non-Hermitian quantum-group XXZ | [Tutorial](xxz-nonhermitian.md) | — |
-| Kondo | [Guide](../kondo.md); planned | Impurity magnetization and susceptibility |
-| Sine-Gordon | [Tutorial](sine-gordon.md) | — |
-| Scaling Lee–Yang | [Tutorial](lee-yang.md) | — |
-| TASEP | [Tutorial](tasep.md) | — |
-| ASEP | [Tutorial](asep.md) | — |
-| Gaudin–Yang | [Tutorial](gaudin-yang.md) | — |
-| Supersymmetric t–J | [Tutorial](tj.md) | — |
-| Negative biquadratic | [Tutorial](biquadratic.md) | — |
-| Ferromagnetic biquadratic sign | [Tutorial](biquadratic-ferromagnetic.md) | — |
-| Richardson pairing | [Tutorial](richardson.md) | — |
-| Central spin | [Tutorial](central-spin.md) | — |
-| SU(n) fermion gas | [Tutorial](su-fermions.md) | — |
-| Bose–Fermi mixture | [Tutorial](bose-fermi.md) | — |
-| Integrable ladder | [Guide](../ladder.md); planned | Rung exchange and magnetization sectors |
-| Haldane–Shastry | [Tutorial](haldane-shastry.md) | — |
-| Sutherland | [Tutorial](sutherland.md) | — |
+| Model family | Worked tutorial |
+| --- | --- |
+| XXX | [Tutorial](xxx.md) |
+| XXZ | [Tutorial](xxz-spinons.md) |
+| XYZ | [Tutorial](xyz.md) |
+| SU(3)/ULS | [Tutorial](su3-uls.md) |
+| Spin-1 TB | [Tutorial](takhtajan-babujian.md) |
+| Hubbard | [Half filling](hubbard-half-filled.md), [doping](hubbard-doped.md) |
+| Lieb–Liniger | [Tutorial](lieb-liniger.md) |
+| q-boson | [Tutorial](q-boson.md) |
+| Three-state Potts | [Tutorial](potts.md) |
+| Non-Hermitian quantum-group XXZ | [Tutorial](xxz-nonhermitian.md) |
+| Kondo | [Tutorial](kondo.md) |
+| Sine-Gordon | [Tutorial](sine-gordon.md) |
+| Scaling Lee–Yang | [Tutorial](lee-yang.md) |
+| TASEP | [Tutorial](tasep.md) |
+| ASEP | [Tutorial](asep.md) |
+| Gaudin–Yang | [Tutorial](gaudin-yang.md) |
+| Supersymmetric t–J | [Tutorial](tj.md) |
+| Negative biquadratic | [Tutorial](biquadratic.md) |
+| Ferromagnetic biquadratic sign | [Tutorial](biquadratic-ferromagnetic.md) |
+| Richardson pairing | [Tutorial](richardson.md) |
+| Central spin | [Tutorial](central-spin.md) |
+| SU(n) fermion gas | [Tutorial](su-fermions.md) |
+| Bose–Fermi mixture | [Tutorial](bose-fermi.md) |
+| Integrable ladder | [Tutorial](ladder.md) |
+| Haldane–Shastry | [Tutorial](haldane-shastry.md) |
+| Sutherland | [Tutorial](sutherland.md) |
 
 A model tutorial introduces a useful supported calculation; it does not imply
 that every frontend mode or every physical sector is implemented. Boundary
