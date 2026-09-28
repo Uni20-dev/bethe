@@ -3,6 +3,7 @@ project(bethe VERSION 0.1.0 LANGUAGES CXX)
 
 option(BETHE_BUILD_APPS "Build Bethe ansatz command-line programs" ${PROJECT_IS_TOP_LEVEL})
 option(BETHE_BUILD_TESTS "Build Bethe ansatz regression tests" ${PROJECT_IS_TOP_LEVEL})
+option(BETHE_INSTALL_APPS "Install Bethe command-line programs" ${PROJECT_IS_TOP_LEVEL})
 
 # Reuse an enclosing project's Uni20 when present. Otherwise use a reproducible
 # source dependency; FETCHCONTENT_SOURCE_DIR_UNI20 provides the local override.
@@ -133,6 +134,23 @@ if(BETHE_BUILD_APPS)
     target_link_libraries(${app} PRIVATE bethe_cli)
     set_target_properties(${app} PROPERTIES CXX_EXTENSIONS OFF)
   endforeach()
+
+  if(BETHE_INSTALL_APPS)
+    include(GNUInstallDirs)
+    # Only executables declared in this directory: no tests or dependency
+    # targets, and no second list of frontend names to keep synchronized.
+    get_property(bethe_directory_targets DIRECTORY PROPERTY BUILDSYSTEM_TARGETS)
+    set(bethe_installed_apps "")
+    foreach(target IN LISTS bethe_directory_targets)
+      get_target_property(target_type ${target} TYPE)
+      if(target_type STREQUAL "EXECUTABLE")
+        install(TARGETS ${target}
+          RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}" COMPONENT BetheRuntime)
+        list(APPEND bethe_installed_apps ${target})
+      endif()
+    endforeach()
+    install(FILES COPYING DESTINATION "${CMAKE_INSTALL_DOCDIR}" COMPONENT BetheRuntime)
+  endif()
 endif()
 
 if(BETHE_BUILD_TESTS)

@@ -174,6 +174,21 @@ else()
 endif()
 
 if(BETHE_BUILD_APPS)
+  # Absolute GNUInstallDirs overrides intentionally ignore --prefix. Do not
+  # run a temporary-prefix test that could write into those real locations.
+  if(BETHE_INSTALL_APPS AND Python3_Interpreter_FOUND
+      AND NOT IS_ABSOLUTE "${CMAKE_INSTALL_BINDIR}"
+      AND NOT IS_ABSOLUTE "${CMAKE_INSTALL_DOCDIR}"
+      AND NOT CMAKE_INSTALL_BINDIR MATCHES "(^|/)\\.\\.(/|$)"
+      AND NOT CMAKE_INSTALL_DOCDIR MATCHES "(^|/)\\.\\.(/|$)")
+    add_test(NAME Install.runtime
+      COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_install.py"
+        --cmake "${CMAKE_COMMAND}" --build-dir "${PROJECT_BINARY_DIR}"
+        --config "$<CONFIG>" --bindir "${CMAKE_INSTALL_BINDIR}"
+        --docdir "${CMAKE_INSTALL_DOCDIR}" --suffix "${CMAKE_EXECUTABLE_SUFFIX}"
+        --fp128 "${UNI20_ENABLE_MPLAPACK}" --apps ${bethe_installed_apps})
+    set_tests_properties(Install.runtime PROPERTIES RUN_SERIAL TRUE TIMEOUT 180)
+  endif()
   if(Python3_Interpreter_FOUND)
     add_test(NAME Output.table_contracts
       COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_table_contracts.py"

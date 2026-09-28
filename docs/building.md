@@ -72,10 +72,54 @@ Relative output paths, such as `--csv spectrum.csv`, refer to the directory
 where you run the command. Only the optional repository plotting and maintenance
 scripts need access to the source files.
 
-Bethe does not yet provide CMake install rules or an installed CMake package;
-`cmake --install` is not currently a Bethe installation workflow. Use the
-build-tree executables as above, and see [embedding](#embed-the-library) for
-C++ library use.
+## Install the programs
+
+After building, install into a prefix of your choice. From the build directory:
+
+```sh
+cmake --install . --prefix "$HOME/.local"
+export PATH="$HOME/.local/bin:$PATH"
+bethe-xxx-pbc 4
+```
+
+No administrator privileges are needed for this user-owned prefix. To select
+the prefix at configure time instead, pass `-DCMAKE_INSTALL_PREFIX=/path/to/prefix`
+to CMake and subsequently use `cmake --install .`. Multi-configuration builds
+also need `--config Release` (or the configuration you built).
+
+All enabled frontends are installed to `bin/`, with `COPYING` under
+`share/doc/bethe/`. The directories follow CMake's `GNUInstallDirs` settings,
+including `CMAKE_INSTALL_BINDIR` and `CMAKE_INSTALL_DOCDIR`. Prefer relative
+directory overrides so `--prefix` and package staging continue to work; see
+[CMake's install reference](https://cmake.org/cmake/help/latest/command/install.html).
+`--component BetheRuntime` selects just this payload; on Unix, package builders
+can stage it with `DESTDIR=/path/to/stage cmake --install . --prefix /usr`.
+
+`BETHE_INSTALL_APPS` defaults to `ON` for standalone builds and `OFF` when
+embedded. Set it to `OFF` to omit the install rules. No programs are installed
+with `BETHE_BUILD_APPS=OFF`; tests, dependency development files and source
+scripts are never part of the Bethe runtime component.
+
+This is a normal dynamically linked installation, not a self-contained binary
+bundle. Shared dependencies selected by the build (for example BLAS/LAPACK or
+MPLAPACK) must remain available to the runtime loader. For dependencies in a
+nonstandard installed location, configure an appropriate `CMAKE_INSTALL_RPATH`
+or use your platform's loader configuration. Do not point an install RPATH at
+temporary dependency build directories that you intend to remove. Bethe does
+not automatically copy third-party libraries or preserve build-tree RPATHs.
+
+Installation currently covers the **programs**, not a `find_package(Bethe)`
+C++ package. Uni20 does not yet export an installable package for Bethe's
+transitive targets. Use [embedding](#embed-the-library) for library consumers;
+the runtime installer does not publish an incomplete header-only package.
+
+With tests enabled and Python available, `ctest -R '^Install.runtime$'` checks
+the installed payload, relocation, command help and small calculations in
+each enabled precision. It also tests component installation and Unix staging,
+using disposable prefixes rather than your configured install prefix. This
+test requires all frontend targets to have been built and relative install
+directories contained within the prefix; it is not registered for absolute
+destinations or parent-directory traversal overrides.
 
 ## Use a development checkout
 

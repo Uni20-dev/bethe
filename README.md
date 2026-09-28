@@ -207,6 +207,9 @@ export PATH="$PWD:$PATH"
 
 See [the build guide](docs/building.md) for a sibling Uni20 checkout, dependency
 setup, optional binary128 support, or embedding `bethe::bethe` in another project.
+To install the programs, run `cmake --install . --prefix "$HOME/.local"` from
+the build directory and put `$HOME/.local/bin` on `PATH`; see
+[installation and runtime dependencies](docs/building.md#install-the-programs).
 Examples use command names on `PATH`, regardless of where they were built or
 installed. Without the `PATH` setup, run `./bethe-xxx-pbc` etc. from the build
 directory. See [running the programs](docs/building.md#run-the-programs) for details.
