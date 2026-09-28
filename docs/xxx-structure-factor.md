@@ -3,6 +3,10 @@
 [Overview](../README.md) · [Plotted tutorial](tutorials/xxx-structure-factor.md) ·
 [XXX conventions](xxx.md)
 
+For an infinite-chain **spectral density** without broadening, see the separate
+[thermodynamic tool](xxx-structure-factor-thermo.md) and its
+[heat-map tutorial](tutorials/xxx-structure-factor-thermo.md).
+
 `bethe-xxx-structure-factor` adds **intensities**, not just energies, to the
 existing real-root two-spinon triplet family. It supports even periodic chains
 at zero field, spin-1/2 operators, and $`H=\sum_j\mathbf S_j\cdot\mathbf S_{j+1}`$

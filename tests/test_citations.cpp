@@ -29,6 +29,7 @@ TEST(Citations, ToolReferenceSelections)
 {
   for (auto tool : {refs::Tool::xxx_pbc,
                     refs::Tool::xxx_structure_factor,
+                    refs::Tool::xxx_structure_factor_thermo,
                     refs::Tool::xxz_qg_obc,
                     refs::Tool::tasep_pbc,
                     refs::Tool::asep_pbc,

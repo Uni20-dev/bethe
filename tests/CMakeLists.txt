@@ -38,6 +38,10 @@ add_executable(bethe_xxx_structure_factor_tests test_xxx_structure_factor.cpp)
 target_link_libraries(bethe_xxx_structure_factor_tests PRIVATE bethe::bethe)
 bethe_discover_tests(bethe_xxx_structure_factor_tests)
 
+add_executable(bethe_xxx_thermodynamic_structure_factor_tests test_xxx_thermodynamic_structure_factor.cpp)
+target_link_libraries(bethe_xxx_thermodynamic_structure_factor_tests PRIVATE bethe::bethe)
+bethe_discover_tests(bethe_xxx_thermodynamic_structure_factor_tests)
+
 add_executable(bethe_newton_control_tests test_newton_control.cpp)
 target_link_libraries(bethe_newton_control_tests PRIVATE bethe::bethe)
 bethe_discover_tests(bethe_newton_control_tests)
@@ -182,6 +186,17 @@ else()
 endif()
 
 if(BETHE_BUILD_APPS)
+  add_test(NAME Citations.bethe-xxx-structure-factor-thermo.cli
+    COMMAND "${CMAKE_COMMAND}" "-DPROGRAM=$<TARGET_FILE:bethe-xxx-structure-factor-thermo>"
+      "-DTOOL=bethe-xxx-structure-factor-thermo" -P "${CMAKE_CURRENT_SOURCE_DIR}/check_citations_cli.cmake")
+  if(Python3_Interpreter_FOUND)
+    add_test(NAME Arguments.bethe-xxx-structure-factor-thermo.cli
+      COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_shared_arguments.py"
+        "$<TARGET_FILE:bethe-xxx-structure-factor-thermo>")
+    add_test(NAME XXXThermodynamicDSF.cli
+      COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_xxx_thermodynamic_structure_factor.py"
+        "$<TARGET_FILE:bethe-xxx-structure-factor-thermo>" "${UNI20_ENABLE_MPLAPACK}")
+  endif()
   add_test(NAME Citations.bethe-xxx-structure-factor.cli
     COMMAND "${CMAKE_COMMAND}" "-DPROGRAM=$<TARGET_FILE:bethe-xxx-structure-factor>"
       "-DTOOL=bethe-xxx-structure-factor" -P "${CMAKE_CURRENT_SOURCE_DIR}/check_citations_cli.cmake")

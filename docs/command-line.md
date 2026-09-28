@@ -51,6 +51,9 @@ For **spectral weights**, use the separate
 [`bethe-xxx-structure-factor`](xxx-structure-factor.md) frontend on an even ring.
 It always scans the complete supported two-spinon family, and reports its
 contribution to the zz or raising-channel sum rules.
+For an infinite-chain spectral density, use
+[`bethe-xxx-structure-factor-thermo`](xxx-structure-factor-thermo.md), with
+`--momentum Q` for a frequency cut or `--momentum-points N` for a heat-map grid.
 
 XXZ uses the same common precision and output controls, but different mode
 combinations: `--excitations` selects a family at fixed `--sz`, not `--spin`.

@@ -34,6 +34,7 @@ Regeneration replaces the repository's example data, not files in your calculati
 - [Sutherland](sutherland.md): collision exponents, excitation labels and bounded scans.
 - [XXX](xxx.md): finite-ring spinons and periodic/free-end excitation scans.
 - [XXX spectral weights](xxx-structure-factor.md): two-spinon intensities, sum rules and plotting broadening.
+- [Thermodynamic XXX intensity](xxx-structure-factor-thermo.md): exact two-spinon spectral density without broadening.
 - [Haldane–Shastry](haldane-shastry.md): motifs, spin multiplicities and complete finite spectra.
 - [XYZ](xyz.md): gapped spinons, bound branches and discrete parity copies.
 - [q-bosons](q-boson.md): occupation-dependent hopping from free bosons to the phase limit.
@@ -64,7 +65,7 @@ excitation tools. Proposed but unimplemented models in the
 
 | Model family | Worked tutorial |
 | --- | --- |
-| XXX | [Energies](xxx.md), [spectral weights](xxx-structure-factor.md) |
+| XXX | [Energies](xxx.md), [finite spectral weights](xxx-structure-factor.md), [thermodynamic intensity](xxx-structure-factor-thermo.md) |
 | XXZ | [Tutorial](xxz-spinons.md) |
 | XYZ | [Tutorial](xyz.md) |
 | SU(3)/ULS | [Tutorial](su3-uls.md) |

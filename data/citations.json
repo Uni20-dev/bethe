@@ -1032,6 +1032,23 @@
       "publication": "J. Stat. Mech. 2005, P09003",
       "year": 2005,
       "links": [{"label": "arXiv", "url": "https://arxiv.org/abs/cond-mat/0506698"}]
+    },
+    {
+      "id": "karbach-muller-bougourzi-1996",
+      "authors": "Michael Karbach, Gerhard Müller, and A. Hamid Bougourzi",
+      "title": "Two-spinon dynamic structure factor of the one-dimensional S=1/2 Heisenberg antiferromagnet",
+      "publication": "arXiv:cond-mat/9606068v2",
+      "year": 1996,
+      "links": [{"label": "arXiv", "url": "https://arxiv.org/abs/cond-mat/9606068"}]
+    },
+    {
+      "id": "caux-hagemans-2006",
+      "authors": "Jean-Sébastien Caux and Rob Hagemans",
+      "title": "The 4-spinon dynamical structure factor of the Heisenberg chain",
+      "publication": "J. Stat. Mech. 2006, P12013",
+      "year": 2006,
+      "links": [{"label": "arXiv", "url": "https://arxiv.org/abs/cond-mat/0611319"},
+                {"label": "Eq. (31) correction", "url": "https://scipost.org/commentary/10.1088/1742-5468/2006/12/P12013/"}]
     }
   ],
   "tools": [
@@ -1206,6 +1223,14 @@
         {"id": "groha-2017", "context": "Odd-chain one-spinon states and hole labels, Sec. 3; only the unperturbed integrable chain is used."},
         {"id": "caux-xxx-spinons", "context": "Thermodynamic XXX spinon dispersion and the bulk reference for --spinons."},
         {"id": "caux-xxx-states", "context": "Highest-weight and string-classification background; strings and infinite-root descendants are not implemented."}
+      ]
+    },
+    {
+      "id": "xxx_structure_factor_thermo",
+      "executable": "bethe-xxx-structure-factor-thermo",
+      "references": [
+        {"id": "caux-hagemans-2006", "context": "Exact thermodynamic two-spinon Szz, Eqs. (9)-(12); the four-spinon contribution is not yet implemented."},
+        {"id": "karbach-muller-bougourzi-1996", "context": "Threshold behavior and two-spinon intensity/first-moment sum rules; no broadening or renormalization to full intensity."}
       ]
     },
     {

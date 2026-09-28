@@ -57,6 +57,8 @@ chain length and boundary condition before comparing areas or peak heights.
 For iMPS, these finite-ring data are useful checks, but increasing N is a
 separate convergence study. The continuum boundaries alone do not determine
 intensities, and multiparticle states outside this family are still absent.
+The separate [thermodynamic tutorial](xxx-structure-factor-thermo.md) now provides
+the exact infinite-chain two-spinon density without artificial broadening.
 
 ## 3. The whole momentum–frequency plane
 

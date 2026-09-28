@@ -1320,4 +1320,26 @@ Relevant tool modes:
 
 - `bethe-xxx-structure-factor`: Rational XXX limit of normalized transverse form factors and Gaudin matrices, Eqs. (11)-(13). Only zero-field real-root two-spinon states are implemented; no strings or full DSF.
 
+### karbach-muller-bougourzi-1996
+
+Michael Karbach, Gerhard Müller, and A. Hamid Bougourzi. *Two-spinon dynamic structure factor of the one-dimensional S=1/2 Heisenberg antiferromagnet*.
+arXiv:cond-mat/9606068v2 (1996).
+
+[arXiv](<https://arxiv.org/abs/cond-mat/9606068>).
+
+Relevant tool modes:
+
+- `bethe-xxx-structure-factor-thermo`: Threshold behavior and two-spinon intensity/first-moment sum rules; no broadening or renormalization to full intensity.
+
+### caux-hagemans-2006
+
+Jean-Sébastien Caux and Rob Hagemans. *The 4-spinon dynamical structure factor of the Heisenberg chain*.
+J. Stat. Mech. 2006, P12013 (2006).
+
+[arXiv](<https://arxiv.org/abs/cond-mat/0611319>), [Eq. (31) correction](<https://scipost.org/commentary/10.1088/1742-5468/2006/12/P12013/>).
+
+Relevant tool modes:
+
+- `bethe-xxx-structure-factor-thermo`: Exact thermodynamic two-spinon Szz, Eqs. (9)-(12); the four-spinon contribution is not yet implemented.
+
 <!-- END GENERATED BIBLIOGRAPHY -->

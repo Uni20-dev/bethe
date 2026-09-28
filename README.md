@@ -49,6 +49,9 @@ Thermodynamic dispersion tools use `bethe-<model>-dispersion`.
 - [XXX spectral weights](docs/xxx-structure-factor.md): `bethe-xxx-structure-factor`
   computes finite-ring two-spinon zz/raising intensities and sum-rule coverage;
   see the [plotted tutorial](docs/tutorials/xxx-structure-factor.md).
+- [Thermodynamic XXX intensity](docs/xxx-structure-factor-thermo.md):
+  `bethe-xxx-structure-factor-thermo` evaluates the exact infinite-chain two-spinon
+  density; see the [unbroadened heat map](docs/tutorials/xxx-structure-factor-thermo.md).
 - [Free-end XXX](docs/open-chains.md): `bethe-xxx-obc` supports
   ground states, sector minima, and real-root excitations, without lattice momentum.
 - [Periodic XXZ](docs/xxz.md): `bethe-xxz-pbc` supports ground states and sector minima

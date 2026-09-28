@@ -6,6 +6,7 @@ import sys
 
 env = dict(os.environ, UNI20_COLOR="never", COLUMNS="4096")
 base_arguments = {
+    "bethe-xxx-structure-factor-thermo": ["--momentum", "1.5", "--omega", "1.8"],
     "bethe-xxz-dispersion": ["--delta", "2", "--points", "3"],
     "bethe-xyz-dispersion": ["--eta", "0.75", "--t", "1", "--points", "3"],
     "bethe-potts-pbc": ["4", "--momentum-index", "0"],
