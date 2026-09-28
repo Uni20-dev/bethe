@@ -2,7 +2,9 @@
 """Check built local links/assets and exact source-to-HTML math preservation."""
 
 import argparse
+from collections import Counter
 from html.parser import HTMLParser
+import json
 from pathlib import Path
 from urllib.parse import unquote, urlsplit
 
@@ -39,6 +41,14 @@ class Page(HTMLParser):
             self.current_math = None
 
 
+def bibliography_link_errors(page, references):
+    """Check final hrefs against the registry, not just local link existence."""
+    expected = Counter(link['url'] for ref in references for link in ref['links'])
+    missing = expected - Counter(page.links)
+    return [f'CITATIONS.md: missing {count} rendered link(s) to {url}'
+            for url, count in missing.items()]
+
+
 def check_site(site):
     site = site.resolve()
     pages = {p: Page(p.read_text()) for p in site.rglob('*.html')}
@@ -65,6 +75,10 @@ def check_site(site):
                 errors.append(f'{path.relative_to(site)}: missing {link}')
             elif url.fragment and dest in pages and unquote(url.fragment) not in pages[dest].ids:
                 errors.append(f'{path.relative_to(site)}: missing anchor {link}')
+    references = json.loads((ROOT / 'data/citations.json').read_text())['references']
+    bibliography = pages.get((site / 'CITATIONS/index.html').resolve())
+    if bibliography is not None:
+        errors.extend(bibliography_link_errors(bibliography, references))
     count = 0
     for relative in site_sources(ROOT):
         if relative.suffix != '.md':
@@ -82,7 +96,8 @@ def check_site(site):
         count += len(expected)
     if errors:
         raise ValueError('\n'.join(errors))
-    print(f'Checked links/assets in {len(pages)} pages and preserved {count} equations.')
+    links = sum(len(ref['links']) for ref in references)
+    print(f'Checked links/assets in {len(pages)} pages, {links} bibliography URLs, and preserved {count} equations.')
 
 
 if __name__ == '__main__':

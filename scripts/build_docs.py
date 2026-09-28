@@ -68,16 +68,20 @@ def site_sources(root):
 def adapt_links(text, relative, included):
     """Source/scripts/papers not published as site pages remain GitHub links."""
     def replace(match):
-        url = urlsplit(match[1])
+        destination = match[1]
+        wrapped = destination.startswith('<') and destination.endswith('>')
+        url = urlsplit(destination[1:-1] if wrapped else destination)
         if url.scheme or url.netloc or not url.path or url.path.startswith('/'):
             return match[0]
         target = posixpath.normpath(str(relative.parent / unquote(url.path)))
         if Path(target) in included:
             return match[0]
-        suffix = ('#' + url.fragment) if url.fragment else ''
-        return '](https://github.com/Uni20-dev/bethe/blob/main/' + quote(target) + suffix + ')'
-    # Repository links have simple, unquoted destinations; code fences are
-    # deliberately left alone, as are inline code examples.
+        suffix = ('?' + url.query if url.query else '') + ('#' + url.fragment if url.fragment else '')
+        destination = 'https://github.com/Uni20-dev/bethe/blob/main/' + quote(target) + suffix
+        return '](' + ('<' + destination + '>' if wrapped else destination) + ')'
+    # Angle-bracket destinations are standard Markdown and may contain spaces
+    # or parentheses (notably DOI URLs). Match them whole before the bare form.
+    # Code fences and inline code examples are deliberately left alone.
     lines = []
     fence = None
     for line in text.splitlines(keepends=True):
@@ -88,7 +92,7 @@ def adapt_links(text, relative, included):
               and len(match[1]) >= len(fence) and not match[2].strip()):
             fence = None
         elif fence is None:
-            line = re.sub(r'\]\(([^\s)]+)\)|(`+)(?!`)(.*?)(?<!`)\2(?!`)',
+            line = re.sub(r'\]\((<[^<>\n]*>|[^\s)]+)\)|(`+)(?!`)(.*?)(?<!`)\2(?!`)',
                           lambda m: replace(m) if m[1] is not None else m[0], line)
         lines.append(line)
     return ''.join(lines)
