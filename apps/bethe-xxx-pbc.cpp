@@ -57,6 +57,7 @@ void add_options(CLI::App& app, Arguments& args)
   cli::option(app, "--max-candidates", args.excitations.max_candidates, "Exhaustive scan limit (default: 10000)")
       ->needs("--excitations");
   cli::option(app, "--roots", args.print_roots, "Print rapidities and exact labels");
+  cli::threads_option(app, args.excitations.threads)->needs("--excitations");
   cli::text_option(app, "--tolerance", args.tolerance, "Normalized equation residual in native precision");
   cli::count_option(app, "--max-iterations", args.max_iterations, "Update budget")->capture_default_str();
   cli::precision_option(app, args.precision);
@@ -94,12 +95,15 @@ template <uni20::Real Real> int run(Arguments const& args, int argc, char** argv
   if (args.tolerance) options.residual_tolerance = uni20::parse_real<Real>(*args.tolerance);
   auto computation = context.computation();
   auto header = [&](std::string_view mode) {
-    return cli::report_header(args.sites, args.precision, options, mode, context, true);
+    auto report = cli::report_header(args.sites, args.precision, options, mode, context, true);
+    if (args.excitations.count) report.field("threads", "Scheduler concurrency limit", args.excitations.threads);
+    return report;
   };
   if (args.excitations.count)
   {
+    uni20::async::TbbScheduler scheduler(args.excitations.threads);
     auto const scan = model::real_excitations<Real>(args.sites, args.excitations.selected_spin(args.sites),
-                                                    args.excitations.options(), options);
+                                                    args.excitations.options({&scheduler}), options);
     computation.finish();
     return finish(cli::print_excitation_report(
         header("real-root excitations"), scan,

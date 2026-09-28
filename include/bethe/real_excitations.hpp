@@ -3,6 +3,7 @@
 #pragma once
 
 #include <algorithm>
+#include <bethe/execution.hpp>
 #include <cstddef>
 #include <cstdint>
 #include <limits>
@@ -24,6 +25,7 @@ struct RealExcitationOptions
     std::size_t count = 10;
     /// Reject larger families before allocating roots or solving any state.
     std::size_t max_candidates = 10000;
+    ExecutionOptions execution = {};
 };
 
 namespace detail
@@ -122,6 +124,7 @@ Result scan_real_combinations(std::size_t slots, std::size_t m, std::int64_t fir
 {
   if (scan.count == 0 || scan.max_candidates == 0)
     throw std::invalid_argument("excitation count and max_candidates must be positive");
+  auto& scheduler = scan.execution.resolved_scheduler();
   Result result;
   using State = decltype(result.ground_state);
   result.candidate_count = bounded_binomial(slots, m, scan.max_candidates);
@@ -143,33 +146,49 @@ Result scan_real_combinations(std::size_t slots, std::size_t m, std::int64_t fir
   };
   auto const keep = std::min(scan.count, result.candidate_count);
   result.levels.reserve(keep);
-  for (;;)
+  for (std::size_t offset = 0; offset < result.candidate_count;)
   {
-    auto state = numbers == result.ground_state.quantum_numbers ? result.ground_state : solve(numbers);
-    if (state.converged)
+    auto const size = std::min(scan.execution.batch_size, result.candidate_count - offset);
+    std::vector<std::vector<uni20::half_int>> labels;
+    labels.reserve(size);
+    for (std::size_t i = 0; i < size; ++i)
     {
-      ++result.converged_count;
-      RealExcitation<State> level{.state = std::move(state), .gap = std::nullopt};
-      if (result.ground_state.converged) level.gap = energy(level.state) - energy(result.ground_state);
-      if (result.levels.size() < keep)
-      {
-        result.levels.push_back(std::move(level));
-        std::push_heap(result.levels.begin(), result.levels.end(), less);
-      }
-      else if (less(level, result.levels.front()))
-      {
-        std::pop_heap(result.levels.begin(), result.levels.end(), less);
-        result.levels.back() = std::move(level);
-        std::push_heap(result.levels.begin(), result.levels.end(), less);
-      }
+      labels.push_back(numbers);
+      // Empty sets have one combination; no slots-1 arithmetic is needed.
+      if (offset + i + 1 < result.candidate_count)
+        advance_combination<uni20::half_int>(numbers,
+                                             uni20::from_twice(first + 2 * static_cast<std::int64_t>(slots - 1)));
     }
-    else if (!result.first_unconverged)
-      result.first_unconverged = std::move(state);
-
-    // Lexicographic combinations of M slots, including the unique M=0 set.
-    if (m == 0 || !advance_combination<uni20::half_int>(
-                      numbers, uni20::from_twice(first + 2 * static_cast<std::int64_t>(slots - 1))))
-      break;
+    std::vector<std::optional<State>> states(size);
+    scheduler.execute_batch(size, [&](std::size_t i) {
+      states[i] = labels[i] == result.ground_state.quantum_numbers ? result.ground_state : solve(labels[i]);
+    });
+    // Merge in enumeration order, independent of completion order. In particular
+    // the first failure and equal-energy tie breaking retain their serial meaning.
+    for (auto& slot : states)
+    {
+      auto state = std::move(*slot);
+      if (state.converged)
+      {
+        ++result.converged_count;
+        RealExcitation<State> level{.state = std::move(state), .gap = std::nullopt};
+        if (result.ground_state.converged) level.gap = energy(level.state) - energy(result.ground_state);
+        if (result.levels.size() < keep)
+        {
+          result.levels.push_back(std::move(level));
+          std::push_heap(result.levels.begin(), result.levels.end(), less);
+        }
+        else if (less(level, result.levels.front()))
+        {
+          std::pop_heap(result.levels.begin(), result.levels.end(), less);
+          result.levels.back() = std::move(level);
+          std::push_heap(result.levels.begin(), result.levels.end(), less);
+        }
+      }
+      else if (!result.first_unconverged)
+        result.first_unconverged = std::move(state);
+    }
+    offset += size;
   }
   std::sort_heap(result.levels.begin(), result.levels.end(), less);
   return result;

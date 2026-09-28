@@ -21,6 +21,67 @@ The complete supported family is always requested: no energy truncation or
 `--max-iterations` and `--tolerance` control the existing root solver.
 fp64, native long-double, and optional fp128 arithmetic are supported throughout.
 
+## Parallel calculations
+
+`--threads N` selects a Uni20 oneTBB scheduler with at most N participants;
+the default is 1. Root solves and form factors run in bounded batches of
+independent states. The ground reference, sorting, moment sums, and output
+remain serial. Worker count does not change state IDs, weights, or summation
+order at the same precision and with the same executable.
+
+```sh
+OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 bethe-xxx-structure-factor 512 \
+  --max-candidates 40000 --threads 36 --quiet \
+  --csv spectrum.csv --csv-table moments=moments.csv
+```
+
+This requests all 32,896 two-spinon states; choose the thread limit for your
+machine. CPU time is summed across workers, not elapsed time. Extra workers
+also need extra determinant workspaces. Keep numerical-library threading at
+one when parallelizing over states to avoid nested oversubscription.
+
+Library callers can pass `bethe::ExecutionOptions{&scheduler, batch_size}` as
+the fourth argument of `two_spinon_structure_factor`, or through
+`RealExcitationOptions::execution` for shared real-root scans. The scheduler
+is borrowed and must outlive the synchronous call; exceptions join active
+work before propagating. A null pointer selects Uni20's active scheduler
+(serial by default). Bethe does not replace the global scheduler. The default
+batch size is 128; changing it does not change the canonical result order.
+
+```cpp
+#include <bethe/xxx_structure_factor.hpp>
+#include <uni20/async/tbb_scheduler.hpp>
+
+uni20::async::TbbScheduler scheduler(8);
+auto spectrum = bethe::heisenberg::two_spinon_structure_factor<double>(
+    64, {}, 10000, {&scheduler});
+```
+
+Link the scheduler consumer to `TBB::tbb`; Bethe's library target supplies
+`uni20_async` but does not impose a particular concurrent backend.
+
+### Example scaling
+
+On Polaron (two Xeon Gold 6254 CPUs, 36 physical cores), the Clang 20 Release
+fp64 executable evaluated all 2,080 N=128 lines with these elapsed times:
+
+| Scheduler limit | Elapsed seconds | Speedup |
+| --- | ---: | ---: |
+| 1 | 14.05 | 1.0× |
+| 4 | 3.66 | 3.8× |
+| 18 | 0.97 | 14.5× |
+| 36 | 0.58 | 24.2× |
+
+These are single-run measurements, including CSV export, with BLAS/OpenMP
+thread limits set to one; they are not a portable performance guarantee.
+All four runs exported byte-identical spectral rows (metadata and timing
+naturally differ). Small systems may not benefit from extra workers.
+
+With the same executable, N=512 completed all 32,896 lines in 332.91 seconds
+using 36 workers (10,781.6 process CPU seconds, about 180 MiB peak resident
+memory). Its partial spectrum contains 93.41% of the full integrated weight
+and 91.12% of the first moment; these fractions are not renormalized.
+
 ## Operator, momentum and spectral normalization
 
 Define the raising operator and its spectral measure by

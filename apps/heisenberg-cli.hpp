@@ -4,6 +4,7 @@
 #pragma once
 
 #include "cli-common.hpp"
+#include "execution-options.hpp"
 #include <bethe/heisenberg_excitations.hpp>
 
 #include <limits>
@@ -16,6 +17,7 @@ struct ExcitationArguments
     std::optional<std::size_t> count;
     std::optional<uni20::half_int> spin;
     std::optional<std::size_t> max_candidates;
+    int threads = 1;
 
     void validate() const
     {
@@ -28,9 +30,9 @@ struct ExcitationArguments
       return spin.value_or(uni20::from_twice(std::int64_t{sites % 2 == 0 ? 2 : 1}));
     }
 
-    heisenberg::RealExcitationOptions options() const
+    heisenberg::RealExcitationOptions options(ExecutionOptions execution = {}) const
     {
-      return {.count = count.value_or(10), .max_candidates = max_candidates.value_or(10000)};
+      return {.count = count.value_or(10), .max_candidates = max_candidates.value_or(10000), .execution = execution};
     }
 };
 

@@ -68,7 +68,8 @@ RealExcitationScan<State> scan_real_excitations(std::size_t sites, uni20::half_i
 
 /// Periodic real-root highest-weight multiplets at total spin S (Sz=S).
 /// Exhaustive within the conventional all-1-string window, not a full spectrum.
-/// O(count*M+N) retained storage; every candidate still requires a solve.
+/// O((count+batch_size)*M+N) retained storage, plus active solver workspaces;
+/// every candidate still requires a solve.
 template <uni20::Real Real = double>
 [[nodiscard]] RealExcitationScan<RealState<Real>> real_excitations(std::size_t sites, uni20::half_int spin,
                                                                    RealExcitationOptions const& scan = {},

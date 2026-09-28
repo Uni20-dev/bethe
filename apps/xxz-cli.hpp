@@ -2,6 +2,7 @@
 // Copyright (C) 2026 Ian McCulloch
 #pragma once
 #include "data-output-options.hpp"
+#include "execution-options.hpp"
 #include "program-options.hpp"
 #include <limits>
 #include <optional>
@@ -15,6 +16,7 @@ struct XxzArguments
     std::string precision = "fp64";
     std::optional<std::string> tolerance = std::nullopt;
     std::size_t max_iterations = 10000;
+    int threads = 1;
     std::optional<uni20::half_int> sz = std::nullopt;
     bool sectors = false;
     std::optional<std::size_t> excitation_count = std::nullopt;
@@ -43,6 +45,7 @@ inline void add_xxz_options(CLI::App& app, XxzArguments& args)
   text_option(app, "--tolerance", args.tolerance, "Residual in the reported convention; default: 32 epsilon");
   count_option(app, "--max-iterations", args.max_iterations, "Update budget")->capture_default_str();
   precision_option(app, args.precision);
+  threads_option(app, args.threads)->needs("--excitations");
 }
 inline void validate_xxz_arguments(XxzArguments const& args)
 {

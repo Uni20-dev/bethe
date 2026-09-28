@@ -29,6 +29,9 @@ def rows(table):
 for precision in precisions:
     args = ["8", "--precision", precision]
     z = document(args)
+    parallel = document([*args, "--threads", "4"])
+    for name in z:
+        assert parallel[name]["rows"] == z[name]["rows"]
     r = document([*args, "--channel", "raising"])
     assert set(z) == {"spectrum", "moments"}
     assert len(rows(z["spectrum"])) == 10
@@ -67,7 +70,9 @@ with tempfile.TemporaryDirectory() as directory:
     out = path/"spectrum.json"
     run(["6", "--json", str(out), "--quiet", "--no-retain"])
     previous = out.read_text()
-    invalid = [["5"], ["0"], ["8", "--max-candidates", "9"], ["8", "--channel", "+-"],
+    invalid = [["8", "--threads", "0"], ["8", "--threads", "-1"], ["8", "--threads", "1.5"],
+               ["8", "--threads", "2147483648"],
+               ["5"], ["0"], ["8", "--max-candidates", "9"], ["8", "--channel", "+-"],
                ["8", "--csv-table", f"failed={path/'bad.csv'}"], ["8", "--table", "failed"],
                ["8", "--tolerance", "nan"], ["8", "--tolerance", "0"]]
     for args in invalid:

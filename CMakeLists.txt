@@ -28,7 +28,7 @@ add_library(bethe INTERFACE)
 add_library(bethe::bethe ALIAS bethe)
 target_compile_features(bethe INTERFACE cxx_std_23)
 target_include_directories(bethe INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/include")
-target_link_libraries(bethe INTERFACE uni20_core uni20_common uni20_linalg)
+target_link_libraries(bethe INTERFACE uni20_core uni20_common uni20_linalg uni20_async)
 
 # Library-only consumers also need recoverable square solves. Catch stale
 # source overrides during configuration rather than deep in template errors.
@@ -138,8 +138,43 @@ if(BETHE_BUILD_APPS)
     set_target_properties(${app} PROPERTIES CXX_EXTENSIONS OFF)
   endforeach()
 
+  set(bethe_parallel_apps bethe-xxx-structure-factor bethe-xxx-pbc bethe-xxx-obc bethe-xxz-pbc bethe-xxz-obc)
+  foreach(app IN LISTS bethe_parallel_apps)
+    target_link_libraries(${app} PRIVATE TBB::tbb)
+  endforeach()
+
   if(BETHE_INSTALL_APPS)
     include(GNUInstallDirs)
+    # A fetched oneTBB is not a system runtime. Ship it beside the executables,
+    # without importing all of Uni20/oneTBB's development installation rules.
+    get_target_property(bethe_tbb_imported TBB::tbb IMPORTED)
+    get_target_property(bethe_tbb_type TBB::tbb TYPE)
+    set(bethe_runtime_files "")
+    if(NOT bethe_tbb_imported AND bethe_tbb_type STREQUAL "SHARED_LIBRARY")
+      install(TARGETS tbb
+        RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}" COMPONENT BetheRuntime
+        LIBRARY DESTINATION "${CMAKE_INSTALL_LIBDIR}" COMPONENT BetheRuntime NAMELINK_SKIP
+        ARCHIVE DESTINATION "${CMAKE_INSTALL_LIBDIR}" COMPONENT BetheDevelopment EXCLUDE_FROM_ALL)
+      get_target_property(bethe_tbb_source TBB::tbb SOURCE_DIR)
+      install(FILES "${bethe_tbb_source}/../../LICENSE.txt"
+        DESTINATION "${CMAKE_INSTALL_DOCDIR}" RENAME oneTBB-LICENSE.txt COMPONENT BetheRuntime)
+      list(APPEND bethe_runtime_files "${CMAKE_INSTALL_DOCDIR}/oneTBB-LICENSE.txt")
+      if(WIN32)
+        list(APPEND bethe_runtime_files "${CMAKE_INSTALL_BINDIR}/$<TARGET_FILE_NAME:TBB::tbb>")
+      else()
+        list(APPEND bethe_runtime_files "${CMAKE_INSTALL_LIBDIR}/$<TARGET_FILE_NAME:TBB::tbb>"
+          "${CMAKE_INSTALL_LIBDIR}/$<TARGET_SONAME_FILE_NAME:TBB::tbb>")
+        file(RELATIVE_PATH bethe_bin_to_lib "${CMAKE_INSTALL_FULL_BINDIR}" "${CMAKE_INSTALL_FULL_LIBDIR}")
+        if(APPLE)
+          set(bethe_runtime_origin "@loader_path")
+        else()
+          set(bethe_runtime_origin "$ORIGIN")
+        endif()
+        foreach(app IN LISTS bethe_parallel_apps)
+          set_property(TARGET ${app} APPEND PROPERTY INSTALL_RPATH "${bethe_runtime_origin}/${bethe_bin_to_lib}")
+        endforeach()
+      endif()
+    endif()
     # Only executables declared in this directory: no tests or dependency
     # targets, and no second list of frontend names to keep synchronized.
     get_property(bethe_directory_targets DIRECTORY PROPERTY BUILDSYSTEM_TARGETS)

@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Copyright (C) 2026 Ian McCulloch
+#include "execution-options.hpp"
 #include "program-options.hpp"
 #include "result-output.hpp"
 #include <bethe/xxx_structure_factor.hpp>
@@ -14,6 +15,7 @@ struct Arguments
     std::string precision = "fp64", channel = "zz";
     std::optional<std::string> tolerance;
     bool roots = false, diagnostics = false;
+    int threads = 1;
     cli::DataOutputOptions output;
 };
 auto program_info()
@@ -46,6 +48,7 @@ void add_options(CLI::App& app, Arguments& a)
       ->capture_default_str();
   cli::text_option(app, "--tolerance", a.tolerance, "Normalized root residual tolerance")->type_name("REAL");
   cli::precision_option(app, a.precision);
+  cli::threads_option(app, a.threads);
   app.add_flag("--roots", a.roots, "Show ground and converged-state z=2*lambda roots on screen");
   app.add_flag("--diagnostics", a.diagnostics, "Show state convergence and form-factor diagnostics on screen");
   cli::add_data_output_options(
@@ -76,8 +79,9 @@ template <uni20::Real Real> int run(Arguments const& a, int argc, char** argv)
   model::SolverOptions<Real> controls;
   controls.max_iterations = a.max_iterations;
   if (a.tolerance) controls.residual_tolerance = uni20::parse_real<Real>(*a.tolerance);
-  auto const result =
-      context.measure([&] { return model::two_spinon_structure_factor<Real>(a.sites, controls, a.max_candidates); });
+  uni20::async::TbbScheduler scheduler(a.threads);
+  auto const result = context.measure(
+      [&] { return model::two_spinon_structure_factor<Real>(a.sites, controls, a.max_candidates, {&scheduler}); });
   auto const& scan = result.scan;
   Real const scale = a.channel == "zz" ? Real{0.5} : Real{1};
   using Optional = std::optional<Real>;
@@ -89,6 +93,7 @@ template <uni20::Real Real> int run(Arguments const& a, int argc, char** argv)
       .field("weight_convention", "Weight convention", "S(q,w)=2*pi*sum weight*delta(w-gap); zz=raising/2")
       .field("family", "Family", "Two-spinon real-root S=1; partial DSF; no rescaling")
       .field("precision", "Precision", a.precision)
+      .field("threads", "Scheduler concurrency limit", a.threads)
       .field("tolerance", "Root residual tolerance", controls.residual_tolerance)
       .field("max_iterations", "Max root iterations", controls.max_iterations)
       .field("max_candidates", "Max candidates", a.max_candidates)

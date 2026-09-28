@@ -16,6 +16,8 @@ CLI conversions, and token-preserving help. Local overrides must provide these
 APIs too; configuration rejects checkouts without the recoverable-solve header.
 Application builds also enable Uni20's
 optional CLI11 dependency; library-only builds do not require it.
+Scheduler-backed state scans use `uni20_async`. The parallel frontends and
+parallel regression tests additionally link oneTBB, supplied by Uni20.
 
 ## Build the pinned version
 
@@ -106,7 +108,12 @@ MPLAPACK) must remain available to the runtime loader. For dependencies in a
 nonstandard installed location, configure an appropriate `CMAKE_INSTALL_RPATH`
 or use your platform's loader configuration. Do not point an install RPATH at
 temporary dependency build directories that you intend to remove. Bethe does
-not automatically copy third-party libraries or preserve build-tree RPATHs.
+not preserve build-tree RPATHs. One exception is source-built oneTBB: Bethe
+installs its shared runtime under `CMAKE_INSTALL_LIBDIR`, its license under
+`share/doc/bethe/`, and a relative runtime search path in the parallel
+frontends. A system-provided oneTBB remains a system dependency. This keeps
+the default source build relocatable without installing dependency headers
+or development libraries.
 
 Installation currently covers the **programs**, not a `find_package(Bethe)`
 C++ package. Uni20 does not yet export an installable package for Bethe's

@@ -92,8 +92,10 @@ comes from Gaussian tails and finite-size effects—not additional states.
 Compared with N=64, this gives four times the momentum resolution and halves
 the broadening. Making η still smaller mainly exposes individual finite-ring
 lines; a denser image grid alone cannot create better physical resolution.
-N=512 and beyond would benefit from parallel state scanning: the current
-frontend scans states serially, so a many-core host alone does not speed it up.
+For larger rings, `--threads N` parallelizes both root solving and form factors
+using Uni20's scheduler. See [parallel calculations](../xxx-structure-factor.md#parallel-calculations)
+for an N=512 command and the library interface. The published N=256 image
+does not depend on the worker count.
 The N=256 family captures **94.89% of the integrated weight** and **92.75% of
 the first moment**. These are the actual finite-ring fractions, without
 renormalization; they need not match the N=64 percentages below.

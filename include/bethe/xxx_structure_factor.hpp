@@ -37,22 +37,35 @@ template <uni20::Real Real> Real raising_first_moment(std::size_t sites, std::si
 /// Exhaustive conventional two-spinon triplet family, not the full DSF.
 /// Always scans and retains all candidates; the budget is checked before work.
 template <uni20::Real Real = double>
-[[nodiscard]] TwoSpinonStructureFactor<Real> two_spinon_structure_factor(std::size_t sites,
-                                                                         SolverOptions<Real> const& solver = {},
-                                                                         std::size_t max_candidates = 10000)
+[[nodiscard]] TwoSpinonStructureFactor<Real>
+two_spinon_structure_factor(std::size_t sites, SolverOptions<Real> const& solver = {},
+                            std::size_t max_candidates = 10000, ExecutionOptions execution = {})
 {
+  auto& scheduler = execution.resolved_scheduler();
   detail::checked_sites(sites);
   if (sites % 2) throw std::invalid_argument("XXX two-spinon structure factor requires even N");
   auto const candidates = real_excitation_count(sites, uni20::half_int{1}, max_candidates);
   TwoSpinonStructureFactor<Real> result;
-  result.scan = real_excitations<Real>(sites, uni20::half_int{1}, {candidates, max_candidates}, solver);
+  // Resolve once: both stages use the same scheduler even when supplied implicitly.
+  execution.scheduler = &scheduler;
+  result.scan = real_excitations<Real>(sites, uni20::half_int{1}, {candidates, max_candidates, execution}, solver);
   auto const& ground = result.scan.ground_state;
   using std::atan;
   Real const two_pi = Real{8} * atan(Real{1});
+  result.form_factors.resize(result.scan.levels.size());
+  for (std::size_t offset = 0; offset < result.scan.levels.size();)
+  {
+    auto const size = std::min(execution.batch_size, result.scan.levels.size() - offset);
+    scheduler.execute_batch(size, [&](std::size_t j) {
+      auto const i = offset + j;
+      result.form_factors[i] = raising_form_factor(sites, ground, result.scan.levels[i].state);
+    });
+    offset += size;
+  }
   for (std::size_t i = 0; i < result.scan.levels.size(); ++i)
   {
     auto const& level = result.scan.levels[i];
-    auto factor = raising_form_factor(sites, ground, level.state);
+    auto& factor = result.form_factors[i];
     // Translation T moves the spin at j to j+1 and has eigenvalue exp(-iP).
     // S_q^+=sum exp(-iqj) S_j^+/sqrt(N) therefore selects q=P0-Pn.
     auto const q = (ground.momentum_index + sites - level.state.momentum_index) % sites;
@@ -60,7 +73,6 @@ template <uni20::Real Real = double>
       result.lines.push_back({i + 1, q, two_pi * Real(q) / Real(sites), *level.gap, *factor.weight});
     else if (factor.converged())
       factor = {}; // inconsistent gap: do not publish even a finite weight
-    result.form_factors.push_back(std::move(factor));
   }
   result.moments = spectral_moments<Real>(sites, result.lines);
   bethe::detail::CompensatedSum<Real> weights, first;

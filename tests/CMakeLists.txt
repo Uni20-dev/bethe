@@ -30,6 +30,10 @@ function(bethe_discover_tests target)
   )
 endfunction()
 
+add_executable(bethe_parallel_scan_tests test_parallel_scan.cpp)
+target_link_libraries(bethe_parallel_scan_tests PRIVATE bethe::bethe TBB::tbb)
+bethe_discover_tests(bethe_parallel_scan_tests)
+
 add_executable(bethe_xxx_structure_factor_tests test_xxx_structure_factor.cpp)
 target_link_libraries(bethe_xxx_structure_factor_tests PRIVATE bethe::bethe)
 bethe_discover_tests(bethe_xxx_structure_factor_tests)
@@ -191,20 +195,26 @@ if(BETHE_BUILD_APPS)
   if(BETHE_INSTALL_APPS AND Python3_Interpreter_FOUND
       AND NOT IS_ABSOLUTE "${CMAKE_INSTALL_BINDIR}"
       AND NOT IS_ABSOLUTE "${CMAKE_INSTALL_DOCDIR}"
+      AND NOT IS_ABSOLUTE "${CMAKE_INSTALL_LIBDIR}"
       AND NOT CMAKE_INSTALL_BINDIR MATCHES "(^|/)\\.\\.(/|$)"
-      AND NOT CMAKE_INSTALL_DOCDIR MATCHES "(^|/)\\.\\.(/|$)")
+      AND NOT CMAKE_INSTALL_DOCDIR MATCHES "(^|/)\\.\\.(/|$)"
+      AND NOT CMAKE_INSTALL_LIBDIR MATCHES "(^|/)\\.\\.(/|$)")
     add_test(NAME Install.runtime
       COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_install.py"
         --cmake "${CMAKE_COMMAND}" --build-dir "${PROJECT_BINARY_DIR}"
         --config "$<CONFIG>" --bindir "${CMAKE_INSTALL_BINDIR}"
         --docdir "${CMAKE_INSTALL_DOCDIR}" --suffix "${CMAKE_EXECUTABLE_SUFFIX}"
-        --fp128 "${UNI20_ENABLE_MPLAPACK}" --apps ${bethe_installed_apps})
+        --fp128 "${UNI20_ENABLE_MPLAPACK}" --runtime-files ${bethe_runtime_files} --apps ${bethe_installed_apps})
     set_tests_properties(Install.runtime PROPERTIES RUN_SERIAL TRUE TIMEOUT 180)
   endif()
   if(Python3_Interpreter_FOUND)
     add_test(NAME XXXStructureFactor.cli
       COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_xxx_structure_factor.py"
         "$<TARGET_FILE:bethe-xxx-structure-factor>" "${UNI20_ENABLE_MPLAPACK}")
+    add_test(NAME ParallelScan.cli
+      COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_parallel_scans.py"
+        "$<TARGET_FILE:bethe-xxx-pbc>" "$<TARGET_FILE:bethe-xxx-obc>"
+        "$<TARGET_FILE:bethe-xxz-pbc>" "$<TARGET_FILE:bethe-xxz-obc>")
     add_test(NAME Output.table_contracts
       COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_table_contracts.py"
         "$<TARGET_FILE_DIR:bethe-su3-dispersion>")

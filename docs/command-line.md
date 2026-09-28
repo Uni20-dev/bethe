@@ -139,12 +139,27 @@ from ranked levels. See the [table schemas](output.md#named-tables).
 
 ## CPU time and convergence
 
+### Parallel state scans
+
+`bethe-xxx-structure-factor` and the `--excitations` modes of
+`bethe-xxx-pbc`, `bethe-xxx-obc`, `bethe-xxz-pbc`, and `bethe-xxz-obc` accept
+`--threads N` (positive integer, default 1). The limit belongs to a Uni20
+oneTBB scheduler, not one operating-system thread per state. Other modes of
+the four energy tools reject an explicit `--threads` option.
+
+Each state is solved independently; ordered result collection, failure
+diagnostics and moment sums are deterministic. Worker threads do not write
+tables. Library users can also select a scheduler for the shared real-root
+scanner used by other models; their frontends do not yet expose this option.
+See the [XXX structure-factor guide](xxx-structure-factor.md#parallel-calculations)
+for examples. Set BLAS/OpenMP thread limits to one to avoid nested threading.
+
 ### Timing
 
 Output includes energy, momentum (periodic systems only), normalized equation
 residual, convergence status, update count, and solver CPU time in seconds.
 CPU time measures process CPU consumption during state construction and solving,
-not elapsed wall time;
+not elapsed wall time (parallel workers' CPU times add together);
 for scans it covers the whole scan, including the ground reference and energy
 ordering for excitations. Report formatting and output
 are excluded. Human reports include it once; exports carry it in the table

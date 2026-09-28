@@ -57,16 +57,20 @@ template <uni20::Real Real> int run(Arguments const& args, int argc, char** argv
         .field("residual_tolerance", "Residual tolerance", options.residual_tolerance)
         .field("root_coordinate", "Root coordinate", coordinate);
     if (delta > Real{1} || delta < Real{0}) report.field("residual_convention", "Residual convention", residual);
+    if (args.excitation_count) report.field("threads", "Scheduler concurrency limit", args.threads);
     return report;
   };
 
   auto computation = context.computation();
   if (args.excitation_count)
   {
+    uni20::async::TbbScheduler scheduler(args.threads);
     auto const sz = args.sz.value_or(uni20::from_twice(std::int64_t{args.sites % 2 == 0 ? 2 : 1}));
-    auto const scan = model::real_excitations<Real>(
-        args.sites, delta, sz, {.count = *args.excitation_count, .max_candidates = args.max_candidates.value_or(10000)},
-        options);
+    auto const scan = model::real_excitations<Real>(args.sites, delta, sz,
+                                                    {.count = *args.excitation_count,
+                                                     .max_candidates = args.max_candidates.value_or(10000),
+                                                     .execution = {&scheduler}},
+                                                    options);
     computation.finish();
     auto report = header("real-root excitations");
     auto const window = scan.window.slots == 0

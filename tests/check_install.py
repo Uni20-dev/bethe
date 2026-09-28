@@ -21,6 +21,7 @@ def run(command, **kwargs):
 def check_files(prefix, args):
     expected = {Path(args.bindir) / (app + args.suffix) for app in args.apps}
     expected.add(Path(args.docdir) / 'COPYING')
+    expected.update(Path(path) for path in args.runtime_files)
     actual = {p.relative_to(prefix) for p in prefix.rglob('*') if p.is_file()}
     if actual != expected:
         raise AssertionError(f'Missing: {expected-actual}; unexpected installed files: {actual-expected}')
@@ -51,6 +52,7 @@ def main():
     parser.add_argument('--docdir', required=True)
     parser.add_argument('--suffix', default='')
     parser.add_argument('--fp128', default='OFF')
+    parser.add_argument('--runtime-files', nargs='*', default=[])
     parser.add_argument('--apps', nargs='+', required=True)
     args = parser.parse_args()
     for destination in (args.bindir, args.docdir):
@@ -82,6 +84,8 @@ def main():
             assert app in run([executable, '--help'], cwd=work, env=env)
             assert app in run([executable, '--version'], cwd=work, env=env)
         xxx = str(relocated / args.bindir / ('bethe-xxx-pbc' + args.suffix))
+        output = run([xxx, '8', '--excitations', 'all', '--threads', '2'], cwd=work, env=env)
+        assert 'converged' in output
         precisions = ['fp64', 'long-double'] + (['fp128'] if args.fp128.upper() in ('ON', 'TRUE', '1') else [])
         for precision in precisions:
             output = run([xxx, '4', '--precision', precision, '--format', 'plain'], cwd=work, env=env)
