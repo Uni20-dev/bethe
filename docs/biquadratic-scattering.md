@@ -16,13 +16,13 @@ that same scan to high labels, near the ferromagnetic low-energy edge:
 
 ```sh
 # Two defects: ell=N-4. Scan choose(8,2)=28 candidates; retain the first ten.
-build/bethe-biquadratic-obc 128 --ferromagnetic --through-lines 124 \
+bethe-biquadratic-obc 128 --ferromagnetic --through-lines 124 \
   --excitations 10 --real-window 8
 # Odd chain, every combination in the selected window:
-build/bethe-biquadratic-obc 129 --ferromagnetic --through-lines 125 \
+bethe-biquadratic-obc 129 --ferromagnetic --through-lines 125 \
   --excitations all --real-window 8 --roots
 # Three unbound defects: ell=N-6; choose(6,3)=20 candidates.
-build/bethe-biquadratic-obc 100000 --ferromagnetic --through-lines 99994 \
+bethe-biquadratic-obc 100000 --ferromagnetic --through-lines 99994 \
   --excitations all --real-window 6 --precision long-double \
   --json scattering.json --csv scattering.csv
 ```

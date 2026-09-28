@@ -24,7 +24,7 @@ conditions, including the Fock-space sign of hopping across the boundary.
 The tool requires at least three sites and does not accept arbitrary J/t.
 
 ```sh
-build/bethe-tj-pbc 16 --particles 14 --sz 0 \
+bethe-tj-pbc 16 --particles 14 --sz 0 \
   --csv-table states=tj-state.csv --csv-table first_roots=tj-first.csv \
   --csv-table second_roots=tj-second.csv
 ```
@@ -151,13 +151,13 @@ Additional analytic and spin-reversal checks:
 | L=5, 3 up + 1 down | [CSV](data/tj-imbalanced-states.csv) | [CSV](data/tj-imbalanced-first_roots.csv) | [CSV](data/tj-imbalanced-second_roots.csv) |
 | L=5, 1 up + 3 down | [CSV](data/tj-reversed-states.csv) | [CSV](data/tj-reversed-first_roots.csv) | [CSV](data/tj-reversed-second_roots.csv) |
 
-With the [plotting dependencies](requirements.txt), from the repository root:
+With the [plotting dependencies](requirements.txt), from the source checkout:
 
 ```sh
 python3 scripts/plot_fermion_tutorial.py --check
 python3 scripts/plot_fermion_tutorial.py
 # Optional: regenerate this and the Gaudin–Yang tutorial together.
-python3 scripts/plot_fermion_tutorial.py --solver-dir build
+python3 scripts/plot_fermion_tutorial.py --solver-dir /path/to/bethe/bin
 python3 -m unittest discover -s scripts -p 'test_tutorial_fermion.py'
 ```
 

@@ -21,8 +21,8 @@ There are no boundary fields. A factor of four separates this normalization
 from the same expression written with Pauli matrices. As a small-system check:
 
 ```sh
-build_codex/bethe-xxx-pbc 4
-build_codex/bethe-xxx-obc 4
+bethe-xxx-pbc 4
+bethe-xxx-obc 4
 ```
 
 The ground energies are $`-2`$ and $`-3/4-\sqrt{3}/2`$, respectively. Removing
@@ -36,8 +36,8 @@ has $`M=(N-1)/2`$ real roots filling all but one of $`M+1`$ allowed Bethe slots.
 The missing slot, or hole, labels the branch.
 
 ```sh
-build_codex/bethe-xxx-pbc 31 --spinons
-build_codex/bethe-xxx-pbc 31 --spinons --precision fp64 \
+bethe-xxx-pbc 31 --spinons
+bethe-xxx-pbc 31 --spinons --precision fp64 \
   --csv-table states=xxx-states.csv --csv-table spinons=xxx-spinons.csv
 ```
 
@@ -92,8 +92,8 @@ On an even chain, select the real-root highest-weight family at total spin
 $`S=1`$:
 
 ```sh
-build_codex/bethe-xxx-pbc 12 --excitations all --spin 1 --format csv > xxx-pbc.csv
-build_codex/bethe-xxx-obc 12 --excitations all --spin 1 --format csv > xxx-obc.csv
+bethe-xxx-pbc 12 --excitations all --spin 1 --format csv > xxx-pbc.csv
+bethe-xxx-obc 12 --excitations all --spin 1 --format csv > xxx-obc.csv
 ```
 
 ![Periodic triplet momenta and ranked periodic versus open-chain gaps](figures/xxx-boundary-scans.svg)
@@ -141,9 +141,9 @@ can describe a complete finite spectrum through exact motif multiplicities.
 After preparing the optional [plotting environment](xxz-spinons.md#5-reproduce-the-figures):
 
 ```sh
-build_codex/docs-venv/bin/python scripts/plot_xxx_tutorial.py
+python3 scripts/plot_xxx_tutorial.py
 # Regenerate all exports from a directory containing both XXX executables:
-build_codex/docs-venv/bin/python scripts/plot_xxx_tutorial.py --build-dir build_codex
+python3 scripts/plot_xxx_tutorial.py --build-dir /path/to/bethe/bin
 python3 scripts/plot_xxx_tutorial.py --check
 python3 -m unittest discover -s scripts -p 'test_tutorial_xxx.py'
 ```

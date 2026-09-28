@@ -8,15 +8,15 @@ exports are independent views of those same values:
 
 ```sh
 # See the usual final report and save two machine-readable files.
-build/bethe-hubbard-dispersion --u 4 --points 101 \
+bethe-hubbard-dispersion --u 4 --points 101 \
   --csv half-filled.csv --json half-filled.json
 
 # Doped curves, without a screen report or retained row history.
-build/bethe-hubbard-dispersion --u 4 --density 0.75 --reference fermi \
+bethe-hubbard-dispersion --u 4 --density 0.75 --reference fermi \
   --points 1001 --quiet --no-retain --tsv doped.tsv
 
 # Display points as they are computed and also save the full-precision table.
-build/bethe-hubbard-dispersion --u 4 --stream --csv live.csv
+bethe-hubbard-dispersion --u 4 --stream --csv live.csv
 ```
 
 `--csv FILE`, `--tsv FILE` and `--json FILE` are repeatable: several destinations
@@ -152,9 +152,9 @@ that selection. Repeatable `--csv-table NAME=FILE` / `--tsv-table NAME=FILE` exp
 additional tables without mixing schemas:
 
 ```sh
-build/bethe-sutherland-pbc 3 --length 4 --lambda 2 --levels all --window 2 \
+bethe-sutherland-pbc 3 --length 4 --lambda 2 --levels all --window 2 \
   --pseudomomenta --csv states.csv --tsv-table pseudomomenta=roots.tsv --json all.json
-build/bethe-sutherland-pbc 3 --length 4 --lambda 2 \
+bethe-sutherland-pbc 3 --length 4 --lambda 2 \
   --pseudomomenta --table pseudomomenta --format csv
 ```
 

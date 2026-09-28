@@ -24,13 +24,13 @@ chemical-potential term. Energies include the displayed density interaction.
 
 ```sh
 # No holes: the Heisenberg limit, with its exchange factor and energy shift.
-build/bethe-tj-pbc 6
+bethe-tj-pbc 6
 # Two holes, three electrons of each spin.
-build/bethe-tj-pbc 8 --particles 6 --roots
+bethe-tj-pbc 8 --particles 6 --roots
 # An imbalanced doped sector: N_up=3, N_down=1.
-build/bethe-tj-pbc 5 --particles 4 --sz 1 --precision long-double
+bethe-tj-pbc 5 --particles 4 --sz 1 --precision long-double
 # Exact polarized free fermions.
-build/bethe-tj-pbc 7 --particles 4 --sz 2 --roots
+bethe-tj-pbc 7 --particles 4 --sz 2 --roots
 ```
 
 `--particles N` defaults to L. `--sz` defaults to 0 for even N or 1/2 for

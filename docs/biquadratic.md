@@ -28,10 +28,10 @@ This is neither the [Takhtajan–Babujian point](takhtajan-babujian.md) nor
 the [ULS point](su3.md): both of those also have a bilinear term.
 
 ```sh
-build/bethe-biquadratic-obc 64
-build/bethe-biquadratic-obc 4 --roots --precision long-double
+bethe-biquadratic-obc 64
+bethe-biquadratic-obc 4 --roots --precision long-double
 # With binary128 enabled:
-build/bethe-biquadratic-obc 64 --precision fp128
+bethe-biquadratic-obc 64 --precision fp128
 ```
 
 Two useful checks are $`E (2)=-4`$ and
@@ -44,13 +44,13 @@ and integer labels. There is no lattice momentum for these open chains.
 
 ```sh
 # Lowest energy in each TL module (not each physical-spin sector):
-build/bethe-biquadratic-obc 16 --sectors
-build/bethe-biquadratic-obc 16 --through-lines 2
+bethe-biquadratic-obc 16 --sectors
+bethe-biquadratic-obc 16 --through-lines 2
 # Lowest 10 supported real-root levels in ell=2, including its minimum:
-build/bethe-biquadratic-obc 16 --excitations 10
-build/bethe-biquadratic-obc 16 --through-lines 4 --excitations all
+bethe-biquadratic-obc 16 --excitations 10
+bethe-biquadratic-obc 16 --through-lines 4 --excitations all
 # A specific Bethe level (its root count determines ell):
-build/bethe-biquadratic-obc 8 --quantum-numbers 1,2,5 --roots
+bethe-biquadratic-obc 8 --quantum-numbers 1,2,5 --roots
 ```
 
 Each numerical level carries a TL through-line label ell and a **multiplicity
@@ -93,15 +93,15 @@ Energy calculations can still converge when this integer count is unavailable.
 
 ```sh
 # Both four-site singlets, including the complex-root level:
-build/bethe-biquadratic-obc 4 --q-spectrum --roots
+bethe-biquadratic-obc 4 --q-spectrum --roots
 # Search all nine levels of the six-site ell=2 module (multiplicity 8 each):
-build/bethe-biquadratic-obc 6 --q-spectrum --through-lines 2
+bethe-biquadratic-obc 6 --q-spectrum --through-lines 2
 # Eight-site singlets benefit from both extra attempts and extra precision:
-build/bethe-biquadratic-obc 8 --q-spectrum --max-attempts 12000 --precision long-double
+bethe-biquadratic-obc 8 --q-spectrum --max-attempts 12000 --precision long-double
 # One selected branch, using a monic polynomial seed rather than real labels:
-build/bethe-biquadratic-obc 4 --q-seed 1.5,-1.3333333333333333 --roots
+bethe-biquadratic-obc 4 --q-seed 1.5,-1.3333333333333333 --roots
 # Typed exports use the same Uni20 table/output machinery:
-build/bethe-biquadratic-obc 4 --q-spectrum --roots --json levels.json
+bethe-biquadratic-obc 4 --q-spectrum --roots --json levels.json
 ```
 
 `--q-spectrum` searches one TL module, default ell=0, including real and complex
@@ -133,8 +133,8 @@ checks, API usage and the remaining large-chain work.
 ## A complex-root singlet on long chains
 
 ```sh
-build/bethe-biquadratic-obc 128 --singlet-excitation
-build/bethe-biquadratic-obc 512 --singlet-excitation --precision long-double --roots
+bethe-biquadratic-obc 128 --singlet-excitation
+bethe-biquadratic-obc 512 --singlet-excitation --precision long-double --roots
 ```
 
 This separate solver targets one positive-deviation two-string above a real

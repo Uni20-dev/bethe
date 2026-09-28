@@ -26,8 +26,8 @@ and energy of inverse length squared. There is no lattice Brillouin zone.
 For a build containing `bethe-lieb-liniger-dispersion`, start with:
 
 ```sh
-build_codex/bethe-lieb-liniger-dispersion --c 1 --density 1 --points 129
-build_codex/bethe-lieb-liniger-dispersion --c 1 --density 1 --points 129 \
+bethe-lieb-liniger-dispersion --c 1 --density 1 --points 129
+bethe-lieb-liniger-dispersion --c 1 --density 1 --points 129 \
   --precision fp64 --format csv > ll-c1-n1.csv
 ```
 
@@ -71,7 +71,7 @@ calculation beyond a simple particle-like approximation.
 To extend only the type-I grid, choose a larger physical momentum cutoff:
 
 ```sh
-build_codex/bethe-lieb-liniger-dispersion --c 1 --density 1 --p-max 12 --points 257
+bethe-lieb-liniger-dispersion --c 1 --density 1 --p-max 12 --points 257
 ```
 
 ### Why is there a second zero without momentum periodicity?
@@ -87,7 +87,7 @@ unbounded type-I branch periodic.
 Compare $`(c,n)=(1,1)`$ with $`(2,2)`$. Both have $`\gamma=1`$.
 
 ```sh
-build_codex/bethe-lieb-liniger-dispersion --c 2 --density 2 --points 129 \
+bethe-lieb-liniger-dispersion --c 2 --density 2 --points 129 \
   --precision fp64 --format csv > ll-c2-n2.csv
 ```
 
@@ -133,10 +133,10 @@ Install the optional plotting dependencies as in the
 [first tutorial](xxz-spinons.md#5-reproduce-the-figures), then run:
 
 ```sh
-build_codex/docs-venv/bin/python scripts/plot_lieb_liniger_tutorial.py
-# Regenerate the four exports from your own build as well:
-build_codex/docs-venv/bin/python scripts/plot_lieb_liniger_tutorial.py \
-  --solver build_codex/bethe-lieb-liniger-dispersion
+python3 scripts/plot_lieb_liniger_tutorial.py
+# Regenerate the four exports with your chosen executable as well:
+python3 scripts/plot_lieb_liniger_tutorial.py \
+  --solver bethe-lieb-liniger-dispersion
 python3 scripts/plot_lieb_liniger_tutorial.py --check
 python3 -m unittest discover -s scripts -p 'test_tutorial_lieb_liniger.py'
 ```

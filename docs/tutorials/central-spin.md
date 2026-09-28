@@ -26,7 +26,7 @@ ground-energy frontend.
 Choose three bath couplings 1,0.7,0.3, central field 1 and total Sz=0:
 
 ```sh
-build/bethe-central-spin --couplings 1,0.7,0.3 --field 1 --sz 0 \
+bethe-central-spin --couplings 1,0.7,0.3 --field 1 --sz 0 \
   --csv-table states=central-state.csv --csv-table variables=central-variables.csv
 ```
 
@@ -179,13 +179,13 @@ Native field-scan exports (each cell links the state and regular variables):
 | Mixed-sign bath, B=2 | [CSV](data/central-mixed-states.csv) | [CSV](data/central-mixed-variables.csv) |
 | High field B=100 | [CSV](data/central-high-states.csv) | [CSV](data/central-high-variables.csv) |
 
-With the [plotting dependencies](requirements.txt), from the repository root:
+With the [plotting dependencies](requirements.txt), from the source checkout:
 
 ```sh
 python3 scripts/plot_gaudin_tutorial.py --check
 python3 scripts/plot_gaudin_tutorial.py
 # Optional: regenerate this and the Richardson tutorial.
-python3 scripts/plot_gaudin_tutorial.py --solver-dir build
+python3 scripts/plot_gaudin_tutorial.py --solver-dir /path/to/bethe/bin
 # Optional independent matrices and central-polarization check; requires NumPy.
 python3 scripts/plot_gaudin_tutorial.py --check --oracle
 python3 -m unittest discover -s scripts -p 'test_tutorial_gaudin.py'

@@ -16,9 +16,9 @@ with an energy shift explained below, **not** generic spin-1 bilinear exchange.
 ## First calculation and supported scope
 
 ```sh
-build/bethe-su3-pbc 6
-build/bethe-su3-pbc 9 --roots --precision long-double
-build/bethe-su3-pbc 48 --precision fp128 --format plain
+bethe-su3-pbc 6
+bethe-su3-pbc 9 --roots --precision long-double
+bethe-su3-pbc 48 --precision fp128 --format plain
 ```
 
 The last command requires an [MPLAPACK-enabled build](building.md#enable-binary128).

@@ -12,14 +12,14 @@ It is a separate front end backed by `bethe::hubbard::open` in
 ## First calculations
 
 ```sh
-build/bethe-hubbard-obc 6 --u 4
-build/bethe-hubbard-obc 5 --u 4 --roots
-build/bethe-hubbard-obc 16 --u 4 --particles 8
-build/bethe-hubbard-obc 15 --u -4 --particles 7 --sz -1/2 --roots
-build/bethe-hubbard-obc 32 --u 4 --precision long-double
-build/bethe-hubbard-obc 6 --u 0 --max-iterations 0
+bethe-hubbard-obc 6 --u 4
+bethe-hubbard-obc 5 --u 4 --roots
+bethe-hubbard-obc 16 --u 4 --particles 8
+bethe-hubbard-obc 15 --u -4 --particles 7 --sz -1/2 --roots
+bethe-hubbard-obc 32 --u 4 --precision long-double
+bethe-hubbard-obc 6 --u 0 --max-iterations 0
 # In a binary128-enabled build:
-build/bethe-hubbard-obc 32 --u 4 --precision fp128
+bethe-hubbard-obc 32 --u 4 --precision fp128
 ```
 
 `--u` is required. `--particles N` defaults to L; `--sz` defaults to 0 for

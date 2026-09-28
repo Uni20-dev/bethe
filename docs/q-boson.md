@@ -11,11 +11,11 @@ spectrum and follows its ground roots from free bosons to the phase limit.
 ## Command-line use
 
 ```sh
-build/bethe-q-boson-pbc 16 --particles 8 --eta 0.5 --roots
-build/bethe-q-boson-pbc 16 --particles 8 --phase --json phase.json
-build/bethe-q-boson-pbc 2 --particles 2 --eta 1e-60 --precision fp128
-build/bethe-q-boson-pbc 5 --particles 3 --eta 0.5 --excitations all --roots --json spectrum.json
-build/bethe-q-boson-pbc --references
+bethe-q-boson-pbc 16 --particles 8 --eta 0.5 --roots
+bethe-q-boson-pbc 16 --particles 8 --phase --json phase.json
+bethe-q-boson-pbc 2 --particles 2 --eta 1e-60 --precision fp128
+bethe-q-boson-pbc 5 --particles 3 --eta 0.5 --excitations all --roots --json spectrum.json
+bethe-q-boson-pbc --references
 ```
 
 The positional argument is the number of sites L. `--particles N` is required

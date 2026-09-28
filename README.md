@@ -192,25 +192,31 @@ special eigenstates at commensurate couplings; these are not ground-state scans.
 
 You need CMake 3.28+, a C++23 compiler supported by Uni20 (GCC 13+ or Clang 19+),
 and Uni20's numerical dependencies. The default configuration fetches a
-tested Uni20 revision:
+tested Uni20 revision. Configure from a build directory of your choice,
+replacing `/path/to/bethe` with the source checkout:
 
 ```sh
-cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release
-cmake --build build --parallel
-ctest --test-dir build --output-on-failure
+mkdir bethe-build
+cd bethe-build
+cmake /path/to/bethe -G Ninja -DCMAKE_BUILD_TYPE=Release
+cmake --build . --parallel
+ctest --output-on-failure
+# Make these programs available by name for this shell:
+export PATH="$PWD:$PATH"
 ```
 
 See [the build guide](docs/building.md) for a sibling Uni20 checkout, dependency
 setup, optional binary128 support, or embedding `bethe::bethe` in another project.
-For a checkout shared between hosts, keep builds on machine-local storage;
-`build/` below is just the example build directory.
+Examples use command names on `PATH`, regardless of where they were built or
+installed. Without the `PATH` setup, run `./bethe-xxx-pbc` etc. from the build
+directory. See [running the programs](docs/building.md#run-the-programs) for details.
 
 ## First calculations
 
 Start with the ground state of a four-site periodic XXX chain:
 
 ```sh
-build/bethe-xxx-pbc 4
+bethe-xxx-pbc 4
 ```
 
 Its total energy is E=-2 in our spin-1/2 normalization. The report includes
@@ -218,30 +224,30 @@ energy per site, convergence diagnostics, and solver CPU time. To see how the
 boundary condition or anisotropy changes the problem, try:
 
 ```sh
-build/bethe-xxx-obc 4
-build/bethe-xxz-pbc 4 --delta 0.5
-build/bethe-xxz-obc 4 --delta 0.5
+bethe-xxx-obc 4
+bethe-xxz-pbc 4 --delta 0.5
+bethe-xxz-obc 4 --delta 0.5
 ```
 
 For mobile electrons rather than a spin-only chain, try
-`build/bethe-hubbard-pbc 6 --u 4 --roots`; its nested Bethe ansatz has separate
+`bethe-hubbard-pbc 6 --u 4 --roots`; its nested Bethe ansatz has separate
 charge momenta and spin rapidities. Use `bethe-hubbard-obc` for free ends;
 see the [periodic](docs/hubbard.md) and [open-chain](docs/hubbard-open.md) guides.
 
-For continuum bosons, try `build/bethe-lieb-liniger-pbc 4 --length 4 --c 1`.
+For continuum bosons, try `bethe-lieb-liniger-pbc 4 --length 4 --c 1`.
 Here 4 particles occupy a ring of physical length 4; it is not a four-site chain.
 
-For three-state sites, try `build/bethe-su3-pbc 6 --roots`. This uses
+For three-state sites, try `bethe-su3-pbc 6 --roots`. This uses
 $`H=\sum_j P_{j,j+1}`$, where $`P`$ swaps adjacent colors; its six-site energy is $`-1-\sqrt{13}`$.
 
 Next, distinguish the lowest state in a magnetization sector from a family
 of excited states:
 
 ```sh
-build/bethe-xxx-pbc 16 --sz 1
-build/bethe-xxx-pbc 16 --sectors
-build/bethe-xxx-pbc 16 --excitations 10 --spin 1
-build/bethe-xxz-pbc 16 --delta 0.5 --excitations all --sz 1
+bethe-xxx-pbc 16 --sz 1
+bethe-xxx-pbc 16 --sectors
+bethe-xxx-pbc 16 --excitations 10 --spin 1
+bethe-xxz-pbc 16 --delta 0.5 --excitations all --sz 1
 ```
 
 XXX excitation scans select total spin with `--spin`; XXZ scans select

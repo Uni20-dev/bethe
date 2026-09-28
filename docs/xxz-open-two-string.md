@@ -14,9 +14,9 @@ pair and N/2-2 positive real roots**, for even N>=4. In the spin-1 biquadratic
 chain this is a physical singlet with multiplicity one.
 
 ```sh
-build/bethe-biquadratic-obc 128 --singlet-excitation
-build/bethe-biquadratic-obc 512 --singlet-excitation --precision long-double --roots
-build/bethe-biquadratic-obc 128 --singlet-excitation --json singlet.json
+bethe-biquadratic-obc 128 --singlet-excitation
+bethe-biquadratic-obc 512 --singlet-excitation --precision long-double --roots
+bethe-biquadratic-obc 128 --singlet-excitation --json singlet.json
 ```
 
 This branch is the lowest excited singlet in the small-chain ED checks.

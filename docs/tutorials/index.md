@@ -6,6 +6,23 @@ checks and caveats for interpreting the result. Start with
 [XXZ spinons](xxz-spinons.md) for the export-and-plot workflow, then choose a
 model below.
 
+## Running the examples
+
+Commands use `bethe-*` names on `PATH`, not a particular build or install
+directory. If you are working directly in your build directory, either prepend
+`./` to those names or add that directory to `PATH` as described in
+[the build guide](../building.md#run-the-programs). Run calculations wherever you
+want their output files; the source checkout is not required.
+
+The optional figure-reproduction commands are different: run `python3 scripts/…`
+from the **source checkout**, with the [plotting dependencies](contributing.md#plotting-environment)
+installed. A single-tool script accepts `--solver bethe-…` from `PATH` or an
+explicit executable path. Multi-tool scripts take an executable directory via
+`--solver-dir` (or the documented `--bin-dir`/`--build-dir` option): replace
+`/path/to/bethe/bin` with your actual build or installed binary directory; it
+need not be named `bin`. Without these options, scripts read the checked-in data.
+Regeneration replaces the repository's example data, not files in your calculation directory.
+
 ## Available tutorials
 
 - [XXZ spinons and continua](xxz-spinons.md): gapless/gapped bands and two-site folding.

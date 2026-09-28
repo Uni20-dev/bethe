@@ -27,8 +27,8 @@ exponentials, its approximation error is separate from the MPS error.
 Start with all motifs of an eight-site ring:
 
 ```sh
-build_codex/bethe-haldane-shastry-pbc 8 --levels all --spin-content
-build_codex/bethe-haldane-shastry-pbc 8 --levels all --precision fp64 \
+bethe-haldane-shastry-pbc 8 --levels all --spin-content
+bethe-haldane-shastry-pbc 8 --levels all --precision fp64 \
   --csv-table levels=hs-levels.csv --csv-table spin_content=hs-spins.csv
 ```
 
@@ -73,7 +73,7 @@ spin-1/2 multiplet at each: four ground states altogether.
 Select the first excited motif of the eight-site example:
 
 ```sh
-build_codex/bethe-haldane-shastry-pbc 8 --motif 2,4,6 --spin-content
+bethe-haldane-shastry-pbc 8 --motif 2,4,6 --spin-content
 ```
 
 It has two spinons and $`S_{\max}=1`$, but its dimension is **four**, not
@@ -147,10 +147,10 @@ selected. Integer counting and floating-point energy accuracy are distinct.
 With the optional [plotting environment](xxz-spinons.md#5-reproduce-the-figures):
 
 ```sh
-build_codex/docs-venv/bin/python scripts/plot_haldane_shastry_tutorial.py
+python3 scripts/plot_haldane_shastry_tutorial.py
 # Also regenerate the four named-table exports:
-build_codex/docs-venv/bin/python scripts/plot_haldane_shastry_tutorial.py \
-  --solver build_codex/bethe-haldane-shastry-pbc
+python3 scripts/plot_haldane_shastry_tutorial.py \
+  --solver bethe-haldane-shastry-pbc
 python3 scripts/plot_haldane_shastry_tutorial.py --check
 python3 -m unittest discover -s scripts -p 'test_tutorial_haldane_shastry.py'
 ```

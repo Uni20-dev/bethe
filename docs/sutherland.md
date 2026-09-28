@@ -10,11 +10,11 @@ The [collision-branch tutorial](tutorials/sutherland.md) compares small-ring
 spectra, explains the labels and illustrates the limits of a bounded scan.
 
 ```sh
-build/bethe-sutherland-pbc 8 --length 8 --lambda 2
-build/bethe-sutherland-pbc 4 --length 4 --lambda 0.5 --labels -1,0,0,2
-build/bethe-sutherland-pbc 4 --length 4 --lambda 2 --levels 10 --window 2
-build/bethe-sutherland-pbc 4 --length 4 --lambda 2 --levels all --window 2 --format csv
-build/bethe-sutherland-pbc 4 --length 4 --lambda 2 --pseudomomenta --precision fp128
+bethe-sutherland-pbc 8 --length 8 --lambda 2
+bethe-sutherland-pbc 4 --length 4 --lambda 0.5 --labels -1,0,0,2
+bethe-sutherland-pbc 4 --length 4 --lambda 2 --levels 10 --window 2
+bethe-sutherland-pbc 4 --length 4 --lambda 2 --levels all --window 2 --format csv
+bethe-sutherland-pbc 4 --length 4 --lambda 2 --pseudomomenta --precision fp128
 ```
 
 ## Hamiltonian and collision branch

@@ -40,9 +40,9 @@ hard-core model. For larger particle numbers, revisit that local cutoff.
 ## 2. Scan a small sector at three deformations
 
 ```sh
-build_codex/bethe-q-boson-pbc 5 --particles 3 --eta 0 --excitations all
-build_codex/bethe-q-boson-pbc 5 --particles 3 --eta 0.5 --excitations all
-build_codex/bethe-q-boson-pbc 5 --particles 3 --phase --excitations all
+bethe-q-boson-pbc 5 --particles 3 --eta 0 --excitations all
+bethe-q-boson-pbc 5 --particles 3 --eta 0.5 --excitations all
+bethe-q-boson-pbc 5 --particles 3 --phase --excitations all
 ```
 
 ![Five-site, three-particle spectra from free bosons to the phase limit](figures/q-boson-spectra.svg)
@@ -71,7 +71,7 @@ different, lifted convention; do not confuse them with the total momentum.
 Export auxiliary tables without requiring a root table on screen:
 
 ```sh
-build_codex/bethe-q-boson-pbc 5 --particles 3 --eta 0.5 --excitations all \
+bethe-q-boson-pbc 5 --particles 3 --eta 0.5 --excitations all \
   --csv-table states=states.csv --csv-table reference=reference.csv \
   --csv-table roots=roots.csv
 ```
@@ -139,10 +139,10 @@ does not calculate form factors, spectral weights, quenches or open boundaries.
 With the optional [plotting environment](xxz-spinons.md#5-reproduce-the-figures):
 
 ```sh
-build_codex/docs-venv/bin/python scripts/plot_q_boson_tutorial.py
+python3 scripts/plot_q_boson_tutorial.py
 # Regenerate all nine named-table exports:
-build_codex/docs-venv/bin/python scripts/plot_q_boson_tutorial.py \
-  --solver build_codex/bethe-q-boson-pbc
+python3 scripts/plot_q_boson_tutorial.py \
+  --solver bethe-q-boson-pbc
 python3 scripts/plot_q_boson_tutorial.py --check
 python3 -m unittest discover -s scripts -p 'test_tutorial_q_boson.py'
 ```

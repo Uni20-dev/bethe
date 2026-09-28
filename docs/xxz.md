@@ -48,15 +48,15 @@ isotropic endpoints. These are not general ground-state or excitation scans.
 ## Ground states and sectors
 
 ```sh
-build/bethe-xxz-pbc 64 --delta 0.5
-build/bethe-xxz-pbc 65 --delta 0.5 --sz -1/2 --roots
-build/bethe-xxz-pbc 16 --delta 0.75 --sectors --precision long-double
-build/bethe-xxz-pbc 4 --delta 0 --format pretty
-build/bethe-xxz-pbc 64 --delta 2 --roots
-build/bethe-xxz-pbc 64 --delta -0.9 --roots
-build/bethe-xxz-pbc 15 --delta 10 --sectors --precision long-double
+bethe-xxz-pbc 64 --delta 0.5
+bethe-xxz-pbc 65 --delta 0.5 --sz -1/2 --roots
+bethe-xxz-pbc 16 --delta 0.75 --sectors --precision long-double
+bethe-xxz-pbc 4 --delta 0 --format pretty
+bethe-xxz-pbc 64 --delta 2 --roots
+bethe-xxz-pbc 64 --delta -0.9 --roots
+bethe-xxz-pbc 15 --delta 10 --sectors --precision long-double
 # In a binary128-enabled build:
-build/bethe-xxz-pbc 64 --delta 0.999999999999999999999999 --precision fp128
+bethe-xxz-pbc 64 --delta 0.999999999999999999999999 --precision fp128
 ```
 
 For ground-state and sector-minimum runs, `--sz` and `--sectors` work as in
@@ -232,10 +232,10 @@ and negative odd-ring ground calls remain rejected, including vacua/scans.
 This section applies only to $`0\le \Delta \le 1`$.
 
 ```sh
-build/bethe-xxz-pbc 64 --delta 0.5 --excitations 10
-build/bethe-xxz-pbc 16 --delta 0.75 --sz -1 --excitations all --roots
-build/bethe-xxz-pbc 8 --delta 0.5 --sz 2 --excitations all --max-candidates 100
-build/bethe-xxz-pbc 8 --delta 0.5 --quantum-numbers -3/2,1/2
+bethe-xxz-pbc 64 --delta 0.5 --excitations 10
+bethe-xxz-pbc 16 --delta 0.75 --sz -1 --excitations all --roots
+bethe-xxz-pbc 8 --delta 0.5 --sz 2 --excitations all --max-candidates 100
+bethe-xxz-pbc 8 --delta 0.5 --quantum-numbers -3/2,1/2
 ```
 
 `--excitations COUNT|all` scans the entire supported quantum-number family,

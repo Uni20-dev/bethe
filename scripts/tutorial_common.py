@@ -1,11 +1,23 @@
 """Small shared helpers for tutorials; importing this needs no plotting packages."""
 
+import argparse
 import csv
 import io
 import math
 from pathlib import Path
+import shutil
 import subprocess
 import tempfile
+
+
+def solver_executable(value):
+    """Argparse type: accept a command on PATH or an explicit executable path."""
+    found = shutil.which(value)
+    if found is None:
+        raise argparse.ArgumentTypeError(
+            f'Executable not found or not executable: {value!r}; '
+            'put it on PATH or supply an explicit path')
+    return Path(found).resolve()
 
 
 def capture_csv_tables(command, names):

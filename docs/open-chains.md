@@ -14,10 +14,10 @@ For anisotropic interactions, see [free-end XXZ chains](xxz-open.md).
 `bethe-xxx-obc` has free ends with no boundary fields:
 
 ```sh
-build/bethe-xxx-obc 16
-build/bethe-xxx-obc 15 --sz 3/2
-build/bethe-xxx-obc 16 --sectors
-build/bethe-xxx-obc 4 --quantum-numbers 1,2 --roots --precision fp128
+bethe-xxx-obc 16
+bethe-xxx-obc 15 --sz 3/2
+bethe-xxx-obc 16 --sectors
+bethe-xxx-obc 4 --quantum-numbers 1,2 --roots --precision fp128
 ```
 
 It shares precision selection, CPU timing, convergence diagnostics, and

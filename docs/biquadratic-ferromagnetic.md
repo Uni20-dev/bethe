@@ -22,22 +22,22 @@ native long double, and enabled fp128, with the shared screen/JSON/CSV/TSV outpu
 
 ```sh
 # Complete one-defect band, analytically (odd N also supported):
-build/bethe-biquadratic-obc 64 --ferromagnetic --one-defect
-build/bethe-biquadratic-obc 65 --ferromagnetic --one-defect --json band.json
+bethe-biquadratic-obc 64 --ferromagnetic --one-defect
+bethe-biquadratic-obc 65 --ferromagnetic --one-defect --json band.json
 # Target bound-pair modes on a long chain (not all two-defect states):
-build/bethe-biquadratic-obc 128 --ferromagnetic --bound-pairs 8
+bethe-biquadratic-obc 128 --ferromagnetic --bound-pairs 8
 # Three-defect droplets, not all three-defect states:
-build/bethe-biquadratic-obc 128 --ferromagnetic --bound-triples 8
+bethe-biquadratic-obc 128 --ferromagnetic --bound-triples 8
 # Mixed bound pair plus a separate defect, a 6-by-6 label window:
-build/bethe-biquadratic-obc 128 --ferromagnetic --pair-defects 8 --mixed-window 6
+bethe-biquadratic-obc 128 --ferromagnetic --pair-defects 8 --mixed-window 6
 # Real-root scattering near the two-defect low-energy edge:
-build/bethe-biquadratic-obc 129 --ferromagnetic --through-lines 125 --excitations all --real-window 8
+bethe-biquadratic-obc 129 --ferromagnetic --through-lines 125 --excitations all --real-window 8
 # Small two-defect module, including complex-root states:
-build/bethe-biquadratic-obc 6 --ferromagnetic --q-spectrum --through-lines 2 --roots
+bethe-biquadratic-obc 6 --ferromagnetic --q-spectrum --through-lines 2 --roots
 # Compare it with the restricted real-root family in the same module:
-build/bethe-biquadratic-obc 6 --ferromagnetic --excitations all --through-lines 2 --roots
+bethe-biquadratic-obc 6 --ferromagnetic --excitations all --through-lines 2 --roots
 # Selected real-root level; labels and roots retain the auxiliary XXZ convention:
-build/bethe-biquadratic-obc 8 --ferromagnetic --quantum-numbers 7 --roots
+bethe-biquadratic-obc 8 --ferromagnetic --quantum-numbers 7 --roots
 ```
 
 Both scans default to $`\ell =N -2`$ in ferromagnetic mode. Set $`\ell =N -4`$ to
@@ -127,8 +127,8 @@ scan of ell=0 returns only the **higher** singlet, even with `all`.
 To see the missing level:
 
 ```sh
-build/bethe-biquadratic-obc 4 --ferromagnetic --q-spectrum --through-lines 0 --roots
-build/bethe-biquadratic-obc 4 --ferromagnetic --excitations all --through-lines 0
+bethe-biquadratic-obc 4 --ferromagnetic --q-spectrum --through-lines 0 --roots
+bethe-biquadratic-obc 4 --ferromagnetic --excitations all --through-lines 0
 ```
 
 The Q-system's first state now has complex roots. `q_coefficients` and `roots`

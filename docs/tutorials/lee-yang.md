@@ -17,7 +17,7 @@ matrix elements. Real energies in this example do not imply a unitary theory.
 Use particle mass m=1, circumference L and velocity=1:
 
 ```sh
-build/bethe-lee-yang-vacuum --mass 1 --length 0.1 \
+bethe-lee-yang-vacuum --mass 1 --length 0.1 \
   --csv-table vacuum=ly-vacuum.csv
 ```
 
@@ -70,7 +70,7 @@ The excited-state tool is a separate TBA calculation with quantized sources.
 For now it supports one **zero-momentum** regular branch at $`5\le mL\le30`$:
 
 ```sh
-build/bethe-lee-yang-excited --mass 1 --length 5 \
+bethe-lee-yang-excited --mass 1 --length 5 \
   --csv-table levels=ly-levels.csv --csv-table source=ly-source.csv \
   --csv-table gap=ly-gap.csv
 ```
@@ -157,13 +157,13 @@ The rescaled one-particle example also has separate
 [levels](data/ly-excited-scaled-levels.csv), [source](data/ly-excited-scaled-source.csv)
 and [gap](data/ly-excited-scaled-gap.csv) tables.
 
-From the repository root, with the [plotting dependencies](requirements.txt):
+From the source checkout, with the [plotting dependencies](requirements.txt):
 
 ```sh
 python3 scripts/plot_field_theory_tutorial.py --check
 python3 scripts/plot_field_theory_tutorial.py
 # Optional: regenerate both field-theory tutorials using native executables.
-python3 scripts/plot_field_theory_tutorial.py --solver-dir build
+python3 scripts/plot_field_theory_tutorial.py --solver-dir /path/to/bethe/bin
 python3 -m unittest discover -s scripts -p 'test_tutorial_field_theory.py'
 ```
 

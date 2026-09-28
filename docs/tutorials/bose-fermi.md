@@ -29,7 +29,7 @@ Eqs. (3), (28)–(34).
 Choose two bosons and three fermions on a circumference-five ring:
 
 ```sh
-build/bethe-bose-fermi-pbc --bosons 2 --fermions 3 --length 5 --c 1 \
+bethe-bose-fermi-pbc --bosons 2 --fermions 3 --length 5 --c 1 \
   --csv-table states=bf-state.csv --csv-table charge_roots=bf-charge.csv \
   --csv-table auxiliary_roots=bf-auxiliary.csv
 ```
@@ -155,13 +155,13 @@ Free cases have different tables:
 The independent Lieb–Liniger run supplies a [state](data/ref-ll5-states.csv)
 and [roots](data/ref-ll5-roots.csv). All exports retain provenance and status.
 
-With the [plotting dependencies](requirements.txt), from the repository root:
+With the [plotting dependencies](requirements.txt), from the source checkout:
 
 ```sh
 python3 scripts/plot_multicomponent_tutorial.py --check
 python3 scripts/plot_multicomponent_tutorial.py
 # Optional: regenerate this and the SU(n) tutorial, including reference runs.
-python3 scripts/plot_multicomponent_tutorial.py --solver-dir build
+python3 scripts/plot_multicomponent_tutorial.py --solver-dir /path/to/bethe/bin
 python3 -m unittest discover -s scripts -p 'test_tutorial_multicomponent.py'
 ```
 

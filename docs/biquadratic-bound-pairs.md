@@ -11,11 +11,11 @@ N>=4 in fp64, native long double and enabled fp128.
 ```sh
 # First eight modes of the bound-pair family, not the first eight levels
 # of the entire physical spectrum:
-build/bethe-biquadratic-obc 128 --ferromagnetic --bound-pairs 8
+bethe-biquadratic-obc 128 --ferromagnetic --bound-pairs 8
 # Every supported two-string label at this size:
-build/bethe-biquadratic-obc 65 --ferromagnetic --bound-pairs all --roots
+bethe-biquadratic-obc 65 --ferromagnetic --bound-pairs all --roots
 # Long chain, native higher precision, with reusable exports:
-build/bethe-biquadratic-obc 100000 --ferromagnetic --bound-pairs 4 \
+bethe-biquadratic-obc 100000 --ferromagnetic --bound-pairs 4 \
   --precision long-double --json pairs.json --csv pairs.csv
 ```
 

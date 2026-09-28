@@ -10,7 +10,7 @@ import math
 from pathlib import Path
 import subprocess
 
-from tutorial_common import finite_number, read_csv_export, save_svg
+from tutorial_common import solver_executable, finite_number, read_csv_export, save_svg
 
 ROOT = Path(__file__).resolve().parents[1]
 DATA = ROOT / 'docs/tutorials/data'
@@ -181,7 +181,7 @@ def plot(cases):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('--solver', type=Path, help='Regenerate data with this executable')
+    parser.add_argument('--solver', type=solver_executable, help='Regenerate data with this executable')
     parser.add_argument('--check', action='store_true', help='Validate without plotting')
     args = parser.parse_args()
     cases = load_cases(args.solver.resolve() if args.solver else None)

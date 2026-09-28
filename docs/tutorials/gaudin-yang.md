@@ -23,7 +23,7 @@ $`\ell=6`$, so density $`n=N/\ell=1`$. The dimensionless interaction is
 $`\gamma=c/n`$, numerically equal to c in this example.
 
 ```sh
-build/bethe-gaudin-yang-pbc 6 --length 6 --c 1 \
+bethe-gaudin-yang-pbc 6 --length 6 --c 1 \
   --csv-table states=gy-state.csv --csv-table charge_roots=gy-charge.csv \
   --csv-table spin_roots=gy-spin.csv
 ```
@@ -152,13 +152,13 @@ The free-current example has [state](data/gy-free-shell-states.csv),
 [up](data/gy-free-shell-free_up.csv) and [down](data/gy-free-shell-free_down.csv)
 exports. All files retain invocation, precision, build provenance and status.
 
-With the [plotting dependencies](requirements.txt) installed, from the repository root:
+With the [plotting dependencies](requirements.txt) installed, from the source checkout:
 
 ```sh
 python3 scripts/plot_fermion_tutorial.py --check
 python3 scripts/plot_fermion_tutorial.py
 # Optional: regenerate the Gaudin–Yang and t–J examples together.
-python3 scripts/plot_fermion_tutorial.py --solver-dir build
+python3 scripts/plot_fermion_tutorial.py --solver-dir /path/to/bethe/bin
 python3 -m unittest discover -s scripts -p 'test_tutorial_fermion.py'
 ```
 

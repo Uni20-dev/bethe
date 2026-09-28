@@ -24,7 +24,7 @@ their J=4 corresponds to our J=1.
 After [building](../building.md), run
 
 ```sh
-build/bethe-tb-dispersion --exchange 1 --points 193 --csv tb-unfolded.csv
+bethe-tb-dispersion --exchange 1 --points 193 --csv tb-unfolded.csv
 ```
 
 The single `dispersion` table contains `spinon`, `two-spinon` and `four-spinon`
@@ -81,7 +81,7 @@ the allowed four-spinon energy interval.
 ## 4. Fold for a two-site cell
 
 ```sh
-build/bethe-tb-dispersion --exchange 1 --points 193 --folded --csv tb-folded.csv
+bethe-tb-dispersion --exchange 1 --points 193 --folded --csv tb-folded.csv
 ```
 
 ![TB continuum envelopes at one-site momenta and after combining the two images seen by a two-site unit cell.](figures/tb-folding.svg)
@@ -119,7 +119,8 @@ reproduces the [ULS tutorial](su3-uls.md). Using the Python environment describe
 there:
 
 ```sh
-build_codex/tutorial-venv/bin/python scripts/plot_spin1_tutorial.py
+# From the source checkout:
+python3 scripts/plot_spin1_tutorial.py
 python3 scripts/plot_spin1_tutorial.py --check
 python3 -m unittest discover -s scripts -p 'test_tutorial_spin1.py'
 ```

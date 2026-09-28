@@ -34,7 +34,7 @@ The distinction and the limits of absolute-energy comparisons are discussed
 by [Barcza et al.](../../CITATIONS.md#barcza-2020), Sec. VII.
 
 ```sh
-build/bethe-kondo-response --field 2 --scale 1 --csv-table response=kondo.csv
+bethe-kondo-response --field 2 --scale 1 --csv-table response=kondo.csv
 ```
 
 This gives approximately $`\Delta E_{\mathrm{imp}}=-0.34629170`$ and
@@ -130,13 +130,13 @@ The `response` exports use T_B=1 unless stated otherwise:
 | Derivative at b=1 | [0.999](data/kondo-deriv1-minus-response.csv), [1.001](data/kondo-deriv1-plus-response.csv) |
 | Derivative at b=2 | [1.999](data/kondo-deriv2-minus-response.csv), [2.001](data/kondo-deriv2-plus-response.csv) |
 
-With the [plotting dependencies](requirements.txt), from the repository root:
+With the [plotting dependencies](requirements.txt), from the source checkout:
 
 ```sh
 python3 scripts/plot_kondo_ladder_tutorial.py --check
 python3 scripts/plot_kondo_ladder_tutorial.py
 # Optional: regenerate this and the ladder tutorial from native tools.
-python3 scripts/plot_kondo_ladder_tutorial.py --solver-dir build
+python3 scripts/plot_kondo_ladder_tutorial.py --solver-dir /path/to/bethe/bin
 python3 -m unittest discover -s scripts -p 'test_tutorial_kondo_ladder.py'
 # Optional independent Kondo oracle; requires mpmath.
 python3 scripts/reference_kondo.py --digits 25 --points 0.5 1 2

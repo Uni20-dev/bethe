@@ -25,7 +25,7 @@ component-dependent fields, traps or chemical potentials. Choose populations
 3,3,3 and circumference 9, so the total density is one:
 
 ```sh
-build/bethe-sun-fermions-pbc --populations 3,3,3 --length 9 --c 1 \
+bethe-sun-fermions-pbc --populations 3,3,3 --length 9 --c 1 \
   --csv-table states=sun-state.csv --csv-table components=sun-components.csv \
   --csv-table roots=sun-roots.csv
 ```
@@ -84,7 +84,7 @@ a label at one level is not the identity of a particle at another.
 Try an imbalanced input with an empty component:
 
 ```sh
-build/bethe-sun-fermions-pbc --populations 1,0,5,3 --length 9 --c 1 --roots
+bethe-sun-fermions-pbc --populations 1,0,5,3 --length 9 --c 1 --roots
 ```
 
 The physical component table remains in **input order**:
@@ -163,13 +163,13 @@ Reduction references: Gaudin–Yang [state](data/ref-gy6-states.csv),
 [charge roots](data/ref-gy6-charge_roots.csv), [spin roots](data/ref-gy6-spin_roots.csv);
 Lieb–Liniger [state](data/ref-ll3-states.csv) and [roots](data/ref-ll3-roots.csv).
 
-With the [plotting dependencies](requirements.txt), from the repository root:
+With the [plotting dependencies](requirements.txt), from the source checkout:
 
 ```sh
 python3 scripts/plot_multicomponent_tutorial.py --check
 python3 scripts/plot_multicomponent_tutorial.py
 # Optional: regenerate both multicomponent tutorials and their reference runs.
-python3 scripts/plot_multicomponent_tutorial.py --solver-dir build
+python3 scripts/plot_multicomponent_tutorial.py --solver-dir /path/to/bethe/bin
 python3 -m unittest discover -s scripts -p 'test_tutorial_multicomponent.py'
 ```
 

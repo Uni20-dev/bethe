@@ -37,8 +37,8 @@ coefficient alone is not a complete specification of this singular Hamiltonian.
 Use four particles on a ring of length four and enumerate a small label window:
 
 ```sh
-build_codex/bethe-sutherland-pbc 4 --length 4 --lambda 1 --levels all --window 1
-build_codex/bethe-sutherland-pbc 4 --length 4 --lambda 1 --levels all --window 1 \
+bethe-sutherland-pbc 4 --length 4 --lambda 1 --levels all --window 1
+bethe-sutherland-pbc 4 --length 4 --lambda 1 --levels all --window 1 \
   --precision fp64 --format csv > sutherland-lambda1.csv
 ```
 
@@ -86,7 +86,7 @@ The first gap depends on the collision exponent; the common boost costs the
 same amount for all three exponents. You can select a state directly:
 
 ```sh
-build_codex/bethe-sutherland-pbc 4 --length 4 --lambda 2 --labels 0,0,0,1
+bethe-sutherland-pbc 4 --length 4 --lambda 2 --labels 0,0,0,1
 ```
 
 Doubling $`L`$ at fixed particle number, exponent and labels halves all momenta
@@ -103,7 +103,7 @@ excitation of the model. The full spectrum is infinite.
 Enlarge the window:
 
 ```sh
-build_codex/bethe-sutherland-pbc 4 --length 4 --lambda 1 --levels all --window 2 \
+bethe-sutherland-pbc 4 --length 4 --lambda 1 --levels all --window 2 \
   --precision fp64 --format csv > sutherland-window2.csv
 ```
 
@@ -148,10 +148,10 @@ conventions, numerical limits and further state-selection examples.
 With the optional [plotting environment](xxz-spinons.md#5-reproduce-the-figures):
 
 ```sh
-build_codex/docs-venv/bin/python scripts/plot_sutherland_tutorial.py
+python3 scripts/plot_sutherland_tutorial.py
 # Also regenerate the five saved exports:
-build_codex/docs-venv/bin/python scripts/plot_sutherland_tutorial.py \
-  --solver build_codex/bethe-sutherland-pbc
+python3 scripts/plot_sutherland_tutorial.py \
+  --solver bethe-sutherland-pbc
 python3 scripts/plot_sutherland_tutorial.py --check
 python3 -m unittest discover -s scripts -p 'test_tutorial_sutherland.py'
 ```

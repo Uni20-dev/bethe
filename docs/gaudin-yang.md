@@ -33,11 +33,11 @@ fermionic antisymmetry. The original solutions are
 follow [Oelkers et al.](../CITATIONS.md#oelkers-2006), Eqs. (1), (2), (7), (8), (25).
 
 ```sh
-build/bethe-gaudin-yang-pbc 6 --length 6 --c 1
-build/bethe-gaudin-yang-pbc 8 --length 8 --c 1 --sz 1 --roots
-build/bethe-gaudin-yang-pbc 18 --length 18 --c 0.001 --precision long-double
+bethe-gaudin-yang-pbc 6 --length 6 --c 1
+bethe-gaudin-yang-pbc 8 --length 8 --c 1 --sz 1 --roots
+bethe-gaudin-yang-pbc 18 --length 18 --c 0.001 --precision long-double
 # Requires a binary128-enabled build:
-build/bethe-gaudin-yang-pbc 6 --length 6 --c 1 --precision fp128
+bethe-gaudin-yang-pbc 6 --length 6 --c 1 --precision fp128
 ```
 
 ## Supported sectors

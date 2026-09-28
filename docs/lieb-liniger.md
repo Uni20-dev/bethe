@@ -13,9 +13,9 @@ finite-window excitation scans, using fp64, long double, or optional fp128.
 ## Start with a calculation
 
 ```sh
-build/bethe-lieb-liniger-pbc 4 --length 4 --c 1 --roots
-build/bethe-lieb-liniger-pbc 4 --length 4 --c 1 --precision long-double
-build/bethe-lieb-liniger-pbc 4 --length 4 --c 1 --excitations all --padding 1
+bethe-lieb-liniger-pbc 4 --length 4 --c 1 --roots
+bethe-lieb-liniger-pbc 4 --length 4 --c 1 --precision long-double
+bethe-lieb-liniger-pbc 4 --length 4 --c 1 --excitations all --padding 1
 ```
 
 Both `--length` and `--c` are required; neither is silently chosen from $`N`$.
@@ -54,7 +54,7 @@ family, no complex-string sector is needed for this model at positive $`c`$.
 For example, move the highest ground label up one slot:
 
 ```sh
-build/bethe-lieb-liniger-pbc 4 --length 4 --c 1 \
+bethe-lieb-liniger-pbc 4 --length 4 --c 1 \
   --quantum-numbers '-3/2,-1/2,1/2,5/2' --roots
 ```
 

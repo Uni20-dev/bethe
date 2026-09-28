@@ -38,7 +38,7 @@ Do not count a threshold pole as an extra isolated particle.
 ## 2. Plot particles beside a continuum threshold
 
 ```sh
-build/bethe-sine-gordon-dispersion --p 0.4 --mass 1 --points 65 \
+bethe-sine-gordon-dispersion --p 0.4 --mass 1 --points 65 \
   --max-momentum 5 --csv-table dispersion=sg-particles.csv
 ```
 
@@ -72,9 +72,9 @@ Select total momentum zero and winding charge +2. The particles have opposite
 rapidities but the **same** topological charge.
 
 ```sh
-build/bethe-sine-gordon-bethe-yang --p 2 --length 1 --number 0.5 \
+bethe-sine-gordon-bethe-yang --p 2 --length 1 --number 0.5 \
   --csv-table levels=sg-by.csv
-build/bethe-sine-gordon-excited --p 2 --length 1 --number 0.5 \
+bethe-sine-gordon-excited --p 2 --length 1 --number 0.5 \
   --tolerance 1e-7 --csv-table levels=sg-levels.csv \
   --csv-table source=sg-source.csv --csv-table gap=sg-gap.csv
 ```
@@ -180,13 +180,13 @@ Extra checks: free p=1 [levels](data/sg-free-nlie-levels.csv),
 [levels](data/sg-scaled-nlie-levels.csv), [source](data/sg-scaled-nlie-source.csv),
 [gap](data/sg-scaled-nlie-gap.csv).
 
-From the repository root, using the [tutorial plotting dependencies](requirements.txt):
+From the source checkout, using the [tutorial plotting dependencies](requirements.txt):
 
 ```sh
 python3 scripts/plot_field_theory_tutorial.py --check
 python3 scripts/plot_field_theory_tutorial.py
 # Optional: regenerate both this and the Lee–Yang tutorial from native solvers.
-python3 scripts/plot_field_theory_tutorial.py --solver-dir build
+python3 scripts/plot_field_theory_tutorial.py --solver-dir /path/to/bethe/bin
 python3 -m unittest discover -s scripts -p 'test_tutorial_field_theory.py'
 ```
 

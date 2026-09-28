@@ -42,7 +42,7 @@ our guide restores the physical ladder constants above.
 Choose six rungs and J_r=5. For example, the M=2 calculation is
 
 ```sh
-build/bethe-ladder-pbc 6 --rung 5 --sz 2 \
+bethe-ladder-pbc 6 --rung 5 --sz 2 \
   --csv-table states=ladder-m2.csv \
   --csv-table representations=ladder-representations.csv \
   --csv-table roots=ladder-roots.csv
@@ -80,7 +80,7 @@ their minimum. Orange markers are **separate native field calculations**
 without `--sz`, for example:
 
 ```sh
-build/bethe-ladder-pbc 6 --rung 5 --field 3
+bethe-ladder-pbc 6 --rung 5 --field 3
 ```
 
 At h=3 this returns M=2 and E=-21.23606798. The second panel divides total M
@@ -114,7 +114,7 @@ hidden in the field plot.
 Now change to J_r=0 and constrain four singlet rungs:
 
 ```sh
-build/bethe-ladder-pbc 6 --rung 0 --singlets 4 --roots
+bethe-ladder-pbc 6 --rung 0 --singlets 4 --roots
 ```
 
 The report distinguishes two vectors:
@@ -187,13 +187,13 @@ Each calculation has three native tables:
 | Even one-triplet ring | [CSV](data/ladder-triplet-even-states.csv) | [CSV](data/ladder-triplet-even-representations.csv) | [CSV](data/ladder-triplet-even-roots.csv) |
 | Odd one-triplet ring | [CSV](data/ladder-triplet-odd-states.csv) | [CSV](data/ladder-triplet-odd-representations.csv) | [CSV](data/ladder-triplet-odd-roots.csv) |
 
-With the [plotting dependencies](requirements.txt), from the repository root:
+With the [plotting dependencies](requirements.txt), from the source checkout:
 
 ```sh
 python3 scripts/plot_kondo_ladder_tutorial.py --check
 python3 scripts/plot_kondo_ladder_tutorial.py
 # Optional: regenerate this and the Kondo tutorial.
-python3 scripts/plot_kondo_ladder_tutorial.py --solver-dir build
+python3 scripts/plot_kondo_ladder_tutorial.py --solver-dir /path/to/bethe/bin
 # Optional independent permutation matrices; requires NumPy.
 OPENBLAS_NUM_THREADS=1 python3 scripts/plot_kondo_ladder_tutorial.py --check --oracle
 python3 -m unittest discover -s scripts -p 'test_tutorial_kondo_ladder.py'

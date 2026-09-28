@@ -27,7 +27,7 @@ without changing the energies.
 For a small regular-root scan, choose N=8, Δ=0.6 and four through-lines:
 
 ```sh
-build/bethe-xxz-qg-obc 8 --delta 0.6 --through-lines 4 --excitations all \
+bethe-xxz-qg-obc 8 --delta 0.6 --through-lines 4 --excitations all \
   --csv-table levels=qg-levels.csv --csv-table reference=qg-sea.csv \
   --csv-table roots=qg-roots.csv
 ```
@@ -50,7 +50,7 @@ failed-candidate accounting and the bounded scan.
 The endpoint has a separate exact construction:
 
 ```sh
-build/bethe-xxz-qg-obc 6 --delta 0 --sz 0 --csv-table blocks=qg-blocks.csv
+bethe-xxz-qg-obc 6 --delta 0 --sz 0 --csv-table blocks=qg-blocks.csv
 ```
 
 It lists the **complete fixed-magnetization Hamiltonian spectrum and block
@@ -164,13 +164,13 @@ Complete endpoint sectors:
 | Odd N, Sz=1/2 | [5](data/qg-free-n5-blocks.csv), [7](data/qg-free-n7-blocks.csv), [9](data/qg-free-n9-blocks.csv), [11](data/qg-free-n11-blocks.csv), [13](data/qg-free-n13-blocks.csv) |
 | N=6 signed sectors | [Sz=+1](data/qg-free-plus-blocks.csv), [Sz=-1](data/qg-free-minus-blocks.csv), [Sz=+3](data/qg-free-up-blocks.csv), [Sz=-3](data/qg-free-down-blocks.csv) |
 
-With the [plotting dependencies](requirements.txt), from the repository root:
+With the [plotting dependencies](requirements.txt), from the source checkout:
 
 ```sh
 python3 scripts/plot_potts_qg_tutorial.py --check
 python3 scripts/plot_potts_qg_tutorial.py
 # Optional: regenerate both this and the Potts tutorial.
-python3 scripts/plot_potts_qg_tutorial.py --solver-dir build
+python3 scripts/plot_potts_qg_tutorial.py --solver-dir /path/to/bethe/bin
 # Optional independent matrix checks; requires NumPy.
 python3 scripts/plot_potts_qg_tutorial.py --check --oracle
 python3 -m unittest discover -s scripts -p 'test_tutorial_potts_qg.py'

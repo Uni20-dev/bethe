@@ -24,8 +24,8 @@ anisotropy that can be substituted directly for $`\Delta`$.
 Start with:
 
 ```sh
-build_codex/bethe-xyz-dispersion --eta 0.75 --t 1 --points 129
-build_codex/bethe-xyz-dispersion --eta 0.75 --t 1 --points 129 \
+bethe-xyz-dispersion --eta 0.75 --t 1 --points 129
+bethe-xyz-dispersion --eta 0.75 --t 1 --points 129 \
   --precision fp64 --format csv > xyz.csv
 ```
 
@@ -83,7 +83,7 @@ bound branch. `--branch all` omits nonexistent branches; a bound-only request
 in a region without one is an input error.
 
 ```sh
-build_codex/bethe-xyz-dispersion --eta 0.75 --t 1 --branch bound --bound-state 1
+bethe-xyz-dispersion --eta 0.75 --t 1 --branch bound --bound-state 1
 ```
 
 ![Physical and reduced momentum views of both bound branches](figures/xyz-bound-copies.svg)
@@ -135,10 +135,10 @@ before comparing with a short periodic MPS.
 With the optional [plotting environment](xxz-spinons.md#5-reproduce-the-figures):
 
 ```sh
-build_codex/docs-venv/bin/python scripts/plot_xyz_tutorial.py
+python3 scripts/plot_xyz_tutorial.py
 # Regenerate the four frontend exports too:
-build_codex/docs-venv/bin/python scripts/plot_xyz_tutorial.py \
-  --solver build_codex/bethe-xyz-dispersion
+python3 scripts/plot_xyz_tutorial.py \
+  --solver bethe-xyz-dispersion
 python3 scripts/plot_xyz_tutorial.py --check
 python3 -m unittest discover -s scripts -p 'test_tutorial_xyz.py'
 ```

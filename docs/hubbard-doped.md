@@ -10,9 +10,9 @@ thermodynamic calculation, not a sequence of finite-ring shell fillings.
 Omitting `--density` retains the [half-filled calculation](hubbard-dispersion.md).
 
 ```sh
-build/bethe-hubbard-dispersion --u 4 --density 0.75 --reference fermi --format csv
-build/bethe-hubbard-dispersion --u 4 --density 0.5 --branch spinon --momentum 1
-build/bethe-hubbard-dispersion --u 4 --density 0.75 --precision fp128 --points 101 --format tsv
+bethe-hubbard-dispersion --u 4 --density 0.75 --reference fermi --format csv
+bethe-hubbard-dispersion --u 4 --density 0.5 --branch spinon --momentum 1
+bethe-hubbard-dispersion --u 4 --density 0.75 --precision fp128 --points 101 --format tsv
 ```
 
 ## Which lines are included?

@@ -25,7 +25,7 @@ For broader context see the [Dukelsky–Pittel–Sierra review](../../CITATIONS.
 Choose four distinct levels 0,1,2,3 and two pairs:
 
 ```sh
-build/bethe-richardson --levels 0,1,2,3 --pairs 2 --g 1 \
+bethe-richardson --levels 0,1,2,3 --pairs 2 --g 1 \
   --csv-table states=paired.csv --csv-table variables=paired-variables.csv
 ```
 
@@ -40,7 +40,7 @@ donate or accept a pair. Indices are **zero-based positions in the input list**.
 For the same four particles, compare one pair plus two blocked levels:
 
 ```sh
-build/bethe-richardson --levels 0,1,2,3 --pairs 1 --blocked 1,2 --g 1 \
+bethe-richardson --levels 0,1,2,3 --pairs 1 --blocked 1,2 --g 1 \
   --csv-table states=blocked.csv --csv-table variables=blocked-variables.csv
 ```
 
@@ -157,13 +157,13 @@ Each link is a native export with provenance and convergence diagnostics:
 | Reversed blocked-index order | [CSV](data/rich-block-order-states.csv) | [CSV](data/rich-block-order-variables.csv) |
 | Weak coupling | [CSV](data/rich-weak-states.csv) | [CSV](data/rich-weak-variables.csv) |
 
-With the [plotting dependencies](requirements.txt), from the repository root:
+With the [plotting dependencies](requirements.txt), from the source checkout:
 
 ```sh
 python3 scripts/plot_gaudin_tutorial.py --check
 python3 scripts/plot_gaudin_tutorial.py
 # Optional: regenerate both Gaudin-model tutorials.
-python3 scripts/plot_gaudin_tutorial.py --solver-dir build
+python3 scripts/plot_gaudin_tutorial.py --solver-dir /path/to/bethe/bin
 # Optional independent occupation/spin matrices; requires NumPy.
 python3 scripts/plot_gaudin_tutorial.py --check --oracle
 python3 -m unittest discover -s scripts -p 'test_tutorial_gaudin.py'

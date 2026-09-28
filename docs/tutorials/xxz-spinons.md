@@ -29,11 +29,13 @@ their exported ranges differ.
 
 ## 2. Export the curves
 
-Run from the repository root, replacing `build/` with your build directory:
+Run in your chosen calculation directory, with the executables on `PATH`
+(or use `./bethe-xxz-dispersion` from its build directory; see
+[setup](../building.md#run-the-programs)):
 
 ```sh
-build/bethe-xxz-dispersion --delta 1 --points 401 --csv xxz-delta1.csv
-build/bethe-xxz-dispersion --delta 2 --points 401 --csv xxz-delta2.csv
+bethe-xxz-dispersion --delta 1 --points 401 --csv xxz-delta1.csv
+bethe-xxz-dispersion --delta 2 --points 401 --csv xxz-delta2.csv
 ```
 
 The default `--branch all` exports both families in the `dispersion` table.
@@ -104,7 +106,7 @@ The spinon interval already spans one cell Brillouin zone. For the pair,
 ask for the union with the π-shifted translation branch:
 
 ```sh
-build/bethe-xxz-dispersion --delta 2 --points 401 --folded --csv xxz-delta2-folded.csv
+bethe-xxz-dispersion --delta 2 --points 401 --folded --csv xxz-delta2-folded.csv
 ```
 
 ![Delta 2 two-spinon continuum before and after folding. The folded union repeats with period pi and includes the broad continuum at both zero and pi.](figures/xxz-folding.svg)
@@ -138,13 +140,17 @@ The checked-in inputs are [Δ=1](data/xxz-delta1.csv),
 The [plotting script](../../scripts/plot_xxz_tutorial.py) validates their schema,
 momentum grids and convergence before drawing either figure.
 
+The following commands run from the **source checkout**, unlike the solver
+commands above. Activate an existing plotting environment or create one:
+
 ```sh
-python3 -m venv build_codex/tutorial-venv
-build_codex/tutorial-venv/bin/pip install -r docs/tutorials/requirements.txt
+python3 -m venv .venv
+. .venv/bin/activate
+python3 -m pip install -r docs/tutorials/requirements.txt
 # Redraw using the committed CSVs; no C++ build is needed:
-build_codex/tutorial-venv/bin/python scripts/plot_xxz_tutorial.py
+python3 scripts/plot_xxz_tutorial.py
 # Or replace those CSVs with fresh solver output, then redraw:
-build_codex/tutorial-venv/bin/python scripts/plot_xxz_tutorial.py --solver build/bethe-xxz-dispersion
+python3 scripts/plot_xxz_tutorial.py --solver bethe-xxz-dispersion
 ```
 
 Regeneration intentionally updates the provenance and timing comments. The

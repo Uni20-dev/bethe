@@ -11,10 +11,10 @@ and enabled fp128. The executable is `bethe-lieb-liniger-obc`.
 ## Start with a calculation
 
 ```sh
-build/bethe-lieb-liniger-obc 4 --length 4 --c 1 --roots
-build/bethe-lieb-liniger-obc 4 --length 4 --c 1 --excitations all --padding 1
-build/bethe-lieb-liniger-obc 4 --length 4 --c 1 --quantum-numbers 1,2,4,5 --precision fp128
-build/bethe-lieb-liniger-obc 4 --length 4 --c 1 --excitations 2 --padding 1 \
+bethe-lieb-liniger-obc 4 --length 4 --c 1 --roots
+bethe-lieb-liniger-obc 4 --length 4 --c 1 --excitations all --padding 1
+bethe-lieb-liniger-obc 4 --length 4 --c 1 --quantum-numbers 1,2,4,5 --precision fp128
+bethe-lieb-liniger-obc 4 --length 4 --c 1 --excitations 2 --padding 1 \
   --roots --json box.json --csv-table roots=box.roots.csv
 ```
 

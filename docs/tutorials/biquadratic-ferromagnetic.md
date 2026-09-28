@@ -27,8 +27,8 @@ count of physical spin flips or a physical total-spin label.
 ## 2. Start with the exact one-defect band
 
 ```sh
-build_codex/bethe-biquadratic-obc 32 --ferromagnetic --one-defect
-build_codex/bethe-biquadratic-obc 32 --ferromagnetic --one-defect \
+bethe-biquadratic-obc 32 --ferromagnetic --one-defect
+bethe-biquadratic-obc 32 --ferromagnetic --one-defect \
   --format csv > one-defect.csv
 ```
 
@@ -61,8 +61,8 @@ has only one state or that all other excitation families are absent.
 ## 3. Bind two or three defects
 
 ```sh
-build_codex/bethe-biquadratic-obc 32 --ferromagnetic --bound-pairs 8
-build_codex/bethe-biquadratic-obc 32 --ferromagnetic --bound-triples 8
+bethe-biquadratic-obc 32 --ferromagnetic --bound-pairs 8
+bethe-biquadratic-obc 32 --ferromagnetic --bound-triples 8
 ```
 
 The right panel shows these eight selected modes of each family:
@@ -118,8 +118,8 @@ two-defect singlet at $`(15-\sqrt{17})/2`$ already interleaves the one-defect
 band. It is the orange line, missing from this real-root scan:
 
 ```sh
-build_codex/bethe-biquadratic-obc 4 --ferromagnetic --through-lines 0 --excitations all
-build_codex/bethe-biquadratic-obc 4 --ferromagnetic --through-lines 0 --q-spectrum --spin-content
+bethe-biquadratic-obc 4 --ferromagnetic --through-lines 0 --excitations all
+bethe-biquadratic-obc 4 --ferromagnetic --through-lines 0 --q-spectrum --spin-content
 ```
 
 The first command returns only the **higher** singlet. The Q-system request

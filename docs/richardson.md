@@ -34,11 +34,11 @@ In particular, do not simulate a higher degeneracy by repeating an energy.
 ## First calculations
 
 ```sh
-build/bethe-richardson --levels 0,1,2,3 --pairs 2 --g 0.7
-build/bethe-richardson --levels -2,-0.8,0.1,0.9,2,3.5 --pairs 2 --g 1 --blocked 1
-build/bethe-richardson --levels 0,1 --pairs 1 --g 1 --precision long-double --variables
+bethe-richardson --levels 0,1,2,3 --pairs 2 --g 0.7
+bethe-richardson --levels -2,-0.8,0.1,0.9,2,3.5 --pairs 2 --g 1 --blocked 1
+bethe-richardson --levels 0,1 --pairs 1 --g 1 --precision long-double --variables
 # With binary128 enabled:
-build/bethe-richardson --levels 0,1,2,3 --pairs 2 --g 1 --precision fp128
+bethe-richardson --levels 0,1,2,3 --pairs 2 --g 1 --precision fp128
 ```
 
 `--levels`, `--pairs` and `--g` are required. Blocked indices are zero-based

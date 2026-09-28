@@ -23,8 +23,8 @@ is neither the [ULS](su3-uls.md) nor the [Takhtajan–Babujian](takhtajan-babuji
 Hamiltonian. A single bond has energies −4, −1 and −1 in total spin 0, 1 and 2.
 
 ```sh
-build_codex/bethe-biquadratic-obc 2
-build_codex/bethe-biquadratic-obc 4
+bethe-biquadratic-obc 2
+bethe-biquadratic-obc 4
 ```
 
 The ground energies should be $`-4`$ and $`-(15+\sqrt{17})/2`$, respectively.
@@ -68,8 +68,8 @@ the level table by `state_id`.
 Compare two requests in the same ell=0 module:
 
 ```sh
-build_codex/bethe-biquadratic-obc 4 --through-lines 0 --excitations all
-build_codex/bethe-biquadratic-obc 4 --through-lines 0 --q-spectrum --spin-content
+bethe-biquadratic-obc 4 --through-lines 0 --excitations all
+bethe-biquadratic-obc 4 --through-lines 0 --q-spectrum --spin-content
 ```
 
 The first returns only the ground configuration. The second uses a numerical
@@ -121,8 +121,8 @@ help resolve roots. Neither replaces checking the final status.
 For longer chains, use the targeted two-string solver:
 
 ```sh
-build_codex/bethe-biquadratic-obc 64 --singlet-excitation
-build_codex/bethe-biquadratic-obc 64 --singlet-excitation \
+bethe-biquadratic-obc 64 --singlet-excitation
+bethe-biquadratic-obc 64 --singlet-excitation \
   --csv-table states=singlet.csv --csv-table reference=ground.csv
 ```
 
@@ -170,9 +170,9 @@ do not specify spectral weights for an operator.
 With the optional [plotting environment](xxz-spinons.md#5-reproduce-the-figures):
 
 ```sh
-build_codex/docs-venv/bin/python scripts/plot_biquadratic_tutorial.py
-build_codex/docs-venv/bin/python scripts/plot_biquadratic_tutorial.py \
-  --solver build_codex/bethe-biquadratic-obc
+python3 scripts/plot_biquadratic_tutorial.py
+python3 scripts/plot_biquadratic_tutorial.py \
+  --solver bethe-biquadratic-obc
 python3 scripts/plot_biquadratic_tutorial.py --check
 python3 -m unittest discover -s scripts -p 'test_tutorial_biquadratic.py'
 ```

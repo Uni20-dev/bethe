@@ -15,12 +15,12 @@ front ends enumerate supported real-root highest-weight states at a
 chosen **total spin S**, with $`M =N /2-S`$ roots and $`S^z =S`$:
 
 ```sh
-build/bethe-xxx-pbc 64 --excitations 10 --spin 1
-build/bethe-xxx-obc 64 --excitations 10 --spin 1
-build/bethe-xxx-pbc 64 --excitations all --spin 1
-build/bethe-xxx-obc 64 --excitations all --spin 1
-build/bethe-xxx-pbc 65 --excitations 10 --spin 1/2 --precision long-double
-build/bethe-xxx-obc 32 --excitations 5 --spin 2 --roots
+bethe-xxx-pbc 64 --excitations 10 --spin 1
+bethe-xxx-obc 64 --excitations 10 --spin 1
+bethe-xxx-pbc 64 --excitations all --spin 1
+bethe-xxx-obc 64 --excitations all --spin 1
+bethe-xxx-pbc 65 --excitations 10 --spin 1/2 --precision long-double
+bethe-xxx-obc 32 --excitations 5 --spin 2 --roots
 ```
 
 `--spin` defaults to 1 for even N and 1/2 for odd N. It must be nonnegative,

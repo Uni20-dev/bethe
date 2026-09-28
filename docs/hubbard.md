@@ -25,15 +25,15 @@ particle/spin sector and odd as well as even lengths.
 ## First calculations
 
 ```sh
-build/bethe-hubbard-pbc 6 --u 4
-build/bethe-hubbard-pbc 6 --u 4 --roots
-build/bethe-hubbard-pbc 32 --u 1 --precision long-double
-build/bethe-hubbard-pbc 6 --u 0 --max-iterations 0
-build/bethe-hubbard-pbc 16 --u 4 --particles 6
-build/bethe-hubbard-pbc 16 --u -4 --particles 8 --roots
-build/bethe-hubbard-pbc 16 --u 4 --sz 2
+bethe-hubbard-pbc 6 --u 4
+bethe-hubbard-pbc 6 --u 4 --roots
+bethe-hubbard-pbc 32 --u 1 --precision long-double
+bethe-hubbard-pbc 6 --u 0 --max-iterations 0
+bethe-hubbard-pbc 16 --u 4 --particles 6
+bethe-hubbard-pbc 16 --u -4 --particles 8 --roots
+bethe-hubbard-pbc 16 --u 4 --sz 2
 # In a binary128-enabled build:
-build/bethe-hubbard-pbc 32 --u 4 --precision fp128
+bethe-hubbard-pbc 32 --u 4 --precision fp128
 ```
 
 The six-site ground energy at U=4 is approximately `-3.66870617887296`.

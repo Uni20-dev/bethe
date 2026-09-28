@@ -12,10 +12,10 @@ graded model, not another color of the SU(kappa) Fermi gas. The frontend is
 ## Command-line use
 
 ```sh
-build/bethe-bose-fermi-pbc --bosons 2 --fermions 3 --length 5 --c 1 --roots
-build/bethe-bose-fermi-pbc --bosons 4 --fermions 0 --length 4 --c 2 --json bosons.json
-build/bethe-bose-fermi-pbc --bosons 1 --fermions 1 --length 1 --c 1e-40 --precision fp128
-build/bethe-bose-fermi-pbc --references
+bethe-bose-fermi-pbc --bosons 2 --fermions 3 --length 5 --c 1 --roots
+bethe-bose-fermi-pbc --bosons 4 --fermions 0 --length 4 --c 2 --json bosons.json
+bethe-bose-fermi-pbc --bosons 1 --fermions 1 --length 1 --c 1e-40 --precision fp128
+bethe-bose-fermi-pbc --references
 ```
 
 Both populations, circumference, and coupling are required. The defaults are

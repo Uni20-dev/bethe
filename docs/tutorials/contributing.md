@@ -12,6 +12,29 @@ and convergence information, check unsuccessful exit codes and missing values,
 and explain energy, momentum and symmetry conventions in the tutorial.
 Do not imply spectral weights when a solver supplies only kinematic bounds.
 
+Use bare `bethe-*` command names in calculation examples, with no assumed build
+directory. Keep source-relative Python commands in reproduction sections and
+identify their working directory. Downloaded CSV provenance retains the actual
+command used to generate it; those historical paths are not setup instructions.
+
+### Plotting environment
+
+From the source checkout, activate a Python environment with the plotting
+dependencies. For example:
+
+```sh
+python3 -m venv .venv
+. .venv/bin/activate
+python3 -m pip install -r docs/tutorials/requirements.txt
+```
+
+The environment can live elsewhere; `.venv` is just a conventional local choice.
+Solvers themselves do not need Python. To regenerate data, supply a command on
+`PATH` or an executable path with `--solver`; scripts that use multiple frontends
+accept their containing directory. These can be build-tree or installed programs.
+
+### Validate saved data
+
 Validate the saved numerical examples:
 
 ```sh
@@ -87,15 +110,17 @@ SVG writing; each model's script and tests own its schema and physics checks.
 
 ## Build the site locally
 
-Use local storage for `build_codex`, following the project's build convention:
+From the source checkout, use a Python environment and an output directory of
+your choice. Here both `.venv` and `.cache` are ignored by Git:
 
 ```sh
-python3 -m venv build_codex/docs-venv
-build_codex/docs-venv/bin/pip install -r docs/requirements-site.txt
+python3 -m venv .venv
+. .venv/bin/activate
+python3 -m pip install -r docs/requirements-site.txt
 python3 -m unittest discover -s scripts -p 'test_build_docs.py'
-build_codex/docs-venv/bin/python scripts/build_docs.py
-python3 scripts/check_docs_site.py
-python3 -m http.server 8000 --directory build_codex/docs-site/site
+python3 scripts/build_docs.py --work-dir .cache/docs-site
+python3 scripts/check_docs_site.py .cache/docs-site/site
+python3 -m http.server 8000 --directory .cache/docs-site/site
 ```
 
 Open `http://localhost:8000/`. The build stages **Git-tracked** documentation

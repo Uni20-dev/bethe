@@ -156,8 +156,8 @@ Work is O(M^3) per Newton update, with O(M^2) dense workspace.
 ## Command-line output
 
 ```sh
-build/bethe-xxz-obc 16 --delta 3 --roots --precision long-double
-build/bethe-xxz-obc 5 --delta 2 --sectors --roots --format plain
+bethe-xxz-obc 16 --delta 3 --roots --precision long-double
+bethe-xxz-obc 5 --delta 2 --sectors --roots --format plain
 ```
 
 `--roots` writes bulk `roots` and separate `boundary_roots` tables, linked to

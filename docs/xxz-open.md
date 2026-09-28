@@ -18,13 +18,13 @@ J&=1,\quad h=0,\quad \Delta\gt -1\ \text{(ground states)},\quad N\ge2,
 ```
 
 ```sh
-build/bethe-xxz-obc 64 --delta 0.5
-build/bethe-xxz-obc 65 --delta 0.5 --sz -1/2 --roots
-build/bethe-xxz-obc 16 --delta 0.75 --sectors --precision long-double
-build/bethe-xxz-obc 16 --delta 3 --roots
-build/bethe-xxz-obc 33 --delta -0.9 --sz -1/2 --roots
+bethe-xxz-obc 64 --delta 0.5
+bethe-xxz-obc 65 --delta 0.5 --sz -1/2 --roots
+bethe-xxz-obc 16 --delta 0.75 --sectors --precision long-double
+bethe-xxz-obc 16 --delta 3 --roots
+bethe-xxz-obc 33 --delta -0.9 --sz -1/2 --roots
 # In a binary128-enabled build:
-build/bethe-xxz-obc 64 --delta 0.999999999999999999999999 --precision fp128
+bethe-xxz-obc 64 --delta 0.999999999999999999999999 --precision fp128
 ```
 
 The default is the ground state, represented by Sz=0 for even N and Sz=1/2
@@ -60,9 +60,9 @@ Both excitation scans and specified quantum-number lists still require
 $`0\le \Delta \le 1`$; negative and massive ground-state support do not extend that family.
 
 ```sh
-build/bethe-xxz-obc 16 --delta 0.5 --excitations 10 --sz 1
-build/bethe-xxz-obc 8 --delta 0.5 --excitations all --sz 2 --roots
-build/bethe-xxz-obc 8 --delta 0.75 --quantum-numbers 1,3 --roots
+bethe-xxz-obc 16 --delta 0.5 --excitations 10 --sz 1
+bethe-xxz-obc 8 --delta 0.5 --excitations all --sz 2 --roots
+bethe-xxz-obc 8 --delta 0.75 --quantum-numbers 1,3 --roots
 ```
 
 `--excitations COUNT|all` scans the supported finite-real-root family at fixed

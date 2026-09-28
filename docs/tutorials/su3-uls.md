@@ -27,7 +27,7 @@ This is not the long-range SU(3) Haldane–Shastry model.
 After [building](../building.md), export all branches:
 
 ```sh
-build/bethe-su3-dispersion --exchange 1 --points 193 --csv su3-unfolded.csv
+bethe-su3-dispersion --exchange 1 --points 193 --csv su3-unfolded.csv
 ```
 
 There is one table, `dispersion`. Branch names select **rows**, not additional
@@ -90,7 +90,7 @@ four-soliton kinematic interval has nonzero width there.
 ## 4. Compare a three-site unit cell
 
 ```sh
-build/bethe-su3-dispersion --exchange 1 --points 193 --folded --csv su3-folded.csv
+bethe-su3-dispersion --exchange 1 --points 193 --folded --csv su3-folded.csv
 ```
 
 ![ULS continuum intervals before and after combining three momentum images for a three-site unit cell.](figures/su3-folding.svg)
@@ -120,11 +120,13 @@ comments. The default fp64 arithmetic is sufficient for these figures;
 long-double and optional fp128 are also available in the frontend.
 
 ```sh
-python3 -m venv build_codex/tutorial-venv
-build_codex/tutorial-venv/bin/pip install -r docs/tutorials/requirements.txt
-build_codex/tutorial-venv/bin/python scripts/plot_spin1_tutorial.py
+# From the source checkout:
+python3 -m venv .venv
+. .venv/bin/activate
+python3 -m pip install -r docs/tutorials/requirements.txt
+python3 scripts/plot_spin1_tutorial.py
 # Regenerate both the ULS and TB examples using freshly built executables:
-build_codex/tutorial-venv/bin/python scripts/plot_spin1_tutorial.py --bin-dir build
+python3 scripts/plot_spin1_tutorial.py --bin-dir /path/to/bethe/bin
 python3 scripts/plot_spin1_tutorial.py --check
 ```
 

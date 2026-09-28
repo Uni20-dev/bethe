@@ -12,7 +12,7 @@ the same executable; there is no finite chain length to choose.
 ## 1. Solve at a fixed density
 
 ```sh
-build/bethe-hubbard-dispersion --u 4 --density 0.75 --points 129 \
+bethe-hubbard-dispersion --u 4 --density 0.75 --points 129 \
   --convention symmetric --reference fermi --csv hubbard-doped-symmetric.csv
 ```
 
@@ -84,7 +84,7 @@ $`\Delta N=0`$ and are unchanged.
 As a consistency check, export with the other interaction convention:
 
 ```sh
-build/bethe-hubbard-dispersion --u 4 --density 0.75 --points 129 \
+bethe-hubbard-dispersion --u 4 --density 0.75 --points 129 \
   --convention unshifted --reference fermi --csv hubbard-doped-unshifted.csv
 ```
 
@@ -140,8 +140,8 @@ The [shared Hubbard plotting script](../../scripts/plot_hubbard_tutorial.py)
 reproduces this tutorial and the half-filled one:
 
 ```sh
-# Use the Python environment set up in the half-filled tutorial.
-build_codex/tutorial-venv/bin/python scripts/plot_hubbard_tutorial.py
+# From the source checkout, using the half-filled tutorial's Python environment:
+python3 scripts/plot_hubbard_tutorial.py
 python3 scripts/plot_hubbard_tutorial.py --check
 python3 -m unittest discover -s scripts -p 'test_tutorial_hubbard.py'
 ```

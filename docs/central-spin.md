@@ -22,9 +22,9 @@ interface.
 ## First calculations
 
 ```sh
-build/bethe-central-spin --couplings 1,0.7,0.3 --field 1 --sz 0
-build/bethe-central-spin --couplings 1,-2,0.3,-0.1 --field 0 --sz 1/2
-build/bethe-central-spin --couplings 1 --field 1 --sz 0 --precision fp128 --variables
+bethe-central-spin --couplings 1,0.7,0.3 --field 1 --sz 0
+bethe-central-spin --couplings 1,-2,0.3,-0.1 --field 0 --sz 1/2
+bethe-central-spin --couplings 1 --field 1 --sz 0 --precision fp128 --variables
 ```
 
 `--sz` includes the central spin, and is required. For Nb bath spins its

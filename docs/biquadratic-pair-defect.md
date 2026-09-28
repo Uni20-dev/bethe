@@ -15,11 +15,11 @@ The same CLI also supports one pair plus several real roots, as described
 
 ```sh
 # One explicitly selected pair of Bethe labels:
-build/bethe-biquadratic-obc 128 --ferromagnetic --pair-defect 125,123 --roots
+bethe-biquadratic-obc 128 --ferromagnetic --pair-defect 125,123 --roots
 # Complete small mixed family, not the entire three-defect module:
-build/bethe-biquadratic-obc 8 --ferromagnetic --pair-defects all
+bethe-biquadratic-obc 8 --ferromagnetic --pair-defects all
 # Lowest eight converged levels among the 36 selected label combinations:
-build/bethe-biquadratic-obc 129 --ferromagnetic --pair-defects 8 --mixed-window 6 \
+bethe-biquadratic-obc 129 --ferromagnetic --pair-defects 8 --mixed-window 6 \
   --precision long-double --json mixed.json --csv mixed.csv \
   --tsv-table labels=mixed-labels.tsv
 ```
@@ -173,11 +173,11 @@ with M=r+2 insertions and ell=N-2M.
 
 ```sh
 # Two real roots I1=123, I2=124, and pair label J=121:
-build/bethe-biquadratic-obc 128 --ferromagnetic --pair-defect 123,124,121 --roots
+bethe-biquadratic-obc 128 --ferromagnetic --pair-defect 123,124,121 --roots
 # All six one-pair-plus-two-real-root candidates on eight sites:
-build/bethe-biquadratic-obc 8 --ferromagnetic --pair-defects all --real-defects 2
+bethe-biquadratic-obc 8 --ferromagnetic --pair-defects all --real-defects 2
 # Two real roots in a six-label window, times six pair labels: 90 candidates:
-build/bethe-biquadratic-obc 129 --ferromagnetic --pair-defects 8 \
+bethe-biquadratic-obc 129 --ferromagnetic --pair-defects 8 \
   --real-defects 2 --mixed-window 6 --precision fp128 --json mixed-four.json
 ```
 

@@ -22,11 +22,11 @@ energies **above** that ground state, not extensive energies.
 ## Run and export
 
 ```sh
-build/bethe-xxz-dispersion --delta 2 --branch spinon --csv spinons.csv
-build/bethe-xxz-dispersion --delta 2 --branch two-spinon --folded --tsv continuum.tsv
-build/bethe-xxz-dispersion --delta 1.0078125 --precision long-double --json curves.json
-build/bethe-xxz-dispersion --delta 0.5 --exchange 2 --momentum 1
-build/bethe-xxz-dispersion --references
+bethe-xxz-dispersion --delta 2 --branch spinon --csv spinons.csv
+bethe-xxz-dispersion --delta 2 --branch two-spinon --folded --tsv continuum.tsv
+bethe-xxz-dispersion --delta 1.0078125 --precision long-double --json curves.json
+bethe-xxz-dispersion --delta 0.5 --exchange 2 --momentum 1
+bethe-xxz-dispersion --references
 ```
 
 By default `--branch all` produces both families in the named `dispersion`

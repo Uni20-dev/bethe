@@ -28,7 +28,7 @@ The frequency is angular frequency, in radians per unit time; divide by
 $`2\pi`$ for cycles per unit time.
 
 ```sh
-build/bethe-tasep-pbc 16 --particles 4 --rate 1 \
+bethe-tasep-pbc 16 --particles 4 --rate 1 \
   --csv-table relaxation=tasep-mode.csv --csv-table roots=tasep-roots.csv
 ```
 
@@ -50,7 +50,7 @@ Run half-filled and quarter-filled rings of sizes 8, 16, 32, 64 and 128:
 
 ```sh
 for L in 8 16 32 64 128; do
-  build/bethe-tasep-pbc "$L" --particles "$((L/2))" --rate 1 \
+  bethe-tasep-pbc "$L" --particles "$((L/2))" --rate 1 \
     --csv-table relaxation="half-${L}.csv"
 done
 ```
@@ -160,13 +160,13 @@ N=0 [mode](data/tasep-empty-relaxation.csv) / [empty roots](data/tasep-empty-roo
 N=L [mode](data/tasep-full-relaxation.csv) / [empty roots](data/tasep-full-roots.csv);
 L=5, N=2 [mode](data/tasep-small-relaxation.csv) / [roots](data/tasep-small-roots.csv).
 
-From the repository root, with the [plotting dependencies](requirements.txt):
+From the source checkout, with the [plotting dependencies](requirements.txt):
 
 ```sh
 python3 scripts/plot_exclusion_tutorial.py --check
 python3 scripts/plot_exclusion_tutorial.py
 # Optional: regenerate both TASEP and ASEP examples with native executables.
-python3 scripts/plot_exclusion_tutorial.py --solver-dir build
+python3 scripts/plot_exclusion_tutorial.py --solver-dir /path/to/bethe/bin
 python3 -m unittest discover -s scripts -p 'test_tutorial_exclusion.py'
 ```
 

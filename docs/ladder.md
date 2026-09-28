@@ -26,16 +26,16 @@ L=2 the closing bond is counted separately, as in our other periodic chains.
 ## First calculations
 
 ```sh
-build/bethe-ladder-pbc 12 --rung 1
-build/bethe-ladder-pbc 12 --rung -1 --sectors
-build/bethe-ladder-pbc 6 --rung 0 --singlets 4 --roots
-build/bethe-ladder-pbc 24 --rung 2 --precision long-double
-build/bethe-ladder-pbc 12 --rung 5 --field 3 --sectors
-build/bethe-ladder-pbc 6 --rung 0 --singlets 4 --field -0.125 --roots
-build/bethe-ladder-pbc 12 --rung 1 --sz 2 --sectors
-build/bethe-ladder-pbc 6 --rung 0 --sz 0 --singlets 4 --roots
+bethe-ladder-pbc 12 --rung 1
+bethe-ladder-pbc 12 --rung -1 --sectors
+bethe-ladder-pbc 6 --rung 0 --singlets 4 --roots
+bethe-ladder-pbc 24 --rung 2 --precision long-double
+bethe-ladder-pbc 12 --rung 5 --field 3 --sectors
+bethe-ladder-pbc 6 --rung 0 --singlets 4 --field -0.125 --roots
+bethe-ladder-pbc 12 --rung 1 --sz 2 --sectors
+bethe-ladder-pbc 6 --rung 0 --sz 0 --singlets 4 --roots
 # Requires a binary128-enabled build:
-build/bethe-ladder-pbc 8 --rung 1 --precision fp128 --roots
+bethe-ladder-pbc 8 --rung 1 --precision fp128 --roots
 ```
 
 The default compares all singlet-count sectors. `--singlets NS` selects a

@@ -15,10 +15,10 @@ continuum thresholds are not implemented in this frontend. A separate
 half-filled lower and upper edges; charge-containing continua remain open.
 
 ```sh
-build/bethe-hubbard-dispersion --u 4 --points 101 --format csv
-build/bethe-hubbard-dispersion --u 4 --branch spinon --momentum 1
-build/bethe-hubbard-dispersion --u 4 --convention unshifted --format tsv
-build/bethe-hubbard-dispersion --u 4 --precision fp128 --points 33 --format csv
+bethe-hubbard-dispersion --u 4 --points 101 --format csv
+bethe-hubbard-dispersion --u 4 --branch spinon --momentum 1
+bethe-hubbard-dispersion --u 4 --convention unshifted --format tsv
+bethe-hubbard-dispersion --u 4 --precision fp128 --points 33 --format csv
 ```
 
 Calculations and output retain the selected `fp64` (default), `long-double`, or

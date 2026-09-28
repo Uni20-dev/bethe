@@ -29,15 +29,15 @@ For example:
 
 ```sh
 # Repulsive doping: three electrons of each spin.
-build/bethe-hubbard-pbc 16 --u 4 --particles 6
+bethe-hubbard-pbc 16 --u 4 --particles 6
 # Electron doping: maps to six particles below half filling.
-build/bethe-hubbard-pbc 16 --u 4 --particles 26
+bethe-hubbard-pbc 16 --u 4 --particles 26
 # Balanced attraction: four pairs, mapped to polarized half filling.
-build/bethe-hubbard-pbc 16 --u -4 --particles 8 --roots
+bethe-hubbard-pbc 16 --u -4 --particles 8 --roots
 # A half-filled polarized repulsive sector.
-build/bethe-hubbard-pbc 16 --u 4 --sz -2
+bethe-hubbard-pbc 16 --u 4 --sz -2
 # Odd N is allowed on the unrestricted free-fermion path.
-build/bethe-hubbard-pbc 16 --u 0 --particles 7 --sz 1/2
+bethe-hubbard-pbc 16 --u 0 --particles 7 --sz 1/2
 ```
 
 This is deliberately not yet an arbitrary-filling, arbitrary-spin ground-state

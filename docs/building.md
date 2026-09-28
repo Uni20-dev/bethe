@@ -1,4 +1,4 @@
-# Building and using Uni20
+# Building Bethe and using Uni20
 
 [Back to the overview](../README.md)
 
@@ -19,29 +19,74 @@ optional CLI11 dependency; library-only builds do not require it.
 
 ## Build the pinned version
 
-From the repository root:
+Create a build directory wherever convenient, change into it, and give CMake
+the path to the source checkout. Replace `/path/to/bethe` below with that path;
+it can also be relative to the build directory (for example, `../bethe`).
 
 ```sh
-cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release
-cmake --build build --parallel
-ctest --test-dir build --output-on-failure
+mkdir bethe-build
+cd bethe-build
+cmake /path/to/bethe -G Ninja -DCMAKE_BUILD_TYPE=Release
+cmake --build . --parallel
+ctest --output-on-failure
 ```
 
-The examples in these guides use `build/` relative to the repository root.
-Substitute your actual build directory throughout. When the checkout is shared
-between hosts, build on machine-local storage: our convention is a
-`build_codex` symlink to local storage, with separate build trees beneath it,
-for example `-B build_codex/release`. Do not share CMake caches between machines.
+The build directory may be inside or outside the source checkout. Equivalently,
+configure from any working directory with explicit source and build paths:
+
+```sh
+cmake -S /path/to/bethe -B /path/to/bethe-build -G Ninja -DCMAKE_BUILD_TYPE=Release
+cmake --build /path/to/bethe-build --parallel
+ctest --test-dir /path/to/bethe-build --output-on-failure
+```
+
+Keep generated files separate from the source. When sharing a checkout between
+hosts, use machine-local build storage and do not share CMake caches.
+
+## Run the programs
+
+From the build directory, run an executable directly:
+
+```sh
+./bethe-xxx-pbc 4
+```
+
+The model guides and tutorials use bare command names such as `bethe-xxx-pbc`.
+These work from any calculation directory when the executables are on `PATH`,
+whether supplied by an installation or your own build. To use the current
+build for the rest of this shell session:
+
+```sh
+export PATH="$PWD:$PATH"
+bethe-xxx-pbc 4
+```
+
+Run the export only while in the build directory; `$PWD` supplies its absolute
+path, so subsequent directory changes are safe. Alternatively, prepend `./` to
+the tutorial commands while working in that directory, or use an absolute
+executable path. For multi-configuration generators, use the directory containing
+the chosen configuration's executables instead.
+
+Solver commands do not require the source checkout as their working directory.
+Relative output paths, such as `--csv spectrum.csv`, refer to the directory
+where you run the command. Only the optional repository plotting and maintenance
+scripts need access to the source files.
+
+Bethe does not yet provide CMake install rules or an installed CMake package;
+`cmake --install` is not currently a Bethe installation workflow. Use the
+build-tree executables as above, and see [embedding](#embed-the-library) for
+C++ library use.
 
 ## Use a development checkout
 
-To work with the sibling Uni20 checkout instead of the pinned version:
+To use a local Uni20 checkout instead of the pinned version, configure from
+your build directory with absolute paths to both source checkouts:
 
 ```sh
-cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release \
-  -DFETCHCONTENT_SOURCE_DIR_UNI20="$PWD/../uni20"
-cmake --build build --parallel
-ctest --test-dir build --output-on-failure
+cmake /path/to/bethe -G Ninja -DCMAKE_BUILD_TYPE=Release \
+  -DFETCHCONTENT_SOURCE_DIR_UNI20=/path/to/uni20
+cmake --build . --parallel
+ctest --output-on-failure
 ```
 
 To return to the pinned revision, use a fresh build directory without the
@@ -80,12 +125,13 @@ prefer an installed GoogleTest 1.12+ package, or fetch v1.17.0. GoogleTest is
 only required when `BETHE_BUILD_TESTS=ON`; library consumers do not inherit it.
 
 Numerical cases are instantiated separately for fp64, native `long double`,
-and optional fp128. Names include the precision, so failures can be isolated:
+and optional fp128. Names include the precision, so failures can be isolated.
+From the build directory:
 
 ```sh
-ctest --test-dir build -N
-ctest --test-dir build -R 'Hubbard.*fp128' --output-on-failure
-build/tests/bethe_heisenberg_tests --gtest_filter='*/long_double.NativePrecisionSix'
+ctest -N
+ctest -R 'Hubbard.*fp128' --output-on-failure
+./tests/bethe_heisenberg_tests --gtest_filter='*/long_double.NativePrecisionSix'
 ```
 
 The tests serve different purposes. Small independent exact-diagonalization

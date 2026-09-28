@@ -15,17 +15,21 @@ then follow a model guide for its Hamiltonian, supported states and limitations.
 
 ## Choose a calculation
 
+Examples assume the executables are on `PATH`. From a build directory, you can
+instead use `./bethe-xxx-pbc` etc.; see [running the programs](building.md#run-the-programs).
+No particular source or build directory is required for a calculation.
+
 ```sh
-build/bethe-xxx-pbc 16
-build/bethe-xxx-pbc 64 --precision fp64 --tolerance 1e-12
-build/bethe-xxx-pbc 6 --precision long-double --roots
-build/bethe-xxx-pbc 15 --sz 1/2
-build/bethe-xxx-pbc 16 --sectors
-build/bethe-xxx-pbc 65 --spinons
-build/bethe-xxx-pbc 32 --excitations 10 --spin 1
-build/bethe-xxx-pbc 5 --quantum-numbers -1,1 --roots
+bethe-xxx-pbc 16
+bethe-xxx-pbc 64 --precision fp64 --tolerance 1e-12
+bethe-xxx-pbc 6 --precision long-double --roots
+bethe-xxx-pbc 15 --sz 1/2
+bethe-xxx-pbc 16 --sectors
+bethe-xxx-pbc 65 --spinons
+bethe-xxx-pbc 32 --excitations 10 --spin 1
+bethe-xxx-pbc 5 --quantum-numbers -1,1 --roots
 # In a binary128-enabled build:
-build/bethe-xxx-pbc 16 --precision fp128 --tolerance 1e-30
+bethe-xxx-pbc 16 --precision fp128 --tolerance 1e-30
 ```
 
 ### XXX state-selection modes

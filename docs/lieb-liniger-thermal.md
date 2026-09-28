@@ -15,17 +15,17 @@ The uniform thermodynamic limit is not a finite-ring spectrum or a trapped gas.
 
 ```sh
 # Grand-canonical equilibrium, with density determined by mu.
-build/bethe-lieb-liniger-thermal --c 4 --temperature 1 --mu -1
+bethe-lieb-liniger-thermal --c 4 --temperature 1 --mu -1
 
 # Fixed-density temperature scan; mu is solved independently at each point.
-build/bethe-lieb-liniger-thermal --c 4 --temperature 0.5 \
+bethe-lieb-liniger-thermal --c 4 --temperature 0.5 \
   --temperature-end 2 --points 9 --density 1 --max-nodes 512 --csv thermal.csv
 
 # Extended precision and simultaneous structured exports.
-build/bethe-lieb-liniger-thermal --c 4 --temperature 1 --density 0.1 \
+bethe-lieb-liniger-thermal --c 4 --temperature 1 --density 0.1 \
   --precision fp128 --json thermal.json --tsv thermal.tsv
 
-build/bethe-lieb-liniger-thermal --references
+bethe-lieb-liniger-thermal --references
 ```
 
 Choose exactly one of `--mu` and `--density`. Without `--temperature-end`, the

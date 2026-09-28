@@ -27,7 +27,7 @@ The frontend accepts r and s directly; they need not sum to one.
 
 ```sh
 # b=1/2, with r+s=1:
-build/bethe-asep-pbc 16 --particles 4 --right-rate 0.75 --left-rate 0.25 \
+bethe-asep-pbc 16 --particles 4 --right-rate 0.75 --left-rate 0.25 \
   --csv-table relaxation=asep-mode.csv --csv-table roots=asep-roots.csv
 ```
 
@@ -154,13 +154,13 @@ Additional checks use the same provenance/status format:
 | Full ring | [CSV](data/asep-full-relaxation.csv) | [empty CSV](data/asep-full-roots.csv) |
 | L=5, N=2, r=1, s=1/2 | [CSV](data/asep-small-relaxation.csv) | [CSV](data/asep-small-roots.csv) |
 
-From the repository root, with the [plotting dependencies](requirements.txt):
+From the source checkout, with the [plotting dependencies](requirements.txt):
 
 ```sh
 python3 scripts/plot_exclusion_tutorial.py --check
 python3 scripts/plot_exclusion_tutorial.py
 # Optional: regenerate the TASEP and ASEP examples together.
-python3 scripts/plot_exclusion_tutorial.py --solver-dir build
+python3 scripts/plot_exclusion_tutorial.py --solver-dir /path/to/bethe/bin
 python3 -m unittest discover -s scripts -p 'test_tutorial_exclusion.py'
 ```
 

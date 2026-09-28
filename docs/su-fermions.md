@@ -26,11 +26,11 @@ continuum gas, not the [SU(3) permutation spin chain](su3.md).
 ## First calculations and supported sectors
 
 ```sh
-build/bethe-sun-fermions-pbc --populations 3,3,3 --length 9 --c 1
-build/bethe-sun-fermions-pbc --populations 5,3,1 --length 9 --c 0.01 --roots
-build/bethe-sun-fermions-pbc --populations 3,1,1,1 --length 6 --c 2 --precision long-double
+bethe-sun-fermions-pbc --populations 3,3,3 --length 9 --c 1
+bethe-sun-fermions-pbc --populations 5,3,1 --length 9 --c 0.01 --roots
+bethe-sun-fermions-pbc --populations 3,1,1,1 --length 6 --c 2 --precision long-double
 # Requires a binary128-enabled build:
-build/bethe-sun-fermions-pbc --populations 1,1,1 --length 1 --c 1 --precision fp128
+bethe-sun-fermions-pbc --populations 1,1,1 --length 1 --c 1 --precision fp128
 ```
 
 The interacting ground-state branch currently requires **every occupied

@@ -9,12 +9,12 @@ The [worked motif tutorial](tutorials/haldane-shastry.md) plots complete small
 rings and shows how their SU(2) multiplets account for every spin state.
 
 ```sh
-build/bethe-haldane-shastry-pbc 16
-build/bethe-haldane-shastry-pbc 15 --sz 3/2
-build/bethe-haldane-shastry-pbc 8 --motif 1,3,6
-build/bethe-haldane-shastry-pbc 12 --levels 10 --precision fp128
-build/bethe-haldane-shastry-pbc 8 --levels all --format csv
-build/bethe-haldane-shastry-pbc 6 --motif 3 --spin-content --format json
+bethe-haldane-shastry-pbc 16
+bethe-haldane-shastry-pbc 15 --sz 3/2
+bethe-haldane-shastry-pbc 8 --motif 1,3,6
+bethe-haldane-shastry-pbc 12 --levels 10 --precision fp128
+bethe-haldane-shastry-pbc 8 --levels all --format csv
+bethe-haldane-shastry-pbc 6 --motif 3 --spin-content --format json
 ```
 
 ## Normalization
@@ -124,7 +124,7 @@ is partial (exit 2). On motif-enumeration refusal, both tables are empty.
 JSON preserves both named tables; for separate rectangular CSV/TSV files use:
 
 ```sh
-build/bethe-haldane-shastry-pbc 8 --levels all --spin-content \
+bethe-haldane-shastry-pbc 8 --levels all --spin-content \
   --csv-table levels=levels.csv --csv-table spin_content=spins.csv \
   --json spectrum.json
 ```

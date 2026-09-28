@@ -28,10 +28,10 @@ two-site-cell folding. These do not enumerate finite-ring excited roots.
 ## First calculations
 
 ```sh
-build/bethe-tb-pbc 16
-build/bethe-tb-pbc 6 --roots --precision long-double
+bethe-tb-pbc 16
+bethe-tb-pbc 6 --roots --precision long-double
 # With binary128 enabled:
-build/bethe-tb-pbc 64 --precision fp128
+bethe-tb-pbc 64 --precision fp128
 ```
 
 The four-site ground energy is $`-11-\sqrt{41}`$, approximately

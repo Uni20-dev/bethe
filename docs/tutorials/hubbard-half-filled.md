@@ -8,7 +8,8 @@ conventions. A [second tutorial](hubbard-doped.md) moves away from half filling.
 
 The figures and CSVs are included. To generate your own, [build](../building.md)
 `bethe-hubbard-dispersion`; no Python is needed to run the solver. The commands
-below assume an executable in `build/`. All calculations here use default fp64.
+below assume the executable is on `PATH`; see [running the programs](../building.md#run-the-programs).
+All calculations here use default fp64.
 
 ## 1. Choose a Hamiltonian
 
@@ -30,7 +31,7 @@ energies do not**. We will keep that distinction visible in the plots.
 ## 2. Export the elementary lines
 
 ```sh
-build/bethe-hubbard-dispersion --u 4 --density 1 --points 129 \
+bethe-hubbard-dispersion --u 4 --density 1 --points 129 \
   --convention symmetric --reference hamiltonian --csv hubbard-half-symmetric.csv
 ```
 
@@ -82,9 +83,9 @@ antiholon shifts **up by 2**. Export the second convention and a
 chemical-potential-subtracted version:
 
 ```sh
-build/bethe-hubbard-dispersion --u 4 --points 129 \
+bethe-hubbard-dispersion --u 4 --points 129 \
   --convention unshifted --reference hamiltonian --csv hubbard-half-unshifted.csv
-build/bethe-hubbard-dispersion --u 4 --points 129 \
+bethe-hubbard-dispersion --u 4 --points 129 \
   --convention unshifted --reference fermi --csv hubbard-half-fermi.csv
 ```
 
@@ -151,7 +152,7 @@ minimum. Branch continuity and quantum numbers remain important.
 To obtain Bethe reference lines at the paper's coupling:
 
 ```sh
-build/bethe-hubbard-dispersion --u 5 --density 1 --points 129 \
+bethe-hubbard-dispersion --u 5 --density 1 --points 129 \
   --convention symmetric --reference hamiltonian --csv hubbard-u5.csv
 ```
 
@@ -167,15 +168,16 @@ Download the exports: [symmetric Hamiltonian](data/hubbard-half-symmetric.csv),
 [unshifted Hamiltonian](data/hubbard-half-unshifted.csv), and
 [unshifted with Fermi reference](data/hubbard-half-fermi.csv).
 
-From the repository root:
+From the source checkout:
 
 ```sh
-python3 -m venv build_codex/tutorial-venv
-build_codex/tutorial-venv/bin/pip install -r docs/tutorials/requirements.txt
-build_codex/tutorial-venv/bin/python scripts/plot_hubbard_tutorial.py
+python3 -m venv .venv
+. .venv/bin/activate
+python3 -m pip install -r docs/tutorials/requirements.txt
+python3 scripts/plot_hubbard_tutorial.py
 # Optional: regenerate the data for both Hubbard tutorials before plotting.
-build_codex/tutorial-venv/bin/python scripts/plot_hubbard_tutorial.py \
-  --solver build/bethe-hubbard-dispersion
+python3 scripts/plot_hubbard_tutorial.py \
+  --solver bethe-hubbard-dispersion
 ```
 
 The [script](../../scripts/plot_hubbard_tutorial.py) uses exported columns for

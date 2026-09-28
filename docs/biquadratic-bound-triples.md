@@ -10,9 +10,9 @@ fp128. This is a finite-size Bethe calculation, not an ideal-string energy
 substituted for a finite chain.
 
 ```sh
-build/bethe-biquadratic-obc 128 --ferromagnetic --bound-triples 8
-build/bethe-biquadratic-obc 65 --ferromagnetic --bound-triples all --roots
-build/bethe-biquadratic-obc 100000 --ferromagnetic --bound-triples 4 \
+bethe-biquadratic-obc 128 --ferromagnetic --bound-triples 8
+bethe-biquadratic-obc 65 --ferromagnetic --bound-triples all --roots
+bethe-biquadratic-obc 100000 --ferromagnetic --bound-triples 4 \
   --precision long-double --json triples.json --csv triples.csv
 ```
 

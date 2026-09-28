@@ -21,7 +21,7 @@ $`Z|a\rangle=e^{2\pi ia/3}|a\rangle`$. Both the exchange and critical field
 are one. The two oriented bonds are both retained for L=2.
 
 ```sh
-build/bethe-potts-pbc 16 --csv-table levels=potts-l16.csv
+bethe-potts-pbc 16 --csv-table levels=potts-l16.csv
 ```
 
 The output contains the neutral vacuum and a **selected charged one-hole
@@ -68,7 +68,7 @@ not the full $`3^L`$-dimensional spectrum.
 To calculate only the first charged momentum of one charge:
 
 ```sh
-build/bethe-potts-pbc 64 --branch charged --charge 1 --momentum-index 1 \
+bethe-potts-pbc 64 --branch charged --charge 1 --momentum-index 1 \
   --csv-table levels=potts-first-descendant.csv
 ```
 
@@ -134,13 +134,13 @@ Download the native `levels` exports:
 [L=8](data/potts-l8-levels.csv), [L=16](data/potts-l16-levels.csv),
 [L=32](data/potts-l32-levels.csv), [L=64](data/potts-l64-levels.csv).
 
-With the [plotting dependencies](requirements.txt), from the repository root:
+With the [plotting dependencies](requirements.txt), from the source checkout:
 
 ```sh
 python3 scripts/plot_potts_qg_tutorial.py --check
 python3 scripts/plot_potts_qg_tutorial.py
 # Optional: regenerate this and the non-Hermitian XXZ tutorial.
-python3 scripts/plot_potts_qg_tutorial.py --solver-dir build
+python3 scripts/plot_potts_qg_tutorial.py --solver-dir /path/to/bethe/bin
 # Optional independent clock/spin matrices; requires NumPy.
 python3 scripts/plot_potts_qg_tutorial.py --check --oracle
 python3 -m unittest discover -s scripts -p 'test_tutorial_potts_qg.py'
