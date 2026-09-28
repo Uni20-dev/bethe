@@ -68,6 +68,7 @@ with tempfile.TemporaryDirectory(prefix="bethe-table-contracts-") as directory:
     # Each output-only family must be producible without its screen flag.
     auxiliary = [
         ("bethe-xxx-pbc", ["4"], "--roots"),
+        ("bethe-xxx-structure-factor", ["4"], "--roots"),
         ("bethe-xxx-obc", ["4"], "--roots"),
         ("bethe-xxz-pbc", ["4", "--delta", "0.5"], "--roots"),
         ("bethe-xxz-obc", ["4", "--delta", "0.5"], "--roots"),

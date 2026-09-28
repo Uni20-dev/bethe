@@ -47,6 +47,11 @@ $`S^z =1/2`$ representatives. The five explicit modes are mutually exclusive:
 
 Add `--roots` to print the roots and exact Bethe quantum numbers.
 
+For **spectral weights**, use the separate
+[`bethe-xxx-structure-factor`](xxx-structure-factor.md) frontend on an even ring.
+It always scans the complete supported two-spinon family, and reports its
+contribution to the zz or raising-channel sum rules.
+
 XXZ uses the same common precision and output controls, but different mode
 combinations: `--excitations` selects a family at fixed `--sz`, not `--spin`.
 See [periodic XXZ excitations](xxz.md#real-root-excitations) or

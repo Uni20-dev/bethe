@@ -46,6 +46,9 @@ Thermodynamic dispersion tools use `bethe-<model>-dispersion`.
 
 - [Periodic XXX](docs/xxx.md): `bethe-xxx-pbc` gives ground states,
   sector minima, real-root excitations, and the odd-chain one-spinon branch.
+- [XXX spectral weights](docs/xxx-structure-factor.md): `bethe-xxx-structure-factor`
+  computes finite-ring two-spinon zz/raising intensities and sum-rule coverage;
+  see the [plotted tutorial](docs/tutorials/xxx-structure-factor.md).
 - [Free-end XXX](docs/open-chains.md): `bethe-xxx-obc` supports
   ground states, sector minima, and real-root excitations, without lattice momentum.
 - [Periodic XXZ](docs/xxz.md): `bethe-xxz-pbc` supports ground states and sector minima

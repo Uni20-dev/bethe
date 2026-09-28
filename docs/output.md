@@ -64,6 +64,7 @@ screen/ordinary JSON output, not prerequisites for named CSV/TSV exports.
 | `bethe-ladder-pbc` | `states` | always `representations`; selected-state `roots` with `--roots` |
 | `bethe-hubbard-pbc`, `bethe-hubbard-obc` | `states` | `charge_roots`, `spin_roots`, or `free_modes` with `--roots` |
 | `bethe-xxx-pbc`, `bethe-xxx-obc` | `states` | `roots` with `--roots`; periodic `--spinons` also has `spinons` |
+| `bethe-xxx-structure-factor` | `spectrum` | `moments`; optional `roots` and `diagnostics` screen flags; see the [spectral-weight guide](xxx-structure-factor.md) |
 | `bethe-xxz-pbc`, `bethe-xxz-obc` | `states` | `roots` with `--roots`; that flag also shows `boundary_roots` for the open ground/sector representation |
 | `bethe-lieb-liniger-pbc`, `bethe-lieb-liniger-obc` | `states` | `roots` with `--roots` |
 | `bethe-lieb-liniger-dispersion` | `dispersion` | none; bulk background in metadata |

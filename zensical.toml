@@ -18,6 +18,7 @@ nav = [
     { "Lieb–Liniger particle and hole branches" = "docs/tutorials/lieb-liniger.md" },
     { "Sutherland collision branches" = "docs/tutorials/sutherland.md" },
     { "XXX finite chains" = "docs/tutorials/xxx.md" },
+    { "XXX two-spinon spectral weights" = "docs/tutorials/xxx-structure-factor.md" },
     { "Haldane–Shastry motifs and spins" = "docs/tutorials/haldane-shastry.md" },
     { "XYZ bound branches" = "docs/tutorials/xyz.md" },
     { "q-bosons and the phase limit" = "docs/tutorials/q-boson.md" },

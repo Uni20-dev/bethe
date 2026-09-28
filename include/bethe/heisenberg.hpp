@@ -99,6 +99,28 @@ inline std::size_t momentum_index(std::size_t sites, std::span<uni20::half_int c
 
 // Keep roundoff in the phase and energy sums from growing with the root count.
 template <typename Real> using CompensatedSum = bethe::detail::CompensatedSum<Real>;
+
+template <uni20::Real Real>
+Real residual(std::size_t sites, std::span<uni20::half_int const> numbers, std::span<Real const> roots,
+              std::vector<Real>& angles)
+{
+  using std::abs;
+  using std::atan;
+  Real const pi = Real{4} * atan(Real{1});
+  angles.resize(roots.size());
+  Real maximum{0};
+  for (std::size_t i = 0; i < roots.size(); ++i)
+  {
+    CompensatedSum<Real> phase;
+    for (std::size_t j = 0; j < roots.size(); ++j)
+      if (i != j) phase.add(atan((roots[i] - roots[j]) / Real{2}));
+    angles[i] = (pi * (Real(numbers[i].twice()) / Real{2}) + phase.value()) / Real(sites);
+    Real const value = Real{2} * abs(atan(roots[i]) - angles[i]);
+    if (!uni20::isfinite(value)) throw std::runtime_error("nonfinite Heisenberg equation residual");
+    maximum = std::max(maximum, value);
+  }
+  return maximum;
+}
 } // namespace detail
 
 /// Solve a specified periodic XXX highest-weight state, J=1, h=0.
@@ -146,20 +168,7 @@ template <uni20::Real Real = double>
   {
     // Evaluate both the residual and the next fixed-point angles at the same
     // current roots. Never report a residual belonging to the previous iterate.
-    result.residual_norm = Real{0};
-    for (std::size_t i = 0; i < roots; ++i)
-    {
-      detail::CompensatedSum<Real> phase;
-      for (std::size_t j = 0; j < roots; ++j)
-      {
-        if (i != j) phase.add(atan((result.rapidities[i] - result.rapidities[j]) / Real{2}));
-      }
-      Real const quantum_number = static_cast<Real>(numbers[i].twice()) / Real{2};
-      angles[i] = (pi * quantum_number + phase.value()) / n;
-      Real const residual = Real{2} * abs(atan(result.rapidities[i]) - angles[i]);
-      if (!uni20::isfinite(residual)) throw std::runtime_error("nonfinite Heisenberg equation residual");
-      result.residual_norm = std::max(result.residual_norm, residual);
-    }
+    result.residual_norm = detail::residual<Real>(sites, numbers, result.rapidities, angles);
 
     result.converged = result.residual_norm <= options.residual_tolerance;
     if (result.converged || result.iterations == options.max_iterations) break;

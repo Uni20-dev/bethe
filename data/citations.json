@@ -1016,6 +1016,22 @@
         {"label": "DOI", "url": "https://doi.org/10.1103/PhysRevResearch.7.023018"},
         {"label": "arXiv", "url": "https://arxiv.org/abs/2408.17117"}
       ]
+    },
+    {
+      "id": "kitanine-maillet-terras-1999",
+      "authors": "N. Kitanine, J. M. Maillet, and V. Terras",
+      "title": "Form factors of the XXZ Heisenberg spin-1/2 finite chain",
+      "publication": "Nucl. Phys. B 554, 647-678",
+      "year": 1999,
+      "links": [{"label": "arXiv", "url": "https://arxiv.org/abs/math-ph/9807020"}]
+    },
+    {
+      "id": "caux-hagemans-maillet-2005",
+      "authors": "Jean-Sebastien Caux, Rob Hagemans, and Jean-Michel Maillet",
+      "title": "Computation of dynamical correlation functions of Heisenberg chains: the gapless anisotropic regime",
+      "publication": "J. Stat. Mech. 2005, P09003",
+      "year": 2005,
+      "links": [{"label": "arXiv", "url": "https://arxiv.org/abs/cond-mat/0506698"}]
     }
   ],
   "tools": [
@@ -1190,6 +1206,16 @@
         {"id": "groha-2017", "context": "Odd-chain one-spinon states and hole labels, Sec. 3; only the unperturbed integrable chain is used."},
         {"id": "caux-xxx-spinons", "context": "Thermodynamic XXX spinon dispersion and the bulk reference for --spinons."},
         {"id": "caux-xxx-states", "context": "Highest-weight and string-classification background; strings and infinite-root descendants are not implemented."}
+      ]
+    },
+    {
+      "id": "xxx_structure_factor",
+      "executable": "bethe-xxx-structure-factor",
+      "references": [
+        {"id": "karbach-1998", "context": "Periodic XXX states and real-root two-spinon triplet window; our z=2*lambda_ABA."},
+        {"id": "kitanine-maillet-terras-1999", "context": "Algebraic Bethe ansatz norm and local spin form-factor determinant foundation, Secs. 3 and 5."},
+        {"id": "caux-hagemans-maillet-2005", "context": "Rational XXX limit of normalized transverse form factors and Gaudin matrices, Eqs. (11)-(13). Only zero-field real-root two-spinon states are implemented; no strings or full DSF."},
+        {"id": "caux-mossel-perez-castillo-2008", "context": "Transverse integrated and first-frequency sum rules, Eqs. (62)-(63), evaluated at Delta=1; thermodynamic fractions are not finite-size identities."}
       ]
     },
     {

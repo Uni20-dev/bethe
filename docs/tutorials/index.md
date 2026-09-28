@@ -33,6 +33,7 @@ Regeneration replaces the repository's example data, not files in your calculati
 - [Lieb–Liniger](lieb-liniger.md): particle/hole branches and density scaling.
 - [Sutherland](sutherland.md): collision exponents, excitation labels and bounded scans.
 - [XXX](xxx.md): finite-ring spinons and periodic/free-end excitation scans.
+- [XXX spectral weights](xxx-structure-factor.md): two-spinon intensities, sum rules and plotting broadening.
 - [Haldane–Shastry](haldane-shastry.md): motifs, spin multiplicities and complete finite spectra.
 - [XYZ](xyz.md): gapped spinons, bound branches and discrete parity copies.
 - [q-bosons](q-boson.md): occupation-dependent hopping from free bosons to the phase limit.
@@ -55,15 +56,15 @@ Regeneration replaces the repository's example data, not files in your calculati
 
 ## Coverage of implemented models
 
-All **26 implemented model families** have worked tutorials, with 27 pages
-because Hubbard has separate half-filled and doped examples. This inventory
+All **26 implemented model families** have worked tutorials, with 28 pages:
+Hubbard has separate half-filled/doped examples and XXX has energies/weights. This inventory
 includes finite systems and impurity response, not only thermodynamic
 excitation tools. Proposed but unimplemented models in the
 [model survey](../models.md) are outside this inventory.
 
 | Model family | Worked tutorial |
 | --- | --- |
-| XXX | [Tutorial](xxx.md) |
+| XXX | [Energies](xxx.md), [spectral weights](xxx-structure-factor.md) |
 | XXZ | [Tutorial](xxz-spinons.md) |
 | XYZ | [Tutorial](xyz.md) |
 | SU(3)/ULS | [Tutorial](su3-uls.md) |

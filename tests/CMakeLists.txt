@@ -30,6 +30,10 @@ function(bethe_discover_tests target)
   )
 endfunction()
 
+add_executable(bethe_xxx_structure_factor_tests test_xxx_structure_factor.cpp)
+target_link_libraries(bethe_xxx_structure_factor_tests PRIVATE bethe::bethe)
+bethe_discover_tests(bethe_xxx_structure_factor_tests)
+
 add_executable(bethe_newton_control_tests test_newton_control.cpp)
 target_link_libraries(bethe_newton_control_tests PRIVATE bethe::bethe)
 bethe_discover_tests(bethe_newton_control_tests)
@@ -174,6 +178,14 @@ else()
 endif()
 
 if(BETHE_BUILD_APPS)
+  add_test(NAME Citations.bethe-xxx-structure-factor.cli
+    COMMAND "${CMAKE_COMMAND}" "-DPROGRAM=$<TARGET_FILE:bethe-xxx-structure-factor>"
+      "-DTOOL=bethe-xxx-structure-factor" -P "${CMAKE_CURRENT_SOURCE_DIR}/check_citations_cli.cmake")
+  if(Python3_Interpreter_FOUND)
+    add_test(NAME Arguments.bethe-xxx-structure-factor.cli
+      COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_shared_arguments.py"
+        "$<TARGET_FILE:bethe-xxx-structure-factor>")
+  endif()
   # Absolute GNUInstallDirs overrides intentionally ignore --prefix. Do not
   # run a temporary-prefix test that could write into those real locations.
   if(BETHE_INSTALL_APPS AND Python3_Interpreter_FOUND
@@ -190,6 +202,9 @@ if(BETHE_BUILD_APPS)
     set_tests_properties(Install.runtime PROPERTIES RUN_SERIAL TRUE TIMEOUT 180)
   endif()
   if(Python3_Interpreter_FOUND)
+    add_test(NAME XXXStructureFactor.cli
+      COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_xxx_structure_factor.py"
+        "$<TARGET_FILE:bethe-xxx-structure-factor>" "${UNI20_ENABLE_MPLAPACK}")
     add_test(NAME Output.table_contracts
       COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_table_contracts.py"
         "$<TARGET_FILE_DIR:bethe-su3-dispersion>")

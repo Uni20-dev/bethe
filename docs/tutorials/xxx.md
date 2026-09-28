@@ -5,6 +5,8 @@ has a particular length, boundary condition and energy reference. This
 tutorial connects those choices to concrete Bethe results for the spin-1/2
 Heisenberg chain. First we approach the single-spinon curve using odd rings;
 then we compare a restricted triplet family with periodic and free ends.
+The [spectral-weight tutorial](xxx-structure-factor.md) continues from these
+energies to operator intensities and dynamical sum rules.
 
 ## 1. Start with the same Hamiltonian
 

@@ -348,6 +348,7 @@ Computers in Physics 12, 565 (1998).
 Relevant tool modes:
 
 - `bethe-xxx-pbc`: Periodic XXX equations, energy normalization, and sector quantum numbers; Eqs. (6)-(9), (16), Table I.
+- `bethe-xxx-structure-factor`: Periodic XXX states and real-root two-spinon triplet window; our z=2\*lambda\_ABA.
 - `bethe-xxz-pbc`: XXX limit at Delta=1 and the conventional real-root quantum-number window.
 - `bethe-tj-pbc`: No-hole reduction to the periodic XXX sector solver: H\_tJ=2\*H\_XXX-L/2. Fermionic translation adds the filled-reference phase (-1)^(L-1).
 
@@ -1155,6 +1156,7 @@ J. Stat. Mech. 2008, P08006 (2008).
 
 Relevant tool modes:
 
+- `bethe-xxx-structure-factor`: Transverse integrated and first-frequency sum rules, Eqs. (62)-(63), evaluated at Delta=1; thermodynamic fractions are not finite-size identities.
 - `bethe-xxz-dispersion`: Massive spinon dispersion, Eqs. (21)-(23), and two-spinon kinematics, Eq. (32). Both unfolded and two-site-folded continuum edges are implemented, not structure factors or spectral weights.
 
 ### bortz-gohmann-2005
@@ -1295,5 +1297,27 @@ Jesse J. Osborne and Ian P. McCulloch. *Efficient and systematic calculation of 
 Phys. Rev. Research 7, 023018 (2025).
 
 [DOI](<https://doi.org/10.1103/PhysRevResearch.7.023018>), [arXiv](<https://arxiv.org/abs/2408.17117>).
+
+### kitanine-maillet-terras-1999
+
+N. Kitanine, J. M. Maillet, and V. Terras. *Form factors of the XXZ Heisenberg spin-1/2 finite chain*.
+Nucl. Phys. B 554, 647-678 (1999).
+
+[arXiv](<https://arxiv.org/abs/math-ph/9807020>).
+
+Relevant tool modes:
+
+- `bethe-xxx-structure-factor`: Algebraic Bethe ansatz norm and local spin form-factor determinant foundation, Secs. 3 and 5.
+
+### caux-hagemans-maillet-2005
+
+Jean-Sebastien Caux, Rob Hagemans, and Jean-Michel Maillet. *Computation of dynamical correlation functions of Heisenberg chains: the gapless anisotropic regime*.
+J. Stat. Mech. 2005, P09003 (2005).
+
+[arXiv](<https://arxiv.org/abs/cond-mat/0506698>).
+
+Relevant tool modes:
+
+- `bethe-xxx-structure-factor`: Rational XXX limit of normalized transverse form factors and Gaudin matrices, Eqs. (11)-(13). Only zero-field real-root two-spinon states are implemented; no strings or full DSF.
 
 <!-- END GENERATED BIBLIOGRAPHY -->

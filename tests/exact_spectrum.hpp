@@ -12,14 +12,22 @@
 
 namespace test_support
 {
+struct ExactEigensystem
+{
+    std::vector<unsigned> basis;
+    std::vector<double> energies;
+    /// Row-major matrix, eigenvectors in columns; energies are unsorted.
+    std::vector<double> vectors;
+};
 // Independent small-chain oracle: construct H directly in the Sz bit basis.
 // Optionally add a*(T+T^-1)/2, which shifts an eigenvalue by a*cos(P), to
 // check momentum as well as energy without a momentum-space Bethe formula.
 // Double is intentional only in this ED oracle; separate analytic regressions
 // in the test programs check the solver at the selected precision.
-inline std::vector<double> exact_spectrum(unsigned n, unsigned down, double translation_weight = 0,
-                                          bool periodic = true, double delta = 1)
+inline ExactEigensystem exact_eigensystem(unsigned n, unsigned down, double translation_weight = 0,
+                                          bool periodic = true, double delta = 1, bool eigenvectors = true)
 {
+  if (n < 2 || n > 12 || down > n) throw std::invalid_argument("ED oracle requires 2<=N<=12 and M<=N");
   std::vector<unsigned> basis;
   std::vector<std::size_t> index(1U << n);
   for (unsigned bits = 0; bits < (1U << n); ++bits)
@@ -30,6 +38,10 @@ inline std::vector<double> exact_spectrum(unsigned n, unsigned down, double tran
     }
   auto const dim = basis.size();
   std::vector<double> matrix(dim * dim, 0);
+  std::vector<double> vectors(eigenvectors ? dim * dim : 0, 0);
+  if (eigenvectors)
+    for (std::size_t i = 0; i < dim; ++i)
+      vectors[i * dim + i] = 1;
   auto at = [&](std::size_t i, std::size_t j) -> double& { return matrix[i * dim + j]; };
   for (std::size_t i = 0; i < dim; ++i)
   {
@@ -60,6 +72,12 @@ inline std::vector<double> exact_spectrum(unsigned n, unsigned down, double tran
         double const t = std::copysign(1.0, tau) / (std::abs(tau) + std::hypot(1.0, tau));
         double const c = 1 / std::sqrt(1 + t * t);
         double const s = t * c;
+        for (std::size_t r = 0; eigenvectors && r < dim; ++r)
+        {
+          double const vp = vectors[r * dim + p], vq = vectors[r * dim + q];
+          vectors[r * dim + p] = c * vp - s * vq;
+          vectors[r * dim + q] = s * vp + c * vq;
+        }
         at(p, p) -= t * off;
         at(q, q) += t * off;
         at(p, q) = at(q, p) = 0;
@@ -81,7 +99,14 @@ inline std::vector<double> exact_spectrum(unsigned n, unsigned down, double tran
   std::vector<double> energies(dim);
   for (std::size_t i = 0; i < dim; ++i)
     energies[i] = at(i, i);
-  std::sort(energies.begin(), energies.end());
-  return energies;
+  return {std::move(basis), std::move(energies), std::move(vectors)};
+}
+
+inline std::vector<double> exact_spectrum(unsigned n, unsigned down, double translation_weight = 0,
+                                          bool periodic = true, double delta = 1)
+{
+  auto result = exact_eigensystem(n, down, translation_weight, periodic, delta, false).energies;
+  std::sort(result.begin(), result.end());
+  return result;
 }
 } // namespace test_support

@@ -8,6 +8,8 @@ the quantum numbers through to rapidities, energy, and momentum. For a first
 command-line run, see [the CLI guide](command-line.md).
 For plotted finite-size and boundary comparisons, see the
 [XXX tutorial](tutorials/xxx.md).
+For intensities as well as energies, see the
+[finite-ring two-spinon structure factor](xxx-structure-factor.md).
 
 ## Hamiltonian and normalization
 
