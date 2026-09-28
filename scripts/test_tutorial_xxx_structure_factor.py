@@ -1,7 +1,8 @@
 """Check exported DSF normalization and catch plausible-looking corruptions."""
 import math
 import unittest
-from plot_xxx_structure_factor_tutorial import DATA, N, gaussian_spectrum, load_case, read_case
+from plot_xxx_structure_factor_tutorial import (DATA, N, HEATMAP_N, HEATMAP_ETA, gaussian_spectrum,
+                                               load_case, read_case, spectral_grid)
 
 
 class XXXStructureFactorTutorial(unittest.TestCase):
@@ -39,6 +40,30 @@ class XXXStructureFactorTutorial(unittest.TestCase):
         expected = 2*math.pi*sum(x['weight'] for x in lines if x['momentum_index'] == N//4)
         self.assertAlmostEqual(area, expected, places=12)
         with self.assertRaises(ValueError): gaussian_spectrum(lines, 16, omega, 0)
+
+    def test_heatmap_export(self):
+        lines, moments = load_case(n=HEATMAP_N)
+        self.assertEqual(len(lines), HEATMAP_N*(HEATMAP_N+2)//8)
+        self.assertEqual(len(moments), HEATMAP_N)
+        self.assertGreater(HEATMAP_N, N)
+        self.assertLess(HEATMAP_ETA, .08)
+        for q in range(1, HEATMAP_N):
+            self.assertAlmostEqual(moments[q]['weight'], moments[HEATMAP_N-q]['weight'], places=9)
+
+    def test_grid_normalization_and_periodic_seam(self):
+        # Artificial q=0 weight makes double-counting the repeated edge visible.
+        lines = [{'momentum_index': 0, 'gap': 1, 'weight': .25},
+                 {'momentum_index': 1, 'gap': 2, 'weight': .5},
+                 {'momentum_index': 3, 'gap': 2, 'weight': .5}]
+        omega = [-1+i*.005 for i in range(1001)]
+        columns = spectral_grid(lines, 4, omega, .05)
+        self.assertEqual(len(columns), 5)
+        self.assertEqual(columns[0], columns[-1])
+        self.assertEqual(columns[1], columns[3])
+        self.assertEqual(columns[2], [0]*len(omega))
+        self.assertEqual(columns[1], gaussian_spectrum(lines, 1, omega, .05))
+        area = sum(.005*(sum(c)-.5*(c[0]+c[-1])) for c in columns[:-1])/(4*2*math.pi)
+        self.assertAlmostEqual(area, sum(x['weight'] for x in lines)/4, places=12)
 
 
 if __name__ == '__main__': unittest.main()

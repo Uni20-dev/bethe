@@ -58,7 +58,47 @@ For iMPS, these finite-ring data are useful checks, but increasing N is a
 separate convergence study. The continuum boundaries alone do not determine
 intensities, and multiparticle states outside this family are still absent.
 
-## 3. Read coverage, not just convergence
+## 3. The whole momentum–frequency plane
+
+For a more resolved demonstration, increase the ring to **N=256** and include
+all **8,256 two-spinon states**:
+
+```sh
+bethe-xxx-structure-factor 256 --csv xxx-n256-spectrum.csv \
+  --csv-table moments=xxx-n256-moments.csv
+```
+
+![Broadened XXX two-spinon spectral function across the full Brillouin zone](figures/xxx-structure-factor-heatmap.svg)
+
+[Open the full-resolution figure](figures/xxx-structure-factor-heatmap.svg) ·
+[Download spectral lines](data/xxx-dsf-n256-spectrum.csv) ·
+[Download moment sums](data/xxx-dsf-n256-moments.csv)
+
+This is the **entire momentum range of the two-spinon contribution**, not the
+complete many-spinon spectral function. It uses the same normalized Gaussian
+as above, now with $`\eta=0.04J`$ (standard deviation; FWHM ≈0.094J). We sample
+frequency every 0.002J and keep all 256 exact momenta, spaced by
+$`\Delta q=2\pi/256`$. There is **no momentum broadening or interpolation**:
+each narrow column shows one finite-ring momentum. The q=0 column is repeated
+at 2π only to close the periodic plotting edge, not counted twice in any sum.
+
+The logarithmic color scale reveals weak spectral weight inside the continuum
+without losing the strong lower-edge response. Intensities below 0.01 use the
+dark background; this is only a display threshold, not a cut on exported
+weights. White dashed curves mark the infinite-chain two-spinon boundaries.
+The blurred intensity outside them, including negative frequencies near q=π,
+comes from Gaussian tails and finite-size effects—not additional states.
+
+Compared with N=64, this gives four times the momentum resolution and halves
+the broadening. Making η still smaller mainly exposes individual finite-ring
+lines; a denser image grid alone cannot create better physical resolution.
+N=512 and beyond would benefit from parallel state scanning: the current
+frontend scans states serially, so a many-core host alone does not speed it up.
+The N=256 family captures **94.89% of the integrated weight** and **92.75% of
+the first moment**. These are the actual finite-ring fractions, without
+renormalization; they need not match the N=64 percentages below.
+
+## 4. Read coverage, not just convergence
 
 The full zz integrated sum rule is
 
@@ -84,17 +124,21 @@ by N gives 1/2, so this small ring exhausts the raising-channel sum rule.
 The zz weights are exactly half as large. That complete small example should
 not be generalized to arbitrary ring lengths.
 
-## 4. Reproduce or inspect the calculation
+## 5. Reproduce or inspect the calculation
 
 From the source checkout with the [plotting environment](contributing.md#plotting-environment):
 
 ```sh
 python3 scripts/plot_xxx_structure_factor_tutorial.py
 python3 scripts/plot_xxx_structure_factor_tutorial.py --solver bethe-xxx-structure-factor
+# Regenerate only the larger-ring heat map:
+python3 scripts/plot_xxx_structure_factor_tutorial.py --heatmap-only --solver bethe-xxx-structure-factor
 ```
 
 The first command reads the checked-in exports; the second replaces them
-with a fresh run and reproduces the figure. The parser checks channel,
+with fresh N=64 and N=256 runs and reproduces both figures. The reference
+N=256 run took about three minutes on the development desktop; plotting saved data requires
+no Bethe solves. The parser checks channel,
 normalization, complete candidate counts, momentum selection, positive weights,
 sum-rule coverage and agreement between line sums and moment tables.
 

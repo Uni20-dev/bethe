@@ -10,6 +10,8 @@ ROOT = Path(__file__).resolve().parents[1]
 DATA = ROOT / 'docs/tutorials/data'
 FIGURES = ROOT / 'docs/tutorials/figures'
 N = 64
+HEATMAP_N = 256
+HEATMAP_ETA = .04
 SPECTRUM = ['state_id', 'momentum_index', 'q', 'gap', 'weight']
 MOMENTS = ['momentum_index', 'q', 'weight', 'first_moment', 'full_first_moment', 'first_moment_fraction']
 
@@ -66,14 +68,14 @@ def read_case(texts, n=N):
     return lines, moments
 
 
-def load_case(solver=None):
+def load_case(solver=None, n=N):
     names = ('spectrum', 'moments')
-    texts = (capture_csv_tables([solver, N], names) if solver else
-             {name: (DATA/f'xxx-dsf-n{N}-{name}.csv').read_text() for name in names})
-    result = read_case(texts)
+    texts = (capture_csv_tables([solver, n, '--max-candidates', n*(n+2)//8], names) if solver else
+             {name: (DATA/f'xxx-dsf-n{n}-{name}.csv').read_text() for name in names})
+    result = read_case(texts, n)
     if solver:
         for name, text in texts.items():
-            (DATA/f'xxx-dsf-n{N}-{name}.csv').write_text(text)
+            (DATA/f'xxx-dsf-n{n}-{name}.csv').write_text(text)
     return result
 
 
@@ -81,9 +83,20 @@ def gaussian_spectrum(lines, q_index, omega, eta):
     """S itself, including 2*pi. A normalized kernel, not fitted peak heights."""
     if not math.isfinite(eta) or eta <= 0:
         raise ValueError('Gaussian width must be positive and finite')
+    selected = [line for line in lines if line['momentum_index'] == q_index]
     return [2*math.pi*math.fsum(line['weight']*math.exp(-.5*((w-line['gap'])/eta)**2)
                               /(math.sqrt(2*math.pi)*eta)
-                              for line in lines if line['momentum_index'] == q_index) for w in omega]
+                              for line in selected) for w in omega]
+
+
+def spectral_grid(lines, n, omega, eta):
+    """One column per exact finite-ring momentum; no momentum convolution.
+
+    The final column repeats q=0 at 2*pi for the periodic plotting seam.
+    It must not be counted twice when integrating over momentum.
+    """
+    columns = [gaussian_spectrum(lines, q, omega, eta) for q in range(n)]
+    return columns + [columns[0].copy()]
 
 
 def plot(lines, moments):
@@ -118,8 +131,44 @@ def plot(lines, moments):
     plt.close(fig)
 
 
+def plot_heatmap(lines, moments):
+    import matplotlib
+    matplotlib.use('Agg')
+    import matplotlib.pyplot as plt
+    from matplotlib.colors import LogNorm
+    import numpy as np
+    n = len(moments)
+    omega = np.linspace(-.2, 3.6, 1901)
+    intensity = np.asarray(spectral_grid(lines, n, omega, HEATMAP_ETA)).T
+    plt.rcParams.update({'svg.hashsalt': 'bethe-xxx-dsf-heatmap', 'font.size': 12,
+                         'axes.spines.top': False, 'axes.spines.right': False})
+    fig, ax = plt.subplots(figsize=(10, 5.6), layout='constrained')
+    cmap = plt.get_cmap('magma').copy()
+    cmap.set_under('#080611')
+    cmap.set_bad('#080611')
+    half_dq = 1/n  # q/pi pixel half-width
+    half_dw = (omega[1]-omega[0])/2
+    picture = ax.imshow(intensity, origin='lower', aspect='auto', interpolation='none', cmap=cmap,
+                        norm=LogNorm(vmin=.01, vmax=math.ceil(float(intensity.max()))),
+                        extent=(-half_dq, 2+half_dq, omega[0]-half_dw, omega[-1]+half_dw))
+    q = np.linspace(0, 2*math.pi, 1001)
+    ax.plot(q/math.pi, math.pi/2*np.abs(np.sin(q)), '--', color='white', alpha=.7, lw=.85)
+    ax.plot(q/math.pi, math.pi*np.abs(np.sin(q/2)), '--', color='white', alpha=.7, lw=.85,
+            label='Infinite-chain two-spinon boundaries')
+    ax.set(title=fr'XXX two-spinon $S^{{zz}}_{{2,\eta}}(q,\omega)$: N={n}, Gaussian $\eta={HEATMAP_ETA}$',
+           xlabel=r'$q/\pi$', ylabel=r'$\omega/J$', xlim=(0, 2), ylim=(omega[0], omega[-1]),
+           xticks=[0,.25,.5,.75,1,1.25,1.5,1.75,2])
+    ax.legend(loc='upper center', facecolor='#080611', labelcolor='white', edgecolor='0.4', fontsize=9)
+    fig.colorbar(picture, ax=ax, extend='min', label=r'$S^{zz}_{2,\eta}(q,\omega)$ (logarithmic color scale)')
+    save_svg(fig, FIGURES/'xxx-structure-factor-heatmap.svg')
+    plt.close(fig)
+
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--solver', type=solver_executable, help='Regenerate from this executable on PATH or explicit path')
+    parser.add_argument('--heatmap-only', action='store_true', help='Only regenerate the larger-ring heat map')
     args = parser.parse_args()
-    plot(*load_case(args.solver))
+    if not args.heatmap_only:
+        plot(*load_case(args.solver))
+    plot_heatmap(*load_case(args.solver, HEATMAP_N))
