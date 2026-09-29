@@ -71,7 +71,7 @@ rescales the frequency axis by $`J`$ and density by $`1/J`$.
   finite momentum resolution matters.
 
 The [model guide](../xxx-structure-factor-thermo.md) explains the formula,
-numerical error estimates, status fields and planned four-spinon extension.
+numerical error estimates, status fields and the two-spinon scope.
 
 ## Reproduce the figure
 

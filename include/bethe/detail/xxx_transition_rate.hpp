@@ -30,7 +30,7 @@ template <uni20::Real Real> struct TransitionRate
 // whose Abel integral is log(1+4/a^2). The remainder is exponentially
 // decaying, not conditionally convergent. For x>=1 its absolute tail
 // beyond L is bounded by 8 exp(-2L)/L. No tabulated fp64 constants.
-// This even rapidity-difference kernel is also needed for four spinons.
+// Even rapidity-difference kernel, independent of continuum kinematics.
 template <uni20::Real Real> class XXXTransitionRate {
   public:
     explicit XXXTransitionRate(StructureFactorOptions<Real> options = {}) : options_(options)

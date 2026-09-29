@@ -139,22 +139,10 @@ The C++ entry point is
 `bethe::heisenberg::ThermodynamicTwoSpinonStructureFactor<Real>` in
 [`xxx_thermodynamic_structure_factor.hpp`](../include/bethe/xxx_thermodynamic_structure_factor.hpp).
 It is immutable and can be shared between scheduler jobs. The rapidity-difference
-kernel is separate from continuum kinematics for reuse by four-spinon weights.
+kernel is separate from continuum kinematics.
 
-## Next checkpoint: four spinons
+## Scope
 
-The two-spinon checkpoint is implemented; four spinons are not yet exposed.
-The next steps are the complex gamma-ratio matrix-element series, its truncation
-diagnostics, and two-dimensional integration over the allowed pair energy and
-momentum. Both momentum sectors modulo $`2\pi`$ must be included. Numerical
-integration errors must remain distinct from missing six-and-higher-spinon weight.
-
-Use Caux–Hagemans together with the
-[author's correction to Eq. (31)](https://scipost.org/commentary/10.1088/1742-5468/2006/12/P12013/):
-the upper frequency conditions for the excluded $`K_{2c}`$ and $`K_{2d}`$
-intervals are interchanged in the original paper. The corrected conditions use
-$`\pi\cos(k/2)`$ for $`K_{2c}`$ and $`\pi\sin(k/2)`$ for $`K_{2d}`$.
-Verify the geometry independently by intersecting the two pair continua before
-implementing a spectral grid. Then test permutation symmetry, coincident-rapidity
-limits, precision/refinement stability and first-moment coverage before publishing
-two-plus-four-spinon plots.
+This tool implements only the exact two-spinon contribution. Higher-spinon
+spectral weights are not provided; numerical integration errors must remain
+distinct from the physical weight absent from this partial contribution.

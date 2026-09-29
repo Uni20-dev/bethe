@@ -38,7 +38,12 @@ jobs:
           path: build_codex/docs-site/site
 
   deploy:
-    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+    # Publishing requires both public visibility and an explicit repository opt-in.
+    if: >-
+      github.ref == 'refs/heads/main' &&
+      github.event_name != 'pull_request' &&
+      github.event.repository.visibility == 'public' &&
+      vars.BETHE_PUBLISH_DOCS == 'true'
     needs: build
     runs-on: ubuntu-latest
     permissions:
