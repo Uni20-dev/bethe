@@ -1,5 +1,9 @@
 # Integrable ladder: reconstruct a finite-size magnetization curve
 
+<!-- BEGIN GENERATED PAGE LINK -->
+[Read this page on the documentation site](https://uni20-dev.github.io/bethe/docs/tutorials/ladder/)
+<!-- END GENERATED PAGE LINK -->
+
 [All tutorials](index.md) · [Model guide](../ladder.md) · [SU(3)/ULS tutorial](su3-uls.md)
 
 This example uses fixed-magnetization energies to build a field-dependent

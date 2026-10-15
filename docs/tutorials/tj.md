@@ -1,5 +1,9 @@
 # Supersymmetric t–J: holes, spin and the Heisenberg limit
 
+<!-- BEGIN GENERATED PAGE LINK -->
+[Read this page on the documentation site](https://uni20-dev.github.io/bethe/docs/tutorials/tj/)
+<!-- END GENERATED PAGE LINK -->
+
 [All tutorials](index.md) · [Model guide](../tj.md) · [XXX tutorial](xxx.md)
 
 The local t–J Hilbert space contains a hole, an up electron or a down electron:

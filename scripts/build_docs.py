@@ -15,7 +15,10 @@ import shutil
 import subprocess
 import sys
 import tempfile
+import tomllib
 from urllib.parse import quote, urlsplit, unquote
+
+from tutorial_links import is_tutorial, render_tutorial_link
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -105,6 +108,8 @@ def main():
     args = parser.parse_args()
     work = args.work_dir.resolve()
     work.mkdir(parents=True, exist_ok=True)
+    config_text = (ROOT / "zensical.toml").read_text()
+    project = tomllib.loads(config_text)['project']
     with tempfile.TemporaryDirectory(prefix="staging-", dir=work) as temp:
         staging = Path(temp)
         sources = site_sources(ROOT)
@@ -114,12 +119,15 @@ def main():
             target = staging / "source" / relative
             target.parent.mkdir(parents=True, exist_ok=True)
             if source.suffix == ".md":
-                target.write_text(adapt_math(adapt_links(source.read_text(), relative, included)))
+                text = source.read_text()
+                if is_tutorial(relative):
+                    text = render_tutorial_link(text, relative, project, for_site=True)
+                target.write_text(adapt_math(adapt_links(text, relative, included)))
             else:
                 shutil.copyfile(source, target)
         # Preserve README.md as a link target for existing GitHub-first docs.
         shutil.copyfile(staging / "source/README.md", staging / "source/index.md")
-        config = (ROOT / "zensical.toml").read_text().replace(
+        config = config_text.replace(
             'docs_dir = "source"', 'docs_dir = ' + json.dumps(staging.name + '/source'))
         (work / "zensical.toml").write_text(config)
         subprocess.run([sys.executable, "-m", "zensical", "build"],

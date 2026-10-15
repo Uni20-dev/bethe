@@ -1,5 +1,9 @@
 # XXZ spinons and two-spinon continua
 
+<!-- BEGIN GENERATED PAGE LINK -->
+[Read this page on the documentation site](https://uni20-dev.github.io/bethe/docs/tutorials/xxz-spinons/)
+<!-- END GENERATED PAGE LINK -->
+
 This tutorial produces reference curves for an infinite spin-1/2 XXZ chain,
 then shows how to compare them with an MPS excitation calculation. We compare
 the gapless Heisenberg point with a gapped antiferromagnet. No finite-size

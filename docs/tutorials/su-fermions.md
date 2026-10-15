@@ -1,5 +1,9 @@
 # SU(n) fermions: components are not Bethe levels
 
+<!-- BEGIN GENERATED PAGE LINK -->
+[Read this page on the documentation site](https://uni20-dev.github.io/bethe/docs/tutorials/su-fermions/)
+<!-- END GENERATED PAGE LINK -->
+
 [All tutorials](index.md) · [Model guide](../su-fermions.md) · [Gaudin–Yang tutorial](gaudin-yang.md)
 
 Adding internal components lets fermions share spatial orbitals without

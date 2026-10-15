@@ -1,5 +1,9 @@
 # ULS excitations: representations before curves
 
+<!-- BEGIN GENERATED PAGE LINK -->
+[Read this page on the documentation site](https://uni20-dev.github.io/bethe/docs/tutorials/su3-uls/)
+<!-- END GENERATED PAGE LINK -->
+
 At the spin-1 Uimin–Lai–Sutherland (ULS) point, spin and quadrupole operators
 belong to a common SU(3) multiplet. This makes a useful test for symmetry-resolved
 MPS excitations—but the elementary curves are not themselves local-response

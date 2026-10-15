@@ -1,5 +1,9 @@
 # Hubbard spinons, holons and energy conventions
 
+<!-- BEGIN GENERATED PAGE LINK -->
+[Read this page on the documentation site](https://uni20-dev.github.io/bethe/docs/tutorials/hubbard-half-filled/)
+<!-- END GENERATED PAGE LINK -->
+
 An infinite, half-filled Hubbard chain is a useful reference for an iMPS
 excitation calculation: its spin excitations are gapless, while its charge
 excitations are gapped. This tutorial plots the elementary lines at

@@ -1,5 +1,9 @@
 # XXX: from excitation energies to spectral weight
 
+<!-- BEGIN GENERATED PAGE LINK -->
+[Read this page on the documentation site](https://uni20-dev.github.io/bethe/docs/tutorials/xxx-structure-factor/)
+<!-- END GENERATED PAGE LINK -->
+
 An energy level tells us where a response *could* appear. Its form factor
 tells us how strongly the chosen operator excites it. This tutorial adds that
 missing information to the [finite-ring XXX scans](xxx.md), using the

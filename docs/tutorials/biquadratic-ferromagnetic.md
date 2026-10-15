@@ -1,5 +1,9 @@
 # Ferromagnetic biquadratic chain: defects and bound droplets
 
+<!-- BEGIN GENERATED PAGE LINK -->
+[Read this page on the documentation site](https://uni20-dev.github.io/bethe/docs/tutorials/biquadratic-ferromagnetic/)
+<!-- END GENERATED PAGE LINK -->
+
 What sits above the large ground manifold of the positive pure biquadratic
 chain? There is an exact one-defect band, but it is only part of the answer:
 several singlet defects can bind, and their levels can interleave scattering

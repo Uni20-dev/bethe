@@ -4,6 +4,9 @@ C++23 tools for finite-system and thermodynamic Bethe ansatz calculations, compl
 [Uni20](https://github.com/Uni20-dev/uni20) and the
 [Matrix Product Toolkit](https://github.com/mptoolkit/mptoolkit).
 
+**[Documentation and tutorials](https://uni20-dev.github.io/bethe/)** ·
+[GitHub repository](https://github.com/Uni20-dev/bethe)
+
 High precision is a first-class feature: the solvers support
 **fp64**, **long-double** (platform-dependent extended precision), and optional
 **fp128** (binary128, about 34 significant decimal digits) through Uni20/MPLAPACK.
@@ -33,9 +36,6 @@ See the [tutorial index and model coverage](docs/tutorials/index.md) for the ful
 
 Figures, source data and Python plotting scripts are included; Python is not
 needed to run the solvers.
-
-Browse the [documentation site](https://uni20-dev.github.io/bethe/) or read the
-same Markdown here on GitHub.
 
 ## Choose a model
 

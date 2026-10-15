@@ -1,5 +1,9 @@
 # Sutherland: the collision rule is part of the model
 
+<!-- BEGIN GENERATED PAGE LINK -->
+[Read this page on the documentation site](https://uni20-dev.github.io/bethe/docs/tutorials/sutherland/)
+<!-- END GENERATED PAGE LINK -->
+
 Can two Bose gases with a vanishing explicit potential have different spectra?
 Yes: their allowed wavefunctions can obey different rules at particle
 coincidences. The Sutherland model makes this distinction unusually concrete.

@@ -1,5 +1,9 @@
 # Lieb–Liniger: particle and hole branches
 
+<!-- BEGIN GENERATED PAGE LINK -->
+[Read this page on the documentation site](https://uni20-dev.github.io/bethe/docs/tutorials/lieb-liniger/)
+<!-- END GENERATED PAGE LINK -->
+
 What happens to the excitation spectrum of a one-dimensional Bose gas as
 repulsion increases? This tutorial plots the two Lieb branches, then changes
 the density to show which parts of a comparison are physics and which are

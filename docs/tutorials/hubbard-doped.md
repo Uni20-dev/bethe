@@ -1,5 +1,9 @@
 # Doping the Hubbard chain
 
+<!-- BEGIN GENERATED PAGE LINK -->
+[Read this page on the documentation site](https://uni20-dev.github.io/bethe/docs/tutorials/hubbard-doped/)
+<!-- END GENERATED PAGE LINK -->
+
 At half filling we found gapless spinons but a charge gap. Now set
 $`n=N/L=0.75`$, retaining $`U/t=4`$, $`t=1`$, zero field and zero temperature.
 This tutorial shows the doped elementary branches and how to choose the

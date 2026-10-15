@@ -1,5 +1,9 @@
 # Haldane–Shastry: counting a complete spin spectrum
 
+<!-- BEGIN GENERATED PAGE LINK -->
+[Read this page on the documentation site](https://uni20-dev.github.io/bethe/docs/tutorials/haldane-shastry/)
+<!-- END GENERATED PAGE LINK -->
+
 How many states does a dot in a spectrum represent? For the Haldane–Shastry
 chain it can represent more than one ordinary spin multiplet. This tutorial
 uses small rings to connect motif labels, energy–momentum plots and SU(2)

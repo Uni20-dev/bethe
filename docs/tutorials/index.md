@@ -1,5 +1,9 @@
 # Tutorials and model coverage
 
+<!-- BEGIN GENERATED PAGE LINK -->
+[Read this page on the documentation site](https://uni20-dev.github.io/bethe/docs/tutorials/)
+<!-- END GENERATED PAGE LINK -->
+
 These worked examples connect actual solver exports to physical questions.
 They include plots, downloadable data, reproduction scripts, normalization
 checks and caveats for interpreting the result. Start with

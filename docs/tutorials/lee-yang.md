@@ -1,5 +1,9 @@
 # Scaling Lee–Yang: a negative central charge and a positive particle gap
 
+<!-- BEGIN GENERATED PAGE LINK -->
+[Read this page on the documentation site](https://uni20-dev.github.io/bethe/docs/tutorials/lee-yang/)
+<!-- END GENERATED PAGE LINK -->
+
 [All tutorials](index.md) · [Model and numerical guide](../lee-yang.md) ·
 [Sine-Gordon comparison](sine-gordon.md)
 

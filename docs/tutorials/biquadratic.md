@@ -1,5 +1,9 @@
 # Negative biquadratic chain: sectors, singlets and missing roots
 
+<!-- BEGIN GENERATED PAGE LINK -->
+[Read this page on the documentation site](https://uni20-dev.github.io/bethe/docs/tutorials/biquadratic/)
+<!-- END GENERATED PAGE LINK -->
+
 The free-end spin-1 chain with a negative pure biquadratic interaction is a
 useful test of symmetry-resolved MPS excitations. Its Bethe calculation uses
 an auxiliary spin-1/2 problem, but the physical multiplicities belong to a

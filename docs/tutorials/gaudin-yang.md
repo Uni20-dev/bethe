@@ -1,5 +1,9 @@
 # Gaudin–Yang: repulsion, spin roots and finite-ring shells
 
+<!-- BEGIN GENERATED PAGE LINK -->
+[Read this page on the documentation site](https://uni20-dev.github.io/bethe/docs/tutorials/gaudin-yang/)
+<!-- END GENERATED PAGE LINK -->
+
 [All tutorials](index.md) · [Model guide](../gaudin-yang.md) · [Lieb–Liniger tutorial](lieb-liniger.md)
 
 The Gaudin–Yang gas contains two species of continuum fermions with a contact

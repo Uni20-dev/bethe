@@ -1,5 +1,9 @@
 # XYZ: gapped spinons and bound branches
 
+<!-- BEGIN GENERATED PAGE LINK -->
+[Read this page on the documentation site](https://uni20-dev.github.io/bethe/docs/tutorials/xyz/)
+<!-- END GENERATED PAGE LINK -->
+
 The XYZ chain is a useful next step beyond XXZ for an excitation ansatz: it
 has domain walls, bound excitations and discrete symmetry labels, but no
 conserved total $`S^z`$. This tutorial shows how to specify the couplings and

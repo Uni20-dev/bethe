@@ -1,5 +1,9 @@
 # Central spin: sector energies and field response
 
+<!-- BEGIN GENERATED PAGE LINK -->
+[Read this page on the documentation site](https://uni20-dev.github.io/bethe/docs/tutorials/central-spin/)
+<!-- END GENERATED PAGE LINK -->
+
 [All tutorials](index.md) · [Model guide](../central-spin.md) · [Richardson tutorial](richardson.md)
 
 One spin coupled to an inhomogeneous bath makes a useful long-range MPS

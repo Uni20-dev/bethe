@@ -1,5 +1,9 @@
 # TB spinons: the same edge can hide a different sector
 
+<!-- BEGIN GENERATED PAGE LINK -->
+[Read this page on the documentation site](https://uni20-dev.github.io/bethe/docs/tutorials/takhtajan-babujian/)
+<!-- END GENERATED PAGE LINK -->
+
 The spin-1 Takhtajan–Babujian (TB) point is another useful benchmark for MPS
 excitation calculations. Its elementary dispersion is a sine curve, but
 identifying the physical excitation takes more than rescaling a spin-1/2

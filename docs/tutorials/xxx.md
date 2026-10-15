@@ -1,5 +1,9 @@
 # XXX: finite spinons and the meaning of an excitation scan
 
+<!-- BEGIN GENERATED PAGE LINK -->
+[Read this page on the documentation site](https://uni20-dev.github.io/bethe/docs/tutorials/xxx/)
+<!-- END GENERATED PAGE LINK -->
+
 An infinite-chain dispersion is a useful target, but a finite MPS calculation
 has a particular length, boundary condition and energy reference. This
 tutorial connects those choices to concrete Bethe results for the spin-1/2

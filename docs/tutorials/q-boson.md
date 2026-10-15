@@ -1,5 +1,9 @@
 # q-bosons: deforming the hopping, not adding a Hubbard U
 
+<!-- BEGIN GENERATED PAGE LINK -->
+[Read this page on the documentation site](https://uni20-dev.github.io/bethe/docs/tutorials/q-boson/)
+<!-- END GENERATED PAGE LINK -->
+
 The q-boson chain offers a small, controlled benchmark for a bosonic MPS:
 keep particle number fixed, change the hopping matrix elements, and follow
 the spectrum from free bosons to the phase model. It is **not** the ordinary

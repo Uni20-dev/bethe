@@ -1,5 +1,9 @@
 # Kondo response: subtract the host and calibrate the scale
 
+<!-- BEGIN GENERATED PAGE LINK -->
+[Read this page on the documentation site](https://uni20-dev.github.io/bethe/docs/tutorials/kondo/)
+<!-- END GENERATED PAGE LINK -->
+
 [All tutorials](index.md) · [Model guide](../kondo.md) · [Central-spin tutorial](central-spin.md)
 
 A lattice impurity calculation and a continuum Bethe-ansatz energy cannot

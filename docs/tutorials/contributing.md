@@ -1,9 +1,32 @@
 # Maintaining tutorials and the documentation site
 
+<!-- BEGIN GENERATED PAGE LINK -->
+[Read this page on the documentation site](https://uni20-dev.github.io/bethe/docs/tutorials/contributing/)
+<!-- END GENERATED PAGE LINK -->
+
 Tutorials are ordinary GitHub-readable Markdown. Keep the narrative, small
 reference exports, and SVG figures in `docs/tutorials/`; put executable
 reproduction scripts in `scripts/`. Readers should not need a solver build
 or a notebook server just to see a result.
+
+## Links between GitHub and the documentation site
+
+Each tutorial has a generated link below its title. On GitHub it opens the
+corresponding documentation page; the site build replaces it with a link to
+that tutorial's Markdown file on GitHub. Both destinations come from
+`zensical.toml` and the source path, including tutorial index pages.
+
+After adding or renaming a tutorial, `git add` its path and refresh the links:
+
+```sh
+python3 scripts/tutorial_links.py
+python3 scripts/tutorial_links.py --check
+```
+
+The generator updates only the marked link block in tracked tutorials and
+leaves the narrative intact. CI rejects missing or stale links. The site build
+changes the link only in its temporary staging copy, keeping the checked-in
+Markdown ready for GitHub readers.
 
 ## Numerical figures
 

@@ -1,5 +1,9 @@
 # TASEP: relaxation, oscillation and finite-size scaling
 
+<!-- BEGIN GENERATED PAGE LINK -->
+[Read this page on the documentation site](https://uni20-dev.github.io/bethe/docs/tutorials/tasep/)
+<!-- END GENERATED PAGE LINK -->
+
 [All tutorials](index.md) · [Model guide](../tasep.md) · [ASEP tutorial](asep.md)
 
 Bethe ansatz also solves stochastic generators. In the totally asymmetric

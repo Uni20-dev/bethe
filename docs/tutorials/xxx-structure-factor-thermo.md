@@ -1,5 +1,9 @@
 # The infinite-chain XXX two-spinon spectrum
 
+<!-- BEGIN GENERATED PAGE LINK -->
+[Read this page on the documentation site](https://uni20-dev.github.io/bethe/docs/tutorials/xxx-structure-factor-thermo/)
+<!-- END GENERATED PAGE LINK -->
+
 The [finite-ring tutorial](xxx-structure-factor.md) turns individual transition
 weights into a broadened spectrum. Here we can remove both the finite ring and
 the plotting broadening: the infinite-chain two-spinon contribution is known

@@ -6,6 +6,7 @@ import unittest
 
 from build_docs import adapt_links, adapt_math, site_sources
 from check_docs_site import Page, bibliography_link_errors
+from tutorial_links import BEGIN, END, render_tutorial_link, sync_tutorial_links, tutorial_urls
 
 
 class SiteTests(unittest.TestCase):
@@ -78,6 +79,89 @@ class SiteTests(unittest.TestCase):
                 self.assertTrue(bibliography_link_errors(Page(f'<a href="{wrong}">DOI</a>'), refs))
         # Repeated registry URLs must not silently lose one of their links.
         self.assertTrue(bibliography_link_errors(Page(f'<a href="{url}">DOI</a>'), refs * 2))
+
+
+class TutorialLinkTests(unittest.TestCase):
+    project = {'site_url': 'https://example.org/bethe/',
+               'repo_url': 'https://github.com/example/bethe'}
+
+    def test_page_and_index_urls(self):
+        cases = [
+            ('docs/tutorials/xxz-spinons.md', 'docs/tutorials/xxz-spinons/'),
+            ('docs/tutorials/index.md', 'docs/tutorials/'),
+            ('docs/tutorials/nested/index.md', 'docs/tutorials/nested/'),
+            ('docs/tutorials/a (b).md', 'docs/tutorials/a%20%28b%29/'),
+        ]
+        for relative, published in cases:
+            with self.subTest(relative=relative):
+                site, source = tutorial_urls(Path(relative), self.project)
+                self.assertEqual(site, 'https://example.org/bethe/' + published)
+                self.assertEqual(source, 'https://github.com/example/bethe/blob/main/'
+                                 + relative.replace(' ', '%20').replace('(', '%28').replace(')', '%29'))
+
+    def test_source_banner_preserves_prose_and_is_idempotent(self):
+        body = 'Energy $`E=\\sum k^2`$.\n\n```math\na=b\n```\n\n[Figure](figures/example.svg)\n'
+        original = '# Example\n\n' + body
+        relative = Path('docs/tutorials/example.md')
+        result = render_tutorial_link(original, relative, self.project)
+        self.assertEqual(result, '# Example\n\n' + BEGIN + '\n'
+                         '[Read this page on the documentation site]'
+                         '(https://example.org/bethe/docs/tutorials/example/)\n'
+                         + END + '\n\n' + body)
+        self.assertEqual(render_tutorial_link(result, relative, self.project), result)
+
+    def test_staging_reverses_link_to_exact_source_file(self):
+        for name in ('example.md', 'index.md'):
+            relative = Path('docs/tutorials') / name
+            source = render_tutorial_link('# Tutorial\n\nBody.\n', relative, self.project)
+            staged = render_tutorial_link(source, relative, self.project, for_site=True)
+            self.assertIn('[View this page on GitHub]'
+                          f'(https://github.com/example/bethe/blob/main/docs/tutorials/{name})', staged)
+            self.assertNotIn('https://example.org/', staged)
+            self.assertTrue(staged.endswith('\n\nBody.\n'))
+            self.assertEqual(render_tutorial_link(staged, relative, self.project), source)
+
+    def test_renaming_refreshes_existing_link(self):
+        old = render_tutorial_link('# Tutorial\n\nBody.\n', Path('docs/tutorials/old.md'), self.project)
+        updated = render_tutorial_link(old, Path('docs/tutorials/new.md'), self.project)
+        self.assertIn('https://example.org/bethe/docs/tutorials/new/', updated)
+        self.assertNotIn('/old/', updated)
+        self.assertEqual(updated.count(BEGIN), 1)
+
+    def test_malformed_blocks_are_rejected_without_consuming_prose(self):
+        cases = [
+            '# Title\n\n' + BEGIN + '\nUnterminated.\n',
+            '# Title\n\n' + END + '\nOrphan end marker.\n',
+            '# Title\n\nBody.\n' + BEGIN + '\nLink\n' + END + '\n',
+            '# Title\n\n' + BEGIN + '\n' + BEGIN + '\nLink\n' + END + '\n',
+            'No heading\n\nBody.\n',
+        ]
+        for source in cases:
+            with self.subTest(source=source), self.assertRaises(ValueError):
+                render_tutorial_link(source, Path('docs/tutorials/example.md'), self.project)
+
+    def test_check_does_not_write_and_generator_ignores_untracked_drafts(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            subprocess.run(['git', 'init', '-q', temp], check=True)
+            (root / 'zensical.toml').write_text('[project]\nsite_url = "https://example.org/bethe/"\n'
+                                              'repo_url = "https://github.com/example/bethe"\n')
+            (root / 'docs/tutorials').mkdir(parents=True)
+            tracked = Path('docs/tutorials/public.md')
+            draft = root / 'docs/tutorials/private.md'
+            original = '# Tutorial\n\nBody.\n'
+            (root / tracked).write_text(original)
+            draft.write_text(original)
+            subprocess.run(['git', 'add', str(tracked)], cwd=root, check=True)
+            self.assertEqual(sync_tutorial_links(root, check=True), [tracked])
+            self.assertEqual((root / tracked).read_text(), original)
+            self.assertEqual(sync_tutorial_links(root), [tracked])
+            self.assertEqual(sync_tutorial_links(root, check=True), [])
+            self.assertEqual(draft.read_text(), original)
+            # A copied banner still points at the old filename until refreshed.
+            new = Path('docs/tutorials/renamed.md')
+            subprocess.run(['git', 'mv', str(tracked), str(new)], cwd=root, check=True)
+            self.assertEqual(sync_tutorial_links(root, check=True), [new])
 
 
 if __name__ == '__main__':

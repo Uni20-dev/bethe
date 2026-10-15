@@ -1,5 +1,9 @@
 # Sine-Gordon: particles, thresholds and finite-volume gaps
 
+<!-- BEGIN GENERATED PAGE LINK -->
+[Read this page on the documentation site](https://uni20-dev.github.io/bethe/docs/tutorials/sine-gordon/)
+<!-- END GENERATED PAGE LINK -->
+
 [All tutorials](index.md) · [Particle guide](../sine-gordon-excitations.md) ·
 [Exact finite-volume guide](../sine-gordon-excited.md)
 

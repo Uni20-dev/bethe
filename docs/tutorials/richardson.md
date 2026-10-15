@@ -1,5 +1,9 @@
 # Richardson pairing: blocking and a smooth root collision
 
+<!-- BEGIN GENERATED PAGE LINK -->
+[Read this page on the documentation site](https://uni20-dev.github.io/bethe/docs/tutorials/richardson/)
+<!-- END GENERATED PAGE LINK -->
+
 [All tutorials](index.md) · [Model guide](../richardson.md) · [Central-spin tutorial](central-spin.md)
 
 The reduced BCS model is a useful finite-system benchmark for an MPS written

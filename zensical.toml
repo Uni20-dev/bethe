@@ -48,6 +48,7 @@ nav = [
   { "Models" = "docs/models.md" },
   { "References" = "CITATIONS.md" },
   { "Contributing tutorials" = "docs/tutorials/contributing.md" },
+  { "GitHub repository" = "https://github.com/Uni20-dev/bethe" },
 ]
 extra_javascript = [
   "docs/javascripts/mathjax.js",

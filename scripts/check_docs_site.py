@@ -6,10 +6,12 @@ from collections import Counter
 from html.parser import HTMLParser
 import json
 from pathlib import Path
+import tomllib
 from urllib.parse import unquote, urlsplit
 
 from build_docs import ROOT, site_sources
 from check_markdown_math import source_expressions
+from tutorial_links import is_tutorial, tutorial_urls
 
 
 class Page(HTMLParser):
@@ -51,6 +53,7 @@ def bibliography_link_errors(page, references):
 
 def check_site(site):
     site = site.resolve()
+    project = tomllib.loads((ROOT / 'zensical.toml').read_text())['project']
     pages = {p: Page(p.read_text()) for p in site.rglob('*.html')}
     errors = []
     for path, page in pages.items():
@@ -93,6 +96,12 @@ def check_site(site):
             path = site / 'index.html'
         if path not in pages or pages[path].math != expected:
             errors.append(f'{relative}: source and rendered math differ')
+        if is_tutorial(relative):
+            published_url, source_url = tutorial_urls(relative, project)
+            if path not in pages or source_url not in pages[path].links:
+                errors.append(f'{relative}: missing link to the GitHub source page')
+            if path not in pages or published_url not in pages[path].links:
+                errors.append(f'{relative}: published tutorial URL does not match the built page')
         count += len(expected)
     if errors:
         raise ValueError('\n'.join(errors))

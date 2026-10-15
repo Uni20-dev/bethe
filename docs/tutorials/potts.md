@@ -1,5 +1,9 @@
 # Three-state Potts: charged levels and finite-size CFT
 
+<!-- BEGIN GENERATED PAGE LINK -->
+[Read this page on the documentation site](https://uni20-dev.github.io/bethe/docs/tutorials/potts/)
+<!-- END GENERATED PAGE LINK -->
+
 [All tutorials](index.md) · [Model guide](../potts.md) · [Non-Hermitian XXZ tutorial](xxz-nonhermitian.md)
 
 The critical Potts chain provides a discrete-symmetry benchmark for MPS:

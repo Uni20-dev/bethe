@@ -1,5 +1,9 @@
 # Bose–Fermi mixtures: change statistics, not just a component label
 
+<!-- BEGIN GENERATED PAGE LINK -->
+[Read this page on the documentation site](https://uni20-dev.github.io/bethe/docs/tutorials/bose-fermi/)
+<!-- END GENERATED PAGE LINK -->
+
 [All tutorials](index.md) · [Model guide](../bose-fermi.md) · [SU(n) fermion tutorial](su-fermions.md)
 
 This gas contains scalar bosons and spinless fermions of equal mass. Boson–boson

@@ -1,5 +1,9 @@
 # Non-Hermitian XXZ: energies are not enough
 
+<!-- BEGIN GENERATED PAGE LINK -->
+[Read this page on the documentation site](https://uni20-dev.github.io/bethe/docs/tutorials/xxz-nonhermitian/)
+<!-- END GENERATED PAGE LINK -->
+
 [All tutorials](index.md) · [Model guide](../xxz-nonhermitian.md) · [Potts tutorial](potts.md)
 
 A real list of energies does not make a Hamiltonian Hermitian. This example
