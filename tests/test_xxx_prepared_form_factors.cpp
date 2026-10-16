@@ -65,16 +65,104 @@ TYPED_TEST(XXXPreparedFormFactors, OwnsGroundSnapshot)
   ASSERT_TRUE(actual.converged());
   test_support::expect_exact(*actual.weight, *expected.weight, "input mutation and destruction");
   auto copied = prepared;
-  auto moved = std::move(copied);
+  ASSERT_TRUE(copied.ready());
+  test_support::expect_exact(*copied(excited).weight, *expected.weight, "value-owned context copy");
+}
+
+TYPED_TEST(XXXPreparedFormFactors, MoveConstructionInvalidatesSource)
+{
+  using Real = TypeParam;
+  using Prepared = model::PreparedRaisingFormFactors<Real>;
+  static_assert(std::is_nothrow_move_constructible_v<Prepared>);
+  auto const excited = model::sector_ground_state<Real>(8, uni20::half_int{1});
+  Prepared source(8, model::ground_state<Real>(8));
+  auto const expected = source(excited);
+  ASSERT_TRUE(expected.converged());
+  auto const residual = source.ground_residual();
+  auto const tolerance = source.root_tolerance();
+  auto moved = std::move(source);
   ASSERT_TRUE(moved.ready());
-  test_support::expect_exact(*moved(excited).weight, *expected.weight, "value-owned context move");
-  // A moved-from context is still safe to inspect/evaluate, but need not be ready.
-  auto const after_move = copied(excited);
-  EXPECT_EQ(after_move.converged(), copied.ready());
-  if (copied.ready())
-    test_support::expect_exact(*after_move.weight, *expected.weight, "valid moved-from context");
-  else
-    EXPECT_FALSE(after_move.weight);
+  EXPECT_EQ(moved.sites(), 8U);
+  EXPECT_EQ(moved.ground_residual(), residual);
+  EXPECT_EQ(moved.root_tolerance(), tolerance);
+  auto const actual = moved(excited);
+  EXPECT_EQ(actual.weight, expected.weight);
+  EXPECT_EQ(actual.log_weight, expected.log_weight);
+  EXPECT_EQ(actual.pivot_margin, expected.pivot_margin);
+  EXPECT_FALSE(source.ready());
+  EXPECT_EQ(source.status(), model::FormFactorStatus::precision_limit);
+  EXPECT_FALSE(source(excited).weight);
+  EXPECT_FALSE(source(excited).log_weight);
+  // Moving again cannot resurrect the source's old successful status.
+  auto unavailable = std::move(source);
+  EXPECT_FALSE(unavailable.ready());
+  EXPECT_FALSE(unavailable(excited).weight);
+}
+
+TYPED_TEST(XXXPreparedFormFactors, MoveAssignmentReuseAndSelfMove)
+{
+  using Real = TypeParam;
+  using Prepared = model::PreparedRaisingFormFactors<Real>;
+  static_assert(std::is_nothrow_move_assignable_v<Prepared>);
+  auto const excited = model::sector_ground_state<Real>(8, uni20::half_int{1});
+  Prepared source(8, model::ground_state<Real>(8));
+  Prepared destination(4, model::ground_state<Real>(4));
+  auto const expected = source(excited);
+  ASSERT_TRUE(expected.converged());
+  auto const residual = source.ground_residual();
+  auto const tolerance = source.root_tolerance();
+  destination = std::move(source);
+  ASSERT_TRUE(destination.ready());
+  EXPECT_EQ(destination.sites(), 8U);
+  EXPECT_EQ(destination.ground_residual(), residual);
+  EXPECT_EQ(destination.root_tolerance(), tolerance);
+  auto const actual = destination(excited);
+  EXPECT_EQ(actual.weight, expected.weight);
+  EXPECT_EQ(actual.log_weight, expected.log_weight);
+  EXPECT_EQ(actual.pivot_margin, expected.pivot_margin);
+  EXPECT_FALSE(source.ready());
+  EXPECT_EQ(source.status(), model::FormFactorStatus::precision_limit);
+  EXPECT_FALSE(source(excited).weight);
+  // Copy assignment remains available, including restoration of a moved-from object.
+  source = destination;
+  ASSERT_TRUE(source.ready());
+  EXPECT_EQ(source(excited).weight, expected.weight);
+  auto& alias = destination;
+  destination = std::move(alias);
+  ASSERT_TRUE(destination.ready()); // Self-move is deliberately a no-op.
+  EXPECT_EQ(destination(excited).weight, expected.weight);
+  EXPECT_EQ(destination(excited).log_weight, expected.log_weight);
+}
+
+TYPED_TEST(XXXPreparedFormFactors, MovingFailedPreparationPreservesFailure)
+{
+  using Real = TypeParam;
+  using Prepared = model::PreparedRaisingFormFactors<Real>;
+  auto const ground = model::ground_state<Real>(8);
+  auto const excited = model::sector_ground_state<Real>(8, uni20::half_int{1});
+  for (bool unconverged : {true, false})
+  {
+    auto bad = ground;
+    if (unconverged)
+      bad.converged = false;
+    else
+      bad.rapidities[0] += Real{0.01};
+    Prepared source(8, bad);
+    auto const status = source.status();
+    ASSERT_NE(status, model::FormFactorStatus::converged);
+    auto const residual = source.ground_residual();
+    auto moved = std::move(source);
+    EXPECT_EQ(moved.status(), status);
+    EXPECT_EQ(moved.ground_residual(), residual);
+    EXPECT_EQ(source.status(), model::FormFactorStatus::precision_limit);
+    Prepared destination(8, ground);
+    destination = std::move(moved);
+    EXPECT_EQ(destination.status(), status);
+    EXPECT_EQ(destination.ground_residual(), residual);
+    EXPECT_EQ(destination(excited).status, status);
+    EXPECT_FALSE(destination(excited).weight);
+    EXPECT_EQ(moved.status(), model::FormFactorStatus::precision_limit);
+  }
 }
 
 TYPED_TEST(XXXPreparedFormFactors, RevalidatesEachExcitedState)

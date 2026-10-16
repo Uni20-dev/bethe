@@ -287,8 +287,10 @@ Gaudin matrix and transverse determinant.
 Const evaluations can run concurrently: scratch buffers belong to each call,
 and no lazy mutable cache or global precision setting is involved. The
 two-spinon scanner shares one context across its scheduled evaluations.
-Copying a context copies its owned data; moving transfers them. A moved-from
-context may no longer be ready and must be checked before reuse.
+Copying a context copies its owned data; moving transfers them together with
+the source's preparation status. The source of a move is explicitly
+non-ready (`precision_limit`), and returns no weights for a valid excited-state
+input; assignment can restore it. Self-move assignment is a no-op.
 
 Invalid state shape, sector or quantum-number labels throw
 `std::invalid_argument`. Numerical failures are reported as

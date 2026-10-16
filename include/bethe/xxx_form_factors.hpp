@@ -4,6 +4,8 @@
 
 #include <bethe/detail/log_determinant.hpp>
 #include <bethe/heisenberg.hpp>
+#include <type_traits>
+#include <utility>
 
 namespace bethe::heisenberg
 {
@@ -112,6 +114,37 @@ template <uni20::Real Real> class PreparedRaisingFormFactors {
       if (uni20::isfinite(ground_log_prefactor_)) status_ = FormFactorStatus::converged;
     }
 
+    PreparedRaisingFormFactors(PreparedRaisingFormFactors const&) = default;
+    PreparedRaisingFormFactors& operator=(PreparedRaisingFormFactors const&) = default;
+
+    /// Transfer the snapshot and explicitly invalidate the source, independently
+    /// of the unspecified post-move contents of its individual members.
+    PreparedRaisingFormFactors(PreparedRaisingFormFactors&& other) noexcept(std::is_nothrow_move_constructible_v<Real>)
+        : status_(std::exchange(other.status_, FormFactorStatus::precision_limit)), sites_(other.sites_),
+          aba_rapidities_(std::move(other.aba_rapidities_)), last_column_(std::move(other.last_column_)),
+          ground_residual_(std::move(other.ground_residual_)), root_tolerance_(std::move(other.root_tolerance_)),
+          ground_log_prefactor_(std::move(other.ground_log_prefactor_)),
+          ground_pivot_margin_(std::move(other.ground_pivot_margin_))
+    {}
+
+    PreparedRaisingFormFactors&
+    operator=(PreparedRaisingFormFactors&& other) noexcept(std::is_nothrow_move_constructible_v<Real> &&
+                                                           std::is_nothrow_move_assignable_v<Real>)
+    {
+      if (this == &other) return *this; // Self-move preserves the snapshot.
+      auto const status = std::exchange(other.status_, FormFactorStatus::precision_limit);
+      status_ = FormFactorStatus::precision_limit;
+      sites_ = other.sites_;
+      aba_rapidities_ = std::move(other.aba_rapidities_);
+      last_column_ = std::move(other.last_column_);
+      ground_residual_ = std::move(other.ground_residual_);
+      root_tolerance_ = std::move(other.root_tolerance_);
+      ground_log_prefactor_ = std::move(other.ground_log_prefactor_);
+      ground_pivot_margin_ = std::move(other.ground_pivot_margin_);
+      status_ = status; // Publish readiness only after the entire transfer succeeds.
+      return *this;
+    }
+
     std::size_t sites() const { return sites_; }
     /// Owned standard ABA lambda, not the solver's scaled coordinate z.
     std::span<Real const> aba_rapidities() const { return aba_rapidities_; }
@@ -120,7 +153,7 @@ template <uni20::Real Real> class PreparedRaisingFormFactors {
     Real root_tolerance() const { return root_tolerance_; }
     FormFactorStatus status() const
     {
-      // A moved-from context may have lost its snapshot and must not evaluate it.
+      // Retain a defensive shape check in addition to explicit move invalidation.
       if (status_ == FormFactorStatus::converged &&
           (aba_rapidities_.size() != sites_ / 2 || last_column_.size() != sites_ / 2))
         return FormFactorStatus::precision_limit;
@@ -216,10 +249,11 @@ template <uni20::Real Real> class PreparedRaisingFormFactors {
       return measured <= root_tolerance_ ? FormFactorStatus::converged : FormFactorStatus::precision_limit;
     }
 
+    // First so move construction invalidates the source before transferring data.
+    FormFactorStatus status_ = FormFactorStatus::precision_limit;
     std::size_t sites_;
     std::vector<Real> aba_rapidities_, last_column_;
     std::optional<Real> ground_residual_;
     Real root_tolerance_{}, ground_log_prefactor_{}, ground_pivot_margin_{};
-    FormFactorStatus status_ = FormFactorStatus::precision_limit;
 };
 } // namespace bethe::heisenberg
