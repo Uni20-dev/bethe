@@ -1,8 +1,10 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Copyright (C) 2026 Ian McCulloch
+#include "execution-options.hpp"
 #include "program-options.hpp"
 #include "result-output.hpp"
 #include <bethe/lieb_liniger_thermo.hpp>
+#include <bethe/observable_grid.hpp>
 
 namespace
 {
@@ -13,6 +15,7 @@ struct Arguments
     std::string c, density = "1", branch = "all", precision = "fp64";
     std::optional<std::string> momentum, pmax, tolerance;
     std::size_t points = 33, initial_nodes = 16, max_nodes = 256, background_iterations = 128, iterations = 160;
+    int threads = 1;
     cli::DataOutputOptions output;
 };
 auto program_info()
@@ -53,6 +56,7 @@ void add_options(CLI::App& app, Arguments& a)
       ->type_name("REAL")
       ->excludes(momentum);
   cli::precision_option(app, a.precision);
+  cli::threads_option(app, a.threads)->description("Scheduler concurrency limit for independent momentum points");
   cli::text_option(app, "--tolerance", a.tolerance, "Relative numerical tolerance (default 4096 epsilon)")
       ->type_name("REAL");
   cli::count_option(app, "--initial-nodes", a.initial_nodes, "Initial full-interval Gauss-Legendre order")
@@ -102,7 +106,8 @@ template <uni20::Real Real> int run(Arguments const& a, int argc, char** argv)
   controls.max_iterations = a.background_iterations;
   controls.max_momentum_iterations = a.iterations;
   if (a.tolerance) controls.tolerance = uni20::parse_real<Real>(*a.tolerance);
-  auto solver = context.measure([&] { return model::Solver<Real>(c, density, controls); });
+  auto const solver = context.measure([&] { return model::Solver<Real>(c, density, controls); });
+  uni20::async::TbbScheduler scheduler(a.threads);
   auto const& bg = solver.background();
   cli::RunReport report(context, "Lieb-Liniger thermodynamic dispersions");
   report.field("interaction", "c", c)
@@ -112,6 +117,7 @@ template <uni20::Real Real> int run(Arguments const& a, int argc, char** argv)
       .field("momentum_convention", "Momentum convention", "physical inverse length; not reduced modulo 2*pi")
       .field("branches", "Branches", a.branch)
       .field("precision", "Precision", a.precision)
+      .field("threads", "Scheduler concurrency limit", a.threads)
       .field("tolerance", "Relative tolerance", controls.tolerance)
       .field("initial_nodes", "Initial nodes", controls.initial_nodes)
       .field("max_nodes", "Max nodes", controls.max_nodes)
@@ -153,16 +159,21 @@ template <uni20::Real Real> int run(Arguments const& a, int argc, char** argv)
       if (a.branch != "all" && a.branch != name(branch)) continue;
       std::size_t const count = momentum ? 1 : a.points;
       Real const high = branch == model::Branch::type_i ? pmax : end;
-      for (std::size_t i = 0; i < count; ++i)
-      {
-        Real const p = momentum ? *momentum : i == count - 1 ? high : high * (Real(i) / Real(count - 1));
-        auto const point = context.measure([&] { return solver.at_momentum(branch, p); });
-        complete = complete && point.converged;
-        table.append(std::string(name(branch)), p, p / (pi * density), point.energy, point.rapidity,
-                     point.edge_distance, point.converged ? Optional(point.energy_error) : std::nullopt,
-                     point.converged ? Optional(point.momentum_error) : std::nullopt, point.iterations,
-                     std::string(name(point.status)));
-      }
+      bethe::evaluate_observable_grid(
+          count,
+          [&](std::size_t i) {
+            Real const p = momentum ? *momentum : i == count - 1 ? high : high * (Real(i) / Real(count - 1));
+            return solver.at_momentum(branch, p);
+          },
+          [&](std::size_t, auto const& point) {
+            complete = complete && point.converged;
+            table.append(std::string(name(branch)), point.momentum, point.momentum / (pi * density), point.energy,
+                         point.rapidity, point.edge_distance,
+                         point.converged ? Optional(point.energy_error) : std::nullopt,
+                         point.converged ? Optional(point.momentum_error) : std::nullopt, point.iterations,
+                         std::string(name(point.status)));
+          },
+          {&scheduler}, [&](std::size_t, std::size_t) { return context.computation(); });
     }
     report.result(complete, complete ? "converged" : "incomplete; failed energies omitted");
     auto const summary = report.finish();

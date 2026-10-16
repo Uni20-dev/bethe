@@ -28,6 +28,10 @@ endpoints $`-\pi`$ and $`\pi`$ are the same point in the Brillouin zone. `--mome
 instead selects one point in radians. With `--branch all` it must belong to
 every selected branch.
 
+Use `--threads N` to evaluate independent grid points concurrently (default 1),
+for either half-filled or doped backgrounds. Rows and numerical diagnostics keep
+their serial order; see [parallel observable grids](command-line.md#parallel-observable-grids).
+
 Use `--help` or $`-h`$ for Uni20-rendered options and examples, and `--references`
 for the literature and its applicability. `--version` and `--build-info`
 report the compiled application and dependency

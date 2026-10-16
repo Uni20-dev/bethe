@@ -178,6 +178,28 @@ without changing Uni20's active global scheduler.
 See the [XXX structure-factor guide](xxx-structure-factor.md#parallel-calculations)
 for examples. Set BLAS/OpenMP thread limits to one to avoid nested threading.
 
+### Parallel observable grids
+
+`bethe-hubbard-dispersion` (half-filled and doped) and
+`bethe-lieb-liniger-dispersion` also accept `--threads N`, defaulting to 1:
+
+```sh
+OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 \
+  bethe-hubbard-dispersion --u 4 --density 0.5 --points 257 --threads 4
+```
+
+The background is prepared once, then independent momentum points are evaluated
+in bounded batches. Rows retain their serial branch/momentum order, including
+failed points and their diagnostics. Only the calling thread writes tables;
+`--no-retain` still permits bounded-memory streaming. `--momentum` accepts the
+same option but has only one point per branch, so it offers no grid parallelism.
+
+The benefit depends on the cost and number of points: background preparation
+remains serial and short grids may not benefit. CPU timing covers preparation
+and batch evaluation, excluding table collection and formatting. Set BLAS/OpenMP
+thread limits to one to avoid nested threading. The library adapter and its
+ownership rules are described in [Parallel observable grids](parallel-grids.md).
+
 ### Timing
 
 Output includes energy, momentum (periodic systems only), normalized equation
