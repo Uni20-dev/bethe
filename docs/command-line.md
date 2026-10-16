@@ -144,16 +144,37 @@ from ranked levels. See the [table schemas](output.md#named-tables).
 
 ### Parallel state scans
 
-`bethe-xxx-structure-factor` and the `--excitations` modes of
-`bethe-xxx-pbc`, `bethe-xxx-obc`, `bethe-xxz-pbc`, and `bethe-xxz-obc` accept
-`--threads N` (positive integer, default 1). The limit belongs to a Uni20
-oneTBB scheduler, not one operating-system thread per state. Other modes of
-the four energy tools reject an explicit `--threads` option.
+`--threads N` is a positive integer, defaulting to 1. It sets a Uni20 oneTBB
+scheduler's concurrency limit, not one operating-system thread per state.
+The following tools support it:
+
+- `bethe-xxx-structure-factor`: independent states and form factors.
+- `bethe-xxx-structure-factor-thermo`: independent spectral points.
+- `--excitations` in XXX and XXZ PBC/OBC, Lieb-Liniger PBC/OBC, q-boson PBC,
+  quantum-group XXZ OBC, and biquadratic OBC.
+
+The energy tools reject an explicit `--threads` option outside an excitation
+scan, including `--threads 1`. Quantum-group XXZ supports only its regular-root
+branch, not the Delta=0 endpoint. Biquadratic threading covers real-root scans
+for either sign, including `--ferromagnetic --real-window`; Q-system, analytic
+and bound-cluster modes do not accept this option.
+
+For example, from an installed environment or with the executables on `PATH`:
+
+```sh
+OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 \
+  bethe-lieb-liniger-pbc 8 --length 8 --c 2 \
+  --excitations 10 --padding 2 --threads 4
+```
 
 Each state is solved independently; ordered result collection, failure
 diagnostics and moment sums are deterministic. Worker threads do not write
-tables. Library users can also select a scheduler for the shared real-root
-scanner used by other models; their frontends do not yet expose this option.
+tables. Threading does not alter the candidate budget, the family being scanned
+or how many converged states are retained. A larger limit can be slower for
+small families; benchmark representative sizes and precisions. Metadata records
+the requested concurrency limit, not a claim that every worker stayed busy.
+Library users can pass `RealExcitationOptions::execution` to the shared scanner
+without changing Uni20's active global scheduler.
 See the [XXX structure-factor guide](xxx-structure-factor.md#parallel-calculations)
 for examples. Set BLAS/OpenMP thread limits to one to avoid nested threading.
 

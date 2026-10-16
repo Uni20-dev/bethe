@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Copyright (C) 2026 Ian McCulloch
 #pragma once
+#include "execution-options.hpp"
 #include "program-options.hpp"
 #include "result-output.hpp"
 #include <bethe/lieb_liniger_open.hpp>
@@ -18,6 +19,7 @@ struct Arguments
     std::optional<std::string> length, interaction, numbers, tolerance;
     std::optional<std::size_t> count, padding, max_candidates;
     std::size_t max_iterations = 10000;
+    int threads = 1;
     std::string precision = "fp64";
     cli::DataOutputOptions output;
     bool roots = false;
@@ -53,6 +55,7 @@ template <bool HardWalls> void add_options(CLI::App& app, Arguments& args)
                                : "explicit sorted labels (default: ground state) integers for odd N, half-odd integers "
                                  "for even N; none for vacuum");
   bethe::cli::all_count_option(app, "--excitations", args.count, "retain lowest converged states in a finite window");
+  cli::threads_option(app, args.threads)->needs("--excitations");
   bethe::cli::option(
       app, "--padding", args.padding,
       HardWalls ? "REQUIRED for scans: P extra upper slots; choose N labels from 1,...,N+P; P=0 is ground only"
@@ -212,8 +215,9 @@ template <bool HardWalls, uni20::Real Real> int run(Arguments const& args, int a
   bool converged;
   if (args.count)
   {
-    bethe::RealExcitationOptions const enumeration{.count = *args.count,
-                                                   .max_candidates = args.max_candidates.value_or(10000)};
+    uni20::async::TbbScheduler scheduler(args.threads);
+    bethe::RealExcitationOptions const enumeration{
+        .count = *args.count, .max_candidates = args.max_candidates.value_or(10000), .execution = {&scheduler}};
     auto computation = context.computation();
     auto const scan = [&] {
       if constexpr (HardWalls)
@@ -224,6 +228,7 @@ template <bool HardWalls, uni20::Real Real> int run(Arguments const& args, int a
     computation.finish();
     converged = scan.converged();
     report.field("calculation", "Calculation", "finite-window excitations (including ground state)")
+        .field("threads", "Scheduler concurrency limit", args.threads)
         .field(HardWalls ? "padding_upper_edge" : "padding_per_edge",
                HardWalls ? "Padding at upper edge" : "Padding per edge", *args.padding)
         .field("candidate_count", "Candidate count", scan.candidate_count)

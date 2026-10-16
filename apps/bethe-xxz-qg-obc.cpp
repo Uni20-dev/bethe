@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Copyright (C) 2026 Ian McCulloch
 #include "excitation-report.hpp"
+#include "execution-options.hpp"
 #include "program-options.hpp"
 #include "result-output.hpp"
 #include <bethe/xxz_quantum_group_critical.hpp>
@@ -13,6 +14,7 @@ namespace model = bethe::xxz::quantum_group::critical;
 struct Arguments
 {
     std::size_t sites = 0;
+    int threads = 1;
     std::optional<std::size_t> through_lines, iterations, max_blocks, max_mode_entries, excitations, max_candidates;
     std::optional<std::vector<uni20::half_int>> numbers;
     std::string delta, precision = "fp64";
@@ -58,6 +60,7 @@ void add_options(CLI::App& app, Arguments& a)
   cli::option(app, "--numbers", a.numbers, "Explicit Bethe labels, e.g. 1,3; none selects M=0")->excludes(lines);
   cli::all_count_option(app, "--excitations", a.excitations, "Keep COUNT lowest converged regular states, or all")
       ->excludes("--numbers");
+  cli::threads_option(app, a.threads)->needs("--excitations");
   cli::count_option(app, "--max-candidates", a.max_candidates, "Regular scan candidate budget; default 10000")
       ->needs("--excitations");
   cli::text_option(app, "--tolerance", a.tolerance, "Normalized logarithmic residual tolerance");
@@ -179,9 +182,10 @@ int run_scan(Arguments const& a, Real delta, bethe::SolverOptions<Real> const& c
   auto const ell = a.through_lines.value_or(a.sites % 2);
   auto const window = model::real_quantum_number_window(a.sites, delta, ell);
   auto const budget = a.max_candidates.value_or(10000);
+  uni20::async::TbbScheduler scheduler(a.threads);
   auto const scan = context.measure([&] {
-    return model::real_excitations<Real>(a.sites, delta, ell, {.count = *a.excitations, .max_candidates = budget},
-                                         controls);
+    return model::real_excitations<Real>(
+        a.sites, delta, ell, {.count = *a.excitations, .max_candidates = budget, .execution = {&scheduler}}, controls);
   });
   cli::RunReport report(context, "Non-Hermitian quantum-group XXZ regular-state scan");
   report.field("hamiltonian", "Hamiltonian", "sum(SxSx+SySy+Delta SzSz)+i*sqrt(1-Delta^2)/2*(Sz_1-Sz_N); spin-half J=1")
@@ -204,6 +208,7 @@ int run_scan(Arguments const& a, Real delta, bethe::SolverOptions<Real> const& c
       .field("root_coordinates", "Root coordinates",
              "z=tanh(lambda)/tan(gamma/2), Delta=cos(gamma); failed roots are provisional")
       .field("candidates", "Candidates", scan.candidate_count)
+      .field("threads", "Scheduler concurrency limit", a.threads)
       .field("converged_candidates", "Converged candidates", scan.converged_count)
       .field("returned_levels", "Returned levels", scan.levels.size())
       .field("requested_levels", "Requested levels",

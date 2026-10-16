@@ -12,9 +12,10 @@ int run_real(Arguments const& args, bethe::SolverOptions<Real> const& options, c
   auto computation = context.computation();
   if (args.excitations)
   {
+    uni20::async::TbbScheduler scheduler(args.threads);
     auto const ell = args.through_lines.value_or(args.ferromagnetic ? args.sites - 2 : 2);
-    bethe::RealExcitationOptions const enumeration{.count = *args.excitations,
-                                                   .max_candidates = args.max_candidates.value_or(10000)};
+    bethe::RealExcitationOptions const enumeration{
+        .count = *args.excitations, .max_candidates = args.max_candidates.value_or(10000), .execution = {&scheduler}};
     auto const scan =
         args.real_window     ? model::ferromagnetic::real_excitations_window<Real>(args.sites, ell, *args.real_window,
                                                                                    enumeration, options)
@@ -23,6 +24,7 @@ int run_real(Arguments const& args, bethe::SolverOptions<Real> const& options, c
     computation.finish();
     auto const& ground = scan.ground_state;
     report.field("calculation", "Calculation", "restricted real-root excitations")
+        .field("threads", "Scheduler concurrency limit", args.threads)
         .field("family", "Family", "positive finite roots; complex-root levels excluded; NOT the complete TL spectrum")
         .field("tl_through_lines", "TL through-lines", ell)
         .field("tl_defects", "TL defects M", (args.sites - ell) / 2)

@@ -34,6 +34,10 @@ add_executable(bethe_parallel_scan_tests test_parallel_scan.cpp)
 target_link_libraries(bethe_parallel_scan_tests PRIVATE bethe::bethe TBB::tbb)
 bethe_discover_tests(bethe_parallel_scan_tests)
 
+add_executable(bethe_parallel_excitation_tests test_parallel_excitation_models.cpp)
+target_link_libraries(bethe_parallel_excitation_tests PRIVATE bethe::bethe TBB::tbb)
+bethe_discover_tests(bethe_parallel_excitation_tests)
+
 add_executable(bethe_xxx_structure_factor_tests test_xxx_structure_factor.cpp)
 target_link_libraries(bethe_xxx_structure_factor_tests PRIVATE bethe::bethe)
 bethe_discover_tests(bethe_xxx_structure_factor_tests)
@@ -229,7 +233,10 @@ if(BETHE_BUILD_APPS)
     add_test(NAME ParallelScan.cli
       COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_parallel_scans.py"
         "$<TARGET_FILE:bethe-xxx-pbc>" "$<TARGET_FILE:bethe-xxx-obc>"
-        "$<TARGET_FILE:bethe-xxz-pbc>" "$<TARGET_FILE:bethe-xxz-obc>")
+        "$<TARGET_FILE:bethe-xxz-pbc>" "$<TARGET_FILE:bethe-xxz-obc>"
+        "$<TARGET_FILE:bethe-lieb-liniger-pbc>" "$<TARGET_FILE:bethe-lieb-liniger-obc>"
+        "$<TARGET_FILE:bethe-q-boson-pbc>" "$<TARGET_FILE:bethe-xxz-qg-obc>"
+        "$<TARGET_FILE:bethe-biquadratic-obc>")
     add_test(NAME Output.table_contracts
       COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_table_contracts.py"
         "$<TARGET_FILE_DIR:bethe-su3-dispersion>")

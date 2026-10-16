@@ -86,6 +86,19 @@ def main():
         xxx = str(relocated / args.bindir / ('bethe-xxx-pbc' + args.suffix))
         output = run([xxx, '8', '--excitations', 'all', '--threads', '2'], cwd=work, env=env)
         assert 'converged' in output
+        # Each new threaded frontend must find the relocated oneTBB runtime
+        # and execute a scan without relying on build-tree library paths.
+        threaded_scans = {
+            'bethe-lieb-liniger-pbc': ['3', '--length', '4', '--c', '2', '--padding', '1'],
+            'bethe-lieb-liniger-obc': ['3', '--length', '4', '--c', '2', '--padding', '1'],
+            'bethe-q-boson-pbc': ['4', '--particles', '3', '--eta', '1'],
+            'bethe-xxz-qg-obc': ['8', '--delta', '0.6', '--through-lines', '4'],
+            'bethe-biquadratic-obc': ['8', '--through-lines', '2'],
+        }
+        for app, scan in threaded_scans.items():
+            executable = str(relocated / args.bindir / (app + args.suffix))
+            output = run([executable, *scan, '--excitations', 'all', '--threads', '2'], cwd=work, env=env)
+            assert 'converged' in output, (app, output)
         precisions = ['fp64', 'long-double'] + (['fp128'] if args.fp128.upper() in ('ON', 'TRUE', '1') else [])
         for precision in precisions:
             output = run([xxx, '4', '--precision', precision, '--format', 'plain'], cwd=work, env=env)
