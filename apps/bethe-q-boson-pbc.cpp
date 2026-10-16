@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Copyright (C) 2026 Ian McCulloch
+#include "execution-options.hpp"
 #include "program-options.hpp"
 #include "result-output.hpp"
 #include <bethe/q_boson.hpp>
@@ -11,6 +12,7 @@ namespace model = bethe::q_boson;
 struct Arguments
 {
     std::size_t sites = 0, particles = 0, iterations = 10000;
+    int threads = 1;
     std::optional<std::string> eta, tolerance;
     std::optional<std::size_t> count, max_candidates;
     std::string precision = "fp64";
@@ -47,6 +49,7 @@ void add_options(CLI::App& app, Arguments& a)
   deformation->add_flag("--phase", a.phase, "Exact eta=+infinity limit");
   app.add_flag("--roots", a.roots, "Export Bethe labels and converged momenta");
   cli::all_count_option(app, "--excitations", a.count, "Retain lowest converged levels, including ground state");
+  cli::threads_option(app, a.threads)->needs("--excitations");
   cli::count_option(app, "--max-candidates", a.max_candidates, "Scan budget (default 10000); requires --excitations");
   cli::text_option(app, "--tolerance", a.tolerance, "Relative equation residual (default 32 epsilon)")
       ->type_name("REAL");
@@ -96,8 +99,12 @@ template <uni20::Real Real> int run(Arguments const& a, int argc, char** argv)
   model::State<Real> single;
   context.measure([&] {
     if (a.count)
-      scan = model::real_excitations(a.sites, a.particles, eta,
-                                     {.count = *a.count, .max_candidates = a.max_candidates.value_or(10000)}, controls);
+    {
+      uni20::async::TbbScheduler scheduler(a.threads);
+      scan = model::real_excitations(
+          a.sites, a.particles, eta,
+          {.count = *a.count, .max_candidates = a.max_candidates.value_or(10000), .execution = {&scheduler}}, controls);
+    }
     else
       single = model::ground_state(a.sites, a.particles, eta, controls);
   });
@@ -123,7 +130,8 @@ template <uni20::Real Real> int run(Arguments const& a, int argc, char** argv)
       .result(converged, scan ? (converged ? "converged canonical family" : "incomplete scan; failed states excluded")
                               : name(state.status));
   if (scan)
-    report.field("candidate_count", "Candidate count", scan->candidate_count)
+    report.field("threads", "Scheduler concurrency limit", a.threads)
+        .field("candidate_count", "Candidate count", scan->candidate_count)
         .field("converged_count", "Converged count", scan->converged_count)
         .field("retained_count", "Retained count", scan->levels.size())
         .field("max_candidates", "Candidate budget", a.max_candidates.value_or(10000));

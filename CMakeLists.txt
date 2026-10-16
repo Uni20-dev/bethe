@@ -141,7 +141,11 @@ if(BETHE_BUILD_APPS)
     set_target_properties(${app} PROPERTIES CXX_EXTENSIONS OFF)
   endforeach()
 
-  set(bethe_parallel_apps bethe-xxx-structure-factor-thermo bethe-xxx-structure-factor bethe-xxx-pbc bethe-xxx-obc bethe-xxz-pbc bethe-xxz-obc)
+  set(bethe_parallel_apps
+    bethe-xxx-structure-factor-thermo bethe-xxx-structure-factor
+    bethe-xxx-pbc bethe-xxx-obc bethe-xxz-pbc bethe-xxz-obc
+    bethe-lieb-liniger-pbc bethe-lieb-liniger-obc bethe-q-boson-pbc
+    bethe-xxz-qg-obc bethe-biquadratic-obc)
   foreach(app IN LISTS bethe_parallel_apps)
     target_link_libraries(${app} PRIVATE TBB::tbb)
   endforeach()

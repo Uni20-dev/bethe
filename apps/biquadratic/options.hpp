@@ -2,6 +2,7 @@
 // Copyright (C) 2026 Ian McCulloch
 #pragma once
 #include "data-output-options.hpp"
+#include "execution-options.hpp"
 #include "program-options.hpp"
 #include <bethe/xxz_common.hpp>
 
@@ -11,6 +12,7 @@ namespace cli = bethe::cli;
 struct Arguments
 {
     std::size_t sites = 0, max_iterations = 10000;
+    int threads = 1;
     std::optional<std::size_t> through_lines, excitations, max_candidates, real_window;
     std::optional<std::size_t> bound_pairs, bound_triples, bound_quartets;
     std::optional<std::size_t> pair_defects, mixed_window, real_defects;
@@ -97,6 +99,7 @@ inline void add_options(CLI::App& app, Arguments& args)
   bethe::cli::all_count_option(
       app, "--excitations", args.excitations,
       "lowest COUNT, or all, supported real-root levels; default ELL=2 (ferro: N-2); excludes complex roots");
+  cli::threads_option(app, args.threads)->needs("--excitations");
   bethe::cli::option(app, "--max-candidates", args.max_candidates,
                      "real-family scan / analytic band / bound-cluster row limit (default: 10000)");
   bethe::cli::option(
