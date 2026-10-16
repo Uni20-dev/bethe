@@ -27,6 +27,7 @@ template <uni20::Real Real> using SolverOptions = bethe::SolverOptions<Real>;
 /// Energy includes the ferromagnetic reference N/4 for J=1.
 template <uni20::Real Real> struct RealState
 {
+    /// Solver coordinate z=2*lambda_ABA, not standard ABA lambda.
     std::vector<Real> rapidities;
     Real energy = Real{0};
     /// Infinity norm of the logarithmic Bethe equations divided by N (radians).

@@ -219,6 +219,8 @@ w=N\,
 
 Thus a raw determinant of the solver's normalized z-coordinate Jacobian is
 **not** the norm needed here. Coordinate scale and ABA product factors matter.
+For the same **unscaled** logarithmic equation vector, the chain rule gives
+$`G_\lambda=2G_z`$ and $`\det G_\lambda=2^M\det G_z`$.
 We divide each regular H column by
 $`\prod_a\sqrt{1+(\mu_a-\lambda_b)^2}`$, restore its logarithm in the final
 weight, and evaluate equilibrated determinants with complete-pivot LU.
@@ -227,16 +229,20 @@ Products and determinants are combined in log space.
 The smallest scaled pivot is a rejection diagnostic, **not a condition number
 or certified error estimate**. Unresolved pivots, near-coincident inter-set
 roots, nonfinite results and weight underflow are rejected. The equations are
-re-evaluated independently of the input convergence flag, with a gate of
+re-evaluated independently of the stored residual, with a gate of
 $`256N\epsilon`$ in normalized residual units. This gate also is not a bound
 on form-factor error. Very large rings can require more precision or a more
 stable determinant representation; an arbitrarily loose `--tolerance` cannot
-bypass these checks.
+bypass these checks. Ground-state validation happens once during preparation;
+excited-state validation happens on every evaluation. A false input convergence
+flag is rejected before either check.
 
 Validation includes analytic N=2 and N=4 weights, independent bit-basis ED
 through N=10 (summed over degenerate subspaces), native-precision coordinate
 Bethe-wave overlaps, exact momentum conventions, both sum rules, failure
 paths and comparisons between fp64, long-double and fp128.
+Prepared/unprepared regression tests cover complete two-spinon families through
+N=32, alongside tests of the coordinate Jacobian and snapshot ownership.
 
 ## C++ entry points and scope
 
@@ -250,6 +256,89 @@ if (!result.converged()) {
 }
 ```
 
+### Reusing a ground state
+
+For individual form factors, prepare once and reuse the context:
+
+```cpp
+#include <bethe/xxx_form_factors.hpp>
+namespace xxx = bethe::heisenberg;
+auto ground = xxx::ground_state<long double>(64);
+xxx::PreparedRaisingFormFactors<long double> const factors(64, ground);
+if (!factors.ready()) {
+  // Inspect factors.status(), ground_residual() and root_tolerance().
+  // Improve the ground solve/precision before calculating weights.
+  return;
+}
+auto excited = xxx::sector_ground_state<long double>(64, uni20::half_int{1});
+auto factor = factors(excited);
+if (factor.converged()) {
+  // *factor.weight = N |<excited|S_0^+|ground>|^2, with no 2*pi.
+}
+```
+
+The context owns a validated snapshot; it does not borrow `ground`. It stores
+standard ABA rapidities (exposed read-only as `aba_rapidities()`), the ground
+Gaudin contribution and the ground-only product/column factors. Both input
+`RealState` objects still use the solver coordinate **z=2λ**; do not halve their
+roots before passing them in. Each excited state gets its own root validation,
+Gaudin matrix and transverse determinant.
+
+Const evaluations can run concurrently: scratch buffers belong to each call,
+and no lazy mutable cache or global precision setting is involved. The
+two-spinon scanner shares one context across its scheduled evaluations.
+Copying a context copies its owned data; moving transfers them. A moved-from
+context may no longer be ready and must be checked before reuse.
+
+Invalid state shape, sector or quantum-number labels throw
+`std::invalid_argument`. Numerical failures are reported as
+`roots_unconverged` or `precision_limit`, with absent weights, never a fabricated
+zero. `ground_residual()` is the measured normalized residual, not the caller's
+stored value; it is absent if validation did not reach a finite residual.
+Preparation validates the supplied roots; it does not solve or refine them.
+
+This replaces the former `raising_form_factor(N, ground, excited)` function.
+For a one-shot call use `PreparedRaisingFormFactors<Real>(N, ground)(excited)`;
+for a scan, keep the context outside the loop. No compatibility wrapper is kept.
+
+### Reproducible timing control
+
+With tests enabled, an optional benchmark compares the prepared evaluator with
+the original unprepared formula, retained **only under `tests/`**. From a
+configured build directory:
+
+```sh
+cmake --build . --target bethe_xxx_form_factor_benchmark
+OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 \
+  ./tests/bethe_xxx_form_factor_benchmark 64 fp128 3
+```
+
+It solves the states once, verifies every weight in the requested precision,
+then times both paths on identical inputs with alternating order. Root-scan and
+one-time preparation costs are reported separately; the speedup includes that
+preparation cost. This measures the form-factor stage, not a whole-scan speedup
+or a determinant-backend change. The benchmark is not built or run by default.
+
+An illustrative N=64 run (528 states, 16 October 2026) on an Intel i7-12700KF,
+GCC 13.3 `Release` (`-O3`, no fast-math), with one worker and one BLAS thread:
+
+| Arithmetic | Preparation (ms) | Unprepared (s) | Prepared (s) | Speedup including preparation |
+| --- | ---: | ---: | ---: | ---: |
+| Binary64 (`fp64`) | 0.080 | 0.06765 | 0.05535 | 1.22× |
+| 80-bit extended (`long-double`) | 0.136 | 0.2814 | 0.2243 | 1.25× |
+| Binary128 (`fp128`) | 1.442 | 6.955 | 6.236 | 1.12× |
+
+Times are medians of five paired evaluations for binary64/extended precision,
+three for binary128, using Uni20 `a25159cc` and the unchanged complete-pivot
+determinant helper. Maximum relative weight changes from regrouping the
+logarithmic sums were respectively $`7.12\times10^{-14}`$,
+$`3.04\times10^{-17}`$ and $`6.88\times10^{-32}`$.
+These are local wall-time measurements, not performance guarantees. Root
+solving remains dominant: the separately measured binary128 scan took 61.8 s,
+so the whole-scan improvement is much smaller than the form-factor-stage gain.
+
+### Module boundaries
+
 `xxx_form_factors.hpp` owns the model-specific normalization;
 `xxx_structure_factor.hpp` combines it with the existing scanner.
 `dynamical_structure_factor.hpp` contains only model-independent accepted
@@ -258,4 +347,4 @@ does not add a general solver API or a new Uni20 kernel.
 
 Strings, four-spinon states, finite fields, XXZ weights, finite temperature,
 OBC form factors and a thermodynamic spectral-density evaluator remain
-separate future milestones. This is not an ABACUS-style adaptive state search.
+separate future milestones.

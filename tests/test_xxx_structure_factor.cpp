@@ -128,10 +128,11 @@ TYPED_TEST(XXXStructureFactor, GuardrailsAndFailures)
   auto ground = result.scan.ground_state;
   auto excited = result.scan.levels.front().state;
   ground.converged = false;
-  EXPECT_EQ(model::raising_form_factor(8, ground, excited).status, model::FormFactorStatus::roots_unconverged);
+  EXPECT_EQ(model::PreparedRaisingFormFactors<Real>(8, ground)(excited).status,
+            model::FormFactorStatus::roots_unconverged);
   ground = result.scan.ground_state;
   ground.rapidities[0] += Real{0.001};
-  auto const stale = model::raising_form_factor(8, ground, excited);
+  auto const stale = model::PreparedRaisingFormFactors<Real>(8, ground)(excited);
   EXPECT_EQ(stale.status, model::FormFactorStatus::precision_limit);
   EXPECT_FALSE(stale.weight);
 }
