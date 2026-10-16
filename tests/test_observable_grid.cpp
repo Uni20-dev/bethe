@@ -49,6 +49,8 @@ template <typename Point> void equal_point(Point const& a, Point const& b)
   if constexpr (requires { a.edge_distance; }) EXPECT_EQ(a.edge_distance, b.edge_distance);
   if constexpr (requires { a.evaluations; }) EXPECT_EQ(a.evaluations, b.evaluations);
   if constexpr (requires { a.symmetric_energy; }) EXPECT_EQ(a.symmetric_energy, b.symmetric_energy);
+  if constexpr (requires { a.interaction; }) EXPECT_EQ(a.interaction, b.interaction);
+  if constexpr (requires { a.energy_offset; }) EXPECT_EQ(a.energy_offset, b.energy_offset);
   if constexpr (requires { a.fermi_energy; }) EXPECT_EQ(a.fermi_energy, b.fermi_energy);
   if constexpr (requires { a.delta_particles; }) EXPECT_EQ(a.delta_particles, b.delta_particles);
   if constexpr (requires { a.spin; }) EXPECT_EQ(a.spin, b.spin);
@@ -253,12 +255,14 @@ TYPED_TEST(ObservableGridModels, HalfFilledHubbardQuadrature)
   {
     model::Options<Real> options;
     options.max_evaluations = budget;
-    check_schedulers(
-        9,
-        [&](std::size_t i) {
-          auto const branch = std::array{model::Branch::spinon, model::Branch::holon, model::Branch::antiholon}[i / 3];
-          return model::dispersion(branch, Real{4}, pi * Real(i % 3) / Real{2}, model::Convention::symmetric, options);
-        },
-        budget != 0);
+    for (auto convention : {model::Convention::symmetric, model::Convention::unshifted})
+      check_schedulers(
+          9,
+          [&](std::size_t i) {
+            auto const branch =
+                std::array{model::Branch::spinon, model::Branch::holon, model::Branch::antiholon}[i / 3];
+            return model::dispersion(branch, Real{4}, pi * Real(i % 3) / Real{2}, convention, options);
+          },
+          budget != 0);
   }
 }
