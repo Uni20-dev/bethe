@@ -50,6 +50,7 @@ two_spinon_structure_factor(std::size_t sites, SolverOptions<Real> const& solver
   execution.scheduler = &scheduler;
   result.scan = real_excitations<Real>(sites, uni20::half_int{1}, {candidates, max_candidates, execution}, solver);
   auto const& ground = result.scan.ground_state;
+  PreparedRaisingFormFactors<Real> const prepared(sites, ground);
   using std::atan;
   Real const two_pi = Real{8} * atan(Real{1});
   result.form_factors.resize(result.scan.levels.size());
@@ -58,7 +59,7 @@ two_spinon_structure_factor(std::size_t sites, SolverOptions<Real> const& solver
     auto const size = std::min(execution.batch_size, result.scan.levels.size() - offset);
     scheduler.execute_batch(size, [&](std::size_t j) {
       auto const i = offset + j;
-      result.form_factors[i] = raising_form_factor(sites, ground, result.scan.levels[i].state);
+      result.form_factors[i] = prepared(result.scan.levels[i].state);
     });
     offset += size;
   }

@@ -42,6 +42,15 @@ add_executable(bethe_xxx_structure_factor_tests test_xxx_structure_factor.cpp)
 target_link_libraries(bethe_xxx_structure_factor_tests PRIVATE bethe::bethe)
 bethe_discover_tests(bethe_xxx_structure_factor_tests)
 
+add_executable(bethe_xxx_prepared_form_factor_tests test_xxx_prepared_form_factors.cpp)
+target_link_libraries(bethe_xxx_prepared_form_factor_tests PRIVATE bethe::bethe)
+bethe_discover_tests(bethe_xxx_prepared_form_factor_tests)
+
+# Explicit, non-CI timing control; does not become a consumer dependency.
+add_executable(bethe_xxx_form_factor_benchmark EXCLUDE_FROM_ALL benchmark_xxx_form_factors.cpp)
+target_link_libraries(bethe_xxx_form_factor_benchmark PRIVATE bethe::bethe)
+set_target_properties(bethe_xxx_form_factor_benchmark PROPERTIES CXX_EXTENSIONS OFF)
+
 add_executable(bethe_xxx_thermodynamic_structure_factor_tests test_xxx_thermodynamic_structure_factor.cpp)
 target_link_libraries(bethe_xxx_thermodynamic_structure_factor_tests PRIVATE bethe::bethe)
 bethe_discover_tests(bethe_xxx_thermodynamic_structure_factor_tests)
