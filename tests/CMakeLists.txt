@@ -38,6 +38,14 @@ add_executable(bethe_parallel_excitation_tests test_parallel_excitation_models.c
 target_link_libraries(bethe_parallel_excitation_tests PRIVATE bethe::bethe TBB::tbb)
 bethe_discover_tests(bethe_parallel_excitation_tests)
 
+add_executable(bethe_observable_grid_tests test_observable_grid.cpp)
+target_link_libraries(bethe_observable_grid_tests PRIVATE bethe::bethe TBB::tbb)
+bethe_discover_tests(bethe_observable_grid_tests)
+
+add_executable(bethe_observable_grid_benchmark EXCLUDE_FROM_ALL benchmark_observable_grid.cpp)
+target_link_libraries(bethe_observable_grid_benchmark PRIVATE bethe::bethe TBB::tbb)
+set_target_properties(bethe_observable_grid_benchmark PROPERTIES CXX_EXTENSIONS OFF)
+
 add_executable(bethe_xxx_structure_factor_tests test_xxx_structure_factor.cpp)
 target_link_libraries(bethe_xxx_structure_factor_tests PRIVATE bethe::bethe)
 bethe_discover_tests(bethe_xxx_structure_factor_tests)
@@ -246,6 +254,11 @@ if(BETHE_BUILD_APPS)
         "$<TARGET_FILE:bethe-lieb-liniger-pbc>" "$<TARGET_FILE:bethe-lieb-liniger-obc>"
         "$<TARGET_FILE:bethe-q-boson-pbc>" "$<TARGET_FILE:bethe-xxz-qg-obc>"
         "$<TARGET_FILE:bethe-biquadratic-obc>")
+    add_test(NAME ObservableGrid.cli
+      COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_parallel_grids.py"
+        "${UNI20_ENABLE_MPLAPACK}" "$<TARGET_FILE:bethe-hubbard-dispersion>"
+        "$<TARGET_FILE:bethe-lieb-liniger-dispersion>")
+    set_tests_properties(ObservableGrid.cli PROPERTIES TIMEOUT 180)
     add_test(NAME Output.table_contracts
       COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_table_contracts.py"
         "$<TARGET_FILE_DIR:bethe-su3-dispersion>")

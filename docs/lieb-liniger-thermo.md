@@ -28,13 +28,19 @@ endpoint without changing the type-II interval. `--momentum` instead evaluates
 one requested p on each selected branch. It cannot be combined with `--points`
 or `--p-max`. Negative-momentum curves follow by parity; this interface uses p>=0.
 
+`--threads N` evaluates independent momenta concurrently after preparing the
+background once (default 1). See
+[parallel observable grids](command-line.md#parallel-observable-grids) for
+timing, ordering and thread-budget conventions.
+
 The `dispersion` table includes `p`, `p_over_pi_n`, `energy`, the particle/hole
 `rapidity`, its positive `edge_distance`, error estimates, inversion iterations,
 and status. Metadata contains Q, ground energy per length, chemical potential,
 coupling, density, precision, solver controls, and provenance; the final summary
 includes CPU time. All [shared output options](output.md) apply. File exports
-and machine stdout receive each row as it is calculated; `--no-retain` does not
-accumulate an extra result vector. Human output uses the Uni20 presentation layer.
+and machine stdout receive ordered rows after each bounded evaluation batch;
+`--no-retain` avoids accumulating the full grid in memory. Human output uses the
+Uni20 presentation layer.
 
 Unconverged energies and rapidities are null in JSON and empty in CSV/TSV,
 with exit status 2. A completed output document does **not** mean every point

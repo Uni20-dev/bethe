@@ -1,9 +1,11 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Copyright (C) 2026 Ian McCulloch
 #include "data-output-options.hpp"
+#include "execution-options.hpp"
 #include "program-options.hpp"
 #include "run-metadata.hpp"
 #include <bethe/hubbard_doped.hpp>
+#include <bethe/observable_grid.hpp>
 
 namespace
 {
@@ -19,6 +21,7 @@ struct Arguments
     cli::DataOutputOptions output;
     std::size_t points = 33, max_evaluations = 1000000, max_levels = 12, max_iterations = 160;
     std::size_t initial_nodes = 16, max_nodes = 256, max_background_iterations = 64;
+    int threads = 1;
     bool quadrature_set = false, mesh_set = false;
 };
 auto program_info()
@@ -73,6 +76,8 @@ void add_options(CLI::App& app, Arguments& args)
       ->type_name("REAL")
       ->excludes(points);
   auto* numerics = app.add_option_group("Numerics");
+  cli::threads_option(*numerics, args.threads)
+      ->description("Scheduler concurrency limit for independent momentum points");
   numerics->add_option("--precision", args.precision, "Real scalar type; fp128 requires MPLAPACK")
       ->check(CLI::IsMember({"fp64", "long-double", "fp128"}))
       ->capture_default_str();
@@ -246,6 +251,7 @@ template <uni20::Real Real> int run(Arguments const& args, int argc, char** argv
         doped ? "unwrapped one-site radians; hole offset pi*n/2; particle offset -pi*n/2"
               : "one-site radians; antiholon p = holon p - pi at the same bare k");
   field("numerics", "precision", "Precision", args.precision);
+  field("numerics", "threads", "Scheduler concurrency limit", args.threads);
   field("model", "branches", "Branch selection", args.branch);
   if (momentum)
     field("numerics", "momentum", "Requested momentum", *momentum);
@@ -279,6 +285,7 @@ template <uni20::Real Real> int run(Arguments const& args, int argc, char** argv
   }
   namespace data = cli::data;
   using Optional = std::optional<Real>;
+  uni20::async::TbbScheduler scheduler(args.threads);
   cli::DataOutput output(args.output);
   auto table = data::make_data_table(
       doped ? "Doped Hubbard thermodynamic dispersions" : "Half-filled Hubbard thermodynamic dispersions",
@@ -330,27 +337,32 @@ template <uni20::Real Real> int run(Arguments const& args, int argc, char** argv
       {
         if (args.branch != "all" && args.branch != name(b)) continue;
         auto const [lo, hi] = solver->momentum_range(b);
-        for (std::size_t i = 0; i < count; ++i)
-        {
-          Real const p = momentum ? *momentum : i == count - 1 ? hi : lo + (hi - lo) * Real(i) / Real(count - 1);
-          auto const s = context.measure([&] { return solver->at_momentum(b, p, convention, reference); });
-          append(s, std::nullopt, s.fermi_energy);
-        }
+        bethe::evaluate_observable_grid(
+            count,
+            [&](std::size_t i) {
+              Real const p = momentum ? *momentum : i == count - 1 ? hi : lo + (hi - lo) * Real(i) / Real(count - 1);
+              return std::as_const(*solver).at_momentum(b, p, convention, reference);
+            },
+            [&](std::size_t, auto const& s) { append(s, std::nullopt, s.fermi_energy); }, {&scheduler},
+            [&](std::size_t, std::size_t) { return context.computation(); });
       }
     else
       for (auto b : {model::Branch::spinon, model::Branch::holon, model::Branch::antiholon})
       {
         if (args.branch != "all" && args.branch != name(b)) continue;
-        for (std::size_t i = 0; i < count; ++i)
-        {
-          Real const fraction = momentum ? Real{0} : Real(i) / Real(count - 1);
-          Real const p = momentum                     ? *momentum
-                         : b == model::Branch::spinon ? pi * fraction
-                                                      : pi * (Real{2} * fraction - Real{1});
-          auto s = context.measure([&] { return model::dispersion(b, u, p, convention, options); });
-          if (reference == model::EnergyReference::fermi && s.converged) s.energy = s.symmetric_energy;
-          append(s, s.evaluations, s.symmetric_energy);
-        }
+        bethe::evaluate_observable_grid(
+            count,
+            [&](std::size_t i) {
+              Real const fraction = momentum ? Real{0} : Real(i) / Real(count - 1);
+              Real const p = momentum                     ? *momentum
+                             : b == model::Branch::spinon ? pi * fraction
+                                                          : pi * (Real{2} * fraction - Real{1});
+              auto s = model::dispersion(b, u, p, convention, options);
+              if (reference == model::EnergyReference::fermi && s.converged) s.energy = s.symmetric_energy;
+              return s;
+            },
+            [&](std::size_t, auto const& s) { append(s, s.evaluations, s.symmetric_energy); }, {&scheduler},
+            [&](std::size_t, std::size_t) { return context.computation(); });
       }
     output.finish(table, summary(complete ? uni20::run_outcome::success : uni20::run_outcome::partial,
                                  complete ? "converged" : "incomplete; failed energies omitted"));

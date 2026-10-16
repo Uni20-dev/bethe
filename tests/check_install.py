@@ -99,6 +99,14 @@ def main():
             executable = str(relocated / args.bindir / (app + args.suffix))
             output = run([executable, *scan, '--excitations', 'all', '--threads', '2'], cwd=work, env=env)
             assert 'converged' in output, (app, output)
+        for app, grid in (
+            ('bethe-lieb-liniger-dispersion', ['--c', '4']),
+            ('bethe-hubbard-dispersion', ['--u', '4']),
+            ('bethe-hubbard-dispersion', ['--u', '4', '--density', '0.5']),
+        ):
+            executable = str(relocated / args.bindir / (app + args.suffix))
+            output = run([executable, *grid, '--points', '3', '--threads', '2'], cwd=work, env=env)
+            assert 'converged' in output, (app, output)
         precisions = ['fp64', 'long-double'] + (['fp128'] if args.fp128.upper() in ('ON', 'TRUE', '1') else [])
         for precision in precisions:
             output = run([xxx, '4', '--precision', precision, '--format', 'plain'], cwd=work, env=env)
