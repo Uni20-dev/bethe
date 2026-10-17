@@ -1,4 +1,6 @@
 # Exercise the real executable, including Uni20's environment-controlled policies.
+cmake_minimum_required(VERSION 3.28)
+
 include("${CMAKE_CURRENT_LIST_DIR}/check_cpu_time.cmake")
 set(ENV{UNI20_GLYPHS} ascii)
 set(ENV{UNI20_CHARSET} escape)

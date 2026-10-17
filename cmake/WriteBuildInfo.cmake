@@ -1,4 +1,6 @@
 # Build provenance, not runtime inspection of whatever directory the user is in.
+cmake_minimum_required(VERSION 3.28)
+
 find_package(Git QUIET)
 function(source_revision source result)
   set(revision "unavailable")

@@ -1,4 +1,6 @@
 # Shared checks for the separate periodic and free-end front ends.
+cmake_minimum_required(VERSION 3.28)
+
 include("${CMAKE_CURRENT_LIST_DIR}/check_cpu_time.cmake")
 set(ENV{UNI20_COLOR} never)
 set(ENV{UNI20_GLYPHS} ascii)

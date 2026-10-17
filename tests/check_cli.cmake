@@ -1,3 +1,5 @@
+cmake_minimum_required(VERSION 3.28)
+
 include("${CMAKE_CURRENT_LIST_DIR}/check_cpu_time.cmake")
 
 function(check_cli expected_status expected_text)

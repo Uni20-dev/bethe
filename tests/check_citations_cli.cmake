@@ -1,5 +1,5 @@
 # Compare each executable's compiled citations with the canonical registry.
-cmake_minimum_required(VERSION 3.24)
+cmake_minimum_required(VERSION 3.28)
 file(READ "${CMAKE_CURRENT_LIST_DIR}/../data/citations.json" registry)
 string(JSON tool_count LENGTH "${registry}" tools)
 math(EXPR last_tool "${tool_count} - 1")
