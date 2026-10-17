@@ -51,7 +51,7 @@ template <typename Real> Real scalar_root(Real g, int label)
 {
   Real const pi = Real{4} * std::atan(Real{1}), origin = pi * Real(label - 1);
   Real lo = origin, hi = pi * Real(label);
-  for (int i = 0; i < uni20::numeric_limits<Real>::digits + 30; ++i)
+  for (int i = 0; i < uni20::numeric_limits<Real>::digits() + 30; ++i)
   {
     Real const mid = lo + (hi - lo) / Real{2};
     if (mid == lo || mid == hi) break;
@@ -77,7 +77,7 @@ TYPED_TEST(LiebLinigerOpen, VacuumAndSingleParticle)
     EXPECT_EQ(s.iterations, 0u);
     Real const exact = pi * pi * Real(label * label) / Real{9};
     EXPECT_REAL_NEAR(s.energy, exact, Real{8} * eps * exact);
-    if constexpr (uni20::numeric_limits<Real>::digits > 53)
+    if constexpr (uni20::numeric_limits<Real>::digits() > 53)
       if (label == 1) EXPECT_GT(std::abs(Real(double(exact)) - exact), Real{8} * eps * exact);
     check_state(s);
   }

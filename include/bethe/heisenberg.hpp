@@ -290,9 +290,11 @@ template <uni20::Real Real = double>
   result.state = solve_real<Real>(sites, numbers, options);
   result.hole = hole;
   auto const n = static_cast<std::int64_t>(sites);
-  result.spinon_momentum =
-      bethe::detail::pi<Real>() * (static_cast<Real>(n - 2 * hole.twice()) / (Real{2} * static_cast<Real>(n)));
-  result.bulk_subtracted_energy = result.state.energy - static_cast<Real>(sites) * bulk_energy_density<Real>();
+  auto const zero = bethe::detail::solver_zero(options);
+  result.spinon_momentum = bethe::detail::spinon_pi(zero) *
+                           (uni20::scalar_like(zero, n - 2 * hole.twice()) / (Real{2} * uni20::scalar_like(zero, n)));
+  result.bulk_subtracted_energy =
+      result.state.energy - static_cast<Real>(sites) * bulk_energy_density(uni20::scalar_like(zero, 1));
   return result;
 }
 

@@ -22,7 +22,7 @@ TYPED_TEST(OpenQSystem, MissingFourSiteSinglet)
   R const physical = R{2} * *s.energy - R{21} / R{4};
   R const exact = (-R{15} + std::sqrt(R{17})) / R{2};
   EXPECT_REAL_NEAR(physical, exact, R{1024} * eps);
-  if constexpr (uni20::numeric_limits<R>::digits > 53) EXPECT_GT(std::abs(R(double(exact)) - exact), R{1024} * eps);
+  if constexpr (uni20::numeric_limits<R>::digits() > 53) EXPECT_GT(std::abs(R(double(exact)) - exact), R{1024} * eps);
   ASSERT_EQ(s.roots.roots.size(), 2);
   EXPECT_GT(std::abs(s.roots.roots[0].imag()), R{1});
   EXPECT_LE(s.residual_norm, R{32} * eps);
@@ -190,7 +190,7 @@ TEST(OpenQSystemSearch, SmallModuleSpectra)
         ASSERT_NE(match, available.end());
         available.erase(match);
       }
-      if (n == 8 && uni20::numeric_limits<long double>::digits > 53)
+      if (n == 8 && uni20::numeric_limits<long double>::digits() > 53)
       {
         auto const higher = qs::spectrum<long double>(n, 1.5L, ell, {.max_attempts = 12000}, {.max_iterations = 100});
         ASSERT_TRUE(higher.complete()) << higher.states.size() << "/" << higher.expected_count.value_or(0);

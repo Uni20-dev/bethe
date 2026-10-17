@@ -2,7 +2,7 @@
 // Copyright (C) 2026 Ian McCulloch
 #include "program-options.hpp"
 #include "result-output.hpp"
-#if UNI20_ENABLE_MPC
+#if UNI20_HAS_MPREAL
 #include <mpc.h>
 #endif
 
@@ -32,21 +32,22 @@ int run(cli::DataOutputOptions const& options, int argc, char** argv)
       .field("bethe_source", "Bethe source", cli::build_info::revision)
       .field("uni20_source", "Uni20 source", cli::build_info::uni20_revision)
       .field("blas_enabled", "BLAS configured", bool(UNI20_BACKEND_BLAS))
-      .field("binary128_enabled", "MPLAPACK binary128 configured", bool(UNI20_HAS_FLOAT128))
-      .field("binary80_enabled", "MPLAPACK binary80 configured", bool(UNI20_ENABLE_MPLAPACK_BINARY80))
-      .field("mpfr_enabled", "MPFR configured", bool(UNI20_ENABLE_MPFR))
-      .field("mpc_enabled", "MPC configured", bool(UNI20_ENABLE_MPC))
-      .field("mplapack_mpfr_enabled", "MPLAPACK MPFR configured", bool(UNI20_ENABLE_MPLAPACK_MPFR))
+      .field("float80_enabled", "Uni20 float80 configured", bool(UNI20_HAS_FLOAT80))
+      .field("float128_enabled", "Uni20 float128 configured", bool(UNI20_HAS_FLOAT128))
+      .field("mpreal_enabled", "Uni20 arbitrary-precision real/complex configured", bool(UNI20_HAS_MPREAL))
+      .field("mplapack_float128_enabled", "MPLAPACK binary128 configured", bool(UNI20_HAS_MPLAPACK_FLOAT128))
+      .field("mplapack_float80_enabled", "MPLAPACK binary80 configured", bool(UNI20_HAS_MPLAPACK_FLOAT80))
+      .field("mplapack_mpfr_enabled", "MPLAPACK MPFR configured", bool(UNI20_HAS_MPLAPACK_MPREAL))
       .field("arbitrary_frontends", "Arbitrary-precision frontends",
-             cli::has_arbitrary_structure_factor ? "bethe-xxx-structure-factor" : "none enabled in this build")
+             cli::has_arbitrary_structure_factor ? "bethe-xxx-pbc, bethe-xxx-structure-factor"
+             : UNI20_HAS_MPREAL                  ? "bethe-xxx-pbc"
+                                                 : "none enabled in this build")
       .field("precision_scope", "Native precision scope", "all numerical frontends, subject to availability")
       .field("precision_note", "Precision units", "significand bits; fp64/fp80/fp128 name complete formats")
       .field("storage_note", "Storage", "native object bytes, including any padding")
       .result(true, "available_build_information");
-#if UNI20_ENABLE_MPFR
+#if UNI20_HAS_MPREAL
   report.field("mpfr_version", "MPFR version", mpfr_get_version());
-#endif
-#if UNI20_ENABLE_MPC
   report.field("mpc_version", "MPC version", mpc_get_version());
 #endif
   cli::ResultOutput output(report, options, {"precisions"});
@@ -73,8 +74,8 @@ int run(cli::DataOutputOptions const& options, int argc, char** argv)
         table.append("fp128", false, "unavailable", Optional{}, Optional{}, Optional{}, Optional{}, Optional{});
 #endif
         for (std::string const choice : {"bits-N", "digits-N"})
-          table.append(choice, cli::has_arbitrary_structure_factor, "arbitrary binary", Optional{}, Optional{},
-                       Optional{}, Optional{}, Optional{});
+          table.append(choice, bool(UNI20_HAS_MPREAL), "arbitrary binary", Optional{}, Optional{}, Optional{},
+                       Optional{}, Optional{});
       },
       column<std::string>("precision"), column<bool>("available"), column<std::string>("format"),
       column<Optional>("significand_bits"), column<Optional>("decimal_digits"), column<Optional>("min_exponent"),

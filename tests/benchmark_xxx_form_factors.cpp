@@ -51,7 +51,7 @@ template <uni20::Real Real> int benchmark(std::size_t n, std::size_t repeats, st
     return std::pair{seconds(start), sum.value()};
   };
   std::cout << "precision=" << precision << " N=" << n << " states=" << scan.levels.size() << " repeats=" << repeats
-            << " scalar_digits=" << uni20::numeric_limits<Real>::digits << "\nroot_scan_seconds=" << scan_seconds
+            << " scalar_digits=" << uni20::numeric_limits<Real>::digits() << "\nroot_scan_seconds=" << scan_seconds
             << " prepare_seconds=" << prepare_seconds
             << " max_relative_change=" << uni20::format_scalar(max_relative_change) << '\n';
   std::vector<double> baseline_times, prepared_times;

@@ -1,5 +1,11 @@
 # GoogleTest is test-only: neither Bethe's public headers nor consumers acquire
 # this dependency when BETHE_BUILD_TESTS=OFF.
+# Capabilities are derived in Uni20's directory scope, not cache requests.
+# In particular AUTO and scalar-only builds must not imply provider support.
+foreach(capability IN ITEMS FLOAT128 MPREAL MPLAPACK_FLOAT128 MPLAPACK_MPREAL)
+  get_directory_property(BETHE_HAS_${capability}
+    DIRECTORY "${bethe_uni20_core_source}" DEFINITION UNI20_HAS_${capability})
+endforeach()
 if(NOT TARGET GTest::gtest_main)
   find_package(GTest 1.12 QUIET CONFIG)
 endif()
@@ -34,7 +40,7 @@ add_executable(bethe_cli_precision_tests test_cli_precision.cpp)
 target_link_libraries(bethe_cli_precision_tests PRIVATE bethe_cli_output)
 bethe_discover_tests(bethe_cli_precision_tests)
 
-if(UNI20_ENABLE_MPFR)
+if(BETHE_HAS_MPREAL)
   add_executable(bethe_xxx_mpfr_tests test_xxx_mpfr.cpp)
   target_link_libraries(bethe_xxx_mpfr_tests PRIVATE bethe::bethe TBB::tbb)
   bethe_discover_tests(bethe_xxx_mpfr_tests)
@@ -217,11 +223,19 @@ else()
 endif()
 
 if(BETHE_BUILD_APPS)
+  set(bethe_arbitrary_structure_factor OFF)
+  if(BETHE_HAS_MPREAL AND BETHE_HAS_MPLAPACK_MPREAL)
+    set(bethe_arbitrary_structure_factor ON)
+  endif()
   if(Python3_Interpreter_FOUND)
     add_test(NAME PrecisionInfo.cli
       COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_precision_info.py"
         "$<TARGET_FILE:bethe-info>" "$<TARGET_FILE:bethe-xxx-pbc>" "$<TARGET_FILE:bethe-xxx-structure-factor>"
-        "${UNI20_ENABLE_MPLAPACK}" "${UNI20_ENABLE_MPLAPACK_MPFR}")
+        "${BETHE_HAS_FLOAT128}" "${bethe_arbitrary_structure_factor}" "${BETHE_HAS_MPREAL}"
+        "${BETHE_HAS_MPLAPACK_FLOAT128}")
+    add_test(NAME XXXPbcPrecision.cli
+      COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_xxx_pbc_precision.py"
+        "$<TARGET_FILE:bethe-xxx-pbc>" "${BETHE_HAS_MPREAL}")
   endif()
   add_test(NAME Citations.bethe-xxx-structure-factor-thermo.cli
     COMMAND "${CMAKE_COMMAND}" "-DPROGRAM=$<TARGET_FILE:bethe-xxx-structure-factor-thermo>"
@@ -232,7 +246,7 @@ if(BETHE_BUILD_APPS)
         "$<TARGET_FILE:bethe-xxx-structure-factor-thermo>")
     add_test(NAME XXXThermodynamicDSF.cli
       COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_xxx_thermodynamic_structure_factor.py"
-        "$<TARGET_FILE:bethe-xxx-structure-factor-thermo>" "${UNI20_ENABLE_MPLAPACK}")
+        "$<TARGET_FILE:bethe-xxx-structure-factor-thermo>" "${BETHE_HAS_FLOAT128}")
   endif()
   add_test(NAME Citations.bethe-xxx-structure-factor.cli
     COMMAND "${CMAKE_COMMAND}" "-DPROGRAM=$<TARGET_FILE:bethe-xxx-structure-factor>"
@@ -256,13 +270,13 @@ if(BETHE_BUILD_APPS)
         --cmake "${CMAKE_COMMAND}" --build-dir "${PROJECT_BINARY_DIR}"
         --config "$<CONFIG>" --bindir "${CMAKE_INSTALL_BINDIR}"
         --docdir "${CMAKE_INSTALL_DOCDIR}" --suffix "${CMAKE_EXECUTABLE_SUFFIX}"
-        --fp128 "${UNI20_ENABLE_MPLAPACK}" --runtime-files ${bethe_runtime_files} --apps ${bethe_installed_apps})
+        --fp128 "${BETHE_HAS_FLOAT128}" --runtime-files ${bethe_runtime_files} --apps ${bethe_installed_apps})
     set_tests_properties(Install.runtime PROPERTIES RUN_SERIAL TRUE TIMEOUT 180)
   endif()
   if(Python3_Interpreter_FOUND)
     add_test(NAME XXXStructureFactor.cli
       COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_xxx_structure_factor.py"
-        "$<TARGET_FILE:bethe-xxx-structure-factor>" "${UNI20_ENABLE_MPLAPACK}" "${UNI20_ENABLE_MPLAPACK_MPFR}")
+        "$<TARGET_FILE:bethe-xxx-structure-factor>" "${BETHE_HAS_FLOAT128}" "${bethe_arbitrary_structure_factor}")
     add_test(NAME ParallelScan.cli
       COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_parallel_scans.py"
         "$<TARGET_FILE:bethe-xxx-pbc>" "$<TARGET_FILE:bethe-xxx-obc>"
@@ -272,7 +286,7 @@ if(BETHE_BUILD_APPS)
         "$<TARGET_FILE:bethe-biquadratic-obc>")
     add_test(NAME ObservableGrid.cli
       COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_parallel_grids.py"
-        "${UNI20_ENABLE_MPLAPACK}" "$<TARGET_FILE:bethe-hubbard-dispersion>"
+        "${BETHE_HAS_FLOAT128}" "$<TARGET_FILE:bethe-hubbard-dispersion>"
         "$<TARGET_FILE:bethe-lieb-liniger-dispersion>")
     set_tests_properties(ObservableGrid.cli PROPERTIES TIMEOUT 180)
     add_test(NAME Output.table_contracts
@@ -291,10 +305,10 @@ if(BETHE_BUILD_APPS)
   if(Python3_Interpreter_FOUND)
     add_test(NAME SineGordonExcitations.cli
       COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_sine_gordon_excitations.py"
-        "$<TARGET_FILE:bethe-sine-gordon-dispersion>" "$<TARGET_FILE:bethe-sine-gordon-bethe-yang>" "${UNI20_ENABLE_MPLAPACK}")
+        "$<TARGET_FILE:bethe-sine-gordon-dispersion>" "$<TARGET_FILE:bethe-sine-gordon-bethe-yang>" "${BETHE_HAS_FLOAT128}")
     add_test(NAME SineGordonExcited.cli
       COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_sine_gordon_excited.py"
-        "$<TARGET_FILE:bethe-sine-gordon-excited>" "${UNI20_ENABLE_MPLAPACK}")
+        "$<TARGET_FILE:bethe-sine-gordon-excited>" "${BETHE_HAS_FLOAT128}")
   endif()
   add_test(NAME Citations.bethe-tb-dispersion.cli
     COMMAND "${CMAKE_COMMAND}" "-DPROGRAM=$<TARGET_FILE:bethe-tb-dispersion>"
@@ -302,7 +316,7 @@ if(BETHE_BUILD_APPS)
   if(Python3_Interpreter_FOUND)
     add_test(NAME TBDispersion.cli
       COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_tb_dispersion.py"
-        "$<TARGET_FILE:bethe-tb-dispersion>" "${UNI20_ENABLE_MPLAPACK}")
+        "$<TARGET_FILE:bethe-tb-dispersion>" "${BETHE_HAS_FLOAT128}")
     add_test(NAME Arguments.bethe-tb-dispersion.cli
       COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_shared_arguments.py"
         "$<TARGET_FILE:bethe-tb-dispersion>")
@@ -313,7 +327,7 @@ if(BETHE_BUILD_APPS)
   if(Python3_Interpreter_FOUND)
     add_test(NAME SU3Dispersion.cli
       COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_su3_dispersion.py"
-        "$<TARGET_FILE:bethe-su3-dispersion>" "${UNI20_ENABLE_MPLAPACK}")
+        "$<TARGET_FILE:bethe-su3-dispersion>" "${BETHE_HAS_FLOAT128}")
     add_test(NAME Arguments.bethe-su3-dispersion.cli
       COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_shared_arguments.py"
         "$<TARGET_FILE:bethe-su3-dispersion>")
@@ -324,7 +338,7 @@ if(BETHE_BUILD_APPS)
   if(Python3_Interpreter_FOUND)
     add_test(NAME Potts.cli
       COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_potts.py"
-        "$<TARGET_FILE:bethe-potts-pbc>" "${UNI20_ENABLE_MPLAPACK}")
+        "$<TARGET_FILE:bethe-potts-pbc>" "${BETHE_HAS_FLOAT128}")
     add_test(NAME Arguments.bethe-potts-pbc.cli
       COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_shared_arguments.py"
         "$<TARGET_FILE:bethe-potts-pbc>")
@@ -335,7 +349,7 @@ if(BETHE_BUILD_APPS)
   if(Python3_Interpreter_FOUND)
     add_test(NAME XYZDispersion.cli
       COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_xyz_dispersion.py"
-        "$<TARGET_FILE:bethe-xyz-dispersion>" "${UNI20_ENABLE_MPLAPACK}")
+        "$<TARGET_FILE:bethe-xyz-dispersion>" "${BETHE_HAS_FLOAT128}")
     add_test(NAME Arguments.bethe-xyz-dispersion.cli
       COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_shared_arguments.py"
         "$<TARGET_FILE:bethe-xyz-dispersion>")
@@ -346,58 +360,58 @@ if(BETHE_BUILD_APPS)
   if(Python3_Interpreter_FOUND)
     add_test(NAME XXZDispersion.cli
       COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_xxz_dispersion.py"
-        "$<TARGET_FILE:bethe-xxz-dispersion>" "${UNI20_ENABLE_MPLAPACK}")
+        "$<TARGET_FILE:bethe-xxz-dispersion>" "${BETHE_HAS_FLOAT128}")
     add_test(NAME Arguments.bethe-xxz-dispersion.cli
       COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_shared_arguments.py"
         "$<TARGET_FILE:bethe-xxz-dispersion>")
     add_test(NAME BiquadraticTripleDefect.cli
       COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_biquadratic_triple_defect.py"
-        "$<TARGET_FILE:bethe-biquadratic-obc>" "${UNI20_ENABLE_MPLAPACK}")
+        "$<TARGET_FILE:bethe-biquadratic-obc>" "${BETHE_HAS_FLOAT128}")
     add_test(NAME BiquadraticTwoPairs.cli
       COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_biquadratic_two_pairs.py"
-        "$<TARGET_FILE:bethe-biquadratic-obc>" "${UNI20_ENABLE_MPLAPACK}")
+        "$<TARGET_FILE:bethe-biquadratic-obc>" "${BETHE_HAS_FLOAT128}")
     add_test(NAME BiquadraticPairDefect.cli
       COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_biquadratic_pair_defect.py"
-        "$<TARGET_FILE:bethe-biquadratic-obc>" "${UNI20_ENABLE_MPLAPACK}")
+        "$<TARGET_FILE:bethe-biquadratic-obc>" "${BETHE_HAS_FLOAT128}")
     add_test(NAME BiquadraticBoundPair.cli
       COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_biquadratic_bound_cluster.py"
-        "$<TARGET_FILE:bethe-biquadratic-obc>" "${UNI20_ENABLE_MPLAPACK}" 2)
+        "$<TARGET_FILE:bethe-biquadratic-obc>" "${BETHE_HAS_FLOAT128}" 2)
     add_test(NAME BiquadraticBoundTriple.cli
       COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_biquadratic_bound_cluster.py"
-        "$<TARGET_FILE:bethe-biquadratic-obc>" "${UNI20_ENABLE_MPLAPACK}" 3)
+        "$<TARGET_FILE:bethe-biquadratic-obc>" "${BETHE_HAS_FLOAT128}" 3)
     add_test(NAME BiquadraticBoundQuartet.cli
       COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_biquadratic_bound_cluster.py"
-        "$<TARGET_FILE:bethe-biquadratic-obc>" "${UNI20_ENABLE_MPLAPACK}" 4)
+        "$<TARGET_FILE:bethe-biquadratic-obc>" "${BETHE_HAS_FLOAT128}" 4)
     add_test(NAME BiquadraticFerro.cli
       COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_biquadratic_ferromagnetic.py"
-        "$<TARGET_FILE:bethe-biquadratic-obc>" "${UNI20_ENABLE_MPLAPACK}")
+        "$<TARGET_FILE:bethe-biquadratic-obc>" "${BETHE_HAS_FLOAT128}")
     add_test(NAME BiquadraticSpinContent.cli
       COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_biquadratic_spin_content.py"
-        "$<TARGET_FILE:bethe-biquadratic-obc>" "${UNI20_ENABLE_MPLAPACK}")
+        "$<TARGET_FILE:bethe-biquadratic-obc>" "${BETHE_HAS_FLOAT128}")
     add_test(NAME LiebLinigerOpen.cli
       COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_lieb_liniger_open.py"
-        "$<TARGET_FILE:bethe-lieb-liniger-obc>" "${UNI20_ENABLE_MPLAPACK}")
+        "$<TARGET_FILE:bethe-lieb-liniger-obc>" "${BETHE_HAS_FLOAT128}")
     add_test(NAME LiebLinigerThermo.cli
       COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_lieb_liniger_thermo.py"
-        "$<TARGET_FILE:bethe-lieb-liniger-dispersion>" "${UNI20_ENABLE_MPLAPACK}")
+        "$<TARGET_FILE:bethe-lieb-liniger-dispersion>" "${BETHE_HAS_FLOAT128}")
     add_test(NAME LiebLinigerThermal.cli
       COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_lieb_liniger_thermal.py"
-        "$<TARGET_FILE:bethe-lieb-liniger-thermal>" "${UNI20_ENABLE_MPLAPACK}")
+        "$<TARGET_FILE:bethe-lieb-liniger-thermal>" "${BETHE_HAS_FLOAT128}")
     add_test(NAME QBoson.cli
       COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_q_boson.py"
-        "$<TARGET_FILE:bethe-q-boson-pbc>" "${UNI20_ENABLE_MPLAPACK}")
+        "$<TARGET_FILE:bethe-q-boson-pbc>" "${BETHE_HAS_FLOAT128}")
     add_test(NAME BoseFermi.cli
       COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_bose_fermi.py"
-        "$<TARGET_FILE:bethe-bose-fermi-pbc>" "${UNI20_ENABLE_MPLAPACK}")
+        "$<TARGET_FILE:bethe-bose-fermi-pbc>" "${BETHE_HAS_FLOAT128}")
     add_test(NAME XYZ.cli
       COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_xyz.py"
-        "$<TARGET_FILE:bethe-xyz-pbc>" "${UNI20_ENABLE_MPLAPACK}")
+        "$<TARGET_FILE:bethe-xyz-pbc>" "${BETHE_HAS_FLOAT128}")
     add_test(NAME HubbardContinuum.cli
       COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_hubbard_continuum.py"
-        "$<TARGET_FILE:bethe-hubbard-continuum>" "${UNI20_ENABLE_MPLAPACK}")
+        "$<TARGET_FILE:bethe-hubbard-continuum>" "${BETHE_HAS_FLOAT128}")
     add_test(NAME CriticalQuantumGroup.cli
       COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_xxz_qg.py"
-        "$<TARGET_FILE:bethe-xxz-qg-obc>" "${UNI20_ENABLE_MPLAPACK}")
+        "$<TARGET_FILE:bethe-xxz-qg-obc>" "${BETHE_HAS_FLOAT128}")
     add_test(NAME Arguments.bethe-xxz-qg-obc.cli
       COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_shared_arguments.py"
         "$<TARGET_FILE:bethe-xxz-qg-obc>")
@@ -412,7 +426,7 @@ if(BETHE_BUILD_APPS)
         "-DTOOL=bethe-hubbard-continuum" -P "${CMAKE_CURRENT_SOURCE_DIR}/check_citations_cli.cmake")
     add_test(NAME Kondo.cli
       COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_kondo.py"
-        "$<TARGET_FILE:bethe-kondo-response>" "${UNI20_ENABLE_MPLAPACK}")
+        "$<TARGET_FILE:bethe-kondo-response>" "${BETHE_HAS_FLOAT128}")
     add_test(NAME Arguments.bethe-kondo-response.cli
       COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_shared_arguments.py"
         "$<TARGET_FILE:bethe-kondo-response>")
@@ -421,7 +435,7 @@ if(BETHE_BUILD_APPS)
         "-DTOOL=bethe-kondo-response" -P "${CMAKE_CURRENT_SOURCE_DIR}/check_citations_cli.cmake")
     add_test(NAME LeeYangExcited.cli
       COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_lee_yang_excited.py"
-        "$<TARGET_FILE:bethe-lee-yang-excited>" "${UNI20_ENABLE_MPLAPACK}")
+        "$<TARGET_FILE:bethe-lee-yang-excited>" "${BETHE_HAS_FLOAT128}")
     add_test(NAME Arguments.bethe-lee-yang-excited.cli
       COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_shared_arguments.py"
         "$<TARGET_FILE:bethe-lee-yang-excited>")
@@ -430,7 +444,7 @@ if(BETHE_BUILD_APPS)
         "-DTOOL=bethe-lee-yang-excited" -P "${CMAKE_CURRENT_SOURCE_DIR}/check_citations_cli.cmake")
     add_test(NAME LeeYang.cli
       COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_lee_yang.py"
-        "$<TARGET_FILE:bethe-lee-yang-vacuum>" "${UNI20_ENABLE_MPLAPACK}")
+        "$<TARGET_FILE:bethe-lee-yang-vacuum>" "${BETHE_HAS_FLOAT128}")
     add_test(NAME Arguments.bethe-lee-yang-vacuum.cli
       COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_shared_arguments.py"
         "$<TARGET_FILE:bethe-lee-yang-vacuum>")
@@ -439,7 +453,7 @@ if(BETHE_BUILD_APPS)
         "-DTOOL=bethe-lee-yang-vacuum" -P "${CMAKE_CURRENT_SOURCE_DIR}/check_citations_cli.cmake")
     add_test(NAME SineGordon.cli
       COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_sine_gordon.py"
-        "$<TARGET_FILE:bethe-sine-gordon-vacuum>" "${UNI20_ENABLE_MPLAPACK}")
+        "$<TARGET_FILE:bethe-sine-gordon-vacuum>" "${BETHE_HAS_FLOAT128}")
     add_test(NAME Arguments.bethe-sine-gordon-vacuum.cli
       COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_shared_arguments.py"
         "$<TARGET_FILE:bethe-sine-gordon-vacuum>")
@@ -448,7 +462,7 @@ if(BETHE_BUILD_APPS)
         "-DTOOL=bethe-sine-gordon-vacuum" -P "${CMAKE_CURRENT_SOURCE_DIR}/check_citations_cli.cmake")
     add_test(NAME ASEP.cli
       COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_asep.py"
-        "$<TARGET_FILE:bethe-asep-pbc>" "${UNI20_ENABLE_MPLAPACK}")
+        "$<TARGET_FILE:bethe-asep-pbc>" "${BETHE_HAS_FLOAT128}")
     add_test(NAME Arguments.bethe-asep-pbc.cli
       COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_shared_arguments.py"
         "$<TARGET_FILE:bethe-asep-pbc>")
@@ -457,7 +471,7 @@ if(BETHE_BUILD_APPS)
         "-DTOOL=bethe-asep-pbc" -P "${CMAKE_CURRENT_SOURCE_DIR}/check_citations_cli.cmake")
     add_test(NAME TASEP.cli
       COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_tasep.py"
-        "$<TARGET_FILE:bethe-tasep-pbc>" "${UNI20_ENABLE_MPLAPACK}")
+        "$<TARGET_FILE:bethe-tasep-pbc>" "${BETHE_HAS_FLOAT128}")
     add_test(NAME Arguments.bethe-tasep-pbc.cli
       COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_shared_arguments.py"
         "$<TARGET_FILE:bethe-tasep-pbc>")
@@ -496,13 +510,13 @@ if(BETHE_BUILD_APPS)
         "-DTOOL=bethe-lieb-liniger-dispersion" -P "${CMAKE_CURRENT_SOURCE_DIR}/check_citations_cli.cmake")
     add_test(NAME BiquadraticTwoString.cli
       COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_biquadratic_two_string.py"
-        "$<TARGET_FILE:bethe-biquadratic-obc>" "${UNI20_ENABLE_MPLAPACK}")
+        "$<TARGET_FILE:bethe-biquadratic-obc>" "${BETHE_HAS_FLOAT128}")
     add_test(NAME BiquadraticQSystem.cli
       COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_biquadratic_qsystem.py"
-        "$<TARGET_FILE:bethe-biquadratic-obc>" "${UNI20_ENABLE_MPLAPACK}")
+        "$<TARGET_FILE:bethe-biquadratic-obc>" "${BETHE_HAS_FLOAT128}")
     add_test(NAME DataOutput.models
       COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_model_tables.py"
-        "${UNI20_ENABLE_MPLAPACK}" "$<TARGET_FILE:bethe-su3-pbc>" "$<TARGET_FILE:bethe-tb-pbc>"
+        "${BETHE_HAS_FLOAT128}" "$<TARGET_FILE:bethe-su3-pbc>" "$<TARGET_FILE:bethe-tb-pbc>"
         "$<TARGET_FILE:bethe-richardson>" "$<TARGET_FILE:bethe-central-spin>"
         "$<TARGET_FILE:bethe-gaudin-yang-pbc>" "$<TARGET_FILE:bethe-tj-pbc>"
         "$<TARGET_FILE:bethe-sun-fermions-pbc>" "$<TARGET_FILE:bethe-ladder-pbc>"
@@ -512,7 +526,7 @@ if(BETHE_BUILD_APPS)
         "$<TARGET_FILE:bethe-lieb-liniger-pbc>" "$<TARGET_FILE:bethe-biquadratic-obc>")
     add_test(NAME DataOutput.spectra
       COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_spectrum_tables.py"
-        "${UNI20_ENABLE_MPLAPACK}"
+        "${BETHE_HAS_FLOAT128}"
         "$<TARGET_FILE:bethe-xxx-pbc>" "$<TARGET_FILE:bethe-xxx-obc>"
         "$<TARGET_FILE:bethe-xxz-pbc>" "$<TARGET_FILE:bethe-xxz-obc>"
         "$<TARGET_FILE:bethe-lieb-liniger-pbc>" "$<TARGET_FILE:bethe-biquadratic-obc>")
@@ -521,19 +535,19 @@ if(BETHE_BUILD_APPS)
         "$<TARGET_FILE:bethe-sutherland-pbc>")
     add_test(NAME Sutherland.cli
       COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_sutherland_cli.py"
-        "$<TARGET_FILE:bethe-sutherland-pbc>" "${UNI20_ENABLE_MPLAPACK}")
+        "$<TARGET_FILE:bethe-sutherland-pbc>" "${BETHE_HAS_FLOAT128}")
     add_test(NAME HaldaneShastry.cli
       COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_haldane_shastry_cli.py"
-        "$<TARGET_FILE:bethe-haldane-shastry-pbc>" "${UNI20_ENABLE_MPLAPACK}")
+        "$<TARGET_FILE:bethe-haldane-shastry-pbc>" "${BETHE_HAS_FLOAT128}")
     add_test(NAME HubbardThermo.cli
       COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_hubbard_thermo_cli.py"
-        "$<TARGET_FILE:bethe-hubbard-dispersion>" "${UNI20_ENABLE_MPLAPACK}")
+        "$<TARGET_FILE:bethe-hubbard-dispersion>" "${BETHE_HAS_FLOAT128}")
     add_test(NAME HubbardThermo.arguments
       COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_hubbard_arguments.py"
-        "$<TARGET_FILE:bethe-hubbard-dispersion>" "${UNI20_ENABLE_MPLAPACK}")
+        "$<TARGET_FILE:bethe-hubbard-dispersion>" "${BETHE_HAS_FLOAT128}")
     add_test(NAME DataOutput.cli
       COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_data_output_cli.py"
-        "$<TARGET_FILE:bethe-hubbard-dispersion>" "${UNI20_ENABLE_MPLAPACK}")
+        "$<TARGET_FILE:bethe-hubbard-dispersion>" "${BETHE_HAS_FLOAT128}")
   endif()
   foreach(app IN ITEMS bethe-xxx-pbc bethe-xxx-obc bethe-xxz-pbc bethe-xxz-obc bethe-hubbard-pbc bethe-hubbard-obc bethe-hubbard-dispersion bethe-lieb-liniger-pbc bethe-lieb-liniger-obc bethe-su3-pbc bethe-gaudin-yang-pbc bethe-tj-pbc bethe-tb-pbc bethe-biquadratic-obc bethe-richardson bethe-central-spin bethe-sun-fermions-pbc bethe-ladder-pbc bethe-haldane-shastry-pbc bethe-sutherland-pbc)
     if(Python3_Interpreter_FOUND)
@@ -547,76 +561,76 @@ if(BETHE_BUILD_APPS)
   endforeach()
   add_test(NAME Biquadratic.cli
     COMMAND "${CMAKE_COMMAND}" "-DPROGRAM=$<TARGET_FILE:bethe-biquadratic-obc>"
-      "-DFLOAT128=${UNI20_ENABLE_MPLAPACK}"
+      "-DFLOAT128=${BETHE_HAS_FLOAT128}"
       -P "${CMAKE_CURRENT_SOURCE_DIR}/check_biquadratic_cli.cmake")
   add_test(NAME Ladder.cli
     COMMAND "${CMAKE_COMMAND}" "-DPROGRAM=$<TARGET_FILE:bethe-ladder-pbc>"
-      "-DFLOAT128=${UNI20_ENABLE_MPLAPACK}"
+      "-DFLOAT128=${BETHE_HAS_FLOAT128}"
       -P "${CMAKE_CURRENT_SOURCE_DIR}/check_ladder_cli.cmake")
   add_test(NAME GaudinYang.cli
     COMMAND "${CMAKE_COMMAND}" "-DPROGRAM=$<TARGET_FILE:bethe-gaudin-yang-pbc>"
-      "-DFLOAT128=${UNI20_ENABLE_MPLAPACK}"
+      "-DFLOAT128=${BETHE_HAS_FLOAT128}"
       -P "${CMAKE_CURRENT_SOURCE_DIR}/check_gaudin_yang_cli.cmake")
   add_test(NAME TJ.cli
     COMMAND "${CMAKE_COMMAND}" "-DPROGRAM=$<TARGET_FILE:bethe-tj-pbc>"
-      "-DFLOAT128=${UNI20_ENABLE_MPLAPACK}"
+      "-DFLOAT128=${BETHE_HAS_FLOAT128}"
       -P "${CMAKE_CURRENT_SOURCE_DIR}/check_tj_cli.cmake")
   add_test(NAME TB.cli
     COMMAND "${CMAKE_COMMAND}" "-DPROGRAM=$<TARGET_FILE:bethe-tb-pbc>"
-      "-DFLOAT128=${UNI20_ENABLE_MPLAPACK}"
+      "-DFLOAT128=${BETHE_HAS_FLOAT128}"
       -P "${CMAKE_CURRENT_SOURCE_DIR}/check_tb_cli.cmake")
   add_test(NAME SUFermions.cli
     COMMAND "${CMAKE_COMMAND}" "-DPROGRAM=$<TARGET_FILE:bethe-sun-fermions-pbc>"
-      "-DFLOAT128=${UNI20_ENABLE_MPLAPACK}"
+      "-DFLOAT128=${BETHE_HAS_FLOAT128}"
       -P "${CMAKE_CURRENT_SOURCE_DIR}/check_su_fermions_cli.cmake")
   add_test(NAME CentralSpin.cli
     COMMAND "${CMAKE_COMMAND}" "-DPROGRAM=$<TARGET_FILE:bethe-central-spin>"
-      "-DFLOAT128=${UNI20_ENABLE_MPLAPACK}"
+      "-DFLOAT128=${BETHE_HAS_FLOAT128}"
       -P "${CMAKE_CURRENT_SOURCE_DIR}/check_central_spin_cli.cmake")
   add_test(NAME Richardson.cli
     COMMAND "${CMAKE_COMMAND}" "-DPROGRAM=$<TARGET_FILE:bethe-richardson>"
-      "-DFLOAT128=${UNI20_ENABLE_MPLAPACK}"
+      "-DFLOAT128=${BETHE_HAS_FLOAT128}"
       -P "${CMAKE_CURRENT_SOURCE_DIR}/check_richardson_cli.cmake")
   add_test(NAME SU3.cli
     COMMAND "${CMAKE_COMMAND}" "-DPROGRAM=$<TARGET_FILE:bethe-su3-pbc>"
-      "-DFLOAT128=${UNI20_ENABLE_MPLAPACK}"
+      "-DFLOAT128=${BETHE_HAS_FLOAT128}"
       -P "${CMAKE_CURRENT_SOURCE_DIR}/check_su3_cli.cmake")
   add_test(NAME LiebLiniger.cli
     COMMAND "${CMAKE_COMMAND}" "-DPROGRAM=$<TARGET_FILE:bethe-lieb-liniger-pbc>"
-      "-DFLOAT128=${UNI20_ENABLE_MPLAPACK}"
+      "-DFLOAT128=${BETHE_HAS_FLOAT128}"
       -P "${CMAKE_CURRENT_SOURCE_DIR}/check_lieb_liniger_cli.cmake")
   add_test(NAME Hubbard.cli
     COMMAND "${CMAKE_COMMAND}" "-DPROGRAM=$<TARGET_FILE:bethe-hubbard-pbc>"
-      "-DFLOAT128=${UNI20_ENABLE_MPLAPACK}"
+      "-DFLOAT128=${BETHE_HAS_FLOAT128}"
       -P "${CMAKE_CURRENT_SOURCE_DIR}/check_hubbard_cli.cmake")
   add_test(NAME HubbardOpen.cli
     COMMAND "${CMAKE_COMMAND}" "-DPROGRAM=$<TARGET_FILE:bethe-hubbard-obc>"
-      "-DFLOAT128=${UNI20_ENABLE_MPLAPACK}"
+      "-DFLOAT128=${BETHE_HAS_FLOAT128}"
       -P "${CMAKE_CURRENT_SOURCE_DIR}/check_hubbard_open_cli.cmake")
   add_test(NAME XXZOpen.cli
     COMMAND "${CMAKE_COMMAND}" "-DPROGRAM=$<TARGET_FILE:bethe-xxz-obc>"
-      "-DFLOAT128=${UNI20_ENABLE_MPLAPACK}"
+      "-DFLOAT128=${BETHE_HAS_FLOAT128}"
       -P "${CMAKE_CURRENT_SOURCE_DIR}/check_xxz_open_cli.cmake")
   add_test(NAME XXZ.cli
     COMMAND "${CMAKE_COMMAND}" "-DPROGRAM=$<TARGET_FILE:bethe-xxz-pbc>"
-      "-DFLOAT128=${UNI20_ENABLE_MPLAPACK}"
+      "-DFLOAT128=${BETHE_HAS_FLOAT128}"
       -P "${CMAKE_CURRENT_SOURCE_DIR}/check_xxz_cli.cmake")
   add_test(NAME Heisenberg.cli
     COMMAND "${CMAKE_COMMAND}" "-DPROGRAM=$<TARGET_FILE:bethe-xxx-pbc>"
-      "-DFLOAT128=${UNI20_ENABLE_MPLAPACK}"
+      "-DFLOAT128=${BETHE_HAS_FLOAT128}"
       -P "${CMAKE_CURRENT_SOURCE_DIR}/check_cli.cmake")
   add_test(NAME Heisenberg.presentation
     COMMAND "${CMAKE_COMMAND}" "-DPROGRAM=$<TARGET_FILE:bethe-xxx-pbc>"
-      "-DFLOAT128=${UNI20_ENABLE_MPLAPACK}"
+      "-DFLOAT128=${BETHE_HAS_FLOAT128}"
       -P "${CMAKE_CURRENT_SOURCE_DIR}/check_presentation.cmake")
   add_test(NAME Open.cli
     COMMAND "${CMAKE_COMMAND}" "-DPROGRAM=$<TARGET_FILE:bethe-xxx-obc>"
-      "-DFLOAT128=${UNI20_ENABLE_MPLAPACK}"
+      "-DFLOAT128=${BETHE_HAS_FLOAT128}"
       -P "${CMAKE_CURRENT_SOURCE_DIR}/check_open_cli.cmake")
   foreach(app IN ITEMS bethe-xxx-pbc bethe-xxx-obc)
     add_test(NAME Excitations.${app}.cli
       COMMAND "${CMAKE_COMMAND}" "-DPROGRAM=$<TARGET_FILE:${app}>"
-        "-DFLOAT128=${UNI20_ENABLE_MPLAPACK}"
+        "-DFLOAT128=${BETHE_HAS_FLOAT128}"
         -P "${CMAKE_CURRENT_SOURCE_DIR}/check_excitations_cli.cmake")
   endforeach()
 endif()

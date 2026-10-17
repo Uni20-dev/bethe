@@ -136,16 +136,18 @@ inline CLI::Option* count_option(CLI::App& app, std::string names, std::size_t& 
 {
   return uni20::cli::add_count_option(app, std::move(names), value, std::move(description));
 }
-inline void precision_option(CLI::App& app, std::string& precision, bool allow_arbitrary = false)
+inline void precision_option(CLI::App& app, std::string& precision,
+                             ArbitraryPrecision support = ArbitraryPrecision::none)
 {
   app.add_option("--precision", precision,
-                 allow_arbitrary ? "Arithmetic: fp64, long-double, fp80, fp128, bits-N or digits-N; see bethe-info"
-                                 : "Arithmetic: fp64, long-double, fp80 or fp128; see bethe-info")
+                 support != ArbitraryPrecision::none
+                     ? "Arithmetic: fp64, long-double, fp80, fp128, bits-N or digits-N; see bethe-info"
+                     : "Arithmetic: fp64, long-double, fp80 or fp128; see bethe-info")
       ->check(CLI::Validator(
-          [allow_arbitrary](std::string& text) {
+          [support](std::string& text) {
             try
             {
-              validate_precision(parse_precision(text), allow_arbitrary);
+              validate_precision(parse_precision(text), support);
             }
             catch (std::exception const& error)
             {

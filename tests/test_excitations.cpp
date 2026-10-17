@@ -235,7 +235,7 @@ TYPED_TEST(ExcitationStates, PrecisionAndDegeneracy)
     ASSERT_TRUE(triplet.levels[0].gap.has_value());
     Real const exact_gap = (Real{1} + sqrt(Real{3}) - sqrt(Real{2})) / Real{2};
     EXPECT_REAL_NEAR(*triplet.levels[0].gap, exact_gap, Real{64} * eps) << "irrational gap at selected precision";
-    if constexpr (uni20::numeric_limits<Real>::digits > uni20::numeric_limits<double>::digits)
+    if constexpr (uni20::numeric_limits<Real>::digits() > uni20::numeric_limits<double>::digits())
     {
       ASSERT_TRUE(abs(static_cast<Real>(static_cast<double>(exact_gap)) - exact_gap) > Real{64} * eps)
           << "gap oracle rejects double narrowing";

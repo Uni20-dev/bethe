@@ -262,7 +262,7 @@ TYPED_TEST(XXZOpen, NativePrecision)
       ASSERT_REAL_NEAR(*gap + exact, Real{0}, Real{128} * eps) << "native precision irrational gap";
 
       test_support::expect_exact(uni20::parse_real<Real>(uni20::format_real(*gap)), *gap, "gap round trip");
-      if constexpr (uni20::numeric_limits<Real>::digits > uni20::numeric_limits<double>::digits)
+      if constexpr (uni20::numeric_limits<Real>::digits() > uni20::numeric_limits<double>::digits())
       {
         ASSERT_TRUE(abs(Real(static_cast<double>(exact)) - exact) > Real{128} * eps)
             << "analytic oracle rejects double narrowing";

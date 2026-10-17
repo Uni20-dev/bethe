@@ -78,7 +78,7 @@ TYPED_TEST(TB, AnalyticFourSitesAndNonidealStrings)
   for (Real x : s.centers)
     ideal_energy -= Real{8} * (Real{1} / (Real{1} + C{x, Real{1} / Real{2}} * C{x, Real{1} / Real{2}})).real();
   EXPECT_GT(std::abs(s.energy - ideal_energy), Real{1} / Real{10});
-  if constexpr (uni20::numeric_limits<Real>::digits > 53)
+  if constexpr (uni20::numeric_limits<Real>::digits() > 53)
     EXPECT_GT(std::abs(Real(double(exact)) - exact), Real{512} * eps);
   test_support::expect_exact(uni20::parse_real<Real>(uni20::format_real(s.energy)), s.energy, "TB energy I/O");
 }

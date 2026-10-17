@@ -87,7 +87,7 @@ TYPED_TEST(Open, SmallChains)
   ASSERT_TRUE(four.converged) << "N=4 irrational open energy";
   ASSERT_REAL_NEAR(four.energy, exact_four, precision_tolerance) << "N=4 irrational open energy";
 
-  if constexpr (uni20::numeric_limits<Real>::digits > uni20::numeric_limits<double>::digits)
+  if constexpr (uni20::numeric_limits<Real>::digits() > uni20::numeric_limits<double>::digits())
   {
     ASSERT_TRUE(abs(static_cast<Real>(static_cast<double>(exact_four)) - exact_four) > precision_tolerance)
         << "open precision oracle must reject double narrowing";

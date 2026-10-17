@@ -20,7 +20,7 @@ if(NOT TARGET uni20_core)
   include(FetchContent)
   FetchContent_Declare(uni20
     GIT_REPOSITORY https://github.com/Uni20-dev/uni20.git
-    GIT_TAG b53f41b3feeeedf5dfee2a17de14d3a9004d4897
+    GIT_TAG 052f0a36699cd49a50041b8a448594e9e378475f
   )
   FetchContent_MakeAvailable(uni20)
   # Keep default builds limited to the components our targets actually link.
@@ -36,10 +36,15 @@ target_link_libraries(bethe INTERFACE uni20_core uni20_common uni20_linalg uni20
 # Library-only consumers also need recoverable square solves. Catch stale
 # source overrides during configuration rather than deep in template errors.
 get_target_property(bethe_uni20_linalg_source uni20_linalg SOURCE_DIR)
+get_target_property(bethe_uni20_core_source uni20_core SOURCE_DIR)
+get_directory_property(bethe_uni20_has_mpreal
+  DIRECTORY "${bethe_uni20_core_source}" DEFINITION UNI20_HAS_MPREAL)
 if(NOT EXISTS "${bethe_uni20_linalg_source}/solve_info.hpp" OR
-   NOT EXISTS "${bethe_uni20_linalg_source}/ops/slogdet.hpp")
+   NOT EXISTS "${bethe_uni20_linalg_source}/ops/slogdet.hpp" OR
+   "${bethe_uni20_has_mpreal}" STREQUAL "")
   message(FATAL_ERROR
-    "Bethe requires Uni20's recoverable linear-solve and LU/log-determinant APIs. "
+    "Bethe requires Uni20's recoverable linear-solve, LU/log-determinant, "
+    "and scalar-capability APIs (Uni20 PR #76 or newer). "
     "Update the supplied Uni20 checkout, or use Bethe's pinned dependency.")
 endif()
 

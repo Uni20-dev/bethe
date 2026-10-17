@@ -1,10 +1,11 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Copyright (C) 2026 Ian McCulloch
 #include <bethe/heisenberg.hpp>
+#include <bethe/heisenberg_excitations.hpp>
 #include <gtest/gtest.h>
-#if UNI20_ENABLE_MPC && UNI20_ENABLE_MPLAPACK_MPFR
-#include <bethe/xxx_structure_factor.hpp>
 #include <uni20/async/tbb_scheduler.hpp>
+#if UNI20_HAS_MPREAL && UNI20_HAS_MPLAPACK_MPREAL
+#include <bethe/xxx_structure_factor.hpp>
 #endif
 
 namespace
@@ -66,7 +67,90 @@ TEST(XxxMpfr, RejectsImplicitPrecisionChanges)
                std::invalid_argument);
 }
 
-#if UNI20_ENABLE_MPC && UNI20_ENABLE_MPLAPACK_MPFR
+TEST(XxxMpfr, SectorMinimaAndSpinonBranch)
+{
+  auto const reference = model::one_spinon_branch<Real>(9, bethe::SolverOptions<Real>(Precision::bits(512)));
+  for (int bits : {128, 256})
+  {
+    auto p = Precision::bits(bits);
+    bethe::SolverOptions<Real> options(p);
+    auto const sectors = model::sector_ground_states<Real>(5, options);
+    ASSERT_EQ(sectors.size(), 6);
+    for (std::size_t i = 0; i < sectors.size(); ++i)
+    {
+      ASSERT_TRUE(sectors[i].converged);
+      EXPECT_EQ(sectors[i].energy.precision(), p);
+      EXPECT_EQ(sectors[i].momentum.precision(), p);
+      EXPECT_EQ(sectors[i].residual_norm.precision(), p);
+      EXPECT_EQ(sectors[i].sz, -sectors[5 - i].sz);
+      EXPECT_EQ(sectors[i].energy, sectors[5 - i].energy);
+    }
+    near(sectors[4].energy, -uni20::math::sqrt(Real(5, p)) / 4, 128);
+    auto const negative = model::sector_ground_state<Real>(5, uni20::from_twice(-3), options);
+    EXPECT_TRUE(negative.spin_reversed);
+    EXPECT_EQ(negative.energy, sectors[1].energy);
+    auto const pi = uni20::pi<Real>.at(p);
+    auto const log2 = uni20::math::log(Real(2, p));
+    auto const center = model::one_spinon_state<Real>(5, uni20::half_int(0), options);
+    ASSERT_TRUE(center.state.converged);
+    near(center.state.energy, Real(-3, p) / 4);
+    near(center.spinon_momentum, pi / 2);
+    near(center.bulk_subtracted_energy, 5 * log2 - 2);
+    near(model::spinon_energy(center.spinon_momentum), pi / 2);
+    near(model::spinon_energy(Real(0, p)), Real(0, p));
+    near(model::spinon_energy(pi), Real(0, p));
+    near(model::bulk_energy_density(Real(1, p)), Real(1, p) / 4 - log2);
+    EXPECT_THROW((void)model::bulk_energy_density<Real>(), std::invalid_argument);
+    EXPECT_THROW((void)model::spinon_energy(Real(1)), std::invalid_argument);
+    EXPECT_THROW((void)model::spinon_energy(pi / 2, Real(1, Precision::bits(bits + 1))), std::invalid_argument);
+    auto const branch = model::one_spinon_branch<Real>(9, options);
+    ASSERT_EQ(branch.size(), reference.size());
+    for (std::size_t i = 0; i < branch.size(); ++i)
+    {
+      ASSERT_TRUE(branch[i].state.converged);
+      ASSERT_TRUE(reference[i].state.converged);
+      near(branch[i].state.energy, reference[i].state.energy.at(p));
+      near(branch[i].spinon_momentum, reference[i].spinon_momentum.at(p));
+      near(branch[i].bulk_subtracted_energy, reference[i].bulk_subtracted_energy.at(p));
+      near(model::spinon_energy(branch[i].spinon_momentum), model::spinon_energy(reference[i].spinon_momentum).at(p));
+    }
+  }
+}
+
+TEST(XxxMpfr, RootOnlyConcurrentPrecisionsAndThreadedExcitations)
+{
+  uni20::async::TbbScheduler scheduler(2);
+  std::vector<model::RealExcitationScan<model::RealState<Real>>> serial(2);
+  scheduler.execute_batch(2, [&](std::size_t i) {
+    auto const default_before = mpfr_get_default_prec();
+    serial[i] = model::real_excitations<Real>(8, uni20::half_int(1), {.count = 100},
+                                              bethe::SolverOptions<Real>(Precision::bits(128 + 128 * i)));
+    EXPECT_EQ(mpfr_get_default_prec(), default_before);
+  });
+  for (std::size_t i = 0; i < serial.size(); ++i)
+  {
+    auto p = Precision::bits(128 + 128 * i);
+    auto const parallel = model::real_excitations<Real>(
+        8, uni20::half_int(1), {.count = 100, .execution = {&scheduler, 3}}, bethe::SolverOptions<Real>(p));
+    ASSERT_TRUE(parallel.converged());
+    ASSERT_TRUE(serial[i].converged());
+    ASSERT_EQ(parallel.levels.size(), 10);
+    ASSERT_EQ(parallel.levels.size(), serial[i].levels.size());
+    for (std::size_t j = 0; j < parallel.levels.size(); ++j)
+    {
+      auto const& level = parallel.levels[j];
+      EXPECT_EQ(level.state.quantum_numbers, serial[i].levels[j].state.quantum_numbers);
+      EXPECT_EQ(level.state.energy.precision(), p);
+      EXPECT_EQ(level.state.energy, serial[i].levels[j].state.energy);
+      EXPECT_EQ(level.state.rapidities, serial[i].levels[j].state.rapidities);
+      ASSERT_TRUE(level.gap);
+      EXPECT_EQ(level.gap->precision(), p);
+      EXPECT_EQ(level.gap, serial[i].levels[j].gap);
+    }
+  }
+}
+
+#if UNI20_HAS_MPREAL && UNI20_HAS_MPLAPACK_MPREAL
 TEST(XxxMpfr, AnalyticSpectralWeightsAndEmptyMomenta)
 {
   for (int bits : {128, 256})

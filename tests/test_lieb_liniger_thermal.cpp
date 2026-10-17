@@ -44,7 +44,7 @@ TYPED_TEST(LiebLinigerThermal, TonksGasNativeFugacitySeries)
   bethe::detail::CompensatedSum<Real> pressure, density;
   Real const z = std::exp(Real{-1});
   Real power = z;
-  for (int l = 1; l < 4 * uni20::numeric_limits<Real>::digits; ++l)
+  for (int l = 1; l < 4 * uni20::numeric_limits<Real>::digits(); ++l)
   {
     Real const term = power / std::sqrt(Real(l));
     density.add(term);
@@ -57,7 +57,7 @@ TYPED_TEST(LiebLinigerThermal, TonksGasNativeFugacitySeries)
   EXPECT_REAL_NEAR(*state.density, n, tol * n);
   EXPECT_REAL_NEAR(*state.energy_per_length, p / Real{2}, tol * p);
   EXPECT_REAL_NEAR(*state.entropy_per_length, Real{3} * p / Real{2} + n, tol);
-  if constexpr (uni20::numeric_limits<Real>::digits > 53)
+  if constexpr (uni20::numeric_limits<Real>::digits() > 53)
     EXPECT_GT(std::abs(Real(double(*state.pressure)) - *state.pressure), Real{4} * eps * p);
 }
 

@@ -253,7 +253,7 @@ GapState<Real> relaxation_gap(std::size_t l, std::size_t particles, Real rate = 
     C b{};
     Real damping{1};
     bool accepted = false;
-    for (int backtrack = 0; backtrack <= uni20::numeric_limits<Real>::digits; ++backtrack)
+    for (int backtrack = 0; backtrack <= uni20::numeric_limits<Real>::digits(); ++backtrack)
     {
       for (std::size_t j = 0; j < n; ++j)
         trial[j] = out.roots[j] + damping * C(evaluation.residual[2 * j], evaluation.residual[2 * j + 1]);

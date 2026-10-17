@@ -270,7 +270,7 @@ OddPolynomialBranch<Real> continue_odd_polynomial(std::size_t sites, Real delta,
       {
         bool accepted = false;
         Real damping = Real{1};
-        for (int backtrack = 0; backtrack <= uni20::numeric_limits<Real>::digits; ++backtrack)
+        for (int backtrack = 0; backtrack <= uni20::numeric_limits<Real>::digits(); ++backtrack)
         {
           auto trial = c;
           bool finite = true;

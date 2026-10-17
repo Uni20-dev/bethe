@@ -52,7 +52,7 @@ LogDeterminant<Real> log_absolute_determinant(std::vector<Scalar> matrix, std::s
   uni20::MdspecTensorView<Span, ConstSpan, uni20::HostStorage> view(Span(matrix.data(), n, n),
                                                                     ConstSpan(matrix.data(), n, n));
   auto const lu = [&] {
-#if UNI20_ENABLE_MPFR
+#if UNI20_HAS_MPREAL
     if constexpr (uni20::has_runtime_precision_v<Real>)
       return uni20::linalg::lu_factor_with_info(view, zero.precision());
     else

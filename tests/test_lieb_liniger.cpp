@@ -59,7 +59,7 @@ template <uni20::Real Real> Real two_body_x(Real g, std::int64_t difference)
   Real lo = pi * Real(difference - 1), hi = pi * Real(difference);
   if (difference == 1) hi = std::min(hi, sqrt(g));
   Real const origin = lo;
-  for (int iteration = 0; iteration < uni20::numeric_limits<Real>::digits + 20; ++iteration)
+  for (int iteration = 0; iteration < uni20::numeric_limits<Real>::digits() + 20; ++iteration)
   {
     Real const mid = lo + (hi - lo) / Real{2};
     if (mid == lo || mid == hi) break;
@@ -100,7 +100,7 @@ TYPED_TEST(LiebLiniger, AnalyticNativePrecision)
     ASSERT_TRUE(two.converged);
     Real const exact = pi * pi / (Real{2} * length * length);
     EXPECT_REAL_NEAR(two.energy, exact, Real{128} * eps * exact);
-    if constexpr (uni20::numeric_limits<Real>::digits > 53)
+    if constexpr (uni20::numeric_limits<Real>::digits() > 53)
       if (length == Real{1}) ASSERT_GT(std::abs(Real(static_cast<double>(exact)) - exact), Real{128} * eps * exact);
     EXPECT_REAL_NEAR(two.momenta[1], pi / (Real{2} * length), Real{128} * eps);
     test_support::expect_exact(uni20::parse_real<Real>(uni20::format_real(two.energy)), two.energy, "energy I/O");

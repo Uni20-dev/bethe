@@ -6,7 +6,7 @@ import subprocess
 import sys
 import tempfile
 
-info, native, structure_factor, fp128, arbitrary = sys.argv[1:]
+info, native, structure_factor, fp128, arbitrary, mpfr, mplapack_fp128 = sys.argv[1:]
 enabled = lambda value: value.upper() in ("ON", "TRUE", "1")
 env = dict(os.environ, OPENBLAS_NUM_THREADS="1", OMP_NUM_THREADS="1", UNI20_COLOR="never")
 
@@ -35,7 +35,14 @@ for row in rows.values():
 assert set(rows) == {"fp64", "fp80", "long-double", "fp128", "bits-N", "digits-N"}
 assert rows["fp64"]["available"] and rows["fp64"]["significand_bits"] == 53
 assert rows["fp128"]["available"] == enabled(fp128)
-assert rows["bits-N"]["available"] == rows["digits-N"]["available"] == enabled(arbitrary)
+assert rows["bits-N"]["available"] == rows["digits-N"]["available"] == enabled(mpfr)
+metadata = table["metadata"]
+assert (metadata["Uni20 float128 configured"] == "true") == enabled(fp128)
+assert (metadata["MPLAPACK binary128 configured"] == "true") == enabled(mplapack_fp128)
+assert (metadata["Uni20 arbitrary-precision real/complex configured"] == "true") == enabled(mpfr)
+assert (metadata["MPLAPACK MPFR configured"] == "true") == enabled(arbitrary)
+assert ("bethe-xxx-pbc" in metadata["Arbitrary-precision frontends"]) == enabled(mpfr)
+assert ("bethe-xxx-structure-factor" in metadata["Arbitrary-precision frontends"]) == enabled(arbitrary)
 if enabled(fp128):
     assert rows["fp128"]["significand_bits"] == 113
 long_double = rows["long-double"]
@@ -58,7 +65,10 @@ else:
 with tempfile.TemporaryDirectory() as directory:
     path = Path(directory)/"preserve.json"
     path.write_text("sentinel")
-    for value in ("bits-512", "digits-100", "mpfr", "bits-0", "digits--100"):
+    invalid = ["mpfr", "bits-0", "digits--100"]
+    if not enabled(mpfr):
+        invalid += ["bits-512", "digits-100"]
+    for value in invalid:
         run(native, ["4", "--precision", value, "--json", str(path), "--force"], 1)
         assert path.read_text() == "sentinel"
     if not enabled(fp128):
@@ -66,7 +76,9 @@ with tempfile.TemporaryDirectory() as directory:
     if not enabled(arbitrary):
         for value in ("bits-512", "digits-100"):
             result = run(structure_factor, ["4", "--precision", value, "--json", str(path), "--force"], 1)
-            assert "arbitrary precision requires" in result.stderr
+            assert "arbitrary-precision form factors require" in result.stderr
+            assert "UNI20_ENABLE_MPREAL=ON" in result.stderr
+            assert "UNI20_BACKEND_MPLAPACK=ON" in result.stderr
             assert path.read_text() == "sentinel"
 
 print("Precision selection and build information contracts passed")

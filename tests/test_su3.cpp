@@ -80,7 +80,7 @@ TYPED_TEST(SU3, AnalyticThreeSites)
   EXPECT_REAL_NEAR(state.energy, -Real{3}, Real{256} * eps);
   EXPECT_REAL_NEAR(state.rapidities[0][1], root, Real{64} * eps);
   EXPECT_EQ(state.rapidities[1][0], Real{0});
-  if constexpr (uni20::numeric_limits<Real>::digits > 53)
+  if constexpr (uni20::numeric_limits<Real>::digits() > 53)
     EXPECT_GT(std::abs(Real(double(root)) - root), Real{64} * eps);
   test_support::expect_exact(uni20::parse_real<Real>(uni20::format_real(state.energy)), state.energy, "energy I/O");
 }
@@ -143,7 +143,7 @@ TYPED_TEST(SU3, AnalyticSixSites)
   auto const state = model::ground_state<Real>(6);
   ASSERT_TRUE(state.converged);
   EXPECT_REAL_NEAR(state.energy, exact, tolerance);
-  if constexpr (uni20::numeric_limits<Real>::digits > 53) EXPECT_GT(std::abs(Real(double(exact)) - exact), tolerance);
+  if constexpr (uni20::numeric_limits<Real>::digits() > 53) EXPECT_GT(std::abs(Real(double(exact)) - exact), tolerance);
 }
 
 struct ExactGround

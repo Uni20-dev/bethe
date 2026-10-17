@@ -20,7 +20,7 @@ TYPED_TEST(OpenTwoString, FourSiteNativePrecision)
   ASSERT_TRUE(state.reference.converged) << int(state.reference.status);
   R const exact = (-R{15} + std::sqrt(R{17})) / R{2};
   EXPECT_REAL_NEAR(state.energy, exact, R{512} * eps);
-  if constexpr (uni20::numeric_limits<R>::digits > 53) EXPECT_GT(std::abs(R(double(exact)) - exact), R{512} * eps);
+  if constexpr (uni20::numeric_limits<R>::digits() > 53) EXPECT_GT(std::abs(R(double(exact)) - exact), R{512} * eps);
   EXPECT_EQ(state.multiplicity, 1);
   EXPECT_EQ(state.through_lines, 0);
 }

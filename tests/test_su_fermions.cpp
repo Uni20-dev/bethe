@@ -86,7 +86,7 @@ TYPED_TEST(SUFermions, TwoComponentReduction)
   auto const analytic = model::ground_state<Real>(std::vector<std::size_t>{1, 1, 0}, Real{1}, pi);
   ASSERT_TRUE(analytic.converged);
   EXPECT_REAL_NEAR(*analytic.energy, exact, Real{512} * eps);
-  if constexpr (uni20::numeric_limits<Real>::digits > 53)
+  if constexpr (uni20::numeric_limits<Real>::digits() > 53)
     EXPECT_GT(std::abs(Real(double(exact)) - exact), Real{512} * eps);
 }
 

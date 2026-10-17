@@ -178,7 +178,7 @@ TYPED_TEST(BoseFermi, LimitsAndBudgets)
   auto const analytic = model::ground_state(1, 1, Real{1}, pi);
   ASSERT_TRUE(analytic.converged);
   EXPECT_REAL_NEAR(*analytic.energy, pi * pi / Real{2}, Real{512} * eps);
-  if constexpr (uni20::numeric_limits<Real>::digits > 53)
+  if constexpr (uni20::numeric_limits<Real>::digits() > 53)
     EXPECT_GT(std::abs(Real(double(pi * pi / Real{2})) - pi * pi / Real{2}), Real{512} * eps);
   for (std::size_t b : {1u, 2u, 5u})
   {

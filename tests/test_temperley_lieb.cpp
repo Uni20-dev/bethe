@@ -32,7 +32,7 @@ TYPED_TEST(TemperleyLieb, AnalyticTwoAndFourSites)
   ASSERT_TRUE(four.reference.converged);
   Real const exact = -(Real{15} + std::sqrt(Real{17})) / Real{2};
   EXPECT_REAL_NEAR(four.energy, exact, Real{256} * eps);
-  if constexpr (uni20::numeric_limits<Real>::digits > 53)
+  if constexpr (uni20::numeric_limits<Real>::digits() > 53)
     EXPECT_GT(std::abs(Real(double(exact)) - exact), Real{256} * eps);
   test_support::expect_exact(uni20::parse_real<Real>(uni20::format_real(four.energy)), four.energy, "biquadratic I/O");
 }
@@ -300,7 +300,7 @@ TYPED_TEST(TemperleyLieb, ExcitationNativePrecisionAndWeights)
     EXPECT_REAL_NEAR(*level.gap, energies[j] - e0, Real{256} * eps);
     EXPECT_EQ(level.state.reference.quantum_numbers, qg::QuantumNumbers({uni20::half_int(std::int64_t(j + 1))}));
   }
-  if constexpr (uni20::numeric_limits<Real>::digits > 53)
+  if constexpr (uni20::numeric_limits<Real>::digits() > 53)
     EXPECT_GT(std::abs(Real(double(energies[0])) - energies[0]), Real{128} * eps);
   auto const vacuum = bethe::biquadratic::sector_ground_state<Real>(4, 4);
   EXPECT_TRUE(vacuum.reference.converged);

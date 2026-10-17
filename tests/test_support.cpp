@@ -16,7 +16,7 @@ TYPED_TEST(PrecisionAssertions, NativeArithmeticAndStrictBound)
   EXPECT_REAL_NEAR(adjacent, Real{1}, Real{2} * eps);
   ASSERT_REAL_NEAR(adjacent, Real{1}, Real{2} * eps);
   EXPECT_FALSE(test_support::real_near("adjacent", "one", "epsilon", adjacent, Real{1}, eps));
-  if constexpr (uni20::numeric_limits<Real>::digits > uni20::numeric_limits<double>::digits)
+  if constexpr (uni20::numeric_limits<Real>::digits() > uni20::numeric_limits<double>::digits())
   {
     ASSERT_EQ(static_cast<double>(adjacent), 1.0);
     EXPECT_NONFATAL_FAILURE(EXPECT_REAL_NEAR(adjacent, Real{1}, eps), "absolute error");

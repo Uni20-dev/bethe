@@ -166,7 +166,7 @@ NegativeGroundRoots<Real> negative_ground_roots(std::size_t sites, Real delta, u
     auto trial = x;
     bool accepted = false;
     Real damping = Real{1};
-    for (int k = 0; k <= uni20::numeric_limits<Real>::digits; ++k)
+    for (int k = 0; k <= uni20::numeric_limits<Real>::digits(); ++k)
     {
       for (std::size_t i = 0; i < m; ++i)
         trial[i] = x[i] + damping * step[i, 0];

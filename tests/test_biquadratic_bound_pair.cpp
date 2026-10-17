@@ -22,7 +22,7 @@ TYPED_TEST(BiquadraticBoundPair, NativePrecisionAndFamily)
   R const exact = (R{15} - std::sqrt(R{17})) / R{2};
   EXPECT_REAL_NEAR(s.energy, exact, R{128} * eps);
   EXPECT_REAL_NEAR(s.tl_energy, exact - R{3}, R{128} * eps);
-  if constexpr (uni20::numeric_limits<R>::digits > 53) EXPECT_GT(std::abs(R(double(exact)) - exact), R{128} * eps);
+  if constexpr (uni20::numeric_limits<R>::digits() > 53) EXPECT_GT(std::abs(R(double(exact)) - exact), R{128} * eps);
   auto const af = bethe::biquadratic::two_string::singlet<R>(4);
   EXPECT_REAL_NEAR(s.energy, -af.energy, R{128} * eps);
   EXPECT_EQ(s.multiplicity, 1);
@@ -149,7 +149,7 @@ TYPED_TEST(BiquadraticBoundPair, LongChainsAndBudgets)
     EXPECT_THROW((void)ferro::bound_pair<R>(n), std::invalid_argument);
   for (std::size_t mode : {0, 6})
     EXPECT_THROW((void)ferro::bound_pair<R>(8, mode), std::invalid_argument);
-  if constexpr (uni20::numeric_limits<R>::digits < std::numeric_limits<std::size_t>::digits)
+  if constexpr (uni20::numeric_limits<R>::digits() < std::numeric_limits<std::size_t>::digits)
     EXPECT_THROW((void)ferro::bound_pair<R>(std::numeric_limits<std::size_t>::max()), std::overflow_error);
   for (R bad : {R{0}, -R{1}, uni20::numeric_limits<R>::infinity(), uni20::numeric_limits<R>::quiet_NaN()})
   {

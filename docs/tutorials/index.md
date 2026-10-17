@@ -37,6 +37,7 @@ Regeneration replaces the repository's example data, not files in your calculati
 - [Lieb–Liniger](lieb-liniger.md): particle/hole branches and density scaling.
 - [Sutherland](sutherland.md): collision exponents, excitation labels and bounded scans.
 - [XXX](xxx.md): finite-ring spinons and periodic/free-end excitation scans.
+- [XXX precision](xxx-precision.md): resolving small energy scales, stable formulas and arbitrary precision.
 - [XXX spectral weights](xxx-structure-factor.md): two-spinon intensities, sum rules and plotting broadening.
 - [Thermodynamic XXX intensity](xxx-structure-factor-thermo.md): exact two-spinon spectral density without broadening.
 - [Haldane–Shastry](haldane-shastry.md): motifs, spin multiplicities and complete finite spectra.
@@ -61,15 +62,16 @@ Regeneration replaces the repository's example data, not files in your calculati
 
 ## Coverage of implemented models
 
-All **26 implemented model families** have worked tutorials, with 28 pages:
-Hubbard has separate half-filled/doped examples and XXX has energies/weights. This inventory
+All **26 implemented model families** have worked tutorials:
+Hubbard has separate half-filled/doped examples and XXX has energies,
+spectral weights and a high-precision example. This inventory
 includes finite systems and impurity response, not only thermodynamic
 excitation tools. Proposed but unimplemented models in the
 [model survey](../models.md) are outside this inventory.
 
 | Model family | Worked tutorial |
 | --- | --- |
-| XXX | [Energies](xxx.md), [finite spectral weights](xxx-structure-factor.md), [thermodynamic intensity](xxx-structure-factor-thermo.md) |
+| XXX | [Energies](xxx.md), [precision](xxx-precision.md), [finite spectral weights](xxx-structure-factor.md), [thermodynamic intensity](xxx-structure-factor-thermo.md) |
 | XXZ | [Tutorial](xxz-spinons.md) |
 | XYZ | [Tutorial](xyz.md) |
 | SU(3)/ULS | [Tutorial](su3-uls.md) |

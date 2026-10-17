@@ -111,7 +111,7 @@ Mesh<Real> solve_mesh(Real c, Real t, Real mu, Real cutoff, bethe::detail::Gauss
     std::vector<Real> trial(n);
     Real damping{1};
     bool accepted = false;
-    for (int backtrack = 0; backtrack <= uni20::numeric_limits<Real>::digits; ++backtrack)
+    for (int backtrack = 0; backtrack <= uni20::numeric_limits<Real>::digits(); ++backtrack)
     {
       for (std::size_t j = 0; j < n; ++j)
         trial[j] = out.epsilon[j] + damping * step[j];
