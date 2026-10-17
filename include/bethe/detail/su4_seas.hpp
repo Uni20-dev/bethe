@@ -180,7 +180,7 @@ Branch<Real> solve(Shape const& shape, std::array<int, 3> const& shift, Real tol
     auto trial = x;
     bool improved = false;
     Real damping{1};
-    for (int backtrack = 0; backtrack <= uni20::numeric_limits<Real>::digits; ++backtrack)
+    for (int backtrack = 0; backtrack <= uni20::numeric_limits<Real>::digits(); ++backtrack)
     {
       for (std::size_t j = 0; j < x.size(); ++j)
         trial[j] = x[j] + damping * correction[j];

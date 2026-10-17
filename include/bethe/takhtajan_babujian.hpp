@@ -198,7 +198,7 @@ template <uni20::Real Real = double>
     bool accepted = false;
     Real damping{1};
     auto trial = x;
-    for (int backtrack = 0; backtrack <= uni20::numeric_limits<Real>::digits; ++backtrack)
+    for (int backtrack = 0; backtrack <= uni20::numeric_limits<Real>::digits(); ++backtrack)
     {
       for (std::size_t j = 0; j < x.size(); ++j)
         trial[j] = x[j] + damping * step[j];

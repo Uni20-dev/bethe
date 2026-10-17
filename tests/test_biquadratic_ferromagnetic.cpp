@@ -40,7 +40,7 @@ TYPED_TEST(BiquadraticFerro, AnalyticBandAndNativePrecision)
   EXPECT_REAL_NEAR(four.gap, R{3} - std::sqrt(R{2}), R{16} * eps);
   EXPECT_EQ(four.multiplicity, 8);
   EXPECT_EQ(ferro::ground_space<R>(4).multiplicity, 55);
-  if constexpr (uni20::numeric_limits<R>::digits > 53) EXPECT_GT(std::abs(R(double(four.gap)) - four.gap), R{16} * eps);
+  if constexpr (uni20::numeric_limits<R>::digits() > 53) EXPECT_GT(std::abs(R(double(four.gap)) - four.gap), R{16} * eps);
   // Extensive total energy may round away a unit-scale gap; the gap is independent.
   auto const huge =
       ferro::one_defect_level<R>(std::numeric_limits<std::size_t>::max(), std::numeric_limits<std::size_t>::max() - 1);

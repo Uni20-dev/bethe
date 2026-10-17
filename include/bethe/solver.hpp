@@ -18,7 +18,7 @@ template <uni20::Real Real> struct SolverOptions
     std::size_t max_iterations = 10000;
 };
 
-#if UNI20_ENABLE_MPFR
+#if UNI20_HAS_MPREAL
 /// Runtime-precision solvers require a finite precision per call. No MPFR global
 /// or thread-local default is read or changed. Set custom tolerances at this precision.
 template <> struct SolverOptions<uni20::mpreal>
@@ -45,7 +45,7 @@ namespace detail
 /// A finite-precision zero, without evaluating an unset runtime scalar.
 template <uni20::Real Real> Real precision_zero(Real const& exemplar)
 {
-#if UNI20_ENABLE_MPFR
+#if UNI20_HAS_MPREAL
   if constexpr (uni20::has_runtime_precision_v<Real>)
     if (!exemplar.initialized() || exemplar.is_exact())
       throw std::invalid_argument("a numerical calculation requires a finite-precision scalar");
@@ -57,7 +57,7 @@ template <uni20::Real Real> void require_same_precision(Real const& value, Real 
 {
   (void)value;
   (void)exemplar;
-#if UNI20_ENABLE_MPFR
+#if UNI20_HAS_MPREAL
   if constexpr (uni20::has_runtime_precision_v<Real>)
     if (!value.initialized() || value.is_exact() || value.precision() != exemplar.precision())
       throw std::invalid_argument("mixed, exact or unset solver values require explicit precision conversion");
@@ -67,7 +67,7 @@ template <uni20::Real Real> void require_same_precision(Real const& value, Real 
 template <uni20::Real Real> Real solver_zero(SolverOptions<Real> const& options)
 {
   (void)options;
-#if UNI20_ENABLE_MPFR
+#if UNI20_HAS_MPREAL
   if constexpr (uni20::has_runtime_precision_v<Real>)
   {
     Real zero(0, options.precision());
@@ -82,7 +82,7 @@ template <uni20::Real Real> Real solver_zero(SolverOptions<Real> const& options)
 template <uni20::Real Real> Real pi_like(Real const& exemplar)
 {
   (void)exemplar;
-#if UNI20_ENABLE_MPFR
+#if UNI20_HAS_MPREAL
   if constexpr (uni20::has_runtime_precision_v<Real>)
     return uni20::pi<Real>.at(exemplar.precision());
   else

@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Copyright (C) 2026 Ian McCulloch
 #include "cli-common.hpp"
+#include "solver-precision.hpp"
 #include <gtest/gtest.h>
 
 namespace cli = bethe::cli;
@@ -26,7 +27,7 @@ TEST(CliPrecision, ParseFormatsAndExplicitPrecision)
 TEST(CliPrecision, NativeFormatAndNoFallback)
 {
   EXPECT_FALSE(cli::is_extended80<double>);
-  auto bits = []<typename Real>() { return uni20::numeric_limits<Real>::digits; };
+  auto bits = []<typename Real>() { return uni20::numeric_limits<Real>::digits(); };
   EXPECT_EQ(cli::dispatch_precision("fp64", bits), 53);
   EXPECT_EQ(cli::dispatch_precision("long-double", bits), std::numeric_limits<long double>::digits);
   if (cli::has_fp80)
@@ -43,18 +44,42 @@ TEST(CliPrecision, NativeFormatAndNoFallback)
   EXPECT_THROW(cli::dispatch_precision("fp128", bits), std::invalid_argument);
 #endif
   EXPECT_THROW(cli::dispatch_precision("bits-128", bits), std::invalid_argument);
-  EXPECT_THROW(cli::validate_precision(cli::parse_precision("digits-100"), false), std::invalid_argument);
+  EXPECT_THROW(cli::validate_precision(cli::parse_precision("digits-100")), std::invalid_argument);
   if (!cli::has_arbitrary_structure_factor)
-    EXPECT_THROW(cli::validate_precision(cli::parse_precision("bits-128"), true), std::invalid_argument);
+    EXPECT_THROW(cli::validate_precision(cli::parse_precision("bits-128"), cli::ArbitraryPrecision::complex_linalg),
+                 std::invalid_argument);
+  if (!UNI20_HAS_MPREAL)
+    EXPECT_THROW(cli::validate_precision(cli::parse_precision("bits-128"), cli::ArbitraryPrecision::real),
+                 std::invalid_argument);
 }
 
-#if UNI20_ENABLE_MPFR
+#if UNI20_HAS_MPREAL
 TEST(CliPrecision, DecimalAndBinaryWorkingPrecision)
 {
+  EXPECT_NO_THROW(cli::validate_precision(cli::parse_precision("bits-128"), cli::ArbitraryPrecision::real));
+  EXPECT_EQ(cli::arithmetic_info(cli::parse_precision("digits-100")).bits, 333);
   EXPECT_EQ(cli::parse_precision("digits-100").working_precision().bit_count(), 333);
   EXPECT_EQ(cli::parse_precision("bits-512").working_precision().bit_count(), 512);
   EXPECT_EQ(cli::parse_precision("bits-128").working_precision().bit_count(), 128);
   EXPECT_THROW(cli::parse_precision("fp128").working_precision(), std::logic_error);
   EXPECT_THROW(cli::parse_precision("digits-9223372036854775807").working_precision(), std::invalid_argument);
+}
+
+TEST(CliPrecision, SolverControlsUseSelectedPrecision)
+{
+  auto check = []<typename Real>(bethe::SolverOptions<Real> const& options) {
+    EXPECT_EQ(options.max_iterations, 17);
+    if constexpr (uni20::has_runtime_precision_v<Real>)
+    {
+      EXPECT_EQ(options.precision(), uni20::Precision::bits(333));
+      EXPECT_EQ(options.residual_tolerance.precision(), options.precision());
+      EXPECT_EQ(options.residual_tolerance,
+                Real("1.00000000000000000000000000000000000000001e-90", options.precision()));
+    }
+    return 0;
+  };
+  EXPECT_EQ(cli::dispatch_solver_precision<cli::ArbitraryPrecision::real>(
+                "digits-100", "1.00000000000000000000000000000000000000001e-90", 17, check),
+            0);
 }
 #endif

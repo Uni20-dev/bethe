@@ -72,7 +72,7 @@ TYPED_TEST(BiquadraticScattering, NativeGapAndOrderingSurviveExtensiveOffset)
     test_support::expect_exact(*s.gap, s.state.tl_energy, "direct gap matches TL energy");
     if (i) EXPECT_GT(*s.gap, *band.levels[i - 1].gap);
   }
-  if constexpr (uni20::numeric_limits<R>::digits <= 64)
+  if constexpr (uni20::numeric_limits<R>::digits() <= 64)
     EXPECT_EQ(band.levels.front().state.energy, band.levels.back().state.energy);
   for (std::size_t length : {127, 128, 100000})
     for (std::size_t m : {2, 3})
@@ -140,7 +140,7 @@ TYPED_TEST(BiquadraticScattering, BudgetsParityAndDomains)
   // Ground-sector and Q-system restrictions are deliberately unchanged.
   EXPECT_THROW((void)bethe::biquadratic::ground_state<R>(7), std::invalid_argument);
   EXPECT_THROW((void)ferro::qsystem::spectrum<R>(7, 3), std::invalid_argument);
-  if constexpr (uni20::numeric_limits<R>::digits < 60)
+  if constexpr (uni20::numeric_limits<R>::digits() < 60)
   {
     std::size_t const n = std::size_t{1} << 60;
     EXPECT_THROW((void)ferro::solve_real<R>(n, std::vector<uni20::half_int>{uni20::half_int(std::int64_t(n - 1))}),

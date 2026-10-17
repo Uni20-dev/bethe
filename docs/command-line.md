@@ -120,14 +120,22 @@ All frontends support typed tables and file exports; see the
 | `bits-N` | Arbitrary precision with N binary significand bits |
 | `digits-N` | Arbitrary precision sufficient for N decimal digits |
 
-The arbitrary-precision choices currently apply only to the finite-ring
-`bethe-xxx-structure-factor`, in an
+The arbitrary-precision choices currently apply to `bethe-xxx-pbc` (all modes)
+and the finite-ring `bethe-xxx-structure-factor`, in an
 [enabled build](building.md#enable-arbitrary-precision-for-xxx):
 
 ```sh
+bethe-xxx-pbc 32 --precision digits-100
+bethe-xxx-pbc 17 --spinons --precision bits-256
+bethe-xxx-pbc 16 --excitations all --threads 4 --precision bits-256
 bethe-xxx-structure-factor 32 --precision bits-256
-bethe-xxx-structure-factor 32 --precision digits-100
 ```
+
+Periodic XXX roots need Uni20's arbitrary-precision scalar family (GMP, MPFR,
+and MPC), but no MPLAPACK. Structure factors additionally require the MPLAPACK
+provider. Other frontends, including `bethe-xxx-obc`,
+still support native precisions only. More precision does not expand the
+supported state family: the excitation scan still excludes strings and infinite roots.
 
 `digits-100` resolves to 333 bits through Uni20's decimal-precision conversion.
 `bits-128` is **not** `fp128`: the former has 128 significand bits, the latter
@@ -159,7 +167,7 @@ bethe-info --format json
 ```
 
 `bethe-info` reports Bethe/Uni20 revisions, configured numerical providers,
-available precision choices and which frontend supports arbitrary precision.
+available precision choices and which frontends support arbitrary precision.
 Its `precisions` table includes significand bits, decimal precision, exponent
 range and native storage size (including padding). Exponents follow
 `numeric_limits`: the smallest normal value is `2^(min_exponent-1)` and the

@@ -302,7 +302,7 @@ State<Real> solve(System<Real> const& system, std::span<Real const> seed, Solver
     bool accepted = false;
     Real damping{1};
     auto trial = state.coefficients;
-    for (int backtrack = 0; backtrack <= uni20::numeric_limits<Real>::digits; ++backtrack)
+    for (int backtrack = 0; backtrack <= uni20::numeric_limits<Real>::digits(); ++backtrack)
     {
       for (std::size_t i = 0; i < trial.size(); ++i)
         trial[i] = state.coefficients[i] + damping * step[i];

@@ -123,7 +123,7 @@ TYPED_TEST(Sectors, OneMagnonPrecision)
   auto const magnon = sector_ground_state<Real>(5, half(3));
   Real const exact_magnon = -sqrt(Real{5}) / Real{4};
   EXPECT_REAL_NEAR(magnon.energy, exact_magnon, Real{64} * eps) << "one-magnon irrational energy precision";
-  if constexpr (uni20::numeric_limits<Real>::digits > uni20::numeric_limits<double>::digits)
+  if constexpr (uni20::numeric_limits<Real>::digits() > uni20::numeric_limits<double>::digits())
   {
     ASSERT_TRUE(abs(static_cast<Real>(static_cast<double>(exact_magnon)) - exact_magnon) > Real{64} * eps)
         << "one-magnon oracle discriminates double narrowing";

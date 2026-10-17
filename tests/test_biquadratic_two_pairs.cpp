@@ -182,7 +182,7 @@ TYPED_TEST(TwoPairs, LongChainThresholdAndFailureContract)
     EXPECT_THROW((void)tp::solve<R>(8, bad, {1, 2}), std::invalid_argument);
   EXPECT_THROW((void)ferro::two_bound_pairs<R>(8, {1, 2}, {.residual_tolerance = R{0}}), std::invalid_argument);
   EXPECT_THROW((void)ferro::two_bound_pairs<R>(std::numeric_limits<std::size_t>::max(), {1, 2}), std::invalid_argument);
-  if constexpr (uni20::numeric_limits<R>::digits <= 53)
+  if constexpr (uni20::numeric_limits<R>::digits() <= 53)
   {
     std::size_t const n = 1000000000000000000ULL;
     EXPECT_THROW((void)ferro::two_bound_pairs<R>(n, {n - 7, n - 6}), std::overflow_error);

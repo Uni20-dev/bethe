@@ -354,9 +354,9 @@ TYPED_TEST(NewtonControl, ExhaustionKeepsIterateAndNativeHalvingBudget)
         last = damping;
         return false;
       }));
-  EXPECT_EQ(trials, unsigned(uni20::numeric_limits<Real>::digits + 1));
+  EXPECT_EQ(trials, unsigned(uni20::numeric_limits<Real>::digits() + 1));
   Real expected{1};
-  for (int i = 0; i < uni20::numeric_limits<Real>::digits; ++i)
+  for (int i = 0; i < uni20::numeric_limits<Real>::digits(); ++i)
     expected /= Real{2};
   test_support::expect_exact(last, expected, "last damping");
   test_support::expect_exact(x[0], Real{1}, "rejected iterate");

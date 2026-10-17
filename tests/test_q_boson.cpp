@@ -103,7 +103,7 @@ TYPED_TEST(QBoson, TwoSiteNativeFormulaAndWeakDeformation)
     Real const expected = Real{2} * loss / (Real{1} + std::sqrt(Real{1} - loss / Real{2}));
     EXPECT_REAL_NEAR(*s.energy, expected, Real{512} * eps * expected);
     EXPECT_GT(*s.energy, Real{0});
-    if constexpr (uni20::numeric_limits<Real>::digits > 53)
+    if constexpr (uni20::numeric_limits<Real>::digits() > 53)
       if (eta == Real{1}) EXPECT_GT(std::abs(*s.energy - Real(double(*s.energy))), Real{4} * eps);
   }
   auto const many = model::ground_state(20, 12, eps * eps);

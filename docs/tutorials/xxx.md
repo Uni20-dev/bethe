@@ -159,7 +159,10 @@ finite-size trend and scan completeness within the stated family. Additional
 N=4 exports ([periodic](data/xxx-n4-pbc.csv), [free ends](data/xxx-n4-obc.csv))
 check exact ground energies and the one-magnon spectrum. fp64 is sufficient
 here; long-double and fp128 can test arithmetic accuracy separately from
-finite-size effects.
+finite-size effects. For a case where rounding actually erases the energy
+scale of interest, continue with [XXX: when a converged energy is not accurate
+enough](xxx-precision.md), including a comparison of native and arbitrary
+precision against an exact one-magnon dispersion.
 
 ## Further reading
 

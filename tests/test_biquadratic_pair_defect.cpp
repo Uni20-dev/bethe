@@ -247,7 +247,7 @@ TYPED_TEST(BiquadraticPairDefect, LongChainThresholdAndNativePrecision)
   R const g = s.tl_energy;
   EXPECT_REAL_NEAR(((g - R{17}) * g + R{80}) * g, R{106}, R{4096} * eps);
   // Even this nearly representable root must not take an fp64 round trip.
-  if constexpr (uni20::numeric_limits<R>::digits > 53) EXPECT_GT(std::abs(g - R(double(g))), eps);
+  if constexpr (uni20::numeric_limits<R>::digits() > 53) EXPECT_GT(std::abs(g - R(double(g))), eps);
 }
 
 TYPED_TEST(BiquadraticPairDefect, JacobianAndFailureContract)

@@ -77,8 +77,8 @@ template <typename Scalar> Scalar integer_power(Scalar base, std::size_t exponen
 /// invalidate it. Each evaluation validates its excited roots independently.
 /// Concurrent const calls share no scratch or mutable cache. See docs/xxx-structure-factor.md.
 template <uni20::Real Real> class PreparedRaisingFormFactors {
-    static_assert(!uni20::has_runtime_precision_v<Real> || (UNI20_ENABLE_MPC && UNI20_ENABLE_MPLAPACK_MPFR),
-                  "MPFR form factors require UNI20_ENABLE_MPC and UNI20_ENABLE_MPLAPACK_MPFR");
+    static_assert(!uni20::has_runtime_precision_v<Real> || (UNI20_HAS_MPREAL && UNI20_HAS_MPLAPACK_MPREAL),
+                  "MPFR form factors require UNI20_ENABLE_MPREAL=ON and UNI20_BACKEND_MPLAPACK=ON");
 
   public:
     PreparedRaisingFormFactors(std::size_t sites, RealState<Real> const& ground) : sites_(sites)

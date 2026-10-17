@@ -3,6 +3,7 @@
 #include "execution-options.hpp"
 #include "program-options.hpp"
 #include "result-output.hpp"
+#include "solver-precision.hpp"
 #include <bethe/xxx_structure_factor.hpp>
 
 namespace
@@ -47,7 +48,7 @@ void add_options(CLI::App& app, Arguments& a)
   cli::count_option(app, "--max-iterations", a.max_iterations, "Root iteration budget per state")
       ->capture_default_str();
   cli::text_option(app, "--tolerance", a.tolerance, "Normalized root residual tolerance")->type_name("REAL");
-  cli::precision_option(app, a.precision, true);
+  cli::precision_option(app, a.precision, cli::ArbitraryPrecision::complex_linalg);
   cli::threads_option(app, a.threads);
   app.add_flag("--roots", a.roots, "Show ground and converged-state z=2*lambda roots on screen");
   app.add_flag("--diagnostics", a.diagnostics, "Show state convergence and form-factor diagnostics on screen");
@@ -76,16 +77,6 @@ std::string status(model::FormFactorStatus s)
 template <uni20::Real Real> int run(Arguments const& a, int argc, char** argv, model::SolverOptions<Real> controls)
 {
   uni20::run_context context(program_info(), {.invocation = std::vector<std::string>(argv, argv + argc)});
-  controls.max_iterations = a.max_iterations;
-  if (a.tolerance)
-  {
-#if UNI20_ENABLE_MPFR
-    if constexpr (uni20::has_runtime_precision_v<Real>)
-      controls.residual_tolerance = uni20::parse_real<Real>(*a.tolerance, controls.precision());
-    else
-#endif
-      controls.residual_tolerance = uni20::parse_real<Real>(*a.tolerance);
-  }
   uni20::async::TbbScheduler scheduler(a.threads);
   auto const result = context.measure(
       [&] { return model::two_spinon_structure_factor<Real>(a.sites, controls, a.max_candidates, {&scheduler}); });
@@ -187,16 +178,8 @@ int main(int argc, char** argv)
       argc, argv, program_info(), [&](auto& app) { add_options(app, a); },
       [&](auto&) {
         a.output.validate();
-        auto const precision = cli::parse_precision(a.precision);
-        if (precision.arbitrary())
-        {
-#if UNI20_ENABLE_MPFR && UNI20_ENABLE_MPC && UNI20_ENABLE_MPLAPACK_MPFR
-          return run<uni20::mpreal>(a, argc, argv, model::SolverOptions<uni20::mpreal>(precision.working_precision()));
-#else
-          throw std::invalid_argument("arbitrary precision is unavailable in this build; see bethe-info");
-#endif
-        }
-        return cli::dispatch_precision(
-            a.precision, [&]<typename Real>() { return run<Real>(a, argc, argv, model::SolverOptions<Real>{}); });
+        return cli::dispatch_solver_precision<cli::ArbitraryPrecision::complex_linalg>(
+            a.precision, a.tolerance, a.max_iterations,
+            [&](auto const& controls) { return run(a, argc, argv, controls); });
       });
 }

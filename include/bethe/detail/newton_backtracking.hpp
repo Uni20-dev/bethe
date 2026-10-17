@@ -27,7 +27,7 @@ bool backtrack_newton(std::vector<Real>& x, Correction&& correction, Accept&& ac
 {
   auto trial = x;
   Real damping{1};
-  for (int backtrack = 0; backtrack <= uni20::numeric_limits<Real>::digits; ++backtrack)
+  for (int backtrack = 0; backtrack <= uni20::numeric_limits<Real>::digits(); ++backtrack)
   {
     for (std::size_t i = 0; i < x.size(); ++i)
       trial[i] = x[i] + damping * correction(i);

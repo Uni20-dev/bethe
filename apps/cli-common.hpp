@@ -25,7 +25,7 @@ static_assert(MPLAPACK_BINARY128_MODE == MPLAPACK_BINARY128_MODE_FLOAT128,
 template <typename Function> int dispatch_precision(std::string_view precision, Function&& run)
 {
   auto const request = parse_precision(precision);
-  validate_precision(request, false);
+  validate_precision(request);
   switch (request.kind)
   {
     case PrecisionKind::fp64:

@@ -86,7 +86,7 @@ TYPED_TEST(Heisenberg, NativePrecisionSix)
   ASSERT_REAL_NEAR(six.rapidities[2], a, tolerance) << "N=6 exact outer roots";
 
   EXPECT_REAL_NEAR(six.rapidities[1], Real{0}, tolerance) << "N=6 central root";
-  if constexpr (uni20::numeric_limits<Real>::digits > uni20::numeric_limits<double>::digits)
+  if constexpr (uni20::numeric_limits<Real>::digits() > uni20::numeric_limits<double>::digits())
   {
     ASSERT_TRUE(abs(static_cast<Real>(static_cast<double>(exact_six)) - exact_six) > precision_tolerance)
         << "high-precision oracle must distinguish a double-only implementation";

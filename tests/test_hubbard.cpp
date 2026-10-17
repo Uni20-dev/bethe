@@ -235,7 +235,7 @@ TYPED_TEST(Hubbard, DimerPrecision)
   ASSERT_TRUE(parsed_state.interaction == parsed) << "U parsing and solve keep selected arithmetic";
   ASSERT_REAL_NEAR(parsed_state.energy, exact, Real{32} * eps) << "U parsing and solve keep selected arithmetic";
 
-  if constexpr (uni20::numeric_limits<Real>::digits > 53)
+  if constexpr (uni20::numeric_limits<Real>::digits() > 53)
   {
     ASSERT_TRUE(parsed != Real(static_cast<double>(parsed))) << "high precision U has digits beyond double";
   }

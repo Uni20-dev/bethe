@@ -24,7 +24,7 @@ template <uni20::Real Real> std::pair<Real, Real> root_two_sum(Real a, Real b)
 
 template <uni20::Real Real> std::pair<Real, Real> root_two_product(Real a, Real b)
 {
-  Real const splitter = std::ldexp(Real{1}, (uni20::numeric_limits<Real>::digits + 1) / 2) + Real{1};
+  Real const splitter = std::ldexp(Real{1}, (uni20::numeric_limits<Real>::digits() + 1) / 2) + Real{1};
   Real const ca = splitter * a, cb = splitter * b;
   Real const ah = ca - (ca - a), al = a - ah, bh = cb - (cb - b), bl = b - bh;
   Real const product = a * b;

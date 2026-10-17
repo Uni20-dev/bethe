@@ -137,7 +137,7 @@ Status correct(System<Real> const& system, std::vector<std::complex<Real>>& v, O
     auto trial = v;
     Real damping{1};
     bool accepted = false;
-    for (int backtrack = 0; backtrack <= uni20::numeric_limits<Real>::digits; ++backtrack)
+    for (int backtrack = 0; backtrack <= uni20::numeric_limits<Real>::digits(); ++backtrack)
     {
       for (std::size_t j = 0; j < v.size(); ++j)
         trial[j] = v[j] + damping * C(e.residual[2 * j], e.residual[2 * j + 1]);

@@ -30,7 +30,7 @@ TYPED_TEST(GaudinYang, TwoParticles)
   auto const exact = model::ground_state(1, 1, Real{1}, pi);
   ASSERT_TRUE(exact.converged);
   EXPECT_REAL_NEAR(exact.energy, pi * pi / Real{2}, Real{512} * eps);
-  if constexpr (uni20::numeric_limits<Real>::digits > 53)
+  if constexpr (uni20::numeric_limits<Real>::digits() > 53)
     EXPECT_GT(std::abs(Real(double(pi * pi / Real{2})) - pi * pi / Real{2}), Real{512} * eps);
   Real const tiny = uni20::parse_real<Real>("1e-40");
   auto const weak = model::ground_state(1, 1, Real{1}, tiny);

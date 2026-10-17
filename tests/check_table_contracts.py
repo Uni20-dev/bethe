@@ -18,7 +18,8 @@ env = dict(os.environ, UNI20_COLOR="never", COLUMNS="4096", OPENBLAS_NUM_THREADS
 tree = ast.parse((source / "tests/check_shared_arguments.py").read_text())
 base = next(ast.literal_eval(n.value) for n in tree.body if isinstance(n, ast.Assign)
             and any(isinstance(t, ast.Name) and t.id == "base_arguments" for t in n.targets))
-base.update({"bethe-su3-dispersion": ["--points", "2"], "bethe-tb-dispersion": ["--points", "2"],
+base.update({"bethe-info": [],
+             "bethe-su3-dispersion": ["--points", "2"], "bethe-tb-dispersion": ["--points", "2"],
              "bethe-haldane-shastry-pbc": ["4"], "bethe-tb-pbc": ["4"],
              "bethe-tj-pbc": ["4"], "bethe-biquadratic-obc": ["4"]})
 

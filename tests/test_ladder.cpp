@@ -425,7 +425,7 @@ TYPED_TEST(Ladder, DescendantsBeatOwnWeightSeas)
     EXPECT_EQ(s.highest_weight.shape, expected);
     Real const exact = ns == 4 ? Real{1} - std::sqrt(Real{5}) : -Real{1} - std::sqrt(Real{13});
     EXPECT_REAL_NEAR(s.highest_weight.energy, exact, tol);
-    if constexpr (uni20::numeric_limits<Real>::digits > 53)
+    if constexpr (uni20::numeric_limits<Real>::digits() > 53)
       EXPECT_GT(std::abs(Real(double(exact)) - exact), Real{32} * uni20::numeric_limits<Real>::epsilon());
     auto const own = model::detail::populations(6, ns);
     Real own_best = Real{6};

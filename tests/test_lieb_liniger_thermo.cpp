@@ -44,7 +44,7 @@ TYPED_TEST(LiebLinigerThermo, NativePrecisionScalingAndFiniteRings)
   EXPECT_EQ(*scaled.energy_per_length, Real{8} * *s.energy_per_length);
   EXPECT_EQ(*scaled.chemical_potential, Real{4} * *s.chemical_potential);
   Real const eps = uni20::numeric_limits<Real>::epsilon();
-  if constexpr (uni20::numeric_limits<Real>::digits > 53)
+  if constexpr (uni20::numeric_limits<Real>::digits() > 53)
     EXPECT_GT(std::abs(Real(double(*s.energy_per_length)) - *s.energy_per_length), Real{8} * eps);
   auto const small = bethe::lieb_liniger::ground_state(24, Real{24}, Real{4});
   auto const large = bethe::lieb_liniger::ground_state(48, Real{48}, Real{4});

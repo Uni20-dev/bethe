@@ -95,12 +95,52 @@ energy-error bound. Unsupported inputs throw `std::invalid_argument`, nonfinite
 arithmetic throws `std::runtime_error`, and budget exhaustion returns the last
 roots with `converged=false`.
 
-The periodic real-root C++ solver also accepts `uni20::mpreal`, with an explicit
-`bethe::SolverOptions<uni20::mpreal>(uni20::Precision::bits(256))` argument.
-Its default tolerance is `32*epsilon(p)`, not a type-wide constant. See the
-[MPFR API and precision contracts](xxx-structure-factor.md#arbitrary-precision).
-This does not yet extend the spinon-branch helpers, OBC solver, or `bethe-xxx-pbc`
-frontend to MPFR; the first arbitrary-precision CLI is `bethe-xxx-structure-factor`.
+## Arbitrary precision
+
+The [precision tutorial](tutorials/xxx-precision.md) demonstrates an energy
+scale that is lost in binary64, with exact-reference checks and a comparison
+of stable formulas versus additional working precision.
+
+With [MPFR enabled](building.md#enable-arbitrary-precision-for-xxx), every
+`bethe-xxx-pbc` mode accepts `bits-N` or `digits-N`:
+
+```sh
+bethe-xxx-pbc 32 --precision digits-100 --roots
+bethe-xxx-pbc 16 --sectors --precision bits-256
+bethe-xxx-pbc 17 --spinons --precision bits-256
+bethe-xxx-pbc 16 --excitations all --threads 4 --precision bits-256
+```
+
+This includes `--sz` (also negative sectors) and `--quantum-numbers`.
+Tolerance parsing, root iterations, energies, momenta, spinon bulk subtraction
+and file output all use the selected precision. The default root tolerance is
+`32*epsilon(p)`; `--tolerance` overrides it at that same precision, regardless
+of option order. Increasing precision does not certify a result's accuracy
+or add missing string/infinite-root states. Budget exhaustion still reports
+unconverged estimates and returns exit status 2.
+
+The C++ API takes an explicit options object; there is no ambient precision:
+
+```cpp
+using Real = uni20::mpreal;
+auto p = uni20::Precision::bits(256);
+bethe::SolverOptions<Real> options(p);
+auto ground = bethe::heisenberg::ground_state<Real>(32, options);
+auto branch = bethe::heisenberg::one_spinon_branch<Real>(17, options);
+auto bulk = bethe::heisenberg::bulk_energy_density(Real(1, p));
+auto dispersion = bethe::heisenberg::spinon_energy(branch.front().spinon_momentum);
+```
+
+The bulk-energy helper requires a finite-precision exchange argument for
+`mpreal`; the dispersion takes its precision from the momentum, with exact
+`J=1` as the default exchange. A finite-precision exchange must match that
+momentum. Parallel excitation scans carry precision per calculation, so
+independent scans at different precisions can share a scheduler.
+
+The root-only algorithm uses real arithmetic and needs no MPLAPACK. Uni20's
+arbitrary-precision scalar family enables MPFR and MPC together; MPLAPACK is
+additionally required for [finite-ring form factors](xxx-structure-factor.md#arbitrary-precision).
+The OBC solver/frontend is not yet enabled for arbitrary precision.
 
 ## Validation
 

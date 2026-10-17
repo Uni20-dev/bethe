@@ -20,7 +20,7 @@ template <uni20::Real Real> Real hubbard_r(Real x, Real u)
   uni20::complex<Real> term = Real{1} / (Real{2} * a);
   CompensatedSum<Real> sum;
   Real const eps = uni20::numeric_limits<Real>::epsilon();
-  for (int j = 0; j < 2 * uni20::numeric_limits<Real>::digits + 32; ++j)
+  for (int j = 0; j < 2 * uni20::numeric_limits<Real>::digits() + 32; ++j)
   {
     sum.add(term.real());
     term *= Real(j + 1) / (Real{2} * (a + Real(j + 1)));

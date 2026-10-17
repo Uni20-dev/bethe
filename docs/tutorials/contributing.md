@@ -67,6 +67,7 @@ python3 scripts/plot_spin1_tutorial.py --check
 python3 scripts/plot_lieb_liniger_tutorial.py --check
 python3 scripts/plot_sutherland_tutorial.py --check
 python3 scripts/plot_xxx_tutorial.py --check
+python3 scripts/plot_xxx_precision_tutorial.py --check
 python3 scripts/plot_haldane_shastry_tutorial.py --check
 python3 scripts/plot_xyz_tutorial.py --check
 python3 scripts/plot_q_boson_tutorial.py --check
