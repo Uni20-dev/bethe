@@ -67,7 +67,8 @@ jobs:
 
       # Reconfigure every run. Do not cache CMake state or dependency build trees.
       - name: Restore compiler cache
-        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
+        id: compiler_cache
+        uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
         with:
           path: ${{ env.CCACHE_DIR }}
           key: cpp-${{ runner.os }}-${{ runner.arch }}-${{ matrix.preset }}-${{ hashFiles('CMakeLists.txt', 'CMakePresets.json', '.github/workflows/ci.yml') }}-${{ github.sha }}
@@ -83,6 +84,14 @@ jobs:
 
       - name: Build all frontends and tests
         run: cmake --build --preset "$PRESET" 2>&1 | tee "${RUNNER_TEMP}/build.log"
+
+      # A numerical/test failure must not discard a successful compilation.
+      - name: Save compiler cache before tests
+        if: steps.compiler_cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
+        with:
+          path: ${{ env.CCACHE_DIR }}
+          key: ${{ steps.compiler_cache.outputs.cache-primary-key }}
 
       - name: Record configured capabilities
         run: '"build/$PRESET/bethe-info" --format json > "${RUNNER_TEMP}/bethe-info.json"'
