@@ -130,7 +130,7 @@ template <uni20::Real Real> int run(Arguments const& a, int argc, char** argv)
       .field("cell_momentum", "Two-site translation phase", "2*p modulo 2*pi; radians/cell")
       .field("bound_existence", "Bound existence", "s>=1 and s*(1-eta)<eta; mergers excluded")
       .field("branches", "Branches", a.branch)
-      .field("precision", "Precision", a.precision)
+      .precision(a.precision)
       .field("bound_count", "Selected bound branches", bound_indices.size())
       .field("band_status", "Spinon status", status);
   if (couplings) report.field("jx", "Jx", couplings->x).field("jy", "Jy", couplings->y).field("jz", "Jz", couplings->z);

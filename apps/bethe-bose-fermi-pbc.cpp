@@ -98,7 +98,7 @@ template <uni20::Real Real> int run(Arguments const& a, int argc, char** argv)
              free         ? "exact free ground state"
              : a.fermions ? "odd-fermion mixed ground state"
                           : "Lieb-Liniger reduction")
-      .field("precision", "Precision", a.precision)
+      .precision(a.precision)
       .field("tolerance", "Residual tolerance", controls.residual_tolerance)
       .field("max_iterations", "Max Newton updates", controls.max_iterations)
       .field("energy", "Energy", state.energy)

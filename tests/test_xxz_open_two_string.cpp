@@ -130,6 +130,7 @@ TYPED_TEST(OpenTwoString, LargeChainsAndBudgets)
   }
   for (std::size_t budget : {0, 1})
   {
+    SCOPED_TRACE(budget);
     auto const s = ts::singlet<R>(16, R{3} / R{2}, {.max_iterations = budget});
     EXPECT_FALSE(s.converged);
     EXPECT_EQ(s.iterations, budget);
@@ -138,8 +139,12 @@ TYPED_TEST(OpenTwoString, LargeChainsAndBudgets)
     x.push_back(s.center);
     x.push_back(s.log_deviation);
     ts::detail::System<R> system(16, s.delta);
-    EXPECT_EQ(s.residual_norm, system.evaluate(x).norm);
-    EXPECT_EQ(s.energy, system.energy(x, s.delta));
+    // Reconstructed acosh(Delta) may differ by one ULP between constant
+    // folding and libm. Allow round-off on the unit residual/energy scales,
+    // not relative to a potentially cancelled residual.
+    R const energy = system.energy(x, s.delta);
+    EXPECT_REAL_NEAR(s.residual_norm, system.evaluate(x).norm, R{32} * eps);
+    EXPECT_REAL_NEAR(s.energy, energy, R{32} * eps * (R{1} + std::abs(energy)));
   }
   // L remains meaningful even when exp(-L) underflows to zero.
   ts::detail::System<R> system(8, R{3} / R{2});

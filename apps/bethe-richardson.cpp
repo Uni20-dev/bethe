@@ -111,7 +111,7 @@ template <uni20::Real Real> int run(Arguments const& args, int argc, char** argv
       .field("pairs", "Pairs", state.pairs)
       .field("blocked_levels", "Blocked levels", state.blocked.size())
       .field("fermions", "Fermions", 2 * state.pairs + state.blocked.size())
-      .field("precision", "Precision", args.precision)
+      .precision(args.precision)
       .field("requested_coupling_g", "Requested coupling g", state.coupling)
       .field("reached_coupling_g", "Reached coupling g", state.reached_coupling)
       .field("energy_evaluated_at_g", "Energy evaluated at g", state.reached_coupling)

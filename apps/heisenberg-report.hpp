@@ -15,7 +15,7 @@ RunReport report_header(std::size_t sites, std::string_view precision, heisenber
   RunReport report(context, "Heisenberg XXX - " + std::string(mode));
   report.field("model", "Model", periodic ? "periodic spin-1/2, J=1, h=0" : "open spin-1/2, free ends, J=1, h=0")
       .field("sites", "Sites", sites)
-      .field("precision", "Precision", precision)
+      .precision(precision)
       .field("residual_tolerance", "Residual tolerance", options.residual_tolerance);
   return report;
 }

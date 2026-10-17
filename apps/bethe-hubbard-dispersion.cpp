@@ -78,9 +78,7 @@ void add_options(CLI::App& app, Arguments& args)
   auto* numerics = app.add_option_group("Numerics");
   cli::threads_option(*numerics, args.threads)
       ->description("Scheduler concurrency limit for independent momentum points");
-  numerics->add_option("--precision", args.precision, "Real scalar type; fp128 requires MPLAPACK")
-      ->check(CLI::IsMember({"fp64", "long-double", "fp128"}))
-      ->capture_default_str();
+  cli::precision_option(*numerics, args.precision);
   cli::text_option(*numerics, "--tolerance", args.tolerance, "Target in native precision; see conventions below")
       ->type_name("REAL")
       ->default_str("256 epsilon (half-filled); 4096 epsilon (doped)");
@@ -251,6 +249,10 @@ template <uni20::Real Real> int run(Arguments const& args, int argc, char** argv
         doped ? "unwrapped one-site radians; hole offset pi*n/2; particle offset -pi*n/2"
               : "one-site radians; antiholon p = holon p - pi at the same bare k");
   field("numerics", "precision", "Precision", args.precision);
+  // Keep the same resolved arithmetic fields as RunReport in this grouped report.
+  auto const arithmetic = cli::arithmetic_info(cli::parse_precision(args.precision));
+  field("numerics", "arithmetic_format", "Arithmetic format", arithmetic.format);
+  field("numerics", "precision_bits", "Working precision (bits)", arithmetic.bits);
   field("numerics", "threads", "Scheduler concurrency limit", args.threads);
   field("model", "branches", "Branch selection", args.branch);
   if (momentum)

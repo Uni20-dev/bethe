@@ -2,6 +2,7 @@
 // Copyright (C) 2026 Ian McCulloch
 #pragma once
 
+#include "precision.hpp"
 #include <fmt/format.h>
 #include <map>
 #include <optional>
@@ -65,6 +66,13 @@ class RunReport {
     }
     RunReport(RunReport const&) = delete;
     RunReport(RunReport&&) = default;
+    RunReport& precision(std::string_view request)
+    {
+      auto const info = arithmetic_info(parse_precision(request));
+      return this->field("precision", "Precision", std::string(request))
+          .field("arithmetic_format", "Arithmetic format", info.format)
+          .field("precision_bits", "Working precision (bits)", info.bits);
+    }
     RunReport& field(std::string id, std::string key, uni20::metadata_value value,
                      uni20::presentation::data_column_display display = {.missing = "unavailable"})
     {

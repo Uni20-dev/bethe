@@ -8,11 +8,16 @@ C++23 tools for finite-system and thermodynamic Bethe ansatz calculations, compl
 [GitHub repository](https://github.com/Uni20-dev/bethe)
 
 High precision is a first-class feature: the solvers support
-**fp64**, **long-double** (platform-dependent extended precision), and optional
+**fp64**, **long-double** (platform-native), **fp80** where extended80 is native, and optional
 **fp128** (binary128, about 34 significant decimal digits) through Uni20/MPLAPACK.
 Parameters, numerical calculations, excitation gaps, and output retain the
 selected precision. See [precision controls](docs/command-line.md#select-arithmetic-precision)
 and [binary128 setup](docs/building.md#enable-binary128).
+Periodic XXX roots and finite-ring two-spinon structure factors also support
+**arbitrary precision**, explicitly chosen per calculation; for example,
+`bethe-xxx-structure-factor 32 --precision digits-100` or `--precision bits-256`.
+Run `bethe-info` to inspect the formats and numerical providers available in your build.
+See [MPFR setup and scope](docs/building.md#enable-arbitrary-precision-for-xxx).
 
 A calculation starts with a model, a boundary condition, and a choice of
 Bethe quantum numbers. The solver finds the corresponding rapidities and

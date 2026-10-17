@@ -77,7 +77,7 @@ template <uni20::Real Real> int run(Arguments const& a, int argc, char** argv)
       .field("charge", "Topological winding charge", a.charge)
       .field("uv_weight", "UV weight Delta+=Delta-",
              (Real{1} + Real{1} / p) / Real{4} + Real(number.twice() - 1) / Real{2})
-      .field("precision", "Precision", a.precision)
+      .precision(a.precision)
       .field("max_root_iterations", "Max hole trials across meshes/contours", controls.max_root_iterations)
       .result(complete, status);
   cli::sine_gordon::report_controls<Real>(report, controls, excited);

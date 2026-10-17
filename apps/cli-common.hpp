@@ -3,6 +3,7 @@
 
 #pragma once
 
+#include "precision.hpp"
 #include <uni20/common/half_int.hpp>
 #include <uni20/core/scalar_io.hpp>
 
@@ -23,17 +24,26 @@ static_assert(MPLAPACK_BINARY128_MODE == MPLAPACK_BINARY128_MODE_FLOAT128,
 
 template <typename Function> int dispatch_precision(std::string_view precision, Function&& run)
 {
-  if (precision == "fp64") return run.template operator()<double>();
-  if (precision == "long-double") return run.template operator()<long double>();
-  if (precision == "fp128")
+  auto const request = parse_precision(precision);
+  validate_precision(request, false);
+  switch (request.kind)
   {
+    case PrecisionKind::fp64:
+      return run.template operator()<double>();
+    case PrecisionKind::long_double:
+    case PrecisionKind::fp80:
+      return run.template operator()<long double>();
+    case PrecisionKind::fp128:
 #if UNI20_HAS_FLOAT128
-    return run.template operator()<uni20::float128>();
+      return run.template operator()<uni20::float128>();
 #else
-    throw std::invalid_argument("fp128 is unavailable; configure with -DUNI20_ENABLE_MPLAPACK=ON");
+      break;
 #endif
+    case PrecisionKind::bits:
+    case PrecisionKind::digits:
+      break;
   }
-  throw std::invalid_argument("unknown precision: " + std::string(precision));
+  throw std::logic_error("unavailable native precision");
 }
 
 inline std::size_t parse_size(std::string_view text)

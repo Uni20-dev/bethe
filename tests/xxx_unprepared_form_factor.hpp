@@ -6,7 +6,7 @@
 // Unprepared public implementation at fe81a93, retained only as a regression
 // and timing control for the prepared-context refactor. It deliberately
 // recomputes all ground factors and retains the original summation order.
-// The unchanged Gaudin/log-determinant kernels are shared; coordinate-wave
+// The current Gaudin/log-determinant kernels are shared; coordinate-wave
 // and bit-basis ED tests provide the separate physical normalization oracles.
 namespace test_support
 {

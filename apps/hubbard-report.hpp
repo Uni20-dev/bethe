@@ -38,7 +38,7 @@ int print_hubbard_state(State const& state, uni20::half_int sz, std::string_view
       .field("down_spins", "Down spins", state.down_spins)
       .field("sz", "Sz", sz, {.fractions = true})
       .field("u", "U", state.interaction)
-      .field("precision", "Precision", precision)
+      .precision(precision)
       .field("method", "Method", method)
       .field("symmetry_mapping", "Symmetry mapping", mapping)
       .field("residual_tolerance", "Residual tolerance", tolerance)

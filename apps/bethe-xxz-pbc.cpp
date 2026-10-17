@@ -49,7 +49,7 @@ template <uni20::Real Real> int run(Arguments const& args, int argc, char** argv
     report.field("model", "Model", "periodic spin-1/2, J=1, h=0")
         .field("sites", "Sites", args.sites)
         .field("delta", "Delta", delta)
-        .field("precision", "Precision", args.precision)
+        .precision(args.precision)
         .field("residual_tolerance", "Residual tolerance", options.residual_tolerance)
         .field("root_coordinate", "Root coordinate", coordinate);
     if (delta < Real{0}) report.field("residual_convention", "Residual convention", negative_residual);

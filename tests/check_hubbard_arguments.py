@@ -96,6 +96,8 @@ with tempfile.TemporaryDirectory(prefix="bethe-arguments-") as directory:
     assert first.read_text() == second.read_text()
     doc = json.loads(result.stdout)
     assert len(doc["rows"]) == 1 and doc["metadata"]["Requested momentum"] == "-1"
+    assert doc["metadata"]["Arithmetic format"] == "binary64"
+    assert int(doc["metadata"]["Working precision (bits)"]) == 53
     assert "\x1b" not in result.stdout and "References" not in result.stdout
 
     # A literal help token in an option value is a filename, not an information request.

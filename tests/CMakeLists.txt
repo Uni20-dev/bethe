@@ -30,6 +30,16 @@ function(bethe_discover_tests target)
   )
 endfunction()
 
+add_executable(bethe_cli_precision_tests test_cli_precision.cpp)
+target_link_libraries(bethe_cli_precision_tests PRIVATE bethe_cli_output)
+bethe_discover_tests(bethe_cli_precision_tests)
+
+if(UNI20_ENABLE_MPFR)
+  add_executable(bethe_xxx_mpfr_tests test_xxx_mpfr.cpp)
+  target_link_libraries(bethe_xxx_mpfr_tests PRIVATE bethe::bethe TBB::tbb)
+  bethe_discover_tests(bethe_xxx_mpfr_tests)
+endif()
+
 add_executable(bethe_parallel_scan_tests test_parallel_scan.cpp)
 target_link_libraries(bethe_parallel_scan_tests PRIVATE bethe::bethe TBB::tbb)
 bethe_discover_tests(bethe_parallel_scan_tests)
@@ -207,6 +217,12 @@ else()
 endif()
 
 if(BETHE_BUILD_APPS)
+  if(Python3_Interpreter_FOUND)
+    add_test(NAME PrecisionInfo.cli
+      COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_precision_info.py"
+        "$<TARGET_FILE:bethe-info>" "$<TARGET_FILE:bethe-xxx-pbc>" "$<TARGET_FILE:bethe-xxx-structure-factor>"
+        "${UNI20_ENABLE_MPLAPACK}" "${UNI20_ENABLE_MPLAPACK_MPFR}")
+  endif()
   add_test(NAME Citations.bethe-xxx-structure-factor-thermo.cli
     COMMAND "${CMAKE_COMMAND}" "-DPROGRAM=$<TARGET_FILE:bethe-xxx-structure-factor-thermo>"
       "-DTOOL=bethe-xxx-structure-factor-thermo" -P "${CMAKE_CURRENT_SOURCE_DIR}/check_citations_cli.cmake")
@@ -246,7 +262,7 @@ if(BETHE_BUILD_APPS)
   if(Python3_Interpreter_FOUND)
     add_test(NAME XXXStructureFactor.cli
       COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_xxx_structure_factor.py"
-        "$<TARGET_FILE:bethe-xxx-structure-factor>" "${UNI20_ENABLE_MPLAPACK}")
+        "$<TARGET_FILE:bethe-xxx-structure-factor>" "${UNI20_ENABLE_MPLAPACK}" "${UNI20_ENABLE_MPLAPACK_MPFR}")
     add_test(NAME ParallelScan.cli
       COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_parallel_scans.py"
         "$<TARGET_FILE:bethe-xxx-pbc>" "$<TARGET_FILE:bethe-xxx-obc>"

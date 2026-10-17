@@ -148,7 +148,7 @@ auto preamble(uni20::run_context& context, Arguments const& args, bethe::SolverO
       .field("tl_loop_weight", "TL loop weight", 3)
       .field("xxz_delta", "XXZ Delta", Real{1.5})
       .field("xxz_reference", "XXZ reference", "spin-half exchange 1; +sqrt(5)/4*(sz_1-sz_N)")
-      .field("precision", "Precision", args.precision)
+      .precision(args.precision)
       .field("residual_tolerance", "Residual tolerance", options.residual_tolerance);
   if (args.output.needs("--spin-content", args.spin_content))
     report.field("spin_content_convention", "Spin content",
