@@ -147,14 +147,18 @@ TYPED_TEST(BiquadraticBoundTriple, LongChainsAndBudgets)
     }
   for (std::size_t budget : {0, 1})
   {
+    SCOPED_TRACE(budget);
     auto const s = ferro::bound_triple<R>(16, 2, {.max_iterations = budget});
     EXPECT_FALSE(s.reference.converged);
     EXPECT_EQ(s.reference.iterations, budget);
     EXPECT_EQ(s.reference.status, bethe::xxz::quantum_group::SolveStatus::iteration_limit);
     ts::detail::System<R> system(16, R{3} / R{2}, 10);
     std::vector<R> x{s.reference.center, s.reference.log_deviation, s.reference.deviation_phase};
-    test_support::expect_exact(s.reference.residual_norm, system.evaluate(x).norm, "final finite-deviation residual");
-    test_support::expect_exact(s.tl_energy, -R{2} * system.energy_shift(x), "gap estimate");
+    // Constant-folded and runtime acosh(Delta) need not round identically.
+    // The residual uses a unit-scale absolute bound, even near cancellation.
+    R const gap = -R{2} * system.energy_shift(x);
+    EXPECT_REAL_NEAR(s.reference.residual_norm, system.evaluate(x).norm, R{32} * eps);
+    EXPECT_REAL_NEAR(s.tl_energy, gap, R{32} * eps * (R{1} + std::abs(gap)));
   }
   auto strict = ferro::bound_triple<R>(16, 2, {.residual_tolerance = eps * eps, .max_iterations = 30});
   if (strict.reference.converged) EXPECT_LE(strict.reference.residual_norm, eps * eps);
