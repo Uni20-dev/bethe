@@ -31,13 +31,13 @@ bool correct_eigenvalue_stage(std::vector<Real>& candidate, Real trust, Options 
     auto correction = evaluation.residual;
     for (auto& v : correction)
       v = -v;
-    if (!least_squares_step(std::move(jac), correction, candidate.size())) return false;
+    if (!least_squares_step(jac, correction, candidate.size(), options.precision())) return false;
     bool const improved = backtrack_newton(
-        candidate, [&](std::size_t i) { return correction[i]; },
+        candidate, options.precision(), [&](std::size_t i) { return correction[i]; },
         [&](auto const& trial, Real damping) {
           auto const values = expand(trial);
           for (std::size_t i = 0; i < values.size(); ++i)
-            if (!uni20::isfinite(values[i]) || std::abs(values[i] - predictor[i]) > trust) return false;
+            if (!uni20::isfinite(values[i]) || uni20::math::abs(values[i] - predictor[i]) > trust) return false;
           return newton_decreases(evaluate(trial, nullptr).norm, evaluation.norm, damping, options.residual_tolerance);
         });
     if (!improved) return false;
@@ -86,7 +86,7 @@ void continue_eigenvalues(std::vector<Real>& x, Real& reached, Real step, Real t
       x = std::move(candidate);
       reached = next;
       commit(next);
-      step *= Real{1.5};
+      step *= Real{3} / Real{2};
     }
     else
     {

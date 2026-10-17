@@ -20,7 +20,7 @@ if(NOT TARGET uni20_core)
   include(FetchContent)
   FetchContent_Declare(uni20
     GIT_REPOSITORY https://github.com/Uni20-dev/uni20.git
-    GIT_TAG 052f0a36699cd49a50041b8a448594e9e378475f
+    GIT_TAG 717c798c047c9e844535d9b21a09c152b49ea9af
   )
   FetchContent_MakeAvailable(uni20)
   # Keep default builds limited to the components our targets actually link.
@@ -33,7 +33,7 @@ target_compile_features(bethe INTERFACE cxx_std_23)
 target_include_directories(bethe INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/include")
 target_link_libraries(bethe INTERFACE uni20_core uni20_common uni20_linalg uni20_async)
 
-# Library-only consumers also need recoverable square solves. Catch stale
+# Library-only consumers also need recoverable square/least-squares solves. Catch stale
 # source overrides during configuration rather than deep in template errors.
 get_target_property(bethe_uni20_linalg_source uni20_linalg SOURCE_DIR)
 get_target_property(bethe_uni20_core_source uni20_core SOURCE_DIR)
@@ -41,10 +41,11 @@ get_directory_property(bethe_uni20_has_mpreal
   DIRECTORY "${bethe_uni20_core_source}" DEFINITION UNI20_HAS_MPREAL)
 if(NOT EXISTS "${bethe_uni20_linalg_source}/solve_info.hpp" OR
    NOT EXISTS "${bethe_uni20_linalg_source}/ops/slogdet.hpp" OR
+   NOT EXISTS "${bethe_uni20_linalg_source}/ops/least_squares.hpp" OR
    "${bethe_uni20_has_mpreal}" STREQUAL "")
   message(FATAL_ERROR
-    "Bethe requires Uni20's recoverable linear-solve, LU/log-determinant, "
-    "and scalar-capability APIs (Uni20 PR #76 or newer). "
+    "Bethe requires Uni20's recoverable linear-solve, least-squares, LU/log-determinant, "
+    "and scalar-capability APIs (Uni20 PR #78 or newer). "
     "Update the supplied Uni20 checkout, or use Bethe's pinned dependency.")
 endif()
 

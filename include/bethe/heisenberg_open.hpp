@@ -60,31 +60,35 @@ template <uni20::Real Real = double>
   using std::atan;
   using std::tan;
   detail::validate_quantum_numbers(sites, numbers);
+  auto const zero = bethe::detail::solver_zero(options);
   if (!uni20::isfinite(options.residual_tolerance) || options.residual_tolerance <= Real{0})
     throw std::invalid_argument("residual tolerance must be finite and positive");
 
-  Real const n = static_cast<Real>(sites);
-  Real const pi = bethe::detail::pi<Real>();
+  Real const n = uni20::scalar_like(zero, sites);
+  Real const pi = bethe::detail::pi_like(zero);
   auto const roots = numbers.size();
   RealState<Real> result;
   result.quantum_numbers.assign(numbers.begin(), numbers.end());
   result.sz = uni20::from_twice(static_cast<std::int64_t>(sites - 2 * roots));
-  result.rapidities.resize(roots, Real{0});
+  result.rapidities.resize(roots, zero);
   if (!initial_roots.empty())
   {
     if (initial_roots.size() != roots) throw std::invalid_argument("initial root count must match the quantum numbers");
     for (Real const root : initial_roots)
+    {
+      bethe::detail::require_same_precision(root, zero);
       if (!uni20::isfinite(root) || root < Real{0})
         throw std::invalid_argument("open initial roots must be finite and nonnegative");
+    }
     result.rapidities.assign(initial_roots.begin(), initial_roots.end());
   }
   std::vector<Real> angles(roots);
   for (;;)
   {
-    result.residual_norm = Real{0};
+    result.residual_norm = zero;
     for (std::size_t i = 0; i < roots; ++i)
     {
-      heisenberg::detail::CompensatedSum<Real> phase;
+      heisenberg::detail::CompensatedSum<Real> phase(zero);
       for (std::size_t j = 0; j < roots; ++j)
         if (i != j)
         {
@@ -107,7 +111,7 @@ template <uni20::Real Real = double>
     }
     ++result.iterations;
   }
-  heisenberg::detail::CompensatedSum<Real> magnons;
+  heisenberg::detail::CompensatedSum<Real> magnons(zero);
   for (Real const z : result.rapidities)
     magnons.add(-Real{2} / (Real{1} + z * z));
   result.energy = (n - Real{1}) / Real{4} + magnons.value();

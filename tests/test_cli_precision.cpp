@@ -51,6 +51,11 @@ TEST(CliPrecision, NativeFormatAndNoFallback)
   if (!UNI20_HAS_MPREAL)
     EXPECT_THROW(cli::validate_precision(cli::parse_precision("bits-128"), cli::ArbitraryPrecision::real),
                  std::invalid_argument);
+  if (cli::has_arbitrary_precision(cli::ArbitraryPrecision::real_lu))
+    EXPECT_NO_THROW(cli::validate_precision(cli::parse_precision("bits-128"), cli::ArbitraryPrecision::real_lu));
+  else
+    EXPECT_THROW(cli::validate_precision(cli::parse_precision("bits-128"), cli::ArbitraryPrecision::real_lu),
+                 std::invalid_argument);
 }
 
 #if UNI20_HAS_MPREAL

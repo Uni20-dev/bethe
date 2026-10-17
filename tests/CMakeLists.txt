@@ -41,6 +41,14 @@ target_link_libraries(bethe_cli_precision_tests PRIVATE bethe_cli_output)
 bethe_discover_tests(bethe_cli_precision_tests)
 
 if(BETHE_HAS_MPREAL)
+  add_executable(bethe_root_solver_mpfr_tests test_root_solver_mpfr.cpp)
+  target_link_libraries(bethe_root_solver_mpfr_tests PRIVATE bethe::bethe TBB::tbb)
+  bethe_discover_tests(bethe_root_solver_mpfr_tests)
+
+  add_executable(bethe_gaudin_mpfr_tests test_gaudin_mpfr.cpp)
+  target_link_libraries(bethe_gaudin_mpfr_tests PRIVATE bethe::bethe)
+  bethe_discover_tests(bethe_gaudin_mpfr_tests)
+
   add_executable(bethe_xxx_mpfr_tests test_xxx_mpfr.cpp)
   target_link_libraries(bethe_xxx_mpfr_tests PRIVATE bethe::bethe TBB::tbb)
   bethe_discover_tests(bethe_xxx_mpfr_tests)
@@ -82,6 +90,10 @@ bethe_discover_tests(bethe_xxx_thermodynamic_structure_factor_tests)
 add_executable(bethe_newton_control_tests test_newton_control.cpp)
 target_link_libraries(bethe_newton_control_tests PRIVATE bethe::bethe)
 bethe_discover_tests(bethe_newton_control_tests)
+
+add_executable(bethe_least_squares_tests test_least_squares.cpp)
+target_link_libraries(bethe_least_squares_tests PRIVATE bethe::bethe)
+bethe_discover_tests(bethe_least_squares_tests)
 
 add_executable(bethe_xxz_dispersion_tests test_xxz_dispersion.cpp)
 target_link_libraries(bethe_xxz_dispersion_tests PRIVATE bethe::bethe)
@@ -228,6 +240,13 @@ if(BETHE_BUILD_APPS)
     set(bethe_arbitrary_structure_factor ON)
   endif()
   if(Python3_Interpreter_FOUND)
+    add_test(NAME RootSolverPrecision.cli
+      COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_root_solver_precision.py"
+        "$<TARGET_FILE:bethe-xxx-obc>" "$<TARGET_FILE:bethe-lieb-liniger-pbc>"
+        "$<TARGET_FILE:bethe-lieb-liniger-obc>" "${BETHE_HAS_MPREAL}" "${BETHE_HAS_MPLAPACK_MPREAL}")
+    add_test(NAME GaudinPrecision.cli
+      COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_gaudin_precision.py"
+        "$<TARGET_FILE:bethe-richardson>" "$<TARGET_FILE:bethe-central-spin>" "${BETHE_HAS_MPREAL}")
     add_test(NAME PrecisionInfo.cli
       COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_precision_info.py"
         "$<TARGET_FILE:bethe-info>" "$<TARGET_FILE:bethe-xxx-pbc>" "$<TARGET_FILE:bethe-xxx-structure-factor>"

@@ -5,8 +5,9 @@
 The library supports repulsive bosons with Dirichlet walls at x=0 and x=L,
 in the same units as the ring: `H=-sum d_j^2 + 2c sum_(i<j) delta(x_i-x_j)`.
 Both L and c must be finite and positive. Ground states, specified real-root
-states and finite-window excitation scans work in fp64, native long double
-and enabled fp128. The executable is `bethe-lieb-liniger-obc`.
+states and finite-window excitation scans work in fp64, native long double,
+enabled fp128, and optional arbitrary precision through MPLAPACK MPFR.
+The executable is `bethe-lieb-liniger-obc`.
 
 ## Start with a calculation
 
@@ -93,6 +94,28 @@ silently treated as a valid coincident-root solution. Increase precision when
 needed. Unconverged results remain estimates and scans keep failure diagnostics.
 Attraction, exactly c=0/infinity, general Robin walls and thermodynamics are not
 implemented by this solver.
+
+## Resolving a tiny interaction energy
+
+Arbitrary precision is useful even for just two bosons. At length 1 and
+coupling $`c=10^{-50}`$, the two roots cluster around $`\pi`$ too closely for
+binary64 to distinguish them:
+
+```sh
+bethe-lieb-liniger-obc 2 --length 1 --c 1e-50 --precision digits-100 --roots
+```
+
+The noninteracting energy is $`2\pi^2`$, while the interaction correction is
+$`E-2\pi^2=3c+O(c^2)`$. Binary128 can separate these roots, but cannot retain
+that tiny correction in the total energy. Tests at 333 bits resolve the ratio
+$`(E-2\pi^2)/c`$ to within $`10^{-45}`$ of 3 and compare with a 512-bit solve.
+Subtract the noninteracting energy at comparable precision: converting the printed
+energy to an ordinary binary64 plotting value would discard the correction.
+
+This requires an [arbitrary-precision build with MPLAPACK MPFR](building.md#enable-arbitrary-precision).
+All finite-size modes support `bits-N` and `digits-N`;
+see the [C++ precision contract](lieb-liniger.md#c-api). Working digits are not
+guaranteed accurate digits, and the equation residual is not an energy-error bound.
 
 ## Independent checks
 

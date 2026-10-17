@@ -101,7 +101,7 @@ The [precision tutorial](tutorials/xxx-precision.md) demonstrates an energy
 scale that is lost in binary64, with exact-reference checks and a comparison
 of stable formulas versus additional working precision.
 
-With [MPFR enabled](building.md#enable-arbitrary-precision-for-xxx), every
+With [MPFR enabled](building.md#enable-arbitrary-precision), every
 `bethe-xxx-pbc` mode accepts `bits-N` or `digits-N`:
 
 ```sh
@@ -140,7 +140,8 @@ independent scans at different precisions can share a scheduler.
 The root-only algorithm uses real arithmetic and needs no MPLAPACK. Uni20's
 arbitrary-precision scalar family enables MPFR and MPC together; MPLAPACK is
 additionally required for [finite-ring form factors](xxx-structure-factor.md#arbitrary-precision).
-The OBC solver/frontend is not yet enabled for arbitrary precision.
+The [OBC solver/frontend](open-chains.md) supports the same per-call precision
+contract for states, sector minima and real-root scans.
 
 ## Validation
 

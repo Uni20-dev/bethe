@@ -23,11 +23,12 @@ template <uni20::Real Real> bool newton_decreases(Real norm, Real previous, Real
 /// optional coordinate normalization, and domain/residual acceptance. Linear
 /// solves, convergence decisions and iteration counters remain with the caller.
 template <uni20::Real Real, typename Correction, typename Accept, typename Normalize = UnchangedNewtonCoordinates>
-bool backtrack_newton(std::vector<Real>& x, Correction&& correction, Accept&& accept, Normalize normalize = {})
+bool backtrack_newton(std::vector<Real>& x, uni20::Precision precision, Correction&& correction, Accept&& accept,
+                      Normalize normalize = {})
 {
   auto trial = x;
-  Real damping{1};
-  for (int backtrack = 0; backtrack <= uni20::numeric_limits<Real>::digits(); ++backtrack)
+  Real damping = uni20::scalar_at_precision<Real>(1, precision);
+  for (std::int64_t backtrack = 0; backtrack <= uni20::numeric_limits<Real>::digits(precision); ++backtrack)
   {
     for (std::size_t i = 0; i < x.size(); ++i)
       trial[i] = x[i] + damping * correction(i);
@@ -40,5 +41,13 @@ bool backtrack_newton(std::vector<Real>& x, Correction&& correction, Accept&& ac
     damping /= Real{2};
   }
   return false;
+}
+
+template <uni20::Real Real, typename Correction, typename Accept, typename Normalize = UnchangedNewtonCoordinates>
+  requires(!uni20::has_runtime_precision_v<Real>)
+bool backtrack_newton(std::vector<Real>& x, Correction&& correction, Accept&& accept, Normalize normalize = {})
+{
+  return backtrack_newton(x, uni20::native_precision<Real>(), std::forward<Correction>(correction),
+                          std::forward<Accept>(accept), std::move(normalize));
 }
 } // namespace bethe::detail

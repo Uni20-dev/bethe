@@ -18,6 +18,8 @@ bethe-xxx-obc 16
 bethe-xxx-obc 15 --sz 3/2
 bethe-xxx-obc 16 --sectors
 bethe-xxx-obc 4 --quantum-numbers 1,2 --roots --precision fp128
+bethe-xxx-obc 16 --sectors --precision digits-100
+bethe-xxx-obc 8 --excitations all --threads 2 --precision bits-256
 ```
 
 It shares precision selection, CPU timing, convergence diagnostics, and
@@ -36,6 +38,13 @@ auto sectors = obc::sector_ground_states<long double>(16);
 bethe::heisenberg::QuantumNumbers numbers{uni20::half_int{1}, uni20::half_int{2}};
 auto state = obc::solve_real<long double>(4, numbers);
 ```
+
+With [arbitrary precision enabled](building.md#enable-arbitrary-precision), all
+modes also accept `bits-N` and `digits-N`; no MPLAPACK provider is required.
+The C++ API takes an explicit `bethe::SolverOptions<uni20::mpreal>(precision)`.
+Custom tolerances and initial roots must already have that finite working
+precision; exact-only, unset and mixed-precision inputs are rejected. Precision
+also applies to empty-root states, failed-iteration diagnostics and threaded scans.
 
 ## Hamiltonian and reflected scattering
 

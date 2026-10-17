@@ -33,11 +33,13 @@ template <uni20::Real Real> struct System
 {
     QuantumNumbers const& numbers;
     Real g;
-    Real const pi = Real{4} * std::atan(Real{1});
+    Real const zero = bethe::detail::precision_zero(g);
+    Real const pi = bethe::detail::pi_like(zero);
     auto seed() const
     {
-      Real const factor =
-          std::min(Real{1}, std::sqrt(g) / (pi * std::sqrt(Real(std::max(std::size_t{1}, numbers.size())))));
+      Real const factor = std::min(
+          Real{1}, uni20::math::sqrt(g) /
+                       (pi * uni20::math::sqrt(uni20::scalar_like(zero, std::max(std::size_t{1}, numbers.size())))));
       std::vector<Real> q(numbers.size());
       for (std::size_t j = 0; j < q.size(); ++j)
         q[j] = pi * (Real(numbers[j].twice() / 2 - std::int64_t(j)) + factor * Real(j));
@@ -52,17 +54,17 @@ template <uni20::Real Real> struct System
     typename lieb_liniger::detail::System<Real>::Evaluation evaluate(std::span<Real const> q,
                                                                      uni20::DenseMatrix<Real>* jacobian = nullptr) const
     {
-      typename lieb_liniger::detail::System<Real>::Evaluation result{std::vector<Real>(q.size())};
+      typename lieb_liniger::detail::System<Real>::Evaluation result{std::vector<Real>(q.size()), zero};
       auto phase = [&](Real x) {
-        if (g >= Real{1}) return std::atan2(x, g);
-        Real const complement = std::atan2(g, std::abs(x));
+        if (g >= Real{1}) return uni20::math::atan2(x, g);
+        Real const complement = uni20::math::atan2(g, uni20::math::abs(x));
         return x > Real{0} ? -complement : complement;
       };
       for (std::size_t j = 0; j < q.size(); ++j)
       {
         auto const label = numbers[j].twice() / 2;
         Real const target = pi * Real(g < Real{1} ? label - std::int64_t(j) : label);
-        bethe::detail::CompensatedSum<Real> sum, diagonal;
+        bethe::detail::CompensatedSum<Real> sum(zero), diagonal(zero);
         sum.add(q[j] - target);
         diagonal.add(Real{1});
         for (std::size_t k = 0; k < q.size(); ++k)
@@ -90,7 +92,8 @@ template <uni20::Real Real> struct System
         }
         result.residual[j] = sum.value();
         if (!uni20::isfinite(sum.value())) throw std::overflow_error("hard-wall residual overflow");
-        result.norm = std::max(result.norm, std::abs(sum.value()) / std::max({Real{1}, std::abs(target), q[j]}));
+        result.norm =
+            std::max(result.norm, uni20::math::abs(sum.value()) / std::max({Real{1}, uni20::math::abs(target), q[j]}));
       }
       return result;
     }
@@ -114,6 +117,7 @@ State<Real> solve_real(Real length, Real c, QuantumNumbers const& numbers, Solve
                        std::span<Real const> initial_momenta = {})
 {
   Real const g = lieb_liniger::detail::validate_parameters(numbers.size(), length, c, options);
+  auto const zero = bethe::detail::solver_zero(options);
   detail::validate_numbers(numbers);
   detail::System<Real> const system{numbers, g};
   auto q = system.seed();
@@ -121,14 +125,17 @@ State<Real> solve_real(Real length, Real c, QuantumNumbers const& numbers, Solve
   {
     if (initial_momenta.size() != q.size()) throw std::invalid_argument("initial wave-number count differs from N");
     for (std::size_t j = 0; j < q.size(); ++j)
+    {
+      bethe::detail::require_same_precision(initial_momenta[j], zero);
       q[j] = initial_momenta[j] * length;
+    }
   }
   if (!system.physical(q))
     throw std::invalid_argument("hard-wall seed must be finite, positive and distinctly ordered at this precision");
   State<Real> result{.particles = numbers.size(), .length = length, .interaction = c, .quantum_numbers = numbers};
   result.iterations = bethe::detail::continuum_newton(system, q, options);
   result.momenta.resize(q.size());
-  bethe::detail::CompensatedSum<Real> energy;
+  bethe::detail::CompensatedSum<Real> energy(zero);
   for (std::size_t j = 0; j < q.size(); ++j)
   {
     Real const k = q[j] / length, term = k * k;
@@ -140,7 +147,9 @@ State<Real> solve_real(Real length, Real c, QuantumNumbers const& numbers, Solve
   result.energy = energy.value();
   if (!uni20::isfinite(result.energy)) throw std::overflow_error("hard-wall energy sum overflow");
   if (!q.empty() && result.energy == Real{0}) throw std::underflow_error("hard-wall energy underflow");
-  result.residual_norm = system.physical(q) ? system.evaluate(q).norm : uni20::numeric_limits<Real>::infinity();
+  // Infinity is a diagnostic sentinel, not a finite value narrowed to binary64.
+  result.residual_norm =
+      system.physical(q) ? system.evaluate(q).norm : uni20::scalar_like(zero, std::numeric_limits<double>::infinity());
   result.converged = result.residual_norm <= options.residual_tolerance;
   result.status = result.converged                              ? SolveStatus::converged
                   : result.iterations == options.max_iterations ? SolveStatus::iteration_limit

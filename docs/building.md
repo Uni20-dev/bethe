@@ -9,12 +9,13 @@ need the extra precision.
 CMake 3.28+, a C++23 compiler supported by Uni20 (GCC 13+ or Clang 19+),
 and Uni20's numerical dependencies are required. Uni20 is pinned to a tested
 commit and fetched automatically unless a parent already supplies `uni20_core`.
-The current pin is `052f0a36`, including recoverable square solves and reusable
-LU/log-determinants, explicit-precision MPFR/MPC scalars and conversions,
+The current pin is `717c798c` from Uni20 PR #78, including recoverable square
+and QR least-squares solves, reusable LU/log-determinants, binary80 provider
+integration, explicit-precision MPFR/MPC scalars and conversions,
 uniform scalar/backend configuration, typed run metadata, runtime-precision
 data tables, and token-preserving help.
 Local overrides must provide these APIs too; configuration rejects checkouts
-without the recoverable-solve/log-determinant headers and scalar-capability API.
+without the recoverable-solve/least-squares/log-determinant headers and scalar-capability API.
 Application builds also enable Uni20's
 optional CLI11 dependency; library-only builds do not require it.
 Scheduler-backed state scans use `uni20_async`. The parallel frontends and
@@ -161,7 +162,7 @@ For binary128, use a separate build directory and add
 To use an installed MPLAPACK 3.0+ binary128
 package, add `-DUNI20_USE_SYSTEM_MPLAPACK=ON` and
 `-Dmplapack_DIR=/path/to/lib/cmake/mplapack`; otherwise Uni20 can fetch it.
-See [Uni20's scalar and provider setup](https://github.com/Uni20-dev/uni20/blob/052f0a36699cd49a50041b8a448594e9e378475f/docs/linalg/scalar_configuration.md).
+See [Uni20's scalar and provider setup](https://github.com/Uni20-dev/uni20/blob/717c798c047c9e844535d9b21a09c152b49ea9af/docs/linalg/scalar_configuration.md).
 
 `UNI20_USE_SYSTEM_MPLAPACK=OFF` forces a v3.0.0 source fetch. Alternatively,
 build MPLAPACK v3.0.0 separately and pass its **build directory** as
@@ -181,27 +182,35 @@ uses MPLAPACK's scalar headers/math, but does not register its matrix kernels.
 when migrating from the removed `UNI20_ENABLE_MPLAPACK`, `UNI20_ENABLE_MPFR`,
 or `UNI20_ENABLE_MPC` options.
 
-## Enable arbitrary precision for XXX
+## Enable arbitrary precision
 
 Arbitrary precision is optional. Uni20 enables its real and complex scalars
 together, requiring GMP, MPFR >= 4.2, and MPC development packages. All modes of
-`bethe-xxx-pbc` work without MPLAPACK. In a separate build directory:
+`bethe-xxx-pbc`, `bethe-xxx-obc`, `bethe-richardson` and `bethe-central-spin`
+work without MPLAPACK; Uni20 supplies CPU QR for the latter two.
+In a separate build directory:
 
 ```sh
 cmake /path/to/bethe -G Ninja -DCMAKE_BUILD_TYPE=Release -DUNI20_ENABLE_MPREAL=ON
 cmake --build . --parallel
 ./bethe-xxx-pbc 32 --precision digits-100
 ./bethe-xxx-pbc 17 --spinons --precision bits-256
+./bethe-xxx-obc 16 --sectors --precision bits-256
+./bethe-richardson --levels 0,1,2,3 --pairs 2 --g 1 --precision digits-100
+./bethe-central-spin --couplings 1,0.7,0.3 --field 1 --sz 0 --precision bits-256
 ./bethe-info
 ```
 
-For finite-ring structure factors, additionally enable MPLAPACK matrix kernels:
+For finite-ring structure factors and finite-size Lieb–Liniger, additionally
+enable MPLAPACK matrix kernels. Unlike QR, Uni20's arbitrary-precision square
+LU solves currently require this provider:
 
 ```sh
 cmake /path/to/bethe -G Ninja -DCMAKE_BUILD_TYPE=Release \
   -DUNI20_ENABLE_MPREAL=ON -DUNI20_BACKEND_MPLAPACK=ON
 cmake --build . --parallel
 ./bethe-xxx-structure-factor 32 --precision bits-256 --threads 4
+./bethe-lieb-liniger-obc 2 --length 1 --c 1e-50 --precision digits-100
 ./bethe-info
 ```
 
@@ -213,11 +222,14 @@ enabled; use `-DUNI20_ENABLE_FLOAT80=OFF` with an MPFR-only package. Binary128
 can be enabled alongside arbitrary precision with `-DUNI20_ENABLE_FLOAT128=ON`
 on supported configurations.
 
-This MPFR path covers periodic XXX real roots, sector/ground states, one-spinon
+This MPFR path covers periodic/open XXX real roots, sector/ground states, periodic one-spinon
 branches, real-root excitation scans, prepared raising form factors and the
-finite two-spinon DSF. It does **not** enable arbitrary precision throughout
-all models or frontends. Both root-only C++ use and `bethe-xxx-pbc` need just
-`UNI20_ENABLE_MPREAL=ON`; form factors additionally need `UNI20_BACKEND_MPLAPACK=ON`.
+finite two-spinon DSF, finite-size periodic/hard-wall Lieb–Liniger states and scans,
+plus Richardson and central-spin ground-state continuation.
+It does **not** enable arbitrary precision throughout all models or frontends.
+The XXX real-root and Gaudin solvers need just `UNI20_ENABLE_MPREAL=ON`;
+Lieb–Liniger and form factors additionally need `UNI20_BACKEND_MPLAPACK=ON`. Enabling that provider
+also lets Uni20 dispatch the Lieb–Liniger LU and Gaudin QR operations to MPLAPACK.
 No ambient precision default determines the calculation's
 working precision. At the provider boundary, Uni20 temporarily sets and restores
 MPLAPACK's thread-local defaults around each synchronous call.
@@ -291,12 +303,12 @@ on changed C++ files to apply the shared style.
 ### Linear solves and failure policy
 
 We link `uni20_core` for scalar facilities, `uni20_common` for `half_int` and
-presentation facilities, and `uni20_linalg` for square linear solves.
+presentation facilities, and `uni20_linalg` for square and least-squares solves.
 Frontends additionally use `uni20_cli` for option parsing.
 
 Square Newton and dressing-equation solves use Uni20's recoverable
 `solve_inplace_with_info`, with LAPACK/MPLAPACK for compatible column-major
-workspaces and native CPU arithmetic for long double. The row-major vector
+workspaces and native CPU fallback where needed. The row-major vector
 adapter in `detail/newton.hpp` rearranges its owned coefficient copy in place
 and exposes non-owning column-major views; the caller's coefficients are
 preserved without an additional matrix allocation.
@@ -309,8 +321,26 @@ return to the model's stalled/ill-conditioned or continuation-rejection path;
 failed workspaces never become accepted iterates. Shape errors remain distinct
 from numerical failures. No process-global error policy is changed.
 
-The overdetermined Givens least-squares helper in `detail/newton.hpp` remains
-local pending a corresponding Uni20 API; it does not form normal equations.
+Rectangular Newton corrections and continuation tangents use Uni20's
+`least_squares_with_info` through read-only row-major views in `detail/newton.hpp`.
+Normal dispatch selects LAPACK/MPLAPACK QR or Uni20's CPU Givens implementation;
+native long double remains supported without MPLAPACK. Bethe retains its
+`64 * epsilon` relative-diagonal rejection threshold, which is neither a
+numerical-rank determination nor a condition estimate. No normal equations
+are formed. A failed correction leaves the RHS unchanged; success replaces
+it with the solution. An inconsistent least-squares fit can succeed: physical
+residual checks and continuation acceptance still belong to the model.
+
+The rectangular adapter also accepts an explicit finite `uni20::Precision`
+for runtime-precision scalars. At this low-level boundary Uni20 converts inputs
+at the requested working precision. The Richardson and central-spin model APIs
+are stricter: inputs and tolerance must already have the options' finite
+precision; mixed, exact and unset runtime values require explicit conversion.
+Their sums, predictor/corrector state, backtracking limits and output diagnostics
+retain that precision, including zero-budget and analytic cases. Numerical rank
+via SVD, condition estimates and
+refinement remain coordinated with
+[Uni20's numerical infrastructure plan](https://github.com/Uni20-dev/uni20/blob/717c798c047c9e844535d9b21a09c152b49ea9af/docs/linalg/precision_numerics_plan.md).
 
 ### Shared iteration and continuation
 

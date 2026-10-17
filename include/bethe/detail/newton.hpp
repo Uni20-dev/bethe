@@ -5,6 +5,7 @@
 #include <cmath>
 #include <limits>
 #include <uni20/core/math.hpp>
+#include <uni20/linalg/ops/least_squares.hpp>
 #include <uni20/linalg/ops/linear_solve.hpp>
 #include <uni20/tensor/mdspec_tensor_view.hpp>
 #include <vector>
@@ -20,8 +21,8 @@ template <uni20::Real Real> bool newton_step(std::vector<Real> a, std::vector<Re
   if (n && n > std::numeric_limits<std::size_t>::max() / n) return false;
   if (a.size() != n * n) return false;
   // Reuse the owned coefficient copy as column-major workspace, allowing
-  // LAPACK/MPLAPACK dispatch without another allocation. Long double uses
-  // Uni20's native CPU fallback. Neither view outlives its vector storage.
+  // LAPACK/MPLAPACK dispatch without another allocation, with Uni20's native
+  // CPU fallback where needed. Neither view outlives its vector storage.
   for (std::size_t i = 0; i < n; ++i)
     for (std::size_t j = i + 1; j < n; ++j)
       std::swap(a[i * n + j], a[j * n + i]);
@@ -35,52 +36,40 @@ template <uni20::Real Real> bool newton_step(std::vector<Real> a, std::vector<Re
       .succeeded();
 }
 
-// Overdetermined Newton correction without forming normal equations. Givens
-// rotations retain native long-double support and return rank loss instead
-// of invoking a terminal LAPACK/error-policy path. Row-major m x n, m>=n.
-template <uni20::Real Real> bool least_squares_step(std::vector<Real> a, std::vector<Real>& b, std::size_t n)
+/// Overdetermined Newton correction for row-major m x n coefficients, m>=n.
+/// Uni20 owns QR and backend selection; Bethe retains the 64*epsilon diagonal
+/// rejection policy (not a rank or condition estimate). No normal equations.
+/// Preserve a always, and replace b by the n-component correction only on
+/// success. Invalid shapes and numerical failures return false. Invalid or
+/// unavailable precision and allocation failures remain ordinary errors.
+/// An explicit finite precision permits runtime inputs, converted by Uni20 at
+/// that precision; callers must not infer recovered accuracy from conversion.
+template <uni20::Real Real>
+bool least_squares_step(std::vector<Real> const& a, std::vector<Real>& b, std::size_t n, uni20::Precision precision)
 {
   auto const m = b.size();
   if (m < n || (m && n > std::numeric_limits<std::size_t>::max() / m) || a.size() != m * n) return false;
-  Real scale{};
-  for (Real v : a)
-  {
-    if (!uni20::isfinite(v)) return false;
-    scale = std::max(scale, std::abs(v));
-  }
-  for (Real v : b)
-    if (!uni20::isfinite(v)) return false;
-  for (std::size_t k = 0; k < n; ++k)
-  {
-    for (std::size_t i = k + 1; i < m; ++i)
-    {
-      Real const r = std::hypot(a[k * n + k], a[i * n + k]);
-      if (r == Real{0}) continue;
-      Real const c = a[k * n + k] / r, s = a[i * n + k] / r;
-      a[k * n + k] = r;
-      a[i * n + k] = Real{0};
-      for (std::size_t j = k + 1; j < n; ++j)
-      {
-        Real const x = a[k * n + j], y = a[i * n + j];
-        a[k * n + j] = c * x + s * y;
-        a[i * n + j] = -s * x + c * y;
-      }
-      Real const x = b[k], y = b[i];
-      b[k] = c * x + s * y;
-      b[i] = -s * x + c * y;
-    }
-    if (!uni20::isfinite(a[k * n + k]) ||
-        !(std::abs(a[k * n + k]) > Real{64} * uni20::numeric_limits<Real>::epsilon() * scale))
-      return false;
-  }
-  b.resize(n);
-  for (std::size_t i = n; i-- > 0;)
-  {
-    for (std::size_t j = i + 1; j < n; ++j)
-      b[i] -= a[i * n + j] * b[j];
-    b[i] /= a[i * n + i];
-    if (!uni20::isfinite(b[i])) return false;
-  }
+  using Span = stdex::mdspan<Real const, stdex::dextents<std::size_t, 2>, stdex::layout_right>;
+  using View = uni20::MdspecTensorView<Span, Span, uni20::HostStorage>;
+  View const matrix(Span(a.data(), m, n), Span(a.data(), m, n));
+  View const rhs(Span(b.data(), m, 1), Span(b.data(), m, 1));
+  auto const result = uni20::linalg::least_squares_with_info(
+      matrix, rhs, precision,
+      {.relative_diagonal_tolerance = Real{64} * uni20::numeric_limits<Real>::epsilon(precision)});
+  if (!result.info.succeeded()) return false;
+  std::vector<Real> correction;
+  correction.reserve(n);
+  for (std::size_t i = 0; i < n; ++i)
+    correction.push_back((*result.solution)[i, 0]);
+  b = std::move(correction);
   return true;
+}
+
+/// Fixed-precision convenience; runtime arithmetic requires an explicit request.
+template <uni20::Real Real>
+  requires(!uni20::has_runtime_precision_v<Real>)
+bool least_squares_step(std::vector<Real> const& a, std::vector<Real>& b, std::size_t n)
+{
+  return least_squares_step(a, b, n, uni20::native_precision<Real>());
 }
 } // namespace bethe::detail

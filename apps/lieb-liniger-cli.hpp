@@ -4,6 +4,7 @@
 #include "execution-options.hpp"
 #include "program-options.hpp"
 #include "result-output.hpp"
+#include "solver-precision.hpp"
 #include <bethe/lieb_liniger_open.hpp>
 #include <type_traits>
 
@@ -39,6 +40,7 @@ template <bool HardWalls> auto program_info()
                 HardWalls ? "Positive k are standing-wave Bethe coordinates, not a conserved total momentum."
                           : "Momentum P=2*pi*sum(I)/ELL is signed, with no Brillouin-zone reduction.",
                 "Attraction, c=0, c=infinity, and thermodynamics are not implemented.",
+                "bits-N/digits-N require MPLAPACK MPFR for the Newton solves; inspect this build with bethe-info.",
                 HardWalls ? "Dirichlet walls only. See docs/lieb-liniger-open.md for equations and numerical limits."
                           : "See docs/lieb-liniger.md for equations, residual scaling, and numerical limits.",
                 "Use --references for literature and applicability; see CITATIONS.md."};
@@ -69,7 +71,7 @@ template <bool HardWalls> void add_options(CLI::App& app, Arguments& args)
                      "dimensionless component-scaled residual (default: 32 epsilon; not an energy-error bound)");
   bethe::cli::option(app, "--max-iterations", args.max_iterations, "Newton updates per state (default: 10000)")
       ->capture_default_str();
-  bethe::cli::precision_option(app, args.precision);
+  bethe::cli::precision_option(app, args.precision, cli::ArbitraryPrecision::real_lu);
   cli::add_data_output_options(app, args.output,
                                {{.name = "states", .description = "Selected states and diagnostics", .primary = true},
                                 {.name = "reference",
@@ -192,13 +194,12 @@ void write_output(cli::RunReport& report, Arguments const& args,
   output.finish();
 }
 
-template <bool HardWalls, uni20::Real Real> int run(Arguments const& args, int argc, char** argv)
+template <bool HardWalls, uni20::Real Real>
+int run(Arguments const& args, int argc, char** argv, model::SolverOptions<Real> const& options)
 {
   uni20::run_context context(program_info<HardWalls>(), {.invocation = std::vector<std::string>(argv, argv + argc)});
-  Real const length = uni20::parse_real<Real>(*args.length), c = uni20::parse_real<Real>(*args.interaction);
-  model::SolverOptions<Real> options;
-  options.max_iterations = args.max_iterations;
-  if (args.tolerance) options.residual_tolerance = uni20::parse_real<Real>(*args.tolerance);
+  Real const length = cli::parse_solver_real<Real>(*args.length, options);
+  Real const c = cli::parse_solver_real<Real>(*args.interaction, options);
   cli::RunReport report(context, HardWalls ? "Lieb-Liniger (hard walls)" : "Lieb-Liniger (periodic)");
   report.field("particles", "Particles", args.particles)
       .field("length", "Length", length)
@@ -287,8 +288,9 @@ template <bool HardWalls> int main(int argc, char** argv)
       argc, argv, program_info<HardWalls>(), [&](auto& app) { add_options<HardWalls>(app, args); },
       [&](auto&) {
         validate(args);
-        return bethe::cli::dispatch_precision(args.precision,
-                                              [&]<uni20::Real Real> { return run<HardWalls, Real>(args, argc, argv); });
+        return cli::dispatch_solver_precision<cli::ArbitraryPrecision::real_lu>(
+            args.precision, args.tolerance, args.max_iterations,
+            [&](auto const& options) { return run<HardWalls>(args, argc, argv, options); });
       });
 }
 } // namespace bethe::cli::lieb_liniger_app

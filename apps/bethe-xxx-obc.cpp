@@ -6,6 +6,7 @@
 #include "heisenberg-cli.hpp"
 #include "heisenberg-report.hpp"
 #include "program-options.hpp"
+#include "solver-precision.hpp"
 
 #include <optional>
 
@@ -56,9 +57,9 @@ void add_options(CLI::App& app, Arguments& args)
       ->needs("--excitations");
   cli::option(app, "--roots", args.print_roots, "Print rapidities and exact labels");
   cli::threads_option(app, args.excitations.threads)->needs("--excitations");
-  cli::text_option(app, "--tolerance", args.tolerance, "Normalized equation residual in native precision");
+  cli::text_option(app, "--tolerance", args.tolerance, "Normalized equation residual at the selected precision");
   cli::count_option(app, "--max-iterations", args.max_iterations, "Update budget")->capture_default_str();
-  cli::precision_option(app, args.precision);
+  cli::precision_option(app, args.precision, cli::ArbitraryPrecision::real);
   cli::add_data_output_options(app, args.output,
                                {{.name = "states", .description = "Selected states and diagnostics", .primary = true},
                                 {.name = "reference",
@@ -79,14 +80,12 @@ void add_options(CLI::App& app, Arguments& args)
                                  .screen_option = "--roots"}});
 }
 
-template <uni20::Real Real> int run(Arguments const& args, int argc, char** argv)
+template <uni20::Real Real>
+int run(Arguments const& args, int argc, char** argv, bethe::SolverOptions<Real> const& options)
 {
   uni20::run_context context(program_info(), {.invocation = std::vector<std::string>(argv, argv + argc)});
   namespace cli = bethe::cli;
   namespace model = bethe::heisenberg::open;
-  bethe::SolverOptions<Real> options;
-  options.max_iterations = args.max_iterations;
-  if (args.tolerance) options.residual_tolerance = uni20::parse_real<Real>(*args.tolerance);
   auto computation = context.computation();
   auto header = [&](std::string_view mode) {
     auto report = cli::report_header(args.sites, args.precision, options, mode, context, false);
@@ -138,7 +137,8 @@ int main(int argc, char** argv)
             1)
           throw std::invalid_argument("--sz, --sectors, --quantum-numbers and --excitations are mutually exclusive");
         args.output.validate();
-        return bethe::cli::dispatch_precision(args.precision,
-                                              [&]<uni20::Real Real> { return run<Real>(args, argc, argv); });
+        return bethe::cli::dispatch_solver_precision<bethe::cli::ArbitraryPrecision::real>(
+            args.precision, args.tolerance, args.max_iterations,
+            [&](auto const& options) { return run(args, argc, argv, options); });
       });
 }

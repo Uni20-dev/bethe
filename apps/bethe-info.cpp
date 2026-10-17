@@ -39,9 +39,11 @@ int run(cli::DataOutputOptions const& options, int argc, char** argv)
       .field("mplapack_float80_enabled", "MPLAPACK binary80 configured", bool(UNI20_HAS_MPLAPACK_FLOAT80))
       .field("mplapack_mpfr_enabled", "MPLAPACK MPFR configured", bool(UNI20_HAS_MPLAPACK_MPREAL))
       .field("arbitrary_frontends", "Arbitrary-precision frontends",
-             cli::has_arbitrary_structure_factor ? "bethe-xxx-pbc, bethe-xxx-structure-factor"
-             : UNI20_HAS_MPREAL                  ? "bethe-xxx-pbc"
-                                                 : "none enabled in this build")
+             cli::has_arbitrary_structure_factor
+                 ? "bethe-xxx-pbc, bethe-xxx-obc, bethe-lieb-liniger-pbc, bethe-lieb-liniger-obc, bethe-richardson, "
+                   "bethe-central-spin, bethe-xxx-structure-factor"
+             : UNI20_HAS_MPREAL ? "bethe-xxx-pbc, bethe-xxx-obc, bethe-richardson, bethe-central-spin"
+                                : "none enabled in this build")
       .field("precision_scope", "Native precision scope", "all numerical frontends, subject to availability")
       .field("precision_note", "Precision units", "significand bits; fp64/fp80/fp128 name complete formats")
       .field("storage_note", "Storage", "native object bytes, including any padding")

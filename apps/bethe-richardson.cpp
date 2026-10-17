@@ -2,6 +2,7 @@
 // Copyright (C) 2026 Ian McCulloch
 #include "program-options.hpp"
 #include "result-output.hpp"
+#include "solver-precision.hpp"
 #include <bethe/richardson.hpp>
 
 namespace
@@ -45,7 +46,7 @@ void add_options(CLI::App& app, Arguments& args)
   bethe::cli::option(app, "--tolerance", args.tolerance, "polynomial backward residual (default: 32 epsilon)");
   bethe::cli::option(app, "--max-iterations", args.max_iterations, "attempted Newton corrections, including retries")
       ->capture_default_str();
-  bethe::cli::precision_option(app, args.precision);
+  bethe::cli::precision_option(app, args.precision, cli::ArbitraryPrecision::real);
   cli::add_data_output_options(
       app, args.output,
       {{.name = "states", .description = "Selected states and diagnostics", .primary = true},
@@ -87,18 +88,15 @@ char const* status(model::SolveStatus value)
   }
   return "unknown";
 }
-template <uni20::Real Real> int run(Arguments const& args, int argc, char** argv)
+template <uni20::Real Real> int run(Arguments const& args, int argc, char** argv, model::SolverOptions<Real> options)
 {
   uni20::run_context context(program_info(), {.invocation = std::vector<std::string>(argv, argv + argc)});
   std::vector<Real> levels;
-  each_item(*args.levels, [&](auto value) { levels.push_back(uni20::parse_real<Real>(value)); });
+  each_item(*args.levels, [&](auto value) { levels.push_back(cli::parse_solver_real<Real>(value, options)); });
   std::vector<std::size_t> blocked;
   each_item(args.blocked, [&](auto value) { blocked.push_back(cli::parse_size(value)); });
-  Real const g = uni20::parse_real<Real>(*args.g);
-  model::SolverOptions<Real> options;
-  options.max_iterations = args.max_iterations;
+  Real const g = cli::parse_solver_real<Real>(*args.g, options);
   options.max_stages = args.max_stages;
-  if (args.tolerance) options.residual_tolerance = uni20::parse_real<Real>(*args.tolerance);
   auto computation = context.computation();
   auto const state = model::ground_state<Real>(levels, *args.pairs, g, blocked, options);
   computation.finish();
@@ -168,7 +166,8 @@ int main(int argc, char** argv)
       argc, argv, program_info(), [&](auto& app) { add_options(app, args); },
       [&](auto&) {
         validate(args);
-        return bethe::cli::dispatch_precision(args.precision,
-                                              [&]<uni20::Real Real> { return run<Real>(args, argc, argv); });
+        return cli::dispatch_solver_precision<cli::ArbitraryPrecision::real, model::SolverOptions>(
+            args.precision, args.tolerance, args.max_iterations,
+            [&](auto const& options) { return run(args, argc, argv, options); });
       });
 }
