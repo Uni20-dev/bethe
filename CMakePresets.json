@@ -79,16 +79,30 @@
       "execution": { "jobs": 2, "timeout": 600, "noTestsAction": "error" },
       "environment": { "OPENBLAS_NUM_THREADS": "1", "OMP_NUM_THREADS": "1" }
     },
-    { "name": "ci-native", "configurePreset": "ci-native", "inherits": "ci-tests" },
+    {
+      "name": "ci-routine-tests",
+      "hidden": true,
+      "inherits": "ci-tests",
+      "filter": { "exclude": { "label": "^long-running$" } }
+    },
+    { "name": "ci-native", "configurePreset": "ci-native", "inherits": "ci-routine-tests" },
     {
       "name": "ci-sanitizers",
       "configurePreset": "ci-sanitizers",
-      "inherits": "ci-tests",
+      "inherits": "ci-routine-tests",
       "environment": {
         "ASAN_OPTIONS": "detect_leaks=1:halt_on_error=1",
         "UBSAN_OPTIONS": "halt_on_error=1:print_stacktrace=1"
       }
     },
-    { "name": "ci-wide", "configurePreset": "ci-wide", "inherits": "ci-tests" }
+    { "name": "ci-wide", "configurePreset": "ci-wide", "inherits": "ci-routine-tests" },
+    {
+      "name": "ci-long-running",
+      "displayName": "Long-running binary128 numerical validation",
+      "configurePreset": "ci-wide",
+      "inherits": "ci-tests",
+      "filter": { "include": { "label": "^long-running$" } },
+      "execution": { "timeout": 1800 }
+    }
   ]
 }

@@ -5,13 +5,20 @@ on:
     branches: [main]
   pull_request:
     branches: [main]
+  schedule:
+    - cron: "0 18 * * 0" # Monday 02:00 Asia/Taipei; include long-running validation.
   workflow_dispatch:
+    inputs:
+      long_running:
+        description: Include long-running numerical validation
+        type: boolean
+        default: true
 
 permissions:
   contents: read
 
 concurrency:
-  group: cpp-ci-${{ github.ref }}
+  group: cpp-ci-${{ github.event_name }}-${{ github.ref }}
   cancel-in-progress: true
 
 defaults:
@@ -83,6 +90,7 @@ jobs:
             2>&1 | tee "${RUNNER_TEMP}/configure.log"
 
       - name: Build all frontends and tests
+        id: build
         run: cmake --build --preset "$PRESET" 2>&1 | tee "${RUNNER_TEMP}/build.log"
 
       # A numerical/test failure must not discard a successful compilation.
@@ -96,8 +104,19 @@ jobs:
       - name: Record configured capabilities
         run: '"build/$PRESET/bethe-info" --format json > "${RUNNER_TEMP}/bethe-info.json"'
 
-      - name: Run all numerical, CLI and installation tests
-        run: ctest --preset "$PRESET" --output-junit "${RUNNER_TEMP}/ctest.xml"
+      - name: Run routine numerical, CLI and installation tests
+        run: |
+          ctest --preset "$PRESET" --output-junit "${RUNNER_TEMP}/ctest.xml" \
+            2>&1 | tee "${RUNNER_TEMP}/ctest.log"
+
+      - name: Run long-running numerical validation
+        if: >-
+          ${{ !cancelled() && steps.build.outcome == 'success' && matrix.preset == 'ci-wide' &&
+              (github.event_name == 'schedule' ||
+               (github.event_name == 'workflow_dispatch' && inputs.long_running)) }}
+        run: |
+          ctest --preset ci-long-running --output-junit "${RUNNER_TEMP}/ctest-long-running.xml" \
+            2>&1 | tee "${RUNNER_TEMP}/ctest-long-running.log"
 
       - name: Compiler cache statistics
         if: always()
@@ -112,6 +131,9 @@ jobs:
           if-no-files-found: warn
           path: |
             ${{ runner.temp }}/ctest.xml
+            ${{ runner.temp }}/ctest.log
+            ${{ runner.temp }}/ctest-long-running.xml
+            ${{ runner.temp }}/ctest-long-running.log
             ${{ runner.temp }}/bethe-info.json
             ${{ runner.temp }}/configure.log
             ${{ runner.temp }}/build.log

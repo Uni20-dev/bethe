@@ -270,6 +270,24 @@ inside scans and keep expensive ED loops grouped into logical cases.
 CTest gives each test one BLAS/OpenMP thread; it can still run independent
 cases concurrently with `ctest --parallel`.
 
+Expensive end-to-end numerical checks carry the `long-running` label. From a
+build directory, choose routine checks, long checks alone, or the complete suite:
+
+```sh
+ctest --label-exclude '^long-running$' --output-on-failure
+ctest --label-regex '^long-running$' --output-on-failure
+ctest --output-on-failure
+```
+
+The long group currently contains five binary128 cases: the interacting
+sine-Gordon vacuum and excited level, and the Hubbard charge-continuum oracle,
+native-default accuracy and convention checks. Previous local runs took roughly
+one to fifteen minutes each. Their full numerical tolerances remain unchanged;
+each has a 30-minute timeout. The corresponding fp64/long-double cases and
+faster binary128 kernel, precision and failure-path checks stay in the routine
+suite. New costly cases should be declared with `LONG_RUNNING_TESTS` alongside
+their target's `bethe_discover_tests` call, using GoogleTest names.
+
 ### Continuous integration
 
 Pull requests and pushes to `main` run three Linux configurations, defined in
@@ -281,12 +299,23 @@ Pull requests and pushes to `main` run three Linux configurations, defined in
 | `ci-sanitizers` | Clang 19; AddressSanitizer and UndefinedBehaviorSanitizer; native scalars and MPFR; CPU kernels without BLAS/MPLAPACK |
 | `ci-wide` | GCC 13 Release; binary80, binary128 and MPFR; OpenBLAS and source-built, optimized MPLAPACK |
 
-Each builds **all frontends and test targets** and runs the complete registered
-CTest suite, including CLI/export checks and the installed-program relocation
-test. Runtime-precision Lieb–Liniger and form-factor coverage belongs to
+Each builds **all frontends and test targets** and runs the routine CTest suite,
+including CLI/export checks and the installed-program relocation test.
+Runtime-precision Lieb–Liniger and form-factor coverage belongs to
 `ci-wide`; the scalar-only sanitizer configuration also checks that unavailable
 provider requests fail clearly. These jobs do not claim macOS, Windows or GPU
 coverage. Documentation has its own workflow.
+
+Weekly CI (Monday 02:00 Asia/Taipei) additionally runs `ci-long-running` on the
+wide-precision build. A manual **C++ CI** run includes it by default, controlled
+by the **Include long-running numerical validation** input. Run this group when
+changing the relevant solvers, quadratures or precision machinery; ordinary
+pushes and pull requests do not run it. Results are uploaded separately from
+the routine suite. From a configured and built `ci-wide` tree:
+
+```sh
+ctest --preset ci-long-running
+```
 
 The workflow fetches Bethe's pinned Uni20, limits compilation and concurrent
 tests to two jobs, and gives numerical kernels one BLAS/OpenMP thread.
@@ -311,7 +340,8 @@ shared source checkout, keep the build on local storage instead:
 cmake --preset ci-native -B /path/to/local/bethe-ci-native
 cmake --build /path/to/local/bethe-ci-native --parallel 2
 OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 \
-  ctest --test-dir /path/to/local/bethe-ci-native --parallel 2 --output-on-failure
+  ctest --test-dir /path/to/local/bethe-ci-native --parallel 2 \
+    --label-exclude '^long-running$' --output-on-failure
 ```
 
 ## Embed the library
