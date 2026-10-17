@@ -39,6 +39,8 @@ bethe-richardson --levels -2,-0.8,0.1,0.9,2,3.5 --pairs 2 --g 1 --blocked 1
 bethe-richardson --levels 0,1 --pairs 1 --g 1 --precision long-double --variables
 # With binary128 enabled:
 bethe-richardson --levels 0,1,2,3 --pairs 2 --g 1 --precision fp128
+# With arbitrary precision enabled (MPLAPACK optional):
+bethe-richardson --levels 0,1,2,3 --pairs 2 --g 1 --precision digits-100
 ```
 
 `--levels`, `--pairs` and `--g` are required. Blocked indices are zero-based
@@ -49,6 +51,31 @@ silently, so the meaning of a blocked index cannot change during parsing.
 The one-pair, two-level example epsilon=(0,1) has energy
 $`1-g -\sqrt{1+g \,g }`$, hence E=-sqrt(2) at g=1. Empty, completely paired, and
 zero-coupling sectors use exact formulas and need no Newton iterations.
+
+## Arbitrary precision
+
+`bits-N` and `digits-N` apply to the whole calculation: input decimals, equation
+scaling, QR corrections, continuation and exported energies/variables. The
+default residual tolerance is 32 epsilons **at the requested precision**, not
+a fixed binary64 threshold. See [build requirements](building.md#enable-arbitrary-precision).
+
+For C++ callers, working precision belongs to the solver options:
+
+```cpp
+using Real = uni20::mpreal;
+auto p = uni20::Precision::decimal_digits(100);
+bethe::richardson::SolverOptions<Real> options(p);
+std::vector<Real> levels{Real("0", p), Real("1", p), Real("2", p), Real("3", p)};
+auto state = bethe::richardson::ground_state<Real>(levels, 2, Real("1", p), {}, options);
+```
+
+Every level, coupling and custom tolerance must already have precision `p`.
+Mixed-precision, exact-only and unset runtime inputs are rejected; use an
+explicit conversion when intended. No ambient MPFR default is selected by
+the solver. More working bits do not guarantee that many accurate energy
+digits: compare precisions, particularly for tightly clustered levels or
+small energy differences. The residual measures backward error, not an
+energy-error bound.
 
 ## Avoiding pair-root collision singularities
 
@@ -111,8 +138,11 @@ eliminates y_0, which is occupied at g=0. Eliminating an empty variable
 instead can erase its small value by subtraction at weak coupling.
 All L equations participate in a rectangular QR correction with L-1
 unknowns; no equation is discarded and no normal equations are formed.
-Native-precision Givens rotations provide a recoverable rank-failure path,
-also for long double without a BLAS/LAPACK backend.
+Uni20's recoverable least-squares API selects LAPACK/MPLAPACK QR or a CPU
+Givens implementation, including long double without MPLAPACK. Bethe rejects
+unresolved triangular diagonals using its `64 * epsilon` policy; this is not
+a numerical-rank determination or an error bound. Failed corrections leave
+the current continuation state unchanged.
 
 Stages are checked against Fermi-sea and uniform-pair variational upper
 bounds, a kinetic-plus-interaction lower bound, and the concavity/tangent

@@ -159,6 +159,7 @@ template <typename Real> struct ControlOptions
 {
     Real residual_tolerance{};
     std::size_t max_iterations = 20, max_stages = 20;
+    uni20::Precision precision() const { return uni20::native_precision<Real>(); }
 };
 template <typename Real> struct Evaluation
 {

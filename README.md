@@ -13,12 +13,14 @@ High precision is a first-class feature: the solvers support
 Parameters, numerical calculations, excitation gaps, and output retain the
 selected precision. See [precision controls](docs/command-line.md#select-arithmetic-precision)
 and [binary128 setup](docs/building.md#enable-binary128).
-Periodic XXX states, spinon branches, real-root excitation scans and finite-ring
-two-spinon structure factors also support **arbitrary precision**, explicitly
+XXX states with periodic or open boundaries, finite-size Lieb–Liniger states,
+their real-root excitation scans, periodic XXX spinon branches and finite-ring
+two-spinon structure factors, Richardson pairing and central-spin ground states
+also support **arbitrary precision**, explicitly
 chosen per calculation; for example, `bethe-xxx-pbc 32 --precision digits-100`
 or `bethe-xxx-structure-factor 32 --precision bits-256`.
 Run `bethe-info` to inspect the formats and numerical providers available in your build.
-See [MPFR setup and scope](docs/building.md#enable-arbitrary-precision-for-xxx).
+See [MPFR setup and scope](docs/building.md#enable-arbitrary-precision).
 
 A calculation starts with a model, a boundary condition, and a choice of
 Bethe quantum numbers. The solver finds the corresponding rapidities and

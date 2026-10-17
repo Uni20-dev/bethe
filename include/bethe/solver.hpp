@@ -16,6 +16,7 @@ template <uni20::Real Real> struct SolverOptions
 {
     Real residual_tolerance = Real{32} * uni20::numeric_limits<Real>::epsilon();
     std::size_t max_iterations = 10000;
+    uni20::Precision precision() const { return uni20::native_precision<Real>(); }
 };
 
 #if UNI20_HAS_MPREAL

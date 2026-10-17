@@ -25,13 +25,35 @@ endif()
 include(GoogleTest)
 
 function(bethe_discover_tests target)
+  cmake_parse_arguments(PARSE_ARGV 1 arg "" "" "LONG_RUNNING_TESTS")
+  if(arg_UNPARSED_ARGUMENTS OR arg_KEYWORDS_MISSING_VALUES)
+    message(FATAL_ERROR "Invalid arguments to bethe_discover_tests(${target})")
+  endif()
   set_target_properties(${target} PROPERTIES CXX_EXTENSIONS OFF)
   target_link_libraries(${target} PRIVATE GTest::gtest_main)
   # Discovery happens at test time; the directory's configure-time TESTS
   # property does not include these dynamically registered cases.
+  # Partition by GoogleTest name before registration, without duplicating cases
+  # or relying on CTest's version-dependent pretty names for typed tests.
+  set(routine_filter "*")
+  if(arg_LONG_RUNNING_TESTS)
+    list(JOIN arg_LONG_RUNNING_TESTS ":" long_filter)
+    set(routine_filter "*-${long_filter}")
+    gtest_discover_tests(${target}
+      DISCOVERY_MODE PRE_TEST
+      NO_PRETTY_TYPES
+      TEST_FILTER "${long_filter}"
+      TEST_LIST ${target}_LONG_RUNNING_TESTS
+      PROPERTIES
+        ENVIRONMENT "OPENBLAS_NUM_THREADS=1\;OMP_NUM_THREADS=1"
+        LABELS "long-running"
+        TIMEOUT 1800
+    )
+  endif()
   gtest_discover_tests(${target}
     DISCOVERY_MODE PRE_TEST
     NO_PRETTY_TYPES
+    TEST_FILTER "${routine_filter}"
     PROPERTIES ENVIRONMENT "OPENBLAS_NUM_THREADS=1\;OMP_NUM_THREADS=1"
   )
 endfunction()
@@ -41,6 +63,14 @@ target_link_libraries(bethe_cli_precision_tests PRIVATE bethe_cli_output)
 bethe_discover_tests(bethe_cli_precision_tests)
 
 if(BETHE_HAS_MPREAL)
+  add_executable(bethe_root_solver_mpfr_tests test_root_solver_mpfr.cpp)
+  target_link_libraries(bethe_root_solver_mpfr_tests PRIVATE bethe::bethe TBB::tbb)
+  bethe_discover_tests(bethe_root_solver_mpfr_tests)
+
+  add_executable(bethe_gaudin_mpfr_tests test_gaudin_mpfr.cpp)
+  target_link_libraries(bethe_gaudin_mpfr_tests PRIVATE bethe::bethe)
+  bethe_discover_tests(bethe_gaudin_mpfr_tests)
+
   add_executable(bethe_xxx_mpfr_tests test_xxx_mpfr.cpp)
   target_link_libraries(bethe_xxx_mpfr_tests PRIVATE bethe::bethe TBB::tbb)
   bethe_discover_tests(bethe_xxx_mpfr_tests)
@@ -82,6 +112,10 @@ bethe_discover_tests(bethe_xxx_thermodynamic_structure_factor_tests)
 add_executable(bethe_newton_control_tests test_newton_control.cpp)
 target_link_libraries(bethe_newton_control_tests PRIVATE bethe::bethe)
 bethe_discover_tests(bethe_newton_control_tests)
+
+add_executable(bethe_least_squares_tests test_least_squares.cpp)
+target_link_libraries(bethe_least_squares_tests PRIVATE bethe::bethe)
+bethe_discover_tests(bethe_least_squares_tests)
 
 add_executable(bethe_xxz_dispersion_tests test_xxz_dispersion.cpp)
 target_link_libraries(bethe_xxz_dispersion_tests PRIVATE bethe::bethe)
@@ -147,7 +181,8 @@ bethe_discover_tests(bethe_asep_tests)
 
 add_executable(bethe_sine_gordon_tests test_sine_gordon.cpp)
 target_link_libraries(bethe_sine_gordon_tests PRIVATE bethe::bethe)
-bethe_discover_tests(bethe_sine_gordon_tests)
+bethe_discover_tests(bethe_sine_gordon_tests
+  LONG_RUNNING_TESTS SineGordon/fp128.VacuumInteractingNative)
 
 add_executable(bethe_sine_gordon_excitation_tests test_sine_gordon_excitations.cpp)
 target_link_libraries(bethe_sine_gordon_excitation_tests PRIVATE bethe::bethe)
@@ -155,7 +190,8 @@ bethe_discover_tests(bethe_sine_gordon_excitation_tests)
 
 add_executable(bethe_sine_gordon_excited_tests test_sine_gordon_excited.cpp)
 target_link_libraries(bethe_sine_gordon_excited_tests PRIVATE bethe::bethe)
-bethe_discover_tests(bethe_sine_gordon_excited_tests)
+bethe_discover_tests(bethe_sine_gordon_excited_tests
+  LONG_RUNNING_TESTS SineGordonExcited/fp128.NativeInteractingLevel)
 
 add_executable(bethe_kondo_tests test_kondo.cpp)
 target_link_libraries(bethe_kondo_tests PRIVATE bethe::bethe)
@@ -183,7 +219,11 @@ bethe_discover_tests(bethe_extrema_tests)
 
 add_executable(bethe_hubbard_charge_continuum_tests test_hubbard_charge_continuum.cpp)
 target_link_libraries(bethe_hubbard_charge_continuum_tests PRIVATE bethe::bethe)
-bethe_discover_tests(bethe_hubbard_charge_continuum_tests)
+bethe_discover_tests(bethe_hubbard_charge_continuum_tests
+  LONG_RUNNING_TESTS
+    HubbardChargeContinuum/fp128.IndependentOracle
+    HubbardChargeContinuum/fp128.NativeDefaultTolerance
+    HubbardChargeContinuum/fp128.ShiftAndConvention)
 
 add_executable(bethe_biquadratic_pair_defect_tests test_biquadratic_pair_defect.cpp)
 target_link_libraries(bethe_biquadratic_pair_defect_tests PRIVATE bethe::bethe)
@@ -228,6 +268,13 @@ if(BETHE_BUILD_APPS)
     set(bethe_arbitrary_structure_factor ON)
   endif()
   if(Python3_Interpreter_FOUND)
+    add_test(NAME RootSolverPrecision.cli
+      COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_root_solver_precision.py"
+        "$<TARGET_FILE:bethe-xxx-obc>" "$<TARGET_FILE:bethe-lieb-liniger-pbc>"
+        "$<TARGET_FILE:bethe-lieb-liniger-obc>" "${BETHE_HAS_MPREAL}" "${BETHE_HAS_MPLAPACK_MPREAL}")
+    add_test(NAME GaudinPrecision.cli
+      COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_gaudin_precision.py"
+        "$<TARGET_FILE:bethe-richardson>" "$<TARGET_FILE:bethe-central-spin>" "${BETHE_HAS_MPREAL}")
     add_test(NAME PrecisionInfo.cli
       COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_precision_info.py"
         "$<TARGET_FILE:bethe-info>" "$<TARGET_FILE:bethe-xxx-pbc>" "$<TARGET_FILE:bethe-xxx-structure-factor>"

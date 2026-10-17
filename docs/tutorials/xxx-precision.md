@@ -48,7 +48,7 @@ state approaches an infinite rapidity, but remains finite for every run here.
 
 ## 2. Reproduce the loss of a physical energy scale
 
-With an [arbitrary-precision build](../building.md#enable-arbitrary-precision-for-xxx),
+With an [arbitrary-precision build](../building.md#enable-arbitrary-precision),
 run the same state in two precisions:
 
 ```sh

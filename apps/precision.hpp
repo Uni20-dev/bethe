@@ -31,13 +31,15 @@ enum class ArbitraryPrecision
 {
   none,
   real,
+  real_lu, // Unlike QR, the current runtime-precision LU requires MPLAPACK.
   complex_linalg
 };
 constexpr bool has_arbitrary_precision(ArbitraryPrecision support)
 {
-  return support == ArbitraryPrecision::real             ? bool(UNI20_HAS_MPREAL)
-         : support == ArbitraryPrecision::complex_linalg ? has_arbitrary_structure_factor
-                                                         : false;
+  return support == ArbitraryPrecision::real ? bool(UNI20_HAS_MPREAL)
+         : support == ArbitraryPrecision::real_lu || support == ArbitraryPrecision::complex_linalg
+             ? bool(UNI20_HAS_MPREAL && UNI20_HAS_MPLAPACK_MPREAL)
+             : false;
 }
 
 enum class PrecisionKind
@@ -102,6 +104,9 @@ inline void validate_precision(PrecisionRequest request, ArbitraryPrecision supp
     if (!has_arbitrary_precision(support))
       throw std::invalid_argument(support == ArbitraryPrecision::real
                                       ? "arbitrary precision requires -DUNI20_ENABLE_MPREAL=ON; see bethe-info"
+                                  : support == ArbitraryPrecision::real_lu
+                                      ? "arbitrary-precision linear solves require -DUNI20_ENABLE_MPREAL=ON and "
+                                        "-DUNI20_BACKEND_MPLAPACK=ON; see bethe-info"
                                       : "arbitrary-precision form factors require -DUNI20_ENABLE_MPREAL=ON and "
                                         "-DUNI20_BACKEND_MPLAPACK=ON; see bethe-info");
 #if UNI20_HAS_MPREAL

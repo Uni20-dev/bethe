@@ -8,7 +8,8 @@ This is the continuum counterpart of a chain calculation: specify a physical
 ring circumference $`\ell`$, a particle number $`N`$, and a repulsive coupling $`c`$.
 There is no lattice spacing or site count. The executable
 `bethe-lieb-liniger-pbc` supports the ground state, explicit Bethe labels, and
-finite-window excitation scans, using fp64, long double, or optional fp128.
+finite-window excitation scans, using fp64, long double, optional fp128, or
+arbitrary precision through MPLAPACK MPFR.
 
 ## Start with a calculation
 
@@ -110,7 +111,7 @@ J_j&=I_j-\left[j-\frac{N-1}{2}\right].
 \end{aligned}
 ```
 
-The integer subtraction in $`J_{j}`$ is performed before conversion to `Real`.
+The integer subtraction in $`J_{j}`$ is performed exactly before floating-point rounding.
 Phase sums are compensated, and kernels avoid forming unsafe squared scales.
 The weak-coupling seed separates roots by order `sqrt(g)` around the free-boson
 momenta $`2\,\pi \,J_{j}`$; it crosses over to $`2\,\pi \,I_{j}`$ at large $`g`$.
@@ -126,6 +127,13 @@ small absolute equation error need not resolve a tiny gap or a boosted cluster.
 
 All parameters are parsed directly into the selected arithmetic. Higher
 precision also applies to roots, energy sums, gap subtraction, and output.
+With [arbitrary precision enabled](building.md#enable-arbitrary-precision), all
+finite-size PBC/OBC modes accept `bits-N` and `digits-N`, including threaded
+excitation scans. Uni20 dispatches the Newton solves; its arbitrary-precision
+LU currently requires MPLAPACK MPFR (native solvers retain their CPU fallback).
+This does not yet extend
+to the separate thermodynamic dispersion or thermal frontends.
+
 Finite positive $`\ell`$, $`c`$, and representable nonzero $`g =c \,\ell`$ are required.
 Very large labels, very close roots, or extreme physical units can exceed the
 selected type's resolution or exponent range; use better-scaled units or higher
@@ -147,6 +155,20 @@ auto excited = ll::solve_real(4.0L, 1.0L, numbers);
 auto scan = ll::real_excitations(4, 4.0L, 1.0L, 1, {.count = 10});
 // Check ground.converged, excited.converged, and scan.converged().
 ```
+
+For runtime precision, construct every real input at the requested precision:
+
+```cpp
+auto p = uni20::Precision::bits(256);
+bethe::SolverOptions<uni20::mpreal> options(p);
+auto ground = ll::ground_state(4, uni20::mpreal("4", p), uni20::mpreal("1", p), options);
+```
+
+The same contract applies to hard walls. Custom tolerances and initial roots
+must have the same finite precision; implicit rounding from another precision,
+exact-only inputs and unset values are rejected. No ambient precision default
+is used. Analytic two-/three-body energies and independent two-body wall
+equations test accuracy at 128, 256 and 333 bits.
 
 `State<Real>` carries physical `momenta`, `energy`, signed `momentum`, exact
 `momentum_index`, labels, iterations, residual, and `SolveStatus`. An optional

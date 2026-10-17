@@ -10,7 +10,7 @@ namespace bethe::detail
 /// c/(c*c+x*x), without squaring large/small dimensional parameters.
 template <uni20::Real Real> Real rational_scattering_kernel(Real x, Real c)
 {
-  if (std::abs(x) > c)
+  if (uni20::math::abs(x) > c)
   {
     Real const ratio = c / x;
     return (ratio / x) / (Real{1} + ratio * ratio);
@@ -26,7 +26,11 @@ template <uni20::Real Real, typename System>
 std::size_t continuum_newton(System const& system, std::vector<Real>& q, SolverOptions<Real> const& options)
 {
   auto const n = q.size();
-  uni20::DenseMatrix<Real> jacobian(n, n), step(n, 1);
+  auto const zero = solver_zero(options);
+  for (auto const& value : q)
+    require_same_precision(value, zero);
+  auto const precision = options.precision();
+  uni20::DenseMatrix<Real> jacobian(n, n, precision), step(n, 1, precision);
   std::size_t iterations = 0;
   for (;;)
   {
@@ -34,9 +38,9 @@ std::size_t continuum_newton(System const& system, std::vector<Real>& q, SolverO
     if (evaluation.norm <= options.residual_tolerance || iterations == options.max_iterations) break;
     for (std::size_t j = 0; j < n; ++j)
       step[j, 0] = -evaluation.residual[j];
-    if (!uni20::linalg::solve_inplace_with_info(jacobian, step).succeeded()) break;
+    if (!uni20::linalg::solve_inplace_with_info(jacobian, step, precision).succeeded()) break;
     bool const accepted = backtrack_newton(
-        q, [&](std::size_t j) { return step[j, 0]; },
+        q, precision, [&](std::size_t j) { return step[j, 0]; },
         [&](auto const& trial, Real damping) {
           return system.physical(trial) &&
                  newton_decreases(system.evaluate(trial).norm, evaluation.norm, damping, options.residual_tolerance);

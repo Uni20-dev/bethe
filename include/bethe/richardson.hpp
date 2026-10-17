@@ -10,6 +10,7 @@ namespace bethe::richardson
 {
 template <uni20::Real Real> struct SolverOptions : bethe::SolverOptions<Real>
 {
+    using bethe::SolverOptions<Real>::SolverOptions;
     std::size_t max_stages = 10000; // Attempted continuation stages, including rejected ones.
 };
 enum class SolveStatus
@@ -43,11 +44,17 @@ namespace detail
 // additional derivative equations, not this system.
 template <uni20::Real Real> class System {
   public:
-    System(std::vector<Real> e, std::size_t m) : levels(std::move(e)), pairs(m), n(levels.size()) {}
+    System(std::vector<Real> e, std::size_t m, uni20::Precision precision)
+        : levels(std::move(e)), pairs(m), n(levels.size()), zero(uni20::scalar_at_precision<Real>(0, precision))
+    {}
+    System(std::vector<Real> e, std::size_t m)
+      requires(!uni20::has_runtime_precision_v<Real>)
+        : System(std::move(e), m, uni20::native_precision<Real>())
+    {}
     std::vector<Real> expand(std::span<Real const> x) const
     {
-      std::vector<Real> y(n);
-      bethe::detail::CompensatedSum<Real> last;
+      std::vector<Real> y(n, zero);
+      bethe::detail::CompensatedSum<Real> last(zero);
       last.add(Real(pairs));
       for (Real v : x)
         last.add(-v);
@@ -63,21 +70,21 @@ template <uni20::Real Real> class System {
     Evaluation evaluate(std::span<Real const> x, Real g, std::vector<Real>* jac = nullptr) const
     {
       auto const y = expand(x);
-      Evaluation out{.residual = std::vector<Real>(n)};
-      if (jac) jac->assign(n * (n - 1), Real{0});
+      Evaluation out{.residual = std::vector<Real>(n, zero), .norm = zero};
+      if (jac) jac->assign(n * (n - 1), zero);
       for (std::size_t i = 0; i < n; ++i)
       {
-        bethe::detail::CompensatedSum<Real> sum, scale, diagonal;
+        bethe::detail::CompensatedSum<Real> sum(zero), scale(zero), diagonal(zero);
         sum.add(y[i] * (y[i] - Real{1}));
-        scale.add(Real{1} + std::abs(y[i] * (y[i] - Real{1})));
+        scale.add(Real{1} + uni20::math::abs(y[i] * (y[i] - Real{1})));
         diagonal.add(Real{2} * y[i] - Real{1});
-        Real last{};
+        Real last = zero;
         for (std::size_t j = 0; j < n; ++j)
           if (i != j)
           {
             Real const a = g / (levels[i] - levels[j]), term = a * (y[i] - y[j]);
             sum.add(-term);
-            scale.add(std::abs(a) * (std::abs(y[i]) + std::abs(y[j])));
+            scale.add(uni20::math::abs(a) * (uni20::math::abs(y[i]) + uni20::math::abs(y[j])));
             if (jac)
             {
               diagonal.add(-a);
@@ -90,7 +97,7 @@ template <uni20::Real Real> class System {
         Real const normalization = scale.value();
         if (!uni20::isfinite(sum.value()) || !uni20::isfinite(normalization))
           throw std::runtime_error("Richardson equations are not representable at this precision");
-        out.norm = std::max(out.norm, std::abs(sum.value()) / normalization);
+        out.norm = std::max(out.norm, uni20::math::abs(sum.value()) / normalization);
         out.residual[i] = sum.value() / normalization;
         if (jac)
         {
@@ -111,26 +118,27 @@ template <uni20::Real Real> class System {
       auto const y = expand(x);
       std::vector<Real> jac;
       (void)evaluate(x, g, &jac);
-      slope.assign(n, Real{0});
+      slope.assign(n, zero);
       for (std::size_t i = 0; i < n; ++i)
       {
-        bethe::detail::CompensatedSum<Real> rhs, scale;
-        scale.add(Real{1} + std::abs(y[i] * (y[i] - Real{1})));
+        bethe::detail::CompensatedSum<Real> rhs(zero), scale(zero);
+        scale.add(Real{1} + uni20::math::abs(y[i] * (y[i] - Real{1})));
         for (std::size_t j = 0; j < n; ++j)
           if (i != j)
           {
             Real const term = (y[i] - y[j]) / (levels[i] - levels[j]);
             rhs.add(term);
-            scale.add(std::abs(g / (levels[i] - levels[j])) * (std::abs(y[i]) + std::abs(y[j])));
+            scale.add(uni20::math::abs(g / (levels[i] - levels[j])) *
+                      (uni20::math::abs(y[i]) + uni20::math::abs(y[j])));
           }
         slope[i] = rhs.value() / scale.value();
       }
-      return bethe::detail::least_squares_step(std::move(jac), slope, n - 1);
+      return bethe::detail::least_squares_step(jac, slope, n - 1, uni20::precision_of(zero));
     }
     Real energy(std::span<Real const> x, Real g) const
     {
       auto const y = expand(x);
-      bethe::detail::CompensatedSum<Real> sum;
+      bethe::detail::CompensatedSum<Real> sum(zero);
       for (std::size_t i = 0; i < n; ++i)
         sum.add(levels[i] * y[i]);
       sum.add(-g * Real(pairs) * Real(n - pairs + 1));
@@ -138,6 +146,7 @@ template <uni20::Real Real> class System {
     }
     std::vector<Real> const levels;
     std::size_t const pairs, n;
+    Real const zero;
 };
 } // namespace detail
 
@@ -146,6 +155,10 @@ template <uni20::Real Real = double>
                                        std::span<std::size_t const> blocked = {},
                                        SolverOptions<Real> const& options = {})
 {
+  auto const zero = bethe::detail::solver_zero(options);
+  bethe::detail::require_same_precision(coupling, zero);
+  for (auto const& level : levels)
+    bethe::detail::require_same_precision(level, zero);
   if (!uni20::isfinite(coupling) || coupling < Real{0})
     throw std::invalid_argument("Richardson requires finite g>=0 (attractive pairing)");
   if (!uni20::isfinite(options.residual_tolerance) || options.residual_tolerance <= Real{0})
@@ -164,10 +177,11 @@ template <uni20::Real Real = double>
   auto const n = levels.size() - blocked.size();
   if (pairs > n) throw std::invalid_argument("pair count exceeds the number of unblocked levels");
   State<Real> out;
+  out.reached_coupling = out.energy = out.residual_norm = out.target_residual_norm = out.particle_number_error = zero;
   out.levels.assign(levels.begin(), levels.end());
   out.pairs = pairs;
   out.coupling = coupling;
-  bethe::detail::CompensatedSum<Real> constant;
+  bethe::detail::CompensatedSum<Real> constant(zero);
   for (std::size_t i = 0; i < levels.size(); ++i)
     if (is_blocked[i])
     {
@@ -176,14 +190,14 @@ template <uni20::Real Real = double>
     }
     else
       out.active.push_back(i);
-  if (!coupling || !pairs || pairs == n)
+  if (coupling == Real{0} || !pairs || pairs == n)
   {
-    out.eigenvalue_variables.assign(n, Real{0});
+    out.eigenvalue_variables.assign(n, zero);
     for (std::size_t j = 0; j < pairs; ++j)
     {
       constant.add(levels[out.active[j]]);
       constant.add(levels[out.active[j]]);
-      out.eigenvalue_variables[j] = Real{1};
+      out.eigenvalue_variables[j] = uni20::scalar_like(zero, 1);
     }
     constant.add(-coupling * Real(pairs));
     out.energy = constant.value();
@@ -200,8 +214,8 @@ template <uni20::Real Real = double>
   Real const spread = levels[out.active.back()] - origin, scale = std::max(spread, coupling);
   if (!uni20::isfinite(scale))
     throw std::invalid_argument("Richardson level span is not representable at this precision");
-  std::vector<Real> e(n);
-  Real gap = Real{2};
+  std::vector<Real> e(n, zero);
+  Real gap = uni20::scalar_like(zero, 2);
   for (std::size_t i = 0; i < n; ++i)
   {
     e[i] = Real{2} * ((levels[out.active[i]] - origin) / scale);
@@ -215,22 +229,23 @@ template <uni20::Real Real = double>
   Real const target = coupling / scale;
   if (!(target > Real{0}))
     throw std::invalid_argument("Richardson coupling scale is not representable at this precision");
-  detail::System<Real> const system(std::move(e), pairs);
-  std::vector<Real> x(n - 1, Real{0});
+  detail::System<Real> const system(std::move(e), pairs, options.precision());
+  std::vector<Real> x(n - 1, zero);
   for (std::size_t i = 0; i < pairs - 1; ++i)
-    x[i] = Real{1};
-  Real reached{}, step = std::min(target, gap / Real{16});
-  Real const trust = Real{1} / Real{16}, eps = uni20::numeric_limits<Real>::epsilon();
+    x[i] = uni20::scalar_like(zero, 1);
+  Real reached = zero, step = std::min(target, gap / Real{16});
+  Real const trust = uni20::scalar_like(zero, 1) / Real{16};
+  Real const eps = uni20::numeric_limits<Real>::epsilon(options.precision());
   auto predict = [&](std::vector<Real>& slope) -> std::optional<bethe::detail::ContinuationPrediction<Real>> {
     if (!system.tangent(x, reached, slope)) return std::nullopt;
-    Real max_slope{};
-    bethe::detail::CompensatedSum<Real> last;
+    Real max_slope = zero;
+    bethe::detail::CompensatedSum<Real> last(zero);
     for (Real v : slope)
     {
-      max_slope = std::max(max_slope, std::abs(v));
+      max_slope = std::max(max_slope, uni20::math::abs(v));
       last.add(v);
     }
-    max_slope = std::max(max_slope, std::abs(last.value()));
+    max_slope = std::max(max_slope, uni20::math::abs(last.value()));
     return bethe::detail::ContinuationPrediction<Real>{trust, max_slope};
   };
   auto correct = [&](std::vector<Real>& candidate, Real next, Real step, std::vector<Real> const& slope,
@@ -243,7 +258,7 @@ template <uni20::Real Real = double>
     {
       // Necessary physical bounds: kinetic minimum plus the maximal pair
       // interaction; variational Fermi-sea and uniform-pair (Dicke) states.
-      bethe::detail::CompensatedSum<Real> free, sum;
+      bethe::detail::CompensatedSum<Real> free(zero), sum(zero);
       for (std::size_t i = 0; i < n; ++i)
       {
         sum.add(system.levels[i]);
@@ -253,12 +268,12 @@ template <uni20::Real Real = double>
       Real const lower = free.value() - interaction;
       Real const upper = std::min(free.value() - next * Real(pairs), Real(pairs) / Real(n) * sum.value() - interaction);
       Real const energy = system.energy(candidate, next);
-      Real const allowance =
-          Real{512} * Real(n) * (eps + options.residual_tolerance) * (Real{1} + std::abs(lower) + std::abs(upper));
+      Real const allowance = Real{512} * Real(n) * (eps + options.residual_tolerance) *
+                             (Real{1} + uni20::math::abs(lower) + uni20::math::abs(upper));
       accepted = uni20::isfinite(energy) && energy >= lower - allowance && energy <= upper + allowance;
       // The ground energy is concave in g. Its tangent is an upper bound,
       // while the norm of S+S- bounds how far it can fall in one stage.
-      bethe::detail::CompensatedSum<Real> derivative;
+      bethe::detail::CompensatedSum<Real> derivative(zero);
       for (std::size_t j = 1; j < n; ++j)
         derivative.add(system.levels[j] * slope[j - 1]);
       derivative.add(-Real(pairs) * Real(n - pairs + 1));
@@ -273,10 +288,10 @@ template <uni20::Real Real = double>
   out.eigenvalue_variables = system.expand(x);
   out.residual_norm = system.evaluate(x, reached).norm;
   out.target_residual_norm = system.evaluate(x, target).norm;
-  bethe::detail::CompensatedSum<Real> number;
+  bethe::detail::CompensatedSum<Real> number(zero);
   for (Real v : out.eigenvalue_variables)
     number.add(v);
-  out.particle_number_error = std::abs(number.value() - Real(pairs));
+  out.particle_number_error = uni20::math::abs(number.value() - Real(pairs));
   constant.add(Real{2} * (origin * Real(pairs)));
   constant.add(scale * system.energy(x, reached));
   out.energy = constant.value();

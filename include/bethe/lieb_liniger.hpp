@@ -51,6 +51,9 @@ template <uni20::Real Real>
 Real validate_parameters(std::size_t n, Real length, Real c, SolverOptions<Real> const& options)
 {
   check_particles(n);
+  auto const zero = bethe::detail::solver_zero(options);
+  bethe::detail::require_same_precision(length, zero);
+  bethe::detail::require_same_precision(c, zero);
   if (!uni20::isfinite(length) || length <= Real{0} || !uni20::isfinite(c) || c <= Real{0})
     throw std::invalid_argument("repulsive Lieb-Liniger requires finite length > 0 and c > 0");
   Real const g = c * length;
@@ -86,7 +89,8 @@ template <uni20::Real Real> struct System
 {
     QuantumNumbers const& numbers;
     Real g;
-    Real const pi = Real{4} * std::atan(Real{1});
+    Real const zero = bethe::detail::precision_zero(g);
+    Real const pi = bethe::detail::pi_like(zero);
 
     std::int64_t ground_twice(std::size_t j) const
     {
@@ -94,12 +98,17 @@ template <uni20::Real Real> struct System
     }
     Real reduced_twice(std::size_t j) const
     {
-      return static_cast<Real>(static_cast<__int128>(numbers[j].twice()) - ground_twice(j));
+      if constexpr (uni20::has_runtime_precision_v<Real>)
+        // Exact integer arithmetic also covers a difference beyond int64.
+        return Real(numbers[j].twice()) - Real(ground_twice(j));
+      else
+        return static_cast<Real>(static_cast<__int128>(numbers[j].twice()) - ground_twice(j));
     }
     auto seed() const
     {
-      using std::sqrt;
-      Real const factor = std::min(Real{1}, sqrt(g) / (pi * sqrt(Real(std::max(std::size_t{1}, numbers.size())))));
+      using uni20::math::sqrt;
+      Real const factor =
+          std::min(Real{1}, sqrt(g) / (pi * sqrt(uni20::scalar_like(zero, std::max(std::size_t{1}, numbers.size())))));
       std::vector<Real> q(numbers.size());
       for (std::size_t j = 0; j < q.size(); ++j)
         q[j] = pi * (reduced_twice(j) + factor * Real(ground_twice(j)));
@@ -120,14 +129,14 @@ template <uni20::Real Real> struct System
     };
     Evaluation evaluate(std::span<Real const> q, uni20::DenseMatrix<Real>* jacobian = nullptr) const
     {
-      using std::abs;
-      using std::atan;
-      using std::sqrt;
+      using uni20::math::abs;
+      using uni20::math::atan;
+      using uni20::math::sqrt;
       auto const n = q.size();
-      Evaluation result{std::vector<Real>(n)};
+      Evaluation result{std::vector<Real>(n), zero};
       for (std::size_t j = 0; j < n; ++j)
       {
-        bethe::detail::CompensatedSum<Real> sum, diagonal;
+        bethe::detail::CompensatedSum<Real> sum(zero), diagonal(zero);
         Real const target = pi * (g < Real{1} ? reduced_twice(j) : Real(numbers[j].twice()));
         sum.add(q[j] - target);
         diagonal.add(Real{1});
@@ -189,6 +198,7 @@ State<Real> solve_real(Real length, Real c, QuantumNumbers const& numbers, Solve
                        std::span<Real const> initial_momenta = {})
 {
   Real const g = detail::validate_parameters(numbers.size(), length, c, options);
+  auto const zero = bethe::detail::solver_zero(options);
   auto const momentum_index = detail::validate_numbers(numbers);
   detail::System<Real> const system{numbers, g};
   auto q = system.seed();
@@ -196,7 +206,10 @@ State<Real> solve_real(Real length, Real c, QuantumNumbers const& numbers, Solve
   {
     if (initial_momenta.size() != q.size()) throw std::invalid_argument("initial momentum count differs from N");
     for (std::size_t j = 0; j < q.size(); ++j)
+    {
+      bethe::detail::require_same_precision(initial_momenta[j], zero);
       q[j] = initial_momenta[j] * length;
+    }
   }
   if (!system.physical(q))
     throw std::invalid_argument("initial momenta must be finite and strictly ordered at the selected precision");
@@ -211,7 +224,7 @@ State<Real> solve_real(Real length, Real c, QuantumNumbers const& numbers, Solve
   auto const n = q.size();
   result.iterations = bethe::detail::continuum_newton(system, q, options);
   result.momenta.resize(n);
-  bethe::detail::CompensatedSum<Real> energy;
+  bethe::detail::CompensatedSum<Real> energy(zero);
   bool nonzero = false;
   for (std::size_t j = 0; j < n; ++j)
   {
@@ -225,7 +238,9 @@ State<Real> solve_real(Real length, Real c, QuantumNumbers const& numbers, Solve
   result.energy = energy.value();
   if (!uni20::isfinite(result.energy)) throw std::overflow_error("Lieb-Liniger energy sum overflow");
   if (nonzero && result.energy == Real{0}) throw std::underflow_error("Lieb-Liniger energy underflow");
-  result.residual_norm = system.physical(q) ? system.evaluate(q).norm : uni20::numeric_limits<Real>::infinity();
+  // Infinity is a diagnostic sentinel, not a finite value narrowed to binary64.
+  result.residual_norm =
+      system.physical(q) ? system.evaluate(q).norm : uni20::scalar_like(zero, std::numeric_limits<double>::infinity());
   result.converged = system.physical(q) && result.residual_norm <= options.residual_tolerance;
   if (result.converged)
     result.status = SolveStatus::converged;

@@ -43,7 +43,7 @@ Thus A=B=1 gives E=-0.9571067811865475244..., and A=1, B=0 gives E=-3/4.
 The polarized sectors instead have `E=sum A_j/4 +/- B/2`. An empty list,
 `--couplings ''`, represents an isolated central spin and requires Sz=+/-1/2.
 
-The report uses Uni20 presentation, retains the selected fp64/long-double/fp128
+The report uses Uni20 presentation, retains the selected native or arbitrary
 precision, and includes CPU time. `--references` displays literature from
 the shared citation registry separately from help. There is no excitation scan,
 rapidity output, wavefunction, form factor or dynamics API yet.
@@ -98,7 +98,7 @@ t rounds to one. Unrepresentable ratios/pole separations are rejected.
 The number constraint is enforced by eliminating an initially occupied
 bath variable. Keeping the central variable independent preserves its tiny
 high-field value. All quadratic equations enter a rectangular Newton
-correction using native-precision QR; no equation is discarded, no normal
+correction using precision-generic QR; no equation is discarded, no normal
 equations are formed, and long-double does not require a LAPACK backend.
 
 ## Which state is followed?
@@ -138,12 +138,39 @@ if (s.converged) {
 }
 ```
 
+With [arbitrary precision enabled](building.md#enable-arbitrary-precision),
+MPLAPACK is optional: Uni20 can use its CPU QR fallback.
+
+```sh
+bethe-central-spin --couplings 1,0.7,0.3 --field 1 --sz 0 --precision digits-100
+```
+
+```cpp
+using Real = uni20::mpreal;
+auto p = uni20::Precision::bits(256);
+bethe::central_spin::SolverOptions<Real> options(p);
+std::vector<Real> a{Real("1", p), Real("0.7", p), Real("0.3", p)};
+auto s = bethe::central_spin::sector_ground_state<Real>(a, Real("1", p), uni20::half_int{0}, options);
+```
+
+Inputs and custom tolerance must have the options' finite precision. Mixed,
+exact-only and unset runtime scalars require explicit conversion. Parsing,
+continuation, backtracking and all returned real diagnostics preserve the
+selected precision; no ambient precision setting is needed. This includes
+analytic states and incomplete solves with null energy/reached-field values.
+The number of working bits is not a promise of that many correct result bits.
+
 `SolverOptions<Real>` has `residual_tolerance` (default 32 machine epsilons),
 `max_iterations` (default 10000 attempted Newton corrections, including
 retries) and `max_stages` (default 10000 attempted stages). The tolerance
 is a polynomial backward residual, **not an energy-error bound**. Close
 couplings can amplify energy error; use higher precision and compare
 results when a problem is ill-conditioned.
+
+Rectangular corrections and tangents share the Richardson solver's
+[recoverable Uni20 QR path](building.md#linear-solves-and-failure-policy).
+The model still owns the physical residual and continuation acceptance;
+a successful least-squares fit alone does not establish convergence.
 
 Zero budget suppresses continuation. The seed then has no finite reached
 field and no energy: `State::reached_field` and `State::energy` are empty
