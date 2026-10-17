@@ -85,7 +85,7 @@ template <uni20::Real Real> int run(Arguments const& a, int argc, char** argv)
       .field("response_convention", "Response convention",
              "Impurity-induced total magnetization, including host change")
       .field("calculation", "Calculation", "T=0; isotropic antiferromagnetic spin-1/2 single-channel scaling limit")
-      .field("precision", "Precision", a.precision)
+      .precision(a.precision)
       .field("tolerance", "Absolute M and Delta E/|b| tolerance", controls.tolerance)
       .field("max_series_terms", "Max series terms", controls.max_series_terms)
       .field("max_lobes", "Max Fourier lobes", controls.max_lobes)

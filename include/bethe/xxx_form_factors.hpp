@@ -33,14 +33,15 @@ namespace detail
 /// equations with respect to lambda. Prefactors of the full ABA norm are
 /// accounted for separately in PreparedRaisingFormFactors, not in this determinant.
 template <uni20::Real Real>
-bethe::detail::LogDeterminant<Real> gaudin_log_determinant(std::size_t sites, std::span<Real const> lambda)
+bethe::detail::LogDeterminant<Real> gaudin_log_determinant(std::size_t sites, std::span<Real const> lambda,
+                                                           Real const& zero = Real{0})
 {
   auto const m = lambda.size();
   std::vector<Real> matrix(m * m);
   for (std::size_t a = 0; a < m; ++a)
   {
-    bethe::detail::CompensatedSum<Real> diagonal;
-    diagonal.add(Real(sites) / (lambda[a] * lambda[a] + Real{0.25}));
+    bethe::detail::CompensatedSum<Real> diagonal(zero);
+    diagonal.add(Real(sites) / (lambda[a] * lambda[a] + Real{1} / Real{4}));
     for (std::size_t b = 0; b < m; ++b)
       if (a != b)
       {
@@ -50,12 +51,12 @@ bethe::detail::LogDeterminant<Real> gaudin_log_determinant(std::size_t sites, st
       }
     matrix[a * m + a] = diagonal.value();
   }
-  return bethe::detail::log_absolute_determinant<Real>(std::move(matrix), m);
+  return bethe::detail::log_absolute_determinant<Real>(std::move(matrix), m, zero);
 }
 
 template <typename Scalar> Scalar integer_power(Scalar base, std::size_t exponent)
 {
-  Scalar result{1};
+  Scalar result = uni20::scalar_like(base, 1);
   while (exponent)
   {
     if (exponent & 1U) result *= base;
@@ -76,6 +77,9 @@ template <typename Scalar> Scalar integer_power(Scalar base, std::size_t exponen
 /// invalidate it. Each evaluation validates its excited roots independently.
 /// Concurrent const calls share no scratch or mutable cache. See docs/xxx-structure-factor.md.
 template <uni20::Real Real> class PreparedRaisingFormFactors {
+    static_assert(!uni20::has_runtime_precision_v<Real> || (UNI20_ENABLE_MPC && UNI20_ENABLE_MPLAPACK_MPFR),
+                  "MPFR form factors require UNI20_ENABLE_MPC and UNI20_ENABLE_MPLAPACK_MPFR");
+
   public:
     PreparedRaisingFormFactors(std::size_t sites, RealState<Real> const& ground) : sites_(sites)
     {
@@ -85,22 +89,23 @@ template <uni20::Real Real> class PreparedRaisingFormFactors {
       if (sites % 2 || ground.rapidities.size() != m || ground.sz != uni20::half_int{0} || ground.spin_reversed ||
           ground.quantum_numbers != sector_ground_quantum_numbers(sites, uni20::half_int{0}))
         throw std::invalid_argument("XXX preparation requires the even-ring singlet ground state");
-      root_tolerance_ = Real{256} * Real(sites) * uni20::numeric_limits<Real>::epsilon();
+      working_zero_ = bethe::detail::precision_zero(ground.rapidities.front());
+      root_tolerance_ = Real{256} * Real(sites) * uni20::numeric_limits<Real>::epsilon(working_zero_);
       status_ = validate_roots(ground, ground_residual_);
       if (status_ != FormFactorStatus::converged) return;
       status_ = FormFactorStatus::precision_limit;
       aba_rapidities_.reserve(m);
       for (Real z : ground.rapidities)
         aba_rapidities_.push_back(z / Real{2});
-      auto const norm = detail::gaudin_log_determinant<Real>(sites, aba_rapidities_);
+      auto const norm = detail::gaudin_log_determinant<Real>(sites, aba_rapidities_, working_zero_);
       ground_pivot_margin_ = norm.pivot_margin;
       if (!norm.log_absolute) return;
-      bethe::detail::CompensatedSum<Real> logarithm;
-      logarithm.add(log(Real(sites)) - *norm.log_absolute);
+      bethe::detail::CompensatedSum<Real> logarithm(working_zero_);
+      logarithm.add(log(uni20::scalar_like(working_zero_, sites)) - *norm.log_absolute);
       last_column_.reserve(m);
       for (Real x : aba_rapidities_)
       {
-        Real const denominator = x * x + Real{0.25};
+        Real const denominator = x * x + Real{1} / Real{4};
         last_column_.push_back(Real{1} / denominator);
         logarithm.add(log(denominator));
       }
@@ -124,7 +129,7 @@ template <uni20::Real Real> class PreparedRaisingFormFactors {
           aba_rapidities_(std::move(other.aba_rapidities_)), last_column_(std::move(other.last_column_)),
           ground_residual_(std::move(other.ground_residual_)), root_tolerance_(std::move(other.root_tolerance_)),
           ground_log_prefactor_(std::move(other.ground_log_prefactor_)),
-          ground_pivot_margin_(std::move(other.ground_pivot_margin_))
+          ground_pivot_margin_(std::move(other.ground_pivot_margin_)), working_zero_(std::move(other.working_zero_))
     {}
 
     PreparedRaisingFormFactors&
@@ -141,6 +146,7 @@ template <uni20::Real Real> class PreparedRaisingFormFactors {
       root_tolerance_ = std::move(other.root_tolerance_);
       ground_log_prefactor_ = std::move(other.ground_log_prefactor_);
       ground_pivot_margin_ = std::move(other.ground_pivot_margin_);
+      working_zero_ = std::move(other.working_zero_);
       status_ = status; // Publish readiness only after the entire transfer succeeds.
       return *this;
     }
@@ -163,7 +169,7 @@ template <uni20::Real Real> class PreparedRaisingFormFactors {
 
     [[nodiscard]] FormFactor<Real> operator()(RealState<Real> const& excited) const
     {
-      using Complex = std::complex<Real>;
+      using Complex = uni20::complex<Real>;
       using std::abs;
       using std::exp;
       using std::log;
@@ -184,17 +190,17 @@ template <uni20::Real Real> class PreparedRaisingFormFactors {
       lambda.reserve(m - 1);
       for (Real z : excited.rapidities)
         lambda.push_back(z / Real{2});
-      auto const norm = detail::gaudin_log_determinant<Real>(sites_, lambda);
+      auto const norm = detail::gaudin_log_determinant<Real>(sites_, lambda, working_zero_);
       result.pivot_margin = std::min(ground_pivot_margin_, norm.pivot_margin);
       if (!norm.log_absolute) return result;
       auto const& mu = aba_rapidities_;
       std::vector<Complex> h(m * m);
-      bethe::detail::CompensatedSum<Real> logarithm;
+      bethe::detail::CompensatedSum<Real> logarithm(working_zero_);
       logarithm.add(ground_log_prefactor_);
       logarithm.add(-*norm.log_absolute);
       for (std::size_t b = 0; b + 1 < m; ++b)
       {
-        Complex product{1};
+        Complex product(uni20::scalar_like(working_zero_, 1));
         for (Real x : mu)
         {
           Real const d = x - lambda[b], scale = sqrt(Real{1} + d * d);
@@ -202,24 +208,24 @@ template <uni20::Real Real> class PreparedRaisingFormFactors {
           // Restore the H column's scaling in log space.
           logarithm.add(Real{2} * log(scale));
         }
-        Complex const phase =
-            detail::integer_power(Complex(lambda[b], Real{0.5}) / Complex(lambda[b], Real{-0.5}), sites_);
+        Complex const phase = detail::integer_power(
+            Complex(lambda[b], Real{1} / Real{2}) / Complex(lambda[b], -Real{1} / Real{2}), sites_);
         for (std::size_t a = 0; a < m; ++a)
         {
           Real const d = mu[a] - lambda[b];
           // Coincident roots require a limiting representation, not perturbation.
           if (abs(d) <= root_tolerance_ * (Real{1} + abs(mu[a]) + abs(lambda[b]))) return result;
-          h[a * m + b] = (product / Complex(d, Real{-1}) - phase * std::conj(product) / Complex(d, Real{1})) / d;
+          h[a * m + b] = (product / Complex(d, Real{-1}) - phase * uni20::conj(product) / Complex(d, Real{1})) / d;
         }
       }
       for (std::size_t a = 0; a < m; ++a)
         h[a * m + m - 1] = last_column_[a];
-      auto const determinant = bethe::detail::log_absolute_determinant<Real>(std::move(h), m);
+      auto const determinant = bethe::detail::log_absolute_determinant<Real>(std::move(h), m, working_zero_);
       result.pivot_margin = std::min(result.pivot_margin, determinant.pivot_margin);
       if (!determinant.log_absolute) return result;
       logarithm.add(Real{2} * *determinant.log_absolute);
       for (Real x : lambda)
-        logarithm.add(-log(x * x + Real{0.25}));
+        logarithm.add(-log(x * x + Real{1} / Real{4}));
       for (std::size_t a = 0; a < lambda.size(); ++a)
         for (std::size_t b = 0; b < a; ++b)
         {
@@ -240,9 +246,13 @@ template <uni20::Real Real> class PreparedRaisingFormFactors {
     {
       if (!state.converged) return FormFactorStatus::roots_unconverged;
       for (Real z : state.rapidities)
+      {
+        bethe::detail::require_same_precision(z, working_zero_);
         if (!uni20::isfinite(z)) return FormFactorStatus::precision_limit;
+      }
       std::vector<Real> angles;
-      Real const measured = detail::residual<Real>(sites_, state.quantum_numbers, state.rapidities, angles);
+      Real const measured =
+          detail::residual<Real>(sites_, state.quantum_numbers, state.rapidities, angles, working_zero_);
       if (!uni20::isfinite(measured)) return FormFactorStatus::precision_limit;
       residual = measured;
       // Neither the caller's convergence flag nor its stored residual is a certificate.
@@ -254,6 +264,6 @@ template <uni20::Real Real> class PreparedRaisingFormFactors {
     std::size_t sites_;
     std::vector<Real> aba_rapidities_, last_column_;
     std::optional<Real> ground_residual_;
-    Real root_tolerance_{}, ground_log_prefactor_{}, ground_pivot_margin_{};
+    Real root_tolerance_{}, ground_log_prefactor_{}, ground_pivot_margin_{}, working_zero_{};
 };
 } // namespace bethe::heisenberg

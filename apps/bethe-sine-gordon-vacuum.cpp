@@ -49,7 +49,7 @@ template <uni20::Real Real> int run(Arguments const& a, int argc, char** argv)
       .field("coupling_convention", "Coupling convention", "p=beta^2/(8*pi-beta^2); kinetic term (1/2)(partial phi)^2")
       .field("subtraction", "Energy convention", "bulk-subtracted E_C=E0-L*e_bulk; Y=L*E_C; c_eff=-6*Y/pi")
       .field("calculation", "Calculation", "untwisted zero-topological-charge vacuum NLIE")
-      .field("precision", "Precision", a.precision)
+      .precision(a.precision)
       .result(state.converged, name(state.status));
   cli::sine_gordon::report_controls<Real>(report, controls, state);
   cli::ResultOutput output(report, a.output, {"vacuum"});

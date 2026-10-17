@@ -102,7 +102,7 @@ template <uni20::Real Real> int run(Arguments const& a, int argc, char** argv)
       .field("particles", "Particles", a.particles)
       .field("length", "Length", length)
       .field("lambda", "Lambda", lambda)
-      .field("precision", "Precision", a.precision)
+      .precision(a.precision)
       .field("calculation", "Calculation",
              a.labels   ? "specified integer labels"
              : a.levels ? "label-window spectrum"

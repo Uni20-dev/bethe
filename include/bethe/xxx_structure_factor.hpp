@@ -26,11 +26,10 @@ template <uni20::Real Real> struct TwoSpinonStructureFactor
 /// E0 is the unshifted total ground energy, not E0-N/4 or an energy density.
 template <uni20::Real Real> Real raising_first_moment(std::size_t sites, std::size_t momentum_index, Real ground_energy)
 {
-  using std::atan;
   using std::sin;
   if (sites < 2 || momentum_index >= sites || !uni20::isfinite(ground_energy))
     throw std::invalid_argument("invalid XXX first-moment parameters");
-  Real const s = sin(Real{4} * atan(Real{1}) * Real(momentum_index) / Real(sites));
+  Real const s = sin(bethe::detail::pi_like(ground_energy) * Real(momentum_index) / Real(sites));
   return -Real{8} * ground_energy / (Real{3} * Real(sites)) * s * s;
 }
 
@@ -51,8 +50,8 @@ two_spinon_structure_factor(std::size_t sites, SolverOptions<Real> const& solver
   result.scan = real_excitations<Real>(sites, uni20::half_int{1}, {candidates, max_candidates, execution}, solver);
   auto const& ground = result.scan.ground_state;
   PreparedRaisingFormFactors<Real> const prepared(sites, ground);
-  using std::atan;
-  Real const two_pi = Real{8} * atan(Real{1});
+  auto const zero = bethe::detail::solver_zero(solver);
+  Real const two_pi = Real{2} * bethe::detail::pi_like(zero);
   result.form_factors.resize(result.scan.levels.size());
   for (std::size_t offset = 0; offset < result.scan.levels.size();)
   {
@@ -75,8 +74,8 @@ two_spinon_structure_factor(std::size_t sites, SolverOptions<Real> const& solver
     else if (factor.converged())
       factor = {}; // inconsistent gap: do not publish even a finite weight
   }
-  result.moments = spectral_moments<Real>(sites, result.lines);
-  bethe::detail::CompensatedSum<Real> weights, first;
+  result.moments = spectral_moments<Real>(sites, result.lines, zero);
+  bethe::detail::CompensatedSum<Real> weights(zero), first(zero);
   for (auto const& moment : result.moments)
   {
     weights.add(moment.weight);

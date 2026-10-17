@@ -95,6 +95,13 @@ energy-error bound. Unsupported inputs throw `std::invalid_argument`, nonfinite
 arithmetic throws `std::runtime_error`, and budget exhaustion returns the last
 roots with `converged=false`.
 
+The periodic real-root C++ solver also accepts `uni20::mpreal`, with an explicit
+`bethe::SolverOptions<uni20::mpreal>(uni20::Precision::bits(256))` argument.
+Its default tolerance is `32*epsilon(p)`, not a type-wide constant. See the
+[MPFR API and precision contracts](xxx-structure-factor.md#arbitrary-precision).
+This does not yet extend the spinon-branch helpers, OBC solver, or `bethe-xxx-pbc`
+frontend to MPFR; the first arbitrary-precision CLI is `bethe-xxx-structure-factor`.
+
 ## Validation
 
 Tests use exact small-chain energies and roots, an independent evaluation of

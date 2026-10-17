@@ -108,7 +108,7 @@ template <uni20::Real Real> int run(Arguments const& args, int argc, char** argv
       .field("n_down", "N_down", down)
       .field("holes", "Holes", state.holes)
       .field("sz", "Sz", sz, {.fractions = true})
-      .field("precision", "Precision", args.precision)
+      .precision(args.precision)
       .field("residual_tolerance", "Residual tolerance", options.residual_tolerance)
       .result(state.converged, status(state.status))
       .field("total_energy", "Total energy", state.energy)

@@ -29,12 +29,17 @@ template <uni20::Real Real> struct SpectralMoment
 
 /// Sum accepted lines only. A partial family must not be rescaled to a full sum
 /// rule. Model-specific full sum rules and scan failures live outside this layer.
+/// Supply a finite-precision zero for runtime scalars, including empty spectra.
 template <uni20::Real Real>
-std::vector<SpectralMoment<Real>> spectral_moments(std::size_t momenta, std::span<LehmannLine<Real> const> lines)
+std::vector<SpectralMoment<Real>> spectral_moments(std::size_t momenta, std::span<LehmannLine<Real> const> lines,
+                                                   Real const& zero = Real{0})
 {
-  std::vector<detail::CompensatedSum<Real>> weights(momenta), first(momenta);
+  detail::CompensatedSum<Real> const initial(detail::precision_zero(zero));
+  std::vector<detail::CompensatedSum<Real>> weights(momenta, initial), first(momenta, initial);
   for (auto const& line : lines)
   {
+    detail::require_same_precision(line.gap, zero);
+    detail::require_same_precision(line.weight, zero);
     if (line.momentum_index >= momenta || !uni20::isfinite(line.gap) || line.gap < Real{0} ||
         !uni20::isfinite(line.weight) || line.weight < Real{0})
       throw std::invalid_argument("invalid Lehmann line");

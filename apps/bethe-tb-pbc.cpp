@@ -86,7 +86,7 @@ template <uni20::Real Real> int run(Arguments const& args, int argc, char** argv
       .field("total_spin", "Total spin", 0)
       .field("two_strings", "Two-strings", state.centers.size())
       .field("complex_roots", "Complex roots", state.rapidities.size())
-      .field("precision", "Precision", args.precision)
+      .precision(args.precision)
       .field("residual_tolerance", "Residual tolerance", options.residual_tolerance)
       .result(state.converged, status(state.status))
       .field("total_energy", "Total energy", state.energy)

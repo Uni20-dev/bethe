@@ -9,11 +9,11 @@ need the extra precision.
 CMake 3.28+, a C++23 compiler supported by Uni20 (GCC 13+ or Clang 19+),
 and Uni20's numerical dependencies are required. Uni20 is pinned to a tested
 commit and fetched automatically unless a parent already supplies `uni20_core`.
-The current pin is `a25159c`, including recoverable square solves
-([Uni20 PR57](https://github.com/Uni20-dev/uni20/pull/57)) and their documented
-contracts, along with typed run metadata and timing, data-table APIs, exact
-CLI conversions, and token-preserving help. Local overrides must provide these
-APIs too; configuration rejects checkouts without the recoverable-solve header.
+The current pin is `b53f41b`, including recoverable square solves and reusable
+LU/log-determinants, explicit-precision MPFR/MPC scalars and conversions,
+typed run metadata, runtime-precision data tables, and token-preserving help.
+Local overrides must provide these APIs too; configuration rejects checkouts
+without the recoverable-solve and log-determinant headers.
 Application builds also enable Uni20's
 optional CLI11 dependency; library-only builds do not require it.
 Scheduler-backed state scans use `uni20_async`. The parallel frontends and
@@ -159,7 +159,7 @@ For binary128, use a separate build directory and add
 `-DUNI20_ENABLE_MPLAPACK=ON`. To use an installed MPLAPACK 3.0+ binary128
 package, add `-DUNI20_USE_SYSTEM_MPLAPACK=ON` and
 `-Dmplapack_DIR=/path/to/lib/cmake/mplapack`; otherwise Uni20 can fetch it.
-See [Uni20's provider setup](https://github.com/Uni20-dev/uni20/blob/a25159cc19c97c43ca43754c46fb9bdef8c41bda/docs/linalg/mplapack_binary128.md).
+See [Uni20's provider setup](https://github.com/Uni20-dev/uni20/blob/b53f41b3feeeedf5dfee2a17de14d3a9004d4897/docs/linalg/mplapack_binary128.md).
 
 `UNI20_USE_SYSTEM_MPLAPACK=OFF` forces a v3.0.0 source fetch. Alternatively,
 build MPLAPACK v3.0.0 separately and pass its **build directory** as
@@ -167,6 +167,35 @@ build MPLAPACK v3.0.0 separately and pass its **build directory** as
 no system-wide installation is needed. Enable only the binary128 backend and
 use C++23 as described in Uni20's provider setup above. Keep build directories
 on machine-local storage when the source checkout is shared between hosts.
+
+## Enable arbitrary precision for XXX
+
+MPFR is optional. In a separate build directory, with GMP, MPFR and MPC
+development packages installed:
+
+```sh
+cmake /path/to/bethe -G Ninja -DCMAKE_BUILD_TYPE=Release \
+  -DUNI20_ENABLE_MPFR=ON -DUNI20_ENABLE_MPC=ON \
+  -DUNI20_ENABLE_MPLAPACK_MPFR=ON
+cmake --build . --parallel
+./bethe-xxx-structure-factor 32 --precision bits-256 --threads 4
+./bethe-info
+```
+
+Uni20 can fetch MPLAPACK 3.0+ or use an installed/build-tree package with
+`-DUNI20_USE_SYSTEM_MPLAPACK=ON -Dmplapack_DIR=/path/to/mplapack`.
+That package must include its **MPFR component**; a binary128-only build is
+not sufficient. Binary128 can be enabled alongside MPFR with
+`-DUNI20_ENABLE_MPLAPACK=ON` on supported configurations.
+
+This first MPFR path covers periodic XXX real roots, sector/ground states,
+prepared raising form factors and the finite two-spinon DSF. It does **not**
+enable arbitrary precision throughout all models or frontends. Root-only C++
+use needs just `UNI20_ENABLE_MPFR`; form factors additionally need MPC and
+MPLAPACK MPFR. No ambient precision default determines the calculation's
+working precision. At the provider boundary, Uni20 temporarily sets and restores
+MPLAPACK's thread-local defaults around each synchronous call.
+See [the explicit-precision C++ interface](xxx-structure-factor.md#arbitrary-precision).
 
 ## Run and extend the tests
 
@@ -279,7 +308,7 @@ Paths below are relative to `apps/`.
 
 | Header | Responsibility |
 | --- | --- |
-| `cli-common.hpp` | Common CLI utilities and precision dispatch |
+| `cli-common.hpp`, `precision.hpp` | Common CLI utilities, checked precision requests and dispatch |
 | `program-options.hpp` | Parse/information/error lifecycle, exact option adapters, Bethe identity and citations |
 | `report-common.hpp`, `excitation-report.hpp` | Shared report rendering |
 | `data-output-options.hpp` | Export flags for typed-table frontends |

@@ -109,13 +109,66 @@ All frontends support typed tables and file exports; see the
 
 ## Select arithmetic precision
 
-`--precision` selects `fp64` (the default), `long-double`, or optional `fp128`.
-`long double` precision is platform-dependent; `fp128` uses Uni20's configured
-MPLAPACK binary128 type. The fp128 CLI currently requires MPLAPACK's native
+`--precision` selects the arithmetic, independently of output formatting:
+
+| Value | Working arithmetic |
+| --- | --- |
+| `fp64` (default) | Binary64, 53 significand bits |
+| `long-double` | This platform's native `long double` |
+| `fp80` | Extended80, 64 significand bits; requires that native format |
+| `fp128` | Binary128, 113 significand bits; requires the configured provider |
+| `bits-N` | Arbitrary precision with N binary significand bits |
+| `digits-N` | Arbitrary precision sufficient for N decimal digits |
+
+The arbitrary-precision choices currently apply only to the finite-ring
+`bethe-xxx-structure-factor`, in an
+[enabled build](building.md#enable-arbitrary-precision-for-xxx):
+
+```sh
+bethe-xxx-structure-factor 32 --precision bits-256
+bethe-xxx-structure-factor 32 --precision digits-100
+```
+
+`digits-100` resolves to 333 bits through Uni20's decimal-precision conversion.
+`bits-128` is **not** `fp128`: the former has 128 significand bits, the latter
+113. These select working precision, not guaranteed accurate digits or printed
+decimal places. Positive integer counts are required; unsupported formats,
+out-of-range counts and unsupported frontends fail without falling back.
+
+`long-double` remains platform-dependent. `fp80` selects that same native type
+only when its significand and exponent range match extended80; a padded
+16-byte representation does not make it binary128. Bethe's native `fp80`
+selection does not require Uni20's optional `float80` alias or binary80
+MPLAPACK provider. `fp128` uses Uni20's configured MPLAPACK binary128 type.
+The fp128 CLI currently requires MPLAPACK's native
 `_Float128/strfromf128` mode: other modes are rejected at compile time because
 the pinned Uni20's scalar I/O narrows them to `long double`.
 Calculations, tolerance parsing, and output retain the
 selected precision; displayed digits are not a guarantee of energy accuracy.
+
+Exports record the requested precision, resolved arithmetic format and
+significand bits. Arbitrary-precision JSON cells contain
+`{"value":"...","precision":256}`; CSV/TSV retain round-trip decimal values.
+MPFR/MPC are implementation providers, not precision option names.
+
+### Inspect the build
+
+```sh
+bethe-info
+bethe-info --format json
+```
+
+`bethe-info` reports Bethe/Uni20 revisions, configured numerical providers,
+available precision choices and which frontend supports arbitrary precision.
+Its `precisions` table includes significand bits, decimal precision, exponent
+range and native storage size (including padding). Exponents follow
+`numeric_limits`: the smallest normal value is `2^(min_exponent-1)` and the
+largest finite magnitude is less than `2^max_exponent`. Variable-precision
+properties are left unspecified until a working precision is chosen. The
+`decimal_digits` column is the conservative `numeric_limits::digits10`
+decimal round-trip guarantee (15 for binary64), not the approximate
+`significand_bits * log10(2)` digit count (about 16 for binary64).
+Use `bethe-info --build-info` for additional compiler and dependency details.
 
 For setup details and the supported MPLAPACK configuration, see
 [building with binary128](building.md#enable-binary128).

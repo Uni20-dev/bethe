@@ -152,7 +152,7 @@ template <uni20::Real Real> int run_free(Arguments const& a, uni20::run_context&
       .field("defective_blocks", "Size-two blocks", defective)
       .field("max_blocks", "Max blocks", controls.max_blocks)
       .field("max_mode_entries", "Max mode entries", controls.max_mode_entries)
-      .field("precision", "Precision", a.precision)
+      .precision(a.precision)
       .result(true, "complete");
   cli::ResultOutput output(report, a.output, {"blocks"});
   using cli::column;
@@ -215,7 +215,7 @@ int run_scan(Arguments const& a, Real delta, bethe::SolverOptions<Real> const& c
              *a.excitations == std::numeric_limits<std::size_t>::max() ? "all" : std::to_string(*a.excitations))
       .field("max_candidates", "Max candidates", budget)
       .field("reference_converged", "Sea reference converged", scan.ground_state.converged ? 1 : 0)
-      .field("precision", "Precision", a.precision)
+      .precision(a.precision)
       .field("tolerance", "Residual tolerance", controls.residual_tolerance)
       .field("residual", "Residual convention", "max|F|/(2N), not an energy error")
       .field("max_iterations", "Max iterations", controls.max_iterations)
@@ -299,7 +299,7 @@ template <uni20::Real Real> int run(Arguments const& a, int argc, char** argv)
       .field("root_coordinates", "Root coordinates",
              "z=tanh(lambda)/tan(gamma/2), Delta=cos(gamma); last iterate on failure")
       .field("residual", "Residual convention", "max|2N*theta1-sum(theta2_minus+theta2_plus)-2*pi*I|/(2N)")
-      .field("precision", "Precision", a.precision)
+      .precision(a.precision)
       .field("tolerance", "Residual tolerance", controls.residual_tolerance)
       .field("max_iterations", "Max iterations", controls.max_iterations)
       .result(s.converged, name(s.status));

@@ -87,7 +87,7 @@ template <uni20::Real Real> int run(Arguments const& args, int argc, char** argv
              fmt::format("{}, {}, {}", state.populations[0], state.populations[1], state.populations[2]))
       .field("first_level_roots", "First-level roots", state.rapidities[0].size())
       .field("second_level_roots", "Second-level roots", state.rapidities[1].size())
-      .field("precision", "Precision", args.precision)
+      .precision(args.precision)
       .field("residual_tolerance", "Residual tolerance", options.residual_tolerance)
       .result(state.converged, status(state.status))
       .field("total_energy", "Total energy", state.energy)

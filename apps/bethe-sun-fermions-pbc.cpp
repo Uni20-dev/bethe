@@ -114,7 +114,7 @@ template <uni20::Real Real> int run(Arguments const& args, int argc, char** argv
       .field("length", "Length", length)
       .field("requested_c", "Requested c", c)
       .field("units", "Units", "hbar^2/(2m)=1; interaction 2c delta")
-      .field("precision", "Precision", args.precision)
+      .precision(args.precision)
       .result(state.converged, status(state.status));
   if (state.energy)
   {

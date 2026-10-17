@@ -114,7 +114,7 @@ template <uni20::Real Real> int run(Arguments const& a, int argc, char** argv)
       .field("first", "First Bethe number", first)
       .field("levels", "Levels", a.levels)
       .field("tolerance", "Counting tolerance", options.tolerance)
-      .field("precision", "Precision", a.precision);
+      .precision(a.precision);
   using Optional = std::optional<Real>;
   auto table = cli::data::make_data_table(
       "Sine-Gordon Bethe-Yang levels",

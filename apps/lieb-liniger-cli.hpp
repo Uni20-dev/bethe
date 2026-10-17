@@ -204,7 +204,7 @@ template <bool HardWalls, uni20::Real Real> int run(Arguments const& args, int a
       .field("length", "Length", length)
       .field("c", "c", c)
       .field("units", "Units", "hbar^2/(2m)=1; interaction 2c delta")
-      .field("precision", "Precision", args.precision)
+      .precision(args.precision)
       .field("residual_tolerance", "Residual tolerance", options.residual_tolerance)
       .field("momentum_convention", "Momentum convention",
              HardWalls ? "no conserved total momentum; positive k are standing-wave Bethe coordinates"

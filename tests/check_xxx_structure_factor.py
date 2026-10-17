@@ -8,8 +8,11 @@ import subprocess
 import sys
 import tempfile
 
-program, fp128 = sys.argv[1:]
+program, fp128, mpfr = sys.argv[1:]
+mpfr_enabled = mpfr.upper() in ("ON", "TRUE", "1")
 precisions = ["fp64", "long-double"] + (["fp128"] if fp128.upper() in ("ON", "TRUE", "1") else [])
+if mpfr_enabled:
+    precisions += ["bits-128", "bits-256", "digits-100"]
 env = dict(os.environ, OPENBLAS_NUM_THREADS="1", OMP_NUM_THREADS="1", UNI20_COLOR="never")
 
 def run(args, code=0):
@@ -24,7 +27,10 @@ def document(args, code=0):
     return data["tables"]
 
 def rows(table):
-    return [dict(zip([c["id"] for c in table["columns"]], row)) for row in table["rows"]]
+    # Runtime-precision JSON cells carry both the decimal text and bit precision.
+    return [dict(zip([c["id"] for c in table["columns"]],
+                     [v["value"] if isinstance(v, dict) else v for v in row]))
+            for row in table["rows"]]
 
 for precision in precisions:
     args = ["8", "--precision", precision]
@@ -37,7 +43,9 @@ for precision in precisions:
     assert len(rows(z["spectrum"])) == 10
     with localcontext() as ctx:
         ctx.prec = 100
-        tolerance = {"fp64": Decimal("1e-12"), "long-double": Decimal("1e-15"), "fp128": Decimal("1e-29")}[precision]
+        tolerance = {"fp64": Decimal("1e-12"), "long-double": Decimal("1e-15"), "fp128": Decimal("1e-29"),
+                     "bits-128": Decimal("1e-33"), "bits-256": Decimal("1e-71"),
+                     "digits-100": Decimal("1e-93")}[precision]
         for zz, raising in zip(rows(z["spectrum"]), rows(r["spectrum"])):
             assert zz["state_id"] == raising["state_id"]
             assert abs(2*Decimal(zz["weight"])-Decimal(raising["weight"])) < tolerance
@@ -46,6 +54,16 @@ for precision in precisions:
     for table in z.values():
         assert Decimal(table["summary"]["Run CPU seconds"]) >= 0
         assert "partial DSF" in table["metadata"]["Family"]
+        assert table["metadata"]["Precision"] == precision
+        assert "Arithmetic format" in table["metadata"]
+        assert int(table["metadata"]["Working precision (bits)"]) > 0
+        if precision.startswith(("bits-", "digits-")):
+            bits = 333 if precision == "digits-100" else int(precision.split("-")[1])
+            assert int(table["metadata"]["Working precision (bits)"]) == bits
+            for row in table["rows"]:
+                for value in row:
+                    if isinstance(value, dict):
+                        assert value["precision"] == bits
     moment0 = rows(z["moments"])[0]
     assert Decimal(moment0["weight"]) == Decimal(moment0["full_first_moment"]) == 0
     assert moment0["first_moment_fraction"] is None
@@ -58,6 +76,12 @@ for precision in precisions:
     loose = document([*args, "--tolerance", "0.1", "--diagnostics"], 2)
     assert not rows(loose["spectrum"])
     assert any(row["form_factor_status"] == "precision_limit" for row in rows(loose["diagnostics"]))
+
+if mpfr_enabled:
+    # Decimal and binary requests resolving to the same precision are identical.
+    decimal = document(["8", "--precision", "digits-100"])
+    binary = document(["8", "--precision", "bits-333"])
+    assert decimal["spectrum"]["rows"] == binary["spectrum"]["rows"]
 
 with tempfile.TemporaryDirectory() as directory:
     path = Path(directory)
@@ -74,7 +98,13 @@ with tempfile.TemporaryDirectory() as directory:
                ["8", "--threads", "2147483648"],
                ["5"], ["0"], ["8", "--max-candidates", "9"], ["8", "--channel", "+-"],
                ["8", "--csv-table", f"failed={path/'bad.csv'}"], ["8", "--table", "failed"],
-               ["8", "--tolerance", "nan"], ["8", "--tolerance", "0"]]
+               ["8", "--tolerance", "nan"], ["8", "--tolerance", "0"],
+               ["8", "--bits", "128"], ["8", "--precision", "mpfr"],
+               *[["8", "--precision", prefix + suffix]
+                 for prefix in ("bits-", "digits-")
+                 for suffix in ("", "0", "-1", "+1", "1.5", "128junk", "999999999999999999999999999")]]
+    if not mpfr_enabled:
+        invalid += [["8", "--precision", "bits-128"], ["8", "--precision", "digits-100"]]
     for args in invalid:
         run([*args, "--json", str(out), "--force"], 1)
         assert out.read_text() == previous
@@ -86,6 +116,8 @@ with tempfile.TemporaryDirectory() as directory:
     for table in ("spectrum", "moments", "diagnostics", "roots"):
         assert table in help_text
     assert "Used for:" not in help_text
+    assert "bits-N" in help_text and "digits-N" in help_text and "fp80" in help_text
+    assert "--bits" not in help_text
     assert "Caux" in run(["--references"])
 
 print("XXX structure factor CLI contracts passed")

@@ -6,6 +6,7 @@
 #include "data-output.hpp"
 #include <bethe/citations.hpp>
 #include <limits>
+#include <optional>
 #include <uni20/cli/cli.hpp>
 
 namespace bethe::cli
@@ -36,7 +37,8 @@ inline uni20::presentation::report_builder references_report(uni20::presentation
 }
 
 // Identity and literature stay application-owned; Uni20 owns parsing and rendering.
-inline uni20::presentation::program_info program_info(std::string name, std::string description, citations::Tool tool)
+inline uni20::presentation::program_info program_info(std::string name, std::string description,
+                                                      std::optional<citations::Tool> tool = {})
 {
   return {.name = std::move(name),
           .description = std::move(description),
@@ -47,7 +49,8 @@ inline uni20::presentation::program_info program_info(std::string name, std::str
           .license = "GPL-3.0-or-later; see COPYING",
           .references = [tool] {
             std::vector<uni20::presentation::program_reference> references;
-            for (auto const& use : citations::for_tool(tool))
+            if (!tool) return references;
+            for (auto const& use : citations::for_tool(*tool))
             {
               auto const& ref = *use.reference;
               std::string citation =
@@ -72,7 +75,7 @@ inline uni20::presentation::program_info program_info(std::string name, std::str
 // only bind arguments; validation, solvers and output files belong in run().
 template <typename Register, typename Run>
 int program_main(int argc, char** argv, uni20::presentation::program_info const& program, Register&& register_options,
-                 Run&& run)
+                 Run&& run, uni20::cli::parse_policy policy = {})
 {
   namespace options = uni20::cli;
   auto help_program = program;
@@ -86,7 +89,7 @@ int program_main(int argc, char** argv, uni20::presentation::program_info const&
     options::parse_result result;
     try
     {
-      result = options::parse(app, argc, argv);
+      result = options::parse(app, argc, argv, policy);
     }
     catch (ReferencesRequested const&)
     {
@@ -133,10 +136,24 @@ inline CLI::Option* count_option(CLI::App& app, std::string names, std::size_t& 
 {
   return uni20::cli::add_count_option(app, std::move(names), value, std::move(description));
 }
-inline void precision_option(CLI::App& app, std::string& precision)
+inline void precision_option(CLI::App& app, std::string& precision, bool allow_arbitrary = false)
 {
-  app.add_option("--precision", precision, "Real scalar type; fp128 requires MPLAPACK")
-      ->check(CLI::IsMember({"fp64", "long-double", "fp128"}))
+  app.add_option("--precision", precision,
+                 allow_arbitrary ? "Arithmetic: fp64, long-double, fp80, fp128, bits-N or digits-N; see bethe-info"
+                                 : "Arithmetic: fp64, long-double, fp80 or fp128; see bethe-info")
+      ->check(CLI::Validator(
+          [allow_arbitrary](std::string& text) {
+            try
+            {
+              validate_precision(parse_precision(text), allow_arbitrary);
+            }
+            catch (std::exception const& error)
+            {
+              return std::string(error.what());
+            }
+            return std::string{};
+          },
+          "PRECISION"))
       ->capture_default_str();
 }
 

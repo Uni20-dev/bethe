@@ -107,7 +107,7 @@ template <uni20::Real Real> int run(Arguments const& a, int argc, char** argv)
       .field("scope", "Scope",
              "particle dispersions and pair lower thresholds; no spectral weights or finite-volume levels")
       .field("species", "Stable species", particles.size())
-      .field("precision", "Precision", a.precision);
+      .precision(a.precision);
   if (momentum)
     report.field("momentum", "Requested momentum", *momentum);
   else

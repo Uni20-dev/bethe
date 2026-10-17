@@ -132,7 +132,7 @@ template <uni20::Real Real> int run(Arguments const& args, int argc, char** argv
       .field("magnetic_field", "Magnetic field h", field)
       .field("magnetization_convention", "Magnetization convention",
              "M=N_t+ - N_t-; total Sz, one minimizing representative, not a degeneracy average")
-      .field("precision", "Precision", args.precision)
+      .precision(args.precision)
       .field("residual_tolerance", "Residual tolerance", options.residual_tolerance)
       .result(state.converged, status(state.status));
   if (args.sz) report.field("requested_sz", "Requested total Sz", *args.sz);

@@ -103,16 +103,16 @@ template <typename Real> using CompensatedSum = bethe::detail::CompensatedSum<Re
 
 template <uni20::Real Real>
 Real residual(std::size_t sites, std::span<uni20::half_int const> numbers, std::span<Real const> roots,
-              std::vector<Real>& angles)
+              std::vector<Real>& angles, Real const& zero = Real{0})
 {
   using std::abs;
   using std::atan;
-  Real const pi = Real{4} * atan(Real{1});
+  Real const pi = bethe::detail::pi_like(zero);
   angles.resize(roots.size());
-  Real maximum{0};
+  Real maximum = zero;
   for (std::size_t i = 0; i < roots.size(); ++i)
   {
-    CompensatedSum<Real> phase;
+    CompensatedSum<Real> phase(zero);
     for (std::size_t j = 0; j < roots.size(); ++j)
       if (i != j) phase.add(atan((roots[i] - roots[j]) / Real{2}));
     angles[i] = (pi * (Real(numbers[i].twice()) / Real{2}) + phase.value()) / Real(sites);
@@ -144,23 +144,27 @@ template <uni20::Real Real = double>
   using std::tan;
 
   detail::validate_quantum_numbers(sites, numbers);
+  auto const zero = bethe::detail::solver_zero(options);
   if (!uni20::isfinite(options.residual_tolerance) || options.residual_tolerance <= Real{0})
     throw std::invalid_argument("residual tolerance must be finite and positive");
 
   std::size_t const roots = numbers.size();
-  Real const n = static_cast<Real>(sites);
-  Real const pi = Real{4} * atan(Real{1});
+  Real const n = uni20::scalar_like(zero, sites);
+  Real const pi = bethe::detail::pi_like(zero);
   RealState<Real> result;
   result.quantum_numbers.assign(numbers.begin(), numbers.end());
   result.sz = uni20::from_twice(static_cast<std::int64_t>(sites - 2 * roots));
   result.momentum_index = detail::momentum_index(sites, numbers);
   result.momentum = Real{2} * pi * (static_cast<Real>(result.momentum_index) / n);
-  result.rapidities.resize(roots, Real{0});
+  result.rapidities.resize(roots, zero);
   if (!initial_roots.empty())
   {
     if (initial_roots.size() != roots) throw std::invalid_argument("initial root count must match the quantum numbers");
     for (Real const root : initial_roots)
+    {
+      bethe::detail::require_same_precision(root, zero);
       if (!uni20::isfinite(root)) throw std::invalid_argument("initial roots must be finite");
+    }
     result.rapidities.assign(initial_roots.begin(), initial_roots.end());
   }
   std::vector<Real> angles(roots);
@@ -169,7 +173,7 @@ template <uni20::Real Real = double>
   {
     // Evaluate both the residual and the next fixed-point angles at the same
     // current roots. Never report a residual belonging to the previous iterate.
-    result.residual_norm = detail::residual<Real>(sites, numbers, result.rapidities, angles);
+    result.residual_norm = detail::residual<Real>(sites, numbers, result.rapidities, angles, zero);
 
     result.converged = result.residual_norm <= options.residual_tolerance;
     if (result.converged || result.iterations == options.max_iterations) break;
@@ -183,7 +187,7 @@ template <uni20::Real Real = double>
     ++result.iterations;
   }
 
-  detail::CompensatedSum<Real> magnons;
+  detail::CompensatedSum<Real> magnons(zero);
   for (Real const z : result.rapidities)
     magnons.add(-Real{2} / (Real{1} + z * z));
   result.energy = n / Real{4} + magnons.value();

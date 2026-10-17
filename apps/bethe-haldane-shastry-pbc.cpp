@@ -97,7 +97,7 @@ template <uni20::Real Real> int run(Arguments const& a, int argc, char** argv)
   cli::RunReport report(context, "Haldane-Shastry Yangian multiplets");
   report.field("hamiltonian", "Hamiltonian", "H=(pi/N)^2 sum_{i<j} S_i.S_j/sin^2(pi*(i-j)/N); J=1")
       .field("sites", "Sites", a.sites)
-      .field("precision", "Precision", a.precision)
+      .precision(a.precision)
       .field("calculation", "Calculation",
              a.motif    ? "specified motif"
              : a.levels ? "energy-ordered motif spectrum"

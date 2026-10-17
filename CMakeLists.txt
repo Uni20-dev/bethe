@@ -1,6 +1,9 @@
 cmake_minimum_required(VERSION 3.28)
 project(bethe VERSION 0.1.0 LANGUAGES CXX)
 
+# Bethe uses headers, not named C++ modules; do not require clang-scan-deps.
+set(CMAKE_CXX_SCAN_FOR_MODULES OFF)
+
 option(BETHE_BUILD_APPS "Build Bethe ansatz command-line programs" ${PROJECT_IS_TOP_LEVEL})
 option(BETHE_BUILD_TESTS "Build Bethe ansatz regression tests" ${PROJECT_IS_TOP_LEVEL})
 option(BETHE_INSTALL_APPS "Install Bethe command-line programs" ${PROJECT_IS_TOP_LEVEL})
@@ -17,7 +20,7 @@ if(NOT TARGET uni20_core)
   include(FetchContent)
   FetchContent_Declare(uni20
     GIT_REPOSITORY https://github.com/Uni20-dev/uni20.git
-    GIT_TAG a25159cc19c97c43ca43754c46fb9bdef8c41bda
+    GIT_TAG b53f41b3feeeedf5dfee2a17de14d3a9004d4897
   )
   FetchContent_MakeAvailable(uni20)
   # Keep default builds limited to the components our targets actually link.
@@ -33,10 +36,11 @@ target_link_libraries(bethe INTERFACE uni20_core uni20_common uni20_linalg uni20
 # Library-only consumers also need recoverable square solves. Catch stale
 # source overrides during configuration rather than deep in template errors.
 get_target_property(bethe_uni20_linalg_source uni20_linalg SOURCE_DIR)
-if(NOT EXISTS "${bethe_uni20_linalg_source}/solve_info.hpp")
+if(NOT EXISTS "${bethe_uni20_linalg_source}/solve_info.hpp" OR
+   NOT EXISTS "${bethe_uni20_linalg_source}/ops/slogdet.hpp")
   message(FATAL_ERROR
-    "Bethe requires Uni20's recoverable linear-solve API. "
-    "Update the supplied Uni20 checkout to include PR57, or use Bethe's pinned dependency.")
+    "Bethe requires Uni20's recoverable linear-solve and LU/log-determinant APIs. "
+    "Update the supplied Uni20 checkout, or use Bethe's pinned dependency.")
 endif()
 
 if(BETHE_BUILD_APPS OR BETHE_BUILD_TESTS)
@@ -70,6 +74,9 @@ if(BETHE_BUILD_APPS)
   endif()
   add_library(bethe_cli INTERFACE)
   target_link_libraries(bethe_cli INTERFACE bethe_cli_output uni20_cli)
+  add_executable(bethe-info apps/bethe-info.cpp)
+  target_link_libraries(bethe-info PRIVATE bethe_cli)
+  set_target_properties(bethe-info PROPERTIES CXX_EXTENSIONS OFF)
   add_executable(bethe-xxx-structure-factor apps/bethe-xxx-structure-factor.cpp)
   add_executable(bethe-xxx-structure-factor-thermo apps/bethe-xxx-structure-factor-thermo.cpp)
   target_link_libraries(bethe-xxx-structure-factor-thermo PRIVATE bethe_cli)

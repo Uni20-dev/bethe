@@ -105,7 +105,7 @@ template <uni20::Real Real> int run(Arguments const& args, int argc, char** argv
       .field("bath_spins", "Bath spins", a.size())
       .field("total_sz", "Total Sz", state.sz, {.fractions = true})
       .field("up_spins", "Up spins", state.up_spins)
-      .field("precision", "Precision", args.precision)
+      .precision(args.precision)
       .field("spin_reversed", "Spin reversed", state.spin_reversed ? "yes" : "no")
       .field("requested_field_b", "Requested field B", state.field)
       .field("reached_field_b", "Reached field B", state.reached_field, {.missing = "infinite-field seed"})

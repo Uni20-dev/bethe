@@ -47,7 +47,7 @@ void add_options(CLI::App& app, Arguments& a)
   cli::count_option(app, "--max-iterations", a.max_iterations, "Root iteration budget per state")
       ->capture_default_str();
   cli::text_option(app, "--tolerance", a.tolerance, "Normalized root residual tolerance")->type_name("REAL");
-  cli::precision_option(app, a.precision);
+  cli::precision_option(app, a.precision, true);
   cli::threads_option(app, a.threads);
   app.add_flag("--roots", a.roots, "Show ground and converged-state z=2*lambda roots on screen");
   app.add_flag("--diagnostics", a.diagnostics, "Show state convergence and form-factor diagnostics on screen");
@@ -73,17 +73,24 @@ std::string status(model::FormFactorStatus s)
   }
   return "unknown";
 }
-template <uni20::Real Real> int run(Arguments const& a, int argc, char** argv)
+template <uni20::Real Real> int run(Arguments const& a, int argc, char** argv, model::SolverOptions<Real> controls)
 {
   uni20::run_context context(program_info(), {.invocation = std::vector<std::string>(argv, argv + argc)});
-  model::SolverOptions<Real> controls;
   controls.max_iterations = a.max_iterations;
-  if (a.tolerance) controls.residual_tolerance = uni20::parse_real<Real>(*a.tolerance);
+  if (a.tolerance)
+  {
+#if UNI20_ENABLE_MPFR
+    if constexpr (uni20::has_runtime_precision_v<Real>)
+      controls.residual_tolerance = uni20::parse_real<Real>(*a.tolerance, controls.precision());
+    else
+#endif
+      controls.residual_tolerance = uni20::parse_real<Real>(*a.tolerance);
+  }
   uni20::async::TbbScheduler scheduler(a.threads);
   auto const result = context.measure(
       [&] { return model::two_spinon_structure_factor<Real>(a.sites, controls, a.max_candidates, {&scheduler}); });
   auto const& scan = result.scan;
-  Real const scale = a.channel == "zz" ? Real{0.5} : Real{1};
+  Real const scale = uni20::scalar_like(controls.residual_tolerance, 1) / (a.channel == "zz" ? 2 : 1);
   using Optional = std::optional<Real>;
   cli::RunReport report(context, "XXX two-spinon structure factor");
   report.field("sites", "Sites", a.sites)
@@ -92,7 +99,7 @@ template <uni20::Real Real> int run(Arguments const& a, int argc, char** argv)
       .field("fourier_convention", "Fourier convention", "S_q^+=sum exp(-iqj)S_j^+/sqrt(N); q=P0-Pn")
       .field("weight_convention", "Weight convention", "S(q,w)=2*pi*sum weight*delta(w-gap); zz=raising/2")
       .field("family", "Family", "Two-spinon real-root S=1; partial DSF; no rescaling")
-      .field("precision", "Precision", a.precision)
+      .precision(a.precision)
       .field("threads", "Scheduler concurrency limit", a.threads)
       .field("tolerance", "Root residual tolerance", controls.residual_tolerance)
       .field("max_iterations", "Max root iterations", controls.max_iterations)
@@ -118,8 +125,7 @@ template <uni20::Real Real> int run(Arguments const& a, int argc, char** argv)
       },
       column<std::size_t>("state_id"), column<std::size_t>("momentum_index"), column<Real>("q"), column<Real>("gap"),
       column<Real>("weight"));
-  using std::atan;
-  Real const two_pi = Real{8} * atan(Real{1});
+  Real const two_pi = Real{2} * bethe::detail::pi_like(controls.residual_tolerance);
   output.table(
       "moments", "Partial moments and full first-moment sum rule",
       [&](auto& table) {
@@ -181,6 +187,16 @@ int main(int argc, char** argv)
       argc, argv, program_info(), [&](auto& app) { add_options(app, a); },
       [&](auto&) {
         a.output.validate();
-        return cli::dispatch_precision(a.precision, [&]<typename Real>() { return run<Real>(a, argc, argv); });
+        auto const precision = cli::parse_precision(a.precision);
+        if (precision.arbitrary())
+        {
+#if UNI20_ENABLE_MPFR && UNI20_ENABLE_MPC && UNI20_ENABLE_MPLAPACK_MPFR
+          return run<uni20::mpreal>(a, argc, argv, model::SolverOptions<uni20::mpreal>(precision.working_precision()));
+#else
+          throw std::invalid_argument("arbitrary precision is unavailable in this build; see bethe-info");
+#endif
+        }
+        return cli::dispatch_precision(
+            a.precision, [&]<typename Real>() { return run<Real>(a, argc, argv, model::SolverOptions<Real>{}); });
       });
 }

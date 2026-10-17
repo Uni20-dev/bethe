@@ -23,7 +23,8 @@ The complete supported family is always requested: no energy truncation or
 `--excitations all` is needed. There are $`N(N+2)/8`$ candidates: 528 at N=64.
 `--max-candidates` defaults to 10000 and rejects a larger family before solving.
 `--max-iterations` and `--tolerance` control the existing root solver.
-fp64, native long-double, and optional fp128 arithmetic are supported throughout.
+fp64, native long-double (also selectable as fp80 when it is extended80), and
+optional fp128 arithmetic are supported throughout.
 
 ## Parallel calculations
 
@@ -223,10 +224,14 @@ For the same **unscaled** logarithmic equation vector, the chain rule gives
 $`G_\lambda=2G_z`$ and $`\det G_\lambda=2^M\det G_z`$.
 We divide each regular H column by
 $`\prod_a\sqrt{1+(\mu_a-\lambda_b)^2}`$, restore its logarithm in the final
-weight, and evaluate equilibrated determinants with complete-pivot LU.
+weight, and evaluate column-equilibrated determinants using Uni20's
+partial-pivot LU and log-determinant interfaces, with normal backend dispatch
+(LAPACK/MPLAPACK when available, otherwise a supported CPU implementation).
 Products and determinants are combined in log space.
 
-The smallest scaled pivot is a rejection diagnostic, **not a condition number
+The pivot diagnostic is `min(abs(diag(U)))/max(1,max(abs(U)))` after column
+equilibration; values at or below `128*M*epsilon` are rejected.
+This is **not a condition number
 or certified error estimate**. Unresolved pivots, near-coincident inter-set
 roots, nonfinite results and weight underflow are rejected. The equations are
 re-evaluated independently of the stored residual, with a gate of
@@ -255,6 +260,44 @@ if (!result.converged()) {
   // Inspect result.scan, result.form_factors and missing candidate counts.
 }
 ```
+
+### Arbitrary precision
+
+With [MPFR/MPC and MPLAPACK MPFR enabled](building.md#enable-arbitrary-precision-for-xxx):
+
+```sh
+bethe-xxx-structure-factor 32 --precision bits-256 --threads 4 \
+  --json spectrum-256.json
+```
+
+Alternatively, `--precision digits-100` requests 100 decimal digits of working
+precision (333 significand bits). `bethe-info` reports build capabilities.
+The C++ solver takes an explicit finite precision, rather than a global default:
+
+```cpp
+using Real = uni20::mpreal;
+auto p = uni20::Precision::bits(256);
+bethe::SolverOptions<Real> controls(p); // default tolerance = 32*epsilon(p)
+// Optional: controls.residual_tolerance = uni20::parse_real<Real>("1e-70", p);
+auto ground = bethe::heisenberg::ground_state<Real>(32, controls);
+bethe::heisenberg::PreparedRaisingFormFactors<Real> factors(32, ground);
+auto excited = bethe::heisenberg::sector_ground_state<Real>(32, uni20::half_int{1}, controls);
+auto weight = factors(excited);
+auto spectrum = bethe::heisenberg::two_spinon_structure_factor<Real>(32, controls);
+```
+
+All roots in a prepared context and its excited states must carry the same
+finite precision. Exact, unset or differently rounded roots are rejected,
+as are mismatched solver tolerances and warm starts. To change precision,
+explicitly convert the initial roots and re-solve before preparing a new context;
+padding already-rounded roots with more bits does not restore lost accuracy.
+Independent contexts can use different precisions concurrently.
+
+Spectral moment reduction also accepts an explicit finite-precision zero:
+`bethe::spectral_moments<Real>(N, lines, Real(0, p))`. This keeps even empty
+momentum bins at the selected precision. Tests check analytic small systems
+at 128/256 bits, convergence against a 512-bit reference, and serial/parallel
+agreement. These tests do not certify arbitrary large-chain form factors.
 
 ### Reusing a ground state
 
