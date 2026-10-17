@@ -270,6 +270,50 @@ inside scans and keep expensive ED loops grouped into logical cases.
 CTest gives each test one BLAS/OpenMP thread; it can still run independent
 cases concurrently with `ctest --parallel`.
 
+### Continuous integration
+
+Pull requests and pushes to `main` run three Linux configurations, defined in
+[`CMakePresets.json`](../CMakePresets.json):
+
+| Preset | Coverage |
+| --- | --- |
+| `ci-native` | GCC 13 Release; fp64 and native `long double`; OpenBLAS; optional scalars disabled |
+| `ci-sanitizers` | Clang 19; AddressSanitizer and UndefinedBehaviorSanitizer; native scalars and MPFR; CPU kernels without BLAS/MPLAPACK |
+| `ci-wide` | GCC 13 Release; binary80, binary128 and MPFR; OpenBLAS and source-built, optimized MPLAPACK |
+
+Each builds **all frontends and test targets** and runs the complete registered
+CTest suite, including CLI/export checks and the installed-program relocation
+test. Runtime-precision Lieb–Liniger and form-factor coverage belongs to
+`ci-wide`; the scalar-only sanitizer configuration also checks that unavailable
+provider requests fail clearly. These jobs do not claim macOS, Windows or GPU
+coverage. Documentation has its own workflow.
+
+The workflow fetches Bethe's pinned Uni20, limits compilation and concurrent
+tests to two jobs, and gives numerical kernels one BLAS/OpenMP thread.
+Compiler outputs are cached; CMake/build directories are configured afresh.
+JUnit results, capability reports and configure/build/test logs are uploaded
+even on failure. MPLAPACK is built in Release mode without fast-math; the
+first uncached wide-precision build is expected to take longer.
+
+With the named compiler, CMake 3.28+, Ninja, Python and the relevant numerical
+development packages installed, reproduce a configuration from the source root:
+
+```sh
+cmake --preset ci-native
+cmake --build --preset ci-native
+ctest --preset ci-native
+```
+
+Presets default to `build/<preset>` and do not need `ccache` locally. For a
+shared source checkout, keep the build on local storage instead:
+
+```sh
+cmake --preset ci-native -B /path/to/local/bethe-ci-native
+cmake --build /path/to/local/bethe-ci-native --parallel 2
+OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 \
+  ctest --test-dir /path/to/local/bethe-ci-native --parallel 2 --output-on-failure
+```
+
 ## Embed the library
 
 `BETHE_BUILD_APPS` and `BETHE_BUILD_TESTS` default to `ON` standalone and

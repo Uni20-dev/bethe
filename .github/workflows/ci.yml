@@ -1,0 +1,105 @@
+name: C++ CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: cpp-ci-${{ github.ref }}
+  cancel-in-progress: true
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  test:
+    name: ${{ matrix.name }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 120
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - preset: ci-native
+            name: GCC 13 / native / OpenBLAS
+            compiler: g++-13
+          - preset: ci-sanitizers
+            name: Clang 19 / MPFR CPU / ASan + UBSan
+            compiler: clang-19
+          - preset: ci-wide
+            name: GCC 13 / binary80 + binary128 + MPFR / MPLAPACK
+            compiler: g++-13
+    env:
+      OPENBLAS_NUM_THREADS: "1"
+      OMP_NUM_THREADS: "1"
+      CCACHE_DIR: ${{ github.workspace }}/.cache/ccache
+      CCACHE_BASEDIR: ${{ github.workspace }}
+      CCACHE_COMPILERCHECK: content
+      CCACHE_MAXSIZE: 2G
+      PRESET: ${{ matrix.preset }}
+      COMPILER_PACKAGE: ${{ matrix.compiler }}
+
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            cmake ninja-build ccache g++-13 "$COMPILER_PACKAGE" \
+            libopenblas-dev liblapack-dev libgtest-dev \
+            libgmp-dev libmpfr-dev libmpc-dev python3
+
+      # Reconfigure every run. Do not cache CMake state or dependency build trees.
+      - name: Restore compiler cache
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
+        with:
+          path: ${{ env.CCACHE_DIR }}
+          key: cpp-${{ runner.os }}-${{ runner.arch }}-${{ matrix.preset }}-${{ hashFiles('CMakeLists.txt', 'CMakePresets.json', '.github/workflows/ci.yml') }}-${{ github.sha }}
+          restore-keys: |
+            cpp-${{ runner.os }}-${{ runner.arch }}-${{ matrix.preset }}-${{ hashFiles('CMakeLists.txt', 'CMakePresets.json', '.github/workflows/ci.yml') }}-
+            cpp-${{ runner.os }}-${{ runner.arch }}-${{ matrix.preset }}-
+
+      - name: Configure pinned dependencies
+        run: |
+          cmake --version
+          cmake --preset "$PRESET" -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
+            2>&1 | tee "${RUNNER_TEMP}/configure.log"
+
+      - name: Build all frontends and tests
+        run: cmake --build --preset "$PRESET" 2>&1 | tee "${RUNNER_TEMP}/build.log"
+
+      - name: Record configured capabilities
+        run: '"build/$PRESET/bethe-info" --format json > "${RUNNER_TEMP}/bethe-info.json"'
+
+      - name: Run all numerical, CLI and installation tests
+        run: ctest --preset "$PRESET" --output-junit "${RUNNER_TEMP}/ctest.xml"
+
+      - name: Compiler cache statistics
+        if: always()
+        run: ccache --show-stats
+
+      - name: Upload test results and diagnostic logs
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: cpp-${{ matrix.preset }}
+          retention-days: 14
+          if-no-files-found: warn
+          path: |
+            ${{ runner.temp }}/ctest.xml
+            ${{ runner.temp }}/bethe-info.json
+            ${{ runner.temp }}/configure.log
+            ${{ runner.temp }}/build.log
+            build/${{ matrix.preset }}/CMakeCache.txt
+            build/${{ matrix.preset }}/CMakeFiles/CMakeConfigureLog.yaml
+            build/${{ matrix.preset }}/Testing/Temporary/

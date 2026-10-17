@@ -1,0 +1,94 @@
+{
+  "version": 6,
+  "cmakeMinimumRequired": { "major": 3, "minor": 28, "patch": 0 },
+  "configurePresets": [
+    {
+      "name": "ci-base",
+      "hidden": true,
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build/${presetName}",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release",
+        "CMAKE_CXX_STANDARD": "23",
+        "CMAKE_CXX_STANDARD_REQUIRED": "ON",
+        "CMAKE_CXX_EXTENSIONS": "OFF",
+        "BETHE_BUILD_APPS": "ON",
+        "BETHE_BUILD_TESTS": "ON",
+        "BETHE_INSTALL_APPS": "ON",
+        "UNI20_BUILD_TESTS": "OFF",
+        "UNI20_BUILD_EXAMPLES": "OFF",
+        "UNI20_BUILD_PYTHON": "OFF",
+        "UNI20_BUILD_BENCH": "OFF",
+        "UNI20_BUILD_DOCS": "OFF",
+        "UNI20_ENABLE_LTO": "OFF",
+        "UNI20_USE_SYSTEM_FMT": "OFF",
+        "UNI20_USE_SYSTEM_TBB": "OFF",
+        "UNI20_USE_SYSTEM_CLI11": "OFF",
+        "UNI20_ENABLE_FLOAT80": "OFF",
+        "UNI20_ENABLE_FLOAT128": "OFF",
+        "UNI20_ENABLE_MPREAL": "OFF",
+        "UNI20_BACKEND_MPLAPACK": "OFF"
+      }
+    },
+    {
+      "name": "ci-native",
+      "displayName": "GCC 13 Release: native scalars and OpenBLAS",
+      "inherits": "ci-base",
+      "cacheVariables": {
+        "CMAKE_CXX_COMPILER": "g++-13",
+        "UNI20_BACKEND_BLAS": "ON",
+        "UNI20_BLAS_VENDOR": "OpenBLAS"
+      }
+    },
+    {
+      "name": "ci-sanitizers",
+      "displayName": "Clang 19 ASan/UBSan: native and MPFR CPU kernels",
+      "inherits": "ci-base",
+      "cacheVariables": {
+        "CMAKE_CXX_COMPILER": "clang++-19",
+        "CMAKE_BUILD_TYPE": "Debug",
+        "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g1",
+        "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer -fno-sanitize-recover=all",
+        "UNI20_ENABLE_MPREAL": "ON",
+        "UNI20_BACKEND_BLAS": "OFF"
+      }
+    },
+    {
+      "name": "ci-wide",
+      "displayName": "GCC 13 Release: binary80/binary128/MPFR with MPLAPACK",
+      "inherits": "ci-native",
+      "cacheVariables": {
+        "UNI20_ENABLE_FLOAT80": "ON",
+        "UNI20_ENABLE_FLOAT128": "ON",
+        "UNI20_ENABLE_MPREAL": "ON",
+        "UNI20_BACKEND_MPLAPACK": "ON",
+        "UNI20_USE_SYSTEM_MPLAPACK": "OFF"
+      }
+    }
+  ],
+  "buildPresets": [
+    { "name": "ci-native", "configurePreset": "ci-native", "jobs": 2 },
+    { "name": "ci-sanitizers", "configurePreset": "ci-sanitizers", "jobs": 2 },
+    { "name": "ci-wide", "configurePreset": "ci-wide", "jobs": 2 }
+  ],
+  "testPresets": [
+    {
+      "name": "ci-tests",
+      "hidden": true,
+      "output": { "outputOnFailure": true },
+      "execution": { "jobs": 2, "timeout": 600, "noTestsAction": "error" },
+      "environment": { "OPENBLAS_NUM_THREADS": "1", "OMP_NUM_THREADS": "1" }
+    },
+    { "name": "ci-native", "configurePreset": "ci-native", "inherits": "ci-tests" },
+    {
+      "name": "ci-sanitizers",
+      "configurePreset": "ci-sanitizers",
+      "inherits": "ci-tests",
+      "environment": {
+        "ASAN_OPTIONS": "detect_leaks=1:halt_on_error=1",
+        "UBSAN_OPTIONS": "halt_on_error=1:print_stacktrace=1"
+      }
+    },
+    { "name": "ci-wide", "configurePreset": "ci-wide", "inherits": "ci-tests" }
+  ]
+}
