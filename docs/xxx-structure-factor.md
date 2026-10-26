@@ -29,9 +29,10 @@ optional fp128 arithmetic are supported throughout.
 ## Parallel calculations
 
 `--threads N` selects a Uni20 oneTBB scheduler with at most N participants;
-the default is 1. Root solves and form factors run in bounded batches of
-independent states. The ground reference, sorting, moment sums, and output
-remain serial. Worker count does not change state IDs, weights, or summation
+the default is 1. Continuous runners each solve a state and evaluate its form
+factor before taking another candidate. The ground reference and its prepared
+form-factor data are computed once. Sorting, moment sums and output remain
+serial. Worker count does not change state IDs, weights, or summation
 order at the same precision and with the same executable.
 
 ```sh
@@ -45,13 +46,14 @@ machine. CPU time is summed across workers, not elapsed time. Extra workers
 also need extra determinant workspaces. Keep numerical-library threading at
 one when parallelizing over states to avoid nested oversubscription.
 
-Library callers can pass `bethe::ExecutionOptions{&scheduler, batch_size}` as
+Library callers can pass
+`bethe::ExecutionOptions{.scheduler = &scheduler, .max_in_flight = 128}` as
 the fourth argument of `two_spinon_structure_factor`, or through
 `RealExcitationOptions::execution` for shared real-root scans. The scheduler
 is borrowed and must outlive the synchronous call; exceptions join active
 work before propagating. A null pointer selects Uni20's active scheduler
 (serial by default). Bethe does not replace the global scheduler. The default
-batch size is 128; changing it does not change the canonical result order.
+runner limit is 128; changing it does not change the canonical result order.
 
 ```cpp
 #include <bethe/xxx_structure_factor.hpp>
@@ -65,10 +67,16 @@ auto spectrum = bethe::heisenberg::two_spinon_structure_factor<double>(
 Link the scheduler consumer to `TBB::tbb`; Bethe's library target supplies
 `uni20_async` but does not impose a particular concurrent backend.
 
-### Example scaling
+`two_spinon_structure_factor_async` returns the same complete result as a Uni20
+Async value, ready for dependent tasks. It owns solver options and the single
+prepared ground snapshot; the scheduler remains borrowed. See
+[Async execution](async-execution.md) for cancellation and lifetime rules.
+
+### Historical scaling
 
 On Polaron (two Xeon Gold 6254 CPUs, 36 physical cores), the Clang 20 Release
-fp64 executable evaluated all 2,080 N=128 lines with these elapsed times:
+fp64 executable with the earlier batched implementation evaluated all 2,080
+N=128 lines with these elapsed times:
 
 | Scheduler limit | Elapsed seconds | Speedup |
 | --- | ---: | ---: |

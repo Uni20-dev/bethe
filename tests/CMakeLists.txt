@@ -74,13 +74,17 @@ if(BETHE_HAS_MPREAL)
   add_executable(bethe_xxx_mpfr_tests test_xxx_mpfr.cpp)
   target_link_libraries(bethe_xxx_mpfr_tests PRIVATE bethe::bethe TBB::tbb)
   bethe_discover_tests(bethe_xxx_mpfr_tests)
+
+  add_executable(bethe_async_mpfr_tests test_async_mpfr.cpp)
+  target_link_libraries(bethe_async_mpfr_tests PRIVATE bethe::bethe TBB::tbb)
+  bethe_discover_tests(bethe_async_mpfr_tests)
 endif()
 
 add_executable(bethe_parallel_scan_tests test_parallel_scan.cpp)
 target_link_libraries(bethe_parallel_scan_tests PRIVATE bethe::bethe TBB::tbb)
 bethe_discover_tests(bethe_parallel_scan_tests)
 
-foreach(test IN ITEMS async_scan continuous_work)
+foreach(test IN ITEMS async_scan continuous_work async_structure_factor)
   add_executable(bethe_${test}_tests test_${test}.cpp)
   target_link_libraries(bethe_${test}_tests PRIVATE bethe::bethe TBB::tbb)
   bethe_discover_tests(bethe_${test}_tests)
@@ -110,6 +114,16 @@ bethe_discover_tests(bethe_xxx_prepared_form_factor_tests)
 add_executable(bethe_xxx_form_factor_benchmark EXCLUDE_FROM_ALL benchmark_xxx_form_factors.cpp)
 target_link_libraries(bethe_xxx_form_factor_benchmark PRIVATE bethe::bethe)
 set_target_properties(bethe_xxx_form_factor_benchmark PROPERTIES CXX_EXTENSIONS OFF)
+
+# Matched two-stage/fused control with complete native-precision output.
+add_executable(bethe_async_structure_factor_benchmark EXCLUDE_FROM_ALL benchmark_async_structure_factor.cpp)
+target_link_libraries(bethe_async_structure_factor_benchmark PRIVATE bethe::bethe TBB::tbb)
+set_target_properties(bethe_async_structure_factor_benchmark PROPERTIES CXX_EXTENSIONS OFF)
+
+# Standalone upstream reproducers; the regular Async tests already exercise these paths.
+add_executable(bethe_async_dependency_probe EXCLUDE_FROM_ALL async_dependency_probe.cpp)
+target_link_libraries(bethe_async_dependency_probe PRIVATE uni20_async TBB::tbb GTest::gtest_main)
+set_target_properties(bethe_async_dependency_probe PROPERTIES CXX_EXTENSIONS OFF)
 
 add_executable(bethe_xxx_thermodynamic_structure_factor_tests test_xxx_thermodynamic_structure_factor.cpp)
 target_link_libraries(bethe_xxx_thermodynamic_structure_factor_tests PRIVATE bethe::bethe)
