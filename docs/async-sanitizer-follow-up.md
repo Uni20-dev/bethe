@@ -85,6 +85,10 @@ caused CLI timeouts while `llvm-symbolizer` waited for remote HTTPS connections;
 the numerical processes were waiting for symbolization. Local debug information
 remains available, and disabling those downloads does not disable sanitizer
 checks or leak detection.
+This matches [Uni20's documented test-environment policy](https://github.com/Uni20-dev/uni20/blob/bc14c127d28cfd10da1621f1805910f044c81683/docs/development/testing.md):
+keep the setting in test commands or presets, without changing library behavior
+or the user's shell configuration. System-library stack traces may have less
+detail when their debug symbols are not installed locally.
 
 ## Remaining MPFR cache cleanup
 
