@@ -128,3 +128,21 @@ application thread's cache after a scheduler wait does not clear caches created
 on other threads. A follow-up should choose the ownership of thread-exit cleanup
 without introducing repeated cache clearing into numerical hot paths or changing
 working precision. This remains a separate sanitizer blocker for the MPFR cases.
+
+## GitHub runner findings
+
+The sanitizer runner also needs `llvm-19`, which supplies
+`llvm-symbolizer-19`. Installing Clang and compiler-rt with
+`--no-install-recommends` did not supply a usable external symbolizer: CI warned
+about its invalid path and emitted address-only stacks. Source-based LSan
+suppressions cannot match those stacks. The workflow now installs the package,
+checks its version and sets `ASAN_SYMBOLIZER_PATH` explicitly. This addresses
+symbolization, without expanding the suppression.
+
+The wide Release job exposed a separate scheduler assertion in
+`TbbScheduler::ExecutionScope::~ExecutionScope`: `current_` is null instead of
+the active scope. Both concurrent `AsyncMpfr` tests aborted; the other 1,823
+routine cases passed. Repeating those tests locally with a two-CPU affinity
+reproduced the assertion on iteration seven, despite the earlier full local
+suite passing. This is an unresolved execution failure, independent of MPFR
+cache retention; the assertion and affected tests remain enabled.
