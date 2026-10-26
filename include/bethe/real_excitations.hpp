@@ -3,14 +3,17 @@
 #pragma once
 
 #include <algorithm>
+#include <bethe/detail/continuous_work.hpp>
 #include <bethe/execution.hpp>
 #include <cstddef>
 #include <cstdint>
 #include <limits>
+#include <mutex>
 #include <numeric>
 #include <optional>
 #include <span>
 #include <stdexcept>
+#include <uni20/async/async.hpp>
 #include <uni20/common/half_int.hpp>
 #include <utility>
 #include <vector>
@@ -117,28 +120,23 @@ template <typename Integer> bool advance_combination(std::span<Integer> labels, 
   return true;
 }
 
-template <typename Result, typename Solve, typename Ground, typename Energy = StateEnergy>
-Result scan_real_combinations(std::size_t slots, std::size_t m, std::int64_t first, RealExcitationOptions const& scan,
-                              Solve&& solve, Ground&& ground, EnergyOrder order = EnergyOrder::ascending,
-                              Energy energy = {})
+/// Synchronous core, called within one owning Async operation. The caller has
+/// checked the budget and initialized result.candidate_count. transform enriches
+/// a converged level outside the collection lock, before releasing its runner;
+/// the returned record must retain .state and .gap for ordering and diagnostics.
+/// This fuses per-state follow-up work without a second queue or per-state task.
+template <typename Result, typename Solve, typename Ground, typename Energy, typename Transform>
+void scan_real_combinations_into(uni20::async::IAsyncScheduler& scheduler, std::size_t slots, std::size_t m,
+                                 std::int64_t first, RealExcitationOptions const& scan, Solve& solve, Ground& ground,
+                                 EnergyOrder order, Energy& energy, Result& result, Transform transform)
 {
-  if (scan.count == 0 || scan.max_candidates == 0)
-    throw std::invalid_argument("excitation count and max_candidates must be positive");
-  auto& scheduler = scan.execution.resolved_scheduler();
-  Result result;
-  using State = decltype(result.ground_state);
-  result.candidate_count = bounded_binomial(slots, m, scan.max_candidates);
-  if (result.candidate_count == 0)
-    throw std::invalid_argument("no supported real-root configurations at this precision");
+  if (scan.execution.stop.stop_requested()) throw ScanCancelled{};
   result.ground_state = ground();
+  if (scan.execution.stop.stop_requested()) throw ScanCancelled{};
+  using State = decltype(result.ground_state);
   std::vector<uni20::half_int> numbers(m);
   for (std::size_t i = 0; i < m; ++i)
     numbers[i] = uni20::from_twice(first + 2 * static_cast<std::int64_t>(i));
-
-  // A bounded max heap avoids retaining roots for every solved candidate.
-  // An optional energy projection keeps small gaps and level ordering from
-  // being lost to a shared extensive offset. Other models keep their existing
-  // total-energy convention through the default projection.
   auto less = [order, &energy](auto const& left, auto const& right) {
     auto const a = energy(left.state), b = energy(right.state);
     if (a != b) return order == EnergyOrder::ascending ? a < b : a > b;
@@ -146,52 +144,118 @@ Result scan_real_combinations(std::size_t slots, std::size_t m, std::int64_t fir
   };
   auto const keep = std::min(scan.count, result.candidate_count);
   result.levels.reserve(keep);
-  for (std::size_t offset = 0; offset < result.candidate_count;)
-  {
-    auto const size = std::min(scan.execution.batch_size, result.candidate_count - offset);
-    std::vector<std::vector<uni20::half_int>> labels;
-    labels.reserve(size);
-    for (std::size_t i = 0; i < size; ++i)
-    {
-      labels.push_back(numbers);
-      // Empty sets have one combination; no slots-1 arithmetic is needed.
-      if (offset + i + 1 < result.candidate_count)
-        advance_combination<uni20::half_int>(numbers,
-                                             uni20::from_twice(first + 2 * static_cast<std::int64_t>(slots - 1)));
-    }
-    std::vector<std::optional<State>> states(size);
-    scheduler.execute_batch(size, [&](std::size_t i) {
-      states[i] = labels[i] == result.ground_state.quantum_numbers ? result.ground_state : solve(labels[i]);
-    });
-    // Merge in enumeration order, independent of completion order. In particular
-    // the first failure and equal-energy tie breaking retain their serial meaning.
-    for (auto& slot : states)
-    {
-      auto state = std::move(*slot);
-      if (state.converged)
-      {
-        ++result.converged_count;
-        RealExcitation<State> level{.state = std::move(state), .gap = std::nullopt};
-        if (result.ground_state.converged) level.gap = energy(level.state) - energy(result.ground_state);
-        if (result.levels.size() < keep)
+  std::mutex mutex;
+  std::size_t next = 0, first_failure = result.candidate_count;
+  auto completed = continuous_work(
+      scheduler, scan.execution.max_in_flight, result.candidate_count,
+      [&](std::size_t, std::stop_token stop) {
+        std::size_t id;
+        std::vector<uni20::half_int> labels;
         {
-          result.levels.push_back(std::move(level));
-          std::push_heap(result.levels.begin(), result.levels.end(), less);
+          // Label generation and ID assignment are atomic together. Arrival at
+          // the collector never defines a candidate's enumeration identity.
+          std::lock_guard lock(mutex);
+          id = next++;
+          labels = numbers;
+          if (next < result.candidate_count)
+            advance_combination<uni20::half_int>(numbers,
+                                                 uni20::from_twice(first + 2 * static_cast<std::int64_t>(slots - 1)));
         }
-        else if (less(level, result.levels.front()))
+        auto state = labels == result.ground_state.quantum_numbers ? result.ground_state : solve(labels);
+        // A cancelled scan never returns partial data. Do not start a follow-up
+        // kernel after cancellation (or another runner's execution failure).
+        if (stop.stop_requested()) return;
+        if (state.converged)
         {
-          std::pop_heap(result.levels.begin(), result.levels.end(), less);
-          result.levels.back() = std::move(level);
-          std::push_heap(result.levels.begin(), result.levels.end(), less);
+          RealExcitation<State> solved{.state = std::move(state), .gap = std::nullopt};
+          if (result.ground_state.converged) solved.gap = energy(solved.state) - energy(result.ground_state);
+          auto level = transform(std::move(solved), std::as_const(result.ground_state));
+          std::lock_guard lock(mutex);
+          ++result.converged_count;
+          if (result.levels.size() < keep)
+          {
+            result.levels.push_back(std::move(level));
+            std::push_heap(result.levels.begin(), result.levels.end(), less);
+          }
+          else if (less(level, result.levels.front()))
+          {
+            std::pop_heap(result.levels.begin(), result.levels.end(), less);
+            result.levels.back() = std::move(level);
+            std::push_heap(result.levels.begin(), result.levels.end(), less);
+          }
         }
-      }
-      else if (!result.first_unconverged)
-        result.first_unconverged = std::move(state);
-    }
-    offset += size;
-  }
+        else
+        {
+          std::lock_guard lock(mutex);
+          if (id < first_failure)
+          {
+            first_failure = id;
+            result.first_unconverged = std::move(state);
+          }
+        }
+      },
+      scan.execution.stop);
+  // Cancellation is an execution outcome, not numerical nonconvergence. Active
+  // kernels finish before it is observed; no partly scanned family is returned.
+  if (completed != result.candidate_count || scan.execution.stop.stop_requested()) throw ScanCancelled{};
   std::sort_heap(result.levels.begin(), result.levels.end(), less);
-  return result;
+}
+
+/// One owning coroutine, one joined batch of continuous runners. Neither the
+/// coroutine inventory nor completed intermediate queues grow with family size.
+template <typename Result, typename Solve, typename Ground, typename Energy>
+uni20::async::AsyncTask scan_real_combinations_task(uni20::async::IAsyncScheduler& scheduler, std::size_t slots,
+                                                    std::size_t m, std::int64_t first, RealExcitationOptions scan,
+                                                    Solve solve, Ground ground, EnergyOrder order, Energy energy,
+                                                    Result result, uni20::async::WriteBuffer<Result> output)
+{
+  // Enroll the exception sink before any preparation or allocation can fail.
+  auto destination = co_await output;
+  scan_real_combinations_into(scheduler, slots, m, first, scan, solve, ground, order, energy, result,
+                              [](auto level, auto const&) { return level; });
+  destination = std::move(result);
+}
+
+/// Submit a complete finite-family scan. Preflight errors throw before any
+/// scientific work. Callbacks/configuration are decay-copied into the task:
+/// references inside a callback remain the caller's lifetime responsibility.
+/// The scheduler is borrowed until completion, even if the result is discarded.
+template <typename Result, typename Solve, typename Ground, typename Energy = StateEnergy>
+uni20::async::Async<Result> scan_real_combinations_async(std::size_t slots, std::size_t m, std::int64_t first,
+                                                         RealExcitationOptions scan, Solve solve, Ground ground,
+                                                         EnergyOrder order = EnergyOrder::ascending, Energy energy = {},
+                                                         Result seed = {})
+{
+  if (scan.count == 0 || scan.max_candidates == 0)
+    throw std::invalid_argument("excitation count and max_candidates must be positive");
+  auto& scheduler = scan.execution.continuous_scheduler();
+  seed.candidate_count = bounded_binomial(slots, m, scan.max_candidates);
+  if (seed.candidate_count == 0) throw std::invalid_argument("no supported real-root configurations at this precision");
+  uni20::async::Async<Result> output;
+  // Only ONE task is admitted. All later work is within execute_batch's joining
+  // scope, including allocation/worker failure; no partially submitted graph.
+  auto task = scan_real_combinations_task(scheduler, slots, m, first, std::move(scan), std::move(solve),
+                                          std::move(ground), order, std::move(energy), std::move(seed), output.write());
+  schedule_owned(scheduler, std::move(task));
+  return output;
+}
+
+/// Move a privately owned result only after waiting on the explicitly resolved
+/// scheduler. Uni20's move_from_wait uses the active scheduler if not yet ready.
+template <typename T> T take_scan_result(uni20::async::Async<T>& result, uni20::async::IAsyncScheduler& scheduler)
+{
+  return take_result(result, scheduler);
+}
+
+template <typename Result, typename Solve, typename Ground, typename Energy = StateEnergy>
+Result scan_real_combinations(std::size_t slots, std::size_t m, std::int64_t first, RealExcitationOptions const& scan,
+                              Solve&& solve, Ground&& ground, EnergyOrder order = EnergyOrder::ascending,
+                              Energy energy = {})
+{
+  auto& scheduler = scan.execution.resolved_scheduler();
+  auto result = scan_real_combinations_async<Result>(slots, m, first, scan, std::forward<Solve>(solve),
+                                                     std::forward<Ground>(ground), order, std::move(energy));
+  return take_scan_result(result, scheduler);
 }
 
 } // namespace detail

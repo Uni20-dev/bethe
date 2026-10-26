@@ -64,8 +64,8 @@ TEST(ParallelScan, BoundedHeapFailureAndTieOrdering)
   {
     auto const reference = scan({&fifo, 1}, order);
     for (auto* scheduler : std::vector<IAsyncScheduler*>{&reverse, &random, &parallel})
-      for (std::size_t batch : {1, 3, 128})
-        equal(reference, scan({scheduler, batch}, order));
+      for (std::size_t capacity : {1, 3, 128})
+        equal(reference, scan({scheduler, 128, capacity}, order));
   }
 }
 
@@ -101,15 +101,15 @@ TEST(ParallelScan, PreflightVacuumAndException)
   EXPECT_EQ(active, 0); // no work remains after synchronous exception propagation
 }
 
-TEST(ParallelScan, BoundedBatchesAndActiveSchedulerFallback)
+TEST(ParallelScan, BoundedRunnersAndActiveSchedulerFallback)
 {
   RecordingScheduler active, explicit_scheduler;
   uni20::async::ScopedScheduler scope(&active);
-  auto const reference = scan({nullptr, 6}, bethe::detail::EnergyOrder::ascending);
-  EXPECT_EQ(active.sizes, (std::vector<std::size_t>{6, 6, 6, 6, 4}));
-  auto const result = scan({&explicit_scheduler, 8}, bethe::detail::EnergyOrder::ascending);
-  EXPECT_EQ(explicit_scheduler.sizes, (std::vector<std::size_t>{8, 8, 8, 4}));
-  EXPECT_EQ(active.sizes.size(), 5); // explicit selection did not touch the active scheduler
+  auto const reference = scan({nullptr, 128, 6}, bethe::detail::EnergyOrder::ascending);
+  EXPECT_EQ(active.sizes, (std::vector<std::size_t>{6}));
+  auto const result = scan({&explicit_scheduler, 128, 8}, bethe::detail::EnergyOrder::ascending);
+  EXPECT_EQ(explicit_scheduler.sizes, (std::vector<std::size_t>{8}));
+  EXPECT_EQ(active.sizes.size(), 1); // explicit selection did not touch the active scheduler
   EXPECT_EQ(uni20::async::get_global_scheduler(), &active);
   equal(reference, result);
 }

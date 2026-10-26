@@ -254,6 +254,7 @@ template <uni20::Real Real> int run(Arguments const& args, int argc, char** argv
   field("numerics", "arithmetic_format", "Arithmetic format", arithmetic.format);
   field("numerics", "precision_bits", "Working precision (bits)", arithmetic.bits);
   field("numerics", "threads", "Scheduler concurrency limit", args.threads);
+  field("numerics", "cpu_timing_scope", "CPU timing scope", "background + grids (including row output)");
   field("model", "branches", "Branch selection", args.branch);
   if (momentum)
     field("numerics", "momentum", "Requested momentum", *momentum);
@@ -339,19 +340,20 @@ template <uni20::Real Real> int run(Arguments const& args, int argc, char** argv
       {
         if (args.branch != "all" && args.branch != name(b)) continue;
         auto const [lo, hi] = solver->momentum_range(b);
+        auto computation = context.computation();
         bethe::evaluate_observable_grid(
             count,
             [&](std::size_t i) {
               Real const p = momentum ? *momentum : i == count - 1 ? hi : lo + (hi - lo) * Real(i) / Real(count - 1);
               return std::as_const(*solver).at_momentum(b, p, convention, reference);
             },
-            [&](std::size_t, auto const& s) { append(s, std::nullopt, s.fermi_energy); }, {&scheduler},
-            [&](std::size_t, std::size_t) { return context.computation(); });
+            [&](std::size_t, auto const& s) { append(s, std::nullopt, s.fermi_energy); }, {&scheduler});
       }
     else
       for (auto b : {model::Branch::spinon, model::Branch::holon, model::Branch::antiholon})
       {
         if (args.branch != "all" && args.branch != name(b)) continue;
+        auto computation = context.computation();
         bethe::evaluate_observable_grid(
             count,
             [&](std::size_t i) {
@@ -363,8 +365,7 @@ template <uni20::Real Real> int run(Arguments const& args, int argc, char** argv
               if (reference == model::EnergyReference::fermi && s.converged) s.energy = s.symmetric_energy;
               return s;
             },
-            [&](std::size_t, auto const& s) { append(s, s.evaluations, s.symmetric_energy); }, {&scheduler},
-            [&](std::size_t, std::size_t) { return context.computation(); });
+            [&](std::size_t, auto const& s) { append(s, s.evaluations, s.symmetric_energy); }, {&scheduler});
       }
     output.finish(table, summary(complete ? uni20::run_outcome::success : uni20::run_outcome::partial,
                                  complete ? "converged" : "incomplete; failed energies omitted"));

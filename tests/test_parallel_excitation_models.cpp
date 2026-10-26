@@ -78,15 +78,15 @@ template <typename Solve> void check_schedulers(Solve solve)
   for (std::size_t iterations : {10000, 0})
   {
     SCOPED_TRACE(iterations);
-    auto const reference = solve({.count = 3, .max_candidates = 100, .execution = {&serial, 1}}, iterations);
+    auto const reference = solve({.count = 3, .max_candidates = 100, .execution = {&serial, 128, 1}}, iterations);
     EXPECT_EQ(reference.converged(), iterations != 0);
     if (iterations == 0) EXPECT_TRUE(reference.first_unconverged);
     RecordingScheduler recording;
-    auto const reversed = solve({.count = 3, .max_candidates = 100, .execution = {&recording, 3}}, iterations);
-    EXPECT_EQ(recording.tasks, reference.candidate_count); // scheduler selection was not ignored
+    auto const reversed = solve({.count = 3, .max_candidates = 100, .execution = {&recording, 128, 3}}, iterations);
+    EXPECT_EQ(recording.tasks, std::min(std::size_t{3}, reference.candidate_count));
     EXPECT_LE(recording.largest_batch, 3U);
     equal_scan(reference, reversed);
-    auto const concurrent = solve({.count = 3, .max_candidates = 100, .execution = {&parallel, 7}}, iterations);
+    auto const concurrent = solve({.count = 3, .max_candidates = 100, .execution = {&parallel, 128, 7}}, iterations);
     equal_scan(reference, concurrent);
   }
   EXPECT_EQ(get_global_scheduler(), original);

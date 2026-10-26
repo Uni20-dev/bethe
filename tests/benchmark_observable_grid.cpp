@@ -34,19 +34,6 @@ struct Timer
       return {std::chrono::duration<double>(Clock::now() - start).count(), seconds};
     }
 };
-struct BatchScope
-{
-    Timing& total;
-    Timer timer;
-    explicit BatchScope(Timing& t) : total(t) {}
-    BatchScope(BatchScope const&) = delete;
-    ~BatchScope()
-    {
-      auto const t = timer.elapsed();
-      total.wall += t.wall;
-      total.cpu += t.cpu;
-    }
-};
 
 template <uni20::Real Real, typename Evaluate>
 void measure(std::size_t count, std::size_t repeats, Timing preparation, Evaluate evaluate)
@@ -60,25 +47,23 @@ void measure(std::size_t count, std::size_t repeats, Timing preparation, Evaluat
       // Alternate the sweep order, rather than always timing eight workers last.
       int const workers = 1 << (repeat % 2 ? 3 - step : step);
       uni20::async::TbbScheduler scheduler(workers);
-      Timing evaluation;
       bethe::detail::CompensatedSum<Real> sum;
       std::size_t next = 0, failed = 0;
       Timer timer;
-      bethe::evaluate_observable_grid(
-          count, evaluate,
-          [&](std::size_t i, auto const& point) {
-            if (i != next++) throw std::runtime_error("reordered grid");
-            if (!point.converged)
-            {
-              ++failed;
-              return;
-            }
-            if constexpr (requires { *point.energy; })
-              sum.add(*point.energy);
-            else
-              sum.add(point.energy);
-          },
-          {&scheduler}, [&](std::size_t, std::size_t) { return BatchScope(evaluation); });
+      bethe::evaluate_observable_grid(count, evaluate,
+                                      [&](std::size_t i, auto const& point) {
+                                        if (i != next++) throw std::runtime_error("reordered grid");
+                                        if (!point.converged)
+                                        {
+                                          ++failed;
+                                          return;
+                                        }
+                                        if constexpr (requires { *point.energy; })
+                                          sum.add(*point.energy);
+                                        else
+                                          sum.add(point.energy);
+                                      },
+                                      {&scheduler});
       auto const whole = timer.elapsed();
       if (next != count || (reference_sum && *reference_sum != sum.value()) ||
           (reference_failures && *reference_failures != failed))
@@ -86,9 +71,7 @@ void measure(std::size_t count, std::size_t repeats, Timing preparation, Evaluat
       reference_sum = sum.value();
       reference_failures = failed;
       std::cout << "repeat=" << repeat + 1 << " workers=" << workers << " grid_wall=" << whole.wall
-                << " grid_cpu=" << whole.cpu << " evaluation_wall=" << evaluation.wall
-                << " evaluation_cpu=" << evaluation.cpu
-                << " collection_and_batch_overhead_wall=" << whole.wall - evaluation.wall << " failed=" << failed
+                << " grid_cpu=" << whole.cpu << " failed=" << failed
                 << " converged_energy_sum=" << uni20::format_scalar(sum.value()) << std::endl;
     }
 }
@@ -143,7 +126,7 @@ try
   if (count < 2) throw std::invalid_argument("grid needs at least two points");
   std::string_view const model(argv[1]), precision(argv[2]);
   std::cout << std::setprecision(9) << "model=" << model << " precision=" << precision << " points=" << count
-            << " repeats=" << repeats << " batch_size=128\n";
+            << " repeats=" << repeats << " max_in_flight=128\n";
   if (precision == "fp64")
     benchmark<double>(model, count, repeats);
   else if (precision == "long-double")

@@ -80,6 +80,12 @@ add_executable(bethe_parallel_scan_tests test_parallel_scan.cpp)
 target_link_libraries(bethe_parallel_scan_tests PRIVATE bethe::bethe TBB::tbb)
 bethe_discover_tests(bethe_parallel_scan_tests)
 
+foreach(test IN ITEMS async_scan continuous_work)
+  add_executable(bethe_${test}_tests test_${test}.cpp)
+  target_link_libraries(bethe_${test}_tests PRIVATE bethe::bethe TBB::tbb)
+  bethe_discover_tests(bethe_${test}_tests)
+endforeach()
+
 add_executable(bethe_parallel_excitation_tests test_parallel_excitation_models.cpp)
 target_link_libraries(bethe_parallel_excitation_tests PRIVATE bethe::bethe TBB::tbb)
 bethe_discover_tests(bethe_parallel_excitation_tests)

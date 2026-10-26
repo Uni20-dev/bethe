@@ -37,7 +37,7 @@ inline uni20::presentation::table_metadata run_summary(uni20::metadata_document 
                                           {"elapsed_seconds", "Elapsed seconds"}};
   if (summary.find("rows")) keys.emplace("rows", "Rows");
   auto result = run_metadata(summary, keys);
-  // Preserve the established compute-only CPU field, including its units and
+  // Preserve the explicitly scoped CPU field, including its units and
   // six fractional digits. New timing fields export native seconds directly.
   auto const& seconds = summary.find("compute_cpu_seconds")->value.get<std::optional<long double>>();
   result.at("CPU time") = seconds ? fmt::format("{:.6f} s", *seconds) : "unavailable";

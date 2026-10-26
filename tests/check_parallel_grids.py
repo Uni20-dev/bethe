@@ -35,6 +35,7 @@ def table(program, args, code=0):
     assert t["summary"]["Outcome"] == ("success" if code == 0 else "partial")
     assert Decimal(t["summary"]["Run CPU seconds"]) >= 0
     assert Decimal(t["summary"]["CPU time"].split()[0]) >= 0
+    assert t["metadata"]["CPU timing scope"] == "background + grids (including row output)"
     return t
 
 
@@ -70,7 +71,7 @@ for program, base, budget in cases:
         column = next(i for i, c in enumerate(failed["columns"]) if c["id"] == "status")
         assert all(row[column] == "density_limit" for row in failed["rows"])
 
-# More than one batch, including a short final batch, and custom momentum range.
+# More points than the admission window, and a custom momentum range.
 same_tables(lieb_liniger, ["--c", "4", "--branch", "type-i", "--p-max", "20", "--points", "129"])
 same_tables(hubbard, ["--u", "4", "--branch", "holon", "--momentum", "1",
                       "--max-evaluations", "0"], 2)

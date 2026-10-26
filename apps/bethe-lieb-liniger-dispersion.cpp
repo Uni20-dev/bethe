@@ -118,6 +118,7 @@ template <uni20::Real Real> int run(Arguments const& a, int argc, char** argv)
       .field("branches", "Branches", a.branch)
       .precision(a.precision)
       .field("threads", "Scheduler concurrency limit", a.threads)
+      .field("cpu_timing_scope", "CPU timing scope", "background + grids (including row output)")
       .field("tolerance", "Relative tolerance", controls.tolerance)
       .field("initial_nodes", "Initial nodes", controls.initial_nodes)
       .field("max_nodes", "Max nodes", controls.max_nodes)
@@ -159,6 +160,7 @@ template <uni20::Real Real> int run(Arguments const& a, int argc, char** argv)
       if (a.branch != "all" && a.branch != name(branch)) continue;
       std::size_t const count = momentum ? 1 : a.points;
       Real const high = branch == model::Branch::type_i ? pmax : end;
+      auto computation = context.computation();
       bethe::evaluate_observable_grid(
           count,
           [&](std::size_t i) {
@@ -173,7 +175,7 @@ template <uni20::Real Real> int run(Arguments const& a, int argc, char** argv)
                          point.converged ? Optional(point.momentum_error) : std::nullopt, point.iterations,
                          std::string(name(point.status)));
           },
-          {&scheduler}, [&](std::size_t, std::size_t) { return context.computation(); });
+          {&scheduler});
     }
     report.result(complete, complete ? "converged" : "incomplete; failed energies omitted");
     auto const summary = report.finish();
