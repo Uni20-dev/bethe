@@ -123,8 +123,12 @@ TEST(XxxMpfr, RootOnlyConcurrentPrecisionsAndThreadedExcitations)
   std::vector<model::RealExcitationScan<model::RealState<Real>>> serial(2);
   scheduler.execute_batch(2, [&](std::size_t i) {
     auto const default_before = mpfr_get_default_prec();
-    serial[i] = model::real_excitations<Real>(8, uni20::half_int(1), {.count = 100},
-                                              bethe::SolverOptions<Real>(Precision::bits(128 + 128 * i)));
+    // Each concurrent reference calculation needs its own serial scheduler;
+    // the process-wide default DebugScheduler is single-threaded.
+    uni20::async::DebugScheduler serial_scheduler;
+    serial[i] = model::real_excitations<Real>(
+        8, uni20::half_int(1), {.count = 100, .execution = {&serial_scheduler}},
+        bethe::SolverOptions<Real>(Precision::bits(128 + 128 * i)));
     EXPECT_EQ(mpfr_get_default_prec(), default_before);
   });
   for (std::size_t i = 0; i < serial.size(); ++i)

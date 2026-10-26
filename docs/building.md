@@ -306,6 +306,16 @@ Runtime-precision Lieb–Liniger and form-factor coverage belongs to
 provider requests fail clearly. These jobs do not claim macOS, Windows or GPU
 coverage. Documentation has its own workflow.
 
+The sanitizer preset sets `UNI20_SANITIZE` as well as the application's compiler
+flags, activating Uni20's oneTBB instrumentation boundary. The compiled oneTBB
+implementation is excluded; Bethe and Uni20 remain instrumented. Leak detection
+stays enabled, with `tests/lsan.supp` accounting only for Uni20's intentionally
+retained `NodeInfo` debug metadata. See [the dependency sanitizer notes](async-sanitizer-follow-up.md).
+Suppression statistics are quiet so successful commands retain their normal
+stderr behavior; actual sanitizer errors still print and fail the process.
+The preset clears `DEBUGINFOD_URLS` so symbolization uses locally available
+debug information without waiting for remote downloads during CLI checks.
+
 Weekly CI (Monday 02:00 Asia/Taipei) additionally runs `ci-long-running` on the
 wide-precision build. A manual **C++ CI** run includes it by default, controlled
 by the **Include long-running numerical validation** input. Run this group when
