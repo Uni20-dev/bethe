@@ -63,6 +63,29 @@ if enabled:
         failed = table(["--c", "4", "--momentum", "1", "--precision", precision, "--max-iterations", "0"], 2)
         assert all(row["energy"] is None and row["status"] == "momentum_limit" for row in rows(failed))
 
+        # Non-dyadic index fractions remain exact rationals until multiplication
+        # by the finite-precision endpoint. Exercise thirds and fifths, not only
+        # the half-grid points above, at every supported runtime precision.
+        for count in (4, 6):
+            grid = ["--c", "4", "--points", str(count), "--precision", precision, "--p-max", "2"]
+            serial = table([*grid, "--threads", "1"])
+            parallel = table([*grid, "--threads", "3", "--no-retain"])
+            check_precision(serial, precision, bits)
+            check_precision(parallel, precision, bits)
+            assert serial["rows"] == parallel["rows"]
+            r = rows(serial)
+            assert len(r) == 2*count and all(row["status"] == "converged" for row in r)
+            with localcontext() as ctx:
+                ctx.prec = 120
+                bound = Decimal(2) ** (3-bits)
+                for i, row in enumerate(r[:count]):
+                    assert row["branch"] == "type-i"
+                    assert abs(Decimal(row["p"])-Decimal(2*i)/Decimal(count-1)) < bound
+                endpoint = Decimal(r[-1]["p"])
+                for i, row in enumerate(r[count:]):
+                    assert row["branch"] == "type-ii"
+                    assert abs(Decimal(row["p"])-endpoint*Decimal(i)/Decimal(count-1)) < endpoint*bound
+
     with localcontext() as ctx:
         ctx.prec = 120
         # Independently known strong-coupling asymptotics expose a real energy

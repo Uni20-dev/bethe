@@ -166,6 +166,8 @@ template <uni20::Real Real> int run(Arguments const& a, model::Options<Real> con
       bethe::evaluate_observable_grid(
           count,
           [&](std::size_t i) {
+            // Runtime scalars retain this index fraction as an exact rational;
+            // multiplication by high supplies the finite working precision.
             Real const p = momentum ? *momentum : i == count - 1 ? high : high * (Real(i) / Real(count - 1));
             return solver.at_momentum(branch, p);
           },
