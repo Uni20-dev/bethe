@@ -67,10 +67,18 @@ with localcontext() as ctx:
                                  (["--density", "0.1"], "2", "1")):
             args = ["--c", "4", "--temperature", lo, "--temperature-end", hi,
                     "--points", "4", *ensemble, "--precision", precision]
+            if ensemble[0] == "--density":
+                # This grid tests scheduling and complete-row equality. The
+                # default-precision inversion is checked above; repeating it
+                # for every grid point exceeds the slower CI runner's budget.
+                args += ["--tolerance", "1e-12", "--density-tolerance", "1e-10"]
             serial = table([*args, "--threads", "1"])
             parallel = table([*args, "--threads", "4", "--no-retain"])
             assert serial["rows"] == parallel["rows"]
             assert len(serial["rows"]) == 4
+            if ensemble[0] == "--density":
+                assert all(abs(Decimal(r["density"])-Decimal("0.1")) < Decimal("1e-10")
+                           for r in rows(serial))
             assert "ordered row output" in parallel["metadata"]["CPU timing scope"]
 
 scan = [*base, "--temperature-end", "2", "--points", "3"]
