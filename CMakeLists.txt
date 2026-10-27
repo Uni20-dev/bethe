@@ -6,6 +6,7 @@ set(CMAKE_CXX_SCAN_FOR_MODULES OFF)
 
 option(BETHE_BUILD_APPS "Build Bethe ansatz command-line programs" ${PROJECT_IS_TOP_LEVEL})
 option(BETHE_BUILD_TESTS "Build Bethe ansatz regression tests" ${PROJECT_IS_TOP_LEVEL})
+option(BETHE_BUILD_EXAMPLES "Build library composition examples" OFF)
 option(BETHE_INSTALL_APPS "Install Bethe command-line programs" ${PROJECT_IS_TOP_LEVEL})
 
 # Reuse an enclosing project's Uni20 when present. Otherwise use a reproducible
@@ -210,6 +211,10 @@ if(BETHE_BUILD_APPS)
     endforeach()
     install(FILES COPYING DESTINATION "${CMAKE_INSTALL_DOCDIR}" COMPONENT BetheRuntime)
   endif()
+endif()
+
+if(BETHE_BUILD_EXAMPLES)
+  add_subdirectory(examples)
 endif()
 
 if(BETHE_BUILD_TESTS)

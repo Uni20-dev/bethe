@@ -71,6 +71,13 @@ in turn; a row's identity is its branch and logical point index.
 Async result. Its collector is serialized **on the scheduler**, so use the
 synchronous adapter for caller-thread-only CLI output. See
 [Async execution](async-execution.md) for ownership and cancellation.
+
+When the background itself is not ready yet,
+[`prepared_observable_grid.hpp`](../include/bethe/prepared_observable_grid.hpp)
+adds preparation as an Async result and a reader-dependent overload of the same
+grid. Several curves can share one prepared solver without copying its meshes;
+see [shared backgrounds](async-execution.md#shared-backgrounds) and the complete
+Lieb–Liniger example there.
 Threading leaves each scalar solver's arithmetic and stopping rules unchanged.
 Native-precision tests compare every field against independent scalar calls,
 using both a reverse-order scheduler and oneTBB, for binary64, native

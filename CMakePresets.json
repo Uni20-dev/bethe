@@ -14,6 +14,7 @@
         "CMAKE_CXX_EXTENSIONS": "OFF",
         "BETHE_BUILD_APPS": "ON",
         "BETHE_BUILD_TESTS": "ON",
+        "BETHE_BUILD_EXAMPLES": "ON",
         "BETHE_INSTALL_APPS": "ON",
         "UNI20_BUILD_TESTS": "OFF",
         "UNI20_BUILD_EXAMPLES": "OFF",
