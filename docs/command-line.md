@@ -261,7 +261,9 @@ in a bounded window that admits a new point after each collected result.
 Rows retain their serial branch/momentum order, including
 failed points and their diagnostics. Only the calling thread writes tables;
 `--no-retain` still permits bounded-memory streaming. `--momentum` accepts the
-same option but has only one point per branch, so it offers no grid parallelism.
+same option but has only one point per branch. Hubbard places all selected
+branches in one work window, so those queries can still overlap; a single
+selected branch has no single-point parallelism.
 
 The benefit depends on the cost and number of points: background preparation
 remains serial and short grids may not benefit. CPU timing covers preparation

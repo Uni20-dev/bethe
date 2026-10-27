@@ -157,6 +157,30 @@ OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 ./examples/bethe-async-background-examp
 
 The example is built in CI and is not installed as a frontend executable.
 
+The [doped Hubbard example](../examples/async_hubbard_background.cpp) uses the
+same APIs with `bethe::hubbard::thermo::DopedSolver<double>(4.0, 0.5)`. It
+submits spinon, holon and charge-particle curves before waiting for preparation,
+then collects them at a shared Fermi energy reference. Momentum intervals come
+from the prepared solver, so each evaluator owns only its branch selection;
+all three readers share the same coarse and fine meshes. The model's const
+queries use local inversion and accumulation state, with no mutable mesh cache.
+
+```sh
+cmake --build . --target bethe-async-hubbard-background-example -j2
+OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 ./examples/bethe-async-hubbard-background-example
+```
+
+For this model, a failed background produces failed points with the original
+background status, even at nominal gapless endpoints. A failed momentum
+inversion preserves its own status and missing energies. Tests compare every
+point field with serial calls in all configured fixed precisions, using queued
+and oneTBB schedulers and exhausting background/query budgets separately.
+The ordinary Hubbard frontend also shares one prepared background, but waits
+for it before validating branch intervals and opening caller-thread output.
+Its queries across selected branches share a single bounded window. The
+example demonstrates a client whose dependent computations are submitted
+before preparation completes; it does not claim faster preparation itself.
+
 ## Matched pipeline benchmark
 
 With tests enabled, build the opt-in comparison from a configured build directory:
