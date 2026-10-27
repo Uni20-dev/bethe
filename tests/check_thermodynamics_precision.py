@@ -13,9 +13,11 @@ enabled = all(flag.upper() in ("ON", "TRUE", "1") for flag in (mpfr, mplapack))
 env = dict(os.environ, OPENBLAS_NUM_THREADS="1", OMP_NUM_THREADS="1", UNI20_COLOR="never")
 
 
-def run(args, status=0):
+def run(args, status=0, error=None):
     result = subprocess.run([program, *args], text=True, capture_output=True, env=env, timeout=60)
     assert result.returncode == status, (args, result.returncode, result.stdout, result.stderr)
+    if error is not None:
+        assert not result.stdout and error in result.stderr, (args, result.stdout, result.stderr)
     return result.stdout
 
 
@@ -107,7 +109,9 @@ with tempfile.TemporaryDirectory() as directory:
     else:
         invalid += [["--precision", p] for p in ("bits-128", "digits-100")]
     for args in invalid:
-        run(["--c", "4", "--momentum", "0", *args, "--json", str(path), "--force"], 1)
+        missing_provider = not enabled and args in (["--precision", "bits-128"], ["--precision", "digits-100"])
+        run(["--c", "4", "--momentum", "0", *args, "--json", str(path), "--force"], 1,
+            error="arbitrary-precision linear solves require" if missing_provider else None)
         assert path.read_text() == "sentinel"
 
 print("Thermodynamic precision, physical corrections and exports passed")
