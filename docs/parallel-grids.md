@@ -8,7 +8,10 @@ adapter.
 
 The first frontends using this path are Hubbard and Lieb–Liniger dispersion.
 See the [command-line examples](command-line.md#parallel-observable-grids).
-Continuum optimizations, thermal grids and other observables can adopt the
+[Thermal Lieb–Liniger](lieb-liniger-thermal.md) also uses this adapter for
+independent temperature solves in either ensemble, preserving each point's
+iteration and convergence diagnostics.
+Continuum optimizations and other observables can adopt the
 same path after checking their independence and scratch ownership.
 
 ## Using the library
@@ -148,3 +151,40 @@ at p=5.412109375 with the default numerical controls. That row, its missing
 energy, and the partial outcome were identical at every worker count; binary64
 and binary128 completed this grid. Parallelism preserves these numerical
 diagnostics rather than changing the tolerance or silently dropping points.
+
+### Thermal Lieb–Liniger temperature scans
+
+On 28 October 2026, the thermal frontend was compared with a fresh serial
+baseline at Bethe `46b636e`, using identical GCC 13.3 Release builds, Uni20
+`04163b9b` and oneTBB 2022.3 on an Intel Core i7-12700KF. BLAS/OpenMP each
+used one thread. Each row below is the median of three complete-process timings,
+including CSV formatting with `--no-retain`; execution order alternated between
+repeats. All exported rows, including error estimates and iteration counts,
+matched the baseline exactly at every concurrency. The workstation was shared,
+so these are workload examples rather than isolated scaling measurements.
+
+Both ensembles use c=4 and a uniform temperature scan from 1 to 2. Reproduce
+the binary128 grand-canonical case with:
+
+```sh
+OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 /usr/bin/time -v \
+  bethe-lieb-liniger-thermal --c 4 --temperature 1 --temperature-end 2 \
+  --points 33 --mu -1 --precision fp128 --threads 8 \
+  --format csv --no-preamble --no-retain > /dev/null
+```
+
+The binary64 cases use 257 points at `--mu -1`, or 129 points at
+`--density 0.1`, with `--precision fp64`. Numerical controls otherwise keep
+their precision-dependent defaults. The old baseline has no `--threads` option.
+
+| Ensemble / arithmetic | Points | Old serial (s) | 1 worker (s) | 4 workers (s) | 8 workers (s) | Old / 8-worker CPU (s) | Old / 8-worker peak RSS (MiB) |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| Fixed mu, binary64 | 257 | 0.53 | 0.54 | 0.14 | 0.08 | 0.52 / 0.59 | 6.61 / 11.18 |
+| Fixed density, binary64 | 129 | 1.88 | 1.91 | 0.48 | 0.26 | 1.87 / 2.01 | 6.69 / 11.68 |
+| Fixed mu, binary128 | 33 | 47.75 | 48.03 | 13.37 | 7.45 | 47.74 / 49.70 | 9.99 / 33.80 |
+
+The binary128 scan gains about 6.4 times in wall time at eight workers, with
+about 4% more total CPU work than the old serial frontend. Independent solver
+workspaces increase peak memory with concurrency; bounded result admission
+does not bound total solver scratch independently of worker count. Single-point
+requests and very short scans have no corresponding parallel benefit.

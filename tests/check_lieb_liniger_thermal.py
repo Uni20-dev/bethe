@@ -61,6 +61,18 @@ with localcontext() as ctx:
         assert canonical["status"] == "converged"
         assert Decimal(canonical["density_error"]) < 10 * tol
 
+        # Complete results, including iteration/error diagnostics, must be
+        # independent of scheduling in both ensembles and either scan direction.
+        for ensemble, lo, hi in ((["--mu", "-1"], "1", "2"),
+                                 (["--density", "0.1"], "2", "1")):
+            args = ["--c", "4", "--temperature", lo, "--temperature-end", hi,
+                    "--points", "4", *ensemble, "--precision", precision]
+            serial = table([*args, "--threads", "1"])
+            parallel = table([*args, "--threads", "4", "--no-retain"])
+            assert serial["rows"] == parallel["rows"]
+            assert len(serial["rows"]) == 4
+            assert "ordered row output" in parallel["metadata"]["CPU timing scope"]
+
 scan = [*base, "--temperature-end", "2", "--points", "3"]
 t = table(scan)
 assert [r["temperature"] for r in rows(t)] == ["1", "1.5", "2"]
@@ -75,10 +87,18 @@ for option, value, expected in (("--max-iterations", "0", "iteration_limit"),
     assert r["status"] == expected and all(r[k] is None for k in ("density", "pressure", "energy_per_length", "entropy_per_length"))
 failed = rows(table(["--c", "4", "--temperature", "1", "--density", "1", "--max-evaluations", "0"], 2))[0]
 assert failed["status"] == "density_limit" and failed["chemical_potential"] is None
-mixed = rows(table(["--c", "4", "--temperature", "0.0001", "--temperature-end", "1",
-                    "--points", "2", "--mu", "-1"], 2))
+mixed_args = ["--c", "4", "--temperature", "0.0001", "--temperature-end", "1",
+              "--points", "2", "--mu", "-1"]
+mixed_table = table(mixed_args, 2)
+assert mixed_table["rows"] == table([*mixed_args, "--threads", "4", "--no-retain"], 2)["rows"]
+mixed = rows(mixed_table)
 assert mixed[0]["status"] == "precision_limit" and mixed[0]["pressure"] is None
 assert mixed[1]["status"] == "converged" and Decimal(mixed[1]["pressure"]) > 0
+# Cross the bounded admission window without expensive equilibrium solves.
+failed_scan = [*base, "--temperature-end", "2", "--points", "129", "--max-iterations", "0"]
+failed_serial = table(failed_scan, 2)
+assert len(failed_serial["rows"]) == 129
+assert failed_serial["rows"] == table([*failed_scan, "--threads", "4", "--no-retain"], 2)["rows"]
 # The documented lower-temperature scan needs a larger mesh than the default.
 run(["--c", "4", "--temperature", "0.5", "--temperature-end", "2", "--points", "9",
      "--density", "1", "--max-nodes", "512", "--quiet"])
@@ -87,6 +107,7 @@ for args in (["--c", "4", "--temperature", "1"], [*base, "--density", "1"],
              [*base, "--points", "3"], [*base, "--temperature-end", "0"],
              [*base, "--temperature-end", "2", "--points", "1"],
              [*base, "--max-nodes", "513"], [*base, "--tolerance", "nan"],
+             [*base, "--threads", "0"],
              [*base, "--density-tolerance", "1e-8"], [*base, "--max-evaluations", "1"],
              ["--c", "-1", "--temperature", "1", "--mu", "0"],
              ["--c", "4", "--temperature", "0", "--mu", "0"],
