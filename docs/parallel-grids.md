@@ -8,7 +8,9 @@ adapter.
 
 The first frontends using this path are Hubbard and Lieb–Liniger dispersion.
 See the [command-line examples](command-line.md#parallel-observable-grids).
-Continuum optimizations, thermal grids and other observables can adopt the
+[Hubbard continuum edges](hubbard-continuum.md) also use this adapter for
+independent total momenta, retaining each point's inversion/search diagnostics.
+Thermal grids and other observables can adopt the
 same path after checking their independence and scratch ownership.
 
 ## Using the library
@@ -148,3 +150,52 @@ at p=5.412109375 with the default numerical controls. That row, its missing
 energy, and the partial outcome were identical at every worker count; binary64
 and binary128 completed this grid. Parallelism preserves these numerical
 diagnostics rather than changing the tolerance or silently dropping points.
+
+### Hubbard continuum frontend
+
+Independent total-momentum queries also scale for continuum edges: the outer
+grid can overlap each point's quadrature, inversion and charge-channel extrema
+search. The inner algorithms and stopping rules are unchanged. The frontend
+uses the shared 128-point admission window and writes ordered rows on the caller.
+
+The following measurements on 28 October 2026 compare the serial frontend at
+Bethe `46b636e` with this continuous-grid implementation. Both builds used
+Uni20 `04163b9b`, GCC 13.3 Release (`-O3`, no fast-math), oneTBB 2022.3 and
+the same optimized MPLAPACK 3.0.0 configuration on an Intel Core i7-12700KF.
+These are whole-command wall/process-CPU times and peak RSS, including startup
+and CSV formatting. Three repeats alternate command order on a shared
+workstation, with no simultaneous compilation. BLAS and OpenMP each use one
+thread. All complete CSV rows match the serial baseline exactly at 1/4/8
+workers, including the error estimates, work counts and status columns.
+
+From the corresponding build directory, the two workloads are:
+
+```sh
+OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 \
+  ./bethe-hubbard-continuum --u 4 --channel two-spinon --points 129 \
+  --precision fp128 --threads 8 --format csv --no-preamble --no-retain
+OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 \
+  ./bethe-hubbard-continuum --u 4 --channel spinon-holon --points 65 \
+  --search-tolerance 1e-7 --position-tolerance 1e-5 --tolerance 1e-10 \
+  --precision fp64 --threads 8 --format csv --no-preamble --no-retain
+```
+
+Use `--threads 1` or `--threads 4` for the other measurements; omit that option
+for the old serial frontend. The looser charge controls are part of the
+benchmark definition, not a change to the defaults or a certified error bound.
+
+Median wall times:
+
+| Family | Precision | Points | Old serial (s) | New 1 worker (s) | New 4 workers (s) | New 8 workers (s) |
+| --- | --- | ---: | ---: | ---: | ---: | ---: |
+| Two spinons | binary128 | 129 | 28.55 | 29.64 | 7.65 | 3.95 |
+| Spinon–holon | binary64 | 65 | 18.79 | 18.79 | 4.89 | 2.64 |
+
+Relative to the old serial loop, eight workers give 7.23x and 7.12x speedups.
+Process CPU time increases from 28.55 to 30.64 s and from 18.78 to 19.65 s;
+peak RSS increases from 4.22 to 5.45 MiB and from 4.22 to 6.41 MiB.
+The new single-worker two-spinon path costs about 4% more than the old loop,
+while the charge workload is unchanged at this timing resolution. Thus the
+benefit is concurrent expensive queries; small grids need not become faster.
+Per-query numerical scratch grows with active workers even though admission
+and retained results are bounded.

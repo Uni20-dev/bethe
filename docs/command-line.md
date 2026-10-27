@@ -263,6 +263,11 @@ failed points and their diagnostics. Only the calling thread writes tables;
 `--no-retain` still permits bounded-memory streaming. `--momentum` accepts the
 same option but has only one point per branch, so it offers no grid parallelism.
 
+`bethe-hubbard-continuum --threads N` evaluates independent total momenta
+through the same bounded grid, for two-spinon and charge-containing edges.
+Each point's quadrature, inversion and extrema search remain sequential;
+rows preserve momentum order, including failures.
+
 The benefit depends on the cost and number of points: background preparation
 remains serial and short grids may not benefit. CPU timing covers preparation
 and complete grid calls, including row output, since evaluation and collection
