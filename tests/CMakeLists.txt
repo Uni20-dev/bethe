@@ -83,6 +83,10 @@ target_link_libraries(bethe_cli_precision_tests PRIVATE bethe_cli_output)
 bethe_discover_tests(bethe_cli_precision_tests)
 
 if(BETHE_HAS_MPREAL)
+  add_executable(bethe_su3_mpfr_tests test_su3_mpfr.cpp)
+  target_link_libraries(bethe_su3_mpfr_tests PRIVATE bethe::bethe TBB::tbb)
+  bethe_discover_tests(bethe_su3_mpfr_tests)
+
   add_executable(bethe_root_solver_mpfr_tests test_root_solver_mpfr.cpp)
   target_link_libraries(bethe_root_solver_mpfr_tests PRIVATE bethe::bethe TBB::tbb)
   bethe_discover_tests(bethe_root_solver_mpfr_tests)
@@ -312,6 +316,9 @@ if(BETHE_BUILD_APPS)
     set(bethe_arbitrary_structure_factor ON)
   endif()
   if(Python3_Interpreter_FOUND)
+    add_test(NAME SU3Precision.cli
+      COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_su3_precision.py"
+        "$<TARGET_FILE:bethe-su3-pbc>" "${BETHE_HAS_MPREAL}" "${BETHE_HAS_MPLAPACK_MPREAL}")
     add_test(NAME RootSolverPrecision.cli
       COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_root_solver_precision.py"
         "$<TARGET_FILE:bethe-xxx-obc>" "$<TARGET_FILE:bethe-lieb-liniger-pbc>"

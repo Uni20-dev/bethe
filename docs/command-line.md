@@ -135,12 +135,14 @@ bethe-lieb-liniger-obc 2 --length 1 --c 1e-50 --precision digits-100
 bethe-xxx-structure-factor 32 --precision bits-256
 bethe-richardson --levels 0,1,2,3 --pairs 2 --g 1 --precision digits-100
 bethe-central-spin --couplings 1,0.7,0.3 --field 1 --sz 0 --precision bits-256
+bethe-su3-pbc 24 --precision digits-100
 ```
 
 XXX roots, Richardson pairing and central spin need Uni20's
 arbitrary-precision scalar family (GMP, MPFR and MPC), but no MPLAPACK.
-Finite-size Lieb–Liniger and structure factors additionally require the MPLAPACK
-MPFR provider for LU operations. Other frontends still support native precisions only, including
+Finite-size Lieb–Liniger, SU(3) singlet ground states and structure factors
+additionally require the MPLAPACK MPFR provider for LU operations.
+Other frontends still support native precisions only, including
 Lieb–Liniger thermodynamic dispersion and thermal calculations. More precision does not expand the
 supported state family: the excitation scan still excludes strings and infinite roots.
 
