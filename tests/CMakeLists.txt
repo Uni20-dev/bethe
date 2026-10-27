@@ -24,6 +24,26 @@ if(NOT TARGET GTest::gtest_main)
 endif()
 include(GoogleTest)
 
+# Dependency lifetime policy belongs to Uni20. Resolve its actual source tree,
+# including enclosing projects and FETCHCONTENT_SOURCE_DIR_UNI20 overrides.
+# This opt-in affects test processes only, not applications or library targets.
+option(BETHE_TEST_UNI20_LSAN_SUPPRESSIONS "Use Uni20's LeakSanitizer policy in Bethe tests" OFF)
+set(bethe_test_environment "OPENBLAS_NUM_THREADS=1;OMP_NUM_THREADS=1")
+if(BETHE_TEST_UNI20_LSAN_SUPPRESSIONS)
+  get_filename_component(bethe_uni20_lsan_suppressions
+    "${bethe_uni20_core_source}/../../../tests/sanitizers/lsan.supp" ABSOLUTE)
+  if(NOT EXISTS "${bethe_uni20_lsan_suppressions}")
+    message(FATAL_ERROR
+      "Uni20's LeakSanitizer policy is missing: ${bethe_uni20_lsan_suppressions}. "
+      "Update the supplied Uni20 checkout, or use Bethe's pinned dependency.")
+  endif()
+  list(APPEND bethe_test_environment
+    "LSAN_OPTIONS=suppressions=${bethe_uni20_lsan_suppressions}:print_suppressions=0")
+endif()
+# GoogleTest discovery forwards PROPERTIES as a list; preserve ENVIRONMENT's
+# nested list as one property value for both routine and long-running cases.
+string(REPLACE ";" "\\;" bethe_discovered_test_environment "${bethe_test_environment}")
+
 function(bethe_discover_tests target)
   cmake_parse_arguments(PARSE_ARGV 1 arg "" "" "LONG_RUNNING_TESTS")
   if(arg_UNPARSED_ARGUMENTS OR arg_KEYWORDS_MISSING_VALUES)
@@ -45,7 +65,7 @@ function(bethe_discover_tests target)
       TEST_FILTER "${long_filter}"
       TEST_LIST ${target}_LONG_RUNNING_TESTS
       PROPERTIES
-        ENVIRONMENT "OPENBLAS_NUM_THREADS=1\;OMP_NUM_THREADS=1"
+        ENVIRONMENT "${bethe_discovered_test_environment}"
         LABELS "long-running"
         TIMEOUT 1800
     )
@@ -54,7 +74,7 @@ function(bethe_discover_tests target)
     DISCOVERY_MODE PRE_TEST
     NO_PRETTY_TYPES
     TEST_FILTER "${routine_filter}"
-    PROPERTIES ENVIRONMENT "OPENBLAS_NUM_THREADS=1\;OMP_NUM_THREADS=1"
+    PROPERTIES ENVIRONMENT "${bethe_discovered_test_environment}"
   )
 endfunction()
 
@@ -74,11 +94,21 @@ if(BETHE_HAS_MPREAL)
   add_executable(bethe_xxx_mpfr_tests test_xxx_mpfr.cpp)
   target_link_libraries(bethe_xxx_mpfr_tests PRIVATE bethe::bethe TBB::tbb)
   bethe_discover_tests(bethe_xxx_mpfr_tests)
+
+  add_executable(bethe_async_mpfr_tests test_async_mpfr.cpp)
+  target_link_libraries(bethe_async_mpfr_tests PRIVATE bethe::bethe TBB::tbb)
+  bethe_discover_tests(bethe_async_mpfr_tests)
 endif()
 
 add_executable(bethe_parallel_scan_tests test_parallel_scan.cpp)
 target_link_libraries(bethe_parallel_scan_tests PRIVATE bethe::bethe TBB::tbb)
 bethe_discover_tests(bethe_parallel_scan_tests)
+
+foreach(test IN ITEMS async_scan continuous_work async_structure_factor)
+  add_executable(bethe_${test}_tests test_${test}.cpp)
+  target_link_libraries(bethe_${test}_tests PRIVATE bethe::bethe TBB::tbb)
+  bethe_discover_tests(bethe_${test}_tests)
+endforeach()
 
 add_executable(bethe_parallel_excitation_tests test_parallel_excitation_models.cpp)
 target_link_libraries(bethe_parallel_excitation_tests PRIVATE bethe::bethe TBB::tbb)
@@ -104,6 +134,16 @@ bethe_discover_tests(bethe_xxx_prepared_form_factor_tests)
 add_executable(bethe_xxx_form_factor_benchmark EXCLUDE_FROM_ALL benchmark_xxx_form_factors.cpp)
 target_link_libraries(bethe_xxx_form_factor_benchmark PRIVATE bethe::bethe)
 set_target_properties(bethe_xxx_form_factor_benchmark PROPERTIES CXX_EXTENSIONS OFF)
+
+# Matched two-stage/fused control with complete native-precision output.
+add_executable(bethe_async_structure_factor_benchmark EXCLUDE_FROM_ALL benchmark_async_structure_factor.cpp)
+target_link_libraries(bethe_async_structure_factor_benchmark PRIVATE bethe::bethe TBB::tbb)
+set_target_properties(bethe_async_structure_factor_benchmark PROPERTIES CXX_EXTENSIONS OFF)
+
+# Standalone upstream reproducers; the regular Async tests already exercise these paths.
+add_executable(bethe_async_dependency_probe EXCLUDE_FROM_ALL async_dependency_probe.cpp)
+target_link_libraries(bethe_async_dependency_probe PRIVATE uni20_async TBB::tbb GTest::gtest_main)
+set_target_properties(bethe_async_dependency_probe PROPERTIES CXX_EXTENSIONS OFF)
 
 add_executable(bethe_xxx_thermodynamic_structure_factor_tests test_xxx_thermodynamic_structure_factor.cpp)
 target_link_libraries(bethe_xxx_thermodynamic_structure_factor_tests PRIVATE bethe::bethe)
@@ -684,4 +724,4 @@ endif()
 
 # Small dense systems and short CLI checks do not benefit from BLAS thread pools.
 get_property(bethe_test_names DIRECTORY PROPERTY TESTS)
-set_tests_properties(${bethe_test_names} PROPERTIES ENVIRONMENT "OPENBLAS_NUM_THREADS=1;OMP_NUM_THREADS=1")
+set_tests_properties(${bethe_test_names} PROPERTIES ENVIRONMENT "${bethe_test_environment}")

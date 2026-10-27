@@ -9,7 +9,8 @@ need the extra precision.
 CMake 3.28+, a C++23 compiler supported by Uni20 (GCC 13+ or Clang 19+),
 and Uni20's numerical dependencies are required. Uni20 is pinned to a tested
 commit and fetched automatically unless a parent already supplies `uni20_core`.
-The current pin is `717c798c` from Uni20 PR #78, including recoverable square
+The current pin is `04163b9b`, including Uni20 PR #99's sanitizer policy and
+PR #98's notification-based scheduler waits, alongside recoverable square
 and QR least-squares solves, reusable LU/log-determinants, binary80 provider
 integration, explicit-precision MPFR/MPC scalars and conversions,
 uniform scalar/backend configuration, typed run metadata, runtime-precision
@@ -305,6 +306,21 @@ Runtime-precision Lieb–Liniger and form-factor coverage belongs to
 `ci-wide`; the scalar-only sanitizer configuration also checks that unavailable
 provider requests fail clearly. These jobs do not claim macOS, Windows or GPU
 coverage. Documentation has its own workflow.
+
+The sanitizer preset sets `UNI20_SANITIZE` as well as the application's compiler
+flags, activating Uni20's oneTBB instrumentation boundary. The compiled oneTBB
+implementation is excluded; Bethe and Uni20 remain instrumented. Leak detection
+stays enabled. The preset enables `BETHE_TEST_UNI20_LSAN_SUPPRESSIONS`, which
+selects `tests/sanitizers/lsan.supp` from the actual Uni20 dependency checkout
+for every CTest case, including CLI subprocesses. This also works with local
+source overrides and custom build directories. The upstream file covers
+intentionally retained `NodeInfo` metadata and known MPFR internal cache frames;
+ordinary owning scalar leaks remain detectable. Bethe keeps no separate copy
+of these rules. See [the dependency sanitizer notes](async-sanitizer-follow-up.md).
+Suppression statistics are quiet so successful commands retain their normal
+stderr behavior; actual sanitizer errors still print and fail the process.
+The preset clears `DEBUGINFOD_URLS` so symbolization uses locally available
+debug information without waiting for remote downloads during CLI checks.
 
 Weekly CI (Monday 02:00 Asia/Taipei) additionally runs `ci-long-running` on the
 wide-precision build. A manual **C++ CI** run includes it by default, controlled

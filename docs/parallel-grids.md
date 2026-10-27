@@ -2,7 +2,7 @@
 
 An observable grid evaluates a scalar quantity at independent logical points.
 The model owns the physics and prepares its background; the shared
-`bethe::evaluate_observable_grid` adapter owns batching and ordered collection.
+`bethe::evaluate_observable_grid` adapter owns bounded admission and ordered collection.
 Uni20 supplies the scheduler. No output format or model formula belongs in the
 adapter.
 
@@ -33,12 +33,14 @@ bethe::evaluate_observable_grid(
       // Calling thread, increasing i: append a row or accumulate a moment here.
       points.push_back(std::move(point));
     },
-    {&scheduler, 128});
+    {.scheduler = &scheduler, .max_in_flight = 128});
 ```
 
 The borrowed scheduler must outlive the synchronous call. An omitted scheduler
 uses Uni20's active scheduler (serial by default); the adapter never changes it.
-`ExecutionOptions::batch_size` must be positive and defaults to 128. Logical
+`ExecutionOptions::max_in_flight` bounds active and completed-but-uncollected
+points and defaults to 128. `batch_size` remains for other batched clients; both
+bounds must be positive. Logical
 indices are exactly `[0, count)`, including empty and single-point grids.
 Frontends keep branches in their declared order and evaluate each branch's grid
 in turn; a row's identity is its branch and logical point index.
@@ -52,17 +54,23 @@ in turn; a row's identity is its branch and logical point index.
 - Collection runs on the calling thread in increasing index order. Tables,
   diagnostics and floating-point reductions belong here, never in workers.
   Ordinary numerical failure/status values are passed through, not dropped.
-- The adapter retains at most one batch of result slots. Collection may retain
-  more; for streaming output, disable table retention separately.
-- A thrown evaluation error joins the batch's workers and collects none of that
-  batch. Earlier batches remain collected. A collection error leaves the
-  already-collected prefix; all workers have already finished. These exceptions
-  are distinct from a normal point result reporting failed convergence.
-- An optional fifth argument, `observe_batch(offset, size)`, returns a scope guard
-  on the calling thread. Its lifetime covers only synchronous batch execution,
-  ending before collection. The frontends return `run_context::computation()`
-  here to measure worker CPU time without concurrent writes to timing metadata.
+- As each result is collected, a new point may enter the bounded window. A slow
+  early point or collector applies backpressure; there is no whole-batch join.
+  Collection may retain more data; disable table retention for streaming output.
+- Execution errors and cancellation stop admission and drain every accepted
+  task before propagating. Already collected prefixes remain, but a partial
+  grid is never reported as successful completion. Numerical failure/status
+  values are ordinary results.
+- The optional fifth argument, `observe_wait(index, 1)`, scopes waiting for one
+  point, excluding collection. It does **not** measure total computation: workers
+  may compute while collection runs. Time the entire grid call for total costs.
+  The frontends' `CPU time` includes background preparation and complete grid
+  calls, including row output; `CPU timing scope` records this in metadata.
 
+`evaluate_observable_grid_async` offers the same window policy with an owning
+Async result. Its collector is serialized **on the scheduler**, so use the
+synchronous adapter for caller-thread-only CLI output. See
+[Async execution](async-execution.md) for ownership and cancellation.
 Threading leaves each scalar solver's arithmetic and stopping rules unchanged.
 Native-precision tests compare every field against independent scalar calls,
 using both a reverse-order scheduler and oneTBB, for binary64, native
@@ -90,9 +98,8 @@ Each invocation times 1/2/4/8-worker sweeps, reverses sweep order on alternate
 repeats, and checks an exactly matching ordered energy checksum and failure
 count. The checksum sums only converged energies; every failed point is counted
 and reported, not treated as a zero-energy success. It reports
-preparation, batch evaluation and total grid wall/process-CPU times separately;
-collection plus batch-storage overhead is the difference of wall times. There
-is no table output inside those intervals. Use process resource accounting for
+preparation and total grid wall/process-CPU times separately, including ordered
+checksum collection. There is no table output inside those intervals. Use process resource accounting for
 peak memory, and time the actual frontend separately when measuring formatting,
 streaming and file I/O. Small workloads and serial background preparation can
 hide otherwise useful evaluation speedups.
@@ -101,7 +108,8 @@ hide otherwise useful evaluation speedups.
 
 On an Intel Core i7-12700KF, GCC 13.3 Release (`-O3`, no fast-math), oneTBB
 2022.3, and Uni20 `a25159cc`, the binary128 workloads above gave these median
-grid wall times over three repeats on 16 October 2026. Both
+grid wall times over three repeats on 16 October 2026, using the previous batched adapter.
+These are historical baselines, not measurements of continuous execution. Both
 `OPENBLAS_NUM_THREADS` and `OMP_NUM_THREADS` were 1; the MPLAPACK 3.0.0
 binary128 provider was an optimized Release build. This was a shared workstation,
 not an isolated scaling experiment.

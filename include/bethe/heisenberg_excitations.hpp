@@ -49,9 +49,9 @@ template <typename State> struct RealExcitationScan
 namespace detail
 {
 template <typename State, typename Solve, typename Ground>
-RealExcitationScan<State> scan_real_excitations(std::size_t sites, uni20::half_int spin,
-                                                RealExcitationOptions const& scan, bool periodic, Solve&& solve,
-                                                Ground&& ground)
+uni20::async::Async<RealExcitationScan<State>> scan_real_excitations_async(std::size_t sites, uni20::half_int spin,
+                                                                           RealExcitationOptions scan, bool periodic,
+                                                                           Solve solve, Ground ground)
 {
   if (scan.count == 0 || scan.max_candidates == 0)
     throw std::invalid_argument("excitation count and max_candidates must be positive");
@@ -59,29 +59,65 @@ RealExcitationScan<State> scan_real_excitations(std::size_t sites, uni20::half_i
   auto const m = static_cast<std::size_t>((static_cast<std::int64_t>(sites) - spin.twice()) / 2);
   auto const slots = sites - m;
   auto const first = periodic ? -static_cast<std::int64_t>(slots - 1) : std::int64_t{2};
-  auto result = bethe::detail::scan_real_combinations<RealExcitationScan<State>>(
-      slots, m, first, scan, std::forward<Solve>(solve), std::forward<Ground>(ground));
-  result.spin = spin;
-  return result;
+  RealExcitationScan<State> seed;
+  seed.spin = spin;
+  return bethe::detail::scan_real_combinations_async<RealExcitationScan<State>>(
+      slots, m, first, scan, std::move(solve), std::move(ground), bethe::detail::EnergyOrder::ascending,
+      bethe::detail::StateEnergy{}, std::move(seed));
+}
+
+template <typename State, typename Solve, typename Ground>
+RealExcitationScan<State> scan_real_excitations(std::size_t sites, uni20::half_int spin,
+                                                RealExcitationOptions const& scan, bool periodic, Solve&& solve,
+                                                Ground&& ground)
+{
+  auto& scheduler = scan.execution.resolved_scheduler();
+  auto result = scan_real_excitations_async<State>(sites, spin, scan, periodic, std::forward<Solve>(solve),
+                                                   std::forward<Ground>(ground));
+  return bethe::detail::take_scan_result(result, scheduler);
 }
 } // namespace detail
 
+/// Owns all model/solver options. The returned value can be read by dependent
+/// Uni20 tasks immediately. Keep the borrowed scheduler alive through completion.
+template <uni20::Real Real = double>
+[[nodiscard]] uni20::async::Async<RealExcitationScan<RealState<Real>>>
+real_excitations_async(std::size_t sites, uni20::half_int spin, RealExcitationOptions scan = {},
+                       SolverOptions<Real> solver = {})
+{
+  return detail::scan_real_excitations_async<RealState<Real>>(
+      sites, spin, scan, true,
+      [sites, solver](QuantumNumbers const& numbers) { return solve_real<Real>(sites, numbers, solver); },
+      [sites, solver] { return ground_state<Real>(sites, solver); });
+}
+
 /// Periodic real-root highest-weight multiplets at total spin S (Sz=S).
 /// Exhaustive within the conventional all-1-string window, not a full spectrum.
-/// O((count+batch_size)*M+N) retained storage, plus active solver workspaces;
+/// O((count+max_in_flight)*M+N) retained storage, plus active solver workspaces;
 /// every candidate still requires a solve.
 template <uni20::Real Real = double>
 [[nodiscard]] RealExcitationScan<RealState<Real>> real_excitations(std::size_t sites, uni20::half_int spin,
                                                                    RealExcitationOptions const& scan = {},
                                                                    SolverOptions<Real> const& solver = {})
 {
-  return detail::scan_real_excitations<RealState<Real>>(
-      sites, spin, scan, true, [&](QuantumNumbers const& numbers) { return solve_real<Real>(sites, numbers, solver); },
-      [&] { return ground_state<Real>(sites, solver); });
+  auto& scheduler = scan.execution.resolved_scheduler();
+  auto result = real_excitations_async<Real>(sites, spin, scan, solver);
+  return bethe::detail::take_scan_result(result, scheduler);
 }
 
 namespace open
 {
+template <uni20::Real Real = double>
+[[nodiscard]] uni20::async::Async<RealExcitationScan<RealState<Real>>>
+real_excitations_async(std::size_t sites, uni20::half_int spin, RealExcitationOptions scan = {},
+                       SolverOptions<Real> solver = {})
+{
+  return heisenberg::detail::scan_real_excitations_async<RealState<Real>>(
+      sites, spin, scan, false,
+      [sites, solver](QuantumNumbers const& numbers) { return open::solve_real<Real>(sites, numbers, solver); },
+      [sites, solver] { return open::ground_state<Real>(sites, solver); });
+}
+
 /// Free-end analogue: positive real roots with integer labels in [1,N-M].
 /// No lattice momentum. String states and SU(2) descendants are not enumerated.
 template <uni20::Real Real = double>
@@ -89,10 +125,9 @@ template <uni20::Real Real = double>
                                                                    RealExcitationOptions const& scan = {},
                                                                    SolverOptions<Real> const& solver = {})
 {
-  return heisenberg::detail::scan_real_excitations<RealState<Real>>(
-      sites, spin, scan, false,
-      [&](QuantumNumbers const& numbers) { return open::solve_real<Real>(sites, numbers, solver); },
-      [&] { return open::ground_state<Real>(sites, solver); });
+  auto& scheduler = scan.execution.resolved_scheduler();
+  auto result = open::real_excitations_async<Real>(sites, spin, scan, solver);
+  return bethe::detail::take_scan_result(result, scheduler);
 }
 } // namespace open
 } // namespace bethe::heisenberg
