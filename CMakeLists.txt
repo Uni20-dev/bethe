@@ -20,7 +20,7 @@ if(NOT TARGET uni20_core)
   include(FetchContent)
   FetchContent_Declare(uni20
     GIT_REPOSITORY https://github.com/Uni20-dev/uni20.git
-    GIT_TAG 3c0e713837eccf0918f0b8f95b5b7109fd5bbc11
+    GIT_TAG 30af0808380cdc7d467fa584edd6b3bec4703285
   )
   FetchContent_MakeAvailable(uni20)
   # Keep default builds limited to the components our targets actually link.

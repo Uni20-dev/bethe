@@ -1,8 +1,9 @@
 # Async dependency sanitizer findings
 
-Bethe pins Uni20 `3c0e713837eccf0918f0b8f95b5b7109fd5bbc11`, including
-[Uni20 PR #97](https://github.com/Uni20-dev/uni20/pull/97), with fetched oneTBB
-2022.3.0. The original 26 October 2026 integration at Uni20 `1e7c4a96` exposed
+Bethe pins Uni20 `30af0808380cdc7d467fa584edd6b3bec4703285`, including the
+sanitizer boundaries in [Uni20 PR #97](https://github.com/Uni20-dev/uni20/pull/97)
+and notification-based waits in [Uni20 PR #98](https://github.com/Uni20-dev/uni20/pull/98),
+with fetched oneTBB 2022.3.0. The original 26 October 2026 integration at Uni20 `1e7c4a96` exposed
 two dependency findings under Clang 19, Debug (`-O1 -g1`),
 address/undefined-behaviour sanitizers and leak detection. They reproduce without Bethe headers,
 numerical kernels or callbacks. The maintainer accepts Uni20's process-lifetime
@@ -90,13 +91,13 @@ keep the setting in test commands or presets, without changing library behavior
 or the user's shell configuration. System-library stack traces may have less
 detail when their debug symbols are not installed locally.
 
-## Remaining MPFR cache cleanup
+## Remaining MPFR thread-cache reports
 
 With the TBB boundary corrected and the debug-metadata suppression selected,
 the 27 October 2026 validation against the fetched pin (no local Uni20 source
-override) builds all frontends and tests and passes both dependency-only probes.
+override) builds all frontends and tests.
 The full routine sanitizer suite passes 1,311 of 1,316 tests, with no skips,
-in 191.70 seconds. The five failures report MPFR/GMP cache allocations after threads exit:
+in 170.98 seconds. The five failures report MPFR/GMP cache allocations after threads exit:
 
 - `RootSolverMpfrShared.AlternatingPrecisionsAndThreadedScans`
 - `XxxMpfr.RootOnlyConcurrentPrecisionsAndThreadedExcitations`
@@ -110,11 +111,10 @@ process exit. Suppression statistics are disabled in the preset so accepted
 debug metadata does not disturb CLI tests that require empty stderr; actual
 sanitizer diagnostics still fail those tests.
 
-The full run also exposed concurrent use of the process-wide, single-threaded
-`DebugScheduler` in the XXX MPFR test's serial reference calculations. Each
-concurrent callback now owns a separate `DebugScheduler`; its numerical
-assertions pass on rechecking, leaving the cache report above. The concurrent
-references must not share the default scheduler.
+The full runs also exposed concurrent use of the process-wide, single-threaded
+`DebugScheduler` in the XXX MPFR root and form-factor tests' serial reference
+calculations. Each concurrent reference callback now owns a separate
+`DebugScheduler`; the references must not share the default scheduler.
 
 A standalone oneTBB/MPFR control reproduces this with `mpfr_atan` at 333 bits
 after `task::suspend`/`resume`, even after clearing every `mpfr_t` value.
@@ -125,9 +125,11 @@ after every operation is not the proposed implementation.
 [MPFR's memory-handling contract](https://www.mpfr.org/mpfr-current/mpfr.html#Memory-Handling)
 asks users to free local caches before a thread terminates. Clearing only the
 application thread's cache after a scheduler wait does not clear caches created
-on other threads. A follow-up should choose the ownership of thread-exit cleanup
-without introducing repeated cache clearing into numerical hot paths or changing
-working precision. This remains a separate sanitizer blocker for the MPFR cases.
+on other threads. Exit-time reports alone do not require a runtime cleanup
+mechanism: persistent worker threads reuse their caches. Thread turnover and
+the sanitizer provider's auxiliary resumable-task threads need separate
+consideration. These known reports remain unsuppressed while the cache policy
+is reviewed; they are distinct from execution failures or numerical errors.
 
 ## GitHub runner findings
 
@@ -138,11 +140,47 @@ about its invalid path and emitted address-only stacks. Source-based LSan
 suppressions cannot match those stacks. The workflow now installs the package,
 checks its version and sets `ASAN_SYMBOLIZER_PATH` explicitly. This addresses
 symbolization, without expanding the suppression.
+The subsequent GitHub run at `086bef4` confirms 1,311/1,316 sanitizer tests pass,
+with only the same five MPFR cache reports remaining.
 
 The wide Release job exposed a separate scheduler assertion in
 `TbbScheduler::ExecutionScope::~ExecutionScope`: `current_` is null instead of
 the active scope. Both concurrent `AsyncMpfr` tests aborted; the other 1,823
 routine cases passed. Repeating those tests locally with a two-CPU affinity
 reproduced the assertion on iteration seven, despite the earlier full local
-suite passing. This is an unresolved execution failure, independent of MPFR
-cache retention; the assertion and affected tests remain enabled.
+suite passing. This failure affected the previous pin, `3c0e7138`, independently
+of MPFR cache retention.
+
+## Notification-based scheduler correction
+
+Uni20 PR #98 removes execution-scope accounting and the wait watchdog. Pending
+waits instead require readiness notifications; both reader and writer waits
+supply them. Bethe's callers need no API changes. The separate test correction
+giving each concurrent serial reference its own `DebugScheduler` remains
+necessary.
+
+Before the merge, targeted GCC 13 Release checks against these Uni20 headers
+and existing build configurations and provider libraries passed:
+
+- All three `AsyncMpfr` tests, repeated 50 times with two-CPU affinity: 150 passes.
+- The corrected concurrent XXX reference test, repeated 30 times: 30 passes.
+- The complete `XxxMpfr` test executable: nine passes.
+- Uni20's updated TBB module plus the direct suspend/resume regression:
+  50 passes and one NUMA-topology skip. The regression fails with the previous
+  scheduler's execution-scope assertion.
+
+The complete local routine suites were then rebuilt and run against the fetched
+merge commit, `30af0808`, with no local Uni20 source override:
+
+| Configuration | Passed / total | Elapsed time |
+| --- | ---: | ---: |
+| GCC 13 Release, native scalars | 1,286 / 1,286 | 70.68 s |
+| GCC 13 Release, binary80/binary128/MPFR | 1,825 / 1,825 | 372.33 s |
+| Clang 19 ASan/UBSan, native scalars and MPFR | 1,311 / 1,316 | 170.98 s |
+
+All three suites have zero skips and include CLI and installation tests. The
+wide build reuses an optimized MPLAPACK 3.0.0 installation; GitHub CI builds the
+pinned provider from source. The five scheduled long-running numerical tests
+are outside these routine suites. The sanitizer failures are exactly the five
+cache reports listed above: the scheduler correction resolves the execution
+failure without changing their handling or disabling leak detection.
