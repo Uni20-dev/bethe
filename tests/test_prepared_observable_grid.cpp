@@ -8,7 +8,10 @@
 #endif
 #include <array>
 #include <atomic>
+#include <chrono>
+#include <future>
 #include <memory>
+#include <optional>
 
 namespace
 {
@@ -33,12 +36,14 @@ struct Background
       if (value) --counts->live;
     }
 };
-AsyncTask overwrite(WriteBuffer<Background> out, Counts& counts)
+AsyncTask overwrite(WriteBuffer<Background> out, Counts& counts, WriteBuffer<bool> completed)
 {
+  auto done = co_await completed;
   auto value = co_await out;
   EXPECT_EQ(counts.queries, 24);
   *value->value = 99;
   ++counts.writes;
+  done = true;
 }
 } // namespace
 
@@ -49,6 +54,7 @@ TEST(PreparedGrid, TwoReadersRetainOneBackgroundWithoutCopies)
     DebugScheduler scheduler({.order = order, .random_seed = 731});
     Counts counts;
     std::array<std::vector<std::size_t>, 2> rows;
+    Async<bool> written;
     auto results = [&] {
       auto background = bethe::prepare_background_async(
           [&] {
@@ -71,14 +77,14 @@ TEST(PreparedGrid, TwoReadersRetainOneBackgroundWithoutCopies)
             {&scheduler, 128, 3});
       };
       auto a = submit(0), b = submit(1);
-      scheduler.schedule(overwrite(background.write(), counts));
+      scheduler.schedule(overwrite(background.write(), counts, written.write()));
       EXPECT_EQ(counts.prepared, 0); // submission does not wait for preparation
       EXPECT_EQ(counts.queries, 0);
       return std::pair{std::move(a), std::move(b)};
     }(); // neither reader borrows the submission-local handle
     EXPECT_EQ(results.first.get_wait(scheduler), 12u);
     EXPECT_EQ(results.second.get_wait(scheduler), 12u);
-    scheduler.run_all();
+    EXPECT_TRUE(written.get_wait(scheduler));
     EXPECT_EQ(counts.prepared, 1);
     EXPECT_EQ(counts.copies, 0);
     EXPECT_EQ(counts.live, 0);
@@ -114,6 +120,8 @@ TEST(PreparedGrid, OwnedMoveOnlyCallbacksAndDiscardedHandles)
   owner.reset();
   EXPECT_FALSE(weak.expired());
   ScopedScheduler active(&other);
+  // Deliberately test discarded handles with the debug scheduler. Normal
+  // callers retain and wait on their operation's result, not the whole queue.
   scheduler.run_all();
   EXPECT_EQ(collected, 20u);
   EXPECT_EQ(counts.prepared, 1);
@@ -279,12 +287,13 @@ TEST(PreparedGrid, AdmissionAndQueryFailuresDrainBeforeBackgroundRelease)
     Reject scheduler;
     scheduler.reject = reject;
     Counts counts;
+    std::optional<Async<Background>> background;
     bool failed = false;
     try
     {
-      auto background = bethe::prepare_background_async([&] { return Background(counts); }, {&scheduler});
+      background.emplace(bethe::prepare_background_async([&] { return Background(counts); }, {&scheduler}));
       auto grid = bethe::evaluate_observable_grid_async(
-          background.read(), 20,
+          background->read(), 20,
           [&](Background const&, auto i) {
             ++counts.queries;
             if (!reject && i == 1) throw std::runtime_error("query");
@@ -306,9 +315,142 @@ TEST(PreparedGrid, AdmissionAndQueryFailuresDrainBeforeBackgroundRelease)
       failed = true;
     }
     EXPECT_TRUE(failed);
-    scheduler.run_all(); // also observes accepted preparation when grid submission failed
+    // Preparation can be admitted even when grid submission fails. Observe
+    // that specific result; a queue-wide drain could hide orphaned queries.
+    if (background) EXPECT_NO_THROW((void)background->get_wait(scheduler));
+    background.reset();
     EXPECT_EQ(counts.live, 0);
   }
+}
+
+namespace
+{
+enum class GridFailure
+{
+  query,
+  collector,
+  cancellation
+};
+class PreparedGridDrain : public ::testing::TestWithParam<GridFailure> {};
+
+AsyncTask overwrite_after_queries(WriteBuffer<int> out, std::atomic<bool>& finished, std::promise<void>& overwritten)
+{
+  auto value = co_await out;
+  EXPECT_TRUE(finished.load());
+  value = 99;
+  overwritten.set_value();
+}
+} // namespace
+
+TEST_P(PreparedGridDrain, CompletionWaitsForHeldQuery)
+{
+  using namespace std::chrono_literals;
+  TbbScheduler scheduler(4);
+  std::promise<void> entered, release, triggered, overwritten;
+  auto entered_future = entered.get_future().share();
+  auto release_future = release.get_future().share();
+  auto triggered_future = triggered.get_future();
+  auto overwritten_future = overwritten.get_future();
+  std::atomic<bool> finished{false};
+  std::atomic<int> sibling_queries{0};
+  std::stop_source stop;
+  auto const failure = GetParam();
+  auto background = bethe::prepare_background_async([] { return 7; }, {&scheduler});
+  auto failed = bethe::evaluate_observable_grid_async(
+      background.read(), 2,
+      [&](int const& value, std::size_t index) {
+        if (index == 1)
+        {
+          entered.set_value();
+          if (release_future.wait_for(5s) != std::future_status::ready)
+            throw std::runtime_error("held query timed out");
+          EXPECT_EQ(value, 7);
+          finished = true;
+        }
+        else
+        {
+          if (entered_future.wait_for(5s) != std::future_status::ready)
+            throw std::runtime_error("second query did not enter");
+          if (failure == GridFailure::query)
+          {
+            triggered.set_value();
+            throw std::domain_error("query");
+          }
+        }
+        return value;
+      },
+      [&](auto, auto) {
+        triggered.set_value();
+        if (failure == GridFailure::collector) throw std::domain_error("collector");
+        stop.request_stop();
+      },
+      {.scheduler = &scheduler, .max_in_flight = 2, .stop = stop.get_token()});
+  auto sibling = bethe::evaluate_observable_grid_async(
+      background.read(), 12,
+      [&](int const& value, auto) {
+        ++sibling_queries;
+        return value;
+      },
+      [](auto, auto value) { EXPECT_EQ(value, 7); }, {.scheduler = &scheduler, .max_in_flight = 2});
+  scheduler.schedule(overwrite_after_queries(background.write(), finished, overwritten));
+  auto ready = failed.read();
+
+  // Check while the query is still held, before any final wait can conceal
+  // premature completion. Other workers can finish the sibling and propagate
+  // the failure, but neither the failed result nor the writer may become ready.
+  // Keep these assertions nonfatal so we always release and join accepted work.
+  EXPECT_EQ(triggered_future.wait_for(5s), std::future_status::ready);
+  EXPECT_NO_THROW(EXPECT_EQ(sibling.get_wait(scheduler), 12u));
+  EXPECT_EQ(sibling_queries.load(), 12);
+  EXPECT_EQ(overwritten_future.wait_for(20ms), std::future_status::timeout);
+  EXPECT_FALSE(ready.await_ready());
+  EXPECT_FALSE(finished.load());
+  release.set_value();
+  try
+  {
+    (void)failed.get_wait(scheduler);
+    ADD_FAILURE() << "expected grid failure";
+  }
+  catch (bethe::ExecutionCancelled const&)
+  {
+    EXPECT_EQ(failure, GridFailure::cancellation);
+  }
+  catch (std::domain_error const& error)
+  {
+    EXPECT_NE(failure, GridFailure::cancellation);
+    EXPECT_STREQ(error.what(), failure == GridFailure::query ? "query" : "collector");
+  }
+  catch (std::exception const& error)
+  {
+    ADD_FAILURE() << "unexpected execution error: " << error.what();
+  }
+  EXPECT_TRUE(finished.load());
+  EXPECT_EQ(background.get_wait(scheduler), 99); // joins the dependent writer
+}
+
+INSTANTIATE_TEST_SUITE_P(PreparedGrid, PreparedGridDrain,
+                         ::testing::Values(GridFailure::query, GridFailure::collector, GridFailure::cancellation),
+                         [](auto const& info) {
+                           switch (info.param)
+                           {
+                             case GridFailure::query:
+                               return "QueryFailure";
+                             case GridFailure::collector:
+                               return "CollectorFailure";
+                             case GridFailure::cancellation:
+                               return "Cancellation";
+                           }
+                           return "Unknown";
+                         });
+
+TEST(PreparedGrid, SingleWorkerComposesBackgroundAndGrid)
+{
+  TbbScheduler scheduler(1);
+  auto background = bethe::prepare_background_async([] { return 7; }, {&scheduler});
+  auto grid = bethe::evaluate_observable_grid_async(
+      background.read(), 20, [](int value, auto i) { return value + i; },
+      [](auto i, auto value) { EXPECT_EQ(value, i + 7); }, {&scheduler});
+  EXPECT_EQ(grid.get_wait(scheduler), 20u);
 }
 
 TEST(PreparedGrid, BoundsConcurrentQueriesAndRetainedResultsAcrossTwoGrids)
