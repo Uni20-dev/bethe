@@ -65,6 +65,9 @@ waits may execute a kernel there. See [parallel grids](parallel-grids.md).
 
 ## Ownership, dependencies and cancellation
 
+For curves that depend on a prepared model, see [shared backgrounds](#shared-backgrounds)
+below. They use the same bounded grid and add a reader dependency on preparation.
+
 Async entry points own their options and decay-copied callables. References
 captured inside callbacks remain borrowed. The scheduler and borrowed data must
 outlive completion, even if the result handle is discarded. Evaluators must
@@ -88,6 +91,71 @@ Argument and budget errors are checked before scientific work. A scheduler
 admission failure is an execution error, not a failed root or zero spectral
 weight. No scheduler-wide drain is used as the completion boundary for an
 individual operation.
+
+## Shared backgrounds
+
+Include `<bethe/prepared_observable_grid.hpp>` to submit preparation and its
+dependent grids together. `prepare_background_async(prepare, execution)` runs
+the synchronous preparation callable once and returns its owning result as
+`Async<Background>`. The prepared-grid overload accepts a reader and calls
+`evaluate(background const&, index)` for each point:
+
+```cpp
+auto background = bethe::prepare_background_async(
+    [] { return model::Solver<double>(4.0, 1.0); }, execution);
+auto particle = bethe::evaluate_observable_grid_async(
+    background.read(), count,
+    [pmax, count](model::Solver<double> const& solver, std::size_t i) {
+      return solver.at_momentum(model::Branch::type_i,
+                                pmax * double(i) / double(count - 1));
+    }, collect_particle, execution);
+auto hole = bethe::evaluate_observable_grid_async(
+    background.read(), count,
+    [pmax, count](model::Solver<double> const& solver, std::size_t i) {
+      return solver.at_momentum(model::Branch::type_ii,
+                                pmax * double(i) / double(count - 1));
+    }, collect_hole, execution);
+```
+
+Here `model` is `bethe::lieb_liniger::thermo`, `count` is at least two, and
+`pmax` is within the type-II momentum range. Both curves are submitted without
+observing the background on the calling thread. They share one scheduler pool;
+the waiting coordinators do not reserve a fixed allocation of CPUs.
+
+Each grid holds its reader until all admitted queries have finished, including
+failure cleanup. Destroying the original background handle is safe after readers
+are enrolled. No prepared meshes are copied per grid or per point. The prepared
+type must support concurrent const queries; mutable scratch belongs to each query.
+The maximum-in-flight limit applies independently to each grid, while the
+scheduler limits shared CPU concurrency. This adds composition; it does not
+establish a speedup over an already-prepared synchronous background.
+
+Readiness is separate from numerical convergence. Lieb–Liniger's `at_momentum`
+already checks preparation status and returns explicit failed points when the
+background did not converge; a zero-energy endpoint remains a successful point.
+The generic adapter does not invent a convergence rule for other models. Their
+evaluators must preserve preparation diagnostics or reject the failed background.
+Preparation exceptions propagate to every dependent grid, including empty grids.
+
+Cancelling one grid stops its queries without cancelling preparation or sibling
+grids. A grid waiting for preparation observes cancellation after that dependency
+finishes. Preparation itself checks its own stop token before and after its
+synchronous kernel; neither preparation nor point kernels are interrupted midway.
+Errors in an input dependency take precedence over a dependent grid's cancellation.
+
+The [complete example](../examples/async_background.cpp) submits both branches,
+observes all accepted operations even if one fails, and then prints the curves.
+Collectors run on the scheduler, so the example collects separate vectors and
+prints after completion. It also drains preparation if grid submission fails.
+From a separate build directory:
+
+```sh
+cmake -DBETHE_BUILD_EXAMPLES=ON /path/to/bethe
+cmake --build . --target bethe-async-background-example -j2
+OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 ./examples/bethe-async-background-example
+```
+
+The example is built in CI and is not installed as a frontend executable.
 
 ## Matched pipeline benchmark
 

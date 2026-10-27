@@ -373,6 +373,12 @@ An existing standalone cache with `UNI20_BUILD_CLI=OFF` likewise needs
 
 ## Source layout and development
 
+Set `BETHE_BUILD_EXAMPLES=ON` to build library composition examples in the
+`examples/` subdirectory. The first example prepares one Lieb–Liniger background
+asynchronously and submits both elementary branches before observing it; see
+[shared backgrounds](async-execution.md#shared-backgrounds). Examples are checked
+in CI and are not installed with the command-line tools.
+
 ### Where code belongs
 
 | Location | Responsibility |
