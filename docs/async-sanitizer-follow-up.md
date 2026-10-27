@@ -1,15 +1,23 @@
 # Async dependency sanitizer findings
 
-Bethe pins Uni20 `30af0808380cdc7d467fa584edd6b3bec4703285`, including the
+Bethe pins Uni20 `04163b9b84bb71830b2305a2a346d526ecb946ab`, including the
 sanitizer boundaries in [Uni20 PR #97](https://github.com/Uni20-dev/uni20/pull/97)
+and [PR #99](https://github.com/Uni20-dev/uni20/pull/99),
 and notification-based waits in [Uni20 PR #98](https://github.com/Uni20-dev/uni20/pull/98),
 with fetched oneTBB 2022.3.0. The original 26 October 2026 integration at Uni20 `1e7c4a96` exposed
 two dependency findings under Clang 19, Debug (`-O1 -g1`),
 address/undefined-behaviour sanitizers and leak detection. They reproduce without Bethe headers,
 numerical kernels or callbacks. The maintainer accepts Uni20's process-lifetime
-diagnostic metadata and the existing oneTBB instrumentation exclusion. The
-sanitizer preset now selects those boundaries explicitly; neither requires a
-Bethe scheduler workaround.
+diagnostic metadata, the existing oneTBB instrumentation exclusion, and the
+narrow MPFR cache suppression policy described below. The sanitizer preset
+selects these boundaries explicitly; they require no Bethe scheduler workaround.
+
+With the merged PR #99 policy wired through CTest, all **1,316 routine sanitizer
+checks pass**, with zero skips, in the 27 October local run (180.69 seconds).
+This check reuses existing numerical binaries: the dependency update changes
+CMake, tests, and documentation, with no numerical or scheduler-header changes.
+Fresh all-target builds remain part of GitHub CI. The merged upstream cache and
+sanitizer-option regressions also pass.
 
 ## Uni20 debug DAG allocations
 
@@ -22,7 +30,8 @@ tasks are gone. This is distinct from an outstanding Bethe calculation or
 retained result payload. The current Debug preset enables this diagnostic path;
 normal Release builds disable it.
 
-The lifetime policy is intentional and remains unchanged. `tests/lsan.supp`
+The lifetime policy is intentional and remains unchanged. Uni20's
+`tests/sanitizers/lsan.supp`
 matches allocation stacks in the debug-metadata header
 `uni20/async/async_node.hpp`. Clang with reduced debug information may omit the
 `NodeInfo` qualification on inlined `create<T>` frames, so a qualified function
@@ -65,12 +74,12 @@ From a configured `ci-sanitizers` build directory:
 cmake --build . --target bethe_async_dependency_probe -j2
 ASAN_OPTIONS=detect_leaks=1:halt_on_error=1 \
 DEBUGINFOD_URLS= \
-LSAN_OPTIONS=suppressions=/path/to/bethe/tests/lsan.supp:print_suppressions=0 \
+LSAN_OPTIONS=suppressions=/path/to/uni20/tests/sanitizers/lsan.supp:print_suppressions=0 \
 UBSAN_OPTIONS=halt_on_error=1:print_stacktrace=1 \
   ./tests/bethe_async_dependency_probe --gtest_filter=DependencyOnly.Uni20DebugNodeLifetime
 ASAN_OPTIONS=detect_leaks=1:halt_on_error=1 \
 DEBUGINFOD_URLS= \
-LSAN_OPTIONS=suppressions=/path/to/bethe/tests/lsan.supp:print_suppressions=0 \
+LSAN_OPTIONS=suppressions=/path/to/uni20/tests/sanitizers/lsan.supp:print_suppressions=0 \
 UBSAN_OPTIONS=halt_on_error=1:print_stacktrace=1 \
   ./tests/bethe_async_dependency_probe --gtest_filter=DependencyOnly.TbbSuspendResume
 ```
@@ -81,23 +90,30 @@ exclusion, so no local dependency override is required. The exclusion does not
 constitute sanitizer validation of oneTBB itself; Bethe and Uni20 code, including
 provider headers instantiated by them, remain instrumented.
 
+For CTest runs, the sanitizer preset enables
+`BETHE_TEST_UNI20_LSAN_SUPPRESSIONS`. CMake resolves the file from the source
+directory of the actual `uni20_core` target and sets `LSAN_OPTIONS` for both
+discovered GoogleTests and CLI/installation checks. This handles fetched,
+locally overridden, and parent-supplied Uni20 sources without assuming a build
+directory name. Bethe does not maintain its own suppression file. Set this
+option to `OFF` to run an unsuppressed audit.
+
 The preset also clears `DEBUGINFOD_URLS`. An inherited Ubuntu debuginfod URL
 caused CLI timeouts while `llvm-symbolizer` waited for remote HTTPS connections;
 the numerical processes were waiting for symbolization. Local debug information
 remains available, and disabling those downloads does not disable sanitizer
 checks or leak detection.
-This matches [Uni20's documented test-environment policy](https://github.com/Uni20-dev/uni20/blob/bc14c127d28cfd10da1621f1805910f044c81683/docs/development/testing.md):
+This matches [Uni20's documented test-environment policy](https://github.com/Uni20-dev/uni20/blob/04163b9b84bb71830b2305a2a346d526ecb946ab/docs/development/testing.md):
 keep the setting in test commands or presets, without changing library behavior
 or the user's shell configuration. System-library stack traces may have less
 detail when their debug symbols are not installed locally.
 
-## Remaining MPFR thread-cache reports
+## MPFR thread-cache reports and suppression policy
 
-With the TBB boundary corrected and the debug-metadata suppression selected,
-the 27 October 2026 validation against the fetched pin (no local Uni20 source
-override) builds all frontends and tests.
-The full routine sanitizer suite passes 1,311 of 1,316 tests, with no skips,
-in 170.98 seconds. The five failures report MPFR/GMP cache allocations after threads exit:
+Before PR #99, with the TBB boundary corrected and only the debug-metadata
+suppression selected, the 27 October 2026 validation against Uni20 `30af0808`
+passed 1,311 of 1,316 tests, with no skips, in 170.98 seconds.
+The five failures reported MPFR/GMP cache allocations after threads exit:
 
 - `RootSolverMpfrShared.AlternatingPrecisionsAndThreadedScans`
 - `XxxMpfr.RootOnlyConcurrentPrecisionsAndThreadedExcitations`
@@ -105,11 +121,18 @@ in 170.98 seconds. The five failures report MPFR/GMP cache allocations after thr
 - `RootSolverPrecision.cli`
 - `XXXPbcPrecision.cli`
 
-These allocations are not suppressed. The numerical and precision assertions
-in the three unit tests pass before LeakSanitizer reports the allocations at
-process exit. Suppression statistics are disabled in the preset so accepted
-debug metadata does not disturb CLI tests that require empty stderr; actual
-sanitizer diagnostics still fail those tests.
+The numerical and precision assertions in the three unit tests passed before
+LeakSanitizer reported allocations at process exit. PR #99's policy suppresses
+the observed internal C frames `mpfr_atan`, `mpfr_cos`, and `mpfr_cache`, with
+start and end anchors. The anchors matter: a substring rule also matches Uni20's templated wrapper
+`mpreal_access::apply<&mpfr_atan>` and can hide leaked owning result storage
+allocated before the C function is called. Upstream regression tests verify
+that real scalar and ordinary heap leaks still fail. A function-based exclusion
+can nevertheless hide other internal allocations within the named MPFR frames;
+it is not a blanket claim about MPFR's ownership correctness.
+
+Suppression statistics are disabled so accepted allocations do not disturb CLI
+tests that require empty stderr; actual sanitizer diagnostics still fail.
 
 The full runs also exposed concurrent use of the process-wide, single-threaded
 `DebugScheduler` in the XXX MPFR root and form-factor tests' serial reference
@@ -128,8 +151,8 @@ application thread's cache after a scheduler wait does not clear caches created
 on other threads. Exit-time reports alone do not require a runtime cleanup
 mechanism: persistent worker threads reuse their caches. Thread turnover and
 the sanitizer provider's auxiliary resumable-task threads need separate
-consideration. These known reports remain unsuppressed while the cache policy
-is reviewed; they are distinct from execution failures or numerical errors.
+consideration. Suppression changes test reporting, not runtime cache lifetime;
+these allocations are distinct from execution failures or numerical errors.
 
 ## GitHub runner findings
 

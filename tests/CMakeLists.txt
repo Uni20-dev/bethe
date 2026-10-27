@@ -24,6 +24,26 @@ if(NOT TARGET GTest::gtest_main)
 endif()
 include(GoogleTest)
 
+# Dependency lifetime policy belongs to Uni20. Resolve its actual source tree,
+# including enclosing projects and FETCHCONTENT_SOURCE_DIR_UNI20 overrides.
+# This opt-in affects test processes only, not applications or library targets.
+option(BETHE_TEST_UNI20_LSAN_SUPPRESSIONS "Use Uni20's LeakSanitizer policy in Bethe tests" OFF)
+set(bethe_test_environment "OPENBLAS_NUM_THREADS=1;OMP_NUM_THREADS=1")
+if(BETHE_TEST_UNI20_LSAN_SUPPRESSIONS)
+  get_filename_component(bethe_uni20_lsan_suppressions
+    "${bethe_uni20_core_source}/../../../tests/sanitizers/lsan.supp" ABSOLUTE)
+  if(NOT EXISTS "${bethe_uni20_lsan_suppressions}")
+    message(FATAL_ERROR
+      "Uni20's LeakSanitizer policy is missing: ${bethe_uni20_lsan_suppressions}. "
+      "Update the supplied Uni20 checkout, or use Bethe's pinned dependency.")
+  endif()
+  list(APPEND bethe_test_environment
+    "LSAN_OPTIONS=suppressions=${bethe_uni20_lsan_suppressions}:print_suppressions=0")
+endif()
+# GoogleTest discovery forwards PROPERTIES as a list; preserve ENVIRONMENT's
+# nested list as one property value for both routine and long-running cases.
+string(REPLACE ";" "\\;" bethe_discovered_test_environment "${bethe_test_environment}")
+
 function(bethe_discover_tests target)
   cmake_parse_arguments(PARSE_ARGV 1 arg "" "" "LONG_RUNNING_TESTS")
   if(arg_UNPARSED_ARGUMENTS OR arg_KEYWORDS_MISSING_VALUES)
@@ -45,7 +65,7 @@ function(bethe_discover_tests target)
       TEST_FILTER "${long_filter}"
       TEST_LIST ${target}_LONG_RUNNING_TESTS
       PROPERTIES
-        ENVIRONMENT "OPENBLAS_NUM_THREADS=1\;OMP_NUM_THREADS=1"
+        ENVIRONMENT "${bethe_discovered_test_environment}"
         LABELS "long-running"
         TIMEOUT 1800
     )
@@ -54,7 +74,7 @@ function(bethe_discover_tests target)
     DISCOVERY_MODE PRE_TEST
     NO_PRETTY_TYPES
     TEST_FILTER "${routine_filter}"
-    PROPERTIES ENVIRONMENT "OPENBLAS_NUM_THREADS=1\;OMP_NUM_THREADS=1"
+    PROPERTIES ENVIRONMENT "${bethe_discovered_test_environment}"
   )
 endfunction()
 
@@ -704,4 +724,4 @@ endif()
 
 # Small dense systems and short CLI checks do not benefit from BLAS thread pools.
 get_property(bethe_test_names DIRECTORY PROPERTY TESTS)
-set_tests_properties(${bethe_test_names} PROPERTIES ENVIRONMENT "OPENBLAS_NUM_THREADS=1;OMP_NUM_THREADS=1")
+set_tests_properties(${bethe_test_names} PROPERTIES ENVIRONMENT "${bethe_test_environment}")

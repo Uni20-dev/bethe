@@ -50,6 +50,7 @@
         "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g1",
         "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer -fno-sanitize-recover=all",
         "UNI20_SANITIZE": "address,undefined",
+        "BETHE_TEST_UNI20_LSAN_SUPPRESSIONS": "ON",
         "UNI20_ENABLE_MPREAL": "ON",
         "UNI20_BACKEND_BLAS": "OFF"
       }
@@ -94,7 +95,6 @@
       "environment": {
         "DEBUGINFOD_URLS": "",
         "ASAN_OPTIONS": "detect_leaks=1:halt_on_error=1",
-        "LSAN_OPTIONS": "suppressions=${sourceDir}/tests/lsan.supp:print_suppressions=0",
         "UBSAN_OPTIONS": "halt_on_error=1:print_stacktrace=1"
       }
     },
