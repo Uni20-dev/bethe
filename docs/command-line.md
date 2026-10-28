@@ -269,6 +269,11 @@ failed points and their diagnostics. Only the calling thread writes tables;
 `--no-retain` still permits bounded-memory streaming. `--momentum` accepts the
 same option but has only one point per branch, so it offers no grid parallelism.
 
+`bethe-hubbard-continuum --threads N` evaluates independent total momenta
+through the same bounded grid, for two-spinon and charge-containing edges.
+Each point's quadrature, inversion and extrema search remain sequential;
+rows preserve momentum order, including failures.
+
 `bethe-lieb-liniger-thermal --threads N` uses the same bounded grid for
 temperature scans, at fixed chemical potential or density. Each equilibrium
 solve remains sequential; rows preserve the requested temperature order.
