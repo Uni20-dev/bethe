@@ -87,6 +87,18 @@ if(BETHE_HAS_MPREAL)
   target_link_libraries(bethe_gaudin_yang_mpfr_tests PRIVATE bethe::bethe TBB::tbb)
   bethe_discover_tests(bethe_gaudin_yang_mpfr_tests)
 
+  add_executable(bethe_hubbard_mpfr_tests test_hubbard_mpfr.cpp)
+  target_link_libraries(bethe_hubbard_mpfr_tests PRIVATE bethe::bethe TBB::tbb)
+  bethe_discover_tests(bethe_hubbard_mpfr_tests)
+
+  add_executable(bethe_xxz_mpfr_tests test_xxz_mpfr.cpp)
+  target_link_libraries(bethe_xxz_mpfr_tests PRIVATE bethe::bethe TBB::tbb)
+  bethe_discover_tests(bethe_xxz_mpfr_tests)
+
+  add_executable(bethe_su3_mpfr_tests test_su3_mpfr.cpp)
+  target_link_libraries(bethe_su3_mpfr_tests PRIVATE bethe::bethe TBB::tbb)
+  bethe_discover_tests(bethe_su3_mpfr_tests)
+
   add_executable(bethe_root_solver_mpfr_tests test_root_solver_mpfr.cpp)
   target_link_libraries(bethe_root_solver_mpfr_tests PRIVATE bethe::bethe TBB::tbb)
   bethe_discover_tests(bethe_root_solver_mpfr_tests)
@@ -102,20 +114,34 @@ if(BETHE_HAS_MPREAL)
   add_executable(bethe_async_mpfr_tests test_async_mpfr.cpp)
   target_link_libraries(bethe_async_mpfr_tests PRIVATE bethe::bethe TBB::tbb)
   bethe_discover_tests(bethe_async_mpfr_tests)
+
+  add_executable(bethe_thermodynamics_mpfr_tests test_thermodynamics_mpfr.cpp)
+  target_link_libraries(bethe_thermodynamics_mpfr_tests PRIVATE bethe::bethe TBB::tbb)
+  bethe_discover_tests(bethe_thermodynamics_mpfr_tests)
 endif()
 
 add_executable(bethe_parallel_scan_tests test_parallel_scan.cpp)
 target_link_libraries(bethe_parallel_scan_tests PRIVATE bethe::bethe TBB::tbb)
 bethe_discover_tests(bethe_parallel_scan_tests)
 
-foreach(test IN ITEMS async_scan continuous_work async_structure_factor prepared_observable_grid)
+foreach(test IN ITEMS async_scan continuous_work async_structure_factor prepared_observable_grid solver_composition)
   add_executable(bethe_${test}_tests test_${test}.cpp)
   target_link_libraries(bethe_${test}_tests PRIVATE bethe::bethe TBB::tbb)
   bethe_discover_tests(bethe_${test}_tests)
 endforeach()
 
+if(TARGET bethe-async-gaudin-sweep-example)
+  add_test(NAME SolverComposition.example COMMAND bethe-async-gaudin-sweep-example)
+endif()
+
 if(TARGET bethe-async-background-example)
   add_test(NAME AsyncBackground.example COMMAND bethe-async-background-example)
+endif()
+if(TARGET bethe-async-hubbard-background-example)
+  add_test(NAME AsyncHubbardBackground.example COMMAND bethe-async-hubbard-background-example)
+endif()
+if(TARGET bethe-async-ground-states-example)
+  add_test(NAME AsyncGroundStates.example COMMAND bethe-async-ground-states-example)
 endif()
 
 add_executable(bethe_parallel_excitation_tests test_parallel_excitation_models.cpp)
@@ -316,6 +342,9 @@ if(BETHE_BUILD_APPS)
     set(bethe_arbitrary_structure_factor ON)
   endif()
   if(Python3_Interpreter_FOUND)
+    add_test(NAME SU3Precision.cli
+      COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_su3_precision.py"
+        "$<TARGET_FILE:bethe-su3-pbc>" "${BETHE_HAS_MPREAL}" "${BETHE_HAS_MPLAPACK_MPREAL}")
     add_test(NAME RootSolverPrecision.cli
       COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_root_solver_precision.py"
         "$<TARGET_FILE:bethe-xxx-obc>" "$<TARGET_FILE:bethe-lieb-liniger-pbc>"
@@ -387,6 +416,16 @@ if(BETHE_BUILD_APPS)
     add_test(NAME Output.table_contracts
       COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_table_contracts.py"
         "$<TARGET_FILE_DIR:bethe-su3-dispersion>")
+  endif()
+  if(Python3_Interpreter_FOUND)
+    add_test(NAME Hubbard.precision
+      COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_hubbard_precision.py"
+        "$<TARGET_FILE:bethe-hubbard-pbc>" "$<TARGET_FILE:bethe-hubbard-obc>"
+        "${BETHE_HAS_MPREAL}" "${BETHE_HAS_MPLAPACK_MPREAL}")
+    add_test(NAME XXZ.precision
+      COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_xxz_precision.py"
+        "$<TARGET_FILE:bethe-xxz-pbc>" "$<TARGET_FILE:bethe-xxz-obc>"
+        "${BETHE_HAS_MPREAL}" "${BETHE_HAS_MPLAPACK_MPREAL}")
   endif()
   foreach(app IN ITEMS bethe-sine-gordon-dispersion bethe-sine-gordon-bethe-yang bethe-sine-gordon-excited)
     add_test(NAME Citations.${app}.cli
@@ -489,6 +528,9 @@ if(BETHE_BUILD_APPS)
     add_test(NAME LiebLinigerThermo.cli
       COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_lieb_liniger_thermo.py"
         "$<TARGET_FILE:bethe-lieb-liniger-dispersion>" "${BETHE_HAS_FLOAT128}")
+    add_test(NAME LiebLinigerThermo.precision
+      COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_thermodynamics_precision.py"
+        "$<TARGET_FILE:bethe-lieb-liniger-dispersion>" "${BETHE_HAS_MPREAL}" "${BETHE_HAS_MPLAPACK_MPREAL}")
     add_test(NAME LiebLinigerThermal.cli
       COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_lieb_liniger_thermal.py"
         "$<TARGET_FILE:bethe-lieb-liniger-thermal>" "${BETHE_HAS_FLOAT128}")

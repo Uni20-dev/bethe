@@ -3,8 +3,8 @@ name: C++ CI
 on:
   push:
     branches: [main]
+  # Stacked feature PRs need the same validation as PRs targeting main.
   pull_request:
-    branches: [main]
   schedule:
     - cron: "0 18 * * 0" # Monday 02:00 Asia/Taipei; include long-running validation.
   workflow_dispatch:

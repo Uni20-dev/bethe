@@ -2,6 +2,7 @@
 // Copyright (C) 2026 Ian McCulloch
 #pragma once
 
+#include <bethe/detail/newton_backtracking.hpp>
 #include <bethe/xxz_common.hpp>
 #include <uni20/linalg/ops/linear_solve.hpp>
 
@@ -32,7 +33,7 @@ template <uni20::Real Real> class NegativeGroundSystem {
   public:
     NegativeGroundSystem(std::size_t sites, std::size_t roots, Real delta, bool open)
         : sites(sites), order(roots), delta(delta), open(open), plus(Real{1} + delta), minus(Real{1} - delta),
-          a(-delta), pi(Real{4} * std::atan(Real{1}))
+          a(-delta), pi(bethe::detail::pi_like(delta))
     {
       checked_sites(sites);
       if (!uni20::isfinite(delta) || delta <= -Real{1} || delta >= Real{0})
@@ -40,8 +41,8 @@ template <uni20::Real Real> class NegativeGroundSystem {
       if (roots > sites / 2) throw std::invalid_argument("negative XXZ roots require M <= N/2");
       if (!open && sites % 2)
         throw std::invalid_argument("odd periodic negative XXZ requires a complex-root and sector-selection solver");
-      s = std::sqrt(plus / minus);
-      b = std::sqrt(plus) * std::sqrt(minus);
+      s = uni20::math::sqrt(plus / minus);
+      b = uni20::math::sqrt(plus) * uni20::math::sqrt(minus);
     }
 
     std::vector<Real> seed() const
@@ -51,7 +52,7 @@ template <uni20::Real Real> class NegativeGroundSystem {
       {
         Real const angle = open ? pi * Real(i + 1) / (Real{2} * Real(sites + 1))
                                 : pi * (Real(i) - Real(order - 1) / Real{2}) / Real(sites);
-        x[i] = std::atanh(std::tan(angle));
+        x[i] = uni20::math::atanh(uni20::math::tan(angle));
       }
       return x;
     }
@@ -63,17 +64,20 @@ template <uni20::Real Real> class NegativeGroundSystem {
       {
         if (!uni20::isfinite(x[i]) || (open && x[i] <= Real{0}) || (i && x[i] <= x[i - 1])) return false;
         // A rounded endpoint cannot encode a finite hyperbolic root.
-        if (std::abs(std::tanh(x[i])) >= Real{1}) return false;
+        if (uni20::math::abs(uni20::math::tanh(x[i])) >= Real{1}) return false;
       }
       return true;
     }
 
     // Complementary half-scattering phase divided by s. Exact rank-sized
     // multiples of pi were canceled analytically before numerical evaluation.
-    Real phase(Real x) const { return std::copysign(std::atan2(b, a * std::abs(std::tanh(x))) / s, x); }
+    Real phase(Real x) const
+    {
+      return uni20::math::copysign(uni20::math::atan2(b, a * uni20::math::abs(uni20::math::tanh(x))) / s, x);
+    }
     Real derivative(Real x) const
     {
-      Real const v = std::tanh(x), c = Real{1} / std::cosh(x);
+      Real const v = uni20::math::tanh(x), c = Real{1} / uni20::math::cosh(x);
       return -minus * a * c * c / (b * b + a * a * v * v);
     }
 
@@ -85,17 +89,18 @@ template <uni20::Real Real> class NegativeGroundSystem {
 
     Evaluation evaluate(std::span<Real const> x, uni20::DenseMatrix<Real>* jacobian = nullptr) const
     {
-      Evaluation out{.residual = std::vector<Real>(order)};
+      Real const zero = bethe::detail::precision_zero(delta);
+      Evaluation out{.residual = std::vector<Real>(order, zero), .norm = zero};
       for (std::size_t i = 0; i < order; ++i)
       {
-        Real const v = std::tanh(x[i]), c = Real{1} / std::cosh(x[i]);
+        Real const v = uni20::math::tanh(x[i]), c = Real{1} / uni20::math::cosh(x[i]);
         Real const multiplier = open ? Real{2} : Real{1};
-        bethe::detail::CompensatedSum<Real> f, diagonal;
-        f.add(multiplier * Real(sites) * std::atan(s * v) / s);
+        bethe::detail::CompensatedSum<Real> f(zero), diagonal(zero);
+        f.add(multiplier * Real(sites) * uni20::math::atan(s * v) / s);
         diagonal.add(multiplier * Real(sites) * c * c / (Real{1} + s * s * v * v));
         if (open)
         {
-          f.add(-Real{2} * std::atan(s / v) / s);
+          f.add(-Real{2} * uni20::math::atan(s / v) / s);
           diagonal.add(Real{2} * c * c / (v * v + s * s));
         }
         for (std::size_t j = 0; j < order; ++j)
@@ -116,7 +121,7 @@ template <uni20::Real Real> class NegativeGroundSystem {
         if (jacobian) (*jacobian)[i, i] = diagonal.value() / Real(sites);
         out.residual[i] = f.value() / Real(sites);
         if (!uni20::isfinite(out.residual[i])) throw std::runtime_error("nonfinite negative XXZ residual");
-        out.norm = std::max(out.norm, std::abs(out.residual[i]));
+        out.norm = std::max(out.norm, uni20::math::abs(out.residual[i]));
       }
       return out;
     }
@@ -135,15 +140,14 @@ template <uni20::Real Real>
 NegativeGroundRoots<Real> negative_ground_roots(std::size_t sites, Real delta, uni20::half_int sz, bool open,
                                                 SolverOptions<Real> const& options = {})
 {
+  Real const zero = solver_zero(delta, options);
   auto const m = sector_roots(sites, sz);
   NegativeGroundSystem<Real> const system(sites, m, delta, open);
-  if (!uni20::isfinite(options.residual_tolerance) || options.residual_tolerance <= Real{0})
-    throw std::invalid_argument("residual tolerance must be finite and positive");
   auto const elements = std::size_t(std::numeric_limits<std::ptrdiff_t>::max()) / sizeof(Real);
   if (m && m > elements / m) throw std::length_error("negative XXZ Newton matrix is too large");
   NegativeGroundRoots<Real> state;
   auto x = system.seed();
-  uni20::DenseMatrix<Real> jacobian(m, m), step(m, 1);
+  uni20::DenseMatrix<Real> jacobian(m, m, options.precision()), step(m, 1, options.precision());
   for (;;)
   {
     if (!system.physical(x)) throw std::runtime_error("negative XXZ roots cannot be represented at this precision");
@@ -158,43 +162,30 @@ NegativeGroundRoots<Real> negative_ground_roots(std::size_t sites, Real delta, u
     if (state.iterations == options.max_iterations) break;
     for (std::size_t i = 0; i < m; ++i)
       step[i, 0] = -evaluation.residual[i];
-    if (!uni20::linalg::solve_inplace_with_info(jacobian, step).succeeded())
+    if (!uni20::linalg::solve_inplace_with_info(jacobian, step, options.precision()).succeeded())
     {
       state.status = NegativeSolveStatus::stalled;
       break;
     }
-    auto trial = x;
-    bool accepted = false;
-    Real damping = Real{1};
-    for (int k = 0; k <= uni20::numeric_limits<Real>::digits(); ++k)
-    {
-      for (std::size_t i = 0; i < m; ++i)
-        trial[i] = x[i] + damping * step[i, 0];
-      if (system.physical(trial))
-      {
-        Real const norm = system.evaluate(trial).norm;
-        if (norm <= options.residual_tolerance || norm < (Real{1} - damping / Real{10000}) * evaluation.norm)
-        {
-          accepted = true;
-          break;
-        }
-      }
-      damping /= Real{2};
-    }
+    bool const accepted = bethe::detail::backtrack_newton(
+        x, options.precision(), [&](std::size_t j) { return step[j, 0]; },
+        [&](auto const& trial, Real damping) {
+          return system.physical(trial) && bethe::detail::newton_decreases(system.evaluate(trial).norm, evaluation.norm,
+                                                                           damping, options.residual_tolerance);
+        });
     if (!accepted)
     {
       state.status = NegativeSolveStatus::stalled;
       break;
     }
-    x = std::move(trial);
     ++state.iterations;
   }
   state.log_rapidities = x;
-  bethe::detail::CompensatedSum<Real> energy;
+  bethe::detail::CompensatedSum<Real> energy(zero);
   energy.add(Real(open ? sites - 1 : sites) * delta / Real{4});
   for (std::size_t i = 0; i < m; ++i)
   {
-    Real const v = std::tanh(x[i]), c = Real{1} / std::cosh(x[i]);
+    Real const v = uni20::math::tanh(x[i]), c = Real{1} / uni20::math::cosh(x[i]);
     Real const z = system.s * v;
     state.rapidities.push_back(z);
     energy.add(-system.plus * c * c / (Real{1} + z * z));

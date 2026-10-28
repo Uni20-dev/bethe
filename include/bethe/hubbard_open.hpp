@@ -44,13 +44,18 @@ namespace detail
 template <uni20::Real Real> class GroundSystem {
   public:
     GroundSystem(std::size_t sites, std::size_t particles, std::size_t down)
-        : sites(sites), n(particles), m(down), nk(n), ns(m), order(n + m), pi(Real{4} * std::atan(Real{1})),
+      requires(!uni20::has_runtime_precision_v<Real>)
+        : GroundSystem(sites, particles, down, uni20::native_precision<Real>())
+    {}
+    GroundSystem(std::size_t sites, std::size_t particles, std::size_t down, uni20::Precision precision)
+        : sites(sites), n(particles), m(down), nk(n), ns(m), order(n + m),
+          zero(uni20::scalar_at_precision<Real>(0, precision)), pi(bethe::detail::pi_like(zero)),
           labels(open::ground_quantum_numbers(sites, particles, down))
     {}
 
     std::vector<Real> seed() const
     {
-      using std::tan;
+      using uni20::math::tan;
       std::vector<Real> x(order);
       for (std::size_t j = 0; j < n; ++j)
         x[j] = pi * Real(j + 1) / Real(sites + 1);
@@ -87,10 +92,10 @@ template <uni20::Real Real> class GroundSystem {
     Evaluation evaluate(std::vector<Real> const& x, Real u, uni20::DenseMatrix<Real>* jacobian = nullptr) const
     {
       using hubbard::detail::kernel;
-      using std::abs;
-      using std::atan;
-      using std::cos;
-      using std::sin;
+      using uni20::math::abs;
+      using uni20::math::atan;
+      using uni20::math::cos;
+      using uni20::math::sin;
       Real const scale = std::max(Real{1}, u), weight = Real{1} / Real(sites + 1);
       std::vector<Real> sine(n), cosine(n), lambda(m);
       for (std::size_t j = 0; j < n; ++j)
@@ -101,17 +106,17 @@ template <uni20::Real Real> class GroundSystem {
       for (std::size_t a = 0; a < m; ++a)
       {
         lambda[a] = scale * x[n + a];
-        if (!uni20::isfinite(lambda[a]) || abs(lambda[a]) > uni20::numeric_limits<Real>::max() / Real{2})
+        if (!uni20::isfinite(lambda[a]) || !uni20::isfinite(Real{2} * lambda[a]))
           throw std::overflow_error("Hubbard rapidities exceed the representable scattering range");
       }
       if (jacobian)
         for (std::size_t i = 0; i < order; ++i)
           for (std::size_t j = 0; j < order; ++j)
-            (*jacobian)[i, j] = Real{0};
-      Evaluation result{.residual = std::vector<Real>(order)};
+            (*jacobian)[i, j] = zero;
+      Evaluation result{.residual = std::vector<Real>(order, zero), .charge = zero, .spin = zero};
       for (std::size_t j = 0; j < n; ++j)
       {
-        bethe::detail::CompensatedSum<Real> phases;
+        bethe::detail::CompensatedSum<Real> phases(zero);
         if (jacobian) (*jacobian)[j, j] = Real{1};
         for (std::size_t a = 0; a < m; ++a)
         {
@@ -131,7 +136,7 @@ template <uni20::Real Real> class GroundSystem {
       for (std::size_t a = 0; a < m; ++a)
       {
         auto const row = n + a;
-        bethe::detail::CompensatedSum<Real> phases;
+        bethe::detail::CompensatedSum<Real> phases(zero);
         for (std::size_t j = 0; j < n; ++j)
         {
           Real const minus = lambda[a] - sine[j], plus = lambda[a] + sine[j];
@@ -172,23 +177,23 @@ template <uni20::Real Real> class GroundSystem {
     }
 
     std::size_t const sites, n, m, nk, ns, order;
-    Real const pi;
+    Real const zero, pi;
     NestedQuantumNumbers const labels;
 };
 
 template <uni20::Real Real>
 State<Real> free_state(std::size_t sites, std::size_t particles, std::size_t down, Real interaction)
 {
-  using std::cos;
-  State<Real> result;
+  using uni20::math::cos;
+  auto result = hubbard::detail::state_at_interaction<State<Real>>(interaction);
   result.sites = sites;
   result.particles = result.root_particles = particles;
   result.down_spins = result.root_down_spins = down;
   result.interaction = result.root_interaction = interaction;
   result.free_fermion = result.converged = true;
   result.status = SolveStatus::converged;
-  Real const pi = Real{4} * std::atan(Real{1});
-  bethe::detail::CompensatedSum<Real> energy;
+  Real const pi = bethe::detail::pi_like(interaction);
+  bethe::detail::CompensatedSum<Real> energy(bethe::detail::precision_zero(interaction));
   for (auto count : {particles - down, down})
     for (std::size_t j = 0; j < count; ++j)
     {
@@ -219,7 +224,7 @@ template <uni20::Real Real = double>
   else
   {
     hubbard::detail::check_newton_size<Real>(n + m);
-    detail::GroundSystem<Real> const system(sites, n, m);
+    detail::GroundSystem<Real> const system(sites, n, m, options.precision());
     result = hubbard::detail::solve_ground_system<Real, State<Real>>(system, mapping.interaction, options);
   }
   hubbard::detail::apply_mapping(result, particles, down, interaction, mapping);
