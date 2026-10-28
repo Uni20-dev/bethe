@@ -14,7 +14,7 @@ Kondo Hamiltonian solver.
 bethe-kondo-response --field 2 --scale 1
 bethe-kondo-response --field -0.1 --scale 1 --precision long-double
 bethe-kondo-response --field 2 --scale 1 --precision fp128 --json response.json --csv response.csv
-bethe-kondo-response --field -4 --field-end 4 --points 129 --scale 1 --threads 4 --csv response.csv --no-retain
+bethe-kondo-response --field -4 --field-end 4 --points 129 --scale 1 --threads 4 --csv response.csv --no-retain --quiet
 bethe-kondo-response --references
 ```
 
