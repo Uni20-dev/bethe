@@ -202,9 +202,9 @@ cmake --build . --parallel
 ./bethe-info
 ```
 
-For finite-ring structure factors, finite-size Lieb–Liniger and SU(3) singlet
-ground states, additionally enable MPLAPACK matrix kernels.
-Unlike QR, Uni20's arbitrary-precision square
+For finite-ring structure factors, finite-size or zero-temperature
+thermodynamic Lieb–Liniger, and SU(3) singlet ground states, additionally
+enable MPLAPACK matrix kernels. Unlike QR, Uni20's arbitrary-precision square
 LU solves currently require this provider:
 
 ```sh
@@ -214,6 +214,7 @@ cmake --build . --parallel
 ./bethe-xxx-structure-factor 32 --precision bits-256 --threads 4
 ./bethe-lieb-liniger-obc 2 --length 1 --c 1e-50 --precision digits-100
 ./bethe-su3-pbc 24 --precision digits-100
+./bethe-lieb-liniger-dispersion --c 4 --momentum 1 --precision digits-100
 ./bethe-info
 ```
 
@@ -228,7 +229,8 @@ on supported configurations.
 This MPFR path covers periodic/open XXX real roots, sector/ground states, periodic one-spinon
 branches, real-root excitation scans, prepared raising form factors and the
 finite two-spinon DSF, finite-size periodic/hard-wall Lieb–Liniger states and scans,
-plus SU(3) balanced singlet energies and Richardson/central-spin ground-state continuation.
+zero-temperature Lieb–Liniger bulk energies and dispersions, SU(3) balanced
+singlet energies, and Richardson/central-spin ground-state continuation.
 It does **not** enable arbitrary precision throughout all models or frontends.
 The XXX real-root and Gaudin solvers need just `UNI20_ENABLE_MPREAL=ON`;
 Lieb–Liniger, SU(3) and form factors additionally need `UNI20_BACKEND_MPLAPACK=ON`.
@@ -379,7 +381,9 @@ An existing standalone cache with `UNI20_BUILD_CLI=OFF` likewise needs
 Set `BETHE_BUILD_EXAMPLES=ON` to build library composition examples in the
 `examples/` subdirectory. The first example prepares one Lieb–Liniger background
 asynchronously and submits both elementary branches before observing it; see
-[shared backgrounds](async-execution.md#shared-backgrounds). Examples are checked
+[shared backgrounds](async-execution.md#shared-backgrounds). A second example
+evaluates a bounded [ground-state parameter sweep](async-execution.md#ground-state-parameter-sweeps),
+using `mpreal` when its LU provider is configured. Examples are checked
 in CI and are not installed with the command-line tools.
 
 ### Where code belongs
