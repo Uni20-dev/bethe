@@ -203,7 +203,7 @@ cmake --build . --parallel
 ```
 
 For finite-ring structure factors, finite-size or zero-temperature
-thermodynamic Lieb–Liniger, SU(3), finite XXZ/Hubbard and Gaudin–Yang,
+thermodynamic Lieb–Liniger, SU(3), finite XXZ/Hubbard and Gaudin–Yang/Bose–Fermi,
 additionally
 enable MPLAPACK matrix kernels. Unlike QR, Uni20's arbitrary-precision square
 LU solves currently require this provider:
