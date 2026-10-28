@@ -35,7 +35,8 @@ bethe-tj-pbc 7 --particles 4 --sz 2 --roots
 
 `--particles N` defaults to L. `--sz` defaults to 0 for even N or 1/2 for
 odd N, and fixes $`N_{\mathrm{up}} =N /2+S^z`$, $`N_{\mathrm{down}} =N /2-S^z`$. Every returned energy is
-a minimum **within those populations**, not a minimization over filling.
+a minimum **within those populations** when the solve converges, not a
+minimization over filling. Failed solves return estimates, not ground-state energies.
 Three branches are supported:
 
 - **Doped, mixed spin:** both N_up and N_down must be odd. Either parity
@@ -132,9 +133,10 @@ if (!state.converged) { /* report an incomplete solve */ }
 All finite calculations retain fp64, long double, or optional fp128. The
 doped solver works with the positive halves of reflection-paired roots,
 inserting exact zero roots for odd counts. Newton uses an analytic Jacobian
-and a line search preserving positive, ordered roots. A small native-precision
-pivoted linear solve returns an unresolved status for singular/numerically
-tiny pivots; it does not invoke or modify a process-global abort policy.
+and a line search preserving positive, ordered roots. Uni20's recoverable
+linear-solve dispatch selects the configured provider, returning an unresolved
+status for singular/numerically tiny pivots without changing a process-global
+abort policy.
 Dense Newton storage is O((M1+M2)^2); factorization is cubic. The tangent seed
 is only an initial guess, not a thermodynamic approximation to the result.
 This grading is economical near unit filling: a dilute gas on a long ring
@@ -151,6 +153,16 @@ or ill-conditioned. The CLI exits 2 for incomplete solves, 1 for invalid or
 unsupported input, and 0 for convergence. Tolerances are never loosened and
 arithmetic precision is never silently changed.
 
+Supported populations do not guarantee convergence at every size. For example,
+`bethe-tj-pbc 512 --particles 2 --max-iterations 50 --format json` stalls in
+binary64 with residual about 0.159, far above tolerance. The same request in
+80-bit extended precision stalls near the same residual; binary128 reaches the
+50-update limit there. Increasing arithmetic precision alone has not resolved
+this example. Its returned energy is an unconverged estimate and must not be
+used as a physical result. The large filling-curve checks in
+[parallel-grid measurements](parallel-grids.md#nested-model-parameter-sweeps)
+record these numerical failures separately from the concurrency checks.
+
 Tests cover native-precision analytic energies (including E=-4 for one
 electron of each spin and E=-3-sqrt(5) for L=5, N_up=3, N_down=1), the XXX
 reduction, free limits, original equations, Jacobian differences, budgets,
@@ -163,3 +175,11 @@ Next extensions require an explicit finite-ring branch audit for the missing
 population parities; open boundaries and excited-state selection need their
 own equations and labels. Neither shifted centered labels nor copying
 Hubbard's finite-ring selection is a validated extension.
+
+Supported size/population requests compose through the owning Async grid;
+the [nested sweep example](async-execution.md#owning-nested-model-requests)
+demonstrates balanced odd-population filling curves. Each solve owns its roots
+and scratch, and failed final iterates retain all diagnostics. The single-request
+CLI and each Newton sequence stay serial. Explicit MPFR remains a separate audit
+of controls, constants, reductions and Newton precision; composition adds no
+missing population parity or excited family.

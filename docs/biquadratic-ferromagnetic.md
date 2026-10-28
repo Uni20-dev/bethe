@@ -30,6 +30,8 @@ bethe-biquadratic-obc 128 --ferromagnetic --bound-pairs 8
 bethe-biquadratic-obc 128 --ferromagnetic --bound-triples 8
 # Mixed bound pair plus a separate defect, a 6-by-6 label window:
 bethe-biquadratic-obc 128 --ferromagnetic --pair-defects 8 --mixed-window 6
+# Overlap independent candidates in the same family:
+bethe-biquadratic-obc 128 --ferromagnetic --pair-defects 8 --mixed-window 6 --threads 4
 # Real-root scattering near the two-defect low-energy edge:
 bethe-biquadratic-obc 129 --ferromagnetic --through-lines 125 --excitations all --real-window 8
 # Small two-defect module, including complex-root states:
@@ -49,6 +51,24 @@ form M non-crossing singlet arcs, so N=ell+2M. Some TL literature calls the
 through-lines themselves "defects"; our M-defect terminology instead
 counts singlet insertions M. These are algebraic sectors, not counts of
 fixed local singlet bonds in an eigenstate.
+
+`--threads N` controls concurrency for `--excitations`, `--bound-pairs`,
+`--bound-triples`, `--bound-quartets`, `--pair-defects`, `--triple-defects` and
+`--two-pair-states`. The default is one worker. Labels are generated in their
+usual order and copied into each solve; continuous scheduler workers take the
+next candidate as soon as they finish. Each candidate's Newton steps stay
+sequential. Results preserve mode order or the existing gap/label ranking,
+including the first failed candidate in enumeration order, regardless of
+completion order. The option does not change the selected physical family.
+
+All admitted solves finish before an execution error propagates or exports
+open. Table output stays on the calling thread. At most the requested number
+of candidate solves are active, capped by the candidate count; requests do not
+form an unbounded queue. As before, bound-cluster scans retain candidate states
+until final ranking, so memory still grows with `--max-candidates` and the root
+count. Selected `--pair-defect`, `--triple-defect`, `--two-pairs`, analytic bands
+and Q-system modes do not accept `--threads`. Use one BLAS/OpenMP thread per
+solve when benchmarking; small scans may be faster with the default.
 
 Without state-selection options, `--ferromagnetic` reports only the exact
 ground-space reference and the positive spectral gap. `--through-lines N-2`

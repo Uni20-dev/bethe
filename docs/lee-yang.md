@@ -53,6 +53,15 @@ defaults to $`65536\,\epsilon`$. `--max-root-iterations` (default 256 per grid)
 controls the excited source quantization. The default work budget is
 1000000000 kernel products **per state**, not a combined allowance.
 
+Use `--threads 2` to overlap the vacuum and excited solves. The default is
+one worker; larger requests still admit at most two solves. Each state retains
+its own sequential iterations, meshes and work limits. The calling thread
+forms the gap and writes the tables after both solves finish, including when
+one returns numerical failure. CPU timing covers the complete pair, including
+scheduler setup and waiting. Speedup is limited by the more expensive state.
+For independent circumference sweeps of either state, see the
+[finite-volume Async example](async-execution.md#finite-volume-integral-equations).
+
 Three tables are always present:
 
 - `levels`: vacuum and one-particle bulk-subtracted energies and scaling
