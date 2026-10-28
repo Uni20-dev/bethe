@@ -3,6 +3,8 @@
 Bethe uses Uni20's scheduler for independent calculations. It creates no thread
 pool of its own and never changes the global scheduler. Existing synchronous
 scans wait for the same operation exposed by the Async API.
+See [app coverage](app-capabilities.md) for the execution and arbitrary-precision
+paths currently exposed by each frontend, and the remaining integration work.
 
 ## State scans
 

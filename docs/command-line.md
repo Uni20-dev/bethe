@@ -250,6 +250,10 @@ for examples. Set BLAS/OpenMP thread limits to one to avoid nested threading.
 
 ### Parallel observable grids
 
+`bethe-xxx-structure-factor-thermo` uses a bounded grid for independent spectral
+points, collecting rows in momentum-major order. See its
+[streaming and summary conventions](xxx-structure-factor-thermo.md).
+
 `bethe-hubbard-dispersion` (half-filled and doped) and
 `bethe-lieb-liniger-dispersion` also accept `--threads N`, defaulting to 1:
 
