@@ -2,6 +2,7 @@
 // Copyright (C) 2026 Ian McCulloch
 #pragma once
 #include <bethe/detail/spinon_band.hpp>
+#include <bethe/solver.hpp>
 
 namespace bethe::su3
 {
@@ -29,12 +30,17 @@ enum class Momentum
 /// in the prose below its Eq. (65).
 template <uni20::Real Real> class ExcitationDispersion {
   public:
-    explicit ExcitationDispersion(Real exchange = Real{1}) : exchange_(exchange)
+    ExcitationDispersion()
+      requires(!uni20::has_runtime_precision_v<Real>)
+        : ExcitationDispersion(Real{1})
+    {}
+    explicit ExcitationDispersion(Real exchange)
+        : zero_(bethe::detail::precision_zero(exchange)), pi_(bethe::detail::pi_like(zero_)), exchange_(exchange)
     {
       if (!uni20::isfinite(exchange) || exchange <= Real{0})
         throw std::invalid_argument("SU(3) exchange must be finite and positive");
-      amplitude_ = exchange * (Real{4} * pi_ / (Real{3} * std::sqrt(Real{3})));
-      if (!uni20::isfinite(amplitude_) || amplitude_ > uni20::numeric_limits<Real>::max() / Real{1.5})
+      amplitude_ = exchange * (Real{4} * pi_ / (Real{3} * uni20::math::sqrt(uni20::scalar_like(zero_, 3))));
+      if (!uni20::isfinite(amplitude_) || !uni20::isfinite(amplitude_ * (Real{3} / Real{2})))
         throw std::overflow_error("SU(3) elementary band exceeds scalar range");
     }
     Real exchange() const { return exchange_; }
@@ -47,10 +53,11 @@ template <uni20::Real Real> class ExcitationDispersion {
     Real maximum_energy(Particle particle) const
     {
       check_particle(particle);
-      return amplitude_ * (particle == Particle::fundamental ? Real{1.5} : Real{0.5});
+      return amplitude_ * ((particle == Particle::fundamental ? Real{3} : Real{1}) / Real{2});
     }
     Real energy(Particle particle, Real p) const
     {
+      bethe::detail::require_same_precision(p, zero_);
       Real const end = momentum_max(particle);
       if (!uni20::isfinite(p) || p < Real{0} || p > end)
         throw std::invalid_argument("momentum outside SU(3) elementary branch");
@@ -58,11 +65,17 @@ template <uni20::Real Real> class ExcitationDispersion {
       // gapless endpoint. Both representations have the same endpoint speed.
       Real const distance = std::min(p, end - p);
       // Halving a subnormal momentum can erase it even when v*p is nonzero.
+      // MPFR can also round a halved value UP to its minimum; test reversibility.
       // The curvature correction there is far below relative roundoff.
-      Real const value =
-          distance < uni20::numeric_limits<Real>::min()
-              ? velocity() * distance
-              : amplitude_ * (Real{2} * std::sin(distance / Real{2}) * std::sin((end - distance) / Real{2}));
+      if (distance == Real{0}) return zero_;
+      bool use_linear;
+      if constexpr (uni20::has_runtime_precision_v<Real>)
+        use_linear = (distance / Real{2}) * Real{2} != distance;
+      else
+        use_linear = distance < uni20::numeric_limits<Real>::min();
+      Real const value = use_linear ? velocity() * distance
+                                    : amplitude_ * (Real{2} * uni20::math::sin(distance / Real{2}) *
+                                                    uni20::math::sin((end - distance) / Real{2}));
       if (distance > Real{0} && value == Real{0})
         throw std::underflow_error("positive SU(3) excitation energy underflows scalar range");
       return value;
@@ -73,6 +86,7 @@ template <uni20::Real Real> class ExcitationDispersion {
     SpinonContinuum<Real> continuum(Real q, Continuum content = Continuum::two_soliton,
                                     Momentum convention = Momentum::unfolded) const
     {
+      bethe::detail::require_same_precision(q, zero_);
       if (!uni20::isfinite(q) || q < Real{0} || q > Real{2} * pi_)
         throw std::invalid_argument("SU(3) continuum momentum must lie in [0,2*pi]");
       if (content != Continuum::two_soliton && content != Continuum::four_soliton)
@@ -86,18 +100,19 @@ template <uni20::Real Real> class ExcitationDispersion {
       {
         Real const r = q <= a ? q : q <= soft ? soft - q : q - soft;
         result.lower = energy(Particle::antifundamental, r);
-        result.upper = content == Continuum::two_soliton ? amplitude_ * (Real{2} * std::cos((a - r) / Real{2}))
-                                                         : amplitude_ * (Real{4} * std::cos(r / Real{4}));
+        result.upper = content == Continuum::two_soliton ? amplitude_ * (Real{2} * uni20::math::cos((a - r) / Real{2}))
+                                                         : amplitude_ * (Real{4} * uni20::math::cos(r / Real{4}));
       }
       else if (content == Continuum::two_soliton)
       {
         result.lower = q <= soft ? energy(Particle::antifundamental, q) : energy(Particle::fundamental, q - soft);
-        result.upper = q < a ? energy(Particle::fundamental, q) : amplitude_ * (Real{2} * std::sin(q / Real{2}));
+        result.upper =
+            q < a ? energy(Particle::fundamental, q) : amplitude_ * (Real{2} * uni20::math::sin(q / Real{2}));
       }
       else
       {
         result.lower = energy(Particle::antifundamental, q <= soft ? q : q - soft);
-        result.upper = amplitude_ * (Real{4} * std::cos(q / Real{4}));
+        result.upper = amplitude_ * (Real{4} * uni20::math::cos(q / Real{4}));
       }
       if (!uni20::isfinite(result.lower) || !uni20::isfinite(result.upper))
         throw std::overflow_error("SU(3) continuum exceeds scalar range");
@@ -110,7 +125,6 @@ template <uni20::Real Real> class ExcitationDispersion {
       if (particle != Particle::fundamental && particle != Particle::antifundamental)
         throw std::invalid_argument("unknown SU(3) particle representation");
     }
-    Real pi_ = bethe::detail::pi<Real>();
-    Real exchange_, amplitude_;
+    Real zero_, pi_, exchange_, amplitude_;
 };
 } // namespace bethe::su3

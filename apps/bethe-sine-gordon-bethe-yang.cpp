@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Copyright (C) 2026 Ian McCulloch
-#include "program-options.hpp"
+#include "execution-options.hpp"
 #include "result-output.hpp"
+#include <bethe/observable_grid.hpp>
 #include <bethe/sine_gordon_bethe_yang.hpp>
 
 namespace
@@ -14,6 +15,7 @@ struct Arguments
     std::optional<std::string> coupling, length, tolerance;
     std::size_t levels = 1, iterations = 256, evaluations = 100000, quadrature_levels = 16, cutoffs = 64;
     int charge = 2;
+    int threads = 1;
     cli::DataOutputOptions output;
 };
 auto program_info()
@@ -31,6 +33,9 @@ auto program_info()
       "These are NOT exact finite-volume energies. Small residual certifies the equation, not the large-volume "
       "approximation.",
       "Quadrature/cutoff errors and counting residual are separate; no error bound on omitted wrapping terms.",
+      "--threads schedules independent levels; each root search and phase quadrature stays sequential. Rows keep "
+      "Bethe-number order, including failed levels. --no-retain permits bounded-memory streaming.",
+      "One worker, one level, or the analytic free point p=1 uses direct serial evaluation.",
       "See docs/sine-gordon-excitations.md; --references prints literature."};
   return info;
 }
@@ -51,6 +56,7 @@ void add_options(CLI::App& app, Arguments& a)
       ->capture_default_str();
   cli::count_option(app, "--max-fourier-cutoffs", a.cutoffs, "Fourier cutoff attempts")->capture_default_str();
   cli::precision_option(app, a.precision);
+  cli::threads_option(app, a.threads)->description("Scheduler concurrency limit for independent Bethe-Yang levels");
   cli::add_data_output_options(app, a.output,
                                {{.name = "levels", .description = "Selected energy levels", .primary = true}});
 }
@@ -102,6 +108,10 @@ template <uni20::Real Real> int run(Arguments const& a, int argc, char** argv)
   auto validation = options;
   validation.max_iterations = 0;
   (void)model::same_charge_pair(mass, length, p, first, validation);
+  bool const parallel = a.threads > 1 && a.levels > 1 && p != Real{1};
+  std::optional<uni20::async::TbbScheduler> scheduler;
+  if (parallel) scheduler.emplace(a.threads);
+  bethe::ExecutionOptions const execution{.scheduler = scheduler ? &*scheduler : nullptr};
   cli::RunReport report(context, "Sine-Gordon asymptotic Bethe-Yang pairs");
   report.field("mass", "Soliton mass M", mass)
       .field("length", "Circumference L", length)
@@ -113,6 +123,10 @@ template <uni20::Real Real> int run(Arguments const& a, int argc, char** argv)
       .field("charge", "Topological charge", a.charge)
       .field("first", "First Bethe number", first)
       .field("levels", "Levels", a.levels)
+      .field("threads", "Scheduler concurrency limit", a.threads)
+      .field("execution_mode", "Execution mode", parallel ? "bounded Async level grid" : "direct serial")
+      .field("max_in_flight", "Maximum levels in flight", parallel ? execution.max_in_flight : std::size_t{1})
+      .field("cpu_timing_scope", "CPU timing scope", "level grid including ordered row output")
       .field("tolerance", "Counting tolerance", options.tolerance)
       .precision(a.precision);
   using Optional = std::optional<Real>;
@@ -128,15 +142,24 @@ template <uni20::Real Real> int run(Arguments const& a, int argc, char** argv)
       report, context, a.output, "levels", table,
       [&](auto& table) {
         bool success = true;
-        for (std::size_t j = 0; j < a.levels; ++j)
-        {
-          auto const number = uni20::from_twice(first.twice() + 2 * std::int64_t(j));
-          auto const state = context.measure([&] { return model::same_charge_pair(mass, length, p, number, options); });
-          success = success && state.converged;
-          table.append(number, a.charge, state.rapidity, state.energy, state.residual, state.quadrature_error,
-                       state.tail_bound, state.iterations, state.evaluations, name(state.phase_status),
-                       name(state.status));
-        }
+        context.measure([&] {
+          auto evaluate = [mass, length, p, first, options](std::size_t j) {
+            auto const number = uni20::from_twice(first.twice() + 2 * std::int64_t(j));
+            return model::same_charge_pair(mass, length, p, number, options);
+          };
+          auto collect = [&](std::size_t j, model::BetheYangResult<Real> const& state) {
+            auto const number = uni20::from_twice(first.twice() + 2 * std::int64_t(j));
+            success = success && state.converged;
+            table.append(number, a.charge, state.rapidity, state.energy, state.residual, state.quadrature_error,
+                         state.tail_bound, state.iterations, state.evaluations, name(state.phase_status),
+                         name(state.status));
+          };
+          if (parallel)
+            bethe::evaluate_observable_grid(a.levels, evaluate, collect, execution);
+          else
+            for (std::size_t j = 0; j < a.levels; ++j)
+              collect(j, evaluate(j));
+        });
         return success;
       },
       "incomplete; unavailable quantities omitted");

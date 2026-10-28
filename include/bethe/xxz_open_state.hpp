@@ -11,7 +11,8 @@ enum class GroundSolveStatus
 {
   converged,
   iteration_limit,
-  stalled
+  stalled,
+  continuation_stalled
 };
 
 /// Residuals from different coordinate systems are not interchangeable.

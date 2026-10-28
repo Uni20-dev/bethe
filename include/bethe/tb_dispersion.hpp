@@ -13,9 +13,14 @@ namespace bethe::takhtajan_babujian
 /// follow from the energy envelope. TB has SU(2)_2, not XXX's SU(2)_1 content.
 template <uni20::Real Real> class SpinonDispersion {
   public:
-    explicit SpinonDispersion(Real exchange = Real{1}) : band_(scale(exchange), Real{0}) {}
+    SpinonDispersion()
+      requires(!uni20::has_runtime_precision_v<Real>)
+        : SpinonDispersion(Real{1})
+    {}
+    /// Runtime exchange owns the finite precision, including subsequent queries.
+    explicit SpinonDispersion(Real exchange) : band_(make_band(exchange)) {}
     static constexpr uni20::half_int spin() { return uni20::from_twice(1); }
-    Real gap() const { return Real{0}; }
+    Real gap() const { return band_.gap(); }
     Real velocity() const { return band_.maximum_energy(); }
     Real maximum_energy() const { return band_.maximum_energy(); }
     Real energy(Real p) const { return band_.energy(p); }
@@ -33,13 +38,14 @@ template <uni20::Real Real> class SpinonDispersion {
     }
 
   private:
-    static Real scale(Real exchange)
+    static bethe::detail::SpinonBand<Real> make_band(Real exchange)
     {
+      auto const zero = bethe::detail::precision_zero(exchange);
       if (!uni20::isfinite(exchange) || exchange <= Real{0})
         throw std::invalid_argument("TB exchange must be finite and positive");
-      Real const value = exchange * (Real{2} * bethe::detail::pi<Real>());
+      Real const value = exchange * (Real{2} * bethe::detail::spinon_pi(zero));
       if (!uni20::isfinite(value)) throw std::overflow_error("TB spinon band exceeds scalar range");
-      return value;
+      return {value, zero};
     }
     bethe::detail::SpinonBand<Real> band_;
 };

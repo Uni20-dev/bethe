@@ -4,7 +4,7 @@ The [worked tutorial](tutorials/xxz-nonhermitian.md) compares regular scans with
 complete endpoint sectors, explains Jordan blocks and plots parity-dependent
 Casimir estimators.
 
-**Status: native positive finite-real-root library and frontend implemented
+**Status: positive finite-real-root library and frontend implemented
 for 0<Delta<1; complex-root branches and root-of-unity representation
 accounting remain follow-ups.** This is not the existing free-end XXZ model.
 The separate Delta=0 construction includes the complete fixed-magnetization
@@ -16,7 +16,7 @@ not spin-basis generalized eigenvectors.
 ```sh
 bethe-xxz-qg-obc 32 --delta 0.25
 bethe-xxz-qg-obc 7 --delta 0.6 --through-lines 3 --roots
-bethe-xxz-qg-obc 8 --delta 0.6 --numbers 1,3 --precision fp128 --json state.json
+bethe-xxz-qg-obc 8 --delta 0.6 --numbers 1,3 --precision digits-100 --json state.json
 bethe-xxz-qg-obc 8 --delta 0.6 --through-lines 4 --excitations all --roots
 bethe-xxz-qg-obc 4 --delta 0.25 --numbers none
 bethe-xxz-qg-obc 8 --delta 0 --sz 0 --json blocks.json
@@ -134,8 +134,31 @@ if (state.converged) {
 ```
 
 Existing quantum-number, compensated-summation, scalar and solver-option
-facilities are reused. Native fp64, long-double and fp128 follow the same
-equations; no double fallback is used. Iteration work is O(M^2), storage O(M).
+facilities are reused. Binary64, extended precision, binary128 and explicit
+MPFR precision follow the same equations. The regular iteration and analytic
+free endpoint require only Uni20 scalars, without MPLAPACK. Use CLI
+`--precision bits-N` or `--precision digits-N`, or supply explicit solver
+options and a matching finite-precision anisotropy:
+
+```cpp
+#if UNI20_HAS_MPREAL
+auto p = uni20::Precision::decimal_digits(100);
+bethe::SolverOptions<uni20::mpreal> controls(p);
+auto state = qg::sea_state(4, uni20::mpreal("0.25", p), 0, controls);
+#endif
+```
+
+Mixed, exact and unset parameters are rejected. The finite-root window's margin
+uses the anisotropy's precision. Near a threshold, more precision can distinguish
+a finite root from the excluded infinite-root limit: Delta=1e-60 on four sites
+admits the two-root sea at 333 bits but not at 128 bits. A requested precision
+is an arithmetic setting, not a guarantee of accurate digits or convergence.
+Roots, energy shifts, residuals and failed-state diagnostics retain it.
+
+The existing bounded Async scanner handles independent label combinations.
+Owning requests with separate parameter precisions can also compose through the
+[observable grid](async-execution.md), waiting on the final operation result.
+The coupled root iteration stays sequential. Iteration work is O(M^2), storage O(M).
 Failed solves retain their last root coordinates and residual but publish no
 energy. Status distinguishes iteration exhaustion from a precision/branch
 limit. An unrepresentable rapidity is also a precision failure. A zero update
@@ -303,3 +326,31 @@ Independent complex spin matrices through N=8 test nullities of H-E,
 (H-E)^2 and (H-E)^3 for every energy in every magnetization sector. This
 checks eigenvector counts and generalized eigenspace dimensions, not merely
 matching eigenvalue lists. No spin-basis Jordan vectors are returned yet.
+
+## Precision validation
+
+MPFR checks compare two-, three- and four-site energies against independent
+spin-Hamiltonian formulas and verify the unreduced complex Bethe equations.
+A 512-bit algebraic reference demonstrates accuracy growth at 128, 256 and
+333 bits. Tests resolve anisotropies 1e-60 and 1-1e-60, check finite-root window
+changes, and compare complete and partially failed scans at one/four workers.
+Analytic free-sector checks preserve exact particle-hole zeros and integer
+Jordan block counts; existing spin-basis nullity tests remain independent of
+the free-mode construction. Both branches run in scalar-only MPFR sanitizer
+builds as well as the wide-precision configuration.
+
+For the free endpoint's integer-only inputs, supply precision explicitly:
+
+```cpp
+#if UNI20_HAS_MPREAL
+#include <bethe/xxz_quantum_group_free.hpp>
+auto p = uni20::Precision::bits(256);
+auto blocks = bethe::xxz::quantum_group::free::sector<uni20::mpreal>(8, 4, p);
+#endif
+```
+
+The native convenience overload retains `sector<Real>(N, down, budgets)`.
+The explicit overload is `sector<Real>(N, down, precision, budgets)`, and
+`block<Real>(N, modes, zero_occupation, precision)` evaluates a selected block.
+Output budgets and the absence of Jordan vectors are unchanged. Cheap endpoint
+block evaluations remain serial within one sector.

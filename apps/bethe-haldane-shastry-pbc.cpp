@@ -47,7 +47,7 @@ void add_options(CLI::App& app, Arguments& a)
   app.add_flag("--spin-content", a.spin_content, "Add the spin_content table of SU(2) irrep multiplicities");
   cli::count_option(app, "--max-spin-updates", a.max_spin_updates, "Clebsch-Gordan addition budget per motif")
       ->capture_default_str();
-  cli::precision_option(app, a.precision);
+  cli::precision_option(app, a.precision, cli::ArbitraryPrecision::real);
   cli::add_data_output_options(app, a.output,
                                {{.name = "levels", .description = "Yangian multiplets", .primary = true},
                                 {.name = "spin_content",
@@ -67,24 +67,24 @@ std::vector<std::size_t> parse_motif(std::string_view text)
     text.remove_prefix(comma + 1);
   }
 }
-template <uni20::Real Real> int run(Arguments const& a, int argc, char** argv)
+template <uni20::Real Real> int run(Arguments const& a, uni20::Precision precision, int argc, char** argv)
 {
   uni20::run_context context(program_info(), {.invocation = std::vector<std::string>(argv, argv + argc)});
   auto computation = context.computation();
   std::vector<model::Level<Real>> levels;
   std::optional<model::Spectrum<Real>> scan;
   if (a.motif)
-    levels = {model::evaluate<Real>(a.sites, parse_motif(*a.motif))};
+    levels = {model::evaluate<Real>(a.sites, parse_motif(*a.motif), precision)};
   else if (a.levels)
   {
     auto const count = *a.levels == "all" ? std::optional<std::size_t>{} : cli::parse_size(*a.levels);
-    scan = model::spectrum<Real>(a.sites, count, a.max_motifs);
+    scan = model::spectrum<Real>(a.sites, precision, count, a.max_motifs);
     levels = std::move(scan->levels);
   }
   else if (a.sz)
-    levels = model::sector_ground_levels<Real>(a.sites, uni20::half_int::parse(*a.sz));
+    levels = model::sector_ground_levels<Real>(a.sites, uni20::half_int::parse(*a.sz), precision);
   else
-    levels = model::ground_levels<Real>(a.sites);
+    levels = model::ground_levels<Real>(a.sites, precision);
   std::vector<bethe::spin::Decomposition> contents;
   bool complete = !scan || scan->complete;
   if (a.output.needs("--spin-content", a.spin_content))
@@ -178,6 +178,7 @@ int main(int argc, char** argv)
         a.output.validate();
         if (app.count("--max-spin-updates") && !a.output.needs("--spin-content", a.spin_content))
           throw std::invalid_argument("--max-spin-updates requires a spin_content output request");
-        return cli::dispatch_precision(a.precision, [&]<typename Real>() { return run<Real>(a, argc, argv); });
+        return cli::dispatch_scalar_precision<cli::ArbitraryPrecision::real>(
+            a.precision, [&]<typename Real>(uni20::Precision p) { return run<Real>(a, p, argc, argv); });
       });
 }

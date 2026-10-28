@@ -15,6 +15,7 @@ graded model, not another color of the SU(kappa) Fermi gas. The frontend is
 bethe-bose-fermi-pbc --bosons 2 --fermions 3 --length 5 --c 1 --roots
 bethe-bose-fermi-pbc --bosons 4 --fermions 0 --length 4 --c 2 --json bosons.json
 bethe-bose-fermi-pbc --bosons 1 --fermions 1 --length 1 --c 1e-40 --precision fp128
+bethe-bose-fermi-pbc --bosons 2 --fermions 3 --length 5 --c 1 --precision digits-100 --roots
 bethe-bose-fermi-pbc --references
 ```
 
@@ -24,6 +25,13 @@ fp64 and ground-state calculation; there is no excitation mode yet.
 The common [output options](output.md) support screen presentation, CPU timing,
 metadata, and JSON/CSV/TSV files, including streaming and `--no-retain`.
 Literature is printed only with `--references`, not ordinary help.
+
+Alongside fp64, platform-native long double and optional fp128, the frontend
+accepts explicit MPFR precision (`bits-N` or `digits-N`) when
+[MPFR scalars and MPLAPACK MPFR](building.md#enable-arbitrary-precision) are
+configured. This covers the existing mixed, pure-species, free and vacuum
+paths. More arithmetic bits do not extend the supported shells or guarantee
+convergence within the iteration budget.
 
 `states` contains total energy, momentum/index, residual, iterations, and
 convergence status. With `--roots`, interacting calculations add `charge_roots`
@@ -98,6 +106,22 @@ seed. Failures return `iteration_limit`, `stalled`, or `precision_limit`, with
 no energy. Root arrays on failure, when available, are diagnostics only.
 Invalid parameters and unsupported shells throw before solving.
 
+Runtime precision requires options and physical inputs at the same finite
+precision; exact-only, unset and mixed-precision inputs are rejected:
+
+```cpp
+auto p = uni20::Precision::bits(256);
+bethe::bose_fermi::SolverOptions<uni20::mpreal> options(p);
+auto state = bethe::bose_fermi::ground_state(
+    2, 3, uni20::mpreal("5", p), uni20::mpreal("1", p), options);
+```
+
+The shared continuum Newton driver needs MPLAPACK MPFR only when it performs
+an update. Library free states, the pure-boson singleton and zero-update
+diagnostics also work with MPFR scalars alone. A required update without its
+provider throws a clear error; the frontend requires MPLAPACK for all MPFR
+requests. No global precision or exponent-range setting is changed.
+
 The pure-boson branch delegates to Lieb–Liniger. Free states store boson zero
 momenta followed by the occupied fermion modes in `momenta`; exact integer
 fermion labels are in `free_fermion_modes`. These are not interacting charge
@@ -105,13 +129,20 @@ labels. The mixed branch returns ordered real charge and auxiliary roots and
 their separate half-integer labels. Pure-boson labels are Lieb–Liniger labels;
 no auxiliary roots are introduced for this reduction.
 
+For independent compositions or couplings, capture each request and its options
+by value in the existing [bounded Async grid](async-execution.md#observable-grids).
+Each solve owns its Newton scratch and runs its dependent iterations sequentially.
+Wait on the final grid result; failed solves retain their diagnostics and missing
+energy. The same grid can contain different explicit precisions. No additional
+scheduler or model-specific execution wrapper is needed.
+
 ## Numerical method and verification
 
 Our mixed solver uses dimensionless roots $`q =\ell \,k`$, $`g =c \,\ell`$, and auxiliary
 coordinates scaled by `max(1,g)`. Reflection reduction enforces exact paired
 roots and explicit central zeros. The analytic Jacobian couples only the two
 root families. It uses the shared rational scattering kernel, compensated
-sums, native dense solve, and physical-domain damped Newton driver. Small-g
+sums, normal Uni20 LU dispatch, and physical-domain damped Newton driver. Small-g
 rank phases are canceled analytically before summing complementary angles;
 charge residuals are divided by `max(sqrt(g),abs(q))` there, and otherwise
 equations are scaled by N. Returned physical roots are checked again after
@@ -125,3 +156,13 @@ with the Lieb–Liniger ground energy; one boson agrees with the corresponding
 Gaudin–Yang impurity. A separate momentum-space contact Hamiltonian for two
 bosons and three fermions supplies decreasing variational upper bounds as
 the cutoff grows. Those finite-cutoff energies are not claimed to be exact.
+
+MPFR tests exercise 128, 256 and 333 bits, including original complex equations,
+pure-boson and one-fermion Lieb–Liniger reductions, free energies, failed solves,
+finite-precision central zeros and serial/concurrent agreement. Independent
+512-bit two-body bisection checks accuracy growth beyond binary128. At
+$`c=10^{-60}`$ and length one, 333-bit arithmetic resolves
+$`E/(2c)=1-c/12+O(c^2)`$; binary128 cannot resolve that correction. The mixed
+$`N_b=2,N_f=3`$ calculation also resolves the first-order energy shift $`14c`$
+above its nonzero free Fermi sea at that coupling. Input, root and state exports
+retain the selected precision, including free boson zeros.
