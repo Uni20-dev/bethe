@@ -72,6 +72,8 @@ std::size_t validate_sector(std::size_t sites, std::size_t particles, uni20::hal
                             SolverOptions<Real> const& options)
 {
   checked_length(sites);
+  Real const zero = bethe::detail::solver_zero(options);
+  bethe::detail::require_same_precision(interaction, zero);
   if (!uni20::isfinite(interaction)) throw std::invalid_argument("Hubbard ground state requires finite U");
   if (!uni20::isfinite(options.residual_tolerance) || options.residual_tolerance <= Real{0})
     throw std::invalid_argument("residual tolerance must be finite and positive");
@@ -80,6 +82,19 @@ std::size_t validate_sector(std::size_t sites, std::size_t particles, uni20::hal
   if (twice_sz < -bound || twice_sz > bound || (static_cast<std::int64_t>(particles) - twice_sz) % 2 != 0)
     throw std::invalid_argument("Hubbard N and Sz must give integer N_up and N_down between 0 and L");
   return static_cast<std::size_t>((static_cast<std::int64_t>(particles) - twice_sz) / 2);
+}
+
+// Initialize all scalar observables at the physical input precision, including
+// analytic free/vacuum paths that never enter the Newton iteration.
+template <typename StateType, uni20::Real Real> StateType state_at_interaction(Real const& interaction)
+{
+  Real const zero = bethe::detail::precision_zero(interaction);
+  StateType result;
+  result.interaction = result.root_interaction = interaction;
+  result.energy = result.energy_offset = zero;
+  result.charge_residual = result.spin_residual = result.residual_norm = zero;
+  if constexpr (requires { result.momentum; }) result.momentum = zero;
+  return result;
 }
 
 /// Exact bipartite-lattice mappings. Boundary-specific momentum is not part of this type.
@@ -141,7 +156,7 @@ template <uni20::Real Real> void check_newton_size(std::size_t order)
 // Width/(width^2+d^2), without squaring a potentially huge value.
 template <uni20::Real Real> Real kernel(Real d, Real width)
 {
-  using std::abs;
+  using uni20::math::abs;
   if (abs(d) > width)
   {
     Real const ratio = width / d;
@@ -157,8 +172,9 @@ template <uni20::Real Real> Real kernel(Real d, Real width)
 template <uni20::Real Real, typename StateType, typename System>
 StateType solve_ground_system(System const& system, Real interaction, SolverOptions<Real> const& options)
 {
-  using std::cos;
-  StateType result;
+  using uni20::math::cos;
+  auto result = state_at_interaction<StateType>(interaction);
+  Real const zero = bethe::detail::precision_zero(interaction);
   result.sites = system.sites;
   result.particles = result.root_particles = system.n;
   result.down_spins = result.root_down_spins = system.m;
@@ -167,8 +183,9 @@ StateType solve_ground_system(System const& system, Real interaction, SolverOpti
   if (target_u == Real{0} || !uni20::isfinite(Real{1} / target_u))
     throw std::invalid_argument("U is too small for this precision; U/4 and its reciprocal must be representable");
   auto x = system.seed();
-  Real u = std::max(Real{2}, target_u);
-  uni20::DenseMatrix<Real> jacobian(system.order, system.order), step(system.order, 1);
+  Real u = std::max(uni20::scalar_like(target_u, 2), target_u);
+  uni20::DenseMatrix<Real> jacobian(system.order, system.order, options.precision()),
+      step(system.order, 1, options.precision());
   for (;;)
   {
     auto evaluation = system.evaluate(x, u, &jacobian);
@@ -186,13 +203,13 @@ StateType solve_ground_system(System const& system, Real interaction, SolverOpti
     if (result.iterations == options.max_iterations) break;
     for (std::size_t i = 0; i < system.order; ++i)
       step[i, 0] = -evaluation.residual[i];
-    if (!uni20::linalg::solve_inplace_with_info(jacobian, step).succeeded())
+    if (!uni20::linalg::solve_inplace_with_info(jacobian, step, options.precision()).succeeded())
     {
       result.status = SolveStatus::stalled;
       break;
     }
     bool const accepted = bethe::detail::backtrack_newton(
-        x, [&](std::size_t j) { return step[j, 0]; },
+        x, options.precision(), [&](std::size_t j) { return step[j, 0]; },
         [&](auto const& trial, Real damping) {
           return system.physical(trial) &&
                  bethe::detail::newton_decreases(system.evaluate(trial, u).norm(), evaluation.norm(), damping,
@@ -217,7 +234,7 @@ StateType solve_ground_system(System const& system, Real interaction, SolverOpti
   if (result.converged) result.status = SolveStatus::converged;
   system.expand(x, target_u, result.charge_momenta, result.spin_rapidities);
   result.quantum_numbers = system.labels;
-  bethe::detail::CompensatedSum<Real> energy;
+  bethe::detail::CompensatedSum<Real> energy(zero);
   for (Real k : result.charge_momenta)
     energy.add(-Real{2} * cos(k));
   result.energy = energy.value();

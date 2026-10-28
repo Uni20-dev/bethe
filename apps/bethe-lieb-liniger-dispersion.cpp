@@ -3,6 +3,7 @@
 #include "execution-options.hpp"
 #include "program-options.hpp"
 #include "result-output.hpp"
+#include "solver-precision.hpp"
 #include <bethe/lieb_liniger_thermo.hpp>
 #include <bethe/observable_grid.hpp>
 
@@ -34,7 +35,8 @@ auto program_info()
       "The default grid ends at 2*pi*n on both branches. --p-max changes only the type-I grid. "
       "These are elementary lines, not matrix elements, spectral weights, or a complete multiparticle spectrum.",
       "Tolerance defaults to 4096 epsilon in the selected precision. Independent mesh refinement and momentum "
-      "inversion are required; very weak coupling can exceed the node budget. fp128 requires MPLAPACK.",
+      "inversion are required; very weak coupling can exceed the node budget. fp128 and arbitrary-precision "
+      "linear solves require MPLAPACK.",
       "Failed energies are omitted (JSON null, CSV/TSV empty) and exit status is 2. Exports stream during computation; "
       "--no-retain discards delivered rows. See docs/lieb-liniger-thermo.md and docs/output.md. "
       "Use --references for literature and applicability."};
@@ -55,7 +57,7 @@ void add_options(CLI::App& app, Arguments& a)
   cli::text_option(app, "--p-max", a.pmax, "Type-I grid upper momentum (default 2*pi*n)")
       ->type_name("REAL")
       ->excludes(momentum);
-  cli::precision_option(app, a.precision);
+  cli::precision_option(app, a.precision, cli::ArbitraryPrecision::real_lu);
   cli::threads_option(app, a.threads)->description("Scheduler concurrency limit for independent momentum points");
   cli::text_option(app, "--tolerance", a.tolerance, "Relative numerical tolerance (default 4096 epsilon)")
       ->type_name("REAL");
@@ -88,24 +90,24 @@ char const* name(model::Status status)
   }
   return "unknown";
 }
-template <uni20::Real Real> int run(Arguments const& a, int argc, char** argv)
+template <uni20::Real Real> int run(Arguments const& a, model::Options<Real> controls, int argc, char** argv)
 {
   uni20::run_context context(program_info(), {.invocation = std::vector<std::string>(argv, argv + argc)});
-  Real const c = uni20::parse_real<Real>(a.c), density = uni20::parse_real<Real>(a.density);
-  Real const pi = Real{4} * std::atan(Real{1}), end = Real{2} * pi * density;
-  Real const pmax = a.pmax ? uni20::parse_real<Real>(*a.pmax) : end;
+  auto parse = [&](std::string_view text) { return cli::parse_solver_real<Real>(text, controls); };
+  Real const c = parse(a.c), density = parse(a.density);
+  Real const pi = Real{4} * uni20::math::atan(uni20::scalar_like(density, 1)), end = Real{2} * pi * density;
+  Real const pmax = a.pmax ? parse(*a.pmax) : end;
   std::optional<Real> momentum;
-  if (a.momentum) momentum = uni20::parse_real<Real>(*a.momentum);
+  if (a.momentum) momentum = parse(*a.momentum);
   if (!uni20::isfinite(pmax) || !(pmax > Real{0}) || !uni20::isfinite(end) || !(end > Real{0}))
     throw std::invalid_argument("grid endpoints and density must be finite and positive");
   if (momentum && (!uni20::isfinite(*momentum) || *momentum < Real{0} || (a.branch != "type-i" && *momentum > end)))
     throw std::invalid_argument("momentum outside selected branch range");
-  model::Options<Real> controls;
   controls.initial_nodes = a.initial_nodes;
   controls.max_nodes = a.max_nodes;
   controls.max_iterations = a.background_iterations;
   controls.max_momentum_iterations = a.iterations;
-  if (a.tolerance) controls.tolerance = uni20::parse_real<Real>(*a.tolerance);
+  if (a.tolerance) controls.tolerance = parse(*a.tolerance);
   auto const solver = context.measure([&] { return model::Solver<Real>(c, density, controls); });
   uni20::async::TbbScheduler scheduler(a.threads);
   auto const& bg = solver.background();
@@ -164,6 +166,8 @@ template <uni20::Real Real> int run(Arguments const& a, int argc, char** argv)
       bethe::evaluate_observable_grid(
           count,
           [&](std::size_t i) {
+            // Runtime scalars retain this index fraction as an exact rational;
+            // multiplication by high supplies the finite working precision.
             Real const p = momentum ? *momentum : i == count - 1 ? high : high * (Real(i) / Real(count - 1));
             return solver.at_momentum(branch, p);
           },
@@ -209,6 +213,7 @@ int main(int argc, char** argv)
         if (!a.momentum && (a.points < 2 || a.points > 1000000))
           throw std::invalid_argument("require 2<=points<=1000000");
         if (a.pmax && a.branch == "type-ii") throw std::invalid_argument("--p-max changes only the type-I grid");
-        return cli::dispatch_precision(a.precision, [&]<typename Real>() { return run<Real>(a, argc, argv); });
+        return cli::dispatch_options_precision<cli::ArbitraryPrecision::real_lu, model::Options>(
+            a.precision, [&](auto controls) { return run(a, std::move(controls), argc, argv); });
       });
 }

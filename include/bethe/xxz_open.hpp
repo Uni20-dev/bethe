@@ -39,8 +39,7 @@ template <uni20::Real Real> struct RealState
 template <uni20::Real Real = double>
 [[nodiscard]] RealQuantumNumberWindow real_quantum_number_window(std::size_t sites, Real delta, uni20::half_int sz)
 {
-  using std::asin;
-  using std::atan;
+  using uni20::math::asin;
   xxz::detail::validate_delta(delta);
   auto const m = xxz::detail::sector_roots(sites, sz);
   if (m == 0) return {};
@@ -48,8 +47,10 @@ template <uni20::Real Real = double>
   auto const bound = sites - m;
   if (delta == Real{1}) return {uni20::half_int{1}, uni20::half_int(static_cast<std::int64_t>(bound)), bound};
   if (delta == Real{0}) return {uni20::half_int{1}, uni20::half_int(n / 2), sites / 2};
-  Real const infinity = Real(sites + 1) / Real{2} + Real(sites - 2 * m + 1) * asin(delta) / (Real{4} * atan(Real{1}));
-  Real const margin = Real{32} * uni20::numeric_limits<Real>::epsilon() * std::max(Real{1}, infinity);
+  Real const infinity =
+      Real(sites + 1) / Real{2} + Real(sites - 2 * m + 1) * asin(delta) / bethe::detail::pi_like(delta);
+  Real const margin =
+      Real{32} * uni20::numeric_limits<Real>::epsilon(uni20::precision_of(delta)) * std::max(Real{1}, infinity);
   std::size_t lo = 1, hi = bound + 1;
   while (lo < hi)
   {
@@ -103,12 +104,11 @@ template <uni20::Real Real = double>
                                          SolverOptions<Real> const& options = {},
                                          std::span<Real const> initial_roots = {})
 {
-  using std::abs;
-  using std::atan;
-  using std::tan;
+  using uni20::math::abs;
+  using uni20::math::atan;
+  using uni20::math::tan;
+  Real const zero = xxz::detail::solver_zero(delta, options);
   detail::validate_quantum_numbers(sites, delta, numbers);
-  if (!uni20::isfinite(options.residual_tolerance) || options.residual_tolerance <= Real{0})
-    throw std::invalid_argument("residual tolerance must be finite and positive");
   RealState<Real> result;
   result.delta = delta;
   result.sz = uni20::from_twice(static_cast<std::int64_t>(sites - 2 * numbers.size()));
@@ -124,28 +124,31 @@ template <uni20::Real Real = double>
     result.converged = state.converged;
     return result;
   }
-  Real const n = Real(sites), pi = Real{4} * atan(Real{1});
+  Real const n = Real(sites), pi = bethe::detail::pi_like(zero);
   Real const plus = Real{1} + delta, minus = Real{1} - delta;
   auto const m = numbers.size();
   result.quantum_numbers.assign(numbers.begin(), numbers.end());
-  result.rapidities.resize(m, Real{0});
+  result.rapidities.resize(m, zero);
   if (!initial_roots.empty())
   {
     if (initial_roots.size() != m) throw std::invalid_argument("initial root count must match the quantum numbers");
-    for (Real const z : initial_roots)
+    for (Real const& z : initial_roots)
+    {
+      bethe::detail::require_same_precision(z, zero);
       if (!uni20::isfinite(z) || z < Real{0} || minus * z * z >= plus)
         throw std::invalid_argument(
             "open XXZ initial roots must be finite, nonnegative, and inside the real-rapidity branch");
+    }
     result.rapidities.assign(initial_roots.begin(), initial_roots.end());
   }
   std::vector<Real> angles(m);
   for (;;)
   {
-    result.residual_norm = Real{0};
+    result.residual_norm = zero;
     for (std::size_t i = 0; i < m; ++i)
     {
       Real const z = result.rapidities[i];
-      bethe::detail::CompensatedSum<Real> phase;
+      bethe::detail::CompensatedSum<Real> phase(zero);
       if (delta != Real{0})
       {
         for (std::size_t j = 0; j < m; ++j)
@@ -177,7 +180,7 @@ template <uni20::Real Real = double>
     }
     ++result.iterations;
   }
-  bethe::detail::CompensatedSum<Real> magnons;
+  bethe::detail::CompensatedSum<Real> magnons(zero);
   for (Real const z : result.rapidities)
     magnons.add(-(plus - minus * z * z) / (Real{1} + z * z));
   result.energy = Real(sites - 1) * delta / Real{4} + magnons.value();
@@ -205,6 +208,7 @@ template <uni20::Real Real = double>
 [[nodiscard]] GroundState<Real> sector_ground_state(std::size_t sites, Real delta, uni20::half_int sz,
                                                     SolverOptions<Real> const& options = {})
 {
+  (void)xxz::detail::solver_zero(delta, options);
   if (!uni20::isfinite(delta) || delta <= -Real{1})
     throw std::invalid_argument("open XXZ ground states require finite Delta > -1");
   if (delta < Real{0})
@@ -259,6 +263,7 @@ template <uni20::Real Real = double>
 [[nodiscard]] std::vector<GroundState<Real>> sector_ground_states(std::size_t sites, Real delta,
                                                                   SolverOptions<Real> const& options = {})
 {
+  (void)xxz::detail::solver_zero(delta, options);
   auto const n = xxz::detail::checked_sites(sites);
   if (!uni20::isfinite(delta) || delta <= -Real{1})
     throw std::invalid_argument("open XXZ ground states require finite Delta > -1");
