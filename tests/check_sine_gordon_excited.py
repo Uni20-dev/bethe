@@ -44,6 +44,10 @@ for precision in precisions:
         tol = {"fp64": Decimal("1e-8"), "long-double": Decimal("1e-11"), "fp128": Decimal("1e-25")}[precision]
         for number in ("0.5", "1.5"):
             t = tables([*base, "--precision", precision, "--number", number, "--charge", "-2"])
+            concurrent = tables([*base, "--precision", precision, "--number", number,
+                                 "--charge", "-2", "--threads", "2"])
+            assert all(concurrent[k]["rows"] == t[k]["rows"] for k in t)
+            assert concurrent["levels"]["metadata"]["Solver concurrency"] == "2"
             source = rows(t["source"])[0]
             gap = rows(t["gap"])[0]
             levels = rows(t["levels"])
@@ -58,6 +62,10 @@ for precision in precisions:
 
 # Distinguish the exact interacting level from both BY and the vacuum-relative gap.
 t = tables(["--p", "2", "--length", "1", "--tolerance", "1e-7"])
+for workers in (2, 8):
+    concurrent = tables(["--p", "2", "--length", "1", "--tolerance", "1e-7", "--threads", str(workers)])
+    assert all(concurrent[k]["rows"] == t[k]["rows"] for k in t)
+    assert concurrent["levels"]["metadata"]["Solver concurrency"] == "2"
 levels, gap = rows(t["levels"]), rows(t["gap"])[0]
 assert abs(float(levels[1]["casimir_energy"])-5.11055662981005) < 1e-7
 assert abs(float(gap["gap"])-5.44401859555224) < 1e-7
@@ -66,6 +74,8 @@ for flags, expected in ((["--max-root-iterations", "0"], "iteration_limit"),
                          (["--max-intervals", "64"], "mesh_limit"),
                          (["--max-cutoffs", "1"], "cutoff_limit")):
     t = tables([*base, *flags], 2)
+    concurrent = tables([*base, *flags, "--threads", "2"], 2)
+    assert all(concurrent[k]["rows"] == t[k]["rows"] for k in t)
     assert rows(t["source"])[0]["status"] == expected
     assert rows(t["source"])[0]["rapidity"] is None
     assert rows(t["levels"])[1]["casimir_energy"] is None
@@ -73,13 +83,13 @@ for flags, expected in ((["--max-root-iterations", "0"], "iteration_limit"),
     if flags[0] == "--max-root-iterations":
         assert rows(t["levels"])[0]["converged"]  # successful vacuum cannot rescue a failed excited level
 
-invalid = [["--length", "1"], ["--p", "1"], [*base, "--mass", "0"],
+invalid = [[*base, "--threads", "0"], [*base, "--threads", "-1"], ["--length", "1"], ["--p", "1"], [*base, "--mass", "0"],
            ["--length", "1", "--p", "0.5"], [*base, "--number", "1"], [*base, "--number", "2.5"],
            [*base, "--charge", "0"], [*base, "--tolerance", "0"], [*base, "--max-root-iterations", "-1"],
            [*base, "--initial-intervals", "9"], [*base, "--contour-shift", "2"]]
 with tempfile.TemporaryDirectory() as directory:
     path = Path(directory)
-    flags = ["--json", str(path/"result.json"), "--csv-table", "gap="+str(path/"gap.csv"),
+    flags = ["--threads", "2", "--json", str(path/"result.json"), "--csv-table", "gap="+str(path/"gap.csv"),
              "--tsv-table", "source="+str(path/"source.tsv")]
     screen = run([*base, *flags, "--format", "plain"])
     assert "CPU time" in screen and "Used for:" not in screen
@@ -94,12 +104,13 @@ with tempfile.TemporaryDirectory() as directory:
     old = (path/"result.json").read_text()
     run([*base, "--json", str(path/"result.json")], 1)
     for args in invalid:
+        args = args if "--threads" in args else [*args, "--threads", "2"]
         run([*args, "--json", str(path/"result.json"), "--force"], 1)
         assert (path/"result.json").read_text() == old
     run([*base, *flags, "--force", "--no-retain", "--quiet"])
     actual = json.loads((path/"result.json").read_text())["tables"]
     assert all(actual[k]["rows"] == expected[k]["rows"] for k in expected)
-    run([*base, "--stream", "--no-retain", "--format", "plain"])
+    run([*base, "--threads", "2", "--stream", "--no-retain", "--format", "plain"])
     run([*base, "--format", "pretty"])
 
 print("Sine-Gordon exact excitation CLI contracts passed")

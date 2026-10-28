@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Copyright (C) 2026 Ian McCulloch
 #pragma once
+#include "generated-state-scan.hpp"
 #include "report.hpp"
 
 namespace bethe::apps::biquadratic
@@ -77,16 +78,22 @@ int run_real(Arguments const& args, bethe::SolverOptions<Real> const& options, c
   }
   if (args.sectors)
   {
-    std::vector<model::State<Real>> states;
-    states.push_back(model::ground_state<Real>(args.sites, options));
-    bool converged = states.front().reference.converged;
-    for (std::size_t ell = 2; ell <= args.sites; ell += 2)
-    {
-      states.push_back(model::sector_ground_state<Real>(args.sites, ell, options));
-      converged = converged && states.back().reference.converged;
-    }
+    auto const roots = bethe::xxz::quantum_group::detail::sector_roots(args.sites, 0);
+    bethe::xxz::quantum_group::detail::check_matrix_size<Real>(roots);
+    auto const count = args.sites / 2 + 1;
+    auto const states = cli::scan_generated_states(
+        count, [ell = std::size_t{0}]() mutable { return std::exchange(ell, ell + 2); },
+        [sites = args.sites, options](std::size_t ell) {
+          return ell == 0 ? model::ground_state<Real>(sites, options)
+                          : model::sector_ground_state<Real>(sites, ell, options);
+        },
+        args.threads);
+    bool const converged =
+        std::all_of(states.begin(), states.end(), [](auto const& state) { return state.reference.converged; });
     computation.finish();
     report.field("calculation", "Calculation", "TL module minima (not physical-spin sectors)")
+        .field("threads", "Scheduler concurrency limit", args.threads)
+        .field("solver_concurrency", "Solver concurrency", std::min(count, static_cast<std::size_t>(args.threads)))
         .field("multiplicity_meaning", "Multiplicity meaning",
                "physical states per TL eigenvector, not SU(2) multiplets")
         .result(converged, converged ? "converged" : "incomplete; unconverged estimates");

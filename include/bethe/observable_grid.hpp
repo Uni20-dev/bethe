@@ -20,6 +20,40 @@ struct UnobservedGridWait
     int operator()(std::size_t, std::size_t) const { return 0; }
 };
 
+template <typename Value> struct ResetObservableValue
+{
+    Value& value;
+    ~ResetObservableValue() { value.reset(); }
+};
+
+// Slots are private to the coordinator. Once its read wait has returned, no
+// other reader or writer can prevent this exclusive access. Acquiring the
+// writer explicitly also preserves Uni20's exception and debug-proxy checks.
+template <typename Value>
+auto writable_observable_result(uni20::async::Async<Value>& result, uni20::async::IAsyncScheduler& scheduler)
+{
+  (void)result.get_wait(scheduler);
+  auto writer = result.write();
+  if (!writer.await_ready()) throw std::logic_error("observable-grid result has an unexpected dependency");
+  return writer;
+}
+
+template <typename Value>
+Value take_observable_result(uni20::async::Async<Value>& result, uni20::async::IAsyncScheduler& scheduler)
+{
+  auto writer = writable_observable_result(result, scheduler);
+  auto source = writer.await_resume();
+  ResetObservableValue reset{source.get()};
+  return std::move(source.get());
+}
+
+template <typename Value>
+void discard_observable_result(uni20::async::Async<Value>& result, uni20::async::IAsyncScheduler& scheduler)
+{
+  auto writer = writable_observable_result(result, scheduler);
+  writer.await_resume()->reset();
+}
+
 /// Ordered output requires a different admission policy from unordered/top-K
 /// scanners: uncollected results retain their credits. This is a bounded ring,
 /// not a second thread pool or an unbounded reorder queue.
@@ -98,11 +132,11 @@ uni20::async::AsyncTask observable_grid_task(std::shared_ptr<ObservableWindow<Ev
       auto& slot = window->slots[i % window->slots.size()];
       {
         auto value = co_await slot->write();
+        ResetObservableValue reset{value.get()};
         if (!window->control.stopped())
         {
           if (!value->has_value()) throw std::logic_error("missing observable-grid value");
           std::invoke(collect, i, std::move(value->value()));
-          value->reset();
         }
       }
       slot.reset();
@@ -114,14 +148,16 @@ uni20::async::AsyncTask observable_grid_task(std::shared_ptr<ObservableWindow<Ev
     window->control.fail();
   }
   // A collector, evaluator or admission failure must not orphan earlier work.
-  // Await each accepted task; do not use scheduler-wide quiescence as completion.
+  // Await each accepted task and destroy discarded values before completion.
+  // Readiness can precede release of the producer's last storage reference, so
+  // dropping our slot alone does not guarantee prompt payload destruction.
   for (auto& slot : window->slots)
     if (slot)
     {
       try
       {
-        auto ready = slot->read();
-        (void)co_await ready;
+        auto value = co_await slot->write();
+        value->reset();
       }
       catch (...)
       {
@@ -185,7 +221,7 @@ void evaluate_observable_grid(std::size_t count, Evaluate&& evaluate, Collect&& 
       {
         auto value = [&] {
           [[maybe_unused]] auto scope = std::invoke(observe_wait, i, std::size_t{1});
-          return detail::take_result(*slot, scheduler);
+          return detail::take_observable_result(*slot, scheduler);
         }();
         slot.reset();
         if (!window->control.stopped())
@@ -206,7 +242,7 @@ void evaluate_observable_grid(std::size_t count, Evaluate&& evaluate, Collect&& 
     {
       try
       {
-        (void)slot->get_wait(scheduler);
+        detail::discard_observable_result(*slot, scheduler);
       }
       catch (...)
       {
