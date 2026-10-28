@@ -45,7 +45,8 @@ in the requested temperature order, including failures. It admits at most 128
 active or completed-but-uncollected temperatures. No continuation seed is passed
 between temperatures, so concurrent execution preserves the serial calculation.
 Set `OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1` to avoid nested threading.
-Single-temperature requests have no grid parallelism.
+Single-temperature requests have no grid parallelism. Explicit MPFR scans use the same scheduler;
+working precision and convergence controls stay local to each request.
 
 The named table `thermodynamics` reports temperature, chemical potential,
 density, pressure, energy/length, entropy/length, quadrature nodes and cutoff,

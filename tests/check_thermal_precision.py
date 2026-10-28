@@ -82,6 +82,23 @@ if enabled:
         assert abs(Decimal(t["metadata"]["c"])-Decimal(c)) < Decimal("1e-95")
         assert abs(Decimal(t["metadata"]["Requested inner tolerance"])/Decimal(tolerance)-1) < Decimal("1e-95")
 
+    # The merged frontend's scheduler must preserve every numerical column,
+    # work count and failure row at the explicitly selected precision.
+    for ensemble in (("--mu", "-1"), ("--density", "0.1")):
+        for fail in (False, True):
+            args = ["--c", "4", "--temperature", "1", "--temperature-end", "2", "--points", "3",
+                    *ensemble, "--precision", "bits-160", "--tolerance", "1e-12", "--no-retain"]
+            if ensemble[0] == "--density":
+                args += ["--density-tolerance", "1e-10"]
+            if fail:
+                args += ["--max-iterations" if ensemble[0] == "--mu" else "--max-evaluations", "0"]
+            serial = table([*args, "--threads", "1"], 2 if fail else 0)
+            parallel = table([*args, "--threads", "2"], 2 if fail else 0)
+            precision(serial, 160)
+            precision(parallel, 160)
+            assert serial["columns"] == parallel["columns"]
+            assert serial["rows"] == parallel["rows"]
+
     with tempfile.TemporaryDirectory() as folder:
         args = [*base, "--precision", "bits-160", "--tolerance", "1e-20"]
         expected = rows(table(args))
