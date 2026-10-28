@@ -43,7 +43,7 @@ assert (metadata["Uni20 arbitrary-precision real/complex configured"] == "true")
 assert (metadata["MPLAPACK MPFR configured"] == "true") == enabled(arbitrary)
 assert ("bethe-xxx-pbc" in metadata["Arbitrary-precision frontends"]) == enabled(mpfr)
 assert ("bethe-xxx-structure-factor" in metadata["Arbitrary-precision frontends"]) == enabled(arbitrary)
-for name in ("bethe-richardson", "bethe-central-spin", "bethe-xxx-obc", "bethe-su3-dispersion"):
+for name in ("bethe-richardson", "bethe-central-spin", "bethe-xxx-obc", "bethe-su3-dispersion", "bethe-tb-dispersion"):
     assert (name in metadata["Arbitrary-precision frontends"]) == enabled(mpfr)
 for name in ("bethe-lieb-liniger-pbc", "bethe-lieb-liniger-obc"):
     assert (name in metadata["Arbitrary-precision frontends"]) == enabled(arbitrary)

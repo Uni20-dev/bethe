@@ -187,9 +187,9 @@ or `UNI20_ENABLE_MPC` options.
 
 Arbitrary precision is optional. Uni20 enables its real and complex scalars
 together, requiring GMP, MPFR >= 4.2, and MPC development packages. All modes of
-`bethe-xxx-pbc`, `bethe-xxx-obc`, `bethe-richardson`, `bethe-central-spin`
-and `bethe-su3-dispersion` work without MPLAPACK. Uni20 supplies CPU QR for
-Richardson and central spin; SU(3) dispersion uses scalar functions only.
+`bethe-xxx-pbc`, `bethe-xxx-obc`, `bethe-richardson`, `bethe-central-spin`,
+`bethe-su3-dispersion` and `bethe-tb-dispersion` work without MPLAPACK. Uni20 supplies CPU QR for
+Richardson and central spin; SU(3) and TB dispersion use scalar functions only.
 In a separate build directory:
 
 ```sh
@@ -228,10 +228,10 @@ on supported configurations.
 This MPFR path covers periodic/open XXX real roots, sector/ground states, periodic one-spinon
 branches, real-root excitation scans, prepared raising form factors and the
 finite two-spinon DSF, finite-size periodic/hard-wall Lieb–Liniger states and scans,
-plus Richardson and central-spin ground-state continuation and SU(3)
+plus Richardson and central-spin ground-state continuation and SU(3)/TB
 thermodynamic elementary lines and continuum bounds.
 It does **not** enable arbitrary precision throughout all models or frontends.
-The XXX real-root and Gaudin solvers and SU(3) dispersion need just `UNI20_ENABLE_MPREAL=ON`;
+The XXX real-root and Gaudin solvers and SU(3)/TB dispersion need just `UNI20_ENABLE_MPREAL=ON`;
 Lieb–Liniger and form factors additionally need `UNI20_BACKEND_MPLAPACK=ON`. Enabling that provider
 also lets Uni20 dispatch the Lieb–Liniger LU and Gaudin QR operations to MPLAPACK.
 No ambient precision default determines the calculation's
