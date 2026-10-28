@@ -22,6 +22,9 @@ def tables(args, code=0):
     for t in d['tables'].values():
         assert t['summary']['Outcome'] == ('success' if code == 0 else 'partial')
         assert Decimal(t['summary']['Run CPU seconds']) >= 0
+        statuses = [r['status'] for r in rows(d['tables']['spectrum'])]
+        assert int(t['summary']['Failed points']) == statuses.count('numerical_failure')
+        assert int(t['summary']['Divergent threshold points']) == statuses.count('lower_threshold')
     return d['tables']
 
 def rows(table):
@@ -47,7 +50,18 @@ for precision in precisions:
     assert len(singular) == 1 and singular[0]['density'] is None
     grid = ['--momentum-points', '9', '--points', '17', '--precision', precision]
     serial, parallel = tables(grid), tables([*grid, '--threads', '4'])
-    assert serial['spectrum']['rows'] == parallel['spectrum']['rows']
+    streamed = tables([*grid, '--threads', '4', '--stream', '--no-retain'])
+    for name in serial:
+        assert serial[name]['rows'] == parallel[name]['rows'] == streamed[name]['rows']
+    # Cross the admission window with both failed interior points and successful
+    # exterior/threshold points; retain every status in canonical grid order.
+    failed_grid = [*grid, '--max-evaluations', '0']
+    failed_serial = tables(failed_grid, 2)
+    failed_stream = tables([*failed_grid, '--threads', '4', '--no-retain'], 2)
+    for name in failed_serial:
+        assert failed_serial[name]['rows'] == failed_stream[name]['rows']
+    statuses = {r['status'] for r in rows(failed_stream['spectrum'])}
+    assert {'outside_continuum', 'numerical_failure'} <= statuses
 
 with tempfile.TemporaryDirectory() as directory:
     p = Path(directory)

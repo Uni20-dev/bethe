@@ -132,7 +132,8 @@ finite-size PBC/OBC modes accept `bits-N` and `digits-N`, including threaded
 excitation scans. Uni20 dispatches the Newton solves; its arbitrary-precision
 LU currently requires MPLAPACK MPFR (native solvers retain their CPU fallback).
 This does not yet extend
-to the separate thermodynamic dispersion or thermal frontends.
+to the separate thermal frontend. Zero-temperature bulk energies and dispersions
+have their own [explicit-precision support](lieb-liniger-thermo.md#c-api).
 
 Finite positive $`\ell`$, $`c`$, and representable nonzero $`g =c \,\ell`$ are required.
 Very large labels, very close roots, or extreme physical units can exceed the

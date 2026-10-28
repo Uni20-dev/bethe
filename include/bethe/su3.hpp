@@ -67,17 +67,22 @@ inline QuantumNumbers centered_numbers(std::array<std::size_t, 2> counts)
 /// empty for the SU(2) reduction test. This is not a generic Hubbard system.
 template <uni20::Real Real> class GroundSystem {
   public:
-    GroundSystem(std::size_t sites, std::array<std::size_t, 2> counts)
+    GroundSystem(std::size_t sites, std::array<std::size_t, 2> counts, uni20::Precision precision)
         : sites(sites), counts(counts), positive{counts[0] / 2, counts[1] / 2}, order(positive[0] + positive[1]),
-          labels(centered_numbers(counts)), pi(Real{4} * std::atan(Real{1}))
+          labels(centered_numbers(counts)), precision(precision), zero(uni20::scalar_at_precision<Real>(0, precision)),
+          pi(Real{4} * uni20::math::atan(zero + Real{1}))
+    {}
+    GroundSystem(std::size_t sites, std::array<std::size_t, 2> counts)
+      requires(!uni20::has_runtime_precision_v<Real>)
+        : GroundSystem(sites, counts, uni20::native_precision<Real>())
     {}
 
     std::vector<Real> seed() const
     {
       // Invert the filled-sea thermodynamic density at I/L. This is only a
       // starting guess; all finite-size equations are subsequently solved.
-      using std::atanh;
-      using std::tan;
+      using uni20::math::atanh;
+      using uni20::math::tan;
       std::vector<Real> x(order);
       Real const colors = counts[1] ? Real{3} : Real{2};
       for (std::size_t a = 0; a < 2; ++a)
@@ -96,7 +101,9 @@ template <uni20::Real Real> class GroundSystem {
         for (std::size_t j = 0; j < positive[a]; ++j)
         {
           Real const value = x[offset(a) + j];
-          if (!uni20::isfinite(value) || value <= Real{0} || value > uni20::numeric_limits<Real>::max() / Real{4} ||
+          // Differences between reflection partners enter a phase as 2*x.
+          // Check that range directly; MPFR has no fixed numeric_limits::max.
+          if (!uni20::isfinite(value) || value <= Real{0} || !uni20::isfinite(Real{4} * value) ||
               (j && value <= x[offset(a) + j - 1]))
             return false;
         }
@@ -110,16 +117,16 @@ template <uni20::Real Real> class GroundSystem {
         roots[a].reserve(counts[a]);
         for (std::size_t j = positive[a]; j-- > 0;)
           roots[a].push_back(-x[offset(a) + j]);
-        if (counts[a] % 2) roots[a].push_back(Real{0});
+        if (counts[a] % 2) roots[a].push_back(zero);
         for (std::size_t j = 0; j < positive[a]; ++j)
           roots[a].push_back(x[offset(a) + j]);
       }
       return roots;
     }
-    static Real phase(Real x, Real width) { return Real{2} * std::atan(Real{2} * x / width); }
+    static Real phase(Real x, Real width) { return Real{2} * uni20::math::atan(Real{2} * x / width); }
     static Real derivative(Real x, Real width)
     {
-      using std::abs;
+      using uni20::math::abs;
       Real const a = width / Real{2};
       if (abs(x) > Real{1})
       {
@@ -136,19 +143,19 @@ template <uni20::Real Real> class GroundSystem {
     };
     Evaluation evaluate(std::span<Real const> x, uni20::DenseMatrix<Real>* jacobian = nullptr) const
     {
-      using std::abs;
+      using uni20::math::abs;
       auto const roots = expand(x);
-      Evaluation result{.residual = std::vector<Real>(order)};
+      Evaluation result{.residual = std::vector<Real>(order, zero), .levels = {zero, zero}};
       if (jacobian)
         for (std::size_t i = 0; i < order; ++i)
           for (std::size_t j = 0; j < order; ++j)
-            (*jacobian)[i, j] = Real{0};
+            (*jacobian)[i, j] = zero;
       for (std::size_t a = 0; a < 2; ++a)
         for (std::size_t j = 0; j < positive[a]; ++j)
         {
           auto const row = offset(a) + j, full = first(a) + j;
           Real const value = x[row];
-          bethe::detail::CompensatedSum<Real> sum, diagonal;
+          bethe::detail::CompensatedSum<Real> sum(zero), diagonal(zero);
           sum.add(-pi * Real(labels[a][full].twice()) / Real(sites));
           if (a == 0)
           {
@@ -187,12 +194,14 @@ template <uni20::Real Real> class GroundSystem {
     std::array<std::size_t, 2> const counts, positive;
     std::size_t const order;
     QuantumNumbers const labels;
-    Real const pi;
+    uni20::Precision const precision;
+    Real const zero, pi;
 };
 
 template <uni20::Real Real> void check_options(std::size_t sites, SolverOptions<Real> const& options)
 {
   check_sites(sites);
+  (void)bethe::detail::solver_zero(options);
   if (!uni20::isfinite(options.residual_tolerance) || options.residual_tolerance <= Real{0})
     throw std::invalid_argument("residual tolerance must be finite and positive");
   auto const order = sites / 3 + (sites / 3) / 2;
@@ -202,13 +211,15 @@ template <uni20::Real Real> void check_options(std::size_t sites, SolverOptions<
 
 template <uni20::Real Real> State<Real> solve(GroundSystem<Real> const& system, SolverOptions<Real> const& options)
 {
+  bethe::detail::require_same_precision(system.zero, bethe::detail::solver_zero(options));
   auto x = system.seed();
   if (!system.physical(x)) throw std::runtime_error("SU(3) seed cannot be represented at this precision");
   State<Real> result;
   result.sites = system.sites;
   result.populations = {system.sites - system.counts[0], system.counts[0] - system.counts[1], system.counts[1]};
   result.quantum_numbers = system.labels;
-  uni20::DenseMatrix<Real> jacobian(system.order, system.order), step(system.order, 1);
+  uni20::DenseMatrix<Real> jacobian(system.order, system.order, options.precision()),
+      step(system.order, 1, options.precision());
   for (;;)
   {
     auto const evaluation = system.evaluate(x, &jacobian);
@@ -223,13 +234,13 @@ template <uni20::Real Real> State<Real> solve(GroundSystem<Real> const& system, 
     if (result.iterations == options.max_iterations) break;
     for (std::size_t j = 0; j < system.order; ++j)
       step[j, 0] = -evaluation.residual[j];
-    if (!uni20::linalg::solve_inplace_with_info(jacobian, step).succeeded())
+    if (!uni20::linalg::solve_inplace_with_info(jacobian, step, options.precision()).succeeded())
     {
       result.status = SolveStatus::stalled;
       break;
     }
     bool const accepted = bethe::detail::backtrack_newton(
-        x, [&](std::size_t j) { return step[j, 0]; },
+        x, options.precision(), [&](std::size_t j) { return step[j, 0]; },
         [&](auto const& trial, Real damping) {
           return system.physical(trial) &&
                  bethe::detail::newton_decreases(system.evaluate(trial).norm(), result.residual_norm, damping,
@@ -243,7 +254,7 @@ template <uni20::Real Real> State<Real> solve(GroundSystem<Real> const& system, 
     ++result.iterations;
   }
   result.rapidities = system.expand(x);
-  bethe::detail::CompensatedSum<Real> energy;
+  bethe::detail::CompensatedSum<Real> energy(system.zero);
   energy.add(Real(system.sites));
   for (Real lambda : result.rapidities[0])
     energy.add(-GroundSystem<Real>::derivative(lambda, Real{1}));
@@ -252,7 +263,7 @@ template <uni20::Real Real> State<Real> solve(GroundSystem<Real> const& system, 
   // Reflection pairs contribute 2*pi; an unpaired lambda=0 contributes pi.
   // M1=2L/3 is even in the supported SU(3) singlet, hence P=0 exactly.
   result.momentum_index = system.counts[0] % 2 ? system.sites / 2 : 0;
-  result.momentum = system.counts[0] % 2 ? system.pi : Real{0};
+  result.momentum = system.counts[0] % 2 ? system.pi : system.zero;
   return result;
 }
 } // namespace detail
@@ -268,6 +279,6 @@ inline QuantumNumbers ground_quantum_numbers(std::size_t sites)
 template <uni20::Real Real> State<Real> ground_state(std::size_t sites, SolverOptions<Real> const& options = {})
 {
   detail::check_options(sites, options);
-  return detail::solve(detail::GroundSystem<Real>(sites, {2 * (sites / 3), sites / 3}), options);
+  return detail::solve(detail::GroundSystem<Real>(sites, {2 * (sites / 3), sites / 3}, options.precision()), options);
 }
 } // namespace bethe::su3

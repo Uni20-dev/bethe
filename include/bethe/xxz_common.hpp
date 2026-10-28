@@ -18,6 +18,18 @@ using QuantumNumbers = std::vector<uni20::half_int>;
 
 namespace detail
 {
+// Match physical inputs and numerical controls before constructing any roots.
+// Exact integers remain useful for coefficients, but delta must carry the
+// caller's finite working precision, including at Delta=0 and Delta=1.
+template <uni20::Real Real> Real solver_zero(Real const& delta, SolverOptions<Real> const& options)
+{
+  Real const zero = bethe::detail::solver_zero(options);
+  bethe::detail::require_same_precision(delta, zero);
+  if (!uni20::isfinite(options.residual_tolerance) || options.residual_tolerance <= Real{0})
+    throw std::invalid_argument("residual tolerance must be finite and positive");
+  return zero;
+}
+
 inline std::int64_t checked_sites(std::size_t sites)
 {
   if (sites < 2 || sites > static_cast<std::size_t>(std::numeric_limits<std::int64_t>::max() / 4))
