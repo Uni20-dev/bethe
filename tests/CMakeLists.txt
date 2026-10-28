@@ -83,6 +83,10 @@ target_link_libraries(bethe_cli_precision_tests PRIVATE bethe_cli_output)
 bethe_discover_tests(bethe_cli_precision_tests)
 
 if(BETHE_HAS_MPREAL)
+  add_executable(bethe_hubbard_mpfr_tests test_hubbard_mpfr.cpp)
+  target_link_libraries(bethe_hubbard_mpfr_tests PRIVATE bethe::bethe TBB::tbb)
+  bethe_discover_tests(bethe_hubbard_mpfr_tests)
+
   add_executable(bethe_xxz_mpfr_tests test_xxz_mpfr.cpp)
   target_link_libraries(bethe_xxz_mpfr_tests PRIVATE bethe::bethe TBB::tbb)
   bethe_discover_tests(bethe_xxz_mpfr_tests)
@@ -406,6 +410,10 @@ if(BETHE_BUILD_APPS)
         "$<TARGET_FILE_DIR:bethe-su3-dispersion>")
   endif()
   if(Python3_Interpreter_FOUND)
+    add_test(NAME Hubbard.precision
+      COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_hubbard_precision.py"
+        "$<TARGET_FILE:bethe-hubbard-pbc>" "$<TARGET_FILE:bethe-hubbard-obc>"
+        "${BETHE_HAS_MPREAL}" "${BETHE_HAS_MPLAPACK_MPREAL}")
     add_test(NAME XXZ.precision
       COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_xxz_precision.py"
         "$<TARGET_FILE:bethe-xxz-pbc>" "$<TARGET_FILE:bethe-xxz-obc>"

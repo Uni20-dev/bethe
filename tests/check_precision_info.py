@@ -46,7 +46,7 @@ assert ("bethe-xxx-structure-factor" in metadata["Arbitrary-precision frontends"
 for name in ("bethe-richardson", "bethe-central-spin", "bethe-xxx-obc"):
     assert (name in metadata["Arbitrary-precision frontends"]) == enabled(mpfr)
 for name in ("bethe-lieb-liniger-pbc", "bethe-lieb-liniger-obc", "bethe-lieb-liniger-dispersion",
-             "bethe-su3-pbc", "bethe-xxz-pbc", "bethe-xxz-obc"):
+             "bethe-su3-pbc", "bethe-xxz-pbc", "bethe-xxz-obc", "bethe-hubbard-pbc", "bethe-hubbard-obc"):
     assert (name in metadata["Arbitrary-precision frontends"]) == enabled(arbitrary)
 if enabled(fp128):
     assert rows["fp128"]["significand_bits"] == 113
