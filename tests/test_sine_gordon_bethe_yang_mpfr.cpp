@@ -151,8 +151,8 @@ TEST(SineGordonBetheYangMpfr, FailuresAndRejectedControlsRetainTheirMeaning)
   }
   for (R const& invalid : {R{}, R(1), R(1, Precision::bits(80)), R("nan", p)})
     EXPECT_THROW(sg::same_charge_pair(one, invalid, R(2, p), uni20::from_twice(1), controls), std::invalid_argument);
-  EXPECT_THROW(sg::BetheYangOptions<R>(Precision::exact()), std::invalid_argument);
-  EXPECT_THROW(sg::KernelOptions<R>(Precision::exact()), std::invalid_argument);
+  EXPECT_THROW((void)sg::BetheYangOptions<R>(Precision::exact()), std::invalid_argument);
+  EXPECT_THROW((void)sg::KernelOptions<R>(Precision::exact()), std::invalid_argument);
   controls.phase = sg::KernelOptions<R>(Precision::bits(80));
   EXPECT_THROW(sg::same_charge_pair(one, R(10, p), R(2, p), uni20::from_twice(1), controls), std::invalid_argument);
   controls = sg::BetheYangOptions<R>(p);
