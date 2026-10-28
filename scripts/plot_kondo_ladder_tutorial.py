@@ -2,6 +2,7 @@
 """Universal Kondo response and finite integrable-ladder field benchmarks."""
 
 import argparse
+import csv
 import itertools
 import math
 from pathlib import Path
@@ -47,7 +48,11 @@ def integer(row, key):
 
 def read_kondo(text, case):
     field, scale = case
-    meta, rows = read_csv_export(text, K_COLUMNS, {
+    # Archived single-point exports identify the field only in metadata;
+    # current exports also carry it in each response row.
+    header = next(csv.reader(line for line in text.splitlines() if line and not line.startswith('#')), [])
+    columns = ['field', *K_COLUMNS] if header == ['field', *K_COLUMNS] else K_COLUMNS
+    meta, rows = read_csv_export(text, columns, {
         'Program': 'bethe-kondo-response', 'Precision': 'fp64',
         'Calculation': 'T=0; isotropic antiferromagnetic spin-1/2 single-channel scaling limit',
         'Field convention': 'H_field=-b*(S_imp^z+S_host^z); equal g factors',
@@ -56,6 +61,7 @@ def read_kondo(text, case):
     close(finite_number(meta, 'Full Zeeman splitting'), field)
     close(finite_number(meta, 'Universal scale T_B'), scale)
     if len(rows) != 1 or rows[0]['converged'] != 'true': raise ValueError('Missing/convergence response')
+    if 'field' in rows[0]: close(finite_number(rows[0], 'field'), field)
     row = {k: finite_number(rows[0], k) for k in K_COLUMNS[:-2]}
     tolerance = finite_number(meta, 'Absolute M and Delta E/|b| tolerance')
     if tolerance <= 0: raise ValueError('Invalid tolerance')

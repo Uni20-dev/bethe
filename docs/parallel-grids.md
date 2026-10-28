@@ -544,3 +544,53 @@ bounds differ between the compiled frontends by less than `5e-19` relative;
 these very small diagnostics are far below the requested error tolerance.
 Within the candidate, every table field is identical at one/two/eight requested
 workers.
+
+## Kondo field-response scans
+
+`bethe-kondo-response --field START --field-end END --points N --scale T_B`
+evaluates a signed, inclusive field curve. `--threads` overlaps complete,
+independent impurity-response solves; each Euler series and Fourier quadrature
+remains sequential. The shared grid admits at most 128 active or uncollected
+points and emits rows on the calling thread in field order. One worker,
+single-point requests and all-zero curves use direct serial evaluation.
+
+The following are whole-process medians of three runs on 28 October 2026,
+on an Intel Core i7-12700KF with GCC 13.3 Release (`-O3`, no fast-math),
+Uni20 `04163b9b` and oneTBB 2022.3. The host's `long double` is binary80.
+Both BLAS/OpenMP limits were one. Runs used default numerical tolerances,
+CSV output to a local file and `--no-retain --no-preamble`. Timing includes
+startup, scheduling, formatting and file output; memory is peak process RSS
+over all three repeats. Worker order was reversed on the second repeat,
+and builds did not overlap the timings. This was a shared desktop.
+
+| Field interval, scale 1 | Arithmetic | Points | Direct serial (s) | 4 workers (s) | 8 workers (s) | CPU serial / 8 workers (s) | Peak RSS (MiB) |
+| --- | --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| [-1,1] | binary64 | 32769 | 0.30 | 0.11 | 0.12 | 0.30 / 0.95 | 5.30 |
+| [1,10] | binary64 | 4097 | 6.70 | 1.70 | 0.87 | 6.69 / 6.99 | 5.16 |
+| [1,10] | binary80 | 513 | 10.16 | 2.61 | 1.33 | 10.16 / 10.50 | 5.16 |
+| [1,10] | binary128 | 65 | 74.02 | 18.93 | 9.64 | 74.01 / 76.50 | 5.32 |
+
+The substantial high-field curves scale about 7.6–7.7x at eight workers.
+The cheap low-field curve is dominated by output and scheduling sooner:
+four workers are already as fast as eight, and eight use considerably more
+CPU time. Serial therefore remains the default. These measurements do not
+establish scaling beyond eight workers.
+
+For example, reproduce the high-field binary128 case with:
+
+```sh
+OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 /usr/bin/time -v \
+  bethe-kondo-response --field 1 --field-end 10 --points 65 --scale 1 \
+  --precision fp128 --threads 8 --no-retain --format csv --no-preamble > response.csv
+```
+
+All 336,996 rows from the 36 timed processes agree byte for byte with the
+corresponding serial curve, including error estimates and work counters.
+Thirty single-point comparisons with merged main `46b636e`, built with the
+same compiler and Uni20 revision, preserve every existing numerical field
+at one/four requested workers; the new `field` column identifies each row.
+Focused native/wide/sanitizer tests additionally cover owning deferred and
+threaded queries, mixed numerical failures, both scan directions, a 129-point
+window crossing, extreme finite endpoints and non-retained JSON/CSV/TSV.
+The library's physics, quadrature and precision support are unchanged;
+arbitrary-precision Kondo kernels remain separate work.
