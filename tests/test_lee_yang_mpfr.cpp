@@ -118,7 +118,7 @@ TEST(LeeYangMpfr, WorkLimitsAndRejectedInputsDoNotLosePrecision)
   controls.initial_cutoff.reset();
   controls.tolerance = R(1, Precision::bits(80));
   EXPECT_THROW(model::one_particle(mass, length, controls), std::invalid_argument);
-  EXPECT_THROW(model::Options<R>(Precision::exact()), std::invalid_argument);
+  EXPECT_THROW((void)model::Options<R>(Precision::exact()), std::invalid_argument);
   EXPECT_THROW(model::kernel(R(1)), std::invalid_argument);
 }
 
