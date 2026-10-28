@@ -284,3 +284,44 @@ rungs, literal spin-basis Sz blocks through four rungs, exact rung/one-triplet/p
 limits and native-precision algebraic energies. Larger scans, budget
 failures, parsing, formatting and generated literature citations are also
 checked. See [the centralized bibliography](../CITATIONS.md#wang-1999).
+
+
+## Reusing roots across field and rung queries
+
+The permutation-chain roots depend on the rung count and numerical controls,
+not on the field or rung coupling. `PreparedSectors<Real>` owns the ordered
+branch results from one full-sector scan:
+
+```cpp
+bethe::ladder::PreparedSectors<long double> prepared(12);
+auto ground = prepared.ground_state(1.0L, 0.5L);
+auto sectors = prepared.sector_ground_states(-1.0L, -0.5L);
+```
+
+Each query uses the same sector selection, tie handling and compensated energy
+shifts as a direct scan. Copies of the prepared object share immutable storage;
+query results own their selected roots. Concurrent const queries have independent
+cursors and scratch. Preparation is available through the existing
+[Async background/grid API](async-execution.md#prepared-ladder-field-and-rung-sweeps),
+so clients can submit consumers before observing preparation. The ordinary
+single-request frontend remains serial.
+
+Controls and budgets are fixed at construction. The catalogue retains the exact
+solved prefix and any final failed branch; it never repairs or skips a failure.
+`complete()`, `status()`, `iterations()`, `branches()` and `tableaux()` describe
+preparation. Returned scan/state work counters match a fresh direct scan and
+therefore describe that original work, **not new Newton work per query**. Failed
+preparation still permits partial candidates and the proven analytic product
+ground states, exactly as the direct APIs do. A field/rung query does not turn an
+incomplete numerical scan into a certified minimum.
+
+Storage grows with the number of attempted branches and their root counts,
+O(branches × rungs), in addition to temporary dense Newton storage during
+preparation. At most `max_branches` entries are retained. Construction performs
+a scan even if later queries happen to satisfy an analytic product bound; use
+the ordinary `ground_state` function for a single such request.
+
+Fixed-singlet and fixed-magnetization APIs keep their direct implementations.
+They skip different branches and can spend a finite iteration budget differently;
+replaying the full-sector prefix would not preserve their partial-result contract.
+No new excited family, equation or MPFR support is introduced.

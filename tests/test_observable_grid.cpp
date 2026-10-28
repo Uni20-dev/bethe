@@ -324,6 +324,58 @@ TEST(ObservableGrid, EvaluatorAndCollectorFailuresDrainOwnedWork)
     }
 }
 
+TEST(ObservableGrid, DiscardDestroysPayloadBeforeReleasedStorageOwners)
+{
+  DebugScheduler scheduler;
+  Counts counts;
+  using Value = std::optional<std::unique_ptr<Payload>>;
+  auto result = std::make_unique<Async<Value>>(std::make_unique<Payload>(counts, 0));
+  auto retained_storage = result->read();
+  (void)retained_storage.get_wait(scheduler);
+  retained_storage.release();
+  // A released buffer can retain storage after signalling readiness. It must
+  // not retain a discarded payload past the enclosing operation's completion.
+  bethe::detail::discard_observable_result(*result, scheduler);
+  result.reset();
+  EXPECT_EQ(counts.live, 0);
+}
+
+TEST(ObservableGrid, TakeDestroysMovedFromValueBeforeReleasedStorageOwners)
+{
+  struct Tracked
+  {
+      int& live;
+      bool fail_move;
+      Tracked(int& n, bool fail) : live(n), fail_move(fail) { ++live; }
+      Tracked(Tracked&& other) : live(other.live), fail_move(other.fail_move)
+      {
+        if (fail_move) throw std::runtime_error("injected move failure");
+        ++live;
+      }
+      ~Tracked() { --live; }
+  };
+  DebugScheduler scheduler;
+  int live = 0;
+  using Value = std::optional<Tracked>;
+  for (bool fail_move : {false, true})
+  {
+    auto result = std::make_unique<Async<Value>>(std::in_place, live, fail_move);
+    auto retained_storage = result->read();
+    (void)retained_storage.get_wait(scheduler);
+    retained_storage.release();
+    if (fail_move)
+      EXPECT_THROW(bethe::detail::take_observable_result(*result, scheduler), std::runtime_error);
+    else
+    {
+      auto value = bethe::detail::take_observable_result(*result, scheduler);
+      EXPECT_TRUE(value.has_value());
+      EXPECT_EQ(live, 1);
+    }
+    result.reset();
+    EXPECT_EQ(live, 0);
+  }
+}
+
 TEST(ObservableGrid, WaitObserverFailureDrainsAcceptedWork)
 {
   DebugScheduler scheduler;
