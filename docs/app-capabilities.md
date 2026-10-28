@@ -18,10 +18,10 @@ independent numerical or serial/concurrent validation.
 
 | Apps | Existing execution path | MPFR frontend support | Next check / dependency |
 | --- | --- | --- | --- |
-| `xxx-pbc`, `xxx-obc` | Continuous real-root scans; owning Async scan API | Yes, MPFR scalars | Independent sector/sweep composition and configuration coverage |
-| `xxx-structure-factor` | Async preparation, fused root/form-factor runners, ordered reduction | Yes, MPLAPACK MPFR required | Preserve determinant precision and failure diagnostics in composed sweeps |
-| `lieb-liniger-pbc`, `lieb-liniger-obc` | Shared continuous real-root scanner | Yes, MPLAPACK MPFR required | Public composition of independent solves/scans |
-| `richardson`, `central-spin` | Individual solver calls; generic grid can compose independent solves | Yes, MPFR scalars | Parameter sweeps while retaining sequential continuation inside each solve |
+| `xxx-pbc`, `xxx-obc` | Continuous real-root scans; owning Async scan API | Yes, MPFR scalars | Existing concurrent-precision scan tests pass; retain owned solver options through final consumers |
+| `xxx-structure-factor` | Async preparation, fused root/form-factor runners, ordered reduction | Yes, MPLAPACK MPFR required | Existing mixed-precision fused/prepared comparisons pass, including failed references; no extra wrapper needed |
+| `lieb-liniger-pbc`, `lieb-liniger-obc` | Shared continuous real-root scanner; pending [PR #17](https://github.com/Uni20-dev/bethe/pull/17) exposes owning Async scans | Yes, MPLAPACK MPFR required | Integrate reviewed ownership, downstream-consumer and concurrent-precision checks |
+| `richardson`, `central-spin` | Individual solver calls; pending [PR #17](https://github.com/Uni20-dev/bethe/pull/17) supplies an owning grid-sweep example and full-state composition checks | Yes, MPFR scalars | Integrate reviewed example/tests; keep each solve's continuation sequential |
 | `xxx-structure-factor-thermo` | Bounded ordered grid, direct table collection | Native only | Precision-aware transition-rate integrals; no new state solver needed |
 | `lieb-liniger-dispersion` | Prepared solver and bounded grids; shared Async backgrounds for library clients | Native only on merged baseline; [PR #9](https://github.com/Uni20-dev/bethe/pull/9) adds MPFR | Integrate reviewed thermodynamic precision support |
 | `lieb-liniger-thermal` | Serial grid; pending [PR #11](https://github.com/Uni20-dev/bethe/pull/11) adds bounded independent temperature solves | Native only | Explicit-precision quadrature and stopping rules after the thermodynamic precision checkpoint |
@@ -63,6 +63,13 @@ The pending scheduling checkpoints #11, #12 and #14 compare complete results
 against serial/baseline calculations and document measured wall/CPU and memory
 behavior. Finite Hubbard's scalar/LU work is independent of the complex
 Gamma-ratio functions still required by thermodynamic Hubbard.
+
+The composition audit in pending #17 adds finite Lieb–Liniger owning scan APIs
+and a compiled Richardson/central-spin sweep. Deferred input destruction,
+downstream consumers, one/multiple workers, failed solves, cancellation and
+independent MPFR precisions are covered. Existing XXX scan and structure-factor
+composition tests were rerun; their APIs need no new wrapper. No new precision
+support or parallel speedup is claimed by that audit.
 
 Update this inventory with each reviewed app checkpoint. A proposed capability
 or a pending audit is not evidence of implemented support.
