@@ -3,6 +3,8 @@
 Bethe uses Uni20's scheduler for independent calculations. It creates no thread
 pool of its own and never changes the global scheduler. Existing synchronous
 scans wait for the same operation exposed by the Async API.
+See [app coverage](app-capabilities.md) for the execution and arbitrary-precision
+paths currently exposed by each frontend, and the remaining integration work.
 
 ## State scans
 
@@ -167,6 +169,59 @@ OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 ./examples/bethe-async-background-examp
 ```
 
 The example is built in CI and is not installed as a frontend executable.
+
+The [doped Hubbard example](../examples/async_hubbard_background.cpp) uses the
+same APIs with `bethe::hubbard::thermo::DopedSolver<double>(4.0, 0.5)`. It
+submits spinon, holon and charge-particle curves before waiting for preparation,
+then collects them at a shared Fermi energy reference. Momentum intervals come
+from the prepared solver, so each evaluator owns only its branch selection;
+all three readers share the same coarse and fine meshes. The model's const
+queries use local inversion and accumulation state, with no mutable mesh cache.
+
+```sh
+cmake --build . --target bethe-async-hubbard-background-example -j2
+OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 ./examples/bethe-async-hubbard-background-example
+```
+
+For this model, a failed background produces failed points with the original
+background status, even at nominal gapless endpoints. A failed momentum
+inversion preserves its own status and missing energies. Tests compare every
+point field with serial calls in all configured fixed precisions, using queued
+and oneTBB schedulers and exhausting background/query budgets separately.
+The ordinary Hubbard frontend also shares one prepared background, but waits
+for it before validating branch intervals and opening caller-thread output.
+Its queries across selected branches share a single bounded window. The
+example demonstrates a client whose dependent computations are submitted
+before preparation completes; it does not claim faster preparation itself.
+
+## Ground-state parameter sweeps
+
+The same grid can evaluate independent ground states at different couplings,
+densities or system sizes. Each evaluator owns its numerical controls and
+returns the model's complete result, including convergence diagnostics. Ordered
+collection keeps parameter identities stable even when solves finish out of order.
+The operation's final result covers every admitted solve and collected row;
+wait on it before reading caller-owned output storage.
+
+The [ground-state sweep example](../examples/async_ground_states.cpp) evaluates
+four thermodynamic Lieb–Liniger couplings with a maximum of two active solves:
+
+```sh
+cmake -DBETHE_BUILD_EXAMPLES=ON /path/to/bethe
+cmake --build . --target bethe-async-ground-states-example -j2
+OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 ./examples/bethe-async-ground-states-example
+```
+
+It uses explicit 160-bit `mpreal` when MPLAPACK MPFR is configured, otherwise
+binary64. The printed header identifies the working precision. It waits once
+on the grid result, then checks scientific convergence before reporting energies.
+
+Thermodynamic Lieb–Liniger also supports `mpreal` in the shared-background
+composition above. Construct `Options<uni20::mpreal>` with a finite
+`uni20::Precision`, and construct all model parameters, tolerances and momenta
+at that precision. Independent backgrounds can use different precisions on one
+scheduler. More bits do not replace mesh refinement or increase iteration
+budgets; see [thermodynamic controls](lieb-liniger-thermo.md#c-api).
 
 ## Matched pipeline benchmark
 
