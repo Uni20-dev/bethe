@@ -8,14 +8,15 @@
 #include <uni20/linalg/ops/least_squares.hpp>
 #include <uni20/linalg/ops/linear_solve.hpp>
 #include <uni20/tensor/mdspec_tensor_view.hpp>
+#include <utility>
 #include <vector>
 
 namespace bethe::detail
 {
-// Native-precision square solve for a row-major Newton correction.
+// Square solve for a row-major Newton correction at explicit precision.
 // Failure is recoverable and never changes a process-global error policy.
 // The RHS may be modified on failure; callers retain their current iterate.
-template <uni20::Real Real> bool newton_step(std::vector<Real> a, std::vector<Real>& b)
+template <uni20::Real Real> bool newton_step(std::vector<Real> a, std::vector<Real>& b, uni20::Precision precision)
 {
   auto const n = b.size();
   if (n && n > std::numeric_limits<std::size_t>::max() / n) return false;
@@ -32,8 +33,16 @@ template <uni20::Real Real> bool newton_step(std::vector<Real> a, std::vector<Re
   View matrix(Span(a.data(), n, n), ConstSpan(a.data(), n, n));
   View rhs(Span(b.data(), n, 1), ConstSpan(b.data(), n, 1));
   return uni20::linalg::solve_inplace_with_info(
-             matrix, rhs, {.relative_pivot_tolerance = Real{64} * uni20::numeric_limits<Real>::epsilon()})
+             matrix, rhs, precision,
+             {.relative_pivot_tolerance = Real{64} * uni20::numeric_limits<Real>::epsilon(precision)})
       .succeeded();
+}
+
+template <uni20::Real Real>
+  requires(!uni20::has_runtime_precision_v<Real>)
+bool newton_step(std::vector<Real> a, std::vector<Real>& b)
+{
+  return newton_step(std::move(a), b, uni20::native_precision<Real>());
 }
 
 /// Overdetermined Newton correction for row-major m x n coefficients, m>=n.

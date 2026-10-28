@@ -47,20 +47,20 @@ void add_options(CLI::App& app, Arguments& a)
   cli::text_option(app, "--momentum", a.momentum, "Single momentum (radians/site), valid for every selected branch")
       ->type_name("REAL")
       ->excludes(points);
-  cli::precision_option(app, a.precision);
+  cli::precision_option(app, a.precision, cli::ArbitraryPrecision::real);
   cli::add_data_output_options(
       app, a.output,
       {{.name = "dispersion", .description = "Excitation branches and/or continuum bounds", .primary = true}});
 }
-template <uni20::Real Real> int run(Arguments const& a, int argc, char** argv)
+template <uni20::Real Real> int run(Arguments const& a, uni20::Precision precision, int argc, char** argv)
 {
   uni20::run_context context(program_info(), {.invocation = std::vector<std::string>(argv, argv + argc)});
-  model::ExcitationDispersion<Real> const band(uni20::parse_real<Real>(a.exchange));
-  Real const pi = bethe::detail::pi<Real>(), soft = Real{2} * pi / Real{3};
+  model::ExcitationDispersion<Real> const band(cli::parse_scalar<Real>(a.exchange, precision));
+  Real const pi = bethe::detail::pi_like(band.exchange()), soft = Real{2} * pi / Real{3};
   std::optional<Real> momentum;
   if (a.momentum)
   {
-    momentum = uni20::parse_real<Real>(*a.momentum);
+    momentum = cli::parse_scalar<Real>(*a.momentum, precision);
     Real const end = a.branch == "all" || a.branch == "bar3" ? soft : a.branch == "3" ? Real{2} * soft : Real{2} * pi;
     if (!uni20::isfinite(*momentum) || *momentum < Real{0} || *momentum > end)
       throw std::invalid_argument("momentum outside a selected branch's range");
@@ -129,7 +129,10 @@ template <uni20::Real Real> int run(Arguments const& a, int argc, char** argv)
           status = "precision_limit";
           complete = false;
         }
-        Real cell = p < soft ? p : p < Real{2} * soft ? p - soft : p < Real{2} * pi ? p - Real{2} * soft : Real{0};
+        Real cell = p < soft             ? p
+                    : p < Real{2} * soft ? p - soft
+                    : p < Real{2} * pi   ? p - Real{2} * soft
+                                         : uni20::scalar_like(p, 0);
         cell *= Real{3};
         table.append(branch,
                      elementary                ? branch
@@ -154,6 +157,7 @@ int main(int argc, char** argv)
           throw std::invalid_argument("require 2<=points<=1000000");
         if (a.folded && (a.branch == "3" || a.branch == "bar3"))
           throw std::invalid_argument("--folded changes continuum envelopes only");
-        return cli::dispatch_precision(a.precision, [&]<typename Real>() { return run<Real>(a, argc, argv); });
+        return cli::dispatch_scalar_precision<cli::ArbitraryPrecision::real>(
+            a.precision, [&]<typename Real>(uni20::Precision p) { return run<Real>(a, p, argc, argv); });
       });
 }
