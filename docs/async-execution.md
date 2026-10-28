@@ -3,6 +3,8 @@
 Bethe uses Uni20's scheduler for independent calculations. It creates no thread
 pool of its own and never changes the global scheduler. Existing synchronous
 scans wait for the same operation exposed by the Async API.
+See [app coverage](app-capabilities.md) for the execution and arbitrary-precision
+paths currently exposed by each frontend, and the remaining integration work.
 
 ## State scans
 
@@ -20,7 +22,8 @@ auto pending = bethe::heisenberg::real_excitations_async<double>(
 auto const& result = pending.get_wait(scheduler);
 ```
 
-The periodic and open XXX APIs provide `real_excitations_async`. Other models
+The periodic and open XXX and finite Lieb–Liniger APIs provide
+`real_excitations_async`. Other models
 using the shared real-root scanner also use continuous execution through their
 existing synchronous APIs. After preparing the ground reference, a bounded
 number of runners repeatedly solve candidates. There is no barrier between
@@ -32,6 +35,16 @@ order. Final energy ordering and numerical convergence rules are unchanged.
 `max_in_flight` limits active candidates, not scheduler threads. It defaults to
 128. `batch_size` remains for clients that still use batches; both must be
 positive. Set BLAS/OpenMP thread limits to one when parallelizing many solves.
+
+For finite Lieb–Liniger, include `<bethe/lieb_liniger.hpp>` or
+`<bethe/lieb_liniger_open.hpp>` and submit
+`lieb_liniger::real_excitations_async(particles, length, c, padding, scan, solver)`
+(or `lieb_liniger::open::real_excitations_async` for hard walls). These entry
+points own the physical parameters, label-window controls and solver options.
+The periodic result also retains its window and physical metadata. The same
+finite-family cutoff and top-K selection apply as in the blocking APIs.
+Independent MPFR scans can carry different precisions on the same scheduler;
+they require the configured MPLAPACK MPFR real-solve provider.
 
 ## XXX two-spinon structure factor
 
@@ -165,6 +178,59 @@ OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 ./examples/bethe-async-background-examp
 
 The example is built in CI and is not installed as a frontend executable.
 
+The [doped Hubbard example](../examples/async_hubbard_background.cpp) uses the
+same APIs with `bethe::hubbard::thermo::DopedSolver<double>(4.0, 0.5)`. It
+submits spinon, holon and charge-particle curves before waiting for preparation,
+then collects them at a shared Fermi energy reference. Momentum intervals come
+from the prepared solver, so each evaluator owns only its branch selection;
+all three readers share the same coarse and fine meshes. The model's const
+queries use local inversion and accumulation state, with no mutable mesh cache.
+
+```sh
+cmake --build . --target bethe-async-hubbard-background-example -j2
+OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 ./examples/bethe-async-hubbard-background-example
+```
+
+For this model, a failed background produces failed points with the original
+background status, even at nominal gapless endpoints. A failed momentum
+inversion preserves its own status and missing energies. Tests compare every
+point field with serial calls in all configured fixed precisions, using queued
+and oneTBB schedulers and exhausting background/query budgets separately.
+The ordinary Hubbard frontend also shares one prepared background, but waits
+for it before validating branch intervals and opening caller-thread output.
+Its queries across selected branches share a single bounded window. The
+example demonstrates a client whose dependent computations are submitted
+before preparation completes; it does not claim faster preparation itself.
+
+## Ground-state parameter sweeps
+
+The same grid can evaluate independent ground states at different couplings,
+densities or system sizes. Each evaluator owns its numerical controls and
+returns the model's complete result, including convergence diagnostics. Ordered
+collection keeps parameter identities stable even when solves finish out of order.
+The operation's final result covers every admitted solve and collected row;
+wait on it before reading caller-owned output storage.
+
+The [ground-state sweep example](../examples/async_ground_states.cpp) evaluates
+four thermodynamic Lieb–Liniger couplings with a maximum of two active solves:
+
+```sh
+cmake -DBETHE_BUILD_EXAMPLES=ON /path/to/bethe
+cmake --build . --target bethe-async-ground-states-example -j2
+OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 ./examples/bethe-async-ground-states-example
+```
+
+It uses explicit 160-bit `mpreal` when MPLAPACK MPFR is configured, otherwise
+binary64. The printed header identifies the working precision. It waits once
+on the grid result, then checks scientific convergence before reporting energies.
+
+Thermodynamic Lieb–Liniger also supports `mpreal` in the shared-background
+composition above. Construct `Options<uni20::mpreal>` with a finite
+`uni20::Precision`, and construct all model parameters, tolerances and momenta
+at that precision. Independent backgrounds can use different precisions on one
+scheduler. More bits do not replace mesh refinement or increase iteration
+budgets; see [thermodynamic controls](lieb-liniger-thermo.md#c-api).
+
 ## Matched pipeline benchmark
 
 With tests enabled, build the opt-in comparison from a configured build directory:
@@ -186,3 +252,81 @@ Each run prints wall/process-CPU timing and writes complete ordered roots,
 diagnostics, spectral lines and reductions using native-precision formatting.
 Timing excludes file serialization. Compare the files before interpreting
 speedup, repeat measurements, and use a quiet machine for performance claims.
+
+## Independent Richardson and central-spin solves
+
+Their synchronous solvers already support explicit MPFR precision, including
+scalar-only MPFR configurations without MPLAPACK. Submit independent parameter
+or sector points through `evaluate_observable_grid_async`; each point's Newton
+iterations and continuation stages stay sequential. A new scheduler or a task
+for each continuation step is unnecessary.
+
+The [complete parameter-sweep example](../examples/async_gaudin_sweep.cpp)
+captures the level and bath-coupling vectors and both sets of solver options by
+value. It constructs the solvers' borrowed spans only inside each evaluation.
+Capturing a span by value alone would **not** extend the input array's lifetime.
+The bounded collector retains complete states in input order, and the host
+waits once on the final point-count result before inspecting or printing them.
+The example uses 160-bit MPFR when configured and binary64 otherwise, and reports
+the working precision. It is built in CI and is not an installed frontend.
+
+```sh
+cmake -DBETHE_BUILD_EXAMPLES=ON /path/to/bethe
+cmake --build . --target bethe-async-gaudin-sweep-example -j2
+OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 ./examples/bethe-async-gaudin-sweep-example
+```
+
+Numerical failure remains a state with its original status, reached parameter,
+residuals and iteration counts; inspect `converged` before using an energy.
+A zero-budget central-spin solve can have no physical energy at all. A grid's
+successful completion means every requested evaluation finished, not that every
+state converged. Execution exceptions and cancellation follow the shared grid
+contract above. This example demonstrates composition, not a measured speedup.
+
+Regression checks compare full states with serial solves, including partial
+continuation results, blocked pairing levels and signed bath couplings. Deferred
+scheduling exercises destruction of submission-local inputs, while one-worker
+and multi-worker runs check composition. MPFR tests interleave 128-, 256- and
+333-bit requests and check stored precision without changing ambient defaults.
+Existing XXX scan/form-factor tests already cover independent-precision
+composition; those APIs require no additional wrapper.
+
+## Finite-volume integral equations
+
+Lee–Yang `ground_state`/`one_particle` and sine-Gordon
+`vacuum_energy`/`two_soliton_level` have no shared mutable solver state.
+Independent scales, circumferences and allowed levels can use the existing
+observable grid. Capture the inputs and numerical options by value, return the
+complete state, and wait on the grid's final result before reading collected
+states. Coupled fixed-point, hole/root, mesh and contour iterations remain
+inside each sequential solve.
+
+The [complete example](../examples/async_finite_volume.cpp) runs any of these
+four families. Configure with `BETHE_BUILD_EXAMPLES=ON`, then from the build
+directory:
+
+```sh
+cmake --build . --target bethe-async-finite-volume-example -j2
+OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 \
+  ./examples/bethe-async-finite-volume-example sine-gordon-excited 8 64 fp64
+```
+
+Arguments are model/state, threads, number of points and precision. Model/state
+is `lee-yang-vacuum`, `lee-yang-excited`, `sine-gordon-vacuum` or
+`sine-gordon-excited`; threads zero is a direct serial comparison, while one or
+more uses Async. Native `fp64`, `long-double` and configured `fp128` are
+supported. These solvers do not yet support MPFR.
+
+The example uses unit mass, Lee–Yang circumferences `5+5*i/points` at absolute
+Y tolerance `1e-10`, or sine-Gordon `1+3*i/points` at p=2 and tolerance `1e-7`.
+The excited sine-Gordon state has positive Bethe number 1/2. The grid admits at
+most 32 active or uncollected states; this illustrative collector retains all
+results. Numerical failures remain in order and cause exit 2 after the complete
+sweep. Timing includes solving and ordered collection, excluding scheduler
+construction and printing. More arithmetic bits do not improve the deliberately
+fixed discretization tolerance automatically.
+
+The two excited-state frontends also offer `--threads 2` for their independent
+vacuum/excited pair. Their single-scale vacuum frontends stay serial. Useful
+concurrency is across complete solves, not across mutually dependent iterations;
+a parameter sweep can scale beyond the pair's two-task ceiling.

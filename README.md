@@ -13,9 +13,10 @@ High precision is a first-class feature: the solvers support
 Parameters, numerical calculations, excitation gaps, and output retain the
 selected precision. See [precision controls](docs/command-line.md#select-arithmetic-precision)
 and [binary128 setup](docs/building.md#enable-binary128).
-XXX states with periodic or open boundaries, finite-size Lieb–Liniger states,
+XXX and supported XXZ states with periodic or open boundaries, finite-size Lieb–Liniger states,
+zero-temperature Lieb–Liniger bulk energies and dispersions,
 their real-root excitation scans, periodic XXX spinon branches and finite-ring
-two-spinon structure factors, Richardson pairing and central-spin ground states
+two-spinon structure factors, Richardson pairing, central-spin and finite Hubbard ground states
 also support **arbitrary precision**, explicitly
 chosen per calculation; for example, `bethe-xxx-pbc 32 --precision digits-100`
 or `bethe-xxx-structure-factor 32 --precision bits-256`.

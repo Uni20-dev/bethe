@@ -20,6 +20,8 @@ bethe-hubbard-obc 32 --u 4 --precision long-double
 bethe-hubbard-obc 6 --u 0 --max-iterations 0
 # In a binary128-enabled build:
 bethe-hubbard-obc 32 --u 4 --precision fp128
+# With MPFR scalars and MPLAPACK MPFR enabled:
+bethe-hubbard-obc 5 --u -4 --precision bits-256 --roots
 ```
 
 `--u` is required. `--particles N` defaults to L; `--sz` defaults to 0 for
@@ -34,8 +36,12 @@ N_\uparrow=\frac N2+S^z,\qquad N_\downarrow=\frac N2-S^z,\qquad
 Unlike periodic rings, open chains have no shell-parity exclusions in the
 interacting ground-state interface. Nor is there a conserved lattice momentum:
 the returned charge wave numbers describe standing waves, not translation
-eigenvalues. All three precision modes, CPU timing, plain/pretty output, and
+eigenvalues. Native and arbitrary precision, CPU timing, plain/pretty output, and
 convergence controls follow the [common CLI guide](command-line.md).
+See [explicit precision and Async composition](hubbard.md#arbitrary-precision-and-independent-solves)
+for the C++ input contract, provider requirements and validation. Open-chain
+MPFR support covers the same physical sectors, including one-site, empty,
+fully filled and symmetry-mapped states.
 
 ## Hamiltonian and simple checks
 
