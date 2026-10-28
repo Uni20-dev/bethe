@@ -21,7 +21,26 @@ template <uni20::Real Real> struct Options
     Real tolerance = Real{4096} * uni20::numeric_limits<Real>::epsilon();
     std::size_t initial_nodes = 16, max_nodes = 256, max_iterations = 128;
     std::size_t max_momentum_iterations = 160;
+    uni20::Precision precision() const { return uni20::native_precision<Real>(); }
 };
+#if UNI20_HAS_MPREAL
+template <> struct Options<uni20::mpreal>
+{
+    explicit Options(uni20::Precision p) : tolerance(default_tolerance(p)), precision_(p) {}
+    uni20::mpreal tolerance;
+    std::size_t initial_nodes = 16, max_nodes = 256, max_iterations = 128;
+    std::size_t max_momentum_iterations = 160;
+    uni20::Precision precision() const { return precision_; }
+
+  private:
+    static uni20::mpreal default_tolerance(uni20::Precision p)
+    {
+      if (p.is_exact()) throw std::invalid_argument("thermodynamics require finite working precision");
+      return 4096 * uni20::numeric_limits<uni20::mpreal>::epsilon(p);
+    }
+    uni20::Precision precision_;
+};
+#endif
 template <uni20::Real Real> struct Background
 {
     Real interaction{}, density{};
@@ -45,7 +64,10 @@ template <uni20::Real Real>
 std::optional<Mesh<Real>> mesh(Real gamma, Real q, bethe::detail::GaussLegendreRule<Real> const& rule)
 {
   using bethe::detail::CompensatedSum;
-  Real const pi = Real{4} * std::atan(Real{1});
+  auto const zero = bethe::detail::precision_zero(gamma);
+  auto const precision = uni20::precision_of(zero);
+  bethe::detail::require_same_precision(q, zero);
+  Real const pi = Real{4} * uni20::math::atan(uni20::scalar_like(zero, 1));
   std::size_t const n = rule.x.size();
   Mesh<Real> out;
   out.q = q;
@@ -62,9 +84,10 @@ std::optional<Mesh<Real>> mesh(Real gamma, Real q, bethe::detail::GaussLegendreR
   auto kernel = [=](Real x) { return bethe::detail::rational_scattering_kernel(x, gamma) / pi; };
   for (std::size_t i = 0; i < n; ++i)
     for (std::size_t j = 0; j < n; ++j)
-      a[i * n + j] = Real(i == j) - out.w[j] * kernel(out.k[i] - out.k[j]);
-  if (!bethe::detail::newton_step(a, out.rho) || !bethe::detail::newton_step(a, h)) return std::nullopt;
-  CompensatedSum<Real> number, energy, rq, hq;
+      a[i * n + j] = Real(i == j ? 1 : 0) - out.w[j] * kernel(out.k[i] - out.k[j]);
+  if (!bethe::detail::newton_step(a, out.rho, precision) || !bethe::detail::newton_step(a, h, precision))
+    return std::nullopt;
+  CompensatedSum<Real> number(zero), energy(zero), rq(zero), hq(zero);
   rq.add(Real{1} / (Real{2} * pi));
   hq.add(q * q);
   for (std::size_t j = 0; j < n; ++j)
@@ -95,6 +118,11 @@ template <uni20::Real Real>
 Background<Real> background(Real interaction, Real density, Options<Real> options,
                             std::optional<Mesh<Real>>* fine = nullptr, std::optional<Mesh<Real>>* coarse = nullptr)
 {
+  auto const precision = options.precision();
+  auto const zero = uni20::scalar_at_precision<Real>(0, precision);
+  bethe::detail::require_same_precision(interaction, zero);
+  bethe::detail::require_same_precision(density, zero);
+  bethe::detail::require_same_precision(options.tolerance, zero);
   if (!uni20::isfinite(interaction) || !(interaction > Real{0}) || !uni20::isfinite(density) || !(density > Real{0}))
     throw std::invalid_argument("Lieb-Liniger thermodynamics require finite c>0 and density>0");
   if (!uni20::isfinite(options.tolerance) || !(options.tolerance > Real{0}) || options.tolerance >= Real{1} ||
@@ -103,19 +131,20 @@ Background<Real> background(Real interaction, Real density, Options<Real> option
   Background<Real> out;
   out.interaction = interaction;
   out.density = density;
-  Real const gamma = interaction / density, pi = Real{4} * std::atan(Real{1});
+  out.mesh_error = out.density_error = zero;
+  Real const gamma = interaction / density, pi = Real{4} * uni20::math::atan(uni20::scalar_like(zero, 1));
   if (!(gamma > Real{0}) || !uni20::isfinite(gamma) || !uni20::isfinite(Real{1} / gamma))
   {
     out.status = Status::precision_limit;
     return out;
   }
   std::optional<detail::Mesh<Real>> previous;
-  Real q = std::min(pi / Real{2}, std::sqrt(gamma));
+  Real q = std::min(pi / Real{2}, uni20::math::sqrt(gamma));
   for (std::size_t nodes = options.initial_nodes;; nodes *= 2)
   {
     out.nodes = nodes;
-    auto const rule = bethe::detail::gauss_legendre<Real>(nodes);
-    Real lo{0}, hi = pi;
+    auto const rule = bethe::detail::gauss_legendre<Real>(nodes, precision);
+    Real lo = zero, hi = pi;
     std::optional<detail::Mesh<Real>> candidate;
     for (;;)
     {
@@ -130,7 +159,7 @@ Background<Real> background(Real interaction, Real density, Options<Real> option
       // Refine instead of treating that invalid discretization as a density root.
       if (!candidate) break;
       Real const residual = candidate->number - Real{1};
-      out.density_error = std::abs(residual);
+      out.density_error = uni20::math::abs(residual);
       if (out.density_error <= options.tolerance / Real{16}) break;
       if (residual > Real{0})
         hi = q;
@@ -150,9 +179,9 @@ Background<Real> background(Real interaction, Real density, Options<Real> option
     if (candidate && q / gamma / Real(nodes) > Real{1} / (Real{2} * pi)) candidate.reset();
     if (candidate && previous)
     {
-      out.mesh_error = Real{8} * std::max({std::abs(candidate->q - previous->q) / candidate->q,
-                                           std::abs(candidate->energy - previous->energy) / candidate->energy,
-                                           std::abs(candidate->mu - previous->mu) / candidate->mu});
+      out.mesh_error = Real{8} * std::max({uni20::math::abs(candidate->q - previous->q) / candidate->q,
+                                           uni20::math::abs(candidate->energy - previous->energy) / candidate->energy,
+                                           uni20::math::abs(candidate->mu - previous->mu) / candidate->mu});
       if (out.mesh_error <= options.tolerance)
       {
         Real const fermi = q * density, energy = candidate->energy * density * density * density,
@@ -210,18 +239,24 @@ template <uni20::Real Real> class Solver {
     Background<Real> const& background() const { return info_; }
     std::pair<Real, Real> momentum_range(Branch branch) const
     {
-      if (branch == Branch::type_i) return {Real{0}, uni20::numeric_limits<Real>::infinity()};
-      if (branch == Branch::type_ii) return {Real{0}, Real{2} * pi() * info_.density};
+      auto const zero = bethe::detail::precision_zero(info_.density);
+      // Infinity is only the unbounded-range sentinel, represented at the
+      // background's precision. It is not an arithmetic accuracy limit.
+      if (branch == Branch::type_i) return {zero, uni20::scalar_like(zero, std::numeric_limits<double>::infinity())};
+      if (branch == Branch::type_ii) return {zero, Real{2} * pi() * info_.density};
       throw std::invalid_argument("invalid Lieb-Liniger excitation branch");
     }
     Point<Real> at_momentum(Branch branch, Real momentum) const
     {
+      auto const zero = bethe::detail::precision_zero(info_.density);
+      bethe::detail::require_same_precision(momentum, zero);
       auto const [lo, hi] = momentum_range(branch);
       if (!uni20::isfinite(momentum) || momentum < lo || momentum > hi)
         throw std::invalid_argument("momentum outside Lieb-Liniger branch range");
       Point<Real> out;
       out.branch = branch;
       out.momentum = momentum;
+      out.energy_error = out.momentum_error = zero;
       if (!info_.converged)
       {
         out.status = info_.status;
@@ -232,9 +267,9 @@ template <uni20::Real Real> class Solver {
       Real const target = (reflected ? hi - momentum : momentum) / info_.density;
       if (momentum == Real{0} || (hole && momentum == hi))
       {
-        out.energy = Real{0};
+        out.energy = zero;
         out.rapidity = reflected ? -*info_.fermi_rapidity : *info_.fermi_rapidity;
-        out.edge_distance = Real{0};
+        out.edge_distance = zero;
         out.converged = true;
         out.status = Status::converged;
         return out;
@@ -256,20 +291,26 @@ template <uni20::Real Real> class Solver {
         out.status = c.status;
         return out;
       }
-      Real const rounding = Real{64} * uni20::numeric_limits<Real>::epsilon();
-      Real const error = Real{8} * std::abs(f.energy - c.energy) + rounding * f.energy +
-                         Real{2} * (f.error * std::abs(f.velocity) + c.error * std::abs(c.velocity));
-      Real const subnormal_floor =
-          (uni20::numeric_limits<Real>::min() * uni20::numeric_limits<Real>::epsilon()) * Real{8};
+      Real const rounding = Real{64} * uni20::numeric_limits<Real>::epsilon(options_.precision());
+      Real const error = Real{8} * uni20::math::abs(f.energy - c.energy) + rounding * f.energy +
+                         Real{2} * (f.error * uni20::math::abs(f.velocity) + c.error * uni20::math::abs(c.velocity));
+      Real const subnormal_floor = [&] {
+        if constexpr (uni20::has_runtime_precision_v<Real>)
+          // MPFR has no fixed type-level subnormal range. Positivity/finiteness
+          // checks below still reject underflow or overflow of physical values.
+          return zero;
+        else
+          return (uni20::numeric_limits<Real>::min() * uni20::numeric_limits<Real>::epsilon()) * Real{8};
+      }();
       out.energy_error = std::max(error * info_.density * info_.density, subnormal_floor);
       out.momentum_error = std::max(f.error, c.error) * info_.density;
       Real const energy = f.energy * info_.density * info_.density;
       Real const distance = f.distance * info_.density;
       Real const rapidity =
           (reflected ? -Real{1} : Real{1}) * (fine_->q + (hole ? -f.distance : f.distance)) * info_.density;
-      if (!(energy > Real{0}) || !(options_.tolerance * energy >= subnormal_floor) || !(distance > Real{0}) ||
-          !uni20::isfinite(energy) || !uni20::isfinite(distance) || !uni20::isfinite(rapidity) ||
-          !uni20::isfinite(out.energy_error))
+      if (!(energy > Real{0}) || !(options_.tolerance * energy > Real{0}) ||
+          !(options_.tolerance * energy >= subnormal_floor) || !(distance > Real{0}) || !uni20::isfinite(energy) ||
+          !uni20::isfinite(distance) || !uni20::isfinite(rapidity) || !uni20::isfinite(out.energy_error))
       {
         out.status = Status::precision_limit;
         return out;
@@ -288,7 +329,7 @@ template <uni20::Real Real> class Solver {
     }
 
   private:
-    static Real pi() { return Real{4} * std::atan(Real{1}); }
+    Real pi() const { return Real{4} * uni20::math::atan(uni20::scalar_like(info_.density, 1)); }
     struct Evaluation
     {
         Real momentum{}, energy{}, dp{}, de{};
@@ -298,7 +339,8 @@ template <uni20::Real Real> class Solver {
       using bethe::detail::CompensatedSum;
       Real const gamma = info_.interaction / info_.density, sign = hole ? -Real{1} : Real{1};
       Real const shift = sign * distance;
-      CompensatedSum<Real> momentum, energy, dp, de;
+      auto const zero = bethe::detail::precision_zero(info_.density);
+      CompensatedSum<Real> momentum(zero), energy(zero), dp(zero), de(zero);
       momentum.add(distance);
       energy.add(distance * (Real{2} * mesh.q + shift));
       dp.add(Real{1});
@@ -306,13 +348,13 @@ template <uni20::Real Real> class Solver {
       for (std::size_t j = 0; j < mesh.k.size(); ++j)
       {
         Real const a = mesh.q - mesh.k[j], b = a + shift;
-        Real const scale = std::max({gamma, std::abs(a), std::abs(b)});
+        Real const scale = std::max({gamma, uni20::math::abs(a), uni20::math::abs(b)});
         Real const gs = gamma / scale, as = a / scale, bs = b / scale;
-        Real const phase = std::atan2((distance / scale) * gs, gs * gs + as * bs);
+        Real const phase = uni20::math::atan2((distance / scale) * gs, gs * gs + as * bs);
         momentum.add(Real{2} * mesh.w[j] * mesh.rho[j] * phase);
         Real const cb = bethe::detail::rational_scattering_kernel(b, gamma) / pi();
         Real difference;
-        Real const sa = std::max(gamma, std::abs(a));
+        Real const sa = std::max(gamma, uni20::math::abs(a));
         if (distance < sa / Real{4})
         {
           // Difference of kernels factored by the displacement, even when
@@ -324,7 +366,7 @@ template <uni20::Real Real> class Solver {
           difference = cb - bethe::detail::rational_scattering_kernel(a, gamma) / pi();
         energy.add(sign * mesh.w[j] * mesh.epsilon[j] * difference);
         dp.add(Real{2} * pi() * mesh.w[j] * mesh.rho[j] * cb);
-        Real const sb = std::max(gamma, std::abs(b)), gb = gamma / sb, bb = b / sb;
+        Real const sb = std::max(gamma, uni20::math::abs(b)), gb = gamma / sb, bb = b / sb;
         Real const derivative = -Real{2} * (bb / sb) / (gb * gb + bb * bb) * cb;
         de.add(mesh.w[j] * mesh.epsilon[j] * derivative);
       }
@@ -338,15 +380,16 @@ template <uni20::Real Real> class Solver {
     Inversion invert(detail::Mesh<Real> const& mesh, bool hole, Real target, std::size_t& iterations) const
     {
       Inversion out;
-      Real low{0}, high = hole ? mesh.q : target;
-      auto const edge = evaluate(mesh, hole, Real{0});
+      auto const zero = bethe::detail::precision_zero(info_.density);
+      Real low = zero, high = hole ? mesh.q : target;
+      auto const edge = evaluate(mesh, hole, zero);
       Real x = std::min(high, target / edge.dp);
       for (;;)
       {
         auto const value = evaluate(mesh, hole, x);
         out.energy = value.energy;
         out.distance = x;
-        out.error = std::abs(value.momentum - target);
+        out.error = uni20::math::abs(value.momentum - target);
         out.velocity = value.de / value.dp;
         if (!uni20::isfinite(value.energy) || !uni20::isfinite(out.error) || !uni20::isfinite(out.velocity) ||
             !(value.energy > Real{0}) || !(value.dp > Real{0}))
