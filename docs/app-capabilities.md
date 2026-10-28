@@ -47,7 +47,8 @@ independent numerical or serial/concurrent validation.
 | `lee-yang-vacuum`, `lee-yang-excited`, `sine-gordon-vacuum`, `sine-gordon-excited` | Serial baseline; pending [PR #28](https://github.com/Uni20-dev/bethe/pull/28) validates owning parameter sweeps for all four and optional vacuum/excited overlap in the excited-state CLIs | Native only | Integrate reviewed composition; carry explicit precision through Lee–Yang controls/constants/reductions and sine-Gordon complex kernels/quadrature. Coupled iterations remain sequential |
 | `kondo-response` | Pending #29: bounded field scans and owning Async queries; single-point/default one-worker requests stay direct | Native only | Explicit-precision scaled positive-real Gamma, Euler-series tails and quadrature |
 | `potts-pbc` | Pending [PR #30](https://github.com/Uni20-dev/bethe/pull/30): bounded charged-momentum scans and owning Async levels after one vacuum solve | Native only | Auxiliary real-root XXZ precision awaits PR #15; audit Potts constants, twists, labels and failure values. No complex-function dependency |
-| `asep-pbc`, `tasep-pbc`, `xyz-pbc` | Complex/nonlinear composition audit pending | Native only | Branch tracking and scalar-function coverage before advertising MPFR |
+| `asep-pbc` | Single-request CLI stays serial; pending [PR #31](https://github.com/Uni20-dev/bethe/pull/31) supplies an owning shared TASEP seed and dependent Async rate grids | Native only | Explicit complex arithmetic, seed/continuation controls and diagnostics; real-block Newton precision awaits PR #9 |
+| `tasep-pbc`, `xyz-pbc` | Independent size/parameter composition audit pending | Native only | Branch tracking and scalar-function coverage before advertising MPFR; TASEP rate-only curves can reuse unit-rate roots |
 
 `bethe-info` reports capabilities and has no numerical parallelism to add.
 The inventory covers 43 numerical frontends; it does not extend any model's
@@ -198,3 +199,15 @@ rows match baseline output; eight-worker whole-curve speedups are 7.4x in
 binary64/binary80 and 6.7x in binary128. CPU/memory costs and shared-workstation
 limits are documented in the PR's `docs/parallel-grids.md`. The underlying
 real-root XXZ equations and precision support are unchanged.
+
+ASEP's pending #31 extracts the existing rate solver around an owning
+`PreparedGap`. One TASEP seed feeds independent rate queries through the shared
+Async preparation/grid APIs. Full fields, roots, failure budgets and independent
+analytic endpoints agree in direct, deferred and threaded checks. Native/wide/
+sanitizer checks pass 29/39/29; 60 matched-main cases preserve frontend outputs
+and physical/control metadata. All 38,070 complete benchmark state rows match.
+Seed reuse removes 24–32% of serial work; prepared eight-worker curves achieve
+8.9–11.0x combined speedup over independent direct solves. The example and
+`docs/parallel-grids.md` in that PR record separate reuse/concurrency costs,
+output retention and shared seed-counter semantics. The physical branch,
+single-request analytic paths and precision support are unchanged.
