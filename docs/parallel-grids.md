@@ -48,8 +48,11 @@ uses Uni20's active scheduler (serial by default); the adapter never changes it.
 points and defaults to 128. `batch_size` remains for other batched clients; both
 bounds must be positive. Logical
 indices are exactly `[0, count)`, including empty and single-point grids.
-Frontends keep branches in their declared order and evaluate each branch's grid
-in turn; a row's identity is its branch and logical point index.
+Frontends keep branches in their declared output order; a row's identity is
+its branch and logical point index. Hubbard dispersion flattens its selected
+branches into one logical grid, allowing evaluation across branch boundaries
+without changing row order. Lieb–Liniger currently evaluates each branch's grid
+in turn. In both cases the admission window bounds retained results.
 
 ## Ownership, errors and timing
 
@@ -154,6 +157,50 @@ at p=5.412109375 with the default numerical controls. That row, its missing
 energy, and the partial outcome were identical at every worker count; binary64
 and binary128 completed this grid. Parallelism preserves these numerical
 diagnostics rather than changing the tolerance or silently dropping points.
+
+### Hubbard branch scheduling
+
+A matched frontend comparison on 28 October 2026 measures the additional effect
+of removing the wait between Hubbard branches. The baseline is Bethe `46b636e`,
+which already uses a continuous window within each branch. The new version puts
+all selected branches in one window. Both prepare a doped background once;
+this comparison does not measure a change in preparation cost.
+
+The Intel Core i7-12700KF workstation used GCC 13.3 Release, oneTBB 2022.3,
+Uni20 `04163b9b` and optimized MPLAPACK 3.0.0. Both builds used the same
+dependencies and one BLAS/OpenMP thread. These are medians of three complete
+process runs, reversing measurement order on alternate repeats, including
+preparation and CSV output with retention disabled.
+
+| Workload / version | Rows | 1 worker (s) | 4 workers (s) | 8 workers (s) | CPU at 8 workers (s) | Peak RSS at 8 workers (MiB) |
+|---|---:|---:|---:|---:|---:|---:|
+| Half-filled, separate branches | 195 | 34.13 | 8.85 | 4.72 | 35.33 | 7.00 |
+| Half-filled, shared window | 195 | 34.22 | 8.82 | 4.48 | 35.25 | 7.50 |
+| Doped, separate branches | 387 | 21.59 | 6.13 | 3.53 | 22.46 | 7.19 |
+| Doped, shared window | 387 | 21.56 | 6.12 | 3.48 | 22.43 | 7.64 |
+
+The workloads use all three branches at U=4 in binary128: 65 points per branch
+at half filling and 129 at density 0.5. All full CSV outputs, including
+diagnostics and failed-value fields, match byte for byte between versions at
+1/4/8 workers; every point converged. Reproduce each workload with:
+
+```sh
+OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 bethe-hubbard-dispersion \
+  --u 4 --points 65 --precision fp128 --threads 8 \
+  --format csv --no-preamble --no-retain > half.csv
+OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 bethe-hubbard-dispersion \
+  --u 4 --density 0.5 --points 129 --precision fp128 --threads 8 \
+  --format csv --no-preamble --no-retain > doped.csv
+```
+
+Vary `--threads` and compare equally configured builds. The incremental wall-time
+reduction here is modest (about 5% and 1% at eight workers), and the smaller
+difference should not be generalized from a shared workstation. The substantial
+serial-to-parallel benefit was already present in the baseline. The shared
+window removes unnecessary branch waits and permits single-momentum queries
+across branches to overlap; the separate
+[Async example](async-execution.md#shared-backgrounds) demonstrates composable
+preparation and dependent curves without introducing another numerical solver.
 
 ### Thermodynamic XXX streaming measurement
 
