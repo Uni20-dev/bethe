@@ -1,10 +1,12 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Copyright (C) 2026 Ian McCulloch
 #include "test_support.hpp"
+#include <atomic>
 #include <bethe/hubbard_charge_continuum.hpp>
 #include <bethe/hubbard_continuum.hpp>
 #include <bethe/hubbard_doped.hpp>
 #include <bethe/observable_grid.hpp>
+#include <bethe/prepared_observable_grid.hpp>
 #include <tuple>
 #include <uni20/async/tbb_scheduler.hpp>
 
@@ -207,7 +209,126 @@ TEST(HubbardThermoMpfr, ExtremaControlsAndBudgetFailuresAreExplicit)
   EXPECT_EQ(uni20::precision_of(failed.energy_offset), p);
 }
 
+TEST(HubbardThermoMpfr, PhysicalChargeContinuumRetainsExplicitPrecision)
+{
+  auto const p = Precision::bits(160);
+  model::ChargeContinuumOptions<R> controls(p);
+  // Keep this global-search check bounded independently of arithmetic bits.
+  // Accuracy growth of the constituent integrals is tested separately above.
+  controls.search.tolerance = R("1e-8", p);
+  controls.search.position_tolerance = R("1e-6", p);
+  controls.constituent.relative_tolerance = R("1e-12", p);
+  auto const result = model::charge_continuum(model::ChargeChannel::holon_antiholon, R(4, p), R(0, p),
+                                              model::Convention::symmetric, controls);
+  ASSERT_TRUE(result.converged) << int(result.search_status) << ", " << int(result.constituent_status);
+  // At zero total momentum the charge-doublet edges are twice the gap and
+  // twice the gap plus 8; the gap is an independent Fourier-Bessel reference.
+  R const twice_gap("1.286727022012904394732589769289744501783316844", p);
+  EXPECT_LT(math::abs(*result.lower_energy - twice_gap), R("1e-8", p));
+  EXPECT_LT(math::abs(*result.upper_energy - twice_gap - 8), R("1e-8", p));
+  for (auto const* v :
+       {&result.interaction, &result.momentum, &result.energy_scale, &result.energy_offset, &*result.lower_energy,
+        &*result.upper_energy, &*result.lower_symmetric_energy, &*result.upper_symmetric_energy, &result.lower_error,
+        &result.upper_error, &result.lower_momentum_error, &result.upper_momentum_error, &result.lower_momenta[0],
+        &result.lower_momenta[1], &result.upper_momenta[0], &result.upper_momenta[1]})
+    EXPECT_EQ(uni20::precision_of(*v), p);
+  EXPECT_LE(result.quadrature_evaluations, controls.max_quadrature_evaluations);
+  EXPECT_EQ(result.delta_particles, 0);
+}
+
 #if UNI20_HAS_MPLAPACK_MPREAL
+auto fields(model::DopedPoint<R> const& s)
+{
+  return std::tie(s.branch, s.convention, s.reference, s.momentum, s.parameter, s.energy_error, s.momentum_error,
+                  s.energy, s.symmetric_energy, s.fermi_energy, s.delta_particles, s.spin, s.iterations, s.converged,
+                  s.status);
+}
+
+TEST(HubbardThermoMpfr, OwningDopedPreparationsShareMixedPrecisionBackgrounds)
+{
+  using Outputs = std::array<std::vector<model::DopedPoint<R>>, 6>;
+  auto submit = [](uni20::async::IAsyncScheduler& scheduler, Outputs& output, std::atomic<int>& preparations) {
+    std::vector<uni20::async::Async<std::size_t>> finals;
+    for (std::size_t family = 0; family < 3; ++family)
+    {
+      auto const p = Precision::bits(family == 1 ? 160 : 80);
+      model::DopedOptions<R> controls(p);
+      controls.tolerance = R("1e-12", p);
+      if (family == 2) controls.max_background_iterations = 0;
+      auto background = bethe::prepare_background_async(
+          [p, controls, &preparations] {
+            ++preparations;
+            return model::DopedSolver<R>(R(40, p), R(1, p) / 3, controls);
+          },
+          {&scheduler});
+      for (std::size_t channel = 0; channel < 2; ++channel)
+      {
+        auto const branch = channel == 0 ? model::DopedBranch::spinon : model::DopedBranch::holon;
+        auto const index = 2 * family + channel;
+        finals.push_back(bethe::evaluate_observable_grid_async(
+            background.read(), 3,
+            [branch](model::DopedSolver<R> const& solver, std::size_t i) {
+              auto const [lo, hi] = solver.momentum_range(branch);
+              R const momentum = i == 2 ? hi : lo + (hi - lo) * R(i) / 2;
+              return solver.at_momentum(branch, momentum, model::Convention::unshifted, model::EnergyReference::fermi);
+            },
+            [&output, index](std::size_t i, auto state) {
+              EXPECT_EQ(i, output[index].size());
+              output[index].push_back(std::move(state));
+            },
+            {.scheduler = &scheduler, .max_in_flight = 2}));
+      }
+      // The preparation handle and local options expire before any final wait.
+    }
+    return finals;
+  };
+  auto const ambient = mpfr_get_default_prec();
+  uni20::async::DebugScheduler deferred({.order = uni20::async::DebugSchedulerOrder::reverse});
+  Outputs expected;
+  std::atomic<int> prepared{0};
+  auto final = submit(deferred, expected, prepared);
+  EXPECT_EQ(prepared, 0);
+  for (auto& result : final)
+    EXPECT_EQ(result.get_wait(deferred), 3u);
+  EXPECT_EQ(prepared, 3);
+  for (int workers : {1, 2})
+  {
+    uni20::async::TbbScheduler scheduler(workers);
+    Outputs actual;
+    prepared = 0;
+    auto finals = submit(scheduler, actual, prepared);
+    for (auto& result : finals)
+      EXPECT_EQ(result.get_wait(scheduler), 3u);
+    EXPECT_EQ(prepared, 3);
+    for (std::size_t family = 0; family < actual.size(); ++family)
+    {
+      ASSERT_EQ(actual[family].size(), 3u);
+      ASSERT_EQ(expected[family].size(), 3u);
+      auto const p = Precision::bits(family / 2 == 1 ? 160 : 80);
+      for (std::size_t i = 0; i < 3; ++i)
+      {
+        auto const& state = actual[family][i];
+        EXPECT_TRUE(fields(state) == fields(expected[family][i]));
+        EXPECT_EQ(state.converged, family < 4);
+        for (auto const* value : {&state.momentum, &state.parameter, &state.energy_error, &state.momentum_error})
+          EXPECT_EQ(uni20::precision_of(*value), p);
+        if (family >= 4)
+        {
+          EXPECT_EQ(state.status, model::DopedStatus::density_limit);
+          EXPECT_FALSE(state.energy);
+        }
+        else
+          for (auto const* energy : {&state.energy, &state.symmetric_energy, &state.fermi_energy})
+          {
+            ASSERT_TRUE(*energy);
+            EXPECT_EQ(uni20::precision_of(**energy), p);
+          }
+      }
+    }
+  }
+  EXPECT_EQ(mpfr_get_default_prec(), ambient);
+}
+
 TEST(HubbardThermoMpfr, DopedFredholmReferencesAndPhysicalPrecisionGrowth)
 {
   // Independent mpmath Gauss-Legendre/digamma equations at U=40, Q=1.
