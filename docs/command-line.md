@@ -126,7 +126,7 @@ The arbitrary-precision choices currently apply to `bethe-xxx-pbc`, `bethe-xxx-o
 the finite-ring `bethe-xxx-structure-factor`, `bethe-richardson` and
 `bethe-central-spin`, `bethe-hubbard-pbc`, `bethe-hubbard-obc`, and
 `bethe-gaudin-yang-pbc`, `bethe-bose-fermi-pbc`, `bethe-su3-pbc` and `bethe-su3-dispersion`,
-`bethe-haldane-shastry-pbc` and `bethe-sutherland-pbc`, in an
+`bethe-haldane-shastry-pbc` and `bethe-sutherland-pbc` and `bethe-tb-dispersion`, in an
 [enabled build](building.md#enable-arbitrary-precision):
 
 ```sh
@@ -145,7 +145,7 @@ bethe-su3-dispersion --branch four-soliton --folded --precision digits-100
 bethe-su3-pbc 24 --precision digits-100
 ```
 
-XXX roots, Richardson pairing, central spin, SU(3) dispersion, Haldane–Shastry
+XXX roots, Richardson pairing, central spin, SU(3)/TB dispersion, Haldane–Shastry
 and Sutherland need Uni20's
 arbitrary-precision scalar family (GMP, MPFR and MPC), but no MPLAPACK.
 Finite-size and zero-temperature thermodynamic Lieb–Liniger, SU(3) singlet ground

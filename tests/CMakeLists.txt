@@ -207,6 +207,10 @@ add_executable(bethe_su3_dispersion_tests test_su3_dispersion.cpp)
 target_link_libraries(bethe_su3_dispersion_tests PRIVATE bethe::bethe)
 bethe_discover_tests(bethe_su3_dispersion_tests)
 if(BETHE_HAS_MPREAL)
+  add_executable(bethe_tb_dispersion_mpfr_tests test_tb_dispersion_mpfr.cpp)
+  target_link_libraries(bethe_tb_dispersion_mpfr_tests PRIVATE bethe::bethe TBB::tbb)
+  bethe_discover_tests(bethe_tb_dispersion_mpfr_tests)
+
   add_executable(bethe_inverse_square_mpfr_tests test_inverse_square_mpfr.cpp)
   target_link_libraries(bethe_inverse_square_mpfr_tests PRIVATE bethe::bethe TBB::tbb)
   bethe_discover_tests(bethe_inverse_square_mpfr_tests)
@@ -461,6 +465,9 @@ if(BETHE_BUILD_APPS)
     COMMAND "${CMAKE_COMMAND}" "-DPROGRAM=$<TARGET_FILE:bethe-tb-dispersion>"
       "-DTOOL=bethe-tb-dispersion" -P "${CMAKE_CURRENT_SOURCE_DIR}/check_citations_cli.cmake")
   if(Python3_Interpreter_FOUND)
+    add_test(NAME TBDispersion.precision.cli
+      COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_tb_dispersion_precision.py"
+        "$<TARGET_FILE:bethe-tb-dispersion>" "${BETHE_HAS_MPREAL}")
     add_test(NAME TBDispersion.cli
       COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_tb_dispersion.py"
         "$<TARGET_FILE:bethe-tb-dispersion>" "${BETHE_HAS_FLOAT128}")
