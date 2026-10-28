@@ -470,3 +470,77 @@ includes that cost. The smaller 17-level workload has limited parallelism and
 uneven finishing times. These shared-desktop measurements do not establish
 scaling beyond eight workers or a benefit for short/free scans. No worker
 changes the arithmetic, tolerance or stopping criteria of its scalar solve.
+
+## Finite-volume integral-equation sweeps
+
+The [finite-volume example](async-execution.md#finite-volume-integral-equations)
+uses the existing Async grid for independent Lee–Yang and sine-Gordon solves.
+Three-repeat medians below were measured on a shared Intel Core i7-12700KF,
+GCC 13.3, oneTBB 2022.3 and Uni20 `04163b9b`, with one BLAS/OpenMP thread.
+Sweep order was reversed on the second repeat. Times are seconds for solving
+and ordered collection; scheduler construction, initial result preallocation
+and printing are outside that interval. Every benchmark output row matches
+its direct serial counterpart exactly; separate tests compare complete state
+diagnostics, including failures, under deferred and threaded execution.
+
+| Model/state | Arithmetic | Points | Direct | Async 1 | Async 4 | Async 8 | CPU at 8 | Peak RSS, MiB |
+| --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| Lee–Yang vacuum | binary64 | 10,000 | 2.065 | 2.102 | 0.537 | 0.279 | 2.225 | 5.289 |
+| Lee–Yang excited | binary64 | 2,048 | 5.571 | 5.571 | 1.425 | 0.738 | 5.897 | 4.219 |
+| Sine-Gordon vacuum | binary64 | 256 | 4.891 | 4.896 | 1.262 | 0.650 | 5.107 | 4.062 |
+| Sine-Gordon excited | binary64 | 64 | 4.928 | 4.946 | 1.300 | 0.739 | 5.467 | 4.062 |
+| Lee–Yang excited | binary128 | 128 | 21.949 | 21.953 | 5.630 | 2.902 | 22.664 | 4.219 |
+| Sine-Gordon excited | binary128 | 4 | 33.872 | 33.915 | 9.145 | 9.139 | 34.688 | 4.211 |
+
+The four-point binary128 sine-Gordon example has only four independent tasks;
+eight threads cannot improve on four. The longer sweeps show useful scaling,
+while one-worker scheduling has a small cost in the cheap Lee–Yang vacuum
+case. These are desktop measurements, not guarantees for cluster hardware or
+other tolerance/length ranges. Peak RSS covers the complete process and all
+retained states, not just active tasks.
+
+To reproduce a row, build `bethe-async-finite-volume-example` with examples
+enabled, then run it with the model names and point counts above, precisions
+`fp64`/`fp128`, and thread counts `0`, `1`, `4`, `8`:
+
+```sh
+OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 \
+  ./examples/bethe-async-finite-volume-example lee-yang-excited 8 128 fp128
+```
+
+The model inputs and fixed discretization tolerances are specified in the
+[example guide](async-execution.md#finite-volume-integral-equations). Binary128
+here improves arithmetic but does not tighten the chosen mesh tolerance.
+
+### Overlapping one vacuum/excited pair
+
+The excited-state CLI option `--threads 2` has a different limit: there are
+only two tasks and their costs can be unequal. Three-repeat end-to-end CLI
+medians, including JSON output and scheduler startup, are:
+
+| Binary128 request | Main serial | New serial | Two solves | CPU, two solves | Peak RSS, MiB |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| Lee–Yang, L=5 | 10.96 | 10.99 | 10.85 | 10.95 | 5.31 |
+| Sine-Gordon, p=2, L=1, tolerance 1e-9 | 19.34 | 19.39 | 15.08 | 19.41 | 5.46 |
+
+Mass is one and the sine-Gordon positive Bethe number is 1/2. The baseline is
+main `46b636e`, built with the same compiler and Uni20 revision. All pair
+benchmark table rows match exactly. Lee–Yang's roughly 1% gain is negligible
+for practical planning; sine-Gordon gains about 22% in elapsed time. The
+one-worker default avoids scheduling overhead for short requests. A multi-state
+parameter sweep is the better use of a larger CPU allocation.
+
+```sh
+bethe-lee-yang-excited --length 5 --precision fp128 --threads 2 --format json
+bethe-sine-gordon-excited --p 2 --length 1 --tolerance 1e-9 \
+  --precision fp128 --threads 2 --format json
+```
+
+
+Matched-main comparisons cover 30 requests / 120 rows across binary64,
+long double and binary128, including partial failures. Physical observables,
+statuses and work counters are unchanged. Two long-double Lee–Yang direct-tail
+bounds differ between the compiled frontends by less than `5e-19` relative;
+these very small diagnostics are far below the requested error tolerance.
+Within the candidate, every table field is identical at one/two/eight requested
+workers.

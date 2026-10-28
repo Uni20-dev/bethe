@@ -306,6 +306,10 @@ add_executable(bethe_kondo_tests test_kondo.cpp)
 target_link_libraries(bethe_kondo_tests PRIVATE bethe::bethe)
 bethe_discover_tests(bethe_kondo_tests)
 
+add_executable(bethe_finite_volume_async_tests test_finite_volume_async.cpp)
+target_link_libraries(bethe_finite_volume_async_tests PRIVATE bethe::bethe TBB::tbb)
+bethe_discover_tests(bethe_finite_volume_async_tests)
+
 add_executable(bethe_lee_yang_tests test_lee_yang.cpp)
 target_link_libraries(bethe_lee_yang_tests PRIVATE bethe::bethe)
 bethe_discover_tests(bethe_lee_yang_tests)

@@ -282,3 +282,43 @@ and multi-worker runs check composition. MPFR tests interleave 128-, 256- and
 333-bit requests and check stored precision without changing ambient defaults.
 Existing XXX scan/form-factor tests already cover independent-precision
 composition; those APIs require no additional wrapper.
+
+## Finite-volume integral equations
+
+Lee–Yang `ground_state`/`one_particle` and sine-Gordon
+`vacuum_energy`/`two_soliton_level` have no shared mutable solver state.
+Independent scales, circumferences and allowed levels can use the existing
+observable grid. Capture the inputs and numerical options by value, return the
+complete state, and wait on the grid's final result before reading collected
+states. Coupled fixed-point, hole/root, mesh and contour iterations remain
+inside each sequential solve.
+
+The [complete example](../examples/async_finite_volume.cpp) runs any of these
+four families. Configure with `BETHE_BUILD_EXAMPLES=ON`, then from the build
+directory:
+
+```sh
+cmake --build . --target bethe-async-finite-volume-example -j2
+OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 \
+  ./examples/bethe-async-finite-volume-example sine-gordon-excited 8 64 fp64
+```
+
+Arguments are model/state, threads, number of points and precision. Model/state
+is `lee-yang-vacuum`, `lee-yang-excited`, `sine-gordon-vacuum` or
+`sine-gordon-excited`; threads zero is a direct serial comparison, while one or
+more uses Async. Native `fp64`, `long-double` and configured `fp128` are
+supported. These solvers do not yet support MPFR.
+
+The example uses unit mass, Lee–Yang circumferences `5+5*i/points` at absolute
+Y tolerance `1e-10`, or sine-Gordon `1+3*i/points` at p=2 and tolerance `1e-7`.
+The excited sine-Gordon state has positive Bethe number 1/2. The grid admits at
+most 32 active or uncollected states; this illustrative collector retains all
+results. Numerical failures remain in order and cause exit 2 after the complete
+sweep. Timing includes solving and ordered collection, excluding scheduler
+construction and printing. More arithmetic bits do not improve the deliberately
+fixed discretization tolerance automatically.
+
+The two excited-state frontends also offer `--threads 2` for their independent
+vacuum/excited pair. Their single-scale vacuum frontends stay serial. Useful
+concurrency is across complete solves, not across mutually dependent iterations;
+a parameter sweep can scale beyond the pair's two-task ceiling.
