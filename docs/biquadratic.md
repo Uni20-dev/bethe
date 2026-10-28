@@ -45,6 +45,7 @@ and integer labels. There is no lattice momentum for these open chains.
 ```sh
 # Lowest energy in each TL module (not each physical-spin sector):
 bethe-biquadratic-obc 16 --sectors
+bethe-biquadratic-obc 64 --sectors --threads 4
 bethe-biquadratic-obc 16 --through-lines 2
 # Lowest 10 supported real-root levels in ell=2, including its minimum:
 bethe-biquadratic-obc 16 --excitations 10
@@ -83,6 +84,15 @@ for N=4, ell=2 the three energies are $`-6-\sqrt{2}, -6, -6+\sqrt{2}`$, each
 with multiplicity 8. The first has gap `2.147339250435735226109016203...`.
 
 `--sectors`, `--excitations`, and `--quantum-numbers` are separate modes.
+
+`--threads N` overlaps independent solves in `--sectors` and `--excitations`;
+one worker is the default. Sector output remains in increasing through-line
+order, with gaps formed only after the singlet reference has finished. Each
+Newton solve and its continuation remain sequential. A failed reference still
+makes every sector gap unavailable, and numerical failures retain exit status 2.
+Selected single states, the Q-system search and the complex singlet continuation
+do not accept this option. See the [ferromagnetic modes](biquadratic-ferromagnetic.md)
+for concurrent bound-cluster scans.
 Explicit labels determine ell and cannot be combined with `--through-lines`;
 use `--quantum-numbers none` for the zero-root ell=N level. Multiplicities
 use checked uint64 arithmetic: ell>=46 at d=3 is reported as
