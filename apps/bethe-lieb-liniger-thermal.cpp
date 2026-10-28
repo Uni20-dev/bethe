@@ -2,6 +2,7 @@
 // Copyright (C) 2026 Ian McCulloch
 #include "execution-options.hpp"
 #include "result-output.hpp"
+#include "solver-precision.hpp"
 #include <bethe/lieb_liniger_thermal.hpp>
 #include <bethe/observable_grid.hpp>
 
@@ -31,7 +32,9 @@ auto program_info()
       "quantity and c fixed. Pressure, energy and entropy are per length; grand potential/length is -pressure.",
       "Tolerance defaults to 16384 epsilon; density tolerance to 65536 epsilon. Nonlinear, mesh, cutoff and "
       "density inversion budgets are independent. Weak coupling or low temperature can exceed the mesh budget.",
-      "Failed observables are omitted (JSON null, CSV/TSV empty), with exit status 2. fp128 requires MPLAPACK. "
+      "Failed observables are omitted (JSON null, CSV/TSV empty), with exit status 2. fp128 and bits-N/digits-N "
+      "require "
+      "their configured MPLAPACK providers. "
       "Exports stream during computation; --no-retain discards delivered rows. See docs/lieb-liniger-thermal.md. "
       "Use --references for literature."};
   return info;
@@ -46,7 +49,7 @@ void add_options(CLI::App& app, Arguments& a)
   auto* end =
       cli::text_option(app, "--temperature-end", a.end, "Positive scan endpoint (inclusive)")->type_name("REAL");
   cli::count_option(app, "--points", a.points, "Temperature samples, 2..1000000")->capture_default_str()->needs(end);
-  cli::precision_option(app, a.precision);
+  cli::precision_option(app, a.precision, cli::ArbitraryPrecision::real_lu);
   cli::threads_option(app, a.threads)->description("Scheduler concurrency limit for independent temperatures");
   cli::text_option(app, "--tolerance", a.tolerance, "Inner relative tolerance (default 16384 epsilon)");
   cli::text_option(app, "--density-tolerance", a.density_tolerance,
@@ -84,24 +87,24 @@ char const* name(model::Status status)
   }
   return "unknown";
 }
-template <uni20::Real Real> int run(Arguments const& a, int argc, char** argv)
+template <uni20::Real Real> int run(Arguments const& a, model::DensityOptions<Real> controls, int argc, char** argv)
 {
   uni20::run_context context(program_info(), {.invocation = std::vector<std::string>(argv, argv + argc)});
-  Real const c = uni20::parse_real<Real>(a.c), start = uni20::parse_real<Real>(a.temperature);
-  Real const end = a.end ? uni20::parse_real<Real>(*a.end) : start;
-  Real const fixed = uni20::parse_real<Real>(a.mu ? *a.mu : *a.density);
-  model::DensityOptions<Real> controls;
+  auto parse = [&](std::string_view text) { return cli::parse_solver_real<Real>(text, controls); };
+  Real const c = parse(a.c), start = parse(a.temperature);
+  Real const end = a.end ? parse(*a.end) : start;
+  Real const fixed = parse(a.mu ? *a.mu : *a.density);
   auto& inner = controls.equilibrium;
   inner.initial_nodes = a.initial_nodes;
   inner.max_nodes = a.max_nodes;
   inner.max_iterations = a.iterations;
   inner.max_cutoffs = a.cutoffs;
   controls.max_evaluations = a.evaluations;
-  if (a.tolerance) inner.tolerance = uni20::parse_real<Real>(*a.tolerance);
-  if (a.density_tolerance) controls.tolerance = uni20::parse_real<Real>(*a.density_tolerance);
-  if (a.cutoff) inner.initial_cutoff = uni20::parse_real<Real>(*a.cutoff);
+  if (a.tolerance) inner.tolerance = parse(*a.tolerance);
+  if (a.density_tolerance) controls.tolerance = parse(*a.density_tolerance);
+  if (a.cutoff) inner.initial_cutoff = parse(*a.cutoff);
   // Validate before opening any output file, including when --force is used.
-  model::detail::validate(c, start, a.mu ? fixed : Real{0}, inner);
+  model::detail::validate(c, start, a.mu ? fixed : uni20::scalar_like(c, 0), inner);
   if (!(end > Real{0}) || !uni20::isfinite(end) || !uni20::isfinite(fixed) || (a.density && !(fixed > Real{0})) ||
       !(controls.tolerance > Real{0}) || !(controls.tolerance < Real{1}) || !uni20::isfinite(controls.tolerance))
     throw std::invalid_argument("require finite T>0, density>0 and 0<density tolerance<1");
@@ -217,6 +220,7 @@ int main(int argc, char** argv)
         if (a.end && (a.points < 2 || a.points > 1000000)) throw std::invalid_argument("require 2<=points<=1000000");
         if (a.mu && (a.density_tolerance || app.count("--max-evaluations")))
           throw std::invalid_argument("density inversion controls require --density");
-        return cli::dispatch_precision(a.precision, [&]<typename Real>() { return run<Real>(a, argc, argv); });
+        return cli::dispatch_options_precision<cli::ArbitraryPrecision::real_lu, model::DensityOptions>(
+            a.precision, [&](auto controls) { return run(a, std::move(controls), argc, argv); });
       });
 }

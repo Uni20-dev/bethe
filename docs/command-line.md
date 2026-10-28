@@ -151,11 +151,11 @@ bethe-su3-pbc 24 --precision digits-100
 XXX roots, Richardson pairing, central spin, quantum-group XXZ,
 SU(3)/TB/sine-Gordon dispersions, Haldane–Shastry and Sutherland need Uni20's
 arbitrary-precision scalar family (GMP, MPFR and MPC), but no MPLAPACK.
-Finite-size and zero-temperature thermodynamic Lieb–Liniger, SU(3) singlet ground
-states, finite XXZ/Hubbard, Gaudin–Yang/Bose–Fermi, q-boson, finite TB, SU(n) fermions and structure
-factors additionally require the MPLAPACK MPFR provider for LU operations.
-See the [capability inventory](app-capabilities.md) for other frontends.
-More precision does not expand the
+Finite-size, zero-temperature and thermal Lieb–Liniger, SU(3) singlet ground
+states, finite XXZ/Hubbard, Gaudin–Yang/Bose–Fermi, q-boson, finite TB, SU(n)
+fermions and structure factors additionally require the MPLAPACK MPFR provider
+for LU operations. See the [capability inventory](app-capabilities.md) for other
+frontends. More precision does not expand the
 supported state family: the excitation scan still excludes strings and infinite roots.
 
 `bethe-tb-pbc` supports the even-ring singlet ground state with finite
