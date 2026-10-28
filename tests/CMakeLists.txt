@@ -173,6 +173,10 @@ add_executable(bethe_su3_dispersion_tests test_su3_dispersion.cpp)
 target_link_libraries(bethe_su3_dispersion_tests PRIVATE bethe::bethe)
 bethe_discover_tests(bethe_su3_dispersion_tests)
 if(BETHE_HAS_MPREAL)
+  add_executable(bethe_inverse_square_mpfr_tests test_inverse_square_mpfr.cpp)
+  target_link_libraries(bethe_inverse_square_mpfr_tests PRIVATE bethe::bethe TBB::tbb)
+  bethe_discover_tests(bethe_inverse_square_mpfr_tests)
+
   add_executable(bethe_su3_dispersion_mpfr_tests test_su3_dispersion_mpfr.cpp)
   target_link_libraries(bethe_su3_dispersion_mpfr_tests PRIVATE bethe::bethe TBB::tbb)
   bethe_discover_tests(bethe_su3_dispersion_mpfr_tests)
@@ -635,6 +639,9 @@ if(BETHE_BUILD_APPS)
     add_test(NAME Sutherland.cli
       COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_sutherland_cli.py"
         "$<TARGET_FILE:bethe-sutherland-pbc>" "${BETHE_HAS_FLOAT128}")
+    add_test(NAME InverseSquare.precision.cli
+      COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_inverse_square_precision.py"
+        "$<TARGET_FILE:bethe-haldane-shastry-pbc>" "$<TARGET_FILE:bethe-sutherland-pbc>" "${BETHE_HAS_MPREAL}")
     add_test(NAME HaldaneShastry.cli
       COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_haldane_shastry_cli.py"
         "$<TARGET_FILE:bethe-haldane-shastry-pbc>" "${BETHE_HAS_FLOAT128}")

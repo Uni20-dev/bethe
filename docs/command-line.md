@@ -123,7 +123,8 @@ All frontends support typed tables and file exports; see the
 The arbitrary-precision choices currently apply to `bethe-xxx-pbc`, `bethe-xxx-obc`,
 `bethe-lieb-liniger-pbc` and `bethe-lieb-liniger-obc` (all modes),
 the finite-ring `bethe-xxx-structure-factor`, `bethe-richardson`,
-`bethe-central-spin` and `bethe-su3-dispersion`, in an
+`bethe-central-spin`, `bethe-su3-dispersion`, `bethe-haldane-shastry-pbc`
+and `bethe-sutherland-pbc`, in an
 [enabled build](building.md#enable-arbitrary-precision):
 
 ```sh
@@ -138,7 +139,8 @@ bethe-central-spin --couplings 1,0.7,0.3 --field 1 --sz 0 --precision bits-256
 bethe-su3-dispersion --branch four-soliton --folded --precision digits-100
 ```
 
-XXX roots, Richardson pairing, central spin and SU(3) dispersion need Uni20's
+XXX roots, Richardson pairing, central spin, SU(3) dispersion, Haldane–Shastry
+and Sutherland need Uni20's
 arbitrary-precision scalar family (GMP, MPFR and MPC), but no MPLAPACK.
 Finite-size Lieb–Liniger and structure factors additionally require the MPLAPACK
 MPFR provider for LU operations. Other frontends still support native precisions only, including
