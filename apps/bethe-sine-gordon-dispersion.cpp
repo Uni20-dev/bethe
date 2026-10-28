@@ -22,7 +22,8 @@ auto program_info()
                         bethe::citations::Tool::sine_gordon_dispersion);
   info.examples = {
       {"bethe-sine-gordon-dispersion --p 0.4 --csv sg.csv", "Attractive particle spectrum and pair onsets"},
-      {"bethe-sine-gordon-dispersion --p 1 --momentum 0 --precision long-double", "Free Dirac masses"}};
+      {"bethe-sine-gordon-dispersion --p 1 --momentum 0 --precision long-double", "Free Dirac masses"},
+      {"bethe-sine-gordon-dispersion --p 0.4 --momentum 0.7 --precision digits-100", "Explicit MPFR precision"}};
   info.notes = {"Physical soliton mass M; p=beta^2/(8*pi-beta^2), kinetic term (1/2)(partial phi)^2; velocity=hbar=1.",
                 "Soliton/antisoliton charges +/-1; neutral B_n exists only for n*p<1, mass=2*M*sin(n*pi*p/2).",
                 "Energy=sqrt(mass^2+k^2). Pair rows are lower thresholds, not upper bounds or spectral intensities.",
@@ -47,7 +48,7 @@ void add_options(CLI::App& app, Arguments& a)
       ->type_name("REAL")
       ->excludes(count)
       ->excludes(maximum);
-  cli::precision_option(app, a.precision);
+  cli::precision_option(app, a.precision, cli::ArbitraryPrecision::real);
   cli::add_data_output_options(
       app, a.output,
       {{.name = "dispersion", .description = "Excitation branches and/or continuum bounds", .primary = true}});
@@ -65,15 +66,16 @@ std::string name(model::Particle particle)
   }
   throw std::invalid_argument("unknown particle");
 }
-template <uni20::Real Real> int run(Arguments const& a, int argc, char** argv)
+template <uni20::Real Real> int run(Arguments const& a, int argc, char** argv, uni20::Precision precision)
 {
   uni20::run_context context(program_info(), {.invocation = std::vector<std::string>(argv, argv + argc)});
-  Real const mass = uni20::parse_real<Real>(a.mass), p = uni20::parse_real<Real>(*a.coupling);
+  Real const mass = cli::parse_scalar<Real>(a.mass, precision), p = cli::parse_scalar<Real>(*a.coupling, precision);
+  Real const zero = uni20::scalar_like(mass, 0);
   model::ParticleSpectrum<Real> const spectrum(mass, p);
   auto const particles = spectrum.particles(256);
   std::optional<Real> momentum;
-  if (a.momentum) momentum = uni20::parse_real<Real>(*a.momentum);
-  Real const maximum = momentum ? Real{0} : a.maximum ? uni20::parse_real<Real>(*a.maximum) : Real{5} * mass;
+  if (a.momentum) momentum = cli::parse_scalar<Real>(*a.momentum, precision);
+  Real const maximum = momentum ? zero : a.maximum ? cli::parse_scalar<Real>(*a.maximum, precision) : Real{5} * mass;
   if ((momentum && !uni20::isfinite(*momentum)) || (!momentum && (!uni20::isfinite(maximum) || maximum <= Real{0})))
     throw std::invalid_argument("require finite momentum or finite positive grid endpoint");
   struct Branch
@@ -94,7 +96,7 @@ template <uni20::Real Real> int run(Arguments const& a, int argc, char** argv)
       {
         std::vector<model::Particle> pair{first, particles[j]};
         branches.push_back({name(first) + "+" + name(particles[j]), "threshold", first.charge() + particles[j].charge(),
-                            pair, spectrum.threshold(pair, Real{0})});
+                            pair, spectrum.threshold(pair, zero)});
       }
   }
   std::size_t const count = momentum ? 1 : a.points;
@@ -161,6 +163,7 @@ int main(int argc, char** argv)
         a.output.validate();
         if (!a.momentum && (a.points < 2 || a.points > 1000000))
           throw std::invalid_argument("require 2<=points<=1000000");
-        return cli::dispatch_precision(a.precision, [&]<typename Real>() { return run<Real>(a, argc, argv); });
+        return cli::dispatch_scalar_precision<cli::ArbitraryPrecision::real>(
+            a.precision, [&]<typename Real>(uni20::Precision p) { return run<Real>(a, argc, argv, p); });
       });
 }

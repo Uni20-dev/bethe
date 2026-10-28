@@ -236,6 +236,11 @@ bethe_discover_tests(bethe_sine_gordon_tests
 add_executable(bethe_sine_gordon_excitation_tests test_sine_gordon_excitations.cpp)
 target_link_libraries(bethe_sine_gordon_excitation_tests PRIVATE bethe::bethe)
 bethe_discover_tests(bethe_sine_gordon_excitation_tests)
+if(BETHE_HAS_MPREAL)
+  add_executable(bethe_sine_gordon_particle_mpfr_tests test_sine_gordon_particles_mpfr.cpp)
+  target_link_libraries(bethe_sine_gordon_particle_mpfr_tests PRIVATE bethe::bethe TBB::tbb)
+  bethe_discover_tests(bethe_sine_gordon_particle_mpfr_tests)
+endif()
 
 add_executable(bethe_sine_gordon_excited_tests test_sine_gordon_excited.cpp)
 target_link_libraries(bethe_sine_gordon_excited_tests PRIVATE bethe::bethe)
@@ -402,6 +407,9 @@ if(BETHE_BUILD_APPS)
     add_test(NAME SineGordonExcitations.cli
       COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_sine_gordon_excitations.py"
         "$<TARGET_FILE:bethe-sine-gordon-dispersion>" "$<TARGET_FILE:bethe-sine-gordon-bethe-yang>" "${BETHE_HAS_FLOAT128}")
+    add_test(NAME SineGordonDispersion.precision
+      COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_sine_gordon_dispersion_precision.py"
+        "$<TARGET_FILE:bethe-sine-gordon-dispersion>" "${BETHE_HAS_MPREAL}")
     add_test(NAME SineGordonExcited.cli
       COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_sine_gordon_excited.py"
         "$<TARGET_FILE:bethe-sine-gordon-excited>" "${BETHE_HAS_FLOAT128}")
