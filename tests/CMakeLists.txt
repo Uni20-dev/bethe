@@ -317,6 +317,11 @@ bethe_discover_tests(bethe_xxz_quantum_group_critical_tests)
 add_executable(bethe_xxz_quantum_group_free_tests test_xxz_quantum_group_free.cpp)
 target_link_libraries(bethe_xxz_quantum_group_free_tests PRIVATE bethe::bethe)
 bethe_discover_tests(bethe_xxz_quantum_group_free_tests)
+if(BETHE_HAS_MPREAL)
+  add_executable(bethe_xxz_qg_mpfr_tests test_xxz_qg_mpfr.cpp)
+  target_link_libraries(bethe_xxz_qg_mpfr_tests PRIVATE bethe::bethe uni20_async TBB::tbb)
+  bethe_discover_tests(bethe_xxz_qg_mpfr_tests)
+endif()
 
 add_executable(bethe_hubbard_continuum_tests test_hubbard_continuum.cpp)
 target_link_libraries(bethe_hubbard_continuum_tests PRIVATE bethe::bethe)
@@ -596,6 +601,9 @@ if(BETHE_BUILD_APPS)
     add_test(NAME HubbardContinuum.cli
       COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_hubbard_continuum.py"
         "$<TARGET_FILE:bethe-hubbard-continuum>" "${BETHE_HAS_FLOAT128}")
+    add_test(NAME QuantumGroupMpfr.cli
+      COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_xxz_qg_mpfr.py"
+        "$<TARGET_FILE:bethe-xxz-qg-obc>" "${BETHE_HAS_MPREAL}")
     add_test(NAME CriticalQuantumGroup.cli
       COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_xxz_qg.py"
         "$<TARGET_FILE:bethe-xxz-qg-obc>" "${BETHE_HAS_FLOAT128}")
