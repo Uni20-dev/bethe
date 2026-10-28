@@ -12,7 +12,7 @@ remain serial when its work is too cheap to benefit from scheduling; independent
 parameter sweeps can still use the generic library grid. Native-only apps below
 do not yet expose MPFR at their frontend, even if some underlying helpers do.
 Names omit the `bethe-` executable prefix. This inventory describes the current
-source tree, including the integrated checkpoints #9–#35. Rebuild an older
+source tree, including the integrated checkpoints #9–#37. Rebuild an older
 installation to obtain these capabilities. Linked PRs preserve the original
 precision/provider configurations and independent numerical or serial/concurrent
 validation; their measurements are historical records, not new integration runs.
@@ -31,7 +31,7 @@ validation; their measurements are historical records, not new integration runs.
 | `xxz-pbc`, `xxz-obc` | Continuous real-root scans; owning parameter sweeps ([#15](https://github.com/Uni20-dev/bethe/pull/15)) | Yes, MPLAPACK MPFR required | Preserve existing ground/excitation restrictions and low-precision failure diagnostics |
 | `q-boson-pbc` | Continuous real-root scans; owning mixed-precision queries ([#25](https://github.com/Uni20-dev/bethe/pull/25)) | Yes, MPLAPACK MPFR required | Preserve ground/canonical-state precision and scalar-only zero-update diagnostics |
 | `su3-pbc` | Individual nested solves; owning mixed-precision sweeps ([#13](https://github.com/Uni20-dev/bethe/pull/13)) | Yes, MPLAPACK MPFR required | Balanced singlets retain their existing physical scope |
-| `tb-pbc` | Serial CLI; owning Async size sweeps and complete-state diagnostics ([#33](https://github.com/Uni20-dev/bethe/pull/33)) | Native only | Model-level explicit precision, finite string deviations and complex scalar representation |
+| `tb-pbc` | Single-request CLI stays serial; owning mixed-precision Async size sweeps compare complete states ([#37](https://github.com/Uni20-dev/bethe/pull/37)) | MPFR + MPLAPACK, including finite string deviations and owning complex rapidities | Preserve the even-ring singlet ground-state branch; the residual tolerance is not an energy-error bound |
 | `hubbard-pbc`, `hubbard-obc` | Individual finite-size solves; owning parameter sweeps ([#16](https://github.com/Uni20-dev/bethe/pull/16)) | Yes, MPLAPACK MPFR required | Preserve existing sectors, both interaction signs and symmetry mappings |
 | `gaudin-yang-pbc` | Individual nested solves; owning mixed-precision sector sweeps ([#18](https://github.com/Uni20-dev/bethe/pull/18)) | Yes, MPLAPACK MPFR required | Preserve repulsive-shell restrictions and requested-coupling failure diagnostics |
 | `sun-fermions-pbc`, `tj-pbc` | Serial CLIs; owning coupling/population grids with complete partial/failure states ([#33](https://github.com/Uni20-dev/bethe/pull/33)) | Native only | Model-level explicit precision; large dilute t–J seed/Newton convergence remains a numerical limitation |

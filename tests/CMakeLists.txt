@@ -126,6 +126,10 @@ if(BETHE_HAS_MPREAL)
   add_executable(bethe_thermodynamics_mpfr_tests test_thermodynamics_mpfr.cpp)
   target_link_libraries(bethe_thermodynamics_mpfr_tests PRIVATE bethe::bethe TBB::tbb)
   bethe_discover_tests(bethe_thermodynamics_mpfr_tests)
+
+  add_executable(bethe_tb_mpfr_tests test_tb_mpfr.cpp)
+  target_link_libraries(bethe_tb_mpfr_tests PRIVATE bethe::bethe TBB::tbb)
+  bethe_discover_tests(bethe_tb_mpfr_tests)
 endif()
 
 add_executable(bethe_parallel_scan_tests test_parallel_scan.cpp)
@@ -620,6 +624,9 @@ if(BETHE_BUILD_APPS)
     add_test(NAME LiebLinigerThermo.precision
       COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_thermodynamics_precision.py"
         "$<TARGET_FILE:bethe-lieb-liniger-dispersion>" "${BETHE_HAS_MPREAL}" "${BETHE_HAS_MPLAPACK_MPREAL}")
+    add_test(NAME TB.precision
+      COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_tb_precision.py"
+        "$<TARGET_FILE:bethe-tb-pbc>" "${BETHE_HAS_MPREAL}" "${BETHE_HAS_MPLAPACK_MPREAL}")
     add_test(NAME LiebLinigerThermal.cli
       COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_lieb_liniger_thermal.py"
         "$<TARGET_FILE:bethe-lieb-liniger-thermal>" "${BETHE_HAS_FLOAT128}")

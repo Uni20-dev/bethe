@@ -126,8 +126,8 @@ The arbitrary-precision choices currently apply to `bethe-xxx-pbc`, `bethe-xxx-o
 the finite-ring `bethe-xxx-structure-factor`, `bethe-richardson` and
 `bethe-central-spin`, `bethe-hubbard-pbc`, `bethe-hubbard-obc`, and
 `bethe-gaudin-yang-pbc`, `bethe-bose-fermi-pbc`, `bethe-su3-pbc` and `bethe-su3-dispersion`,
-`bethe-haldane-shastry-pbc`, `bethe-sutherland-pbc`, `bethe-tb-dispersion`
-and `bethe-sine-gordon-dispersion`, plus both branches of `bethe-xxz-qg-obc`, in an
+`bethe-haldane-shastry-pbc`, `bethe-sutherland-pbc`, `bethe-tb-dispersion`,
+`bethe-sine-gordon-dispersion` and `bethe-tb-pbc`, plus both branches of `bethe-xxz-qg-obc`, in an
 [enabled build](building.md#enable-arbitrary-precision):
 
 ```sh
@@ -151,11 +151,14 @@ XXX roots, Richardson pairing, central spin, quantum-group XXZ,
 SU(3)/TB/sine-Gordon dispersions, Haldane–Shastry and Sutherland need Uni20's
 arbitrary-precision scalar family (GMP, MPFR and MPC), but no MPLAPACK.
 Finite-size and zero-temperature thermodynamic Lieb–Liniger, SU(3) singlet ground
-states, finite XXZ/Hubbard, Gaudin–Yang/Bose–Fermi, q-boson and structure factors
-additionally require the MPLAPACK MPFR provider for LU operations. Other
-frontends still support native precisions only, including Lieb–Liniger thermal
-calculations. More precision does not expand the
+states, finite XXZ/Hubbard, Gaudin–Yang/Bose–Fermi, q-boson, finite TB and structure
+factors additionally require the MPLAPACK MPFR provider for LU operations.
+See the [capability inventory](app-capabilities.md) for other frontends.
+More precision does not expand the
 supported state family: the excitation scan still excludes strings and infinite roots.
+
+`bethe-tb-pbc` supports the even-ring singlet ground state with finite
+two-string deviations; see [the model documentation](takhtajan-babujian.md).
 
 `digits-100` resolves to 333 bits through Uni20's decimal-precision conversion.
 `bits-128` is **not** `fp128`: the former has 128 significand bits, the latter
