@@ -127,7 +127,8 @@ the finite-ring `bethe-xxx-structure-factor`, `bethe-richardson` and
 `bethe-central-spin`, `bethe-hubbard-pbc`, `bethe-hubbard-obc`, and
 `bethe-gaudin-yang-pbc`, `bethe-bose-fermi-pbc`, `bethe-su3-pbc` and `bethe-su3-dispersion`,
 `bethe-haldane-shastry-pbc`, `bethe-sutherland-pbc`, `bethe-tb-dispersion`,
-`bethe-sine-gordon-dispersion` and `bethe-tb-pbc`, plus both branches of `bethe-xxz-qg-obc`, in an
+`bethe-sine-gordon-dispersion`, `bethe-tb-pbc` and `bethe-sun-fermions-pbc`,
+plus both branches of `bethe-xxz-qg-obc`, in an
 [enabled build](building.md#enable-arbitrary-precision):
 
 ```sh
@@ -151,7 +152,7 @@ XXX roots, Richardson pairing, central spin, quantum-group XXZ,
 SU(3)/TB/sine-Gordon dispersions, Haldane–Shastry and Sutherland need Uni20's
 arbitrary-precision scalar family (GMP, MPFR and MPC), but no MPLAPACK.
 Finite-size and zero-temperature thermodynamic Lieb–Liniger, SU(3) singlet ground
-states, finite XXZ/Hubbard, Gaudin–Yang/Bose–Fermi, q-boson, finite TB and structure
+states, finite XXZ/Hubbard, Gaudin–Yang/Bose–Fermi, q-boson, finite TB, SU(n) fermions and structure
 factors additionally require the MPLAPACK MPFR provider for LU operations.
 See the [capability inventory](app-capabilities.md) for other frontends.
 More precision does not expand the
