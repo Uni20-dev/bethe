@@ -377,7 +377,9 @@ Set `BETHE_BUILD_EXAMPLES=ON` to build library composition examples in the
 `examples/` subdirectory. The first example prepares one Lieb–Liniger background
 asynchronously and submits both elementary branches before observing it; see
 [shared backgrounds](async-execution.md#shared-backgrounds). Examples are checked
-in CI and are not installed with the command-line tools.
+in CI and are not installed with the command-line tools. The
+[nested sweep example](async-execution.md#owning-nested-model-requests) demonstrates
+independent TB sizes, SU(N) couplings and t–J fillings with complete diagnostics.
 
 ### Where code belongs
 
