@@ -40,9 +40,9 @@ independent numerical or serial/concurrent validation.
 | `tb-dispersion` | Serial analytic CLI; owning mixed-precision Async queries validated in pending PR #22 | Native only on merged baseline; [PR #22](https://github.com/Uni20-dev/bethe/pull/22) adds MPFR scalars, no MPLAPACK | Integrate reviewed shared-band precision; XXZ/XYZ elliptic models still need separate audits |
 | `sine-gordon-dispersion` | Serial analytic CLI; owning mixed-precision Async queries validated in pending PR #23 | Native only on merged baseline; [PR #23](https://github.com/Uni20-dev/bethe/pull/23) adds MPFR scalars, no MPLAPACK | Integrate reviewed masses, strict breather selection and pair thresholds; cheap formulas stay serial |
 | `xyz-dispersion` | Serial CLI; pending [PR #24](https://github.com/Uni20-dev/bethe/pull/24) reuses owning bound branches and validates shared Async preparation / parameter curves | Native only | Integrate reviewed reuse and measured curve-level concurrency; explicit-precision elliptic/theta functions remain necessary |
-| `xxz-dispersion` | Immutable band with cheap queries; bulk preparation remains serial | Native only | Theta constants await [Uni20 PR #103](https://github.com/Uni20-dev/uni20/pull/103); bulk quadrature still needs explicit precision. Cheap band queries stay serial |
+| `xxz-dispersion` | Immutable band with cheap queries; bulk preparation remains serial | Native only | Theta constants await [Uni20 PR #103](https://github.com/Uni20-dev/uni20/pull/103); finite quadrature is proposed in [Uni20 PR #104](https://github.com/Uni20-dev/uni20/pull/104), with model integration still required. Cheap band queries stay serial |
 | `xxz-qg-obc` | Shared continuous regular-root scans; owning regular/free-sector queries validated in pending PR #26 | Native only on merged baseline; [PR #26](https://github.com/Uni20-dev/bethe/pull/26) adds MPFR scalars, no MPLAPACK | Integrate reviewed critical regular-root and free-endpoint precision; individual cheap free blocks stay serial |
-| `sine-gordon-bethe-yang` | Serial CLI; pending [PR #27](https://github.com/Uni20-dev/bethe/pull/27) adds bounded independent level scans | Native only | Integrate reviewed concurrency; MPFR needs explicit-precision phase integration and shared tanh-sinh/error controls |
+| `sine-gordon-bethe-yang` | Serial CLI; pending [PR #27](https://github.com/Uni20-dev/bethe/pull/27) adds bounded independent level scans | Native only | Integrate reviewed concurrency; MPFR phase integration needs the proposed [Uni20 quadrature](https://github.com/Uni20-dev/uni20/pull/104) and a model-level precision audit |
 | `biquadratic-obc` | Sector-specific solver/composition audit pending | Native only | Treat real, complex and singular sectors separately; massive quantum-group Newton precision awaits PR #9 |
 | `lee-yang-vacuum`, `lee-yang-excited`, `sine-gordon-vacuum`, `sine-gordon-excited`, `kondo-response` | Integral-equation composition audit pending | Native only | Preserve coupled iterations and continuation; audit discretization and complex functions |
 | `asep-pbc`, `tasep-pbc`, `potts-pbc`, `xyz-pbc` | Complex/nonlinear composition audit pending | Native only | Branch tracking and scalar-function coverage before advertising MPFR |
@@ -130,8 +130,18 @@ zero-argument rectangular constants at native and explicit MPFR precision,
 with independent product/Gamma references and accuracy growth through 1,024
 bits. Local native/wide/sanitizer checks and upstream CI pass; independent
 review and merge remain pending. Bethe has not changed its Uni20 pin or enabled MPFR for XXZ/XYZ.
-XXZ bulk-energy quadrature and XYZ complex theta arguments/derivatives remain
+XXZ bulk-energy integration and XYZ complex theta arguments/derivatives remain
 separate work.
+
+The shared finite-integration prerequisite is proposed in
+[Uni20 PR #104](https://github.com/Uni20-dev/uni20/pull/104). Array-valued tanh-sinh
+quadrature carries explicit precision through endpoint distances, accumulation
+and recoverable error diagnostics. Local native/wide/sanitizer checks pass,
+including reflected/translated singularities, cutoff sensitivity and accuracy
+growth through 1,024 bits. Review, upstream CI and merge remain pending.
+Its estimates are not certified bounds. Bethe still needs model-level adoption,
+kernel/tolerance audits and native-output comparisons for sine-Gordon, XXZ bulk,
+Hubbard and Kondo; no new app capability is implied by this upstream proposal.
 
 Update this inventory with each reviewed app checkpoint. A proposed capability
 or a pending audit is not evidence of implemented support.
