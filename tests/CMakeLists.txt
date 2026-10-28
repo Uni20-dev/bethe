@@ -104,7 +104,7 @@ add_executable(bethe_parallel_scan_tests test_parallel_scan.cpp)
 target_link_libraries(bethe_parallel_scan_tests PRIVATE bethe::bethe TBB::tbb)
 bethe_discover_tests(bethe_parallel_scan_tests)
 
-foreach(test IN ITEMS async_scan continuous_work async_structure_factor prepared_observable_grid)
+foreach(test IN ITEMS async_scan continuous_work async_structure_factor prepared_observable_grid async_complex_sweeps)
   add_executable(bethe_${test}_tests test_${test}.cpp)
   target_link_libraries(bethe_${test}_tests PRIVATE bethe::bethe TBB::tbb)
   bethe_discover_tests(bethe_${test}_tests)
@@ -112,6 +112,13 @@ endforeach()
 
 if(TARGET bethe-async-background-example)
   add_test(NAME AsyncBackground.example COMMAND bethe-async-background-example)
+endif()
+
+if(TARGET bethe-async-complex-sweeps-example)
+  foreach(model IN ITEMS tasep xyz)
+    add_test(NAME AsyncComplexSweeps.${model}.example
+      COMMAND bethe-async-complex-sweeps-example ${model} 8 4 2 fp64)
+  endforeach()
 endif()
 
 add_executable(bethe_parallel_excitation_tests test_parallel_excitation_models.cpp)

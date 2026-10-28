@@ -157,6 +157,46 @@ OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 ./examples/bethe-async-background-examp
 
 The example is built in CI and is not installed as a frontend executable.
 
+## Independent TASEP and finite XYZ solves
+
+The [complex-root sweep example](../examples/async_complex_sweeps.cpp) uses
+the ordinary owning grid for two independent families:
+
+- TASEP: fixed ring size, particles from 1 through `POINTS`, at unit jump rate.
+  The count cannot exceed half the sites, avoiding particle-hole duplicates.
+- XYZ: fixed even ring size and elliptic parameter `t=3/4`, with eta equally
+  spaced from 1/5 through 4/5. One point selects eta=1/2.
+
+From a build directory configured with `BETHE_BUILD_EXAMPLES=ON`:
+
+```sh
+cmake --build . --target bethe-async-complex-sweeps-example -j2
+OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 \
+  ./examples/bethe-async-complex-sweeps-example tasep 128 64 4 fp64
+OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 \
+  ./examples/bethe-async-complex-sweeps-example xyz 32 129 4 long-double
+```
+
+Arguments are model, sites, points, threads and precision (`fp64`,
+`long-double`, configured `fp128`). Zero threads calls each solver directly;
+positive counts use Async, capped at the smaller of 32 and the point count.
+The callable owns its inputs and options; every solve owns its complex roots,
+Newton scratch and diagnostics. Completion is the final grid result. Collection
+is ordered on the scheduler, and printing happens afterward. The admission
+window is 32; this demonstration retains every output state, so output memory
+grows with the number of points. It prints all state fields, including roots,
+and returns status 2 if any numerical solve fails.
+
+Tests submit both models onto the same scheduler, including deferred and
+single-worker execution, after the submission-local request vectors disappear.
+They compare every state field with direct calls, retain numerical failures,
+and check that an invalid request in either model does not cancel the other
+grid. These are fixed-precision native solvers; this example does not enable
+MPFR. The existing single-request frontends remain serial. TASEP root updates
+and XYZ Newton steps are coupled and remain sequential. For a TASEP rate-only
+curve, reuse a unit-rate result and rescale its eigenvalue/gap; the roots do not
+depend on the positive jump rate.
+
 ## Matched pipeline benchmark
 
 With tests enabled, build the opt-in comparison from a configured build directory:
