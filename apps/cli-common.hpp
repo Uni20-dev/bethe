@@ -5,6 +5,7 @@
 
 #include "precision.hpp"
 #include <uni20/common/half_int.hpp>
+#include <uni20/core/runtime_precision.hpp>
 #include <uni20/core/scalar_io.hpp>
 
 #include <charconv>
@@ -44,6 +45,35 @@ template <typename Function> int dispatch_precision(std::string_view precision, 
       break;
   }
   throw std::logic_error("unavailable native precision");
+}
+
+// Analytic frontends need a scalar family and explicit precision, without
+// fabricating iterative solver controls. Native selection keeps the same API.
+template <ArbitraryPrecision Support, typename Function>
+int dispatch_scalar_precision(std::string_view precision, Function&& run)
+{
+  auto const request = parse_precision(precision);
+  validate_precision(request, Support);
+  if (request.arbitrary())
+  {
+#if UNI20_HAS_MPREAL
+    if constexpr (has_arbitrary_precision(Support))
+      return run.template operator()<uni20::mpreal>(request.working_precision());
+#endif
+    throw std::logic_error("unavailable arithmetic passed validation");
+  }
+  return dispatch_precision(
+      precision, [&]<typename Real> { return run.template operator()<Real>(uni20::native_precision<Real>()); });
+}
+
+template <uni20::Real Real> Real parse_scalar(std::string_view text, uni20::Precision precision)
+{
+  uni20::require_precision<Real>(precision);
+  if (precision.is_exact()) throw std::invalid_argument("a numerical frontend requires finite precision");
+  if constexpr (uni20::has_runtime_precision_v<Real>)
+    return uni20::parse_real<Real>(text, precision);
+  else
+    return uni20::parse_real<Real>(text);
 }
 
 inline std::size_t parse_size(std::string_view text)

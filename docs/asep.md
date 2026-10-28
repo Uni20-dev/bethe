@@ -139,6 +139,61 @@ retained coordinates are diagnostic only. Invalid parameters and exceeded size
 budgets throw. Overflowing physical rates are also rejected rather than reported
 as a successful infinite gap.
 
+## Reusing a seed across rate queries
+
+For many rate pairs at fixed size and filling, prepare the unit-rate TASEP
+state once:
+
+```cpp
+#include <bethe/asep.hpp>
+bethe::asep::PreparedGap<double> const prepared(32, 8);
+auto a = prepared.at_rates(1.0, 0.3);
+auto b = prepared.at_rates(1.0, 0.9);
+```
+
+The object owns its options and seed. Concurrent const queries borrow that
+immutable seed and allocate independent continuation roots, Newton matrices
+and diagnostics. Each query starts from the same TASEP state; a difficult
+rate pair cannot change another query's starting point or budget. Existing
+`relaxation_gap` calls retain their behavior, including avoiding seed work
+for analytic sectors and equal rates. Prefer that direct function for a
+single request or an entirely analytic curve.
+
+`seed_state()` exposes a const view of the preparation result. A failed seed
+remains a numerical result, propagated to nonanalytic queries; an analytic
+endpoint can still succeed. Invalid preparation controls throw. Returned
+`seed_iterations` and `seed_newton_iterations` describe the shared seed's
+construction, so summing those fields over a curve would overcount preparation
+work. Query continuation counters retain their original meaning.
+
+The [Async example](../examples/async_asep.cpp) submits preparation and its
+consumer before either is ready. The existing reader-dependent grid retains
+the background through completion, limits active/uncollected results and
+collects rows in rate order. It waits on operation results; there is no global
+scheduler drain. From a build directory configured with
+`-DBETHE_BUILD_EXAMPLES=ON`:
+
+```sh
+cmake --build . --target bethe-async-asep-example -j2
+OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 \
+  ./examples/bethe-async-asep-example prepared 32 8 129 8 fp64
+```
+
+Arguments are seed mode (`prepared` or `independent`), sites, particles,
+points, threads and precision. Zero threads selects direct serial execution;
+positive counts use Async, capped by the point count and admission window 32.
+The right rate is one and left rates cover [0,0.9] inclusively; a one-point
+request uses 0.5. Numerical controls remain the model defaults. The example
+retains complete states for printing after completion, so its output storage
+grows with the requested point count. Its timing includes preparation,
+scheduler and collection but excludes printing. The existing single-request
+frontend and physical state family are unchanged.
+
+See [measurements and limits](parallel-grids.md#asep-shared-seeds).
+Native binary64, `long double` and configured binary128 are supported.
+MPFR still needs explicit precision through complex arithmetic, seed selection,
+Newton controls, continuation and all failure results.
+
 ## Validation and next step
 
 ASEP and TASEP share an independent test-only configuration-space Markov matrix
@@ -149,6 +204,13 @@ All enabled precisions check original multiplicative equations, analytic
 Jacobian, rate scaling, reflection/particle–hole symmetry, selected rings through
 32 sites, failure budgets, and a bias only eight native epsilons from symmetry.
 Dense diagonalization is never a production fallback.
+
+Prepared and direct queries compare every state field, including complex roots,
+wave representation, residuals and work counters, across both rate directions,
+particle-hole sectors, analytic endpoints and failure budgets. Two Async grids
+share one preparation after submission-local handles disappear, under deferred
+and one/four-worker scheduling. They retain complete numerical seed failures
+and preserve the independently successful analytic endpoint.
 
 Frontend regressions additionally cover native rate parsing, rate/reflection
 symmetry, analytic and TASEP endpoints, all exposed iteration budgets, tiny bias,

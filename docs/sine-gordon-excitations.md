@@ -13,12 +13,16 @@ Two tools cover the first excitation checkpoint:
   These are **asymptotic**, not exact finite-volume excited energies.
 
 Both use fp64 by default, native long-double and optional MPLAPACK fp128.
+Particle dispersions additionally accept `--precision bits-N` or `digits-N`
+with Uni20's MPFR scalars enabled; this requires no MPLAPACK. The scattering
+phase and finite-volume solvers still use the configured fixed formats.
 All dimensional quantities use velocity=hbar=1. The mass input M is the physical
 soliton mass, not the bare cosine coefficient or the lightest breather mass.
 
 ```sh
 bethe-sine-gordon-dispersion --p 0.4 --points 129 --csv sg-lines.csv
 bethe-sine-gordon-dispersion --p 0.5 --momentum 0.7 --precision long-double
+bethe-sine-gordon-dispersion --p 0.4 --momentum 0.7 --precision digits-100
 bethe-sine-gordon-bethe-yang --p 2 --length 10 --levels 4 --json sg-pairs.json
 bethe-sine-gordon-bethe-yang --p 1 --length 10 --number 1.5 --precision fp128
 ```
@@ -66,6 +70,14 @@ this continuum theory. Very weak coupling can produce many species: enumeration
 is limited to 256 breathers and one million output rows, with an explicit error
 rather than silent truncation. The library can evaluate a chosen B_n directly.
 
+The MPFR path carries the requested precision through input parsing, masses,
+threshold sums, momenta and exports, including zero momentum. For example,
+333-bit arithmetic distinguishes the appearance of B2 at couplings
+`0.5 +/- 1e-60`, which binary128 cannot resolve. MPFR's wider exponent range
+also permits mass and momentum scales outside the native formats. Working
+precision does not change the strict pole condition or introduce spectral
+weights. These elementary formulas are inexpensive, so the CLI remains serial.
+
 ## Scattering and Bethe–Yang convention
 
 The library exposes the odd same-charge phase for real rapidity at all p>0:
@@ -94,6 +106,24 @@ they are not neutral states with strictly zero winding. `--charge` selects ±2;
 The free solution brackets the positive root in the repulsive regime. The
 constant S-matrix sign accounts for the half-odd quantization. At p=1, chi=0,
 giving momenta ±2pi I/L directly.
+
+Each requested level has its own root search and phase integrals. Use
+`--threads N` to overlap these independent calculations, for example:
+
+```sh
+OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 \
+  bethe-sine-gordon-bethe-yang --p 2 --length 100 --levels 129 \
+  --threads 4 --no-retain --csv pairs.csv --quiet
+```
+
+One worker (the default), a single level, or the analytic free point p=1 uses
+direct serial evaluation. Otherwise a bounded window holds at most 128 active or
+uncollected results; rows are written on the calling thread in Bethe-number
+order, including failed levels and their diagnostics. `--no-retain` disables
+table storage after delivery. Each bisection and phase quadrature remains
+sequential. Short interacting scans may not benefit from scheduling. CPU timing
+covers the whole level grid including ordered output; its scope, the execution
+mode and the requested concurrency limit are recorded in metadata.
 
 We do not solve mixed soliton–antisoliton transfer-matrix channels, breather
 Bethe–Yang levels, or nonzero-total-momentum pairs here. In particular, simply
@@ -126,6 +156,10 @@ native-precision response, and the original exponential quantization condition.
 use a closed rapidity kernel rather than the production Fourier integral.
 Library regressions cover unequal-mass threshold minimization, scaling,
 breather appearance boundaries and distinct numerical-budget failures.
+MPFR particle tests use independent algebraic masses at p=2/5, a 512-bit
+reference, signed momenta, and mass scales from `1e-7000` to `1e7000`.
+They verify accuracy growth at 128/256/333 bits and reject mixed, exact or
+unset precision inputs. Scalar-only sanitizer builds exercise this whole path.
 
 ## The two-flavour Schwinger comparison
 
@@ -152,3 +186,20 @@ auto phase = sg::soliton_phase(0.7L, 2.0L);
 auto pair = sg::same_charge_pair(1.0L, 10.0L, 2.0L, uni20::from_twice(1));
 // Check pair.converged before using *pair.energy or *pair.rapidity.
 ```
+
+For MPFR particles, both parameters and each query momentum must have the same
+explicit finite precision:
+
+```cpp
+using R = uni20::mpreal;
+auto precision = uni20::Precision::bits(333);
+sg::ParticleSpectrum<R> spectrum(R(1, precision), R("0.4", precision));
+auto energy = spectrum.energy({sg::ParticleKind::breather, 1}, R("0.7", precision));
+```
+
+`ParticleSpectrum` owns its parameters and constants and has immutable queries.
+Independent spectra at different precisions can be captured by value in an
+[Async observable grid](async-execution.md#observable-grids); wait on the grid's
+final result. Complete masses, particle energies and pair thresholds agree with
+serial evaluation under deferred and one/four-worker execution, including an
+independent failing query. No ambient MPFR precision is changed.
