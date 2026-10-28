@@ -39,7 +39,8 @@ independent numerical or serial/concurrent validation.
 | `haldane-shastry-pbc`, `sutherland-pbc` | Serial analytic CLIs; owning mixed-precision window/parameter scans validated in pending PR #21 | Native only on merged baseline; [PR #21](https://github.com/Uni20-dev/bethe/pull/21) adds MPFR scalars, no MPLAPACK | Integrate reviewed precision and exact-integer gap/order handling; cheap formulas stay serial |
 | `tb-dispersion` | Serial analytic CLI; owning mixed-precision Async queries validated in pending PR #22 | Native only on merged baseline; [PR #22](https://github.com/Uni20-dev/bethe/pull/22) adds MPFR scalars, no MPLAPACK | Integrate reviewed shared-band precision; XXZ/XYZ elliptic models still need separate audits |
 | `sine-gordon-dispersion` | Serial analytic CLI; owning mixed-precision Async queries validated in pending PR #23 | Native only on merged baseline; [PR #23](https://github.com/Uni20-dev/bethe/pull/23) adds MPFR scalars, no MPLAPACK | Integrate reviewed masses, strict breather selection and pair thresholds; cheap formulas stay serial |
-| `xxz-dispersion`, `xyz-dispersion` | Independent queries; prepared-context audit pending | Native only | Elliptic/theta/integral accuracy and immutable scratch ownership |
+| `xyz-dispersion` | Serial CLI; pending [PR #24](https://github.com/Uni20-dev/bethe/pull/24) reuses owning bound branches and validates shared Async preparation / parameter curves | Native only | Integrate reviewed reuse and measured curve-level concurrency; explicit-precision elliptic/theta functions remain necessary |
+| `xxz-dispersion` | Immutable band with cheap queries; bulk preparation remains serial | Native only | Explicit-precision theta constants and bulk quadrature; a per-momentum task is unlikely to help after preparation |
 | `sine-gordon-bethe-yang`, `biquadratic-obc`, `xxz-qg-obc` | Sector-specific solver/composition audit pending | Native only | Treat real, complex and singular sectors separately |
 | `lee-yang-vacuum`, `lee-yang-excited`, `sine-gordon-vacuum`, `sine-gordon-excited`, `kondo-response` | Integral-equation composition audit pending | Native only | Preserve coupled iterations and continuation; audit discretization and complex functions |
 | `asep-pbc`, `tasep-pbc`, `potts-pbc`, `xyz-pbc` | Complex/nonlinear composition audit pending | Native only | Branch tracking and scalar-function coverage before advertising MPFR |
@@ -111,6 +112,15 @@ selection, unequal-mass threshold minimization and full owning Async queries
 pass at 128/256/333 bits. Full MPFR physics runs in scalar-only sanitizers;
 1,095 native/binary128 output rows match the baseline. The scattering phase,
 Bethe–Yang and finite-volume integral equations remain separate precision work.
+
+XYZ's pending #24 prepares the bound coefficient once per branch and reuses it
+for both parity copies. Independent elliptic/limiting references, owning Async
+readers and failed preparations/queries pass in native/wide/sanitizer builds.
+End-to-end binary128 curve time falls from 5.42 to 0.27 seconds with identical
+output; an independent 2,097,664-energy parameter sweep falls from 4.480 to
+0.585 seconds with eight workers. These are distinct reuse and scheduling
+measurements; the CLI stays serial. Commands and limits are in the PR's
+`docs/parallel-grids.md`. It does not extend the theta helper to MPFR.
 
 Update this inventory with each reviewed app checkpoint. A proposed capability
 or a pending audit is not evidence of implemented support.
