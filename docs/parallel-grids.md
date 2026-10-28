@@ -920,3 +920,88 @@ about 0.041 s on these cases. They remain sequential and are included above. Cha
 rung count, controls or precision requires another preparation. For a single
 request, especially a proven analytic product state, the ordinary direct API
 avoids catalogue construction and storage entirely.
+
+## Biquadratic sector and bound-cluster scans
+
+`bethe-biquadratic-obc --threads N` also supports the independent AF
+`--sectors` minima and ferromagnetic bound-cluster scans. The latter include
+single droplets (`--bound-pairs`, `--bound-triples`, `--bound-quartets`),
+`--pair-defects` with any supported real-root count, `--triple-defects`, and
+`--two-pair-states`. Real-root excitation scans already use continuous workers.
+Selected single states and the dependent Q-system/singlet algorithms remain
+on their existing paths; these modes reject an explicit `--threads` option.
+One worker remains the default, and scans containing one candidate run directly.
+
+The shared CLI adapter in [`generated-state-scan.hpp`](../apps/generated-state-scan.hpp)
+owns its generator and solver until its final Async result completes. A short
+serialized step copies the next candidate's labels and assigns its enumeration
+ID. Continuous scheduler runners then solve those requests independently,
+without a per-candidate coroutine or intermediate result queue. Each runner
+writes its own result slot. After completion, the caller performs the existing
+ordering, gap subtraction and table output. Numerical failures retain their
+original diagnostics; execution exceptions wait for every admitted runner.
+The regression suite checks that completion stays pending while a peer solve
+is deliberately held open after another throws.
+
+Transient requests are bounded by worker count. Bound-cluster candidates are
+still retained until ranking, so result memory scales with candidate and root
+counts; `--max-candidates` remains the admission guard. Disabling table retention
+does not eliminate this numerical storage. The implementation changes no root
+equations, continuation steps, physical family or precision support.
+
+### Validation and measurement
+
+On the Ryzen workstation (Intel Core i7-12700KF), native GCC 13, wide GCC 13 and
+Clang 19 ASan/UBSan each pass 18 focused checks. These include the existing
+independent small-chain references, complete serial/concurrent output comparisons,
+partial scans, export preflight and operation lifetime. A fresh-main comparison
+covers 135 requests and 3,192 rows. Labels, ordering, statuses and work counters
+are unchanged. Binary64 and binary128 outputs match exactly. In the native
+long-double build, 96 standalone bound-pair fields differ at rounding scale
+(maximum absolute difference 3.4e-18); all new-build worker counts agree exactly.
+A separate GCC 13 probe finds a one-ULP difference between folded and runtime
+`acosh(1.5L)`, consistent with this path's sensitivity to compiler inlining.
+This cross-build rounding difference is recorded, not hidden by the concurrency
+comparison.
+
+Whole-frontend timings on 28 October 2026 use GCC 13.3 Release (`-O3`, no
+fast-math), oneTBB 2022.3, Uni20 `04163b9`, and optimized MPLAPACK 3.0.0 for
+binary128. BLAS/OpenMP each use one thread. The table gives medians of three
+runs, reversing the order on the middle repetition. Compilation had finished;
+the workstation was shared, without CPU pinning. Every invocation includes
+root tables and JSON output redirected to a host-local file.
+
+| Frontend workload | States | Main serial (s) | New serial (s) | 2 workers (s) | 4 workers (s) | 8 workers (s) |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| 768-site AF sectors, binary64 | 385 | 6.25 | 6.26 | 3.20 | 1.67 | 0.90 |
+| 64 sites, pair + 12 real roots, width 15, 80-bit extended | 6,825 | 7.22 | 7.19 | 3.83 | 2.09 | 1.22 |
+| 64 sites, pair + 6 real roots, width 11, binary128 | 5,082 | 27.29 | 27.35 | 13.93 | 7.13 | 3.69 |
+
+From one to eight workers, median process CPU times are 6.26 to 6.53 s,
+7.18 to 7.56 s, and 27.34 to 28.40 s respectively. Peak RSS across all variants
+and repetitions is 18.0–37.7 MiB, 21.6–22.9 MiB and 14.0–16.3 MiB. The sector
+scan's larger concurrent Newton matrices explain its higher memory demand.
+All 45 measured invocations converge, and all 6,309,585 exported table rows
+match their main and serial counterparts exactly after excluding invocation,
+revision, timing and concurrency metadata. The standalone bound-pair rounding
+differences above do not occur in these three benchmark workloads.
+
+Reproduce with one, two, four or eight workers, enabling binary128 for the last
+command. Here native `long double` has a 64-bit significand in the 80-bit
+extended format. Run from an installed executable directory or a build directory
+with the executables on `PATH`:
+
+```sh
+export OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1
+bethe-biquadratic-obc 768 --sectors --precision fp64 \
+  --threads 8 --roots --format json > sectors.json
+bethe-biquadratic-obc 64 --ferromagnetic --pair-defects all \
+  --real-defects 12 --mixed-window 15 --precision long-double \
+  --threads 8 --roots --format json > mixed-extended.json
+bethe-biquadratic-obc 64 --ferromagnetic --pair-defects all \
+  --real-defects 6 --mixed-window 11 --precision fp128 \
+  --threads 8 --roots --format json > mixed-binary128.json
+```
+
+These substantial scans improve by 5.9–7.4x at eight workers. Small scans
+already finish in milliseconds, so this does not justify changing the default.
