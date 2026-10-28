@@ -208,9 +208,8 @@ cmake --build . --parallel
 ```
 
 For finite-ring structure factors, finite-size or zero-temperature
-thermodynamic Lieb–Liniger, SU(3), finite XXZ/Hubbard and Gaudin–Yang/Bose–Fermi,
-additionally
-enable MPLAPACK matrix kernels. Unlike QR, Uni20's arbitrary-precision square
+thermodynamic Lieb–Liniger, SU(3), finite XXZ/Hubbard Gaudin–Yang/Bose–Fermi and q-boson,
+additionally enable MPLAPACK matrix kernels. Unlike QR, Uni20's arbitrary-precision square
 LU solves currently require this provider:
 
 ```sh
@@ -241,12 +240,13 @@ finite two-spinon DSF, finite-size periodic/hard-wall Lieb–Liniger states and 
 zero-temperature Lieb–Liniger bulk energies and dispersions, SU(3) balanced
 singlet energies, and Richardson/central-spin ground-state continuation and finite Hubbard ground states.
 SU(3)/TB thermodynamic elementary lines and continuum bounds and Haldane–Shastry/Sutherland finite spectra are also supported.
+Q-boson ground states and canonical scans also retain explicit precision.
 Sine-Gordon particle lines and pair thresholds also support MPFR.
 Both finite XXZ frontends support their existing ground, sector and real-root
 excitation modes; their physical domain and state-family restrictions still apply.
 It does **not** enable arbitrary precision throughout all models or frontends.
 The XXX real-root and Gaudin solvers, SU(3)/TB/sine-Gordon dispersions and Haldane–Shastry/Sutherland need just `UNI20_ENABLE_MPREAL=ON`;
-Lieb–Liniger, SU(3), finite XXZ/Hubbard, Gaudin–Yang/Bose–Fermi and form factors additionally
+Lieb–Liniger, SU(3), finite XXZ/Hubbard, Gaudin–Yang/Bose–Fermi, q-boson and form factors additionally
 need `UNI20_BACKEND_MPLAPACK=ON`.
 Enabling that provider also lets Uni20 dispatch the Lieb–Liniger LU and Gaudin
 QR operations to MPLAPACK.

@@ -43,7 +43,7 @@ int run(cli::DataOutputOptions const& options, int argc, char** argv)
                  ? "bethe-xxx-pbc, bethe-xxx-obc, bethe-lieb-liniger-pbc, bethe-lieb-liniger-obc, "
                    "bethe-lieb-liniger-dispersion, bethe-richardson, bethe-central-spin, "
                    "bethe-xxx-structure-factor, bethe-su3-pbc, bethe-xxz-pbc, bethe-xxz-obc, "
-                   "bethe-hubbard-pbc, bethe-hubbard-obc, bethe-gaudin-yang-pbc, bethe-bose-fermi-pbc, bethe-su3-dispersion, "
+                   "bethe-hubbard-pbc, bethe-hubbard-obc, bethe-gaudin-yang-pbc, bethe-bose-fermi-pbc, bethe-q-boson-pbc, bethe-su3-dispersion, "
                    "bethe-haldane-shastry-pbc, bethe-sutherland-pbc, bethe-tb-dispersion, bethe-sine-gordon-dispersion"
              : UNI20_HAS_MPREAL ? "bethe-xxx-pbc, bethe-xxx-obc, bethe-richardson, bethe-central-spin, bethe-su3-dispersion, "
                    "bethe-haldane-shastry-pbc, bethe-sutherland-pbc, bethe-tb-dispersion, bethe-sine-gordon-dispersion"

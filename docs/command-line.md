@@ -121,7 +121,7 @@ All frontends support typed tables and file exports; see the
 | `digits-N` | Arbitrary precision sufficient for N decimal digits |
 
 The arbitrary-precision choices currently apply to `bethe-xxx-pbc`, `bethe-xxx-obc`,
-`bethe-lieb-liniger-pbc`, `bethe-lieb-liniger-obc`, `bethe-xxz-pbc` and
+`bethe-lieb-liniger-pbc`, `bethe-lieb-liniger-obc`, `bethe-q-boson-pbc`, `bethe-xxz-pbc` and
 `bethe-xxz-obc` (all currently supported modes), `bethe-lieb-liniger-dispersion`,
 the finite-ring `bethe-xxx-structure-factor`, `bethe-richardson` and
 `bethe-central-spin`, `bethe-hubbard-pbc`, `bethe-hubbard-obc`, and
@@ -151,7 +151,7 @@ XXX roots, Richardson pairing, central spin, SU(3)/TB/sine-Gordon dispersions, H
 and Sutherland need Uni20's
 arbitrary-precision scalar family (GMP, MPFR and MPC), but no MPLAPACK.
 Finite-size and zero-temperature thermodynamic Lieb–Liniger, SU(3) singlet ground
-states, finite XXZ/Hubbard, Gaudin–Yang/Bose–Fermi and structure factors additionally require the MPLAPACK MPFR provider
+states, finite XXZ/Hubbard, Gaudin–Yang/Bose–Fermi, q-boson and structure factors additionally require the MPLAPACK MPFR provider
 for LU operations. Other frontends still support native precisions only, including
 Lieb–Liniger thermal calculations. More precision does not expand the
 supported state family: the excitation scan still excludes strings and infinite roots.
