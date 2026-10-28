@@ -18,6 +18,11 @@ namespace bethe::haldane_shastry
 inline constexpr std::size_t max_sites = 1000000;
 namespace detail
 {
+template <uni20::Real Real> Real working_zero(uni20::Precision precision)
+{
+  return bethe::detail::precision_zero(uni20::scalar_at_precision<Real>(0, precision));
+}
+
 inline void validate_sites(std::size_t n)
 {
   if (n < 2 || n > max_sites) throw std::invalid_argument("Haldane-Shastry requires 2<=sites<=1000000");
@@ -67,8 +72,11 @@ template <uni20::Real Real> struct Level
 
 /// Evaluate H=(pi/N)^2 sum_{i<j} S_i.S_j / sin^2(pi*(i-j)/N), J=1.
 /// Motif positions are increasing in [1,N-1], with separation at least two.
-template <uni20::Real Real> Level<Real> evaluate(std::size_t n, std::vector<std::size_t> motif)
+/// Runtime-precision scalars require finite precision; no ambient default is used.
+template <uni20::Real Real>
+Level<Real> evaluate(std::size_t n, std::vector<std::size_t> motif, uni20::Precision precision)
 {
+  Real const zero = detail::working_zero<Real>(precision);
   detail::validate_motif(n, motif);
   std::int64_t weight = 0;
   std::size_t momentum = 0, previous = 0;
@@ -98,7 +106,7 @@ template <uni20::Real Real> Level<Real> evaluate(std::size_t n, std::vector<std:
   auto const ni = static_cast<std::int64_t>(n);
   out.energy_numerator = ni * (ni * ni - 1) - 24 * weight;
   out.momentum_index = momentum;
-  Real const pi = Real{4} * std::atan(Real{1}), scale = (pi / Real(n)) * (pi / Real(n));
+  Real const pi = bethe::detail::pi_like(zero), scale = (pi / Real(n)) * (pi / Real(n));
   out.energy = scale * Real(out.energy_numerator) / Real{24};
   // Subtract exact integers before scalar conversion, retaining small gaps.
   out.gap = scale * Real(out.energy_numerator - detail::ground_numerator(n)) / Real{24};
@@ -125,7 +133,8 @@ inline spin::Decomposition spin_decomposition(std::size_t n, std::vector<std::si
 
 /// Return all minimizing motifs in a fixed Sz sector (one, or two chiral partners).
 /// Degeneracy counts the whole Yangian multiplet, not its selected Sz slice.
-template <uni20::Real Real> std::vector<Level<Real>> sector_ground_levels(std::size_t n, uni20::half_int sz)
+template <uni20::Real Real>
+std::vector<Level<Real>> sector_ground_levels(std::size_t n, uni20::half_int sz, uni20::Precision precision)
 {
   detail::validate_sites(n);
   auto const twice = sz.twice(), ni = static_cast<std::int64_t>(n);
@@ -133,7 +142,7 @@ template <uni20::Real Real> std::vector<Level<Real>> sector_ground_levels(std::s
     throw std::invalid_argument("Sz must lie in [-N/2,N/2] with the chain's half-integer parity");
   auto const abs_twice = static_cast<std::size_t>(twice < 0 ? -twice : twice);
   auto const m = (n - abs_twice) / 2;
-  if (m == 0) return {evaluate<Real>(n, {})};
+  if (m == 0) return {evaluate<Real>(n, {}, precision)};
   std::vector<Level<Real>> out;
   auto const first = (n - 2 * m + 2) / 2;
   for (std::size_t shift = 0; shift <= n % 2; ++shift)
@@ -141,14 +150,14 @@ template <uni20::Real Real> std::vector<Level<Real>> sector_ground_levels(std::s
     std::vector<std::size_t> motif(m);
     for (std::size_t j = 0; j < m; ++j)
       motif[j] = first + shift + 2 * j;
-    out.push_back(evaluate<Real>(n, std::move(motif)));
+    out.push_back(evaluate<Real>(n, std::move(motif), precision));
   }
   return out;
 }
 
-template <uni20::Real Real> std::vector<Level<Real>> ground_levels(std::size_t n)
+template <uni20::Real Real> std::vector<Level<Real>> ground_levels(std::size_t n, uni20::Precision precision)
 {
-  return sector_ground_levels<Real>(n, uni20::from_twice(static_cast<std::int64_t>(n % 2)));
+  return sector_ground_levels<Real>(n, uni20::from_twice(static_cast<std::int64_t>(n % 2)), precision);
 }
 
 template <uni20::Real Real> struct Spectrum
@@ -161,8 +170,10 @@ template <uni20::Real Real> struct Spectrum
 /// Enumerate all motifs before selecting the lowest count (nullopt means all).
 /// Exact integer ordering preserves degeneracies independently of precision.
 template <uni20::Real Real>
-Spectrum<Real> spectrum(std::size_t n, std::optional<std::size_t> count = {}, std::size_t max_motifs = 100000)
+Spectrum<Real> spectrum(std::size_t n, uni20::Precision precision, std::optional<std::size_t> count = {},
+                        std::size_t max_motifs = 100000)
 {
+  (void)detail::working_zero<Real>(precision);
   detail::validate_sites(n);
   if (count && *count == 0) throw std::invalid_argument("level count must be positive");
   Spectrum<Real> out;
@@ -173,7 +184,7 @@ Spectrum<Real> spectrum(std::size_t n, std::optional<std::size_t> count = {}, st
   std::vector<std::size_t> motif;
   // Recursion depth is bounded by the preflight Fibonacci count, not by N.
   auto visit = [&](auto&& self, std::size_t first) -> void {
-    out.levels.push_back(evaluate<Real>(n, motif));
+    out.levels.push_back(evaluate<Real>(n, motif, precision));
     for (std::size_t m = first; m < n; ++m)
     {
       motif.push_back(m);
@@ -190,5 +201,30 @@ Spectrum<Real> spectrum(std::size_t n, std::optional<std::size_t> count = {}, st
   if (count && *count < out.levels.size()) out.levels.resize(*count);
   out.complete = true;
   return out;
+}
+// Native convenience overloads; runtime precision must be supplied explicitly.
+template <uni20::Real Real>
+  requires(!uni20::has_runtime_precision_v<Real>)
+Level<Real> evaluate(std::size_t n, std::vector<std::size_t> motif)
+{
+  return evaluate<Real>(n, std::move(motif), uni20::native_precision<Real>());
+}
+template <uni20::Real Real>
+  requires(!uni20::has_runtime_precision_v<Real>)
+std::vector<Level<Real>> sector_ground_levels(std::size_t n, uni20::half_int sz)
+{
+  return sector_ground_levels<Real>(n, sz, uni20::native_precision<Real>());
+}
+template <uni20::Real Real>
+  requires(!uni20::has_runtime_precision_v<Real>)
+std::vector<Level<Real>> ground_levels(std::size_t n)
+{
+  return ground_levels<Real>(n, uni20::native_precision<Real>());
+}
+template <uni20::Real Real>
+  requires(!uni20::has_runtime_precision_v<Real>)
+Spectrum<Real> spectrum(std::size_t n, std::optional<std::size_t> count = {}, std::size_t max_motifs = 100000)
+{
+  return spectrum<Real>(n, uni20::native_precision<Real>(), count, max_motifs);
 }
 } // namespace bethe::haldane_shastry

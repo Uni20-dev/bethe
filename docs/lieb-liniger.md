@@ -132,7 +132,8 @@ finite-size PBC/OBC modes accept `bits-N` and `digits-N`, including threaded
 excitation scans. Uni20 dispatches the Newton solves; its arbitrary-precision
 LU currently requires MPLAPACK MPFR (native solvers retain their CPU fallback).
 This does not yet extend
-to the separate thermodynamic dispersion or thermal frontends.
+to the separate thermal frontend. Zero-temperature bulk energies and dispersions
+have their own [explicit-precision support](lieb-liniger-thermo.md#c-api).
 
 Finite positive $`\ell`$, $`c`$, and representable nonzero $`g =c \,\ell`$ are required.
 Very large labels, very close roots, or extreme physical units can exceed the
@@ -155,6 +156,12 @@ auto excited = ll::solve_real(4.0L, 1.0L, numbers);
 auto scan = ll::real_excitations(4, 4.0L, 1.0L, 1, {.count = 10});
 // Check ground.converged, excited.converged, and scan.converged().
 ```
+
+For nonblocking composition, both periodic and hard-wall namespaces also expose
+`real_excitations_async` with the same arguments. It owns all model and solver
+options; keep the borrowed scheduler alive through completion. The blocking
+entry point waits on this same operation. See [Async scans](async-execution.md#state-scans)
+for dependencies, cancellation and bounded execution.
 
 For runtime precision, construct every real input at the requested precision:
 
