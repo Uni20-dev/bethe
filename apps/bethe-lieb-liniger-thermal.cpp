@@ -1,8 +1,9 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Copyright (C) 2026 Ian McCulloch
-#include "program-options.hpp"
+#include "execution-options.hpp"
 #include "result-output.hpp"
 #include <bethe/lieb_liniger_thermal.hpp>
+#include <bethe/observable_grid.hpp>
 
 namespace
 {
@@ -13,6 +14,7 @@ struct Arguments
     std::string c, temperature, precision = "fp64";
     std::optional<std::string> mu, density, end, tolerance, density_tolerance, cutoff;
     std::size_t points = 17, initial_nodes = 16, max_nodes = 256, iterations = 512, cutoffs = 4, evaluations = 128;
+    int threads = 1;
     cli::DataOutputOptions output;
 };
 auto program_info()
@@ -45,6 +47,7 @@ void add_options(CLI::App& app, Arguments& a)
       cli::text_option(app, "--temperature-end", a.end, "Positive scan endpoint (inclusive)")->type_name("REAL");
   cli::count_option(app, "--points", a.points, "Temperature samples, 2..1000000")->capture_default_str()->needs(end);
   cli::precision_option(app, a.precision);
+  cli::threads_option(app, a.threads)->description("Scheduler concurrency limit for independent temperatures");
   cli::text_option(app, "--tolerance", a.tolerance, "Inner relative tolerance (default 16384 epsilon)");
   cli::text_option(app, "--density-tolerance", a.density_tolerance,
                    "Relative density tolerance (default 65536 epsilon)");
@@ -103,6 +106,8 @@ template <uni20::Real Real> int run(Arguments const& a, int argc, char** argv)
       !(controls.tolerance > Real{0}) || !(controls.tolerance < Real{1}) || !uni20::isfinite(controls.tolerance))
     throw std::invalid_argument("require finite T>0, density>0 and 0<density tolerance<1");
   std::size_t const count = a.end ? a.points : 1;
+  uni20::async::TbbScheduler scheduler(a.threads);
+  bethe::ExecutionOptions const execution{.scheduler = &scheduler};
   cli::RunReport report(context, "Lieb-Liniger thermal equilibrium");
   report.field("interaction", "c", c)
       .field("ensemble", "Ensemble", a.mu ? "fixed chemical potential" : "fixed density")
@@ -110,6 +115,9 @@ template <uni20::Real Real> int run(Arguments const& a, int argc, char** argv)
       .field("temperature", "Initial temperature", start)
       .field("temperature_end", "Final temperature", end)
       .field("points", "Points", count)
+      .field("threads", "Scheduler concurrency limit", a.threads)
+      .field("max_in_flight", "Maximum temperatures in flight", execution.max_in_flight)
+      .field("cpu_timing_scope", "CPU timing scope", "temperature grid including ordered row output")
       .precision(a.precision)
       .field("tolerance", "Requested inner tolerance", inner.tolerance)
       .field("initial_nodes", "Initial positive-half nodes", inner.initial_nodes)
@@ -140,65 +148,61 @@ template <uni20::Real Real> int run(Arguments const& a, int argc, char** argv)
       cli::column<Optional>("cutoff_error"), cli::column<Optional>("density_error"),
       cli::column<std::size_t>("evaluations"), cli::column<std::size_t>("iterations"),
       cli::column<std::string>("status"));
-  cli::DataOutput output(a.output, {"thermodynamics"});
-  bool complete = true;
-  try
+  struct Sample
   {
-    output.attach(table, "thermodynamics");
-    for (std::size_t i = 0; i < count; ++i)
-    {
-      Real const fraction = count == 1 ? Real{0} : Real(i) / Real(count - 1);
-      Real const temperature = i == count - 1 ? end : (Real{1} - fraction) * start + fraction * end;
-      std::optional<model::State<Real>> state;
-      Optional density_error;
+      Real temperature;
+      std::optional<model::State<Real>> state{};
+      Optional density_error{};
       std::size_t evaluations = 1, iterations = 0;
-      model::Status status;
-      if (a.mu)
-      {
-        state = context.measure([&] { return model::equilibrium(c, temperature, fixed, inner); });
-        status = state->status;
-        iterations = state->iterations;
-      }
-      else
-      {
-        auto result = context.measure([&] { return model::at_density(c, temperature, fixed, controls); });
-        status = result.status;
-        evaluations = result.evaluations;
-        iterations = result.iterations;
-        if (result.converged) density_error = result.density_error;
-        state = std::move(result.state);
-      }
-      bool const converged = status == model::Status::converged;
-      complete = complete && converged;
-      table.append(temperature,
-                   a.mu    ? Optional(fixed)
-                   : state ? Optional(state->chemical_potential)
-                           : std::nullopt,
-                   state ? state->density : std::nullopt, state ? state->pressure : std::nullopt,
-                   state ? state->energy_per_length : std::nullopt, state ? state->entropy_per_length : std::nullopt,
-                   state ? Count(state->nodes) : std::nullopt, state ? Optional(state->cutoff) : std::nullopt,
-                   state ? Optional(state->mesh_error) : std::nullopt,
-                   state ? Optional(state->cutoff_error) : std::nullopt, density_error, evaluations, iterations,
-                   std::string(name(status)));
-    }
-    report.result(complete, complete ? "converged" : "incomplete; failed thermodynamics omitted");
-    auto const summary = report.finish();
-    output.overview(report.overview(summary));
-    output.finish(table, summary);
-    output.finish_document();
-  }
-  catch (...)
-  {
-    data::table_metadata aborted{{"Status", "aborted"}};
-    if (!context.finished()) try
-      {
-        aborted = cli::run_summary(context.finish(uni20::run_outcome::failed));
-      }
-      catch (...)
-      {}
-    output.abort(table, std::move(aborted));
-    throw;
-  }
+      model::Status status = model::Status::density_limit;
+  };
+  bool const complete = cli::stream_result_table(
+      report, context, a.output, "thermodynamics", table,
+      [&](auto& table) {
+        bool complete = true;
+        context.measure([&] {
+          bethe::evaluate_observable_grid(
+              count,
+              [&](std::size_t i) {
+                Real const fraction = count == 1 ? Real{0} : Real(i) / Real(count - 1);
+                Sample point{.temperature = i == count - 1 ? end : (Real{1} - fraction) * start + fraction * end};
+                if (a.mu)
+                {
+                  point.state = model::equilibrium(c, point.temperature, fixed, inner);
+                  point.status = point.state->status;
+                  point.iterations = point.state->iterations;
+                }
+                else
+                {
+                  auto result = model::at_density(c, point.temperature, fixed, controls);
+                  point.status = result.status;
+                  point.evaluations = result.evaluations;
+                  point.iterations = result.iterations;
+                  if (result.converged) point.density_error = result.density_error;
+                  point.state = std::move(result.state);
+                }
+                return point;
+              },
+              [&](std::size_t, Sample const& point) {
+                auto const& state = point.state;
+                complete = complete && point.status == model::Status::converged;
+                table.append(point.temperature,
+                             a.mu    ? Optional(fixed)
+                             : state ? Optional(state->chemical_potential)
+                                     : std::nullopt,
+                             state ? state->density : std::nullopt, state ? state->pressure : std::nullopt,
+                             state ? state->energy_per_length : std::nullopt,
+                             state ? state->entropy_per_length : std::nullopt,
+                             state ? Count(state->nodes) : std::nullopt, state ? Optional(state->cutoff) : std::nullopt,
+                             state ? Optional(state->mesh_error) : std::nullopt,
+                             state ? Optional(state->cutoff_error) : std::nullopt, point.density_error,
+                             point.evaluations, point.iterations, std::string(name(point.status)));
+              },
+              execution);
+        });
+        return complete;
+      },
+      "incomplete; failed thermodynamics omitted");
   if (!complete) std::cerr << "Some thermal points did not converge; failed observables are unavailable.\n";
   return complete ? 0 : 2;
 }

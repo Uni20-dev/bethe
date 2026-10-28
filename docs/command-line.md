@@ -269,6 +269,10 @@ failed points and their diagnostics. Only the calling thread writes tables;
 `--no-retain` still permits bounded-memory streaming. `--momentum` accepts the
 same option but has only one point per branch, so it offers no grid parallelism.
 
+`bethe-lieb-liniger-thermal --threads N` uses the same bounded grid for
+temperature scans, at fixed chemical potential or density. Each equilibrium
+solve remains sequential; rows preserve the requested temperature order.
+
 The benefit depends on the cost and number of points: background preparation
 remains serial and short grids may not benefit. CPU timing covers preparation
 and complete grid calls, including row output, since evaluation and collection
