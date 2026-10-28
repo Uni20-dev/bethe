@@ -13,6 +13,7 @@ for MPS excitation calculations.
 bethe-potts-pbc 16 --json potts.json --csv potts.csv
 bethe-potts-pbc 64 --momentum-index 1 --precision long-double
 bethe-potts-pbc 32 --branch charged --charge -1 --tsv charged.tsv
+bethe-potts-pbc 64 --threads 8 --csv levels.csv --no-retain --quiet
 bethe-potts-pbc 128 --branch ground --precision fp128
 bethe-potts-pbc --references
 ```
@@ -20,6 +21,20 @@ bethe-potts-pbc --references
 fp64 is the default; native long-double and optional MPLAPACK-enabled fp128
 arithmetic are supported. [Build instructions](building.md) and
 [output conventions](output.md) apply.
+
+`--threads N` overlaps independent charged momentum solves after computing
+one vacuum reference. One worker is the default; vacuum-only and single-momentum
+requests remain direct serial calculations. Each coupled Bethe solve remains
+sequential, with its own roots and scratch. Charge-conjugate rows share one
+solve, preserving the original state counting.
+
+The shared Async grid retains at most 128 active or uncollected results,
+with concurrency capped by that window and the selected momentum count.
+Rows stream on the calling thread in momentum order, with +1 before -1 when
+both charges are requested. Numerical failures and missing-reference statuses
+remain explicit rows. `--no-retain` discards delivered rows. CPU time includes
+the vacuum solve and the complete ordered level grid, including row output.
+See [measurements and limits](parallel-grids.md#potts-momentum-scans).
 
 ## Hamiltonian and physical labels
 

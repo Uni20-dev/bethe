@@ -84,6 +84,13 @@ and quadrature scratch. No background preparation or global scheduler change
 is required. The frontend exposes this as `--field-end`, `--points` and
 `--threads`, collecting rows on its calling thread.
 
+The [Potts frontend](potts.md) uses this grid for its charged momenta after
+one vacuum solve. Charge conjugation reuses each result for both charge rows.
+Independent library calls to `potts::ground_state` and `charged_one_hole` can
+also be captured as owning requests in an Async grid: retain the full returned
+state, including auxiliary roots, labels, residual and convergence diagnostics.
+The root iterations themselves stay sequential.
+
 ## Ownership, dependencies and cancellation
 
 For curves that depend on a prepared model, see [shared backgrounds](#shared-backgrounds)
