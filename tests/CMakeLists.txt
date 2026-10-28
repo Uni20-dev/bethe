@@ -82,6 +82,10 @@ add_executable(bethe_cli_precision_tests test_cli_precision.cpp)
 target_link_libraries(bethe_cli_precision_tests PRIVATE bethe_cli_output)
 bethe_discover_tests(bethe_cli_precision_tests)
 
+add_executable(bethe_generated_state_scan_tests test_generated_state_scan.cpp)
+target_link_libraries(bethe_generated_state_scan_tests PRIVATE bethe::bethe TBB::tbb)
+bethe_discover_tests(bethe_generated_state_scan_tests)
+
 if(BETHE_HAS_MPREAL)
   add_executable(bethe_tj_mpfr_tests test_tj_mpfr.cpp)
   target_link_libraries(bethe_tj_mpfr_tests PRIVATE bethe::bethe TBB::tbb)
@@ -132,7 +136,7 @@ add_executable(bethe_parallel_scan_tests test_parallel_scan.cpp)
 target_link_libraries(bethe_parallel_scan_tests PRIVATE bethe::bethe TBB::tbb)
 bethe_discover_tests(bethe_parallel_scan_tests)
 
-foreach(test IN ITEMS async_scan continuous_work async_structure_factor prepared_observable_grid solver_composition async_complex_sweeps)
+foreach(test IN ITEMS async_scan continuous_work async_structure_factor prepared_observable_grid solver_composition async_complex_sweeps async_nested_sweeps prepared_ladder)
   add_executable(bethe_${test}_tests test_${test}.cpp)
   target_link_libraries(bethe_${test}_tests PRIVATE bethe::bethe TBB::tbb)
   bethe_discover_tests(bethe_${test}_tests)
@@ -160,6 +164,16 @@ if(TARGET bethe-async-complex-sweeps-example)
     add_test(NAME AsyncComplexSweeps.${model}.example
       COMMAND bethe-async-complex-sweeps-example ${model} 8 4 2 fp64)
   endforeach()
+endif()
+
+if(TARGET bethe-async-nested-sweeps-example)
+  add_test(NAME AsyncNestedSweeps.tb.example COMMAND bethe-async-nested-sweeps-example tb 4 3 2 fp64)
+  add_test(NAME AsyncNestedSweeps.sun.example COMMAND bethe-async-nested-sweeps-example sun 1 3 2 fp64)
+  add_test(NAME AsyncNestedSweeps.tj.example COMMAND bethe-async-nested-sweeps-example tj 8 2 2 fp64)
+endif()
+
+if(TARGET bethe-async-ladder-example)
+  add_test(NAME PreparedLadder.example COMMAND bethe-async-ladder-example prepared 6 9 2 fp64)
 endif()
 
 add_executable(bethe_parallel_excitation_tests test_parallel_excitation_models.cpp)
@@ -574,6 +588,9 @@ if(BETHE_BUILD_APPS)
     add_test(NAME Arguments.bethe-xxz-dispersion.cli
       COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_shared_arguments.py"
         "$<TARGET_FILE:bethe-xxz-dispersion>")
+    add_test(NAME BiquadraticConcurrency.cli
+      COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_biquadratic_concurrency.py"
+        "$<TARGET_FILE:bethe-biquadratic-obc>" "${BETHE_HAS_FLOAT128}")
     add_test(NAME BiquadraticTripleDefect.cli
       COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_biquadratic_triple_defect.py"
         "$<TARGET_FILE:bethe-biquadratic-obc>" "${BETHE_HAS_FLOAT128}")

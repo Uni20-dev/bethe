@@ -3,6 +3,7 @@
 #pragma once
 #include <bethe/detail/su4_seas.hpp>
 #include <functional>
+#include <memory>
 #include <optional>
 
 namespace bethe::ladder
@@ -138,9 +139,10 @@ template <uni20::Real Real> State<Real> product(std::size_t l, Real rung, Real f
   s.status = SolveStatus::converged;
   return s;
 }
-template <uni20::Real Real>
-SectorScan<Real> scan(std::size_t l, Real rung, Real field, std::optional<std::size_t> only,
-                      SolverOptions<Real> const& options, std::optional<std::int64_t> projection = {})
+template <uni20::Real Real, typename SolveBranch>
+SectorScan<Real> scan_with_branches(std::size_t l, Real rung, Real field, std::optional<std::size_t> only,
+                                    SolverOptions<Real> const& options, std::optional<std::int64_t> projection,
+                                    SolveBranch&& solve_branch)
 {
   validate(l, rung, options);
   if (!uni20::isfinite(field)) throw std::invalid_argument("ladder magnetic field must be finite");
@@ -199,8 +201,8 @@ SectorScan<Real> scan(std::size_t l, Real rung, Real field, std::optional<std::s
         return false;
       }
       ++out.branches;
-      auto const branch =
-          solve<Real>(shape, shift, options.residual_tolerance, options.max_iterations - out.iterations);
+      auto const& branch =
+          solve_branch(shape, shift, options.residual_tolerance, options.max_iterations - out.iterations);
       out.iterations += branch.iterations;
       if (!branch.converged)
       {
@@ -256,6 +258,30 @@ SectorScan<Real> scan(std::size_t l, Real rung, Real field, std::optional<std::s
   }
   return out;
 }
+template <uni20::Real Real>
+SectorScan<Real> scan(std::size_t l, Real rung, Real field, std::optional<std::size_t> only,
+                      SolverOptions<Real> const& options, std::optional<std::int64_t> projection = {})
+{
+  return scan_with_branches(l, rung, field, only, options, projection,
+                            [](Shape const& shape, std::array<int, 3> const& shift, Real tolerance,
+                               std::size_t budget) { return solve<Real>(shape, shift, tolerance, budget); });
+}
+
+template <uni20::Real Real>
+std::optional<State<Real>> analytic_ground_state(std::size_t rungs, Real rung_coupling, Real magnetic_field,
+                                                 SolverOptions<Real> const& options)
+{
+  validate(rungs, rung_coupling, options);
+  if (!uni20::isfinite(magnetic_field)) throw std::invalid_argument("ladder magnetic field must be finite");
+  // Operator bound sum(P-1)>=-4*N_triplet proves these product ground states,
+  // independently of parity and iteration/branch budgets.
+  auto const magnitude = std::abs(magnetic_field);
+  if (rung_coupling >= Real{4} && rung_coupling - magnitude >= Real{4})
+    return product(rungs, rung_coupling, magnetic_field, 0);
+  if (magnitude >= Real{4} && magnitude - std::max(rung_coupling, Real{0}) >= Real{4})
+    return product(rungs, rung_coupling, magnetic_field, magnetic_field > Real{0} ? 1 : 3);
+  return {};
+}
 } // namespace detail
 
 /// Select the lowest retained candidate from one scan. Its convergence flag
@@ -295,20 +321,82 @@ template <uni20::Real Real = double>
 [[nodiscard]] State<Real> ground_state(std::size_t rungs, Real rung_coupling, Real magnetic_field,
                                        SolverOptions<Real> const& options = {})
 {
-  detail::validate(rungs, rung_coupling, options);
-  if (!uni20::isfinite(magnetic_field)) throw std::invalid_argument("ladder magnetic field must be finite");
-  // Operator bound sum(P-1)>=-4*N_triplet proves the rung product is a
-  // ground state for J_r-|h|>=4, independently of parity and iteration budgets.
-  auto const magnitude = std::abs(magnetic_field);
-  if (rung_coupling >= Real{4} && rung_coupling - magnitude >= Real{4})
-    return detail::product(rungs, rung_coupling, magnetic_field, 0);
-  // The same bound about the favored triplet applies when all other rung
-  // colors cost at least 4: |h|>=4+max(J_r,0). Sufficient, not necessary.
-  if (magnitude >= Real{4} && magnitude - std::max(rung_coupling, Real{0}) >= Real{4})
-    return detail::product(rungs, rung_coupling, magnetic_field, magnetic_field > Real{0} ? 1 : 3);
+  if (auto exact = detail::analytic_ground_state(rungs, rung_coupling, magnetic_field, options))
+    return std::move(*exact);
   auto const scan = sector_ground_states(rungs, rung_coupling, magnetic_field, options);
   return minimum_candidate(scan);
 }
+/// Own the ordered full-sector branch prefix for repeated rung/field queries.
+/// Copies share immutable storage. Query results own their selected roots.
+/// Controls and whole-scan budgets are fixed at preparation; no Newton solves
+/// run in queries. Their work counters describe the original scan, not new work.
+/// A failed preparation remains useful for partial candidates and exact product
+/// ground states, but it does not certify other minima. Fixed-singlet and fixed-Sz
+/// scans have different branch/budget order and are deliberately not replayed.
+template <uni20::Real Real = double> class PreparedSectors {
+  private:
+    struct Entry
+    {
+        std::array<int, 3> shift;
+        std::size_t budget;
+        detail::Branch<Real> branch;
+    };
+    struct Data
+    {
+        std::size_t rungs;
+        SolverOptions<Real> options;
+        std::vector<Entry> entries;
+        std::size_t iterations = 0, tableaux = 0;
+        bool complete = false;
+        SolveStatus status = SolveStatus::iteration_limit;
+    };
+    std::shared_ptr<Data const> data_;
+
+  public:
+    explicit PreparedSectors(std::size_t rungs, SolverOptions<Real> const& options = {})
+    {
+      auto data = std::make_shared<Data>(Data{.rungs = rungs, .options = options, .entries = {}});
+      auto const scan = detail::scan_with_branches(
+          rungs, Real{0}, Real{0}, std::nullopt, options, std::nullopt,
+          [&data](detail::Shape const& shape, std::array<int, 3> const& shift, Real tolerance,
+                  std::size_t budget) -> detail::Branch<Real> const& {
+            data->entries.push_back({shift, budget, detail::solve<Real>(shape, shift, tolerance, budget)});
+            return data->entries.back().branch;
+          });
+      data->iterations = scan.iterations;
+      data->tableaux = scan.tableaux;
+      data->complete = scan.complete;
+      data->status = scan.status;
+      data_ = std::move(data);
+    }
+    [[nodiscard]] std::size_t rungs() const { return data_->rungs; }
+    [[nodiscard]] SolverOptions<Real> const& options() const { return data_->options; }
+    [[nodiscard]] std::size_t branches() const { return data_->entries.size(); }
+    [[nodiscard]] std::size_t iterations() const { return data_->iterations; }
+    [[nodiscard]] std::size_t tableaux() const { return data_->tableaux; }
+    [[nodiscard]] bool complete() const { return data_->complete; }
+    [[nodiscard]] SolveStatus status() const { return data_->status; }
+
+    [[nodiscard]] SectorScan<Real> sector_ground_states(Real rung, Real field = Real{0}) const
+    {
+      std::size_t cursor = 0;
+      return detail::scan_with_branches(rungs(), rung, field, std::nullopt, options(), std::nullopt,
+                                        [this, &cursor](detail::Shape const& shape, std::array<int, 3> const& shift,
+                                                        Real, std::size_t budget) -> detail::Branch<Real> const& {
+                                          auto const& entry = data_->entries.at(cursor++);
+                                          if (entry.branch.shape != shape || entry.shift != shift ||
+                                              entry.budget != budget)
+                                            throw std::logic_error("prepared ladder branch order or budget mismatch");
+                                          return entry.branch;
+                                        });
+    }
+    [[nodiscard]] State<Real> ground_state(Real rung, Real field = Real{0}) const
+    {
+      if (auto exact = detail::analytic_ground_state(rungs(), rung, field, options())) return std::move(*exact);
+      return minimum_candidate(sector_ground_states(rung, field));
+    }
+};
+
 // Preserve the zero-field API and its balanced-triplet representative.
 template <uni20::Real Real = double>
 [[nodiscard]] SectorScan<Real> sector_ground_states(std::size_t rungs, Real rung,

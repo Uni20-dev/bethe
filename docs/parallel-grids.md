@@ -799,3 +799,209 @@ One-worker Async overhead is small here; small or analytic-only requests need
 not benefit. These shared-workstation measurements establish useful scaling
 for these inputs, not a universal performance guarantee. Numerical kernels,
 physical state families and precision support are unchanged.
+
+## Nested-model parameter sweeps
+
+The [nested sweep example](async-execution.md#owning-nested-model-requests)
+compares direct scalar calls with owning Async grids for TB sizes, SU(N)
+repulsive couplings and t–J balanced odd fillings. Each complete state owns its
+roots and diagnostics; the coupled scalar iterations remain sequential.
+
+Build `bethe-async-nested-sweeps-example` with `BETHE_BUILD_EXAMPLES=ON` and
+run the documented `MODEL SIZE POINTS THREADS PRECISION` commands with zero
+threads for the direct control, then one/four/eight threads for Async. Set
+`OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1` to prevent nested oversubscription.
+Compare all CSV rows after the leading timing comment lines, including nested
+roots, labels, residuals, convergence, requested/reached coupling and counters.
+Internal timing includes the scheduler and ordered collection, excluding
+printing. Whole-process timing includes printing; the retained output means
+memory grows with the curve even though admission is bounded at 32 states.
+
+Three-repeat whole-process medians follow, including printing all state fields.
+The machine was a shared Intel Core i7-12700KF with GCC 13.3 Release `-O3`,
+oneTBB 2022.3 and Uni20 `04163b9b`; no compiler jobs ran during measurement.
+Worker order was reversed on the second repeat, with OS-default affinity.
+The native configuration disables MPLAPACK and uses normal Uni20 fallback
+dispatch; the binary128 configuration enables the Release MPLAPACK 3.0 provider.
+No backend is forced by the model or example. All times are seconds; CPU is
+user plus system, and peak RSS is the maximum over all repeats/worker counts.
+
+| Model | Arithmetic | SIZE | Points | Direct | Async 1 | Async 4 | Async 8 | CPU direct / 8 | Peak RSS, MiB |
+| --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| TB | binary64 | 128 | 449 | 13.61 | 13.63 | 3.56 | 1.94 | 13.60 / 14.57 | 46.37 |
+| TB | 80-bit extended | 64 | 193 | 8.73 | 8.72 | 2.31 | 1.26 | 8.73 / 8.88 | 17.83 |
+| TB | binary128 | 32 | 81 | 9.33 | 9.32 | 2.49 | 1.34 | 9.33 / 9.56 | 8.43 |
+| SU(3) fermions | binary64 | 15 | 4097 | 8.17 | 8.16 | 2.13 | 1.11 | 8.16 / 8.42 | 14.82 |
+| SU(3) fermions | 80-bit extended | 9 | 2049 | 8.64 | 8.66 | 2.26 | 1.21 | 8.63 / 9.00 | 10.44 |
+| SU(3) fermions | binary128 | 5 | 513 | 9.21 | 9.22 | 2.35 | 1.23 | 9.20 / 9.72 | 6.85 |
+| t–J | binary64 | 384 | 96 | 1.59 | 1.58 | 0.41 | 0.24 | 1.59 / 1.73 | 19.24 |
+| t–J | 80-bit extended | 256 | 64 | 4.53 | 4.55 | 1.18 | 0.61 | 4.53 / 4.72 | 13.77 |
+| t–J | binary128 | 128 | 32 | 5.07 | 5.03 | 1.31 | 0.79 | 5.07 / 5.66 | 7.86 |
+
+The TB curves cover even sizes 128–1024, 64–448 and 32–192 respectively.
+The SU(3) curves have three populations of 15, 9 or 5 at total density one,
+with c from 1/2 to 4. All TB and SU(3) points converge, as do the two wider
+precision t–J curves. These are library sweep benchmarks: the single-request
+frontends do not gain a sweep option or parallel Newton iterations.
+
+All 90,888 complete state rows from the 108 timed processes match their direct
+counterparts exactly, including unsuccessful iterates. Eight workers give
+6.4–7.5x wall-time speedup here, with roughly 2–12% more CPU time. One-worker
+overhead is small on these curves. Shorter curves, different population ranges,
+providers and shared-machine load can behave differently; the binary64 t–J
+curve is substantially shorter than the others.
+
+The 384-site binary64 t–J sweep returns 94 converged states and two failures,
+at balanced populations (1,1) and (31,31). Both fail in direct execution too;
+the table measures all 96 requests, without dropping failed rows or changing
+controls. A larger 512-site trial returned 116 converged states and 12 failures
+at balanced populations n=1,5,29,31,...,47. At n=37 and 39 the solver exhausts
+its default 10,000-update budget; the others report a stalled line search.
+Those failed iterates are not physical energies. The two long runs dominate
+that trial's cost, so it is not used for the repeated throughput table.
+All 128 full states, including the 12 failures, agree exactly between direct
+and eight-worker execution. That single comparison took 135.44 and 66.27 s
+respectively (135.42 and 136.19 CPU seconds). Two slow requests limit the gain
+despite eight available workers; this is not an eight-worker scaling estimate
+from repeated successful curves.
+
+The 512-site two-electron CLI probe also stalls in 80-bit extended precision;
+binary128 exhausts a 50-update probe near the same residual, about 0.159.
+This leaves a seed/Newton convergence investigation, not evidence that more
+workers or arithmetic bits cure the numerical problem. See the
+[t–J solver limitations and reproducer](tj.md#library-and-numerical-contract).
+
+
+## Prepared ladder sweeps
+
+The [ladder example](async-execution.md#prepared-ladder-field-and-rung-sweeps)
+separates repeated direct scans from a shared root catalogue and dependent
+queries. Reuse and query concurrency are distinct effects; the sequential
+preparation remains inside all end-to-end timings. Physical inputs, controls,
+full-state diagnostics and output order must match before comparing speed.
+
+Three-repeat whole-process medians on a shared Intel Core i7-12700KF, GCC13.3
+Release `-O3`, oneTBB2022.3 and Uni20 `04163b9b` follow. BLAS/OpenMP use one
+thread per solve; no compiler jobs overlap measurement. Variant order is
+reversed on the second repeat and affinity is left to the OS. Native builds
+use normal Uni20 fallback dispatch without MPLAPACK; the binary128 build uses
+the configured Release MPLAPACK3 provider. No backend is forced in the code.
+All times are seconds and include printing complete states. RSS is the maximum
+across worker counts/repeats, including retained results and prepared roots.
+
+| Arithmetic | Rungs / points | Mode | Serial | Async 1 | Async 4 | Async 8 | CPU at 8 | Peak RSS, MiB |
+| --- | --- | --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| binary64 | 24 / 1025 | direct | 10.42 | 10.58 | 2.76 | 1.58 | 12.44 | 6.88 |
+| binary64 | 24 / 1025 | prepared | 0.12 | 0.13 | 0.05 | 0.04 | 0.19 | 7.19 |
+| 80-bit extended | 16 / 2049 | direct | 15.60 | 15.61 | 4.02 | 2.04 | 16.12 | 7.64 |
+| 80-bit extended | 16 / 2049 | prepared | 0.09 | 0.09 | 0.05 | 0.05 | 0.15 | 7.81 |
+| binary128 | 12 / 513 | direct | 16.07 | 16.04 | 4.13 | 2.13 | 16.80 | 6.56 |
+| binary128 | 12 / 513 | prepared | 0.06 | 0.06 | 0.05 | 0.04 | 0.07 | 6.70 |
+
+All 86,088 complete state rows from 72 timed processes converge and match the
+direct serial result exactly, including roots, labels, selected populations,
+branch diagnostics and scan counters. Independent matched-main CLI checks
+retain 1,491 identical rows across 60 requests, including partial budgets,
+fixed sectors, both field signs, large shifts and analytic products. Only
+revision/invocation/time metadata is excluded from that comparison.
+
+The major benefit is root reuse: prepared serial curves are roughly 90–270x
+faster here than repeated serial scans. Those ratios depend strongly on the
+number of repeated parameter values and do not describe a single solve.
+Repeated direct scans also scale across workers, but retain almost all their
+CPU cost. Prepared queries benefit less from parallelism: their whole curves
+already take 0.06–0.12 s serially, including the one preparation. Eight-worker
+curves take about 0.04–0.05 s, with shared-host variation visible at that scale.
+Do not treat this small absolute saving as a reason to parallelize every cheap
+query. Four workers can be preferable when CPU efficiency matters.
+
+The native root preparations themselves take about 0.014–0.017 s and binary128
+about 0.041 s on these cases. They remain sequential and are included above. Changing
+rung count, controls or precision requires another preparation. For a single
+request, especially a proven analytic product state, the ordinary direct API
+avoids catalogue construction and storage entirely.
+
+## Biquadratic sector and bound-cluster scans
+
+`bethe-biquadratic-obc --threads N` also supports the independent AF
+`--sectors` minima and ferromagnetic bound-cluster scans. The latter include
+single droplets (`--bound-pairs`, `--bound-triples`, `--bound-quartets`),
+`--pair-defects` with any supported real-root count, `--triple-defects`, and
+`--two-pair-states`. Real-root excitation scans already use continuous workers.
+Selected single states and the dependent Q-system/singlet algorithms remain
+on their existing paths; these modes reject an explicit `--threads` option.
+One worker remains the default, and scans containing one candidate run directly.
+
+The shared CLI adapter in [`generated-state-scan.hpp`](../apps/generated-state-scan.hpp)
+owns its generator and solver until its final Async result completes. A short
+serialized step copies the next candidate's labels and assigns its enumeration
+ID. Continuous scheduler runners then solve those requests independently,
+without a per-candidate coroutine or intermediate result queue. Each runner
+writes its own result slot. After completion, the caller performs the existing
+ordering, gap subtraction and table output. Numerical failures retain their
+original diagnostics; execution exceptions wait for every admitted runner.
+The regression suite checks that completion stays pending while a peer solve
+is deliberately held open after another throws.
+
+Transient requests are bounded by worker count. Bound-cluster candidates are
+still retained until ranking, so result memory scales with candidate and root
+counts; `--max-candidates` remains the admission guard. Disabling table retention
+does not eliminate this numerical storage. The implementation changes no root
+equations, continuation steps, physical family or precision support.
+
+### Validation and measurement
+
+On the Ryzen workstation (Intel Core i7-12700KF), native GCC 13, wide GCC 13 and
+Clang 19 ASan/UBSan each pass 18 focused checks. These include the existing
+independent small-chain references, complete serial/concurrent output comparisons,
+partial scans, export preflight and operation lifetime. A fresh-main comparison
+covers 135 requests and 3,192 rows. Labels, ordering, statuses and work counters
+are unchanged. Binary64 and binary128 outputs match exactly. In the native
+long-double build, 96 standalone bound-pair fields differ at rounding scale
+(maximum absolute difference 3.4e-18); all new-build worker counts agree exactly.
+A separate GCC 13 probe finds a one-ULP difference between folded and runtime
+`acosh(1.5L)`, consistent with this path's sensitivity to compiler inlining.
+This cross-build rounding difference is recorded, not hidden by the concurrency
+comparison.
+
+Whole-frontend timings on 28 October 2026 use GCC 13.3 Release (`-O3`, no
+fast-math), oneTBB 2022.3, Uni20 `04163b9`, and optimized MPLAPACK 3.0.0 for
+binary128. BLAS/OpenMP each use one thread. The table gives medians of three
+runs, reversing the order on the middle repetition. Compilation had finished;
+the workstation was shared, without CPU pinning. Every invocation includes
+root tables and JSON output redirected to a host-local file.
+
+| Frontend workload | States | Main serial (s) | New serial (s) | 2 workers (s) | 4 workers (s) | 8 workers (s) |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| 768-site AF sectors, binary64 | 385 | 6.25 | 6.26 | 3.20 | 1.67 | 0.90 |
+| 64 sites, pair + 12 real roots, width 15, 80-bit extended | 6,825 | 7.22 | 7.19 | 3.83 | 2.09 | 1.22 |
+| 64 sites, pair + 6 real roots, width 11, binary128 | 5,082 | 27.29 | 27.35 | 13.93 | 7.13 | 3.69 |
+
+From one to eight workers, median process CPU times are 6.26 to 6.53 s,
+7.18 to 7.56 s, and 27.34 to 28.40 s respectively. Peak RSS across all variants
+and repetitions is 18.0–37.7 MiB, 21.6–22.9 MiB and 14.0–16.3 MiB. The sector
+scan's larger concurrent Newton matrices explain its higher memory demand.
+All 45 measured invocations converge, and all 6,309,585 exported table rows
+match their main and serial counterparts exactly after excluding invocation,
+revision, timing and concurrency metadata. The standalone bound-pair rounding
+differences above do not occur in these three benchmark workloads.
+
+Reproduce with one, two, four or eight workers, enabling binary128 for the last
+command. Here native `long double` has a 64-bit significand in the 80-bit
+extended format. Run from an installed executable directory or a build directory
+with the executables on `PATH`:
+
+```sh
+export OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1
+bethe-biquadratic-obc 768 --sectors --precision fp64 \
+  --threads 8 --roots --format json > sectors.json
+bethe-biquadratic-obc 64 --ferromagnetic --pair-defects all \
+  --real-defects 12 --mixed-window 15 --precision long-double \
+  --threads 8 --roots --format json > mixed-extended.json
+bethe-biquadratic-obc 64 --ferromagnetic --pair-defects all \
+  --real-defects 6 --mixed-window 11 --precision fp128 \
+  --threads 8 --roots --format json > mixed-binary128.json
+```
+
+These substantial scans improve by 5.9–7.4x at eight workers. Small scans
+already finish in milliseconds, so this does not justify changing the default.
