@@ -161,19 +161,20 @@ template <uni20::Real Real> int run(Arguments const& a, int argc, char** argv)
   try
   {
     output.attach(table, "dispersion");
-    auto emit = [&](std::string const& branch, Index s = {}, Parity rz = {}) {
+    using BoundBranch = typename bethe::xyz::SpinonDispersion<Real>::BoundBranch;
+    auto emit = [&](std::string const& branch, Index s = {}, Parity rz = {}, BoundBranch const* prepared = nullptr) {
       Real const end = branch == "spinon" ? pi : Real{2} * pi;
       for (std::size_t i = 0; i < count; ++i)
       {
         Real const p = momentum ? *momentum : i == count - 1 ? end : end * (Real(i) / Real(count - 1));
         Real const q = rz && *rz == -1 ? (p < pi ? p + pi : p - pi) : p;
         Optional energy, lower, upper;
-        std::string row_status = status;
-        if (band) try
+        std::string row_status = s && band && !prepared ? "precision_limit" : status;
+        if (band && (!s || prepared)) try
           {
             context.measure([&] {
               if (s)
-                energy = band->bound_energy(*s, q);
+                energy = prepared->energy(q);
               else if (branch == "spinon")
                 energy = band->energy(p);
               else
@@ -197,8 +198,19 @@ template <uni20::Real Real> int run(Arguments const& a, int argc, char** argv)
     if (spinons) emit("spinon");
     if (continuum) emit("two-spinon");
     for (auto s : bound_indices)
+    {
+      std::optional<BoundBranch> prepared;
+      if (band) try
+        {
+          context.measure([&] { prepared = band->prepare_bound(s); });
+        }
+        catch (std::runtime_error const&)
+        {
+          complete = false;
+        }
       for (int rz : {1, -1})
-        emit("bound", s, rz);
+        emit("bound", s, rz, prepared ? &*prepared : nullptr);
+    }
     report.result(complete, complete ? "converged" : "incomplete; unavailable quantities omitted");
     auto const summary = report.finish();
     output.overview(report.overview(summary));

@@ -44,7 +44,7 @@ inline void add_xxz_options(CLI::App& app, XxzArguments& args)
   option(app, "--roots", args.print_roots, "Print roots and exact labels");
   text_option(app, "--tolerance", args.tolerance, "Residual in the reported convention; default: 32 epsilon");
   count_option(app, "--max-iterations", args.max_iterations, "Update budget")->capture_default_str();
-  precision_option(app, args.precision);
+  precision_option(app, args.precision, ArbitraryPrecision::real_lu);
   threads_option(app, args.threads)->needs("--excitations");
 }
 inline void validate_xxz_arguments(XxzArguments const& args)

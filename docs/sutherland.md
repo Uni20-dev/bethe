@@ -4,7 +4,8 @@
 bosonic trigonometric inverse-square gas. Here “Sutherland” means the continuum
 Calogero–Sutherland family, not the Uimin–Lai–Sutherland spin chain. Energies
 follow explicit spectral rules: there are no iterative root solves or
-convergence tolerances. fp64, long-double and optional fp128 are supported.
+convergence tolerances. fp64, long-double, optional fp128 and explicit MPFR
+precision (`bits-N` or `digits-N`) are supported.
 
 The [collision-branch tutorial](tutorials/sutherland.md) compares small-ring
 spectra, explains the labels and illustrates the limits of a bounded scan.
@@ -16,6 +17,43 @@ bethe-sutherland-pbc 4 --length 4 --lambda 2 --levels 10 --window 2
 bethe-sutherland-pbc 4 --length 4 --lambda 2 --levels all --window 2 --format csv
 bethe-sutherland-pbc 4 --length 4 --lambda 2 --pseudomomenta --precision fp128
 ```
+
+## Precision and independent calculations
+
+```sh
+bethe-sutherland-pbc 4 --length 4 --lambda 2 --precision digits-100 --pseudomomenta
+bethe-sutherland-pbc 3 --length 4 --lambda 2 --levels all --window 2 --precision bits-256
+```
+
+MPFR needs `UNI20_ENABLE_MPREAL=ON`; no MPLAPACK is required. Inputs are parsed
+directly at the requested precision, which also reaches pi, pseudomomenta,
+energies, gaps and analytic zeros. In the C++ interface, length owns the
+precision and lambda must have the same finite precision:
+
+```cpp
+auto precision = uni20::Precision::bits(256);
+uni20::mpreal length("4", precision), lambda("2", precision);
+auto ground = bethe::sutherland::ground_state(3, length, lambda);
+auto state = bethe::sutherland::evaluate(3, length, lambda, {-1, 0, 2});
+auto scan = bethe::sutherland::spectrum(3, length, lambda, 2);
+```
+
+Mixed, exact or unset parameter values are rejected, including before a
+budget refusal. Integer coefficients in the positive gap formula remain exact
+under MPFR until combined with physical factors. This preserves a uniform
+boost's small gap even when adding it to a huge ground energy rounds it away.
+Spectrum ordering still compares computed gaps: arithmetic precision does not
+establish completeness outside the chosen label window.
+
+Independent parameter/window scans can use the existing
+[Async observable grid](async-execution.md), capturing parameters and labels
+by value and awaiting the final result. A single cheap formula stays serial;
+the CLI adds no scheduler overhead. Tests compare complete states and refused
+scans with serial execution at independent precisions. Numerical checks apply
+the differential Hamiltonian to two-body Gegenbauer wavefunctions, show
+accuracy growth against a 512-bit reference, and resolve weak-coupling energy
+corrections beyond binary128 resolution. Native many-body Jastrow and Jack
+wavefunction checks remain in place.
 
 ## Hamiltonian and collision branch
 

@@ -19,11 +19,17 @@ with an energy shift explained below, **not** generic spin-1 bilinear exchange.
 bethe-su3-pbc 6
 bethe-su3-pbc 9 --roots --precision long-double
 bethe-su3-pbc 48 --precision fp128 --format plain
+bethe-su3-pbc 24 --precision digits-100 --roots
 ```
 
-The last command requires an [MPLAPACK-enabled build](building.md#enable-binary128).
+The fp128 command requires an [MPLAPACK-enabled build](building.md#enable-binary128).
 fp64 is the default; long-double and fp128 retain their native arithmetic,
 tolerance parsing, and output precision.
+`bits-N` and `digits-N` select [arbitrary precision](building.md#enable-arbitrary-precision)
+when Uni20's MPFR scalars and MPLAPACK MPFR LU provider are configured.
+`digits-100` uses 333 significand bits. It selects working precision, not a
+guarantee of 100 accurate digits: the residual tolerance and Newton budget
+still control convergence. An unavailable provider is an error.
 
 Currently supported: the balanced singlet ground state for **L>=3 divisible
 by 3**, with L/3 sites of each color, ordinary periodic boundaries, and no
@@ -43,6 +49,36 @@ momentum, residuals for each equation family, Newton updates, and solver CPU
 time. `--roots` prints two tables with exact integer/half-integer labels.
 Run `--help` for controls and `--references` for relevant literature; normal calculation
 output does not repeat the bibliography.
+
+## Explicit precision and independent solves
+
+The C++ interface takes precision through the ordinary solver options:
+
+```cpp
+#include <bethe/su3.hpp>
+
+auto const precision = uni20::Precision::bits(256);
+bethe::su3::SolverOptions<uni20::mpreal> options(precision);
+auto const state = bethe::su3::ground_state<uni20::mpreal>(24, options);
+```
+
+Constants, root seeds, Newton matrices, residuals and energies retain that
+precision, including exact zero roots and unconverged output. A supplied
+`residual_tolerance` must have the same finite precision. The solver uses
+normal Uni20 LU dispatch; no process-wide MPFR default is changed.
+
+One ground-state solve has dependent Newton iterations, so this frontend has
+no thread option. Independent sizes or precision checks can use the existing
+[Async observable grid](async-execution.md), with each evaluator owning its
+options and returning a `State`. Wait on the returned operation result before
+reading collected states. A regression compares concurrent 128-, 256- and
+333-bit solves, including an exhausted iteration budget, against serial calls.
+This is composition support, not a claim of speedup for a single solve.
+
+Precision checks use the exact three-site roots and the independently derived
+six-site energy below. The latter resolves accuracy improvements beyond
+binary128 against a 512-bit algebraic reference; increasing arithmetic
+precision does not broaden the supported state family.
 
 ## Why two sets of roots?
 

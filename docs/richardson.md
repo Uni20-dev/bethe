@@ -203,3 +203,12 @@ both roots coincide at the pole, and the regular variables are exactly
 Next extensions are robust optional rapidity reconstruction, excited-state
 occupation seeds, and derivative equations for repeated levels/higher
 degeneracies. They are separate capabilities, not flags on this first solver.
+
+## Independent parameter sweeps
+
+Use the shared [Async observable grid](async-execution.md#independent-richardson-and-central-spin-solves)
+for independent couplings, fields or sectors. Capture input vectors and solver
+options by value so each evaluation's borrowed spans remain valid, and wait on
+the final grid result. Continuation within one solve stays sequential. The
+compiled example and mixed-precision tests preserve full state diagnostics,
+including unsuccessful solves; no additional MPFR provider is required.

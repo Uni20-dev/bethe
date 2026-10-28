@@ -98,6 +98,11 @@ for precision in precisions:
     assert "failed" in partial and rows(partial["reference"])[0]["energy"] is None
     assert all(r["gap"] is None and r["converged"] for r in rows(partial["states"]))
     assert rows(partial["failed"])[0]["energy"] is None
+    for workers in (1, 4):
+        for expected, extra, code in ((complete, [], 0), (partial, ["--max-iterations", "0"], 2)):
+            actual = tables([*scan_args, *extra, "--threads", str(workers), "--no-retain"], code)
+            assert expected.keys() == actual.keys()
+            assert all(expected[name]["rows"] == actual[name]["rows"] for name in expected)
     vacuum = tables(["3", "--particles", "0", "--eta", "1", "--excitations", "all", *flags])
     assert len(rows(vacuum["states"])) == 1 and rows(vacuum["roots"]) == []
 
