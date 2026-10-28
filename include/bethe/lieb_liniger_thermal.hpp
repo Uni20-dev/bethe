@@ -24,7 +24,26 @@ template <uni20::Real Real> struct Options
     Real tolerance = Real{16384} * uni20::numeric_limits<Real>::epsilon();
     std::size_t initial_nodes = 16, max_nodes = 256, max_iterations = 512, max_cutoffs = 4;
     std::optional<Real> initial_cutoff{};
+    uni20::Precision precision() const { return uni20::native_precision<Real>(); }
 };
+#if UNI20_HAS_MPREAL
+template <> struct Options<uni20::mpreal>
+{
+    explicit Options(uni20::Precision p) : tolerance(default_tolerance(p)), precision_(p) {}
+    uni20::mpreal tolerance;
+    std::size_t initial_nodes = 16, max_nodes = 256, max_iterations = 512, max_cutoffs = 4;
+    std::optional<uni20::mpreal> initial_cutoff{};
+    uni20::Precision precision() const { return precision_; }
+
+  private:
+    static uni20::mpreal default_tolerance(uni20::Precision p)
+    {
+      if (p.is_exact()) throw std::invalid_argument("thermal equilibrium requires finite working precision");
+      return 16384 * uni20::numeric_limits<uni20::mpreal>::epsilon(p);
+    }
+    uni20::Precision precision_;
+};
+#endif
 template <uni20::Real Real> struct State
 {
     Real interaction{}, temperature{}, chemical_potential{};
@@ -36,6 +55,17 @@ template <uni20::Real Real> struct State
 };
 namespace detail
 {
+// MPFR has no subnormals or type-wide minimum. Query its finite grid without
+// modifying the exponent range; preserve the native underflow threshold.
+template <uni20::Real Real> Real observable_floor(Real const& zero)
+{
+  (void)zero;
+  if constexpr (uni20::has_runtime_precision_v<Real>)
+    return Real{8} * uni20::math::next_up(zero);
+  else
+    return (uni20::numeric_limits<Real>::min() * uni20::numeric_limits<Real>::epsilon()) * Real{8};
+}
+
 template <uni20::Real Real> struct Mesh
 {
     std::vector<Real> k, w, epsilon, rho_total;
@@ -52,9 +82,14 @@ Mesh<Real> solve_mesh(Real c, Real t, Real mu, Real cutoff, bethe::detail::Gauss
                       Options<Real> const& options, std::size_t& iterations)
 {
   using bethe::detail::CompensatedSum;
-  Real const pi = Real{4} * std::atan(Real{1});
+  auto const precision = options.precision();
+  Real const zero = uni20::scalar_at_precision<Real>(0, precision);
+  Real const pi = Real{4} * uni20::math::atan(uni20::scalar_like(zero, 1));
+  Real const infinity = uni20::scalar_like(zero, std::numeric_limits<double>::infinity());
   std::size_t const n = rule.x.size();
   Mesh<Real> out;
+  out.values.fill(zero);
+  out.residual = zero;
   out.k.resize(n);
   out.w.resize(n);
   out.epsilon.resize(n);
@@ -76,22 +111,23 @@ Mesh<Real> solve_mesh(Real c, Real t, Real mu, Real cutoff, bethe::detail::Gauss
     std::vector<bethe::detail::ThermalFactors<Real>> factors(n);
     for (std::size_t j = 0; j < n; ++j)
     {
-      if (!uni20::isfinite(epsilon[j])) return uni20::numeric_limits<Real>::infinity();
+      if (!uni20::isfinite(epsilon[j])) return infinity;
       factors[j] = bethe::detail::thermal_factors(epsilon[j], t);
     }
-    Real norm{};
+    Real norm = zero;
     for (std::size_t i = 0; i < n; ++i)
     {
-      CompensatedSum<Real> sum;
+      CompensatedSum<Real> sum(zero);
       sum.add(epsilon[i] - bare[i]);
       for (std::size_t j = 0; j < n; ++j)
       {
         sum.add(kernel[i * n + j] * factors[j].log_weight);
-        if (jac) jacobian[i * n + j] = Real(i == j) - kernel[i * n + j] * factors[j].filling;
+        if (jac) jacobian[i * n + j] = Real(i == j ? 1 : 0) - kernel[i * n + j] * factors[j].filling;
       }
       residual[i] = sum.value();
-      if (!uni20::isfinite(residual[i])) return uni20::numeric_limits<Real>::infinity();
-      norm = std::max(norm, std::abs(residual[i]) / std::max({Real{1}, std::abs(epsilon[i]), std::abs(bare[i])}));
+      if (!uni20::isfinite(residual[i])) return infinity;
+      norm = std::max(norm, uni20::math::abs(residual[i]) /
+                                std::max({Real{1}, uni20::math::abs(epsilon[i]), uni20::math::abs(bare[i])}));
     }
     return norm;
   };
@@ -107,11 +143,11 @@ Mesh<Real> solve_mesh(Real c, Real t, Real mu, Real cutoff, bethe::detail::Gauss
     std::vector<Real> step = residual;
     for (auto& x : step)
       x = -x;
-    if (!bethe::detail::newton_step(jacobian, step)) return out;
+    if (!bethe::detail::newton_step(jacobian, step, precision)) return out;
     std::vector<Real> trial(n);
-    Real damping{1};
+    Real damping = uni20::scalar_like(zero, 1);
     bool accepted = false;
-    for (int backtrack = 0; backtrack <= uni20::numeric_limits<Real>::digits(); ++backtrack)
+    for (int backtrack = 0; backtrack <= uni20::numeric_limits<Real>::digits(precision); ++backtrack)
     {
       for (std::size_t j = 0; j < n; ++j)
         trial[j] = out.epsilon[j] + damping * step[j];
@@ -132,8 +168,9 @@ Mesh<Real> solve_mesh(Real c, Real t, Real mu, Real cutoff, bethe::detail::Gauss
   }
   // -d epsilon/d mu=2*pi*rho_total, using the same dressed linear operator.
   out.rho_total.assign(n, Real{1} / (Real{2} * pi));
-  if (!bethe::detail::newton_step(jacobian, out.rho_total)) return out;
-  std::array<CompensatedSum<Real>, 4> values;
+  if (!bethe::detail::newton_step(jacobian, out.rho_total, precision)) return out;
+  std::array<CompensatedSum<Real>, 4> values{CompensatedSum<Real>(zero), CompensatedSum<Real>(zero),
+                                             CompensatedSum<Real>(zero), CompensatedSum<Real>(zero)};
   for (std::size_t j = 0; j < n; ++j)
   {
     if (!(out.rho_total[j] > Real{0})) return out;
@@ -147,7 +184,7 @@ Mesh<Real> solve_mesh(Real c, Real t, Real mu, Real cutoff, bethe::detail::Gauss
   for (std::size_t j = 0; j < 4; ++j)
   {
     out.values[j] = values[j].value();
-    Real const floor = (uni20::numeric_limits<Real>::min() * uni20::numeric_limits<Real>::epsilon()) * Real{8};
+    Real const floor = detail::observable_floor(zero);
     if (!(out.values[j] > Real{0}) || !uni20::isfinite(out.values[j]) || !(out.values[j] * options.tolerance >= floor))
     {
       out.status = Status::precision_limit;
@@ -160,9 +197,9 @@ Mesh<Real> solve_mesh(Real c, Real t, Real mu, Real cutoff, bethe::detail::Gauss
 }
 template <uni20::Real Real> Real difference(Mesh<Real> const& a, Mesh<Real> const& b)
 {
-  Real error{};
+  Real error = uni20::scalar_like(a.values[0], 0);
   for (std::size_t j = 0; j < 4; ++j)
-    error = std::max(error, std::abs(a.values[j] - b.values[j]) / a.values[j]);
+    error = std::max(error, uni20::math::abs(a.values[j] - b.values[j]) / a.values[j]);
   return Real{8} * error;
 }
 } // namespace detail
@@ -170,8 +207,13 @@ template <uni20::Real Real> Real difference(Mesh<Real> const& a, Mesh<Real> cons
 namespace detail
 {
 template <uni20::Real Real>
-void validate(Real interaction, Real temperature, Real chemical_potential, Options<Real> const& options)
+void validate(Real const& interaction, Real const& temperature, Real const& chemical_potential,
+              Options<Real> const& options)
 {
+  auto const zero = uni20::scalar_at_precision<Real>(0, options.precision());
+  for (auto const* value : {&interaction, &temperature, &chemical_potential, &options.tolerance})
+    bethe::detail::require_same_precision(*value, zero);
+  if (options.initial_cutoff) bethe::detail::require_same_precision(*options.initial_cutoff, zero);
   if (!uni20::isfinite(interaction) || !(interaction > Real{0}) || !uni20::isfinite(temperature) ||
       !(temperature > Real{0}) || !uni20::isfinite(chemical_potential))
     throw std::invalid_argument("Yang-Yang thermodynamics require finite c>0, T>0 and chemical potential");
@@ -189,16 +231,20 @@ template <uni20::Real Real>
 State<Real> equilibrium(Real interaction, Real temperature, Real chemical_potential, Options<Real> options = {})
 {
   detail::validate(interaction, temperature, chemical_potential, options);
+  auto const precision = options.precision();
+  Real const zero = uni20::scalar_at_precision<Real>(0, precision);
   State<Real> out;
+  out.cutoff = out.nonlinear_residual = out.mesh_error = out.cutoff_error = zero;
   out.interaction = interaction;
   out.temperature = temperature;
   out.chemical_potential = chemical_potential;
-  Real const scale = std::max(temperature, std::abs(chemical_potential)), momentum_scale = std::sqrt(scale);
+  Real const scale = std::max(temperature, uni20::math::abs(chemical_potential)),
+             momentum_scale = uni20::math::sqrt(scale);
   Real const c = interaction / momentum_scale, t = temperature / scale, mu = chemical_potential / scale;
-  Real cutoff =
-      options.initial_cutoff
-          ? *options.initial_cutoff / momentum_scale
-          : std::max(Real{2}, std::sqrt(std::max(mu, Real{0}) + t * (Real{16} - std::log(options.tolerance))));
+  Real cutoff = options.initial_cutoff
+                    ? *options.initial_cutoff / momentum_scale
+                    : std::max(Real{2}, uni20::math::sqrt(std::max(mu, Real{0}) +
+                                                          t * (Real{16} - uni20::math::log(options.tolerance))));
   if (!(c > Real{0}) || !uni20::isfinite(c) || !uni20::isfinite(Real{1} / c) ||
       !(options.tolerance * t / Real{64} > Real{0}) || !(cutoff > Real{0}) || !uni20::isfinite(cutoff))
   {
@@ -219,8 +265,8 @@ State<Real> equilibrium(Real interaction, Real temperature, Real chemical_potent
     for (std::size_t nodes = options.initial_nodes;; nodes *= 2)
     {
       out.nodes = nodes;
-      auto candidate =
-          detail::solve_mesh(c, t, mu, cutoff, bethe::detail::gauss_legendre<Real>(nodes), options, out.iterations);
+      auto candidate = detail::solve_mesh(c, t, mu, cutoff, bethe::detail::gauss_legendre<Real>(nodes, precision),
+                                          options, out.iterations);
       out.nonlinear_residual = candidate.residual;
       if (candidate.status == Status::iteration_limit)
       {
@@ -256,7 +302,7 @@ State<Real> equilibrium(Real interaction, Real temperature, Real chemical_potent
         v[1] *= momentum_scale;
         v[2] = v[2] * momentum_scale * scale;
         v[3] *= momentum_scale;
-        Real const floor = (uni20::numeric_limits<Real>::min() * uni20::numeric_limits<Real>::epsilon()) * Real{8};
+        Real const floor = detail::observable_floor(zero);
         for (auto value : v)
           if (!(value > Real{0}) || !uni20::isfinite(value) || !(value * options.tolerance >= floor))
           {
@@ -288,7 +334,20 @@ template <uni20::Real Real> struct DensityOptions
     Options<Real> equilibrium{};
     Real tolerance = Real{65536} * uni20::numeric_limits<Real>::epsilon();
     std::size_t max_evaluations = 128;
+    uni20::Precision precision() const { return equilibrium.precision(); }
 };
+#if UNI20_HAS_MPREAL
+template <> struct DensityOptions<uni20::mpreal>
+{
+    explicit DensityOptions(uni20::Precision p)
+        : equilibrium(p), tolerance(65536 * uni20::numeric_limits<uni20::mpreal>::epsilon(p))
+    {}
+    Options<uni20::mpreal> equilibrium;
+    uni20::mpreal tolerance;
+    std::size_t max_evaluations = 128;
+    uni20::Precision precision() const { return equilibrium.precision(); }
+};
+#endif
 template <uni20::Real Real> struct DensityState
 {
     Real requested_density{}, density_error{};
@@ -304,12 +363,17 @@ template <uni20::Real Real> struct DensityState
 template <uni20::Real Real>
 DensityState<Real> at_density(Real interaction, Real temperature, Real density, DensityOptions<Real> options = {})
 {
-  detail::validate(interaction, temperature, Real{0}, options.equilibrium);
+  auto const precision = options.precision();
+  Real const zero = uni20::scalar_at_precision<Real>(0, precision);
+  detail::validate(interaction, temperature, zero, options.equilibrium);
+  bethe::detail::require_same_precision(density, zero);
+  bethe::detail::require_same_precision(options.tolerance, zero);
   if (!(density > Real{0}) || !uni20::isfinite(density) || !(options.tolerance > Real{0}) ||
       !uni20::isfinite(options.tolerance) || options.tolerance >= Real{1})
     throw std::invalid_argument("require finite density>0 and 0<density tolerance<1");
   DensityState<Real> out;
   out.requested_density = density;
+  out.density_error = zero;
   if (options.max_evaluations == 0) return out;
   options.equilibrium.tolerance = std::min(options.equilibrium.tolerance, options.tolerance / Real{8});
   if (!(options.equilibrium.tolerance > Real{0}))
@@ -317,12 +381,13 @@ DensityState<Real> at_density(Real interaction, Real temperature, Real density, 
     out.status = Status::precision_limit;
     return out;
   }
-  Real const pi = Real{4} * std::atan(Real{1});
+  Real const pi = Real{4} * uni20::math::atan(uni20::scalar_like(zero, 1));
   // Classical gas seed, evaluated in log space rather than forming fugacity.
-  Real mu = temperature * (std::log(density) + std::log(Real{2} * std::sqrt(pi)) - std::log(temperature) / Real{2});
+  Real mu = temperature * (uni20::math::log(density) + uni20::math::log(Real{2} * uni20::math::sqrt(pi)) -
+                           uni20::math::log(temperature) / Real{2});
   Real step = temperature;
   std::optional<Real> lo, hi;
-  Real flo{}, fhi{};
+  Real flo = zero, fhi = zero;
   int previous_side = 0;
   for (; out.evaluations < options.max_evaluations;)
   {
@@ -340,7 +405,7 @@ DensityState<Real> at_density(Real interaction, Real temperature, Real density, 
       return out;
     }
     Real const f = (*candidate.density - density) / density;
-    out.density_error = std::abs(f);
+    out.density_error = uni20::math::abs(f);
     if (out.density_error <= options.tolerance / Real{2})
     {
       out.state = std::move(candidate);
