@@ -41,7 +41,8 @@ independent numerical or serial/concurrent validation.
 | `sine-gordon-dispersion` | Serial analytic CLI; owning mixed-precision Async queries validated in pending PR #23 | Native only on merged baseline; [PR #23](https://github.com/Uni20-dev/bethe/pull/23) adds MPFR scalars, no MPLAPACK | Integrate reviewed masses, strict breather selection and pair thresholds; cheap formulas stay serial |
 | `xyz-dispersion` | Serial CLI; pending [PR #24](https://github.com/Uni20-dev/bethe/pull/24) reuses owning bound branches and validates shared Async preparation / parameter curves | Native only | Integrate reviewed reuse and measured curve-level concurrency; explicit-precision elliptic/theta functions remain necessary |
 | `xxz-dispersion` | Immutable band with cheap queries; bulk preparation remains serial | Native only | Theta constants await [Uni20 PR #103](https://github.com/Uni20-dev/uni20/pull/103); bulk quadrature still needs explicit precision. Cheap band queries stay serial |
-| `sine-gordon-bethe-yang`, `biquadratic-obc`, `xxz-qg-obc` | Sector-specific solver/composition audit pending | Native only | Treat real, complex and singular sectors separately |
+| `xxz-qg-obc` | Shared continuous regular-root scans; owning regular/free-sector queries validated in pending PR #26 | Native only on merged baseline; [PR #26](https://github.com/Uni20-dev/bethe/pull/26) adds MPFR scalars, no MPLAPACK | Integrate reviewed critical regular-root and free-endpoint precision; individual cheap free blocks stay serial |
+| `sine-gordon-bethe-yang`, `biquadratic-obc` | Sector-specific solver/composition audit pending | Native only | Treat real, complex and singular sectors separately; massive quantum-group Newton precision awaits PR #9 |
 | `lee-yang-vacuum`, `lee-yang-excited`, `sine-gordon-vacuum`, `sine-gordon-excited`, `kondo-response` | Integral-equation composition audit pending | Native only | Preserve coupled iterations and continuation; audit discretization and complex functions |
 | `asep-pbc`, `tasep-pbc`, `potts-pbc`, `xyz-pbc` | Complex/nonlinear composition audit pending | Native only | Branch tracking and scalar-function coverage before advertising MPFR |
 
@@ -62,7 +63,7 @@ in Uni20; model equations and physical normalization remain in Bethe.
   rows, including grids larger than the admission window, mixed successful and
   failed points, threshold counts, native precisions and output preservation.
 
-The pending MPFR checkpoints #9, #13, #15, #16, #18, #19, #20, #21, #22, #23 and #25 verify precision growth
+The pending MPFR checkpoints #9, #13, #15, #16, #18, #19, #20, #21, #22, #23, #25 and #26 verify precision growth
 against independent references beyond binary128, typed endpoint/failure values,
 CLI export/provider contracts and ownership in composed Async calculations.
 The pending scheduling checkpoints #11, #12 and #14 compare complete results
@@ -141,3 +142,12 @@ validate MPFR, including a weak-deformation correction beyond binary128 and
 positive energies at eta=1e-7000. The scalar-only library supports analytic
 limits and zero-update diagnostics through #19's shared guard; actual Newton
 updates and the CLI require MPLAPACK. No new scheduling mechanism is needed.
+
+Quantum-group XXZ's pending #26 validates both the regular critical real-root
+family and complete free-endpoint sectors with MPFR scalars alone. Independent
+spin-Hamiltonian eigenvalues and complex reflection equations verify precision
+growth at 128/256/333 bits. All 45 states of a 16-site family, including partial
+and failed scans, agree under serial/threaded execution. Owning regular/free
+queries also pass deferred and threaded composition tests. Native output
+comparisons retain 681 identical rows; no massive or new complex-root family
+is introduced.
