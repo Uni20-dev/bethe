@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Copyright (C) 2026 Ian McCulloch
+#include "execution-options.hpp"
+#include "independent-solves.hpp"
 #include "sine-gordon-options.hpp"
 #include <bethe/sine_gordon_excited.hpp>
 
@@ -13,6 +15,7 @@ struct Arguments : cli::sine_gordon::Arguments
     Arguments() { iterations = model::TwoSolitonOptions<double>{}.max_iterations; }
     std::string number = "0.5";
     int charge = 2;
+    int threads = 1;
     std::size_t root_iterations = 1024;
 };
 auto program_info()
@@ -23,6 +26,7 @@ auto program_info()
                    {"bethe-sine-gordon-excited --length 0.1 --p 2 --number 1.5 --json levels.json",
                     "Selected descendant towards the ultraviolet limit"}};
   info.notes = {
+      "--threads overlaps the independent vacuum and excited solves (at most two); each solve stays sequential.",
       "M>0 is the soliton mass, L>0 the circumference, u=M*L; velocity=hbar=1, p>=1.",
       "Selected symmetric two-hole states only: delta=0, I=0.5 or 1.5, roots +/-H, total momentum zero.",
       "Winding charge +/-2 describes two solitons or two antisolitons, NOT a neutral soliton-antisoliton pair.",
@@ -44,10 +48,15 @@ template <uni20::Real Real> int run(Arguments const& a, int argc, char** argv)
   model::TwoSolitonOptions<Real> controls;
   cli::sine_gordon::configure<Real>(a, controls);
   controls.max_root_iterations = a.root_iterations;
-  // Validate and solve before opening any exports (including --force targets).
-  auto const excited = context.measure([&] { return model::two_soliton_level(mass, length, p, number, controls); });
-  auto const vacuum = context.measure(
-      [&] { return model::vacuum_energy(mass, length, p, static_cast<model::VacuumOptions<Real> const&>(controls)); });
+  // Reject invalid requests before admitting either independent solve.
+  (void)model::detail::validate_two_soliton(mass, length, p, number, controls);
+  // Both solves finish before opening exports, including --force targets.
+  auto const [excited, vacuum] = context.measure([&] {
+    return cli::independent_solves(
+        [=] { return model::two_soliton_level(mass, length, p, number, controls); },
+        [=] { return model::vacuum_energy(mass, length, p, static_cast<model::VacuumOptions<Real> const&>(controls)); },
+        a.threads);
+  });
   bool const converged = excited.converged && vacuum.converged;
   using Optional = std::optional<Real>;
   auto finite = [](Real x) -> Optional { return uni20::isfinite(x) ? Optional(x) : std::nullopt; };
@@ -77,6 +86,9 @@ template <uni20::Real Real> int run(Arguments const& a, int argc, char** argv)
       .field("charge", "Topological winding charge", a.charge)
       .field("uv_weight", "UV weight Delta+=Delta-",
              (Real{1} + Real{1} / p) / Real{4} + Real(number.twice() - 1) / Real{2})
+      .field("threads", "Requested threads", a.threads)
+      .field("solver_concurrency", "Solver concurrency", std::min(a.threads, 2))
+      .field("execution", "Execution", a.threads == 1 ? "serial" : "independent vacuum/excited solves")
       .precision(a.precision)
       .field("max_root_iterations", "Max hole trials across meshes/contours", controls.max_root_iterations)
       .result(complete, status);
@@ -139,6 +151,8 @@ int main(int argc, char** argv)
         app.add_option("--charge", a.charge, "Pair winding charge")
             ->check(CLI::IsMember({-2, 2}))
             ->capture_default_str();
+        cli::threads_option(app, a.threads)
+            ->description("Concurrency for vacuum and excited solves (at most 2; default 1)");
         cli::count_option(app, "--max-root-iterations", a.root_iterations,
                           "Total hole trials across meshes and contours")
             ->capture_default_str();

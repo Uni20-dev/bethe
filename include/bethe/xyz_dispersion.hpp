@@ -38,27 +38,49 @@ template <uni20::Real Real> class SpinonDispersion {
       return s % 2 ? -1 : 1;
     }
 
-    Real bound_gap(unsigned s) const { return normal_energy((Real{2} * bound_parameter(s)) * gap()); }
+    /// An owning immutable branch: theta functions are evaluated at preparation,
+    /// while each energy query uses only elementary functions. Safe to retain
+    /// after the parent dispersion is destroyed and share among Async readers.
+    class BoundBranch {
+      public:
+        unsigned index() const { return index_; }
+        int x_parity() const { return index_ % 2 ? -1 : 1; }
+        Real gap() const { return normal_energy((Real{2} * a_) * spinon_gap_); }
+
+        /// q is reduced Q in [0,2*pi], not a parity-shifted physical momentum.
+        Real energy(Real q) const
+        {
+          Real const pi = bethe::detail::pi<Real>();
+          if (!uni20::isfinite(q) || q < Real{0} || q > Real{2} * pi)
+            throw std::invalid_argument("XYZ bound momentum must be finite and in [0, 2*pi]");
+          q = std::min(q, Real{2} * pi - q);
+          if (q == Real{0}) return gap();
+          if (q == pi) return normal_energy((Real{2} / a_) * maximum_);
+          Real const sine = std::sin(q / Real{2}), cosine = std::cos(q / Real{2});
+          // Retain the small mass without forming sqrt(1-k1*k1).
+          Real const first = std::hypot(maximum_ * sine, spinon_gap_ * a_ * cosine);
+          Real const second = std::hypot(sine, a_ * cosine);
+          return normal_energy((Real{2} * second / a_) * first);
+        }
+
+      private:
+        friend class SpinonDispersion;
+        BoundBranch(unsigned index, Real a, Real maximum, Real gap)
+            : index_(index), a_(a), maximum_(maximum), spinon_gap_(gap)
+        {}
+        unsigned index_;
+        Real a_, maximum_, spinon_gap_;
+    };
+
+    BoundBranch prepare_bound(unsigned s) const { return {s, bound_parameter(s), maximum_energy(), gap()}; }
+    Real bound_gap(unsigned s) const { return prepare_bound(s).gap(); }
 
     /// q in [0,2*pi] is Q=P-P0-pi*delta_nu_z (mod 2*pi).
     /// Both delta_nu_z=0,1 copies are present in the thermodynamic description.
     /// A lattice bound curve need not lie below the full two-spinon continuum
     /// at every q; do not interpret its name as a spectral-weight assertion.
-    Real bound_energy(unsigned s, Real q) const
-    {
-      Real const pi = bethe::detail::pi<Real>();
-      if (!uni20::isfinite(q) || q < Real{0} || q > Real{2} * pi)
-        throw std::invalid_argument("XYZ bound momentum must be finite and in [0, 2*pi]");
-      Real const a = bound_parameter(s);
-      q = std::min(q, Real{2} * pi - q);
-      if (q == Real{0}) return normal_energy((Real{2} * a) * gap());
-      if (q == pi) return normal_energy((Real{2} / a) * maximum_energy());
-      Real const sine = std::sin(q / Real{2}), cosine = std::cos(q / Real{2});
-      // Retain the small mass without forming sqrt(1-k1*k1).
-      Real const first = std::hypot(maximum_energy() * sine, gap() * a * cosine);
-      Real const second = std::hypot(sine, a * cosine);
-      return normal_energy((Real{2} * second / a) * first);
-    }
+    /// Prepare a branch once with prepare_bound(s) when evaluating a curve.
+    Real bound_energy(unsigned s, Real q) const { return prepare_bound(s).energy(q); }
 
   private:
     void require_bound(unsigned s) const

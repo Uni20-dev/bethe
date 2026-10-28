@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Copyright (C) 2026 Ian McCulloch
-#include "program-options.hpp"
+#include "execution-options.hpp"
 #include "result-output.hpp"
+#include <bethe/observable_grid.hpp>
 #include <bethe/potts.hpp>
 
 namespace
@@ -13,6 +14,7 @@ struct Arguments
     std::optional<std::size_t> momentum_index;
     std::optional<std::string> tolerance;
     std::string branch = "all", charge = "both", precision = "fp64";
+    int threads = 1;
     cli::DataOutputOptions output;
 };
 auto program_info()
@@ -35,6 +37,8 @@ auto program_info()
       "The k=0 charged level tends to x=2/15; k=1,L-1 tend to x=17/15.",
       "Residual=max|F|/(2*L) for the auxiliary logarithmic equations; default tolerance=32 epsilon. "
       "Unconverged energies and gaps are missing, with exit status 2. No spectral weights are calculated.",
+      "--threads overlaps independent charged momenta after one vacuum solve. Charge partners share a solve.",
+      "Rows stream in momentum/charge order; --no-retain discards delivered rows. One worker is the default.",
       "See docs/potts.md for physical-root selection, state counting and validation; --references for literature."};
   return info;
 }
@@ -53,6 +57,7 @@ void add_options(CLI::App& app, Arguments& a)
   cli::text_option(app, "--tolerance", a.tolerance, "Normalized residual tolerance (default 32 epsilon)")
       ->type_name("REAL");
   cli::precision_option(app, a.precision);
+  cli::threads_option(app, a.threads)->description("Scheduler concurrency limit for independent charged momenta");
   cli::add_data_output_options(app, a.output,
                                {{.name = "levels", .description = "Selected energy levels", .primary = true}});
 }
@@ -78,14 +83,12 @@ template <uni20::Real Real> int run(Arguments const& a, int argc, char** argv)
       std::optional<State> state;
       std::string status;
   };
-  auto solve = [&](int charge, std::size_t k) {
+  auto solve = [sites = a.sites, controls](int charge, std::size_t k) {
     Solve result;
     try
     {
-      result.state = context.measure([&] {
-        return charge == 0 ? bethe::potts::ground_state<Real>(a.sites, controls)
-                           : bethe::potts::charged_one_hole<Real>(a.sites, charge, k, controls);
-      });
+      result.state = charge == 0 ? bethe::potts::ground_state<Real>(sites, controls)
+                                 : bethe::potts::charged_one_hole<Real>(sites, charge, k, controls);
       result.status = result.state->converged ? "converged" : "iteration_limit";
     }
     catch (std::runtime_error const&)
@@ -94,8 +97,16 @@ template <uni20::Real Real> int run(Arguments const& a, int argc, char** argv)
     }
     return result;
   };
-  auto const vacuum = solve(0, 0);
+  auto const vacuum = context.measure([&] { return solve(0, 0); });
   Optional const reference = vacuum.state && vacuum.state->converged ? Optional(vacuum.state->energy) : Optional{};
+  std::size_t const first = a.momentum_index.value_or(0);
+  std::size_t const count = a.branch == "ground" ? 0 : a.momentum_index ? 1 : a.sites;
+  bool const parallel = a.threads > 1 && count > 1;
+  std::size_t const window = std::max(std::size_t{1}, std::min(count, std::size_t{128}));
+  int const concurrency = parallel ? static_cast<int>(std::min(window, std::size_t(a.threads))) : 1;
+  std::optional<uni20::async::TbbScheduler> scheduler;
+  if (parallel) scheduler.emplace(concurrency);
+  bethe::ExecutionOptions const execution{.scheduler = scheduler ? &*scheduler : nullptr, .max_in_flight = window};
   cli::RunReport report(context, "Critical three-state Potts (periodic)");
   report.field("sites", "Sites", a.sites)
       .field("hamiltonian", "Hamiltonian", "H=-sum(X+X^dagger+ZZ^dagger+Z^dagger Z); critical, J=1, PBC")
@@ -110,6 +121,11 @@ template <uni20::Real Real> int run(Arguments const& a, int argc, char** argv)
       .field("tolerance", "Residual tolerance", controls.residual_tolerance)
       .field("max_iterations", "Max sweeps per solve", a.iterations)
       .field("max_sites", "Site budget", a.max_sites)
+      .field("threads", "Requested concurrency limit", a.threads)
+      .field("concurrency", "Effective concurrency limit", concurrency)
+      .field("execution_mode", "Execution mode", parallel ? "bounded Async momentum grid" : "direct serial")
+      .field("max_in_flight", "Maximum charged momenta in flight", parallel ? window : std::size_t{1})
+      .field("cpu_timing_scope", "CPU timing scope", "vacuum solve and ordered level grid including row output")
       .field("velocity", "Velocity", velocity)
       .field("bulk_energy", "Bulk energy density", bethe::potts::bulk_energy_density<Real>())
       .field("reference_status", "Vacuum status", vacuum.status);
@@ -123,64 +139,52 @@ template <uni20::Real Real> int run(Arguments const& a, int argc, char** argv)
       cli::column<Real>("momentum").unit("radians/site"), cli::column<Optional>("energy"), cli::column<Optional>("gap"),
       cli::column<Optional>("x_scaled"), cli::column<Optional>("residual"),
       cli::column<std::optional<std::size_t>>("iterations"), cli::column<std::string>("status"));
-  cli::DataOutput output(a.output, {"levels"});
-  bool complete = reference.has_value();
-  try
-  {
-    output.attach(table, "levels");
-    auto emit = [&](Solve const& solved, int charge, std::size_t k) {
-      Optional energy, gap, scaled, residual;
-      std::optional<std::size_t> iterations;
-      std::string status = solved.status;
-      if (solved.state)
-      {
-        residual = solved.state->residual_norm;
-        iterations = solved.state->iterations;
-        if (solved.state->converged)
-        {
-          energy = solved.state->energy;
-          if (reference)
-          {
-            gap = *energy - *reference;
-            scaled = Real(a.sites) * *gap / (Real{2} * pi * velocity);
-          }
+  bool const complete = cli::stream_result_table(
+      report, context, a.output, "levels", table,
+      [&](auto& table) {
+        bool success = reference.has_value();
+        context.measure([&] {
+          auto emit = [&](Solve const& solved, int charge, std::size_t k) {
+            Optional energy, gap, scaled, residual;
+            std::optional<std::size_t> iterations;
+            std::string status = solved.status;
+            if (solved.state)
+            {
+              residual = solved.state->residual_norm;
+              iterations = solved.state->iterations;
+              if (solved.state->converged)
+              {
+                energy = solved.state->energy;
+                if (reference)
+                {
+                  gap = *energy - *reference;
+                  scaled = Real(a.sites) * *gap / (Real{2} * pi * velocity);
+                }
+                else
+                  status = "reference_unavailable";
+              }
+            }
+            success = success && energy.has_value() && gap.has_value();
+            table.append(charge == 0 ? "ground" : "charged-one-hole", charge, k,
+                         Real{2} * pi * (Real(k) / Real(a.sites)), energy, gap, scaled, residual, iterations, status);
+          };
+          if (a.branch != "charged") emit(vacuum, 0, 0);
+          auto evaluate = [solve, first](std::size_t i) { return solve(1, first + i); };
+          auto collect = [&](std::size_t i, Solve const& state) {
+            auto const k = first + i;
+            // Charge conjugation, not a second root solve.
+            if (a.charge != "-1") emit(state, 1, k);
+            if (a.charge == "both" || a.charge == "-1") emit(state, -1, k);
+          };
+          if (parallel)
+            bethe::evaluate_observable_grid(count, evaluate, collect, execution);
           else
-            status = "reference_unavailable";
-        }
-      }
-      complete = complete && energy.has_value() && gap.has_value();
-      table.append(charge == 0 ? "ground" : "charged-one-hole", charge, k, Real{2} * pi * (Real(k) / Real(a.sites)),
-                   energy, gap, scaled, residual, iterations, status);
-    };
-    if (a.branch != "charged") emit(vacuum, 0, 0);
-    if (a.branch != "ground")
-    {
-      auto const first = a.momentum_index.value_or(0), end = a.momentum_index ? first + 1 : a.sites;
-      for (std::size_t k = first; k < end; ++k)
-      {
-        auto const state = solve(1, k); // Charge conjugation, not a second root solve.
-        if (a.charge != "-1") emit(state, 1, k);
-        if (a.charge == "both" || a.charge == "-1") emit(state, -1, k);
-      }
-    }
-    report.result(complete, complete ? "converged" : "incomplete; unavailable quantities omitted");
-    auto const summary = report.finish();
-    output.overview(report.overview(summary));
-    output.finish(table, summary);
-    output.finish_document();
-  }
-  catch (...)
-  {
-    data::table_metadata aborted{{"Status", "aborted"}};
-    if (!context.finished()) try
-      {
-        aborted = cli::run_summary(context.finish(uni20::run_outcome::failed));
-      }
-      catch (...)
-      {}
-    output.abort(table, std::move(aborted));
-    throw;
-  }
+            for (std::size_t i = 0; i < count; ++i)
+              collect(i, evaluate(i));
+        });
+        return success;
+      },
+      "incomplete; unavailable quantities omitted");
   if (!complete) std::cerr << "Some Potts energies or reference gaps are unavailable; inspect row statuses.\n";
   return complete ? 0 : 2;
 }
