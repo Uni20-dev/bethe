@@ -37,7 +37,7 @@ independent numerical or serial/concurrent validation.
 | `bose-fermi-pbc` | Individual nested solves; owning mixed-precision requests validated in pending PR #19 | Native only on merged baseline; [PR #19](https://github.com/Uni20-dev/bethe/pull/19) adds MPFR with MPLAPACK | Integrate reviewed mixed/pure/free-state precision and shared continuum-provider guard |
 | `su3-dispersion` | Serial analytic CLI; owning mixed-precision Async queries validated in pending PR #20 | Native only on merged baseline; [PR #20](https://github.com/Uni20-dev/bethe/pull/20) adds MPFR scalars, no MPLAPACK | Integrate reviewed band/bound precision; individual formulas remain too cheap to justify per-point scheduling |
 | `haldane-shastry-pbc`, `sutherland-pbc` | Serial analytic CLIs; owning mixed-precision window/parameter scans validated in pending PR #21 | Native only on merged baseline; [PR #21](https://github.com/Uni20-dev/bethe/pull/21) adds MPFR scalars, no MPLAPACK | Integrate reviewed precision and exact-integer gap/order handling; cheap formulas stay serial |
-| `tb-dispersion` | Analytic/formula-based path | Native only | Low-cost precision extension; measure before parallelizing individual points |
+| `tb-dispersion` | Serial analytic CLI; owning mixed-precision Async queries validated in pending PR #22 | Native only on merged baseline; [PR #22](https://github.com/Uni20-dev/bethe/pull/22) adds MPFR scalars, no MPLAPACK | Integrate reviewed shared-band precision; XXZ/XYZ elliptic models still need separate audits |
 | `xxz-dispersion`, `xyz-dispersion`, `sine-gordon-dispersion` | Independent queries; prepared-context audit pending | Native only | Elliptic/theta/integral accuracy and immutable scratch ownership |
 | `sine-gordon-bethe-yang`, `biquadratic-obc`, `xxz-qg-obc` | Sector-specific solver/composition audit pending | Native only | Treat real, complex and singular sectors separately |
 | `lee-yang-vacuum`, `lee-yang-excited`, `sine-gordon-vacuum`, `sine-gordon-excited`, `kondo-response` | Integral-equation composition audit pending | Native only | Preserve coupled iterations and continuation; audit discretization and complex functions |
@@ -60,7 +60,7 @@ in Uni20; model equations and physical normalization remain in Bethe.
   rows, including grids larger than the admission window, mixed successful and
   failed points, threshold counts, native precisions and output preservation.
 
-The pending MPFR checkpoints #9, #13, #15, #16, #18, #19, #20 and #21 verify precision growth
+The pending MPFR checkpoints #9, #13, #15, #16, #18, #19, #20, #21 and #22 verify precision growth
 against independent references beyond binary128, typed endpoint/failure values,
 CLI export/provider contracts and ownership in composed Async calculations.
 The pending scheduling checkpoints #11, #12 and #14 compare complete results
@@ -96,6 +96,13 @@ including differential-Hamiltonian references, large-exponent small gaps,
 precision growth, budget refusals and independent owning Async spectra. Native
 ED/wavefunction checks and 561 unchanged exported rows validate the existing
 formats. Individual analytic CLI calculations remain serial.
+
+TB dispersion's pending #22 uses the same scalar dispatcher from #20 and
+extends the common sine/massive-band helper rather than duplicating kinematics.
+Independent dressed-sea and continuum references, scalar-only MPFR physics,
+positive momenta at the MPFR exponent floor and owning mixed-precision queries
+pass. Existing TB/XXZ/XYZ checks and 1,710 identical native output rows validate
+shared-band consumers. This does not enable XXZ/XYZ's elliptic models in MPFR.
 
 Update this inventory with each reviewed app checkpoint. A proposed capability
 or a pending audit is not evidence of implemented support.
