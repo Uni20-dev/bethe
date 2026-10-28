@@ -34,7 +34,7 @@ independent numerical or serial/concurrent validation.
 | `hubbard-pbc`, `hubbard-obc` | Individual finite-size solves; owning parameter sweeps validated in pending PR #16 | Native only on merged baseline; [PR #16](https://github.com/Uni20-dev/bethe/pull/16) adds MPFR with MPLAPACK | Integrate reviewed precision for existing sectors, both interaction signs and symmetry mappings |
 | `gaudin-yang-pbc` | Individual nested solves; owning mixed-precision sector sweeps validated in pending PR #18 | Native only on merged baseline; [PR #18](https://github.com/Uni20-dev/bethe/pull/18) adds MPFR with MPLAPACK | Integrate reviewed precision for existing repulsive shells, free/polarized limits and requested-coupling failure diagnostics |
 | `sun-fermions-pbc`, `tj-pbc` | Single-request CLIs stay serial; pending [PR #33](https://github.com/Uni20-dev/bethe/pull/33) validates owning coupling/population grids with complete partial/failure states | Native only | Shared explicit-precision Newton helper awaits PR #9; large dilute t–J seed/Newton convergence remains a documented numerical limitation |
-| `ladder-pbc` | Shared root-preparation/composition audit pending | Native only | Reuse independent SU(4) seas across rung/field queries while preserving whole-scan budgets and partial candidates; explicit Newton precision awaits PR #9 |
+| `ladder-pbc` | Single-request CLI stays serial; pending [PR #34](https://github.com/Uni20-dev/bethe/pull/34) prepares an owning full-sector root catalogue for dependent Async field/rung queries | Native only | Integrate reviewed reuse/budget/ownership contract; fixed-Sz/singlet scans retain their direct paths. Explicit Newton precision awaits PR #9 |
 | `bose-fermi-pbc` | Individual nested solves; owning mixed-precision requests validated in pending PR #19 | Native only on merged baseline; [PR #19](https://github.com/Uni20-dev/bethe/pull/19) adds MPFR with MPLAPACK | Integrate reviewed mixed/pure/free-state precision and shared continuum-provider guard |
 | `su3-dispersion` | Serial analytic CLI; owning mixed-precision Async queries validated in pending PR #20 | Native only on merged baseline; [PR #20](https://github.com/Uni20-dev/bethe/pull/20) adds MPFR scalars, no MPLAPACK | Integrate reviewed band/bound precision; individual formulas remain too cheap to justify per-point scheduling |
 | `haldane-shastry-pbc`, `sutherland-pbc` | Serial analytic CLIs; owning mixed-precision window/parameter scans validated in pending PR #21 | Native only on merged baseline; [PR #21](https://github.com/Uni20-dev/bethe/pull/21) adds MPFR scalars, no MPLAPACK | Integrate reviewed precision and exact-integer gap/order handling; cheap formulas stay serial |
@@ -231,3 +231,16 @@ all states and diagnostics match direct/eight-worker execution, and a bounded
 higher-precision probe does not resolve the representative dilute failure.
 This convergence limitation is separate from Async correctness. Model kernels,
 frontends and precision support are unchanged; no new state family is claimed.
+
+Pending #34 adds `ladder::PreparedSectors<Real>`: one full-sector scan owns its
+ordered solved/failing branch prefix and later field/rung queries replay the
+same selection rules without new Newton solves. Whole-scan budgets, partial
+candidates, analytic product bypasses and exact tie/large-shift handling are
+preserved. Copies share immutable storage; dependent Async grids outlive the
+preparation handle. Native/wide/sanitizer checks pass 51/67/52, including the
+independent ladder oracles and shared-grid held-query lifetime checks.
+Matched-main comparisons retain 60 requests / 1,491 identical rows; all 86,088
+benchmark state rows converge and match direct calls. Reuse is the primary gain
+(roughly 90–270x on these many-parameter curves); subsequent query parallelism
+saves only hundredths of a second. Fixed-sector scans and native precision
+support remain unchanged. Catalogue/output retention costs are documented.
