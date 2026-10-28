@@ -135,6 +135,10 @@ if(BETHE_HAS_MPREAL)
   target_link_libraries(bethe_thermodynamics_mpfr_tests PRIVATE bethe::bethe TBB::tbb)
   bethe_discover_tests(bethe_thermodynamics_mpfr_tests)
 
+  add_executable(bethe_potts_mpfr_tests test_potts_mpfr.cpp)
+  target_link_libraries(bethe_potts_mpfr_tests PRIVATE bethe::bethe TBB::tbb)
+  bethe_discover_tests(bethe_potts_mpfr_tests)
+
   add_executable(bethe_thermal_mpfr_tests test_thermal_mpfr.cpp)
   target_link_libraries(bethe_thermal_mpfr_tests PRIVATE bethe::bethe TBB::tbb)
   bethe_discover_tests(bethe_thermal_mpfr_tests)
@@ -576,6 +580,9 @@ if(BETHE_BUILD_APPS)
     COMMAND "${CMAKE_COMMAND}" "-DPROGRAM=$<TARGET_FILE:bethe-potts-pbc>"
       "-DTOOL=bethe-potts-pbc" -P "${CMAKE_CURRENT_SOURCE_DIR}/check_citations_cli.cmake")
   if(Python3_Interpreter_FOUND)
+    add_test(NAME PottsMpfr.cli
+      COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_potts_precision.py"
+        "$<TARGET_FILE:bethe-potts-pbc>" "${BETHE_HAS_MPREAL}")
     add_test(NAME Potts.cli
       COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_potts.py"
         "$<TARGET_FILE:bethe-potts-pbc>" "${BETHE_HAS_FLOAT128}")

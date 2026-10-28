@@ -2,6 +2,7 @@
 // Copyright (C) 2026 Ian McCulloch
 #include "execution-options.hpp"
 #include "result-output.hpp"
+#include "solver-precision.hpp"
 #include <bethe/observable_grid.hpp>
 #include <bethe/potts.hpp>
 
@@ -37,6 +38,7 @@ auto program_info()
       "The k=0 charged level tends to x=2/15; k=1,L-1 tend to x=17/15.",
       "Residual=max|F|/(2*L) for the auxiliary logarithmic equations; default tolerance=32 epsilon. "
       "Unconverged energies and gaps are missing, with exit status 2. No spectral weights are calculated.",
+      "bits-N/digits-N use explicit MPFR precision; no MPLAPACK provider is needed.",
       "--threads overlaps independent charged momenta after one vacuum solve. Charge partners share a solve.",
       "Rows stream in momentum/charge order; --no-retain discards delivered rows. One worker is the default.",
       "See docs/potts.md for physical-root selection, state counting and validation; --references for literature."};
@@ -56,13 +58,13 @@ void add_options(CLI::App& app, Arguments& a)
   cli::count_option(app, "--max-sites", a.max_sites, "Explicit work budget, default 512")->capture_default_str();
   cli::text_option(app, "--tolerance", a.tolerance, "Normalized residual tolerance (default 32 epsilon)")
       ->type_name("REAL");
-  cli::precision_option(app, a.precision);
+  cli::precision_option(app, a.precision, cli::ArbitraryPrecision::real);
   cli::threads_option(app, a.threads)->description("Scheduler concurrency limit for independent charged momenta");
   cli::add_data_output_options(app, a.output,
                                {{.name = "levels", .description = "Selected energy levels", .primary = true}});
 }
 
-template <uni20::Real Real> int run(Arguments const& a, int argc, char** argv)
+template <uni20::Real Real> int run(Arguments const& a, bethe::SolverOptions<Real> controls, int argc, char** argv)
 {
   uni20::run_context context(program_info(), {.invocation = std::vector<std::string>(argv, argv + argc)});
   bethe::potts::detail::validate_sites(a.sites);
@@ -70,12 +72,10 @@ template <uni20::Real Real> int run(Arguments const& a, int argc, char** argv)
   if (a.momentum_index && *a.momentum_index >= a.sites) throw std::invalid_argument("momentum index requires 0<=k<L");
   if (a.branch == "ground" && (a.momentum_index || a.charge != "both"))
     throw std::invalid_argument("--momentum-index/--charge select the charged branch, not the vacuum");
-  bethe::SolverOptions<Real> controls;
-  controls.max_iterations = a.iterations;
-  if (a.tolerance) controls.residual_tolerance = uni20::parse_real<Real>(*a.tolerance);
   if (!uni20::isfinite(controls.residual_tolerance) || controls.residual_tolerance <= Real{0})
     throw std::invalid_argument("tolerance must be finite and positive");
-  Real const pi = Real{4} * std::atan(Real{1}), velocity = bethe::potts::velocity<Real>();
+  Real const pi = bethe::detail::pi_like(bethe::detail::solver_zero(controls));
+  Real const velocity = bethe::potts::velocity<Real>(controls.precision());
   using Optional = std::optional<Real>;
   using State = bethe::potts::State<Real>;
   struct Solve
@@ -127,7 +127,7 @@ template <uni20::Real Real> int run(Arguments const& a, int argc, char** argv)
       .field("max_in_flight", "Maximum charged momenta in flight", parallel ? window : std::size_t{1})
       .field("cpu_timing_scope", "CPU timing scope", "vacuum solve and ordered level grid including row output")
       .field("velocity", "Velocity", velocity)
-      .field("bulk_energy", "Bulk energy density", bethe::potts::bulk_energy_density<Real>())
+      .field("bulk_energy", "Bulk energy density", bethe::potts::bulk_energy_density<Real>(controls.precision()))
       .field("reference_status", "Vacuum status", vacuum.status);
   if (reference) report.field("ground_energy", "Vacuum energy", *reference);
   if (a.momentum_index) report.field("momentum_index", "Requested charged momentum index", *a.momentum_index);
@@ -196,6 +196,8 @@ int main(int argc, char** argv)
       argc, argv, program_info(), [&](auto& app) { add_options(app, a); },
       [&](auto&) {
         a.output.validate();
-        return cli::dispatch_precision(a.precision, [&]<typename Real>() { return run<Real>(a, argc, argv); });
+        return cli::dispatch_solver_precision<cli::ArbitraryPrecision::real>(
+            a.precision, a.tolerance, a.iterations,
+            [&](auto controls) { return run(a, std::move(controls), argc, argv); });
       });
 }
