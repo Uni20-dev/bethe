@@ -187,8 +187,12 @@ or `UNI20_ENABLE_MPC` options.
 
 Arbitrary precision is optional. Uni20 enables its real and complex scalars
 together, requiring GMP, MPFR >= 4.2, and MPC development packages. All modes of
-`bethe-xxx-pbc`, `bethe-xxx-obc`, `bethe-richardson` and `bethe-central-spin`
-work without MPLAPACK; Uni20 supplies CPU QR for the latter two.
+`bethe-xxx-pbc`, `bethe-xxx-obc`, `bethe-xxz-qg-obc`, `bethe-richardson`,
+`bethe-central-spin`, `bethe-su3-dispersion`, `bethe-tb-dispersion`,
+`bethe-sine-gordon-dispersion`, `bethe-haldane-shastry-pbc` and
+`bethe-sutherland-pbc` work without MPLAPACK. Uni20 supplies CPU QR for
+Richardson and central spin; SU(3)/TB/sine-Gordon dispersions,
+Haldane–Shastry, Sutherland and quantum-group XXZ use scalar functions only.
 In a separate build directory:
 
 ```sh
@@ -199,13 +203,15 @@ cmake --build . --parallel
 ./bethe-xxx-obc 16 --sectors --precision bits-256
 ./bethe-richardson --levels 0,1,2,3 --pairs 2 --g 1 --precision digits-100
 ./bethe-central-spin --couplings 1,0.7,0.3 --field 1 --sz 0 --precision bits-256
+./bethe-su3-dispersion --branch four-soliton --folded --precision digits-100
+./bethe-sine-gordon-dispersion --p 0.4 --momentum 0.7 --precision digits-100
 ./bethe-info
 ```
 
-For finite-ring structure factors and finite-size or zero-temperature
-thermodynamic Lieb–Liniger, additionally
-enable MPLAPACK matrix kernels. Unlike QR, Uni20's arbitrary-precision square
-LU solves currently require this provider:
+For finite-ring structure factors, finite-size or zero-temperature
+thermodynamic Lieb–Liniger, SU(3), finite XXZ/Hubbard, Gaudin–Yang/Bose–Fermi
+and q-boson, additionally enable MPLAPACK matrix kernels. Unlike QR, Uni20's
+arbitrary-precision square LU solves currently require this provider:
 
 ```sh
 cmake /path/to/bethe -G Ninja -DCMAKE_BUILD_TYPE=Release \
@@ -213,6 +219,10 @@ cmake /path/to/bethe -G Ninja -DCMAKE_BUILD_TYPE=Release \
 cmake --build . --parallel
 ./bethe-xxx-structure-factor 32 --precision bits-256 --threads 4
 ./bethe-lieb-liniger-obc 2 --length 1 --c 1e-50 --precision digits-100
+./bethe-hubbard-obc 5 --u -4 --precision bits-256
+./bethe-xxz-pbc 16 --delta 0.5 --precision bits-256
+./bethe-xxz-obc 16 --delta 3 --precision digits-100
+./bethe-su3-pbc 24 --precision digits-100
 ./bethe-lieb-liniger-dispersion --c 4 --momentum 1 --precision digits-100
 ./bethe-info
 ```
@@ -225,15 +235,23 @@ enabled; use `-DUNI20_ENABLE_FLOAT80=OFF` with an MPFR-only package. Binary128
 can be enabled alongside arbitrary precision with `-DUNI20_ENABLE_FLOAT128=ON`
 on supported configurations.
 
-This MPFR path covers periodic/open XXX real roots, sector/ground states, periodic one-spinon
-branches, real-root excitation scans, prepared raising form factors and the
-finite two-spinon DSF, finite-size periodic/hard-wall Lieb–Liniger states and scans,
-zero-temperature Lieb–Liniger bulk energies and dispersions, plus Richardson and
-central-spin ground-state continuation.
-It does **not** enable arbitrary precision throughout all models or frontends.
-The XXX real-root and Gaudin solvers need just `UNI20_ENABLE_MPREAL=ON`;
-Lieb–Liniger and form factors additionally need `UNI20_BACKEND_MPLAPACK=ON`. Enabling that provider
-also lets Uni20 dispatch the Lieb–Liniger LU and Gaudin QR operations to MPLAPACK.
+This MPFR path covers the existing ground, sector and real-root scan families
+of periodic/open XXX and finite XXZ, both quantum-group XXZ branches, finite
+Hubbard ground states, SU(3) balanced singlets, finite-size Lieb–Liniger,
+Gaudin–Yang and Bose–Fermi states, q-boson ground/canonical states, and
+Richardson/central-spin continuation. It also covers prepared raising form
+factors and the finite two-spinon DSF, zero-temperature Lieb–Liniger bulk
+energies and dispersions, SU(3)/TB elementary lines and continuum bounds,
+sine-Gordon particle lines and pair thresholds, and Haldane–Shastry/Sutherland
+finite spectra. Each model's physical domain and state-family restrictions
+still apply; see the [capability inventory](app-capabilities.md).
+
+The XXX real-root, quantum-group XXZ and Gaudin solvers, SU(3)/TB/sine-Gordon
+dispersions and Haldane–Shastry/Sutherland need just `UNI20_ENABLE_MPREAL=ON`.
+Lieb–Liniger, SU(3), finite XXZ/Hubbard, Gaudin–Yang/Bose–Fermi, q-boson and form
+factors additionally need `UNI20_BACKEND_MPLAPACK=ON`.
+Enabling that provider also lets Uni20 dispatch the Lieb–Liniger LU and Gaudin
+QR operations to MPLAPACK.
 No ambient precision default determines the calculation's
 working precision. At the provider boundary, Uni20 temporarily sets and restores
 MPLAPACK's thread-local defaults around each synchronous call.
@@ -383,6 +401,14 @@ asynchronously and submits both elementary branches before observing it; see
 evaluates a bounded [ground-state parameter sweep](async-execution.md#ground-state-parameter-sweeps),
 using `mpreal` when its LU provider is configured. Examples are checked
 in CI and are not installed with the command-line tools.
+The [ASEP example](asep.md#reusing-a-seed-across-rate-queries) compares independent
+rate solves with queries sharing one TASEP seed, using direct or Async execution.
+The [TASEP/XYZ sweep example](async-execution.md#independent-tasep-and-finite-xyz-solves)
+shows independent complex-root solves with owned requests and bounded admission.
+The [nested sweep example](async-execution.md#owning-nested-model-requests) demonstrates
+independent TB sizes, SU(N) couplings and t–J fillings with complete diagnostics.
+The [ladder example](async-execution.md#prepared-ladder-field-and-rung-sweeps) compares
+repeated scans with shared root preparation and dependent field/rung queries.
 
 ### Where code belongs
 

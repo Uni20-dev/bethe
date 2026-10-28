@@ -77,18 +77,22 @@ inline QuantumNumbers centered_numbers(std::size_t n, std::size_t m)
 
 template <uni20::Real Real> class GroundSystem {
   public:
-    GroundSystem(std::size_t n, std::size_t m)
-        : n(n), m(m), nk(n / 2), ns(m / 2), order(nk + ns), pi(Real{4} * std::atan(Real{1})),
-          labels(centered_numbers(n, m))
+    GroundSystem(std::size_t n, std::size_t m, uni20::Precision precision)
+        : n(n), m(m), nk(n / 2), ns(m / 2), order(nk + ns), zero(uni20::scalar_at_precision<Real>(0, precision)),
+          pi(bethe::detail::pi_like(zero)), labels(centered_numbers(n, m))
     {}
-    static Real scale(Real g) { return std::max(Real{1}, g); }
+    GroundSystem(std::size_t n, std::size_t m)
+      requires(!uni20::has_runtime_precision_v<Real>)
+        : GroundSystem(n, m, uni20::native_precision<Real>())
+    {}
+    static Real scale(Real g) { return std::max(uni20::scalar_like(g, 1), g); }
     std::vector<Real> seed() const
     {
-      std::vector<Real> x(order);
+      std::vector<Real> x(order, zero);
       for (std::size_t j = 0; j < nk; ++j)
         x[j] = pi * Real(labels.charge[nk + j].twice());
       for (std::size_t a = 0; a < ns; ++a)
-        x[nk + a] = std::tan(pi * Real(a + 1) / Real(n)) / Real{2};
+        x[nk + a] = uni20::math::tan(pi * Real(a + 1) / Real(n)) / Real{2};
       return x;
     }
     std::array<std::vector<Real>, 2> expand(std::span<Real const> x, Real g) const
@@ -100,7 +104,7 @@ template <uni20::Real Real> class GroundSystem {
         roots[0].push_back(x[j]);
       for (std::size_t a = ns; a-- > 0;)
         roots[1].push_back(-scale(g) * x[nk + a]);
-      roots[1].push_back(Real{0});
+      roots[1].push_back(zero);
       for (std::size_t a = 0; a < ns; ++a)
         roots[1].push_back(scale(g) * x[nk + a]);
       return roots;
@@ -108,10 +112,12 @@ template <uni20::Real Real> class GroundSystem {
     bool physical(std::span<Real const> x, Real g) const
     {
       if (x.size() != order) return false;
-      Real const limit = uni20::numeric_limits<Real>::max() / Real{8};
       for (std::size_t i = 0; i < order; ++i)
       {
-        if (!uni20::isfinite(x[i]) || x[i] <= Real{0} || x[i] > (i < nk ? limit : limit / scale(g)) ||
+        // Reserve range for sums/differences using the actual scaled root;
+        // runtime precision has no fixed-format numeric_limits::max().
+        Real const guarded_root = Real{8} * x[i] * (i < nk ? uni20::scalar_like(g, 1) : scale(g));
+        if (!uni20::isfinite(x[i]) || x[i] <= Real{0} || !uni20::isfinite(guarded_root) ||
             (i && i != nk && x[i] <= x[i - 1]))
           return false;
       }
@@ -120,7 +126,7 @@ template <uni20::Real Real> class GroundSystem {
     // w/(w*w+d*d), without squaring very large or very small values.
     static Real kernel(Real d, Real w)
     {
-      if (std::abs(d) > w)
+      if (uni20::math::abs(d) > w)
       {
         Real const r = w / d;
         return (r / d) / (Real{1} + r * r);
@@ -137,18 +143,18 @@ template <uni20::Real Real> class GroundSystem {
     Evaluation evaluate(std::span<Real const> x, Real g, uni20::DenseMatrix<Real>* jacobian = nullptr) const
     {
       auto const roots = expand(x, g);
-      Evaluation result{.residual = std::vector<Real>(order)};
+      Evaluation result{.residual = std::vector<Real>(order, zero), .charge = zero, .spin = zero};
       if (jacobian)
         for (std::size_t i = 0; i < order; ++i)
           for (std::size_t j = 0; j < order; ++j)
-            (*jacobian)[i, j] = Real{0};
+            (*jacobian)[i, j] = zero;
       for (std::size_t row = 0; row < order; ++row)
       {
         bool const spin = row >= nk;
         std::size_t const a = spin ? 1 : 0, full = spin ? row - nk + ns + 1 : row + nk;
         Real const value = roots[a][full];
         auto const twice_label = spin ? labels.spin[full].twice() : labels.charge[full].twice();
-        bethe::detail::CompensatedSum<Real> sum, diagonal;
+        bethe::detail::CompensatedSum<Real> sum(zero), diagonal(zero);
         // At weak coupling, subtract exact pi-sized rank contributions before
         // summing the small complementary phases. This resolves the central
         // charge pair whose separation is O(sqrt(g)).
@@ -169,13 +175,13 @@ template <uni20::Real Real> class GroundSystem {
             if (a == b && j == full) continue;
             Real const d = value - roots[b][j];
             Real phase;
-            if (g < Real{1} && std::abs(d) > width)
+            if (g < Real{1} && uni20::math::abs(d) > width)
             {
               rank += (d > Real{0} ? 1 : -1) * (sign > Real{0} ? 1 : -1);
-              phase = -Real{2} * std::atan(width / d);
+              phase = -Real{2} * uni20::math::atan(width / d);
             }
             else
-              phase = Real{2} * std::atan(d / width);
+              phase = Real{2} * uni20::math::atan(d / width);
             sum.add(sign * phase);
             if (jacobian)
             {
@@ -196,9 +202,10 @@ template <uni20::Real Real> class GroundSystem {
         if (!uni20::isfinite(sum.value())) throw std::runtime_error("nonfinite Gaudin-Yang residual");
         // Central weak-coupling charge roots need relative sqrt(g) resolution.
         // Other components use the physical root or unit equation scale.
-        Real const normalization = g < Real{1} && !spin ? std::max(std::sqrt(g), std::abs(value)) : Real(n);
+        Real const normalization =
+            g < Real{1} && !spin ? std::max(uni20::math::sqrt(g), uni20::math::abs(value)) : Real(n);
         auto& norm = spin ? result.spin : result.charge;
-        norm = std::max(norm, std::abs(sum.value()) / normalization);
+        norm = std::max(norm, uni20::math::abs(sum.value()) / normalization);
       }
       if (jacobian)
         for (std::size_t i = 0; i < order; ++i)
@@ -208,13 +215,13 @@ template <uni20::Real Real> class GroundSystem {
       return result;
     }
     std::size_t const n, m, nk, ns, order;
-    Real const pi;
+    Real const zero, pi;
     QuantumNumbers const labels;
 };
 
 template <uni20::Real Real> void observables(State<Real>& state)
 {
-  bethe::detail::CompensatedSum<Real> energy;
+  bethe::detail::CompensatedSum<Real> energy(bethe::detail::precision_zero(state.length));
   for (Real k : state.momenta)
   {
     if (k != Real{0} && k * k == Real{0})
@@ -222,7 +229,7 @@ template <uni20::Real Real> void observables(State<Real>& state)
     energy.add(k * k);
   }
   state.energy = energy.value();
-  Real const pi = Real{4} * std::atan(Real{1});
+  Real const pi = bethe::detail::pi_like(state.length);
   state.momentum = Real{2} * pi * Real(state.momentum_index) / state.length;
   if (!uni20::isfinite(state.energy) || !uni20::isfinite(state.momentum))
     throw std::overflow_error("Gaudin-Yang observables exceed this precision");
@@ -250,11 +257,16 @@ template <uni20::Real Real>
 State<Real> ground_state(std::size_t up, std::size_t down, Real length, Real c, SolverOptions<Real> const& options = {})
 {
   auto const n = detail::check_counts(up, down), m = std::min(up, down);
+  auto const zero = bethe::detail::solver_zero(options);
+  bethe::detail::require_same_precision(length, zero);
+  bethe::detail::require_same_precision(c, zero);
   if (!uni20::isfinite(length) || length <= Real{0} || !uni20::isfinite(c) || c < Real{0})
     throw std::invalid_argument("repulsive Gaudin-Yang requires finite length > 0 and c >= 0");
   if (!uni20::isfinite(options.residual_tolerance) || options.residual_tolerance <= Real{0})
     throw std::invalid_argument("residual tolerance must be finite and positive");
   State<Real> state;
+  state.energy = state.momentum = state.charge_residual = state.spin_residual = state.residual_norm =
+      state.root_interaction = zero;
   state.up = up;
   state.down = down;
   state.length = length;
@@ -265,7 +277,7 @@ State<Real> ground_state(std::size_t up, std::size_t down, Real length, Real c, 
     state.free = state.converged = true;
     state.status = SolveStatus::converged;
     state.root_interaction = c;
-    Real const pi = Real{4} * std::atan(Real{1});
+    Real const pi = bethe::detail::pi_like(state.length);
     for (std::size_t species = 0; species < 2; ++species)
     {
       auto const count = species ? down : up;
@@ -288,11 +300,11 @@ State<Real> ground_state(std::size_t up, std::size_t down, Real length, Real c, 
   auto const order = n / 2 + m / 2;
   auto const elements = std::size_t(std::numeric_limits<std::ptrdiff_t>::max()) / sizeof(Real);
   if (order > elements / order) throw std::length_error("Gaudin-Yang Newton matrix is too large");
-  detail::GroundSystem<Real> const system(n, m);
+  detail::GroundSystem<Real> const system(n, m, options.precision());
   state.quantum_numbers = system.labels;
-  Real g = std::max(target, Real{64} * Real(n));
+  Real g = std::max(target, Real{64} * uni20::scalar_like(zero, n));
   auto x = system.seed();
-  uni20::DenseMatrix<Real> jacobian(order, order), step(order, 1);
+  uni20::DenseMatrix<Real> jacobian(order, order, options.precision()), step(order, 1, options.precision());
   for (;;)
   {
     if (!system.physical(x, g)) throw std::runtime_error("Gaudin-Yang roots cannot be represented at this precision");
@@ -316,13 +328,20 @@ State<Real> ground_state(std::size_t up, std::size_t down, Real length, Real c, 
     if (state.iterations == options.max_iterations) break;
     for (std::size_t j = 0; j < order; ++j)
       step[j, 0] = -evaluation.residual[j];
-    if (!uni20::linalg::solve_inplace_with_info(jacobian, step).succeeded())
+#if !UNI20_HAS_MPLAPACK_MPREAL
+    // Keep free states and zero-update diagnostics usable with MPFR scalars
+    // alone. This is an availability check, not a backend override/fallback.
+    if constexpr (uni20::has_runtime_precision_v<Real>)
+      throw std::runtime_error("Gaudin-Yang Newton updates require MPLAPACK MPFR in this build");
+    else
+#endif
+        if (!uni20::linalg::solve_inplace_with_info(jacobian, step, options.precision()).succeeded())
     {
       state.status = SolveStatus::stalled;
       break;
     }
     bool const accepted = bethe::detail::backtrack_newton(
-        x, [&](std::size_t j) { return step[j, 0]; },
+        x, options.precision(), [&](std::size_t j) { return step[j, 0]; },
         [&](auto const& trial, Real damping) {
           return system.physical(trial, g) &&
                  bethe::detail::newton_decreases(system.evaluate(trial, g).norm(), evaluation.norm(), damping,

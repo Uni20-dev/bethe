@@ -37,6 +37,21 @@ class KondoLadderTutorialTests(unittest.TestCase):
         self.assertAlmostEqual(weak['energy_change']/(.0001**2), -A0/2, delta=1e-9)
         self.assertEqual(self.row('kondo-b0')['energy_change'], 0)
 
+    def test_kondo_row_field_matches_metadata(self):
+        text = (DATA/'kondo-b2-response.csv').read_text()
+        reader = csv.DictReader(line for line in text.splitlines() if not line.startswith('#'))
+        values = list(reader)
+        for field in ('2', '3'):
+            out = io.StringIO()
+            writer = csv.DictWriter(out, fieldnames=['field', *reader.fieldnames])
+            writer.writeheader()
+            writer.writerows(dict(row, field=field) for row in values)
+            current = '\n'.join(line for line in text.splitlines() if line.startswith('#'))+'\n'+out.getvalue()
+            if field == '2':
+                self.assertEqual(read_kondo(current, (2, 1)), read_kondo(text, (2, 1)))
+            else:
+                with self.assertRaises(ValueError): read_kondo(current, (2, 1))
+
     def test_kondo_energy_derivative_crossover_and_saturation(self):
         for b in (1, 2):
             derivative = -(self.row(f'kondo-deriv{b}-plus')['energy_change']-

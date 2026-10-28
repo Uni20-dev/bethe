@@ -37,6 +37,7 @@ namespace detail
 {
 template <uni20::Real Real> void validate_delta(Real delta)
 {
+  (void)bethe::detail::precision_zero(delta);
   if (!uni20::isfinite(delta) || delta < Real{0} || delta > Real{1})
     throw std::invalid_argument("finite-chain XXZ solver requires finite Delta in [0,1]");
 }
@@ -44,6 +45,7 @@ template <uni20::Real Real> void validate_delta(Real delta)
 template <uni20::Real Real> void validate_ground_delta(std::size_t sites, Real delta)
 {
   checked_sites(sites);
+  (void)bethe::detail::precision_zero(delta);
   if (!uni20::isfinite(delta) || delta <= -Real{1})
     throw std::invalid_argument("periodic XXZ ground states require finite Delta > -1");
   if (delta < Real{0} && sites % 2)
@@ -68,16 +70,16 @@ struct RealQuantumNumberWindow
 template <uni20::Real Real = double>
 [[nodiscard]] RealQuantumNumberWindow real_quantum_number_window(std::size_t sites, Real delta, uni20::half_int sz)
 {
-  using std::asin;
-  using std::atan;
+  using uni20::math::asin;
   detail::validate_delta(delta);
   auto const m = detail::sector_roots(sites, sz);
   if (m == 0) return {};
   auto const n = static_cast<std::int64_t>(sites);
   auto const bound = n - static_cast<std::int64_t>(m) - 1;
   auto const parity = bound % 2;
-  Real const infinity = Real(n) / Real{2} + Real(sites - 2 * m + 2) * asin(delta) / (Real{4} * atan(Real{1}));
-  Real const margin = Real{32} * uni20::numeric_limits<Real>::epsilon() * std::max(Real{1}, infinity);
+  Real const infinity = Real(n) / Real{2} + Real(sites - 2 * m + 2) * asin(delta) / bethe::detail::pi_like(delta);
+  Real const margin =
+      Real{32} * uni20::numeric_limits<Real>::epsilon(uni20::precision_of(delta)) * std::max(Real{1}, infinity);
   auto allowed = [&](std::int64_t q) {
     if (delta == Real{1}) return true;
     if (delta == Real{0}) return 2 * q < n; // Exact integer endpoint, |I|<N/4.
@@ -143,12 +145,16 @@ template <uni20::Real Real>
                                               SolverOptions<Real> const& options,
                                               std::span<Real const> initial_roots = {}, Real twist = Real{0})
 {
-  using std::abs;
-  using std::atan;
-  using std::tan;
+  using uni20::math::abs;
+  using uni20::math::atan;
+  using uni20::math::tan;
   auto const m = numbers.size();
-  if (!uni20::isfinite(options.residual_tolerance) || options.residual_tolerance <= Real{0})
-    throw std::invalid_argument("residual tolerance must be finite and positive");
+  Real const zero = detail::solver_zero(delta, options);
+#if UNI20_HAS_MPREAL
+  if constexpr (uni20::has_runtime_precision_v<Real>)
+    if (twist.initialized() && twist.is_exact() && twist == 0) twist = zero;
+#endif
+  bethe::detail::require_same_precision(twist, zero);
   // Internal twisted-XXZ use (e.g. Potts): the caller owns the physical label
   // selection. Public XXZ entry points still use twist=0 and their old windows.
   // Momentum below is the canonical translation label in the homogeneous gauge.
@@ -176,9 +182,9 @@ template <uni20::Real Real>
   result.quantum_numbers.assign(numbers.begin(), numbers.end());
   result.momentum_index = detail::momentum_index(sites, numbers);
   Real const n = static_cast<Real>(sites);
-  Real const pi = Real{4} * atan(Real{1});
+  Real const pi = bethe::detail::pi_like(zero);
   result.momentum = Real{2} * pi * (static_cast<Real>(result.momentum_index) / n);
-  result.rapidities.resize(m, Real{0});
+  result.rapidities.resize(m, zero);
   std::vector<Real> angles(m);
   Real const plus = Real{1} + delta;
   Real const minus = Real{1} - delta;
@@ -187,17 +193,20 @@ template <uni20::Real Real>
   if (!initial_roots.empty())
   {
     if (initial_roots.size() != m) throw std::invalid_argument("initial root count must match the quantum numbers");
-    for (Real const z : initial_roots)
+    for (Real const& z : initial_roots)
+    {
+      bethe::detail::require_same_precision(z, zero);
       if (!uni20::isfinite(z) || (!massive && minus * z * z >= plus))
         throw std::invalid_argument("initial roots must be finite and inside the XXZ real-rapidity branch");
+    }
     result.rapidities.assign(initial_roots.begin(), initial_roots.end());
   }
   for (;;)
   {
-    result.residual_norm = Real{0};
+    result.residual_norm = zero;
     for (std::size_t i = 0; i < m; ++i)
     {
-      bethe::detail::CompensatedSum<Real> phase;
+      bethe::detail::CompensatedSum<Real> phase(zero);
       if (delta != Real{0})
         for (std::size_t j = 0; j < m; ++j)
           if (i != j)
@@ -206,9 +215,9 @@ template <uni20::Real Real>
             {
               // Divide both atan2 arguments by Delta to avoid overflow at
               // large anisotropy. A negative denominator is NOT a pole exit.
-              phase.add(
-                  std::atan2(result.rapidities[i] - result.rapidities[j],
-                             Real{1} + inverse + (Real{1} - inverse) * result.rapidities[i] * result.rapidities[j]));
+              phase.add(uni20::math::atan2(result.rapidities[i] - result.rapidities[j],
+                                           Real{1} + inverse +
+                                               (Real{1} - inverse) * result.rapidities[i] * result.rapidities[j]));
             }
             else
             {
@@ -236,7 +245,7 @@ template <uni20::Real Real>
     }
     ++result.iterations;
   }
-  bethe::detail::CompensatedSum<Real> magnons;
+  bethe::detail::CompensatedSum<Real> magnons(zero);
   for (Real const z : result.rapidities)
     if (massive)
       magnons.add((z * z - Real{1}) / (Real{1} + z * z));
@@ -304,7 +313,7 @@ template <uni20::Real Real = double>
         break;
     }
     result.momentum_index = detail::momentum_index(sites, result.quantum_numbers);
-    result.momentum = Real{8} * std::atan(Real{1}) * (Real(result.momentum_index) / Real(sites));
+    result.momentum = Real{2} * bethe::detail::pi_like(delta) * (Real(result.momentum_index) / Real(sites));
     return result;
   }
   auto const numbers = xxz::sector_ground_quantum_numbers(sites, sz);

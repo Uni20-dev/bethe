@@ -134,8 +134,20 @@ Even then, residuals are recomputed at the **requested** c; `Root coupling
 reached` records the intermediate continuation coupling. An unfinished root
 set must not be used as an eigenstate at the requested interaction.
 
-fp64, platform-native long double, and optional fp128 run the same equations
-without narrowing parameters or output. Finite positive ell, finite c>=0,
+fp64, platform-native long double, optional fp128, and explicit MPFR precision
+run the same equations without narrowing parameters or output. The MPFR frontend
+requires [GMP/MPFR/MPC and MPLAPACK MPFR](building.md#enable-arbitrary-precision).
+For example:
+
+```sh
+bethe-gaudin-yang-pbc 6 --length 6 --c 1 --precision digits-100 --roots
+```
+
+Working precision reaches constants, continuation couplings, Newton matrices,
+backtracking, residuals, energy sums and analytic zeros. A higher bit count does
+not expand the supported shell branches or guarantee that an iteration budget
+converges. Free-state library calls need MPFR scalars only, but the frontend
+requires the LU provider consistently for all MPFR requests. Finite positive ell, finite c>=0,
 and a finite positive tolerance are required; interacting $`c \,\ell /2`$ must be
 finite and nonzero. Particle-label and dense-matrix allocation sizes are
 checked before allocation. Nonfinite physical roots/observables and complete
@@ -192,3 +204,29 @@ the interacting quantum-number arrays are empty on that path.
 `ground_quantum_numbers` describes only the supported interacting branch.
 The header has no CLI or presentation dependency and is suitable for future
 Python bindings without changing the numerical API.
+
+For runtime precision, construct options and every physical input at the same
+finite precision; mixed-precision, unset and exact-only inputs are rejected:
+
+```cpp
+auto p = uni20::Precision::bits(256);
+bethe::gaudin_yang::SolverOptions<uni20::mpreal> options(p);
+auto state = bethe::gaudin_yang::ground_state(
+    5, 3, uni20::mpreal("8", p), uni20::mpreal("1", p), options);
+```
+
+Independent sectors or couplings can be submitted to the existing
+[bounded Async grid](async-execution.md#observable-grids). Capture each solve's
+inputs and options by value; the grid owns them through completion. Each
+continuation chain remains sequential with its own scratch space, and the host
+waits on the final grid result. A numerical failure remains a complete state
+with its requested-coupling residuals and reached-coupling diagnostic. There is
+no additional scheduler and no ambient precision change.
+
+MPFR regressions cover 128, 256 and 333 bits, the unreduced complex equations,
+free/polarized/vacuum states, spin reversal, scaling, failed continuations and
+owned concurrent sector sweeps. An independent 512-bit bisection of the two-body
+jump condition checks accuracy growth beyond binary128. At length one and
+c=10^-60, 333-bit arithmetic resolves the correction
+$`E/(2c)=1-c/12+O(c^2)`$, which fixed binary128 arithmetic cannot distinguish
+from one. Arithmetic precision and solver convergence are tested separately.
