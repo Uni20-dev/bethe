@@ -39,7 +39,9 @@ namespace detail
 template <uni20::Real Real>
 void validate(std::size_t sites, std::size_t particles, Real eta, SolverOptions<Real> const& options)
 {
-  if (sites < 2 || !(eta >= Real{0}) || (!uni20::isfinite(eta) && eta != uni20::numeric_limits<Real>::infinity()) ||
+  auto const zero = bethe::detail::solver_zero(options);
+  bethe::detail::require_same_precision(eta, zero);
+  if (sites < 2 || !(eta >= Real{0}) || (!uni20::isfinite(eta) && !uni20::math::isinf(eta)) ||
       !uni20::isfinite(options.residual_tolerance) || !(options.residual_tolerance > Real{0}))
     throw std::invalid_argument("q-boson requires L>=2, eta>=0 (or +infinity), and finite positive tolerance");
   auto const limit = static_cast<std::size_t>(std::numeric_limits<std::int64_t>::max() / 4);
@@ -52,10 +54,13 @@ template <uni20::Real Real> struct System
     std::size_t sites;
     std::span<std::size_t const> modes;
     Real t; // tanh(eta); never construct exp(eta)
-    Real const pi = Real{4} * std::atan(Real{1});
+    Real const zero = bethe::detail::precision_zero(t);
+    Real const pi = bethe::detail::pi_like(t);
     Real difference(std::span<Real const> u, std::size_t j, std::size_t l) const
     {
-      return Real{2} * pi * Real(static_cast<__int128>(modes[j]) - modes[l]) / Real(sites) + (u[j] - u[l]);
+      return Real{2} * pi * Real(static_cast<std::int64_t>(modes[j]) - static_cast<std::int64_t>(modes[l])) /
+                 Real(sites) +
+             (u[j] - u[l]);
     }
     bool physical(std::span<Real const> u) const
     {
@@ -72,23 +77,24 @@ template <uni20::Real Real> struct System
     Evaluation evaluate(std::span<Real const> k, uni20::DenseMatrix<Real>* jacobian = nullptr) const
     {
       auto const particles = modes.size();
-      Evaluation out{std::vector<Real>(particles)};
+      Evaluation out{std::vector<Real>(particles, zero), zero};
       for (std::size_t j = 0; j < particles; ++j)
       {
-        bethe::detail::CompensatedSum<Real> sum, diagonal;
+        bethe::detail::CompensatedSum<Real> sum(zero), diagonal(zero);
         Real const target = pi * (Real{2} * Real(j) - Real(particles - 1));
-        sum.add(Real(sites) * k[j] - (t < Real{0.5} ? Real{0} : target));
+        sum.add(Real(sites) * k[j] - (t < (Real{1} / Real{2}) ? Real{0} : target));
         diagonal.add(Real(sites));
         for (std::size_t l = 0; l < particles; ++l)
           if (l != j)
           {
-            Real const half = difference(k, j, l) / Real{2}, s = std::sin(half), c = std::cos(half);
+            Real const half = difference(k, j, l) / Real{2}, s = uni20::math::sin(half), c = uni20::math::cos(half);
             // Cancel the exact rank phase against the label's rank contribution
             // before floating-point arithmetic in the weak-deformation limit.
-            sum.add(t < Real{0.5} ? -Real{2} * std::atan(t * (c / s)) : Real{2} * std::atan2(s, t * c));
+            sum.add(t < (Real{1} / Real{2}) ? -Real{2} * uni20::math::atan(t * (c / s))
+                                            : Real{2} * uni20::math::atan2(s, t * c));
             if (jacobian)
             {
-              Real const h = std::hypot(s, t * c), kernel = (t / h) / h;
+              Real const h = uni20::math::hypot(s, t * c), kernel = (t / h) / h;
               if (!uni20::isfinite(kernel)) throw std::overflow_error("q-boson Jacobian exceeds scalar precision");
               (*jacobian)[j, l] = -kernel;
               diagonal.add(kernel);
@@ -96,8 +102,8 @@ template <uni20::Real Real> struct System
           }
         if (jacobian) (*jacobian)[j, j] = diagonal.value();
         out.residual[j] = sum.value();
-        Real const scale = Real(sites) * std::max(std::sqrt(t / Real(sites)), std::abs(k[j]));
-        out.norm = std::max(out.norm, std::abs(out.residual[j]) / scale);
+        Real const scale = Real(sites) * std::max(uni20::math::sqrt(t / Real(sites)), uni20::math::abs(k[j]));
+        out.norm = std::max(out.norm, uni20::math::abs(out.residual[j]) / scale);
         if (!uni20::isfinite(out.residual[j]) || !uni20::isfinite(out.norm))
           throw std::overflow_error("q-boson residual exceeds scalar precision");
       }
@@ -117,15 +123,17 @@ State<Real> solve_modes(std::size_t sites, std::span<std::size_t const> modes, R
 {
   auto const particles = modes.size();
   detail::validate(sites, particles, eta, options);
+  Real const zero = bethe::detail::solver_zero(options);
   State<Real> out;
+  out.residual_norm = out.momentum = zero;
   out.sites = sites;
   out.particles = particles;
   out.eta = eta;
-  out.momenta.resize(particles);
+  out.momenta.assign(particles, zero);
   out.modes.assign(modes.begin(), modes.end());
-  out.deviations.resize(particles);
+  out.deviations.assign(particles, zero);
   out.quantum_numbers.resize(particles);
-  Real const pi = Real{4} * std::atan(Real{1}), t = std::tanh(eta);
+  Real const pi = bethe::detail::pi_like(zero), t = uni20::math::tanh(eta);
   __int128 total = 0;
   for (std::size_t j = 0; j < particles; ++j)
   {
@@ -140,11 +148,21 @@ State<Real> solve_modes(std::size_t sites, std::span<std::size_t const> modes, R
   {
     auto const twice = 2 * static_cast<std::int64_t>(j) - static_cast<std::int64_t>(particles - 1);
     out.quantum_numbers[j] = uni20::from_twice(twice + 2 * static_cast<std::int64_t>(modes[j]));
-    out.deviations[j] =
-        pi * (Real(twice) + Real{2} * Real(total - static_cast<__int128>(particles) * modes[j]) / Real(sites)) /
-        (Real(sites) + Real(particles));
+    auto const offset = total - static_cast<__int128>(particles) * modes[j];
+    Real const mode_offset = [&] {
+      if constexpr (uni20::has_runtime_precision_v<Real>)
+      {
+        // The quotient is bounded by N and the remainder by L. Recombine
+        // exactly: MPFR's precisionless integers accept standard integer types.
+        return Real(static_cast<std::int64_t>(offset / sites)) * Real(sites) +
+               Real(static_cast<std::int64_t>(offset % sites));
+      }
+      else
+        return Real(offset);
+    }();
+    out.deviations[j] = pi * (Real(twice) + Real{2} * mode_offset / Real(sites)) / (Real(sites) + Real(particles));
   }
-  if (t < Real{0.5})
+  if (t < (Real{1} / Real{2}))
   {
     for (std::size_t begin = 0; begin < particles;)
     {
@@ -152,8 +170,9 @@ State<Real> solve_modes(std::size_t sites, std::span<std::size_t const> modes, R
       while (end < particles && modes[end] == modes[begin])
         ++end;
       auto const count = end - begin;
-      Real const factor =
-          std::min(std::sqrt(t) / std::sqrt(Real(sites)) / std::sqrt(Real(count)), pi / (Real(sites) * Real(count)));
+      Real const factor = std::min(uni20::math::sqrt(t) / uni20::math::sqrt(uni20::scalar_like(zero, sites)) /
+                                       uni20::math::sqrt(uni20::scalar_like(zero, count)),
+                                   pi / (Real(sites) * Real(count)));
       for (auto j = begin; j < end; ++j)
         out.deviations[j] = (Real{2} * Real(j - begin) - Real(count - 1)) * factor;
       begin = end;
@@ -190,16 +209,16 @@ State<Real> solve_modes(std::size_t sites, std::span<std::size_t const> modes, R
     out.status = out.iterations == options.max_iterations ? Status::iteration_limit : Status::stalled;
     return out;
   }
-  bethe::detail::CompensatedSum<Real> energy;
+  bethe::detail::CompensatedSum<Real> energy(zero);
   for (std::size_t j = 0; j < particles; ++j)
   {
     auto const centered =
         static_cast<std::int64_t>(modes[j]) - (modes[j] > sites / 2 ? static_cast<std::int64_t>(sites) : 0);
-    Real const s = std::sin(pi * Real(centered) / Real(sites) + out.deviations[j] / Real{2});
+    Real const s = uni20::math::sin(pi * Real(centered) / Real(sites) + out.deviations[j] / Real{2});
     energy.add((Real{4} * s) * s);
   }
   Real const e = energy.value();
-  Real const floor = (uni20::numeric_limits<Real>::min() * uni20::numeric_limits<Real>::epsilon()) * Real{8};
+  Real const floor = uni20::math::next_up(zero) * Real{8};
   bool const exact_zero = total == 0 && (particles < 2 || eta == Real{0});
   if (!exact_zero && (!(e > Real{0}) || !uni20::isfinite(e) || !(e * options.residual_tolerance >= floor)))
   {

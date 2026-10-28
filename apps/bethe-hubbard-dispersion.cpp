@@ -6,6 +6,7 @@
 #include "run-metadata.hpp"
 #include <bethe/hubbard_doped.hpp>
 #include <bethe/observable_grid.hpp>
+#include <limits>
 
 namespace
 {
@@ -212,17 +213,29 @@ template <uni20::Real Real> int run(Arguments const& args, int argc, char** argv
     if (momentum && (!uni20::isfinite(*momentum) || *momentum < lo || *momentum > hi))
       throw std::invalid_argument("momentum is outside a selected branch's interval");
   };
+  std::vector<model::DopedBranch> doped_branches;
+  std::vector<model::Branch> half_branches;
   if (doped)
     for (auto b : {model::DopedBranch::spinon, model::DopedBranch::holon, model::DopedBranch::charge_particle})
     {
       if (args.branch != "all" && args.branch != name(b)) continue;
       auto const [lo, hi] = solver->momentum_range(b);
       check_momentum(lo, hi);
+      doped_branches.push_back(b);
     }
   else
     for (auto b : {model::Branch::spinon, model::Branch::holon, model::Branch::antiholon})
       if (args.branch == "all" || args.branch == name(b))
+      {
         check_momentum(b == model::Branch::spinon ? Real{0} : -pi, pi);
+        half_branches.push_back(b);
+      }
+
+  std::size_t const count = momentum ? 1 : args.points;
+  std::size_t const branches = doped ? doped_branches.size() : half_branches.size();
+  if (branches == 0 || count > std::numeric_limits<std::size_t>::max() / branches)
+    throw std::invalid_argument("selected branch grid is too large");
+  std::size_t const queries = count * branches;
 
   auto& metadata = context.metadata();
   metadata.group("model", "Model");
@@ -334,39 +347,34 @@ template <uni20::Real Real> int run(Arguments const& args, int argc, char** argv
   try
   {
     output.attach(table);
-    std::size_t const count = momentum ? 1 : args.points;
+    auto computation = context.computation();
     if (doped)
-      for (auto b : {model::DopedBranch::spinon, model::DopedBranch::holon, model::DopedBranch::charge_particle})
-      {
-        if (args.branch != "all" && args.branch != name(b)) continue;
-        auto const [lo, hi] = solver->momentum_range(b);
-        auto computation = context.computation();
-        bethe::evaluate_observable_grid(
-            count,
-            [&](std::size_t i) {
-              Real const p = momentum ? *momentum : i == count - 1 ? hi : lo + (hi - lo) * Real(i) / Real(count - 1);
-              return std::as_const(*solver).at_momentum(b, p, convention, reference);
-            },
-            [&](std::size_t, auto const& s) { append(s, std::nullopt, s.fermi_energy); }, {&scheduler});
-      }
+      bethe::evaluate_observable_grid(
+          queries,
+          [&](std::size_t index) {
+            auto const b = doped_branches[index / count];
+            auto const i = index % count;
+            auto const [lo, hi] = solver->momentum_range(b);
+            Real const p = momentum ? *momentum : i == count - 1 ? hi : lo + (hi - lo) * Real(i) / Real(count - 1);
+            return std::as_const(*solver).at_momentum(b, p, convention, reference);
+          },
+          [&](std::size_t, auto const& s) { append(s, std::nullopt, s.fermi_energy); }, {&scheduler});
     else
-      for (auto b : {model::Branch::spinon, model::Branch::holon, model::Branch::antiholon})
-      {
-        if (args.branch != "all" && args.branch != name(b)) continue;
-        auto computation = context.computation();
-        bethe::evaluate_observable_grid(
-            count,
-            [&](std::size_t i) {
-              Real const fraction = momentum ? Real{0} : Real(i) / Real(count - 1);
-              Real const p = momentum                     ? *momentum
-                             : b == model::Branch::spinon ? pi * fraction
-                                                          : pi * (Real{2} * fraction - Real{1});
-              auto s = model::dispersion(b, u, p, convention, options);
-              if (reference == model::EnergyReference::fermi && s.converged) s.energy = s.symmetric_energy;
-              return s;
-            },
-            [&](std::size_t, auto const& s) { append(s, s.evaluations, s.symmetric_energy); }, {&scheduler});
-      }
+      bethe::evaluate_observable_grid(
+          queries,
+          [&](std::size_t index) {
+            auto const b = half_branches[index / count];
+            auto const i = index % count;
+            Real const fraction = momentum ? Real{0} : Real(i) / Real(count - 1);
+            Real const p = momentum                     ? *momentum
+                           : b == model::Branch::spinon ? pi * fraction
+                                                        : pi * (Real{2} * fraction - Real{1});
+            auto s = model::dispersion(b, u, p, convention, options);
+            if (reference == model::EnergyReference::fermi && s.converged) s.energy = s.symmetric_energy;
+            return s;
+          },
+          [&](std::size_t, auto const& s) { append(s, s.evaluations, s.symmetric_energy); }, {&scheduler});
+    computation.finish();
     output.finish(table, summary(complete ? uni20::run_outcome::success : uni20::run_outcome::partial,
                                  complete ? "converged" : "incomplete; failed energies omitted"));
   }

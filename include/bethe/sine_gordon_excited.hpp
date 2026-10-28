@@ -27,6 +27,22 @@ template <uni20::Real Real> struct TwoSolitonState : VacuumState<Real>
 };
 namespace detail
 {
+template <uni20::Real Real>
+Real validate_two_soliton(Real mass, Real length, Real p, uni20::half_int number,
+                          TwoSolitonOptions<Real> const& options)
+{
+  Real const pi = Real{4} * std::atan(Real{1}), eta = options.contour_shift.value_or(pi / Real{4});
+  if (!uni20::isfinite(mass) || mass <= Real{0} || !uni20::isfinite(length) || length <= Real{0} ||
+      !uni20::isfinite(p) || p < Real{1} || (number.twice() != 1 && number.twice() != 3) || !uni20::isfinite(eta) ||
+      eta <= Real{0} || eta >= pi / Real{2} || !uni20::isfinite(options.tolerance) || options.tolerance <= Real{0} ||
+      options.initial_intervals < 8 || options.initial_intervals % 2 ||
+      options.max_intervals < options.initial_intervals ||
+      (options.initial_cutoff && (!uni20::isfinite(*options.initial_cutoff) || *options.initial_cutoff <= Real{0})))
+    throw std::invalid_argument("invalid sine-Gordon two-hole scales, p>=1, I=1/2 or 3/2, or numerical controls");
+  if (options.max_intervals > 16384) throw std::length_error("sine-Gordon two-hole mesh exceeds work ceiling");
+  return eta;
+}
+
 template <uni20::Real Real> struct TwoSolitonMesh : VacuumMesh<Real>
 {
     Real hole{}, coordinate{};
@@ -206,15 +222,7 @@ template <uni20::Real Real>
 TwoSolitonState<Real> two_soliton_level(Real mass, Real length, Real p, uni20::half_int number = uni20::from_twice(1),
                                         TwoSolitonOptions<Real> options = {})
 {
-  Real const pi = Real{4} * std::atan(Real{1}), eta = options.contour_shift.value_or(pi / Real{4});
-  if (!uni20::isfinite(mass) || mass <= Real{0} || !uni20::isfinite(length) || length <= Real{0} ||
-      !uni20::isfinite(p) || p < Real{1} || (number.twice() != 1 && number.twice() != 3) || !uni20::isfinite(eta) ||
-      eta <= Real{0} || eta >= pi / Real{2} || !uni20::isfinite(options.tolerance) || options.tolerance <= Real{0} ||
-      options.initial_intervals < 8 || options.initial_intervals % 2 ||
-      options.max_intervals < options.initial_intervals ||
-      (options.initial_cutoff && (!uni20::isfinite(*options.initial_cutoff) || *options.initial_cutoff <= Real{0})))
-    throw std::invalid_argument("invalid sine-Gordon two-hole scales, p>=1, I=1/2 or 3/2, or numerical controls");
-  if (options.max_intervals > 16384) throw std::length_error("sine-Gordon two-hole mesh exceeds work ceiling");
+  Real const eta = detail::validate_two_soliton(mass, length, p, number, options);
   TwoSolitonState<Real> out;
   out.mass = mass;
   out.length = length;

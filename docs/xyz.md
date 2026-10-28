@@ -176,3 +176,12 @@ for N=2,4,6,8 at 60 combinations of eta and t, verify the original multiplicativ
 complex equations and Jacobian, and compare the t=100 trigonometric limit with
 the existing XXZ solver through N=32. Both signs of Jz and the XY point are
 included, with equation/limit tests in every enabled native precision.
+
+Independent size/eta/t requests compose through the existing owning Async grid;
+the [TASEP/XYZ example](async-execution.md#independent-tasep-and-finite-xyz-solves)
+demonstrates an eta sweep. All roots, controls, scratch and diagnostics belong to
+their individual solve. Tests compare complete successful and failed states
+under deferred and one/multiple-worker scheduling. The coupled Newton iterations
+and single-request CLI remain serial. Arbitrary precision additionally needs
+explicit-precision complex theta arguments and derivatives, not just theta
+constants at zero argument, as well as controls and Newton arithmetic.

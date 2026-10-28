@@ -14,21 +14,37 @@ Kondo Hamiltonian solver.
 bethe-kondo-response --field 2 --scale 1
 bethe-kondo-response --field -0.1 --scale 1 --precision long-double
 bethe-kondo-response --field 2 --scale 1 --precision fp128 --json response.json --csv response.csv
+bethe-kondo-response --field -4 --field-end 4 --points 129 --scale 1 --threads 4 --csv response.csv --no-retain
 bethe-kondo-response --references
 ```
 
 Both `--field` and `--scale` are required. Precision defaults to fp64;
 fp128 requires an enabled MPLAPACK build. The `response` table contains the
-impurity energy change, induced magnetization, zero-field susceptibility,
+field, impurity energy change, induced magnetization, zero-field susceptibility,
 error estimates, work counters and convergence status. The preamble and
 export metadata record the conventions below, numerical controls and CPU time.
 JSON, CSV and TSV files use the shared output options; references appear only
 with `--references`.
 
+Add `--field-end` for an inclusive linear scan with `--points` samples
+(default 17, allowed range 2–1000000). Both directions and both field signs
+are supported; the scale and numerical controls stay fixed. `--points`
+requires `--field-end`. Endpoints and interpolation use the selected arithmetic.
+
+`--threads N` overlaps independent field solves through the shared bounded
+Async grid. One worker is the default. Single-point requests and all-zero
+curves remain direct serial calculations. At most 128 active or uncollected
+results are retained; effective concurrency is capped by that window and the
+number of points. Each solve owns its series, quadrature and scratch storage.
+The calling thread emits rows in requested field order, including failures.
+`--no-retain` discards rows after their sinks consume them. CPU timing covers
+the complete grid including ordered row output. See [measurements and limits](parallel-grids.md#kondo-field-response-scans).
+
 `--tolerance`, `--max-series-terms`, `--max-lobes`, `--max-evaluations` and
 `--max-quadrature-levels` expose the library controls below. An incomplete
 calculation exits with status 2 and publishes missing observables (JSON null,
-empty CSV/TSV cells), not a partial physical answer. Invalid input exits with
+empty CSV/TSV cells) in each failed row; successful rows remain available.
+Invalid input exits with
 status 1 before opening output files, including existing `--force` targets.
 
 ## Physical scope and conventions
