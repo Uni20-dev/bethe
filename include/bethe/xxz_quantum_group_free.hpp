@@ -20,21 +20,23 @@ template <uni20::Real Real> struct Block
 /// Odd N: one ordinary zero mode. Even N: one two-dimensional defective
 /// zero-mode space; occupation 1 produces J_2(0), occupations 0 and 2 J_1(0).
 template <uni20::Real Real = double>
-Block<Real> block(std::size_t sites, std::span<std::size_t const> modes, std::size_t zero_occupation)
+Block<Real> block(std::size_t sites, std::span<std::size_t const> modes, std::size_t zero_occupation,
+                  uni20::Precision p)
 {
+  Real const zero = bethe::detail::precision_zero(uni20::scalar_at_precision<Real>(0, p));
   xxz::detail::checked_sites(sites);
   auto const zeros = sites % 2 ? 1u : 2u;
   if (zero_occupation > zeros) throw std::invalid_argument("invalid zero-mode occupation");
-  bethe::detail::CompensatedSum<Real> energy;
-  Real const pi = Real{4} * std::atan(Real{1});
+  bethe::detail::CompensatedSum<Real> energy(zero);
+  Real const pi = bethe::detail::pi_like(zero);
   for (std::size_t i = 0; i < modes.size(); ++i)
   {
     auto const k = modes[i];
     if (k == 0 || k >= sites || (sites % 2 == 0 && k == sites / 2) || (i && k <= modes[i - 1]))
       throw std::invalid_argument("dispersive modes must increase in 1..N-1, excluding even-N k=N/2");
-    // Enforce particle-hole paired energies using the same native cosine.
+    // Enforce particle-hole paired energies using the same selected-precision cosine.
     auto const reflected = k > sites / 2;
-    Real const value = std::cos(pi * Real(reflected ? sites - k : k) / Real(sites));
+    Real const value = uni20::math::cos(pi * Real(reflected ? sites - k : k) / Real(sites));
     energy.add(reflected ? -value : value);
   }
   return {energy.value(),
@@ -42,6 +44,14 @@ Block<Real> block(std::size_t sites, std::span<std::size_t const> modes, std::si
           zero_occupation,
           modes.size() + zero_occupation,
           zeros == 2 && zero_occupation == 1 ? 2u : 1u};
+}
+
+/// Native convenience overload; runtime scalars require an explicit precision.
+template <uni20::Real Real = double>
+  requires(!uni20::has_runtime_precision_v<Real>)
+Block<Real> block(std::size_t sites, std::span<std::size_t const> modes, std::size_t zero_occupation)
+{
+  return block<Real>(sites, modes, zero_occupation, uni20::native_precision<Real>());
 }
 
 struct SectorOptions
@@ -55,8 +65,10 @@ struct SectorOptions
 /// Reject oversized output before allocating: no partial spectrum is returned.
 /// Reuses the common bounded counting and lexicographic combination helpers.
 template <uni20::Real Real = double>
-std::vector<Block<Real>> sector(std::size_t sites, std::size_t down, SectorOptions const& options = {})
+std::vector<Block<Real>> sector(std::size_t sites, std::size_t down, uni20::Precision p,
+                                SectorOptions const& options = {})
 {
+  (void)bethe::detail::precision_zero(uni20::scalar_at_precision<Real>(0, p));
   xxz::detail::checked_sites(sites);
   if (down > sites) throw std::invalid_argument("down-spin count must lie in 0..N");
   std::size_t const zeros = sites % 2 ? 1 : 2, slots = sites - zeros;
@@ -92,10 +104,17 @@ std::vector<Block<Real>> sector(std::size_t sites, std::size_t down, SectorOptio
       {
         for (std::size_t i = 0; i < indices.size(); ++i)
           modes[i] = indices[i] + (zeros == 2 && indices[i] >= sites / 2 ? 1 : 0);
-        result.push_back(block<Real>(sites, modes, z));
+        result.push_back(block<Real>(sites, modes, z, p));
       }
       while (bethe::detail::advance_combination<std::size_t>(indices, slots));
     }
   return result;
+}
+/// Native convenience overload; runtime scalars require an explicit precision.
+template <uni20::Real Real = double>
+  requires(!uni20::has_runtime_precision_v<Real>)
+std::vector<Block<Real>> sector(std::size_t sites, std::size_t down, SectorOptions const& options = {})
+{
+  return sector<Real>(sites, down, uni20::native_precision<Real>(), options);
 }
 } // namespace bethe::xxz::quantum_group::free
