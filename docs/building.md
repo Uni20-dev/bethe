@@ -202,8 +202,8 @@ cmake --build . --parallel
 ./bethe-info
 ```
 
-For finite-ring structure factors and finite-size Lieb–Liniger, additionally
-enable MPLAPACK matrix kernels. Unlike QR, Uni20's arbitrary-precision square
+For finite-ring structure factors, finite-size Lieb–Liniger and finite Hubbard
+ground states, additionally enable MPLAPACK matrix kernels. Unlike QR, Uni20's arbitrary-precision square
 LU solves currently require this provider:
 
 ```sh
@@ -212,6 +212,7 @@ cmake /path/to/bethe -G Ninja -DCMAKE_BUILD_TYPE=Release \
 cmake --build . --parallel
 ./bethe-xxx-structure-factor 32 --precision bits-256 --threads 4
 ./bethe-lieb-liniger-obc 2 --length 1 --c 1e-50 --precision digits-100
+./bethe-hubbard-obc 5 --u -4 --precision bits-256
 ./bethe-info
 ```
 
@@ -226,7 +227,7 @@ on supported configurations.
 This MPFR path covers periodic/open XXX real roots, sector/ground states, periodic one-spinon
 branches, real-root excitation scans, prepared raising form factors and the
 finite two-spinon DSF, finite-size periodic/hard-wall Lieb–Liniger states and scans,
-plus Richardson and central-spin ground-state continuation.
+plus Richardson, central-spin and finite periodic/open Hubbard ground states.
 It does **not** enable arbitrary precision throughout all models or frontends.
 The XXX real-root and Gaudin solvers need just `UNI20_ENABLE_MPREAL=ON`;
 Lieb–Liniger and form factors additionally need `UNI20_BACKEND_MPLAPACK=ON`. Enabling that provider
