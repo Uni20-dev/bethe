@@ -173,11 +173,46 @@ We do not infer a finite-size degeneracy or state count from these curves.
 `bethe::xyz::SpinonDispersion<Real>(eta,t,J=1)` provides `gap()`,
 `maximum_energy()`, `energy(p)`, `continuum(q,convention)`, `bound_exists(s)`,
 `bound_x_parity(s)`, `bound_gap(s)`, and `bound_energy(s,Q)`.
+For a whole curve, call `prepare_bound(s)` once and use the returned owning
+`BoundBranch`'s `energy(Q)`, `gap()`, `index()` and `x_parity()`. Preparation
+evaluates the theta-function coefficient; queries then use only elementary
+functions. The branch remains valid after the parent dispersion is destroyed.
+The frontend reuses each prepared branch across both z-parity copies, retaining
+per-row failure reporting when only some energies exceed the scalar range.
 Unlike the frontend envelope, the library continuum defaults to a fixed sum
 of two spinon momenta; request `SpinonMomentum::folded` for the union.
 The bound library method takes **reduced Q**, while the frontend's
 `--momentum` takes physical p. Domain mistakes throw `invalid_argument`;
 numerical failures throw a `runtime_error` subtype.
+
+Immutable branches also fit the existing Async preparation/reader interface:
+
+```cpp
+#include <bethe/prepared_observable_grid.hpp>
+#include <bethe/xyz_dispersion.hpp>
+#include <uni20/async/tbb_scheduler.hpp>
+using Band = bethe::xyz::SpinonDispersion<double>;
+uni20::async::TbbScheduler scheduler(4);
+bethe::ExecutionOptions execution{.scheduler = &scheduler, .max_in_flight = 8};
+auto background = bethe::prepare_background_async(
+    [] { return Band(0.75, 1.0).prepare_bound(1); }, execution);
+std::vector<double> energies;
+auto curve = bethe::evaluate_observable_grid_async(
+    background.read(), 65,
+    [](Band::BoundBranch const& branch, std::size_t i) {
+      return branch.energy(2 * uni20::pi<double> * double(i) / 64);
+    },
+    [&energies](std::size_t, double e) { energies.push_back(e); }, execution);
+curve.get_wait(scheduler); // final completion, including its preparation
+```
+
+Several curves may share that preparation, or a parameter sweep can prepare
+one branch and evaluate a whole curve within each independent task. The latter
+amortizes scheduling costs after the expensive theta evaluations are removed
+from individual queries. The single-parameter CLI stays serial. See the
+[reuse and sweep measurements](parallel-grids.md#xyz-prepared-bound-branches).
+Precision remains native/long-double/binary128; MPFR theta functions and
+their error control are separate work.
 
 The independent oracle can be rerun with mpmath (not a build dependency):
 

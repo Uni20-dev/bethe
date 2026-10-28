@@ -52,7 +52,7 @@ void add_options(CLI::App& app, Arguments& a)
   levels->needs(window);
   cli::count_option(app, "--max-states", a.max_states, "Enumeration budget; refusal exits 2")->capture_default_str();
   app.add_flag("--pseudomomenta", a.pseudomomenta, "Include exact-rule k_j values in a separate table");
-  cli::precision_option(app, a.precision);
+  cli::precision_option(app, a.precision, cli::ArbitraryPrecision::real);
   cli::add_data_output_options(app, a.output,
                                {{.name = "states", .description = "Selected states and diagnostics", .primary = true},
                                 {.name = "pseudomomenta",
@@ -75,10 +75,11 @@ std::vector<std::int64_t> parse_labels(std::string_view text)
     text.remove_prefix(comma + 1);
   }
 }
-template <uni20::Real Real> int run(Arguments const& a, int argc, char** argv)
+template <uni20::Real Real> int run(Arguments const& a, uni20::Precision precision, int argc, char** argv)
 {
   uni20::run_context context(program_info(), {.invocation = std::vector<std::string>(argv, argv + argc)});
-  Real const length = uni20::parse_real<Real>(a.length), lambda = uni20::parse_real<Real>(a.lambda);
+  Real const length = cli::parse_scalar<Real>(a.length, precision),
+             lambda = cli::parse_scalar<Real>(a.lambda, precision);
   auto computation = context.computation();
   std::vector<model::State<Real>> states;
   std::optional<model::Spectrum<Real>> scan;
@@ -162,6 +163,7 @@ int main(int argc, char** argv)
       argc, argv, program_info(), [&](auto& app) { add_options(app, a); },
       [&](auto&) {
         a.output.validate();
-        return cli::dispatch_precision(a.precision, [&]<typename Real>() { return run<Real>(a, argc, argv); });
+        return cli::dispatch_scalar_precision<cli::ArbitraryPrecision::real>(
+            a.precision, [&]<typename Real>(uni20::Precision p) { return run<Real>(a, p, argc, argv); });
       });
 }

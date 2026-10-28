@@ -2,7 +2,9 @@
 
 `bethe-lieb-liniger-dispersion` gives the repulsive bulk ground state and
 Lieb's type-I and type-II excitation curves at fixed density. The underlying
-C++ API supports fp64, native long double, and enabled fp128 throughout.
+C++ API supports fp64, native long double, enabled fp128, and explicit-precision
+`uni20::mpreal` throughout. Arbitrary precision requires Uni20's MPFR scalar
+family and MPLAPACK LU support; see [building](building.md#enable-arbitrary-precision).
 
 For plots and a worked density-scaling comparison, start with the
 [particle and hole tutorial](tutorials/lieb-liniger.md).
@@ -20,6 +22,7 @@ bethe-lieb-liniger-dispersion --c 4 --points 65 --csv curves.csv
 bethe-lieb-liniger-dispersion --c 1 --density 0.5 --branch type-i --p-max 8
 bethe-lieb-liniger-dispersion --c 4 --branch type-ii --momentum 1 --precision fp128
 bethe-lieb-liniger-dispersion --c 4 --points 1001 --json curves.json --quiet --no-retain
+bethe-lieb-liniger-dispersion --c 4 --points 65 --precision digits-100 --threads 4
 ```
 
 By default both curves have 33 equally spaced physical momenta from 0 to
@@ -38,7 +41,7 @@ The `dispersion` table includes `p`, `p_over_pi_n`, `energy`, the particle/hole
 and status. Metadata contains Q, ground energy per length, chemical potential,
 coupling, density, precision, solver controls, and provenance; the final summary
 includes CPU time. All [shared output options](output.md) apply. File exports
-and machine stdout receive ordered rows after each bounded evaluation batch;
+and machine stdout receive ordered rows through a bounded continuous window;
 `--no-retain` avoids accumulating the full grid in memory. Human output uses the
 Uni20 presentation layer.
 
@@ -106,7 +109,7 @@ independent rigorous bound on the integral equation. Exact branch endpoints
 are analytic zero-energy points once the background is converged.
 
 All calculations use $`\gamma =c /n`$ and rapidities measured in units of n.
-Thus `Q=n Qbar`, `E/L=n³ ebar`, and `mu=n² mubar`. The solver shares native-real
+Thus `Q=n Qbar`, `E/L=n³ ebar`, and `mu=n² mubar`. The solver shares precision-generic
 Gauss–Legendre quadrature with the doped Hubbard implementation, the pivoting
 linear solver with other Bethe systems, and the stable rational scattering
 kernel with finite continuum solvers.
@@ -130,7 +133,30 @@ auto hole = solver.at_momentum(ll::Branch::type_ii, 1.0);
 // Check point.converged before dereferencing point.energy.
 ```
 
-The scalar type can also be `long double` or Uni20's enabled fp128 type.
+The scalar type can also be `long double`, Uni20's enabled fp128 type, or
+`uni20::mpreal`. Runtime precision is explicit:
+
+```cpp
+auto p = uni20::Precision::decimal_digits(100);
+ll::Options<uni20::mpreal> options(p);
+auto result = ll::ground_state(uni20::mpreal("4", p), uni20::mpreal("1", p), options);
+ll::Solver<uni20::mpreal> solver(uni20::mpreal("4", p), uni20::mpreal("1", p), options);
+auto particle = solver.at_momentum(ll::Branch::type_i, uni20::mpreal("1e-50", p));
+```
+
+Interaction, density, tolerance and query momenta must all have the options'
+finite precision. Exact, unset or mixed-precision inputs are rejected; convert
+deliberately before submission. Constants, quadrature, linear solves,
+accumulation and diagnostics retain that precision, including analytic endpoint
+zeros. Model code never consults or changes ambient MPFR precision; Uni20 owns
+any scoped precision setting needed at the numerical-provider boundary.
+
+The same working precision applies to JSON cells and CSV/TSV output. It specifies
+arithmetic capacity, not certified accurate digits: the mesh and iteration
+budgets still apply. A stringent tolerance can return `mesh_limit` even with
+many arithmetic bits. The finite-temperature solver has separate precision
+support and is not covered by this extension.
+
 `Options<Real>` controls `tolerance`, `initial_nodes`, `max_nodes`, and the
 total density-iteration budget `max_iterations` across all meshes.
 Defaults are $`4096\,\epsilon`$, 16, 256, and 128. Mesh sizes double; the final
@@ -166,6 +192,25 @@ system, increasing finite rings with explicitly changed Bethe labels, Tonks
 curves, density scaling, reflection, and tiny positive gaps in every precision.
 The frontend tests exercise all three export formats, metadata, streaming,
 native input/output, invalid arguments, and numerical failures.
+MPFR tests also resolve the strong-coupling energy correction at c=10^50,
+check accuracy growth with precision, and compare serial and concurrent runs
+at independent precisions without changing defaults.
+
+## Async parameter sweeps
+
+Different couplings or densities are independent ground-state calculations.
+Use `evaluate_observable_grid_async` for a bounded parameter sweep and wait on
+its final result before using the collected rows. The
+[ground-state sweep example](../examples/async_ground_states.cpp) does this with
+four couplings and at most two active solves. It uses 160-bit `mpreal` when the
+MPFR LU provider is configured, and binary64 otherwise. Numerical failures stay
+in the returned `Background` objects; readiness alone does not imply convergence.
+
+For many momenta at one coupling, prepare a `Solver` once through
+[`prepare_background_async`](async-execution.md#shared-backgrounds) and attach
+multiple reader-dependent grids. This shares its two resolved meshes; it avoids
+repeating the ground-state calculation for every point. Different prepared
+backgrounds may use different working precisions on the same scheduler.
 
 These elementary curves do not supply form factors, spectral weights, a full
 multiparticle enumeration, or a momentum-resolved hard-wall spectrum.

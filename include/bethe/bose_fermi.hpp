@@ -35,8 +35,9 @@ template <uni20::Real Real> struct System
 {
     std::size_t n, m;
     Real g;
-    Real const pi = Real{4} * std::atan(Real{1});
-    Real scale() const { return std::max(Real{1}, g); }
+    Real const zero = bethe::detail::precision_zero(g);
+    Real const pi = bethe::detail::pi_like(zero);
+    Real scale() const { return std::max(uni20::scalar_like(g, 1), g); }
     std::size_t order() const { return n / 2 + m / 2; }
     std::array<std::vector<Real>, 2> expand(std::span<Real const> x) const
     {
@@ -44,10 +45,10 @@ template <uni20::Real Real> struct System
       for (std::size_t species = 0; species < 2; ++species)
       {
         auto const count = species ? m : n, half = count / 2, offset = species ? n / 2 : 0;
-        Real const s = species ? scale() : Real{1};
+        Real const s = species ? scale() : uni20::scalar_like(g, 1);
         for (auto j = half; j-- > 0;)
           result[species].push_back(-s * x[offset + j]);
-        if (count % 2) result[species].push_back(Real{0});
+        if (count % 2) result[species].push_back(zero);
         for (std::size_t j = 0; j < half; ++j)
           result[species].push_back(s * x[offset + j]);
       }
@@ -63,20 +64,20 @@ template <uni20::Real Real> struct System
     }
     std::vector<Real> seed() const
     {
-      std::vector<Real> x(order());
+      std::vector<Real> x(order(), zero);
       for (std::size_t j = 0; j < n / 2; ++j)
       {
         auto const rank = 2 * j + 1 + n % 2;
         x[j] = pi * Real(rank);
         if (g < Real{1})
-          x[j] = j < (m + 1) / 2 ? Real(rank) * std::sqrt(g) / std::sqrt(Real(m + 1))
+          x[j] = j < (m + 1) / 2 ? Real(rank) * uni20::math::sqrt(g) / uni20::math::sqrt(uni20::scalar_like(g, m + 1))
                                  : Real{2} * pi * Real(j - (m + 1) / 2 + 1);
       }
       for (std::size_t j = 0; j < m / 2; ++j)
       {
         auto const rank = 2 * j + 1 + m % 2;
-        x[n / 2 + j] = g < Real{1} ? Real(rank) * std::sqrt(g) / std::sqrt(Real(m + 1))
-                                   : g / scale() / Real{2} * std::tan(pi * Real(rank) / (Real{2} * Real(n)));
+        x[n / 2 + j] = g < Real{1} ? Real(rank) * uni20::math::sqrt(g) / uni20::math::sqrt(uni20::scalar_like(g, m + 1))
+                                   : g / scale() / Real{2} * uni20::math::tan(pi * Real(rank) / (Real{2} * Real(n)));
       }
       return x;
     }
@@ -88,11 +89,11 @@ template <uni20::Real Real> struct System
     Evaluation evaluate(std::span<Real const> x, uni20::DenseMatrix<Real>* jacobian = nullptr) const
     {
       auto const roots = expand(x);
-      Evaluation out{std::vector<Real>(order())};
+      Evaluation out{std::vector<Real>(order(), zero), zero};
       if (jacobian)
         for (std::size_t i = 0; i < order(); ++i)
           for (std::size_t j = 0; j < order(); ++j)
-            (*jacobian)[i, j] = Real{0};
+            (*jacobian)[i, j] = zero;
       for (std::size_t row = 0; row < order(); ++row)
       {
         bool const auxiliary = row >= n / 2;
@@ -101,7 +102,7 @@ template <uni20::Real Real> struct System
         auto const full = count / 2 + count % 2 + local;
         Real const value = roots[auxiliary][full], width = g / Real{2};
         std::int64_t rank = -static_cast<std::int64_t>(2 * local + 1 + count % 2);
-        bethe::detail::CompensatedSum<Real> sum, diagonal;
+        bethe::detail::CompensatedSum<Real> sum(zero), diagonal(zero);
         if (!auxiliary)
         {
           sum.add(value);
@@ -111,13 +112,13 @@ template <uni20::Real Real> struct System
         for (std::size_t j = 0; j < other; ++j)
         {
           Real const d = value - roots[!auxiliary][j];
-          if (g < Real{1} && std::abs(d) > width)
+          if (g < Real{1} && uni20::math::abs(d) > width)
           {
             rank += d > Real{0} ? 1 : -1;
-            sum.add(-Real{2} * std::atan(width / d));
+            sum.add(-Real{2} * uni20::math::atan(width / d));
           }
           else
-            sum.add(Real{2} * std::atan(d / width));
+            sum.add(Real{2} * uni20::math::atan(d / width));
           if (jacobian)
           {
             Real const kernel = Real{2} * bethe::detail::rational_scattering_kernel(d, width);
@@ -133,8 +134,9 @@ template <uni20::Real Real> struct System
         if (g < Real{1}) sum.add(pi * Real(rank));
         if (jacobian) (*jacobian)[row, row] += diagonal.value();
         out.residual[row] = sum.value();
-        Real const normalization = !auxiliary && g < Real{1} ? std::max(std::sqrt(g), std::abs(value)) : Real(n);
-        Real const residual = std::abs(sum.value()) / normalization;
+        Real const normalization =
+            !auxiliary && g < Real{1} ? std::max(uni20::math::sqrt(g), uni20::math::abs(value)) : Real(n);
+        Real const residual = uni20::math::abs(sum.value()) / normalization;
         if (!uni20::isfinite(residual)) throw std::overflow_error("Bose-Fermi residual exceeds precision");
         out.norm = std::max(out.norm, residual);
       }
@@ -156,6 +158,9 @@ State<Real> ground_state(std::size_t bosons, std::size_t fermions, Real length, 
   auto const limit = static_cast<std::size_t>(std::numeric_limits<std::int64_t>::max() / 4);
   if (bosons > limit || fermions > limit - bosons) throw std::length_error("Bose-Fermi particle count too large");
   auto const n = bosons + fermions;
+  auto const zero = bethe::detail::solver_zero(options);
+  bethe::detail::require_same_precision(length, zero);
+  bethe::detail::require_same_precision(c, zero);
   if (!uni20::isfinite(length) || !(length > Real{0}) || !uni20::isfinite(c) || c < Real{0} ||
       !uni20::isfinite(options.residual_tolerance) || !(options.residual_tolerance > Real{0}))
     throw std::invalid_argument("Bose-Fermi requires finite length>0, c>=0 and positive finite tolerance");
@@ -164,14 +169,15 @@ State<Real> ground_state(std::size_t bosons, std::size_t fermions, Real length, 
   auto const elements = static_cast<std::size_t>(std::numeric_limits<std::ptrdiff_t>::max()) / sizeof(Real);
   if (n && n > elements / n) throw std::length_error("Bose-Fermi matrix too large");
   State<Real> out;
+  out.residual_norm = out.momentum = zero;
   out.bosons = bosons;
   out.fermions = fermions;
   out.length = length;
   out.interaction = c;
-  Real const pi = Real{4} * std::atan(Real{1});
+  Real const pi = bethe::detail::pi_like(zero);
   if (c == Real{0} || !bosons)
   {
-    out.momenta.assign(bosons, Real{0});
+    out.momenta.assign(bosons, zero);
     for (std::size_t j = 0; j < fermions; ++j)
     {
       auto const mode = static_cast<std::int64_t>(j) - static_cast<std::int64_t>((fermions - 1) / 2);
@@ -239,7 +245,7 @@ State<Real> ground_state(std::size_t bosons, std::size_t fermions, Real length, 
       return out;
     }
   }
-  bethe::detail::CompensatedSum<Real> sum;
+  bethe::detail::CompensatedSum<Real> sum(zero);
   for (Real k : out.momenta)
   {
     if (!uni20::isfinite(k) || (k != Real{0} && k * k == Real{0}))
@@ -249,9 +255,20 @@ State<Real> ground_state(std::size_t bosons, std::size_t fermions, Real length, 
     }
     sum.add(k * k);
   }
-  Real const floor = (uni20::numeric_limits<Real>::min() * uni20::numeric_limits<Real>::epsilon()) * Real{8};
-  if (!uni20::isfinite(sum.value()) || !uni20::isfinite(out.momentum) ||
-      (sum.value() > Real{0} && !(sum.value() * options.residual_tolerance >= floor)))
+  // The requested energy resolution must remain representable. MPFR has no
+  // type-wide min(); test the actual arithmetic without an ambient range change.
+  bool resolved = true;
+  if (sum.value() > Real{0})
+  {
+    if constexpr (uni20::has_runtime_precision_v<Real>)
+      resolved = sum.value() * options.residual_tolerance / Real{8} > Real{0};
+    else
+    {
+      Real const floor = (uni20::numeric_limits<Real>::min() * uni20::numeric_limits<Real>::epsilon()) * Real{8};
+      resolved = sum.value() * options.residual_tolerance >= floor;
+    }
+  }
+  if (!uni20::isfinite(sum.value()) || !uni20::isfinite(out.momentum) || !resolved)
   {
     out.status = Status::precision_limit;
     return out;

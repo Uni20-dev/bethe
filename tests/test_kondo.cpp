@@ -2,11 +2,66 @@
 // Copyright (C) 2026 Ian McCulloch
 #include "test_support.hpp"
 #include <bethe/kondo.hpp>
+#include <bethe/observable_grid.hpp>
+#include <tuple>
+#include <uni20/async/tbb_scheduler.hpp>
 
 namespace
 {
 template <typename Real> class Kondo : public ::testing::Test {};
 TYPED_TEST_SUITE(Kondo, test_support::RealTypes, test_support::PrecisionNames);
+TYPED_TEST(Kondo, OwningAsyncResponsesRetainAllDiagnostics)
+{
+  using R = TypeParam;
+  namespace model = bethe::kondo;
+  using namespace uni20::async;
+  struct Request
+  {
+      R field, scale;
+      model::Options<R> options{};
+  };
+  std::vector<Request> requests{{R{-1}, R{2}}, {R{1}, R{1}}, {R{2}, R{1}}, {R{-8}, R{4}}, {R{0}, R{1}}, {R{3}, R{1}}};
+  requests.back().options.max_lobes = 0;
+  std::vector<model::State<R>> reference;
+  for (auto const& request : requests)
+    reference.push_back(model::ground_response(request.field, request.scale, request.options));
+  for (std::size_t i = 0; i + 1 < reference.size(); ++i)
+    ASSERT_TRUE(reference[i].converged) << i;
+  ASSERT_EQ(reference.back().status, model::Status::tail_limit);
+  auto fields = [](model::State<R> const& s) {
+    return std::tie(s.field, s.scale, s.magnetization, s.energy_change, s.zero_field_susceptibility,
+                    s.magnetization_error, s.scaled_energy_error, s.series_terms, s.lobes, s.evaluations, s.converged,
+                    s.status);
+  };
+  auto check = [&](IAsyncScheduler& scheduler) {
+    std::vector<model::State<R>> actual;
+    auto completion = [&] {
+      auto owned = requests;
+      return bethe::evaluate_observable_grid_async(
+          owned.size(),
+          [owned](std::size_t i) {
+            auto const& request = owned[i];
+            return model::ground_response(request.field, request.scale, request.options);
+          },
+          [&](std::size_t i, model::State<R> state) {
+            EXPECT_EQ(i, actual.size());
+            actual.push_back(std::move(state));
+          },
+          {.scheduler = &scheduler, .max_in_flight = 2});
+    }(); // Request storage and callbacks survive their submission scope.
+    EXPECT_EQ(completion.get_wait(scheduler), reference.size());
+    ASSERT_EQ(actual.size(), reference.size());
+    for (std::size_t i = 0; i < actual.size(); ++i)
+      EXPECT_TRUE(fields(actual[i]) == fields(reference[i])) << i;
+  };
+  DebugScheduler deferred({.order = DebugSchedulerOrder::reverse});
+  check(deferred);
+  for (int workers : {1, 4})
+  {
+    TbbScheduler scheduler(workers);
+    check(scheduler);
+  }
+}
 TYPED_TEST(Kondo, IndependentReferences)
 {
   using R = TypeParam;
