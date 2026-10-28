@@ -130,18 +130,34 @@ auto state = bethe::tj::ground_state<long double>(8, 3, 3);
 if (!state.converged) { /* report an incomplete solve */ }
 ```
 
-All finite calculations retain fp64, long double, or optional fp128. The
-doped solver works with the positive halves of reflection-paired roots,
+The frontend supports fp64, long double, optional fp128, and explicit MPFR
+precision with the MPLAPACK MPFR provider:
+
+```sh
+bethe-tj-pbc 5 --particles 4 --sz 1 --precision bits-256 --roots
+# The equivalent precision can also be specified in decimal digits.
+bethe-tj-pbc 8 --particles 6 --precision digits-80
+```
+
+Library calls use `SolverOptions<uni20::mpreal>(Precision::bits(256))` and
+`ground_state<uni20::mpreal>(L, N_up, N_down, options)`. Options and tolerances
+own their working precision; concurrent requests can use different precisions
+without changing MPFR defaults. Analytic free states, no-hole XXX states and
+zero-update doped estimates are also available without MPLAPACK in library
+calls. The frontend requires the provider for its general interacting path.
+
+The doped solver works with the positive halves of reflection-paired roots,
 inserting exact zero roots for odd counts. Newton uses an analytic Jacobian
 and a line search preserving positive, ordered roots. Uni20's recoverable
-linear-solve dispatch selects the configured provider, returning an unresolved
+linear-solve dispatch selects the configured provider at the selected precision, returning an unresolved
 status for singular/numerically tiny pivots without changing a process-global
 abort policy.
 Dense Newton storage is O((M1+M2)^2); factorization is cubic. The tangent seed
 is only an initial guess, not a thermodynamic approximation to the result.
 This grading is economical near unit filling: a dilute gas on a long ring
 can still require many hole roots. A different grading may be preferable
-for that regime, but is not yet implemented.
+for that regime, but is not yet implemented. Higher arithmetic precision does
+not fix a poor initial guess or guarantee convergence for large dilute sectors.
 
 `residual_norm` is the largest logarithmic residual divided by L, with each
 level also retained in `level_residuals`. The default is 32 epsilon, not an
@@ -152,6 +168,13 @@ energy estimate, residual, count, and a status: iteration limit, stalled,
 or ill-conditioned. The CLI exits 2 for incomplete solves, 1 for invalid or
 unsupported input, and 0 for convergence. Tolerances are never loosened and
 arithmetic precision is never silently changed.
+
+Independent analytic references at 768 bits test accuracy growth at
+80, 160 and 256 bits, including an error below 1e-65 for the five-site doped
+energy. Original complex Bethe equations, all three branches and incomplete
+states are checked separately. Owning one/two-worker Async grids compare
+complete mixed-precision results with direct solves and wait on their final
+result. The single-request CLI stays serial.
 
 Supported populations do not guarantee convergence at every size. For example,
 `bethe-tj-pbc 512 --particles 2 --max-iterations 50 --format json` stalls in

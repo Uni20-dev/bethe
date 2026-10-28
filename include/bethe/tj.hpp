@@ -67,17 +67,22 @@ using bethe::detail::newton_step;
 template <uni20::Real Real> class GroundSystem {
   public:
     GroundSystem(std::size_t n, std::size_t up, std::size_t down)
+      requires(!uni20::has_runtime_precision_v<Real>)
+        : GroundSystem(n, up, down, Real{0})
+    {}
+    GroundSystem(std::size_t n, std::size_t up, std::size_t down, Real const& exemplar)
         : sites(n), counts{n - std::max(up, down), n - up - down}, positive{counts[0] / 2, counts[1] / 2},
-          order(positive[0] + positive[1]), labels(centered_numbers(counts)), pi(Real{4} * std::atan(Real{1}))
+          order(positive[0] + positive[1]), labels(centered_numbers(counts)),
+          zero(bethe::detail::precision_zero(exemplar)), pi(Real{4} * uni20::math::atan(uni20::scalar_like(zero, 1)))
     {}
 
     std::size_t offset(std::size_t a) const { return a ? positive[0] : 0; }
     std::size_t first(std::size_t a) const { return positive[a] + counts[a] % 2; }
-    static Real phase(Real x, Real width) { return Real{2} * std::atan(Real{2} * x / width); }
+    static Real phase(Real x, Real width) { return Real{2} * uni20::math::atan(Real{2} * x / width); }
     static Real derivative(Real x, Real width)
     {
       Real const a = width / Real{2};
-      if (std::abs(x) > Real{1})
+      if (uni20::math::abs(x) > Real{1})
       {
         Real const r = a / x;
         return (Real{2} * r / x) / (Real{1} + r * r);
@@ -86,23 +91,28 @@ template <uni20::Real Real> class GroundSystem {
     }
     std::vector<Real> seed() const
     {
-      std::vector<Real> x(order);
+      std::vector<Real> x(order, zero);
       for (std::size_t a = 0; a < 2; ++a)
         for (std::size_t j = 0; j < positive[a]; ++j)
           x[offset(a) + j] =
-              std::tan(pi * Real(labels[a][first(a) + j].twice()) / (Real{2} * Real(a ? counts[0] : sites))) / Real{2};
+              uni20::math::tan(pi * Real(labels[a][first(a) + j].twice()) / (Real{2} * Real(a ? counts[0] : sites))) /
+              Real{2};
       return x;
     }
     bool physical(std::span<Real const> x) const
     {
       if (x.size() != order) return false;
+      Real const limit = [&] {
+        if constexpr (uni20::has_runtime_precision_v<Real>)
+          return uni20::math::next_down(uni20::scalar_like(zero, std::numeric_limits<double>::infinity())) / Real{8};
+        else
+          return uni20::numeric_limits<Real>::max() / Real{8};
+      }();
       for (std::size_t a = 0; a < 2; ++a)
         for (std::size_t j = 0; j < positive[a]; ++j)
         {
           Real const v = x[offset(a) + j];
-          if (!uni20::isfinite(v) || v <= Real{0} || v > uni20::numeric_limits<Real>::max() / Real{8} ||
-              (j && v <= x[offset(a) + j - 1]))
-            return false;
+          if (!uni20::isfinite(v) || v <= Real{0} || v > limit || (j && v <= x[offset(a) + j - 1])) return false;
         }
       return true;
     }
@@ -113,7 +123,7 @@ template <uni20::Real Real> class GroundSystem {
       {
         for (std::size_t j = positive[a]; j-- > 0;)
           roots[a].push_back(-x[offset(a) + j]);
-        if (counts[a] % 2) roots[a].push_back(Real{0});
+        if (counts[a] % 2) roots[a].push_back(zero);
         for (std::size_t j = 0; j < positive[a]; ++j)
           roots[a].push_back(x[offset(a) + j]);
       }
@@ -128,14 +138,14 @@ template <uni20::Real Real> class GroundSystem {
     Evaluation evaluate(std::span<Real const> x, std::vector<Real>* jac = nullptr) const
     {
       auto const roots = expand(x);
-      Evaluation out{.residual = std::vector<Real>(order)};
-      if (jac) jac->assign(order * order, Real{0});
+      Evaluation out{.residual = std::vector<Real>(order, zero), .levels = {zero, zero}};
+      if (jac) jac->assign(order * order, zero);
       for (std::size_t a = 0; a < 2; ++a)
         for (std::size_t j = 0; j < positive[a]; ++j)
         {
           auto const row = offset(a) + j, full = first(a) + j;
           Real const value = x[row];
-          bethe::detail::CompensatedSum<Real> sum, diagonal;
+          bethe::detail::CompensatedSum<Real> sum(zero), diagonal(zero);
           sum.add(-pi * Real(labels[a][full].twice()) / Real(sites));
           if (a == 0)
           {
@@ -165,7 +175,7 @@ template <uni20::Real Real> class GroundSystem {
           if (jac) (*jac)[row * order + row] += diagonal.value();
           out.residual[row] = sum.value();
           if (!uni20::isfinite(out.residual[row])) throw std::runtime_error("nonfinite t-J equation residual");
-          out.levels[a] = std::max(out.levels[a], std::abs(out.residual[row]));
+          out.levels[a] = std::max(out.levels[a], uni20::math::abs(out.residual[row]));
         }
       return out;
     }
@@ -173,7 +183,7 @@ template <uni20::Real Real> class GroundSystem {
     std::array<std::size_t, 2> const counts, positive;
     std::size_t const order;
     QuantumNumbers const labels;
-    Real const pi;
+    Real const zero, pi;
 };
 } // namespace detail
 
@@ -182,15 +192,19 @@ template <uni20::Real Real = double>
                                        SolverOptions<Real> const& options = {})
 {
   detail::check_counts(sites, num_up, num_down);
+  Real const zero = bethe::detail::solver_zero(options);
+  auto const precision = options.precision();
   if (!uni20::isfinite(options.residual_tolerance) || options.residual_tolerance <= Real{0})
     throw std::invalid_argument("t-J residual tolerance must be finite and positive");
   State<Real> out;
+  out.energy = out.momentum = out.residual_norm = zero;
+  out.level_residuals = {zero, zero};
   out.sites = sites;
   out.num_up = num_up;
   out.num_down = num_down;
   out.holes = sites - num_up - num_down;
   out.spin_reversed = num_down > num_up;
-  Real const pi = Real{4} * std::atan(Real{1});
+  Real const pi = Real{4} * uni20::math::atan(uni20::scalar_like(zero, 1));
   if (num_up == 0 || num_down == 0)
   {
     out.branch = Branch::polarized_free;
@@ -198,8 +212,8 @@ template <uni20::Real Real = double>
     for (std::size_t j = 0; j < particles; ++j)
       out.free_modes.push_back(std::int64_t(j) - std::int64_t((particles - 1) / 2));
     if (particles && particles < sites)
-      out.energy = -Real{2} * std::sin(pi * (Real(particles) / Real(sites))) / std::sin(pi / Real(sites)) *
-                   (particles % 2 ? Real{1} : std::cos(pi / Real(sites)));
+      out.energy = -Real{2} * uni20::math::sin(pi * (uni20::scalar_like(zero, particles) / Real(sites))) /
+                   uni20::math::sin(pi / Real(sites)) * (particles % 2 ? Real{1} : uni20::math::cos(pi / Real(sites)));
     out.momentum_index = particles % 2 ? 0 : particles / 2;
     out.converged = true;
     out.status = SolveStatus::converged;
@@ -215,7 +229,7 @@ template <uni20::Real Real = double>
       v /= Real{2};
     // Algebraically 2*E_XXX-L/2, but do not cancel two extensive constants:
     // a nearly polarized t-J energy can remain O(1) on a very long chain.
-    bethe::detail::CompensatedSum<Real> energy;
+    bethe::detail::CompensatedSum<Real> energy(zero);
     for (Real v : out.rapidities[0])
       energy.add(-detail::GroundSystem<Real>::derivative(v, Real{1}));
     out.energy = energy.value();
@@ -234,7 +248,7 @@ template <uni20::Real Real = double>
     auto const m = sites - std::max(num_up, num_down), order = m / 2 + out.holes / 2;
     auto const elements = std::size_t(std::numeric_limits<std::ptrdiff_t>::max()) / sizeof(Real);
     if (order && order > elements / order) throw std::length_error("t-J Newton matrix is too large");
-    detail::GroundSystem<Real> const system(sites, num_up, num_down);
+    detail::GroundSystem<Real> const system(sites, num_up, num_down, zero);
     out.quantum_numbers = system.labels;
     auto x = system.seed();
     if (!system.physical(x)) throw std::runtime_error("t-J seed is not representable at this precision");
@@ -254,15 +268,15 @@ template <uni20::Real Real = double>
       auto step = evaluation.residual;
       for (auto& v : step)
         v = -v;
-      if (!detail::newton_step(std::move(jac), step))
+      if (!detail::newton_step(std::move(jac), step, precision))
       {
         out.status = SolveStatus::ill_conditioned;
         break;
       }
       bool accepted = false;
-      Real damping{1};
+      Real damping = uni20::scalar_like(zero, 1);
       auto trial = x;
-      for (int backtrack = 0; backtrack <= uni20::numeric_limits<Real>::digits(); ++backtrack)
+      for (int backtrack = 0; backtrack <= uni20::numeric_limits<Real>::digits(precision); ++backtrack)
       {
         for (std::size_t j = 0; j < x.size(); ++j)
           trial[j] = x[j] + damping * step[j];
@@ -286,7 +300,7 @@ template <uni20::Real Real = double>
       ++out.iterations;
     }
     out.rapidities = system.expand(x);
-    bethe::detail::CompensatedSum<Real> energy;
+    bethe::detail::CompensatedSum<Real> energy(zero);
     energy.add(Real{2} * Real(out.holes));
     for (Real v : out.rapidities[0])
       energy.add(-detail::GroundSystem<Real>::derivative(v, Real{1}));
