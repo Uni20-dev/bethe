@@ -122,8 +122,27 @@ if (!state.converged) { /* state.energy is an incomplete estimate */ }
 
 The result retains centres, deviations, exact half-integer string labels,
 adjacent conjugate rapidities, energy, momentum, residuals, status and update
-count. Computation and reporting retain fp64, long double or optional fp128.
-There is no precision fallback or tolerance relaxation.
+count. Computation and reporting retain fp64, long double, optional fp128 or
+explicit MPFR precision. There is no precision fallback or tolerance relaxation.
+
+MPFR requires the configured MPLAPACK MPFR provider for the real Newton
+corrections. Construct controls at a finite working precision; custom tolerances
+must have that same precision:
+
+```cpp
+using R = uni20::mpreal;
+auto p = uni20::Precision::bits(256);
+bethe::takhtajan_babujian::SolverOptions<R> options(p);
+auto state = bethe::takhtajan_babujian::ground_state<R>(16, options);
+```
+
+The CLI accepts `bethe-tb-pbc 16 --precision bits-256 --roots`, or `digits-N`.
+Constants, central zero roots, Newton corrections, sums and incomplete states
+retain the requested precision without changing ambient MPFR settings.
+Rapidities use `uni20::complex<Real>`: native types retain their usual complex
+representation, while MPFR uses Uni20's owning MPC scalar. Structured output
+keeps separate real and imaginary columns. Missing provider support is rejected
+before exports are opened.
 
 Newton uses an analytic real Jacobian, recoverable partial-pivot linear
 solves, and a residual-decreasing line search preserving ordered centres and
@@ -146,6 +165,10 @@ ground-state energy/translation checks at L=4,6,8; the native-precision
 four-site analytic energy; finite-difference Jacobian checks; symmetry,
 budget, precision-I/O and invalid-input tests. The spin-basis ED oracle
 deliberately uses fp64, separately from native-precision analytic/root checks.
+MPFR checks compare the four-site energy against a 768-bit evaluation of
+$`-11-\sqrt{41}`$, test the original complex equations, and compare every state
+field in owning mixed-precision Async grids with direct solves. Each grid task
+owns its controls and roots; Newton iterations within a solve remain sequential.
 
 The next extension is state selection with broken two-strings. Real roots,
 three-strings, singular solutions and their quantum-number branches need
