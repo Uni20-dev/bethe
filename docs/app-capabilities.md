@@ -30,10 +30,11 @@ independent numerical or serial/concurrent validation.
 | `xxz-pbc`, `xxz-obc` | Shared continuous real-root scans; owning parameter sweeps validated in pending PR #15 | Native only on merged baseline; [PR #15](https://github.com/Uni20-dev/bethe/pull/15) adds MPFR with MPLAPACK | Integrate reviewed precision support for existing ground/excitation families |
 | `q-boson-pbc` | Shared continuous real-root scans; owning mixed-precision queries validated in pending PR #25 | Native only on merged baseline; [PR #25](https://github.com/Uni20-dev/bethe/pull/25) adds MPFR with MPLAPACK | Integrate reviewed ground/canonical-state precision; #25 stacks on #19 for the scalar-only Newton guard |
 | `su3-pbc` | Individual nested solves; owning mixed-precision sweeps validated in pending PR #13 | Native only on merged baseline; [PR #13](https://github.com/Uni20-dev/bethe/pull/13) adds MPFR with MPLAPACK | Integrate reviewed balanced-singlet precision support |
-| `tb-pbc` | Individual ground-state solve | Native only | Explicit precision, finite string deviations and complex scalar representation; shared Newton helper awaits PR #9 |
+| `tb-pbc` | Single-request CLI stays serial; pending [PR #33](https://github.com/Uni20-dev/bethe/pull/33) validates owning Async size sweeps and complete-state diagnostics | Native only | Explicit precision, finite string deviations and complex scalar representation; shared Newton helper awaits PR #9 |
 | `hubbard-pbc`, `hubbard-obc` | Individual finite-size solves; owning parameter sweeps validated in pending PR #16 | Native only on merged baseline; [PR #16](https://github.com/Uni20-dev/bethe/pull/16) adds MPFR with MPLAPACK | Integrate reviewed precision for existing sectors, both interaction signs and symmetry mappings |
 | `gaudin-yang-pbc` | Individual nested solves; owning mixed-precision sector sweeps validated in pending PR #18 | Native only on merged baseline; [PR #18](https://github.com/Uni20-dev/bethe/pull/18) adds MPFR with MPLAPACK | Integrate reviewed precision for existing repulsive shells, free/polarized limits and requested-coupling failure diagnostics |
-| `sun-fermions-pbc`, `tj-pbc`, `ladder-pbc` | Composition audit pending | Native only | Shared explicit-precision Newton helper awaits PR #9; audit nested continuation and scratch ownership |
+| `sun-fermions-pbc`, `tj-pbc` | Single-request CLIs stay serial; pending [PR #33](https://github.com/Uni20-dev/bethe/pull/33) validates owning coupling/population grids with complete partial/failure states | Native only | Shared explicit-precision Newton helper awaits PR #9; large dilute t–J seed/Newton convergence remains a documented numerical limitation |
+| `ladder-pbc` | Shared root-preparation/composition audit pending | Native only | Reuse independent SU(4) seas across rung/field queries while preserving whole-scan budgets and partial candidates; explicit Newton precision awaits PR #9 |
 | `bose-fermi-pbc` | Individual nested solves; owning mixed-precision requests validated in pending PR #19 | Native only on merged baseline; [PR #19](https://github.com/Uni20-dev/bethe/pull/19) adds MPFR with MPLAPACK | Integrate reviewed mixed/pure/free-state precision and shared continuum-provider guard |
 | `su3-dispersion` | Serial analytic CLI; owning mixed-precision Async queries validated in pending PR #20 | Native only on merged baseline; [PR #20](https://github.com/Uni20-dev/bethe/pull/20) adds MPFR scalars, no MPLAPACK | Integrate reviewed band/bound precision; individual formulas remain too cheap to justify per-point scheduling |
 | `haldane-shastry-pbc`, `sutherland-pbc` | Serial analytic CLIs; owning mixed-precision window/parameter scans validated in pending PR #21 | Native only on merged baseline; [PR #21](https://github.com/Uni20-dev/bethe/pull/21) adds MPFR scalars, no MPLAPACK | Integrate reviewed precision and exact-integer gap/order handling; cheap formulas stay serial |
@@ -219,3 +220,14 @@ when both models share a scheduler. Substantial filling/eta curves scale
 states match direct calls. Scalar kernels and single-request CLIs are unchanged.
 Their MPFR paths remain unimplemented; the complex-function and Newton audit
 is separate from this measured concurrency checkpoint.
+
+Pending #33 validates owning TB, SU(N) fermion and t–J requests with a compiled
+example and complete-state comparisons under deferred and one/four-worker
+scheduling. Native/wide/sanitizer checks pass 57/79/57. All 90,888 timed state
+rows match direct calls; independent-request sweeps scale 6.4–7.5x at eight
+workers, with documented CPU/memory costs. The binary64 t–J benchmark includes
+two numerical failures in every variant. A larger 512-site curve has 12 failures;
+all states and diagnostics match direct/eight-worker execution, and a bounded
+higher-precision probe does not resolve the representative dilute failure.
+This convergence limitation is separate from Async correctness. Model kernels,
+frontends and precision support are unchanged; no new state family is claimed.
