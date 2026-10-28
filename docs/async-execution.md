@@ -20,7 +20,8 @@ auto pending = bethe::heisenberg::real_excitations_async<double>(
 auto const& result = pending.get_wait(scheduler);
 ```
 
-The periodic and open XXX APIs provide `real_excitations_async`. Other models
+The periodic and open XXX and finite Lieb–Liniger APIs provide
+`real_excitations_async`. Other models
 using the shared real-root scanner also use continuous execution through their
 existing synchronous APIs. After preparing the ground reference, a bounded
 number of runners repeatedly solve candidates. There is no barrier between
@@ -32,6 +33,16 @@ order. Final energy ordering and numerical convergence rules are unchanged.
 `max_in_flight` limits active candidates, not scheduler threads. It defaults to
 128. `batch_size` remains for clients that still use batches; both must be
 positive. Set BLAS/OpenMP thread limits to one when parallelizing many solves.
+
+For finite Lieb–Liniger, include `<bethe/lieb_liniger.hpp>` or
+`<bethe/lieb_liniger_open.hpp>` and submit
+`lieb_liniger::real_excitations_async(particles, length, c, padding, scan, solver)`
+(or `lieb_liniger::open::real_excitations_async` for hard walls). These entry
+points own the physical parameters, label-window controls and solver options.
+The periodic result also retains its window and physical metadata. The same
+finite-family cutoff and top-K selection apply as in the blocking APIs.
+Independent MPFR scans can carry different precisions on the same scheduler;
+they require the configured MPLAPACK MPFR real-solve provider.
 
 ## XXX two-spinon structure factor
 
@@ -178,3 +189,41 @@ Each run prints wall/process-CPU timing and writes complete ordered roots,
 diagnostics, spectral lines and reductions using native-precision formatting.
 Timing excludes file serialization. Compare the files before interpreting
 speedup, repeat measurements, and use a quiet machine for performance claims.
+
+## Independent Richardson and central-spin solves
+
+Their synchronous solvers already support explicit MPFR precision, including
+scalar-only MPFR configurations without MPLAPACK. Submit independent parameter
+or sector points through `evaluate_observable_grid_async`; each point's Newton
+iterations and continuation stages stay sequential. A new scheduler or a task
+for each continuation step is unnecessary.
+
+The [complete parameter-sweep example](../examples/async_gaudin_sweep.cpp)
+captures the level and bath-coupling vectors and both sets of solver options by
+value. It constructs the solvers' borrowed spans only inside each evaluation.
+Capturing a span by value alone would **not** extend the input array's lifetime.
+The bounded collector retains complete states in input order, and the host
+waits once on the final point-count result before inspecting or printing them.
+The example uses 160-bit MPFR when configured and binary64 otherwise, and reports
+the working precision. It is built in CI and is not an installed frontend.
+
+```sh
+cmake -DBETHE_BUILD_EXAMPLES=ON /path/to/bethe
+cmake --build . --target bethe-async-gaudin-sweep-example -j2
+OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 ./examples/bethe-async-gaudin-sweep-example
+```
+
+Numerical failure remains a state with its original status, reached parameter,
+residuals and iteration counts; inspect `converged` before using an energy.
+A zero-budget central-spin solve can have no physical energy at all. A grid's
+successful completion means every requested evaluation finished, not that every
+state converged. Execution exceptions and cancellation follow the shared grid
+contract above. This example demonstrates composition, not a measured speedup.
+
+Regression checks compare full states with serial solves, including partial
+continuation results, blocked pairing levels and signed bath couplings. Deferred
+scheduling exercises destruction of submission-local inputs, while one-worker
+and multi-worker runs check composition. MPFR tests interleave 128-, 256- and
+333-bit requests and check stored precision without changing ambient defaults.
+Existing XXX scan/form-factor tests already cover independent-precision
+composition; those APIs require no additional wrapper.

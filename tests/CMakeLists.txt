@@ -104,11 +104,15 @@ add_executable(bethe_parallel_scan_tests test_parallel_scan.cpp)
 target_link_libraries(bethe_parallel_scan_tests PRIVATE bethe::bethe TBB::tbb)
 bethe_discover_tests(bethe_parallel_scan_tests)
 
-foreach(test IN ITEMS async_scan continuous_work async_structure_factor prepared_observable_grid)
+foreach(test IN ITEMS async_scan continuous_work async_structure_factor prepared_observable_grid solver_composition)
   add_executable(bethe_${test}_tests test_${test}.cpp)
   target_link_libraries(bethe_${test}_tests PRIVATE bethe::bethe TBB::tbb)
   bethe_discover_tests(bethe_${test}_tests)
 endforeach()
+
+if(TARGET bethe-async-gaudin-sweep-example)
+  add_test(NAME SolverComposition.example COMMAND bethe-async-gaudin-sweep-example)
+endif()
 
 if(TARGET bethe-async-background-example)
   add_test(NAME AsyncBackground.example COMMAND bethe-async-background-example)

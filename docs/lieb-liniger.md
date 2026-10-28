@@ -156,6 +156,12 @@ auto scan = ll::real_excitations(4, 4.0L, 1.0L, 1, {.count = 10});
 // Check ground.converged, excited.converged, and scan.converged().
 ```
 
+For nonblocking composition, both periodic and hard-wall namespaces also expose
+`real_excitations_async` with the same arguments. It owns all model and solver
+options; keep the borrowed scheduler alive through completion. The blocking
+entry point waits on this same operation. See [Async scans](async-execution.md#state-scans)
+for dependencies, cancellation and bounded execution.
+
 For runtime precision, construct every real input at the requested precision:
 
 ```cpp
