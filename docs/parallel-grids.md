@@ -148,3 +148,84 @@ at p=5.412109375 with the default numerical controls. That row, its missing
 energy, and the partial outcome were identical at every worker count; binary64
 and binary128 completed this grid. Parallelism preserves these numerical
 diagnostics rather than changing the tolerance or silently dropping points.
+
+## ASEP shared seeds
+
+At fixed size and filling, ASEP rate queries all begin from the same unit-rate
+TASEP solution. `asep::PreparedGap` owns that seed and supports concurrent const
+queries with independent continuation scratch. The existing Async preparation
+and reader-dependent grid admit rate queries once preparation is ready.
+The single-request CLI keeps its
+direct solver and analytic fast paths.
+
+Build the [example](../examples/async_asep.cpp) with `BETHE_BUILD_EXAMPLES=ON`,
+then run from the build directory:
+
+```sh
+OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 \
+  ./examples/bethe-async-asep-example prepared 128 32 1025 8 fp64 > rates.csv
+```
+
+The right rate is one; left rates cover [0,0.9] inclusively. `independent`
+recomputes the seed per rate; `prepared` constructs it once. Thread count 0
+uses direct serial calls and positive counts use Async, capped by the point
+count and window 32. All modes use the same numerical controls. The example
+retains complete states for subsequent printing, including complex roots and
+all diagnostics. The admission bound does not bound that retained output.
+
+### Whole-process measurements
+
+Measurements on 28 October 2026 use an Intel Core i7-12700KF, GCC 13.3 Release,
+Uni20 `04163b9b`, oneTBB 2022.3 and one BLAS/OpenMP thread. Binary80 denotes
+this machine's 80-bit extended `long double`. Binary128 uses the configured
+MPLAPACK 3.0.0 Release provider; normal Uni20 dispatch is unchanged.
+
+Workloads have quarter filling: 128 sites / 1,025 binary64 rates, 64 sites /
+1,025 binary80 rates and 64 sites / 65 binary128 rates. Use `long-double` and
+`fp128` for the latter precisions. Default budgets are 1,000 seed sweeps,
+100 seed Newton updates, 256 continuation attempts and 100 Newton updates per
+attempt; both residual tolerances are 128 native epsilons. The kernel,
+step-selection rules and precision support are unchanged.
+
+Whole-process wall/CPU times include preparation, scheduler construction,
+continuation, ordered collection and CSV printing. Tables give medians over
+three repeats, reversing configuration order in the middle repeat. These are
+shared-workstation measurements with OS-selected affinity and no overlapping
+compiler jobs. They are not an isolated scaling experiment.
+
+| Arithmetic | Independent direct (s) | Independent 8 (s) | Prepared direct (s) | Prepared Async 1 (s) | Prepared 4 (s) | Prepared 8 (s) |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| binary64 | 12.24 | 1.60 | 8.31 | 8.35 | 2.16 | 1.11 |
+| binary80 | 9.87 | 1.31 | 6.98 | 6.98 | 1.80 | 0.94 |
+| binary128 | 11.65 | 1.66 | 8.88 | 8.95 | 2.44 | 1.31 |
+
+Seed reuse removes 24–32% of direct serial work in these curves. Scheduling
+the prepared queries at eight workers gives another 6.8–7.5x wall-time speedup
+relative to prepared direct execution. The combined speedup over independent
+direct solves is 8.9–11.0x. Process CPU times distinguish saved preparation
+from scheduling overhead:
+
+| Arithmetic | Independent direct CPU (s) | Independent 8 CPU (s) | Prepared direct CPU (s) | Prepared Async 1 CPU (s) | Prepared 4 CPU (s) | Prepared 8 CPU (s) |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| binary64 | 12.23 | 12.70 | 8.31 | 8.35 | 8.57 | 8.73 |
+| binary80 | 9.87 | 10.23 | 6.98 | 6.98 | 7.07 | 7.26 |
+| binary128 | 11.64 | 12.10 | 8.87 | 8.95 | 9.10 | 9.21 |
+
+Maximum RSS across these runs is 7.19 MiB. For prepared direct/eight-worker
+execution it is 6.41/7.19 MiB in binary64, 6.09/6.41 MiB in binary80 and
+6.09/6.25 MiB in binary128. Retained output grows with point count and roots
+per state; these figures are not a memory bound for larger sweeps.
+
+All 38,070 complete state rows in 54 timed processes match independent direct
+output byte for byte, including every complex root and diagnostic. Separate
+matched-main checks cover 60 single-request cases / 291 result and root rows,
+including failures, analytic endpoints, tiny bias and rate scaling. All
+non-timing/non-provenance metadata and statuses agree exactly. Native, wide and
+sanitizer tests also compare full library states and two readers of one
+preparation, including numerical seed failure.
+
+Seed work counters in each row describe the shared preparation and must not
+be summed as additional CPU work. Timing distinguishes that one-time cost from
+the rate queries. An entirely analytic curve should use direct analytic calls;
+preparing a TASEP state for it would be unnecessary. The generic grid can also
+compose independent geometries or fillings, where each request owns its seed.

@@ -378,6 +378,8 @@ Set `BETHE_BUILD_EXAMPLES=ON` to build library composition examples in the
 asynchronously and submits both elementary branches before observing it; see
 [shared backgrounds](async-execution.md#shared-backgrounds). Examples are checked
 in CI and are not installed with the command-line tools.
+The [ASEP example](asep.md#reusing-a-seed-across-rate-queries) compares independent
+rate solves with queries sharing one TASEP seed, using direct or Async execution.
 
 ### Where code belongs
 
