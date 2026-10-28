@@ -76,6 +76,28 @@ same_tables(lieb_liniger, ["--c", "4", "--branch", "type-i", "--p-max", "20", "-
 same_tables(hubbard, ["--u", "4", "--branch", "holon", "--momentum", "1",
                       "--max-evaluations", "0"], 2)
 
+# One requested momentum can now overlap different Hubbard branches. Several
+# branch boundaries also lie inside the same admission window on a short grid.
+for base in (["--u", "4"], ["--u", "4", "--density", "0.5"]):
+    for precision in precisions:
+        same_tables(hubbard, [*base, "--momentum", "1", "--precision", precision])
+    args = [*base, "--points", "65", "--max-iterations", "0"]
+    failed = same_tables(hubbard, args, 2)
+    assert len(failed["rows"]) == 195
+    column = next(i for i, c in enumerate(failed["columns"]) if c["id"] == "branch")
+    branches = ["spinon", "holon", "charge-particle" if "--density" in base else "antiholon"]
+    assert [row[column] for row in failed["rows"]] == [b for b in branches for _ in range(65)]
+
+with tempfile.TemporaryDirectory() as directory:
+    path = Path(directory)/"preserve.csv"
+    path.write_text("preserve\n")
+    overflow = subprocess.run([hubbard, "--u", "4", "--points", str((2*sys.maxsize+1)//3+1),
+                               "--csv", str(path), "--force"],
+                              text=True, capture_output=True, env=env, timeout=60)
+    assert overflow.returncode == 1 and "selected branch grid is too large" in overflow.stderr
+    assert not overflow.stdout
+    assert path.read_text() == "preserve\n"
+
 for program, base, _ in cases:
     with tempfile.TemporaryDirectory() as directory:
         path = Path(directory)

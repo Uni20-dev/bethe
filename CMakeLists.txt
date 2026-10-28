@@ -160,7 +160,8 @@ if(BETHE_BUILD_APPS)
     bethe-xxx-pbc bethe-xxx-obc bethe-xxz-pbc bethe-xxz-obc
     bethe-lieb-liniger-pbc bethe-lieb-liniger-obc bethe-q-boson-pbc
     bethe-xxz-qg-obc bethe-biquadratic-obc
-    bethe-hubbard-dispersion bethe-lieb-liniger-dispersion)
+    bethe-hubbard-dispersion bethe-lieb-liniger-dispersion bethe-lieb-liniger-thermal
+    bethe-hubbard-continuum)
   foreach(app IN LISTS bethe_parallel_apps)
     target_link_libraries(${app} PRIVATE TBB::tbb)
   endforeach()
