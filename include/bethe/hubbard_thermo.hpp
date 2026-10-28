@@ -88,7 +88,7 @@ template <uni20::Real Real> Real atan_exp(Real x)
 }
 template <uni20::Real Real> Real atanh_exp_minus(Real x)
 {
-  if (x > Real{.5}) return uni20::math::atanh(uni20::math::exp(-x));
+  if (x > uni20::scalar_like(x, 1) / 2) return uni20::math::atanh(uni20::math::exp(-x));
   return (uni20::math::log1p(uni20::math::exp(-x)) - uni20::math::log(-uni20::math::expm1(-x))) / Real{2};
 }
 template <uni20::Real Real> Real wrap(Real p)
