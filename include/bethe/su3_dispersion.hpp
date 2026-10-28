@@ -65,11 +65,12 @@ template <uni20::Real Real> class ExcitationDispersion {
       // gapless endpoint. Both representations have the same endpoint speed.
       Real const distance = std::min(p, end - p);
       // Halving a subnormal momentum can erase it even when v*p is nonzero.
+      // MPFR can also round a halved value UP to its minimum; test reversibility.
       // The curvature correction there is far below relative roundoff.
       if (distance == Real{0}) return zero_;
       bool use_linear;
       if constexpr (uni20::has_runtime_precision_v<Real>)
-        use_linear = distance / Real{2} == Real{0};
+        use_linear = (distance / Real{2}) * Real{2} != distance;
       else
         use_linear = distance < uni20::numeric_limits<Real>::min();
       Real const value = use_linear ? velocity() * distance
