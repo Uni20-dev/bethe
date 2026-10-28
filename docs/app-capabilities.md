@@ -30,9 +30,11 @@ independent numerical or serial/concurrent validation.
 | `xxz-pbc`, `xxz-obc` | Shared continuous real-root scans; owning parameter sweeps validated in pending PR #15 | Native only on merged baseline; [PR #15](https://github.com/Uni20-dev/bethe/pull/15) adds MPFR with MPLAPACK | Integrate reviewed precision support for existing ground/excitation families |
 | `q-boson-pbc` | Shared real-root excitation scans | Native only | Runtime precision and complete scan diagnostics |
 | `su3-pbc` | Individual nested solves; owning mixed-precision sweeps validated in pending PR #13 | Native only on merged baseline; [PR #13](https://github.com/Uni20-dev/bethe/pull/13) adds MPFR with MPLAPACK | Integrate reviewed balanced-singlet precision support |
-| `tb-pbc` | Individual ground-state solve | Native only | Explicit precision, finite string deviations and complex scalar representation |
+| `tb-pbc` | Individual ground-state solve | Native only | Explicit precision, finite string deviations and complex scalar representation; shared Newton helper awaits PR #9 |
 | `hubbard-pbc`, `hubbard-obc` | Individual finite-size solves; owning parameter sweeps validated in pending PR #16 | Native only on merged baseline; [PR #16](https://github.com/Uni20-dev/bethe/pull/16) adds MPFR with MPLAPACK | Integrate reviewed precision for existing sectors, both interaction signs and symmetry mappings |
-| `sun-fermions-pbc`, `gaudin-yang-pbc`, `bose-fermi-pbc`, `tj-pbc`, `ladder-pbc` | Composition audit pending | Native only | Related real/nested solvers, continuation and scratch ownership |
+| `gaudin-yang-pbc` | Individual nested solves; owning mixed-precision sector sweeps validated in pending PR #18 | Native only on merged baseline; [PR #18](https://github.com/Uni20-dev/bethe/pull/18) adds MPFR with MPLAPACK | Integrate reviewed precision for existing repulsive shells, free/polarized limits and requested-coupling failure diagnostics |
+| `sun-fermions-pbc`, `tj-pbc` | Composition audit pending | Native only | Shared explicit-precision Newton helper awaits PR #9; audit nested continuation and scratch ownership |
+| `bose-fermi-pbc`, `ladder-pbc` | Composition audit pending | Native only | Related real/nested solvers, continuation and scratch ownership |
 | `su3-dispersion`, `tb-dispersion`, `haldane-shastry-pbc`, `sutherland-pbc` | Analytic/formula-based paths | Native only | Low-cost precision extensions; measure before parallelizing individual points |
 | `xxz-dispersion`, `xyz-dispersion`, `sine-gordon-dispersion` | Independent queries; prepared-context audit pending | Native only | Elliptic/theta/integral accuracy and immutable scratch ownership |
 | `sine-gordon-bethe-yang`, `biquadratic-obc`, `xxz-qg-obc` | Sector-specific solver/composition audit pending | Native only | Treat real, complex and singular sectors separately |
@@ -56,7 +58,7 @@ in Uni20; model equations and physical normalization remain in Bethe.
   rows, including grids larger than the admission window, mixed successful and
   failed points, threshold counts, native precisions and output preservation.
 
-The pending MPFR checkpoints #9, #13, #15 and #16 verify precision growth
+The pending MPFR checkpoints #9, #13, #15, #16 and #18 verify precision growth
 against independent references beyond binary128, typed endpoint/failure values,
 CLI export/provider contracts and ownership in composed Async calculations.
 The pending scheduling checkpoints #11, #12 and #14 compare complete results
@@ -70,6 +72,12 @@ downstream consumers, one/multiple workers, failed solves, cancellation and
 independent MPFR precisions are covered. Existing XXX scan and structure-factor
 composition tests were rerun; their APIs need no new wrapper. No new precision
 support or parallel speedup is claimed by that audit.
+
+Gaudin–Yang's pending #18 verifies the unreduced complex Bethe equations and
+two-body accuracy growth at 128/256/333 bits. Free states and zero-update
+diagnostics also work with MPFR scalars alone at the library level; Newton
+updates and the MPFR frontend require MPLAPACK. Mixed interacting populations
+remain odd, and continuation within each independent solve remains sequential.
 
 Update this inventory with each reviewed app checkpoint. A proposed capability
 or a pending audit is not evidence of implemented support.
