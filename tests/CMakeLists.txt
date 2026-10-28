@@ -172,6 +172,11 @@ bethe_discover_tests(bethe_xyz_dispersion_tests)
 add_executable(bethe_su3_dispersion_tests test_su3_dispersion.cpp)
 target_link_libraries(bethe_su3_dispersion_tests PRIVATE bethe::bethe)
 bethe_discover_tests(bethe_su3_dispersion_tests)
+if(BETHE_HAS_MPREAL)
+  add_executable(bethe_su3_dispersion_mpfr_tests test_su3_dispersion_mpfr.cpp)
+  target_link_libraries(bethe_su3_dispersion_mpfr_tests PRIVATE bethe::bethe TBB::tbb)
+  bethe_discover_tests(bethe_su3_dispersion_mpfr_tests)
+endif()
 
 add_executable(bethe_tb_dispersion_tests test_tb_dispersion.cpp)
 target_link_libraries(bethe_tb_dispersion_tests PRIVATE bethe::bethe)
@@ -419,6 +424,9 @@ if(BETHE_BUILD_APPS)
     add_test(NAME SU3Dispersion.cli
       COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_su3_dispersion.py"
         "$<TARGET_FILE:bethe-su3-dispersion>" "${BETHE_HAS_FLOAT128}")
+    add_test(NAME SU3Dispersion.precision
+      COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_su3_dispersion_precision.py"
+        "$<TARGET_FILE:bethe-su3-dispersion>" "${BETHE_HAS_MPREAL}")
     add_test(NAME Arguments.bethe-su3-dispersion.cli
       COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_shared_arguments.py"
         "$<TARGET_FILE:bethe-su3-dispersion>")
