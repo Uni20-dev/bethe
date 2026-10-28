@@ -28,7 +28,7 @@ independent numerical or serial/concurrent validation.
 | `hubbard-dispersion` | Bounded independent queries; pending [PR #14](https://github.com/Uni20-dev/bethe/pull/14) adds shared Async preparation and one branch-spanning window | Native only | Precision-aware kernels and stable gamma-ratio phases |
 | `hubbard-continuum` | Serial searches; pending [PR #12](https://github.com/Uni20-dev/bethe/pull/12) adds bounded independent extrema queries | Native only | Integrate reviewed concurrency; same thermodynamic precision dependencies |
 | `xxz-pbc`, `xxz-obc` | Shared continuous real-root scans; owning parameter sweeps validated in pending PR #15 | Native only on merged baseline; [PR #15](https://github.com/Uni20-dev/bethe/pull/15) adds MPFR with MPLAPACK | Integrate reviewed precision support for existing ground/excitation families |
-| `q-boson-pbc` | Shared real-root excitation scans | Native only | Runtime precision and complete scan diagnostics |
+| `q-boson-pbc` | Shared continuous real-root scans; owning mixed-precision queries validated in pending PR #25 | Native only on merged baseline; [PR #25](https://github.com/Uni20-dev/bethe/pull/25) adds MPFR with MPLAPACK | Integrate reviewed ground/canonical-state precision; #25 stacks on #19 for the scalar-only Newton guard |
 | `su3-pbc` | Individual nested solves; owning mixed-precision sweeps validated in pending PR #13 | Native only on merged baseline; [PR #13](https://github.com/Uni20-dev/bethe/pull/13) adds MPFR with MPLAPACK | Integrate reviewed balanced-singlet precision support |
 | `tb-pbc` | Individual ground-state solve | Native only | Explicit precision, finite string deviations and complex scalar representation; shared Newton helper awaits PR #9 |
 | `hubbard-pbc`, `hubbard-obc` | Individual finite-size solves; owning parameter sweeps validated in pending PR #16 | Native only on merged baseline; [PR #16](https://github.com/Uni20-dev/bethe/pull/16) adds MPFR with MPLAPACK | Integrate reviewed precision for existing sectors, both interaction signs and symmetry mappings |
@@ -62,7 +62,7 @@ in Uni20; model equations and physical normalization remain in Bethe.
   rows, including grids larger than the admission window, mixed successful and
   failed points, threshold counts, native precisions and output preservation.
 
-The pending MPFR checkpoints #9, #13, #15, #16, #18, #19, #20, #21, #22 and #23 verify precision growth
+The pending MPFR checkpoints #9, #13, #15, #16, #18, #19, #20, #21, #22, #23 and #25 verify precision growth
 against independent references beyond binary128, typed endpoint/failure values,
 CLI export/provider contracts and ownership in composed Async calculations.
 The pending scheduling checkpoints #11, #12 and #14 compare complete results
@@ -133,3 +133,11 @@ separate work.
 
 Update this inventory with each reviewed app checkpoint. A proposed capability
 or a pending audit is not evidence of implemented support.
+
+Q-boson's pending #25 retains the existing continuous scanner and compares
+complete states, gaps and failed references in serial/threaded execution.
+Independent occupation-Hamiltonian energies and the unreduced Bethe equations
+validate MPFR, including a weak-deformation correction beyond binary128 and
+positive energies at eta=1e-7000. The scalar-only library supports analytic
+limits and zero-update diagnostics through #19's shared guard; actual Newton
+updates and the CLI require MPLAPACK. No new scheduling mechanism is needed.
