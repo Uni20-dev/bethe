@@ -113,7 +113,7 @@ Each requested level has its own root search and phase integrals. Use
 ```sh
 OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 \
   bethe-sine-gordon-bethe-yang --p 2 --length 100 --levels 129 \
-  --threads 4 --no-retain --csv pairs.csv
+  --threads 4 --no-retain --csv pairs.csv --quiet
 ```
 
 One worker (the default), a single level, or the analytic free point p=1 uses
