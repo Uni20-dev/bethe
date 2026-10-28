@@ -41,7 +41,7 @@ int run(cli::DataOutputOptions const& options, int argc, char** argv)
       .field("arbitrary_frontends", "Arbitrary-precision frontends",
              cli::has_arbitrary_structure_factor
                  ? "bethe-xxx-pbc, bethe-xxx-obc, bethe-lieb-liniger-pbc, bethe-lieb-liniger-obc, "
-                   "bethe-lieb-liniger-dispersion, bethe-richardson, bethe-central-spin, "
+                   "bethe-lieb-liniger-dispersion, bethe-lieb-liniger-thermal, bethe-ladder-pbc, bethe-richardson, bethe-central-spin, "
                    "bethe-xxx-structure-factor, bethe-su3-pbc, bethe-xxz-pbc, bethe-xxz-obc, "
                    "bethe-hubbard-pbc, bethe-hubbard-obc, bethe-gaudin-yang-pbc, bethe-bose-fermi-pbc, bethe-q-boson-pbc, bethe-su3-dispersion, "
                    "bethe-haldane-shastry-pbc, bethe-sutherland-pbc, bethe-tb-dispersion, bethe-sine-gordon-dispersion, bethe-xxz-qg-obc, bethe-tb-pbc, bethe-sun-fermions-pbc"

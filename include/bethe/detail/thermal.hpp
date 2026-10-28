@@ -3,6 +3,7 @@
 #pragma once
 #include <algorithm>
 #include <uni20/core/math.hpp>
+#include <uni20/core/runtime_precision.hpp>
 
 namespace bethe::detail
 {
@@ -12,11 +13,18 @@ template <uni20::Real Real> struct ThermalFactors
 {
     Real log_weight{}, filling{}, entropy{};
 };
-template <uni20::Real Real> ThermalFactors<Real> thermal_factors(Real energy, Real temperature)
+template <uni20::Real Real> ThermalFactors<Real> thermal_factors(Real const& energy, Real const& temperature)
 {
-  Real const r = std::abs(energy) / temperature, b = std::exp(-r);
-  Real const log = std::log1p(b), small = b / (Real{1} + b);
-  return {std::max(-energy, Real{0}) + temperature * log, energy >= Real{0} ? small : Real{1} / (Real{1} + b),
-          log + (b == Real{0} ? Real{0} : r * small)};
+  if constexpr (uni20::has_runtime_precision_v<Real>)
+  {
+    auto const p = uni20::precision_of(temperature);
+    if (p.is_exact() || uni20::precision_of(energy) != p)
+      throw std::invalid_argument("thermal factors require matching finite precision");
+  }
+  Real const zero = uni20::scalar_like(temperature, 0);
+  Real const r = uni20::math::abs(energy) / temperature, b = uni20::math::exp(-r);
+  Real const log = uni20::math::log1p(b), small = b / (Real{1} + b);
+  return {std::max(-energy, zero) + temperature * log, energy >= zero ? small : Real{1} / (Real{1} + b),
+          log + (b == zero ? zero : r * small)};
 }
 } // namespace bethe::detail
