@@ -75,7 +75,7 @@ for program in sys.argv[1:]:
     assert "received 2" in duplicate.stderr
     assert "fp80" in help_text and "bethe-info" in help_text
     if name not in ("bethe-xxx-pbc", "bethe-xxx-obc", "bethe-xxx-structure-factor", "bethe-richardson",
-                    "bethe-central-spin", "bethe-lieb-liniger-pbc", "bethe-lieb-liniger-obc"):
+                    "bethe-central-spin", "bethe-lieb-liniger-pbc", "bethe-lieb-liniger-obc", "bethe-xxz-qg-obc"):
         for precision in ("bits-128", "digits-100"):
             rejected = run(program, [*base, "--precision", precision], 1)
             assert not rejected.stdout and "does not support arbitrary precision" in rejected.stderr

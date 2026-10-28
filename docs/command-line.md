@@ -122,8 +122,8 @@ All frontends support typed tables and file exports; see the
 
 The arbitrary-precision choices currently apply to `bethe-xxx-pbc`, `bethe-xxx-obc`,
 `bethe-lieb-liniger-pbc` and `bethe-lieb-liniger-obc` (all modes),
-the finite-ring `bethe-xxx-structure-factor`, `bethe-richardson` and
-`bethe-central-spin`, in an
+the finite-ring `bethe-xxx-structure-factor`, `bethe-richardson`,
+`bethe-central-spin`, and both branches of `bethe-xxz-qg-obc`, in an
 [enabled build](building.md#enable-arbitrary-precision):
 
 ```sh
@@ -137,7 +137,7 @@ bethe-richardson --levels 0,1,2,3 --pairs 2 --g 1 --precision digits-100
 bethe-central-spin --couplings 1,0.7,0.3 --field 1 --sz 0 --precision bits-256
 ```
 
-XXX roots, Richardson pairing and central spin need Uni20's
+XXX roots, Richardson pairing, central spin and quantum-group XXZ need Uni20's
 arbitrary-precision scalar family (GMP, MPFR and MPC), but no MPLAPACK.
 Finite-size Lieb–Liniger and structure factors additionally require the MPLAPACK
 MPFR provider for LU operations. Other frontends still support native precisions only, including
