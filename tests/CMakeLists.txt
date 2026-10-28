@@ -98,6 +98,10 @@ if(BETHE_HAS_MPREAL)
   add_executable(bethe_async_mpfr_tests test_async_mpfr.cpp)
   target_link_libraries(bethe_async_mpfr_tests PRIVATE bethe::bethe TBB::tbb)
   bethe_discover_tests(bethe_async_mpfr_tests)
+
+  add_executable(bethe_thermodynamics_mpfr_tests test_thermodynamics_mpfr.cpp)
+  target_link_libraries(bethe_thermodynamics_mpfr_tests PRIVATE bethe::bethe TBB::tbb)
+  bethe_discover_tests(bethe_thermodynamics_mpfr_tests)
 endif()
 
 add_executable(bethe_parallel_scan_tests test_parallel_scan.cpp)
@@ -112,6 +116,9 @@ endforeach()
 
 if(TARGET bethe-async-background-example)
   add_test(NAME AsyncBackground.example COMMAND bethe-async-background-example)
+endif()
+if(TARGET bethe-async-ground-states-example)
+  add_test(NAME AsyncGroundStates.example COMMAND bethe-async-ground-states-example)
 endif()
 
 add_executable(bethe_parallel_excitation_tests test_parallel_excitation_models.cpp)
@@ -485,6 +492,9 @@ if(BETHE_BUILD_APPS)
     add_test(NAME LiebLinigerThermo.cli
       COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_lieb_liniger_thermo.py"
         "$<TARGET_FILE:bethe-lieb-liniger-dispersion>" "${BETHE_HAS_FLOAT128}")
+    add_test(NAME LiebLinigerThermo.precision
+      COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_thermodynamics_precision.py"
+        "$<TARGET_FILE:bethe-lieb-liniger-dispersion>" "${BETHE_HAS_MPREAL}" "${BETHE_HAS_MPLAPACK_MPREAL}")
     add_test(NAME LiebLinigerThermal.cli
       COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_lieb_liniger_thermal.py"
         "$<TARGET_FILE:bethe-lieb-liniger-thermal>" "${BETHE_HAS_FLOAT128}")
