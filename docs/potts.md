@@ -15,12 +15,29 @@ bethe-potts-pbc 64 --momentum-index 1 --precision long-double
 bethe-potts-pbc 32 --branch charged --charge -1 --tsv charged.tsv
 bethe-potts-pbc 64 --threads 8 --csv levels.csv --no-retain --quiet
 bethe-potts-pbc 128 --branch ground --precision fp128
+bethe-potts-pbc 16 --precision bits-256 --threads 4 --json high-precision.json
 bethe-potts-pbc --references
 ```
 
 fp64 is the default; native long-double and optional MPLAPACK-enabled fp128
-arithmetic are supported. [Build instructions](building.md) and
-[output conventions](output.md) apply.
+arithmetic are supported. `bits-N` and `digits-N` select explicit MPFR precision
+when Uni20's GMP/MPFR/MPC scalar family is enabled; these Potts solves do not
+need MPLAPACK. [Build instructions](building.md) and [output conventions](output.md)
+apply.
+
+Precision reaches the anisotropy, twists, auxiliary roots, energy map, momentum,
+velocity, bulk energy and failed-iterate diagnostics. It does not change the
+selected physical family or remove iteration limits. The residual tolerance
+controls the logarithmic equations; it is not an energy-error bound. Independent
+two-site algebraic energies and a 150-digit diagonalization of the three-site
+clock Hamiltonian test accuracy beyond binary128.
+
+Library calls with `uni20::mpreal` take explicit `bethe::SolverOptions<uni20::mpreal>`
+constructed from `uni20::Precision::bits(N)`. The analytic helpers accept the same
+precision: `velocity<uni20::mpreal>(p)` and `bulk_energy_density<uni20::mpreal>(p)`.
+Owning Async grids can mix requests at different precisions, retaining each
+request's controls and complete result until its final completion value is ready;
+they do not change ambient MPFR settings.
 
 `--threads N` overlaps independent charged momentum solves after computing
 one vacuum reference. One worker is the default; vacuum-only and single-momentum

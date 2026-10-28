@@ -192,7 +192,7 @@ together, requiring GMP, MPFR >= 4.2, and MPC development packages. All modes of
 `bethe-sine-gordon-dispersion`, `bethe-haldane-shastry-pbc` and
 `bethe-sutherland-pbc` work without MPLAPACK. Uni20 supplies CPU QR for
 Richardson and central spin; SU(3)/TB/sine-Gordon dispersions,
-Haldane–Shastry, Sutherland and quantum-group XXZ use scalar functions only.
+Haldane–Shastry, Sutherland, Potts and quantum-group XXZ use scalar functions only.
 In a separate build directory:
 
 ```sh
