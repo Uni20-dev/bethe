@@ -31,6 +31,7 @@ def table(args, status=0):
     assert Decimal(t['summary']['Run CPU seconds']) >= 0
     assert 'PBC' in t['metadata']['Hamiltonian']
     assert 'not a complete spectrum' in t['metadata']['State selection']
+    assert t['metadata']['CPU timing scope'] == 'vacuum solve and ordered level grid including row output'
     return t
 
 
@@ -60,10 +61,22 @@ for precision in precisions:
     assert records(table([*base, '--branch', 'charged'])) == rows[1:]
     assert records(table([*base, '--momentum-index', '1'])) == rows[:1]+rows[3:5]
     assert records(table([*base, '--charge', '-1'])) == rows[:1]+rows[2::2]
+    parallel = table([*base, '--threads', '4', '--no-retain'])
+    assert parallel['rows'] == t['rows']
+    assert parallel['metadata']['Execution mode'] == 'bounded Async momentum grid'
+    assert parallel['metadata']['Effective concurrency limit'] == '3'
+    for selection in (['--branch', 'ground'], ['--momentum-index', '1'],
+                      ['--branch', 'charged', '--charge', '-1']):
+        serial = table([*base, *selection])
+        threaded = table([*base, *selection, '--threads', '4'])
+        assert threaded['rows'] == serial['rows']
+        if selection[0] == '--momentum-index' or selection == ['--branch', 'ground']:
+            assert threaded['metadata']['Execution mode'] == 'direct serial'
     failed = table([*base, '--max-iterations', '0'], 2)
     assert 'Vacuum energy' not in failed['metadata']
     assert all(r['energy'] is None and r['gap'] is None and r['x_scaled'] is None and
                r['status'] == 'iteration_limit' and r['iterations'] == '0' for r in records(failed))
+    assert table([*base, '--max-iterations', '0', '--threads', '4'], 2)['rows'] == failed['rows']
 
 partial = records(table(['3', '--max-iterations', '28'], 2))
 assert partial[0]['energy'] is not None and partial[0]['gap'] == '0'
@@ -74,13 +87,22 @@ assert all(r['energy'] is not None and r['gap'] is None and r['x_scaled'] is Non
            r['status'] == 'reference_unavailable' for r in missing_reference[1:])
 even = records(table(['4']))
 assert len(even) == 9 and sum(int(r['k']) == 2 for r in even) == 2  # no duplicated zone boundary
+for args in (['3', '--max-iterations', '28'], ['2', '--max-iterations', '20']):
+    assert table([*args, '--threads', '4', '--no-retain'], 2)['rows'] == table(args, 2)['rows']
+# Exhausted solves retain all diagnostics while crossing the admission window;
+# this tests scheduling cost without 129 converged large-system root solves.
+window = ['129', '--max-iterations', '0']
+window_serial = table(window, 2)
+window_parallel = table([*window, '--threads', '4', '--no-retain'], 2)
+assert len(window_serial['rows']) == 259 and window_parallel['rows'] == window_serial['rows']
 
 invalid = [['1'], ['-1'], ['3', '--momentum-index', '3'], ['3', '--momentum-index', '-1'],
            ['3', '--charge', '0'], ['3', '--charge', '2'], ['3', '--branch', 'complete'],
            ['3', '--branch', 'ground', '--momentum-index', '0'], ['3', '--branch', 'ground', '--charge', '-1'],
            ['3', '--tolerance', '0'], ['3', '--tolerance', '-1'], ['3', '--tolerance', 'nan'],
            ['3', '--tolerance', 'inf'], ['3', '--max-iterations', '-1'], ['3', '--max-sites', '2'],
-           ['513'], ['18446744073709551615', '--max-sites', '18446744073709551615']]
+           ['513'], ['18446744073709551615', '--max-sites', '18446744073709551615'],
+           ['3', '--threads', '0'], ['3', '--threads', '-1']]
 for args in invalid:
     run(args, 1)
 
@@ -101,8 +123,11 @@ with tempfile.TemporaryDirectory() as directory:
     for bad in invalid:
         run([*bad, '--json', str(js), '--force'], 1)
         assert js.read_text() == original
-    run(['4', '--json', str(js), '--force', '--quiet', '--no-retain'])
+    run(['4', '--json', str(js), '--csv', str(cs), '--tsv', str(ts), '--force', '--quiet', '--no-retain', '--threads', '4'])
     assert json.loads(js.read_text())['tables']['levels']['rows'] == t['rows']
+    for path, delimiter in ((cs, ','), (ts, '\t')):
+        actual = list(csv.DictReader((line for line in path.read_text().splitlines() if not line.startswith('#')), delimiter=delimiter))
+        assert actual == expected
     run(['4', '--stream', '--no-retain', '--format', 'plain'])
     run(['4', '--format', 'pretty'])
     failure = run(['3', '--max-iterations', '0', '--format', 'csv', '--no-preamble'], 2)

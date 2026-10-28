@@ -52,6 +52,9 @@ def result(args, status=0):
 for precision in precisions:
     flags = ["--precision", precision]
     tables = result([*base, *flags])
+    parallel = result([*base, *flags, "--threads", "2"])
+    assert all(parallel[k]["rows"] == tables[k]["rows"] for k in tables)
+    assert parallel["levels"]["metadata"]["Solver concurrency"] == "2"
     vacuum, excited = rows(tables["levels"])
     gap = rows(tables["gap"])[0]
     source = rows(tables["source"])[0]
@@ -75,6 +78,9 @@ for precision in precisions:
     scaled = result(["--mass", "2", "--length", "2.5", *flags])
     assert abs(Decimal(rows(scaled["gap"])[0]["gap"])-2*Decimal("1.0306379212700556")) < Decimal("1e-10")
     partial = result([*base, *flags, "--max-root-iterations", "0"], 2)
+    concurrent_partial = result([*base, *flags, "--max-root-iterations", "0", "--threads", "8"], 2)
+    assert all(concurrent_partial[k]["rows"] == partial[k]["rows"] for k in partial)
+    assert concurrent_partial["levels"]["metadata"]["Solver concurrency"] == "2"
     v, e = rows(partial["levels"])
     assert v["converged"] and v["casimir_energy"] is not None
     assert not e["converged"] and e["casimir_energy"] is None and e["scaling_function"] is None
@@ -89,6 +95,8 @@ for precision in precisions:
                              (["--max-cutoffs", "0"], "cutoff_limit"),
                              (["--max-kernel-products", "0"], "work_limit")]:
         failed = result([*base, *flags, *controls], 2)
+        parallel = result([*base, *flags, *controls, "--threads", "2"], 2)
+        assert all(parallel[k]["rows"] == failed[k]["rows"] for k in failed)
         for level in rows(failed["levels"]):
             assert not level["converged"] and level["casimir_energy"] is None
             assert level["status"] == status
@@ -105,14 +113,14 @@ g = rows(overflow["gap"])[0]
 assert g["status"] == "gap_precision_limit"
 assert all(g[key] is None for key in ("gap", "scaled_gap", "gap_error"))
 
-invalid = [[], ["--length", "4"], ["--length", "31"], ["--length", "nan"],
+invalid = [[*base, "--threads", "0"], [*base, "--threads", "-1"], [], ["--length", "4"], ["--length", "31"], ["--length", "nan"],
            [*base, "--mass", "0"], [*base, "--mass", "inf"], [*base, "--mass", "bad"],
            [*base, "--initial-cutoff", "0"], [*base, "--initial-intervals", "1"],
            [*base, "--max-intervals", "16384"], [*base, "--max-root-iterations", "-1"],
            [*base, "--tolerance", "0"], [*base, "--tolerance", "nan"]]
 with tempfile.TemporaryDirectory() as directory:
     root = Path(directory)
-    flags = ["--json", str(root/"result.json")]
+    flags = ["--threads", "2", "--json", str(root/"result.json")]
     for suffix in ("csv", "tsv"):
         for name in ("levels", "source", "gap"):
             flags += [f"--{suffix}-table", f"{name}={root/f'{name}.{suffix}'}"]
@@ -128,12 +136,13 @@ with tempfile.TemporaryDirectory() as directory:
             assert records == want
     old = (root/"result.json").read_text()
     for args in invalid:
+        args = args if "--threads" in args else [*args, "--threads", "2"]
         run([*args, "--json", str(root/"result.json"), "--force"], 1)
         assert (root/"result.json").read_text() == old
     run([*base, *flags, "--force", "--quiet", "--no-retain"])
     actual = json.loads((root/"result.json").read_text())["tables"]
     assert all(actual[name]["rows"] == expected[name]["rows"] for name in actual)
-    run([*base, "--stream", "--no-retain", "--format", "plain"])
+    run([*base, "--threads", "2", "--stream", "--no-retain", "--format", "plain"])
     run([*base, "--format", "pretty"])
     run([*base, "--max-root-iterations", "0", "--quiet", "--csv-table", f"gap={root/'failed.csv'}"], 2)
     text = (root/"failed.csv").read_text()

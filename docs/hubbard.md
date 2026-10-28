@@ -34,6 +34,8 @@ bethe-hubbard-pbc 16 --u -4 --particles 8 --roots
 bethe-hubbard-pbc 16 --u 4 --sz 2
 # In a binary128-enabled build:
 bethe-hubbard-pbc 32 --u 4 --precision fp128
+# With MPFR scalars and MPLAPACK MPFR enabled:
+bethe-hubbard-pbc 6 --u -4 --precision digits-100 --roots
 ```
 
 The six-site ground energy at U=4 is approximately `-3.66870617887296`.
@@ -41,7 +43,51 @@ The six-site ground energy at U=4 is approximately `-3.66870617887296`.
 Unsupported sectors are rejected. `--u` is required; zero must be requested
 explicitly. Symmetry mappings preserve the requested physics and report any
 auxiliary root sector separately. The common [precision and presentation controls](command-line.md)
-apply, including solver CPU time and native-precision parameter parsing.
+apply, including solver CPU time and parsing at the selected arithmetic precision.
+
+## Arbitrary precision and independent solves
+
+Both finite Hubbard frontends accept `--precision bits-N` and `digits-N` with
+[MPFR scalars and MPLAPACK MPFR enabled](building.md#enable-arbitrary-precision).
+This covers both signs of U, symmetry-mapped sectors and analytic free-fermion
+paths within each frontend's existing sector restrictions. Root coordinates,
+physical and auxiliary interaction values, energy offsets, equation residuals
+and exact-zero observables retain the requested precision. The full frontend
+requires the LU provider even when a particular free-fermion request needs no
+matrix solve.
+
+The C++ interface requires explicit finite precision in the interaction and
+solver controls, including U=0. Exact-only, unset or mismatched input values
+are rejected:
+
+```cpp
+using Real = uni20::mpreal;
+auto precision = uni20::Precision::bits(256);
+bethe::hubbard::SolverOptions<Real> options(precision);
+Real interaction("-4", precision);
+auto state = bethe::hubbard::ground_state(6, interaction, options);
+```
+
+Newton updates and interaction continuation remain sequential. Independent
+lengths, sectors or couplings can be composed with
+[`evaluate_observable_grid_async`](async-execution.md): capture each interaction
+and its options by value, collect in parameter order and wait on the final
+operation result. Different working precisions can share one scheduler.
+These single-state frontends have no `--threads` option; the reusable library
+grid provides parallel parameter sweeps without adding overhead to one solve.
+
+Validation compares 128-, 256- and 333-bit energies against the independently
+known two-site Hamiltonians below and in the [open-chain guide](hubbard-open.md).
+Increasing precision improves agreement beyond binary128, and a 333-bit
+calculation resolves the energy shift at U=1e-60. Independent unreduced
+Lieb–Wu equations check returned roots and diagnostics in doped, half-filled,
+attractive and spin-reversed sectors, including budget exhaustion. Owning
+Async sweeps match serial results at distinct precisions.
+
+More bits do not supply missing shell parities or excited states, or guarantee
+convergence within a fixed update budget. Equation residuals are not energy
+error bounds. [Thermodynamic Hubbard dispersions](hubbard-dispersion.md) use
+separate kernels and retain their documented precision scope.
 
 ## Hamiltonian and energy convention
 

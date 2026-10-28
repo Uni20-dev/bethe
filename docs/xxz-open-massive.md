@@ -134,7 +134,7 @@ denominator as $`1+y =4/\Delta /(1+1/\Delta)^{2}+r ^{2}\,\exp (-w)`$ near the po
 ## Iteration and diagnostics
 
 Damped Newton uses bulk angles `atan(z)` and w, with a central-difference
-Jacobian in native precision. Continuation starts at `min(Delta,1.1)` and
+Jacobian at the selected working precision. Continuation starts at `min(Delta,1.1)` and
 increases $`\Delta -1`$ by a factor of 1.25 per converged stage. Ordered bulk
 roots and, while real, a largest distinguished root are enforced during
 backtracking. After the crossing, continuation carries w relative to the
@@ -144,7 +144,13 @@ Each accepted Newton update consumes the single global iteration budget;
 there is no hidden unbudgeted seed solve. On exhaustion, energy and residual
 are still evaluated for the requested Delta at the returned roots.
 `root_delta` records the continuation stage reached. `status` distinguishes
-convergence, budget exhaustion, and a stalled line search.
+convergence, budget exhaustion, a stalled line search, and a continuation step
+that rounds back to the current anisotropy (`continuation_stalled`). The last
+case requires more working precision: a converged stage uses no Newton
+iterations, so an iteration budget alone cannot stop a repeated stage. If the
+initial continuation anisotropy itself rounds to one, the solver rejects the
+request before constructing the singular seed. Unconverged CLI energies remain
+explicitly labelled estimates, with exit status 2 for a stalled continuation.
 
 The residual is $`\max (\lvert R_{i} \rvert,\lvert R_{B} \rvert)`$, with the boundary entry absent when
 appropriate. Its boundary component is **regularized**, unlike the old

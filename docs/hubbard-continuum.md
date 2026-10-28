@@ -11,7 +11,7 @@ zero magnetic field, hopping t=1, U>0.
 ```sh
 bethe-hubbard-continuum --u 4 --points 33 --csv edges.csv
 bethe-hubbard-continuum --u 4 --momentum -1 --precision long-double
-bethe-hubbard-continuum --u 4 --points 9 --precision fp128 --json edges.json
+bethe-hubbard-continuum --u 4 --points 9 --precision fp128 --threads 4 --json edges.json
 bethe-hubbard-continuum --references
 ```
 
@@ -22,6 +22,15 @@ constituent momenta, separate error estimates, work counts and status.
 `--tolerance`, `--max-evaluations`, `--max-levels` and `--max-iterations`
 control the native solver. Precision defaults to fp64; fp128 requires MPLAPACK.
 
+`--threads N` evaluates independent total momenta using Uni20's scheduler
+(default 1), for both the two-spinon and charge-containing families. Each
+momentum owns its quadrature, inversion and extrema-search work; their internal
+dependencies remain sequential. The [bounded observable grid](parallel-grids.md)
+allows at most 128 active or completed-but-uncollected results, and collects
+rows on the calling thread in momentum order. Full diagnostics and failed rows
+are preserved. A single `--momentum` has no grid parallelism. Use
+`OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1` to avoid nested threading.
+
 The [common output options](output.md) support screen output and additional
 JSON/CSV/TSV files. Exports stream each completed point; `--no-retain`
 discards delivered rows. Metadata includes conventions and numerical controls,
@@ -29,6 +38,8 @@ with CPU time and overall outcome in the final summary. Failed points have
 missing energies (JSON null, empty CSV/TSV cells) and yield exit status 2;
 other requested points are still attempted. Invalid arguments exit with
 status 1 before output files are opened, even with `--force`.
+CPU timing covers the whole momentum grid, including ordered row output;
+the exported `CPU timing scope` records this explicitly.
 
 ## Two spinons
 

@@ -1,9 +1,10 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Copyright (C) 2026 Ian McCulloch
-#include "program-options.hpp"
+#include "execution-options.hpp"
 #include "result-output.hpp"
 #include <bethe/hubbard_charge_continuum.hpp>
 #include <bethe/hubbard_continuum.hpp>
+#include <bethe/observable_grid.hpp>
 
 namespace
 {
@@ -18,6 +19,7 @@ struct Arguments
     std::size_t points = 33, evaluations = 1000000, levels = 12, iterations = 160;
     std::size_t total_evaluations = 200000000, search_evaluations = 20000, search_iterations = 256;
     std::size_t initial_intervals = 16, max_intervals = 128;
+    int threads = 1;
     cli::DataOutputOptions output;
 };
 auto program_info()
@@ -75,6 +77,7 @@ void add_options(CLI::App& app, Arguments& a)
   cli::count_option(app, "--max-iterations", a.iterations, "Momentum inversion updates per constituent")
       ->capture_default_str();
   cli::precision_option(app, a.precision);
+  cli::threads_option(app, a.threads)->description("Scheduler concurrency limit for independent momenta");
   cli::add_data_output_options(app, a.output,
                                {{.name = "two_spinon",
                                  .description = "Two-spinon continuum edges",
@@ -101,35 +104,23 @@ char const* name(model::Status status)
   return "unknown";
 }
 // Both families use the same incremental export and run-lifecycle handling.
-template <typename Table, typename Append>
+template <typename Table, typename Evaluate, typename Append>
 int stream_rows(Arguments const& a, uni20::run_context& context, cli::RunReport& report, Table& table,
-                std::string const& id, std::size_t count, Append append)
+                std::string const& id, std::size_t count, Evaluate evaluate, Append append,
+                bethe::ExecutionOptions execution)
 {
-  cli::DataOutput output(a.output, {id});
-  bool complete = true;
-  try
-  {
-    output.attach(table, id);
-    for (std::size_t i = 0; i < count; ++i)
-      complete = append(i) && complete;
-    report.result(complete, complete ? "converged" : "incomplete; failed edges omitted");
-    auto const summary = report.finish();
-    output.overview(report.overview(summary));
-    output.finish(table, summary);
-    output.finish_document();
-  }
-  catch (...)
-  {
-    cli::data::table_metadata aborted{{"Status", "aborted"}};
-    if (!context.finished()) try
-      {
-        aborted = cli::run_summary(context.finish(uni20::run_outcome::failed));
-      }
-      catch (...)
-      {}
-    output.abort(table, std::move(aborted));
-    throw;
-  }
+  bool const complete = cli::stream_result_table(
+      report, context, a.output, id, table,
+      [&](auto&) {
+        bool complete = true;
+        context.measure([&] {
+          bethe::evaluate_observable_grid(
+              count, evaluate, [&](std::size_t i, auto const& point) { complete = append(i, point) && complete; },
+              execution);
+        });
+        return complete;
+      },
+      "incomplete; failed edges omitted");
   if (!complete) std::cerr << "Some continuum points did not converge; failed edges are unavailable.\n";
   return complete ? 0 : 2;
 }
@@ -169,6 +160,8 @@ template <uni20::Real Real> int run(Arguments const& a, int argc, char** argv)
   if (momentum && (!uni20::isfinite(*momentum) || std::abs(*momentum) > pi))
     throw std::invalid_argument("total momentum must be in [-pi,pi]");
   std::size_t const count = momentum ? 1 : a.points;
+  uni20::async::TbbScheduler scheduler(a.threads);
+  bethe::ExecutionOptions const execution{.scheduler = &scheduler};
   auto momentum_at = [&](std::size_t i) {
     return momentum ? *momentum : pi * (Real{2} * Real(i) / Real(count - 1) - Real{1});
   };
@@ -209,6 +202,9 @@ template <uni20::Real Real> int run(Arguments const& a, int argc, char** argv)
         .field("momentum_convention", "Momentum convention", "one-site radians, total P modulo 2*pi")
         .precision(a.precision)
         .field("points", "Points", count)
+        .field("threads", "Scheduler concurrency limit", a.threads)
+        .field("max_in_flight", "Maximum momenta in flight", execution.max_in_flight)
+        .field("cpu_timing_scope", "CPU timing scope", "momentum grid including ordered row output")
         .field("tolerance", "Relative constituent tolerance", controls.relative_tolerance)
         .field("search_tolerance", "Search tolerance on E/max(1,U)", options.search.tolerance)
         .field("position_tolerance", "Relative bracket tolerance", options.search.position_tolerance)
@@ -239,18 +235,21 @@ template <uni20::Real Real> int run(Arguments const& a, int argc, char** argv)
         column<std::size_t>("constituent_iterations"), column<std::size_t>("objective_evaluations"),
         column<std::size_t>("search_iterations"), column<std::size_t>("intervals"), column<std::size_t>("meshes"),
         column<bool>("converged"), column<std::string>("search_status"), column<std::string>("constituent_status"));
-    return stream_rows(a, context, report, table, "charge_continuum", count, [&](std::size_t i) {
-      Real const p = momentum_at(i);
-      auto const s = context.measure([&] { return model::charge_continuum(channel, u, p, convention, options); });
-      auto available = [&](Real value) -> Optional { return s.converged ? Optional(value) : std::nullopt; };
-      table.append(p, p / pi, s.lower_energy, s.upper_energy, s.lower_symmetric_energy, s.upper_symmetric_energy,
-                   available(s.lower_momenta[0]), available(s.lower_momenta[1]), available(s.upper_momenta[0]),
-                   available(s.upper_momenta[1]), available(s.lower_error), available(s.upper_error),
-                   available(s.lower_momentum_error), available(s.upper_momentum_error), s.quadrature_evaluations,
-                   s.constituent_iterations, s.objective_evaluations, s.search_iterations, s.intervals, s.meshes,
-                   s.converged, std::string(name(s.search_status)), std::string(name(s.constituent_status)));
-      return s.converged;
-    });
+    return stream_rows(
+        a, context, report, table, "charge_continuum", count,
+        [&](std::size_t i) { return model::charge_continuum(channel, u, momentum_at(i), convention, options); },
+        [&](std::size_t i, auto const& s) {
+          Real const p = momentum_at(i);
+          auto available = [&](Real value) -> Optional { return s.converged ? Optional(value) : std::nullopt; };
+          table.append(p, p / pi, s.lower_energy, s.upper_energy, s.lower_symmetric_energy, s.upper_symmetric_energy,
+                       available(s.lower_momenta[0]), available(s.lower_momenta[1]), available(s.upper_momenta[0]),
+                       available(s.upper_momenta[1]), available(s.lower_error), available(s.upper_error),
+                       available(s.lower_momentum_error), available(s.upper_momentum_error), s.quadrature_evaluations,
+                       s.constituent_iterations, s.objective_evaluations, s.search_iterations, s.intervals, s.meshes,
+                       s.converged, std::string(name(s.search_status)), std::string(name(s.constituent_status)));
+          return s.converged;
+        },
+        execution);
   }
   cli::RunReport report(context, "Hubbard two-spinon continuum");
   report.field("interaction", "U (t=1)", u)
@@ -261,6 +260,9 @@ template <uni20::Real Real> int run(Arguments const& a, int argc, char** argv)
       .field("momentum_convention", "Momentum convention", "one-site radians, total P modulo 2*pi")
       .precision(a.precision)
       .field("points", "Points", count)
+      .field("threads", "Scheduler concurrency limit", a.threads)
+      .field("max_in_flight", "Maximum momenta in flight", execution.max_in_flight)
+      .field("cpu_timing_scope", "CPU timing scope", "momentum grid including ordered row output")
       .field("tolerance", "Relative tolerance", controls.relative_tolerance)
       .field("max_evaluations", "Max evaluations per edge pair", controls.max_evaluations)
       .field("max_levels", "Max quadrature levels", controls.max_levels)
@@ -277,14 +279,18 @@ template <uni20::Real Real> int run(Arguments const& a, int argc, char** argv)
       column<Real>("upper_p2"), column<Real>("lower_energy_quad_error"), column<Real>("upper_energy_quad_error"),
       column<Real>("lower_momentum_error"), column<Real>("upper_momentum_error"), column<std::size_t>("evaluations"),
       column<std::size_t>("iterations"), column<bool>("converged"), column<std::string>("status"));
-  return stream_rows(a, context, report, table, "two_spinon", count, [&](std::size_t i) {
-    Real const p = momentum_at(i);
-    auto const s = context.measure([&] { return model::two_spinon_continuum(u, p, controls); });
-    table.append(p, p / pi, s.lower_energy, s.upper_energy, s.lower_momenta[0], s.lower_momenta[1], s.upper_momenta[0],
-                 s.upper_momenta[1], s.lower_energy_quad_error, s.upper_energy_quad_error, s.lower_momentum_error,
-                 s.upper_momentum_error, s.evaluations, s.iterations, s.converged, std::string(name(s.status)));
-    return s.converged;
-  });
+  return stream_rows(
+      a, context, report, table, "two_spinon", count,
+      [&](std::size_t i) { return model::two_spinon_continuum(u, momentum_at(i), controls); },
+      [&](std::size_t i, auto const& s) {
+        Real const p = momentum_at(i);
+        table.append(p, p / pi, s.lower_energy, s.upper_energy, s.lower_momenta[0], s.lower_momenta[1],
+                     s.upper_momenta[0], s.upper_momenta[1], s.lower_energy_quad_error, s.upper_energy_quad_error,
+                     s.lower_momentum_error, s.upper_momentum_error, s.evaluations, s.iterations, s.converged,
+                     std::string(name(s.status)));
+        return s.converged;
+      },
+      execution);
 }
 } // namespace
 int main(int argc, char** argv)

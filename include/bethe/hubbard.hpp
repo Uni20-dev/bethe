@@ -66,15 +66,23 @@ namespace detail
 /// Spin variables are Lambda/max(1,U/4), to condition the large-U solve.
 template <uni20::Real Real> class GroundSystem {
   public:
-    explicit GroundSystem(std::size_t sites) : GroundSystem(sites, sites, sites / 2) {}
+    explicit GroundSystem(std::size_t sites)
+      requires(!uni20::has_runtime_precision_v<Real>)
+        : GroundSystem(sites, sites, sites / 2, uni20::native_precision<Real>())
+    {}
     GroundSystem(std::size_t sites, std::size_t particles, std::size_t down)
+      requires(!uni20::has_runtime_precision_v<Real>)
+        : GroundSystem(sites, particles, down, uni20::native_precision<Real>())
+    {}
+    GroundSystem(std::size_t sites, std::size_t particles, std::size_t down, uni20::Precision precision)
         : sites(sites), n(particles), m(down), nk(n / 2 - (m % 2 == 0 ? 1 : 0)), ns(m / 2), order(nk + ns),
-          pi(Real{4} * std::atan(Real{1})), labels(ground_quantum_numbers(sites, particles, down))
+          zero(uni20::scalar_at_precision<Real>(0, precision)), pi(bethe::detail::pi_like(zero)),
+          labels(ground_quantum_numbers(sites, particles, down))
     {}
 
     std::vector<Real> seed() const
     {
-      using std::tan;
+      using uni20::math::tan;
       std::vector<Real> x(order);
       for (std::size_t j = 0; j < nk; ++j)
         x[j] = Real{2} * pi * charge_label(j) / Real(sites);
@@ -96,14 +104,14 @@ template <uni20::Real Real> class GroundSystem {
       lambda.clear();
       for (std::size_t j = nk; j-- > 0;)
         k.push_back(-x[j]);
-      if (m % 2 == 0) k.push_back(Real{0});
+      if (m % 2 == 0) k.push_back(zero);
       for (std::size_t j = 0; j < nk; ++j)
         k.push_back(x[j]);
       if (m % 2 == 0) k.push_back(pi);
       Real const scale = std::max(Real{1}, u);
       for (std::size_t a = ns; a-- > 0;)
         lambda.push_back(-scale * x[nk + a]);
-      if (m % 2 != 0) lambda.push_back(Real{0});
+      if (m % 2 != 0) lambda.push_back(zero);
       for (std::size_t a = 0; a < ns; ++a)
         lambda.push_back(scale * x[nk + a]);
     }
@@ -115,34 +123,34 @@ template <uni20::Real Real> class GroundSystem {
     };
     Evaluation evaluate(std::vector<Real> const& x, Real u, uni20::DenseMatrix<Real>* jacobian = nullptr) const
     {
-      using std::abs;
-      using std::atan;
-      using std::cos;
-      using std::sin;
+      using uni20::math::abs;
+      using uni20::math::atan;
+      using uni20::math::cos;
+      using uni20::math::sin;
       std::vector<Real> k, lambda;
       expand(x, u, k, lambda);
       // Reflection creates both +/-Lambda: keep their differences representable
       // instead of letting overflow masquerade as a saturated scattering phase.
       for (Real value : lambda)
-        if (!uni20::isfinite(value) || abs(value) > uni20::numeric_limits<Real>::max() / Real{2})
+        if (!uni20::isfinite(value) || !uni20::isfinite(Real{2} * value))
           throw std::overflow_error("Hubbard rapidities exceed the representable scattering range");
       std::vector<Real> sine(n), cosine(n);
       for (std::size_t j = 0; j < n; ++j)
       {
         // The fixed points are exact, not floating sin(pi) divided by small U.
-        sine[j] = k_variable(j) < 0 ? Real{0} : sin(k[j]);
+        sine[j] = k_variable(j) < 0 ? zero : sin(k[j]);
         cosine[j] = cos(k[j]);
       }
       if (jacobian)
         for (std::size_t i = 0; i < order; ++i)
           for (std::size_t j = 0; j < order; ++j)
-            (*jacobian)[i, j] = Real{0};
+            (*jacobian)[i, j] = zero;
       Real const scale = std::max(Real{1}, u), weight = Real{2} / Real(sites);
-      Evaluation result{.residual = std::vector<Real>(order)};
+      Evaluation result{.residual = std::vector<Real>(order, zero), .charge = zero, .spin = zero};
       for (std::size_t i = 0; i < nk; ++i)
       {
         Real const s = sin(x[i]), c = cos(x[i]);
-        bethe::detail::CompensatedSum<Real> phases;
+        bethe::detail::CompensatedSum<Real> phases(zero);
         if (jacobian) (*jacobian)[i, i] = Real{1};
         for (std::size_t b = 0; b < m; ++b)
         {
@@ -163,7 +171,7 @@ template <uni20::Real Real> class GroundSystem {
       {
         auto const row = nk + a;
         Real const l = scale * x[row];
-        bethe::detail::CompensatedSum<Real> phases;
+        bethe::detail::CompensatedSum<Real> phases(zero);
         for (std::size_t j = 0; j < n; ++j)
         {
           Real const d = l - sine[j];
@@ -200,7 +208,7 @@ template <uni20::Real Real> class GroundSystem {
       return result;
     }
     std::size_t const sites, n, m, nk, ns, order;
-    Real const pi;
+    Real const zero, pi;
     NestedQuantumNumbers const labels;
 
   private:
@@ -227,17 +235,17 @@ template <uni20::Real Real> class GroundSystem {
 template <uni20::Real Real>
 State<Real> free_state(std::size_t sites, std::size_t particles, std::size_t down, Real interaction)
 {
-  using std::atan;
-  using std::cos;
-  using std::sin;
-  State<Real> result;
+  using uni20::math::atan;
+  using uni20::math::cos;
+  using uni20::math::sin;
+  auto result = state_at_interaction<State<Real>>(interaction);
   result.sites = sites;
   result.particles = result.root_particles = particles;
   result.down_spins = result.root_down_spins = down;
   result.interaction = result.root_interaction = interaction;
   result.free_fermion = result.converged = true;
   result.status = SolveStatus::converged;
-  Real const pi = Real{4} * atan(Real{1}), angle = pi / Real(sites);
+  Real const pi = bethe::detail::pi_like(interaction), angle = pi / Real(sites);
   std::int64_t momentum = 0, length = static_cast<std::int64_t>(sites);
   for (auto count : {particles - down, down})
   {
@@ -266,10 +274,11 @@ State<Real> repulsive_ground_state(std::size_t sites, std::size_t particles, std
   if (down == 0) return free_state(sites, particles, down, interaction);
   auto const order = particles / 2 - (down % 2 == 0 ? 1 : 0) + down / 2;
   check_newton_size<Real>(order);
-  GroundSystem<Real> const system(sites, particles, down);
+  GroundSystem<Real> const system(sites, particles, down, options.precision());
   auto result = solve_ground_system<Real, State<Real>>(system, interaction, options);
   result.momentum_index = down % 2 == 0 ? sites / 2 : 0;
-  result.momentum = result.momentum_index == 0 ? Real{0} : Real{4} * std::atan(Real{1});
+  result.momentum =
+      result.momentum_index == 0 ? bethe::detail::precision_zero(interaction) : bethe::detail::pi_like(interaction);
   return result;
 }
 } // namespace detail
@@ -296,7 +305,7 @@ template <uni20::Real Real = double>
   if (mapping.particle_hole && before_particle_hole % 2 != 0) momentum_shift = (momentum_shift + sites / 2) % sites;
   result.momentum_offset = momentum_shift;
   result.momentum_index = (result.momentum_index + momentum_shift) % sites;
-  result.momentum = Real{8} * std::atan(Real{1}) * Real(result.momentum_index) / Real(sites);
+  result.momentum = Real{2} * bethe::detail::pi_like(interaction) * Real(result.momentum_index) / Real(sites);
   return result;
 }
 
