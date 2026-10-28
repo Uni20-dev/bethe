@@ -70,6 +70,39 @@ TEST_P(SU3DispersionMpfr, IndependentSeasEndpointsAndTinyEnergies)
   EXPECT_REAL_NEAR(huge.energy(Particle::fundamental, R("1e-7000", p())), band.velocity(), 64 * eps);
 }
 
+TEST_P(SU3DispersionMpfr, NonzeroUnderflowWhenHalvingMomentum)
+{
+  Band band(v(1));
+  R const eps = uni20::numeric_limits<R>::epsilon(p());
+  for (unsigned numerator : {4u, 5u, 6u, 7u, 8u, 12u})
+  {
+    SCOPED_TRACE(numerator);
+    mpfr_t raw;
+    mpfr_init2(raw, p().bit_count());
+    mpfr_set_ui_2exp(raw, numerator, mpfr_get_emin() - 3, MPFR_RNDN);
+    R q(raw, p());
+    mpfr_clear(raw);
+    ASSERT_GT(q, 0);
+    EXPECT_EQ((q / 2) * 2 != q, numerator < 8);
+    if (numerator > 4) EXPECT_GT(q / 2, 0);
+    for (auto particle : {Particle::fundamental, Particle::antifundamental})
+    {
+      R energy = band.energy(particle, q);
+      finite(energy, p());
+      EXPECT_GT(energy, 0);
+      EXPECT_REAL_NEAR(energy / q, band.velocity(), 32 * eps);
+    }
+    for (auto content : {Continuum::two_soliton, Continuum::four_soliton})
+      for (auto convention : {Momentum::unfolded, Momentum::three_site_folded})
+      {
+        auto edge = band.continuum(q, content, convention);
+        finite(edge.lower, p());
+        EXPECT_GT(edge.lower, 0);
+        EXPECT_REAL_NEAR(edge.lower / q, band.velocity(), 32 * eps);
+      }
+  }
+}
+
 TEST_P(SU3DispersionMpfr, ContinuumFoldingAndExchangeScaling)
 {
   Band band(v(1)), scaled(v(7));
