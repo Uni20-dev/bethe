@@ -202,7 +202,7 @@ cmake --build . --parallel
 ./bethe-info
 ```
 
-For finite-ring structure factors and finite-size Lieb–Liniger, additionally
+For finite-ring structure factors, finite-size Lieb–Liniger and Gaudin–Yang, additionally
 enable MPLAPACK matrix kernels. Unlike QR, Uni20's arbitrary-precision square
 LU solves currently require this provider:
 
