@@ -46,7 +46,8 @@ independent numerical or serial/concurrent validation.
 | `biquadratic-obc` | Sector-specific solver/composition audit pending | Native only | Treat real, complex and singular sectors separately; massive quantum-group Newton precision awaits PR #9 |
 | `lee-yang-vacuum`, `lee-yang-excited`, `sine-gordon-vacuum`, `sine-gordon-excited` | Serial baseline; pending [PR #28](https://github.com/Uni20-dev/bethe/pull/28) validates owning parameter sweeps for all four and optional vacuum/excited overlap in the excited-state CLIs | Native only | Integrate reviewed composition; carry explicit precision through Lee–Yang controls/constants/reductions and sine-Gordon complex kernels/quadrature. Coupled iterations remain sequential |
 | `kondo-response` | Pending #29: bounded field scans and owning Async queries; single-point/default one-worker requests stay direct | Native only | Explicit-precision scaled positive-real Gamma, Euler-series tails and quadrature |
-| `asep-pbc`, `tasep-pbc`, `potts-pbc`, `xyz-pbc` | Complex/nonlinear composition audit pending | Native only | Branch tracking and scalar-function coverage before advertising MPFR |
+| `potts-pbc` | Pending [PR #30](https://github.com/Uni20-dev/bethe/pull/30): bounded charged-momentum scans and owning Async levels after one vacuum solve | Native only | Auxiliary real-root XXZ precision awaits PR #15; audit Potts constants, twists, labels and failure values. No complex-function dependency |
+| `asep-pbc`, `tasep-pbc`, `xyz-pbc` | Complex/nonlinear composition audit pending | Native only | Branch tracking and scalar-function coverage before advertising MPFR |
 
 `bethe-info` reports capabilities and has no numerical parallelism to add.
 The inventory covers 43 numerical frontends; it does not extend any model's
@@ -186,3 +187,14 @@ improve from 6.33 to 0.85 seconds for 2,049 binary64 levels and from 30.82 to
 5.71 seconds for 17 binary128 levels. CPU/memory costs, a roughly 4% one-worker
 binary128 overhead and measurement limits are recorded in the PR's
 `docs/parallel-grids.md`. Numerical kernels and precision support are unchanged.
+
+Potts's pending #30 retains one vacuum solve and reuses each charged-momentum
+result for both conjugate charge rows. The existing bounded grid streams
+ordered rows, including missing-reference and iteration failures; default
+one-worker and selected single-state requests stay serial. Complete owning
+states match under deferred/one/four-worker execution. Native/wide/sanitizer
+checks, 33 matched-baseline cases and tutorial exports pass. All 8,100 timed
+rows match baseline output; eight-worker whole-curve speedups are 7.4x in
+binary64/binary80 and 6.7x in binary128. CPU/memory costs and shared-workstation
+limits are documented in the PR's `docs/parallel-grids.md`. The underlying
+real-root XXZ equations and precision support are unchanged.
