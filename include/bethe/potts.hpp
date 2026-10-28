@@ -34,7 +34,8 @@ template <uni20::Real Real>
 State<Real> solve(std::size_t sites, int charge, std::size_t momentum_index, bethe::SolverOptions<Real> const& options)
 {
   validate_sites(sites);
-  Real const pi = Real{4} * std::atan(Real{1}), root3 = std::sqrt(Real{3});
+  Real const zero = bethe::detail::solver_zero(options);
+  Real const pi = bethe::detail::pi_like(zero), root3 = uni20::math::sqrt(uni20::scalar_like(zero, 3));
   xxz::QuantumNumbers numbers;
   numbers.reserve(sites);
   auto const l = static_cast<std::int64_t>(sites);
@@ -89,10 +90,32 @@ template <uni20::Real Real = double>
   return detail::solve<Real>(sites, charge, momentum_index, options);
 }
 
-template <uni20::Real Real = double> [[nodiscard]] Real velocity() { return Real{3} * std::sqrt(Real{3}) / Real{2}; }
-
-template <uni20::Real Real = double> [[nodiscard]] Real bulk_energy_density()
+/// Sound velocity at an explicit finite arithmetic precision.
+template <uni20::Real Real = double> [[nodiscard]] Real velocity(uni20::Precision precision)
 {
-  return -Real{4} / Real{3} - std::sqrt(Real{3}) / (Real{2} * std::atan(Real{1}));
+  Real const zero = bethe::detail::precision_zero(uni20::scalar_at_precision<Real>(0, precision));
+  return Real{3} * uni20::math::sqrt(uni20::scalar_like(zero, 3)) / Real{2};
+}
+
+/// Infinite-chain energy per clock site at an explicit finite precision.
+template <uni20::Real Real = double> [[nodiscard]] Real bulk_energy_density(uni20::Precision precision)
+{
+  Real const zero = bethe::detail::precision_zero(uni20::scalar_at_precision<Real>(0, precision));
+  Real const one = uni20::scalar_like(zero, 1);
+  return -Real{4} * one / Real{3} - uni20::math::sqrt(Real{3} * one) / (Real{2} * uni20::math::atan(one));
+}
+
+template <uni20::Real Real = double>
+  requires(!uni20::has_runtime_precision_v<Real>)
+[[nodiscard]] Real velocity()
+{
+  return velocity<Real>(uni20::native_precision<Real>());
+}
+
+template <uni20::Real Real = double>
+  requires(!uni20::has_runtime_precision_v<Real>)
+[[nodiscard]] Real bulk_energy_density()
+{
+  return bulk_energy_density<Real>(uni20::native_precision<Real>());
 }
 } // namespace bethe::potts
