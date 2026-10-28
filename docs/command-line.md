@@ -409,6 +409,8 @@ For projected lattice electrons, [`bethe-tj-pbc`](tj.md) fixes t=1, J=2 and
 takes L with optional `--particles N --sz VALUE`. It supports doped sectors
 with odd populations of both spins, plus every no-hole or fully polarized
 sector. Defaults are N=L and the smallest nonnegative Sz compatible with N.
+Explicit `--precision bits-N` or `digits-N` is supported with the MPLAPACK
+MPFR provider, including all three existing branches and root exports.
 
 ### SU(3)/ULS and spin-1 TB chains
 
