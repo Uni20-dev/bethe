@@ -188,9 +188,9 @@ or `UNI20_ENABLE_MPC` options.
 Arbitrary precision is optional. Uni20 enables its real and complex scalars
 together, requiring GMP, MPFR >= 4.2, and MPC development packages. All modes of
 `bethe-xxx-pbc`, `bethe-xxx-obc`, `bethe-richardson`, `bethe-central-spin`,
-`bethe-su3-dispersion`, `bethe-tb-dispersion`, `bethe-haldane-shastry-pbc` and `bethe-sutherland-pbc`
+`bethe-su3-dispersion`, `bethe-tb-dispersion`, `bethe-sine-gordon-dispersion`, `bethe-haldane-shastry-pbc` and `bethe-sutherland-pbc`
 work without MPLAPACK. Uni20 supplies CPU QR for
-Richardson and central spin; SU(3)/TB dispersion, Haldane–Shastry and Sutherland
+Richardson and central spin; SU(3)/TB/sine-Gordon dispersions, Haldane–Shastry and Sutherland
 use scalar functions only.
 In a separate build directory:
 
@@ -203,6 +203,7 @@ cmake --build . --parallel
 ./bethe-richardson --levels 0,1,2,3 --pairs 2 --g 1 --precision digits-100
 ./bethe-central-spin --couplings 1,0.7,0.3 --field 1 --sz 0 --precision bits-256
 ./bethe-su3-dispersion --branch four-soliton --folded --precision digits-100
+./bethe-sine-gordon-dispersion --p 0.4 --momentum 0.7 --precision digits-100
 ./bethe-info
 ```
 
@@ -240,10 +241,11 @@ finite two-spinon DSF, finite-size periodic/hard-wall Lieb–Liniger states and 
 zero-temperature Lieb–Liniger bulk energies and dispersions, SU(3) balanced
 singlet energies, and Richardson/central-spin ground-state continuation and finite Hubbard ground states.
 SU(3)/TB thermodynamic elementary lines and continuum bounds and Haldane–Shastry/Sutherland finite spectra are also supported.
+Sine-Gordon particle lines and pair thresholds also support MPFR.
 Both finite XXZ frontends support their existing ground, sector and real-root
 excitation modes; their physical domain and state-family restrictions still apply.
 It does **not** enable arbitrary precision throughout all models or frontends.
-The XXX real-root and Gaudin solvers, SU(3)/TB dispersion and Haldane–Shastry/Sutherland need just `UNI20_ENABLE_MPREAL=ON`;
+The XXX real-root and Gaudin solvers, SU(3)/TB/sine-Gordon dispersions and Haldane–Shastry/Sutherland need just `UNI20_ENABLE_MPREAL=ON`;
 Lieb–Liniger, SU(3), finite XXZ/Hubbard, Gaudin–Yang/Bose–Fermi and form factors additionally
 need `UNI20_BACKEND_MPLAPACK=ON`.
 Enabling that provider also lets Uni20 dispatch the Lieb–Liniger LU and Gaudin
