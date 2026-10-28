@@ -13,7 +13,7 @@ for MPS excitation calculations.
 bethe-potts-pbc 16 --json potts.json --csv potts.csv
 bethe-potts-pbc 64 --momentum-index 1 --precision long-double
 bethe-potts-pbc 32 --branch charged --charge -1 --tsv charged.tsv
-bethe-potts-pbc 64 --threads 8 --csv levels.csv --no-retain
+bethe-potts-pbc 64 --threads 8 --csv levels.csv --no-retain --quiet
 bethe-potts-pbc 128 --branch ground --precision fp128
 bethe-potts-pbc --references
 ```
