@@ -41,8 +41,8 @@ int run(cli::DataOutputOptions const& options, int argc, char** argv)
       .field("arbitrary_frontends", "Arbitrary-precision frontends",
              cli::has_arbitrary_structure_factor
                  ? "bethe-xxx-pbc, bethe-xxx-obc, bethe-lieb-liniger-pbc, bethe-lieb-liniger-obc, "
-                   "bethe-lieb-liniger-dispersion, bethe-richardson, "
-                   "bethe-central-spin, bethe-xxx-structure-factor, bethe-su3-pbc"
+                   "bethe-lieb-liniger-dispersion, bethe-richardson, bethe-central-spin, "
+                   "bethe-xxx-structure-factor, bethe-su3-pbc, bethe-xxz-pbc, bethe-xxz-obc"
              : UNI20_HAS_MPREAL ? "bethe-xxx-pbc, bethe-xxx-obc, bethe-richardson, bethe-central-spin"
                                 : "none enabled in this build")
       .field("precision_scope", "Native precision scope", "all numerical frontends, subject to availability")

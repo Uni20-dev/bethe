@@ -78,7 +78,7 @@ for program in sys.argv[1:]:
     # results and unavailable providers; they must not claim no frontend support.
     if name not in ("bethe-xxx-pbc", "bethe-xxx-obc", "bethe-xxx-structure-factor", "bethe-richardson",
                     "bethe-central-spin", "bethe-lieb-liniger-pbc", "bethe-lieb-liniger-obc",
-                    "bethe-lieb-liniger-dispersion", "bethe-su3-pbc"):
+                    "bethe-lieb-liniger-dispersion", "bethe-su3-pbc", "bethe-xxz-pbc", "bethe-xxz-obc"):
         for precision in ("bits-128", "digits-100"):
             rejected = run(program, [*base, "--precision", precision], 1)
             assert not rejected.stdout and "does not support arbitrary precision" in rejected.stderr
