@@ -102,6 +102,10 @@ if(BETHE_HAS_MPREAL)
   add_executable(bethe_thermodynamics_mpfr_tests test_thermodynamics_mpfr.cpp)
   target_link_libraries(bethe_thermodynamics_mpfr_tests PRIVATE bethe::bethe TBB::tbb)
   bethe_discover_tests(bethe_thermodynamics_mpfr_tests)
+
+  add_executable(bethe_thermal_mpfr_tests test_thermal_mpfr.cpp)
+  target_link_libraries(bethe_thermal_mpfr_tests PRIVATE bethe::bethe TBB::tbb)
+  bethe_discover_tests(bethe_thermal_mpfr_tests)
 endif()
 
 add_executable(bethe_parallel_scan_tests test_parallel_scan.cpp)
@@ -498,6 +502,9 @@ if(BETHE_BUILD_APPS)
     add_test(NAME LiebLinigerThermal.cli
       COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_lieb_liniger_thermal.py"
         "$<TARGET_FILE:bethe-lieb-liniger-thermal>" "${BETHE_HAS_FLOAT128}")
+    add_test(NAME LiebLinigerThermal.precision
+      COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_thermal_precision.py"
+        "$<TARGET_FILE:bethe-lieb-liniger-thermal>" "${BETHE_HAS_MPREAL}" "${BETHE_HAS_MPLAPACK_MPREAL}")
     add_test(NAME QBoson.cli
       COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_q_boson.py"
         "$<TARGET_FILE:bethe-q-boson-pbc>" "${BETHE_HAS_FLOAT128}")
