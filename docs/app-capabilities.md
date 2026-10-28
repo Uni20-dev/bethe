@@ -42,7 +42,8 @@ independent numerical or serial/concurrent validation.
 | `xyz-dispersion` | Serial CLI; pending [PR #24](https://github.com/Uni20-dev/bethe/pull/24) reuses owning bound branches and validates shared Async preparation / parameter curves | Native only | Integrate reviewed reuse and measured curve-level concurrency; explicit-precision elliptic/theta functions remain necessary |
 | `xxz-dispersion` | Immutable band with cheap queries; bulk preparation remains serial | Native only | Theta constants await [Uni20 PR #103](https://github.com/Uni20-dev/uni20/pull/103); bulk quadrature still needs explicit precision. Cheap band queries stay serial |
 | `xxz-qg-obc` | Shared continuous regular-root scans; owning regular/free-sector queries validated in pending PR #26 | Native only on merged baseline; [PR #26](https://github.com/Uni20-dev/bethe/pull/26) adds MPFR scalars, no MPLAPACK | Integrate reviewed critical regular-root and free-endpoint precision; individual cheap free blocks stay serial |
-| `sine-gordon-bethe-yang`, `biquadratic-obc` | Sector-specific solver/composition audit pending | Native only | Treat real, complex and singular sectors separately; massive quantum-group Newton precision awaits PR #9 |
+| `sine-gordon-bethe-yang` | Serial CLI; pending [PR #27](https://github.com/Uni20-dev/bethe/pull/27) adds bounded independent level scans | Native only | Integrate reviewed concurrency; MPFR needs explicit-precision phase integration and shared tanh-sinh/error controls |
+| `biquadratic-obc` | Sector-specific solver/composition audit pending | Native only | Treat real, complex and singular sectors separately; massive quantum-group Newton precision awaits PR #9 |
 | `lee-yang-vacuum`, `lee-yang-excited`, `sine-gordon-vacuum`, `sine-gordon-excited`, `kondo-response` | Integral-equation composition audit pending | Native only | Preserve coupled iterations and continuation; audit discretization and complex functions |
 | `asep-pbc`, `tasep-pbc`, `potts-pbc`, `xyz-pbc` | Complex/nonlinear composition audit pending | Native only | Branch tracking and scalar-function coverage before advertising MPFR |
 
@@ -66,7 +67,7 @@ in Uni20; model equations and physical normalization remain in Bethe.
 The pending MPFR checkpoints #9, #13, #15, #16, #18, #19, #20, #21, #22, #23, #25 and #26 verify precision growth
 against independent references beyond binary128, typed endpoint/failure values,
 CLI export/provider contracts and ownership in composed Async calculations.
-The pending scheduling checkpoints #11, #12 and #14 compare complete results
+The pending scheduling checkpoints #11, #12, #14 and #27 compare complete results
 against serial/baseline calculations and document measured wall/CPU and memory
 behavior. Finite Hubbard's scalar/LU work is independent of the complex
 Gamma-ratio functions still required by thermodynamic Hubbard.
@@ -127,8 +128,8 @@ The theta-constant prerequisite is proposed separately in
 [Uni20 PR #103](https://github.com/Uni20-dev/uni20/pull/103). It provides scaled
 zero-argument rectangular constants at native and explicit MPFR precision,
 with independent product/Gamma references and accuracy growth through 1,024
-bits. Local native/wide/sanitizer checks pass; upstream review and CI are
-pending. Bethe has not changed its Uni20 pin or enabled MPFR for XXZ/XYZ.
+bits. Local native/wide/sanitizer checks and upstream CI pass; independent
+review and merge remain pending. Bethe has not changed its Uni20 pin or enabled MPFR for XXZ/XYZ.
 XXZ bulk-energy quadrature and XYZ complex theta arguments/derivatives remain
 separate work.
 
@@ -151,3 +152,13 @@ and failed scans, agree under serial/threaded execution. Owning regular/free
 queries also pass deferred and threaded composition tests. Native output
 comparisons retain 681 identical rows; no massive or new complex-root family
 is introduced.
+
+Sine-Gordon Bethe–Yang's pending #27 uses the existing bounded grid for
+independent interacting levels. One worker, a single level and the free point
+stay direct and serial. Native/wide/sanitizer CLI checks preserve all fields,
+partially converged scans and ordered output. Matched baseline comparisons
+retain 495 selected rows and 2,066 benchmark rows. Eight-worker wall times
+improve from 6.33 to 0.85 seconds for 2,049 binary64 levels and from 30.82 to
+5.71 seconds for 17 binary128 levels. CPU/memory costs, a roughly 4% one-worker
+binary128 overhead and measurement limits are recorded in the PR's
+`docs/parallel-grids.md`. Numerical kernels and precision support are unchanged.
