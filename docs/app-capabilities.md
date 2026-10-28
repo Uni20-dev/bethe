@@ -36,7 +36,8 @@ independent numerical or serial/concurrent validation.
 | `sun-fermions-pbc`, `tj-pbc`, `ladder-pbc` | Composition audit pending | Native only | Shared explicit-precision Newton helper awaits PR #9; audit nested continuation and scratch ownership |
 | `bose-fermi-pbc` | Individual nested solves; owning mixed-precision requests validated in pending PR #19 | Native only on merged baseline; [PR #19](https://github.com/Uni20-dev/bethe/pull/19) adds MPFR with MPLAPACK | Integrate reviewed mixed/pure/free-state precision and shared continuum-provider guard |
 | `su3-dispersion` | Serial analytic CLI; owning mixed-precision Async queries validated in pending PR #20 | Native only on merged baseline; [PR #20](https://github.com/Uni20-dev/bethe/pull/20) adds MPFR scalars, no MPLAPACK | Integrate reviewed band/bound precision; individual formulas remain too cheap to justify per-point scheduling |
-| `tb-dispersion`, `haldane-shastry-pbc`, `sutherland-pbc` | Analytic/formula-based paths | Native only | Low-cost precision extensions; measure before parallelizing individual points |
+| `haldane-shastry-pbc`, `sutherland-pbc` | Serial analytic CLIs; owning mixed-precision window/parameter scans validated in pending PR #21 | Native only on merged baseline; [PR #21](https://github.com/Uni20-dev/bethe/pull/21) adds MPFR scalars, no MPLAPACK | Integrate reviewed precision and exact-integer gap/order handling; cheap formulas stay serial |
+| `tb-dispersion` | Analytic/formula-based path | Native only | Low-cost precision extension; measure before parallelizing individual points |
 | `xxz-dispersion`, `xyz-dispersion`, `sine-gordon-dispersion` | Independent queries; prepared-context audit pending | Native only | Elliptic/theta/integral accuracy and immutable scratch ownership |
 | `sine-gordon-bethe-yang`, `biquadratic-obc`, `xxz-qg-obc` | Sector-specific solver/composition audit pending | Native only | Treat real, complex and singular sectors separately |
 | `lee-yang-vacuum`, `lee-yang-excited`, `sine-gordon-vacuum`, `sine-gordon-excited`, `kondo-response` | Integral-equation composition audit pending | Native only | Preserve coupled iterations and continuation; audit discretization and complex functions |
@@ -59,7 +60,7 @@ in Uni20; model equations and physical normalization remain in Bethe.
   rows, including grids larger than the admission window, mixed successful and
   failed points, threshold counts, native precisions and output preservation.
 
-The pending MPFR checkpoints #9, #13, #15, #16, #18, #19 and #20 verify precision growth
+The pending MPFR checkpoints #9, #13, #15, #16, #18, #19, #20 and #21 verify precision growth
 against independent references beyond binary128, typed endpoint/failure values,
 CLI export/provider contracts and ownership in composed Async calculations.
 The pending scheduling checkpoints #11, #12 and #14 compare complete results
@@ -87,6 +88,14 @@ actual updates and the frontend require MPLAPACK. Tests resolve a weak-coupling
 shift above a nonzero Fermi sea beyond binary128 resolution and compare complete
 states under owning, mixed-precision grid composition. Mixed interacting shells
 still require odd fermion number.
+
+Haldane–Shastry and Sutherland's pending #21 inherit #20's scalar CLI dispatcher.
+The spin model keeps exact motif ordering; the gas keeps exact MPFR integer gap
+coefficients until physical scaling. Full MPFR tests run without MPLAPACK,
+including differential-Hamiltonian references, large-exponent small gaps,
+precision growth, budget refusals and independent owning Async spectra. Native
+ED/wavefunction checks and 561 unchanged exported rows validate the existing
+formats. Individual analytic CLI calculations remain serial.
 
 Update this inventory with each reviewed app checkpoint. A proposed capability
 or a pending audit is not evidence of implemented support.
