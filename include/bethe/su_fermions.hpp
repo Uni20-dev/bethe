@@ -16,6 +16,13 @@ template <uni20::Real Real> struct SolverOptions : bethe::SolverOptions<Real>
 {
     std::size_t max_stages = 10000;
 };
+#if UNI20_HAS_MPREAL
+template <> struct SolverOptions<uni20::mpreal> : bethe::SolverOptions<uni20::mpreal>
+{
+    explicit SolverOptions(uni20::Precision p) : bethe::SolverOptions<uni20::mpreal>(p) {}
+    std::size_t max_stages = 10000;
+};
+#endif
 enum class SolveStatus
 {
   converged,
@@ -94,7 +101,12 @@ inline QuantumNumbers centered_numbers(std::span<std::size_t const> counts)
 template <uni20::Real Real> class GroundSystem {
   public:
     explicit GroundSystem(std::vector<std::size_t> nested_counts)
-        : counts(std::move(nested_counts)), labels(centered_numbers(counts)), pi(Real{4} * std::atan(Real{1}))
+      requires(!uni20::has_runtime_precision_v<Real>)
+        : GroundSystem(std::move(nested_counts), Real{0})
+    {}
+    GroundSystem(std::vector<std::size_t> nested_counts, Real const& exemplar)
+        : counts(std::move(nested_counts)), labels(centered_numbers(counts)),
+          zero(bethe::detail::precision_zero(exemplar)), pi(Real{4} * uni20::math::atan(uni20::scalar_like(zero, 1)))
     {
       offsets.push_back(0);
       for (auto count : counts)
@@ -104,7 +116,7 @@ template <uni20::Real Real> class GroundSystem {
     static Real scale(Real g) { return std::max(Real{1}, g); }
     std::vector<Real> seed() const
     {
-      std::vector<Real> x(order());
+      std::vector<Real> x(order(), zero);
       Real const colors = Real(counts.size());
       for (std::size_t a = 0; a < counts.size(); ++a)
         for (std::size_t j = 0; j < counts[a] / 2; ++j)
@@ -112,10 +124,10 @@ template <uni20::Real Real> class GroundSystem {
           Real const label = Real(labels[a][counts[a] - counts[a] / 2 + j].twice()) / Real{2};
           // Strong-coupling charge sea and inverse balanced SU(kappa) spin
           // density. For imbalanced populations this remains only a seed.
-          x[offsets[a] + j] =
-              a ? colors / pi *
-                      std::atanh(std::tan(pi * label / Real(counts[0])) * std::tan(pi * Real(a) / (Real{2} * colors)))
-                : Real{2} * pi * label;
+          x[offsets[a] + j] = a ? colors / pi *
+                                      uni20::math::atanh(uni20::math::tan(pi * label / Real(counts[0])) *
+                                                         uni20::math::tan(pi * Real(a) / (Real{2} * colors)))
+                                : Real{2} * pi * label;
         }
       return x;
     }
@@ -127,7 +139,7 @@ template <uni20::Real Real> class GroundSystem {
         Real const factor = a ? scale(g) : Real{1};
         for (std::size_t j = counts[a] / 2; j-- > 0;)
           roots[a].push_back(-factor * x[offsets[a] + j]);
-        if (counts[a] % 2) roots[a].push_back(Real{0});
+        if (counts[a] % 2) roots[a].push_back(zero);
         for (std::size_t j = 0; j < counts[a] / 2; ++j)
           roots[a].push_back(factor * x[offsets[a] + j]);
       }
@@ -136,12 +148,17 @@ template <uni20::Real Real> class GroundSystem {
     bool physical(std::span<Real const> x, Real g) const
     {
       if (x.size() != order()) return false;
+      Real const limit = [&] {
+        if constexpr (uni20::has_runtime_precision_v<Real>)
+          return uni20::math::next_down(uni20::scalar_like(zero, std::numeric_limits<double>::infinity())) / Real{8};
+        else
+          return uni20::numeric_limits<Real>::max() / Real{8};
+      }();
       for (std::size_t a = 0; a < counts.size(); ++a)
         for (std::size_t j = 0; j < counts[a] / 2; ++j)
         {
           Real const value = x[offsets[a] + j];
-          if (!uni20::isfinite(value) || value <= Real{0} ||
-              value > uni20::numeric_limits<Real>::max() / Real{8} / (a ? scale(g) : Real{1}) ||
+          if (!uni20::isfinite(value) || value <= Real{0} || value > limit / (a ? scale(g) : Real{1}) ||
               (j && value <= x[offsets[a] + j - 1]))
             return false;
         }
@@ -149,7 +166,7 @@ template <uni20::Real Real> class GroundSystem {
     }
     static Real kernel(Real d, Real w)
     {
-      if (std::abs(d) > w)
+      if (uni20::math::abs(d) > w)
       {
         Real const r = w / d;
         return (r / d) / (Real{1} + r * r);
@@ -165,14 +182,15 @@ template <uni20::Real Real> class GroundSystem {
     Evaluation evaluate(std::span<Real const> x, Real g, std::vector<Real>* jac = nullptr) const
     {
       auto const roots = expand(x, g);
-      Evaluation out{.residual = std::vector<Real>(order()), .levels = std::vector<Real>(counts.size())};
-      if (jac) jac->assign(order() * order(), Real{0});
+      Evaluation out{
+          .residual = std::vector<Real>(order(), zero), .levels = std::vector<Real>(counts.size(), zero), .norm = zero};
+      if (jac) jac->assign(order() * order(), zero);
       for (std::size_t a = 0; a < counts.size(); ++a)
         for (std::size_t j = 0; j < counts[a] / 2; ++j)
         {
           auto const row = offsets[a] + j, full = counts[a] - counts[a] / 2 + j;
           Real const value = roots[a][full];
-          bethe::detail::CompensatedSum<Real> sum, diagonal;
+          bethe::detail::CompensatedSum<Real> sum(zero), diagonal(zero);
           std::int64_t rank = -labels[a][full].twice();
           if (g >= Real{1}) sum.add(pi * Real(rank));
           if (a == 0)
@@ -188,13 +206,13 @@ template <uni20::Real Real> class GroundSystem {
               if (a == b && k == full) continue;
               Real const d = value - roots[b][k];
               Real phase;
-              if (g < Real{1} && std::abs(d) > w)
+              if (g < Real{1} && uni20::math::abs(d) > w)
               {
                 rank += (d > Real{0} ? 1 : -1) * (sign > Real{0} ? 1 : -1);
-                phase = -Real{2} * std::atan(w / d);
+                phase = -Real{2} * uni20::math::atan(w / d);
               }
               else
-                phase = Real{2} * std::atan(d / w);
+                phase = Real{2} * uni20::math::atan(d / w);
               sum.add(sign * phase);
               if (jac)
               {
@@ -211,10 +229,11 @@ template <uni20::Real Real> class GroundSystem {
           if (g < Real{1}) sum.add(pi * Real(rank));
           // All weak-coupling central clusters, including nested spin seas,
           // need relative sqrt(g) resolution, not just the charge roots.
-          Real const normalization = g < Real{1} ? std::max(std::sqrt(g), std::abs(value)) : Real(counts[0]);
+          Real const normalization =
+              g < Real{1} ? std::max(uni20::math::sqrt(g), uni20::math::abs(value)) : Real(counts[0]);
           if (!uni20::isfinite(sum.value())) throw std::runtime_error("nonfinite SU fermion equation residual");
           out.residual[row] = sum.value() / normalization;
-          out.levels[a] = std::max(out.levels[a], std::abs(out.residual[row]));
+          out.levels[a] = std::max(out.levels[a], uni20::math::abs(out.residual[row]));
           if (jac)
           {
             (*jac)[row * order() + row] += diagonal.value();
@@ -234,7 +253,7 @@ template <uni20::Real Real> class GroundSystem {
     std::vector<std::size_t> const counts;
     std::vector<std::size_t> offsets;
     QuantumNumbers const labels;
-    Real const pi;
+    Real const zero, pi;
 };
 template <uni20::Real Real> Real physical_root(Real value, Real length)
 {
@@ -243,9 +262,9 @@ template <uni20::Real Real> Real physical_root(Real value, Real length)
     throw std::runtime_error("SU fermion physical root is not representable; rescale the units");
   return r;
 }
-template <uni20::Real Real> Real energy(std::span<Real const> momenta)
+template <uni20::Real Real> Real energy(std::span<Real const> momenta, Real const& zero)
 {
-  bethe::detail::CompensatedSum<Real> sum;
+  bethe::detail::CompensatedSum<Real> sum(zero);
   for (Real k : momenta)
   {
     if (k != Real{0} && k * k == Real{0})
@@ -269,17 +288,22 @@ template <uni20::Real Real = double>
                                        SolverOptions<Real> const& options = {})
 {
   auto const sector = detail::sector(populations);
+  Real const zero = bethe::detail::solver_zero<Real>(options);
+  auto const precision = options.precision();
+  bethe::detail::require_same_precision(length, zero);
+  bethe::detail::require_same_precision(c, zero);
   if (!uni20::isfinite(length) || length <= Real{0} || !uni20::isfinite(c) || c < Real{0})
     throw std::invalid_argument("repulsive SU fermions require finite length>0 and c>=0");
   if (!uni20::isfinite(options.residual_tolerance) || options.residual_tolerance <= Real{0})
     throw std::invalid_argument("SU fermion residual tolerance must be finite and positive");
   State<Real> out;
+  out.residual_norm = out.target_residual_norm = out.momentum = zero;
   out.populations.assign(populations.begin(), populations.end());
   out.component_order = sector.components;
   out.particles = sector.n;
   out.length = length;
   out.interaction = c;
-  Real const pi = Real{4} * std::atan(Real{1});
+  Real const pi = Real{4} * uni20::math::atan(uni20::scalar_like(zero, 1));
   if (c == Real{0} || sector.components.size() < 2)
   {
     out.free_modes.resize(populations.size());
@@ -296,7 +320,7 @@ template <uni20::Real Real = double>
       if (count % 2 == 0) out.momentum_index += std::int64_t(count / 2);
     }
     std::sort(out.rapidities[0].begin(), out.rapidities[0].end());
-    out.energy = detail::energy<Real>(out.rapidities[0]);
+    out.energy = detail::energy<Real>(out.rapidities[0], zero);
     out.momentum = detail::physical_root(Real{2} * pi * Real(out.momentum_index), length);
     out.reached_interaction = c;
     out.free = out.converged = true;
@@ -309,10 +333,10 @@ template <uni20::Real Real = double>
     throw std::invalid_argument("c*length/2 must be finite and nonzero at the selected precision");
   auto const elements = std::size_t(std::numeric_limits<std::ptrdiff_t>::max()) / sizeof(Real);
   if (sector.order > elements / sector.order) throw std::length_error("SU fermion Newton matrix is too large");
-  detail::GroundSystem<Real> const system(sector.counts);
+  detail::GroundSystem<Real> const system(sector.counts, zero);
   out.quantum_numbers = system.labels;
   auto x = system.seed();
-  Real g = std::max(target, Real{64} * Real(sector.n)), accepted_g{};
+  Real g = uni20::scalar_like(zero, std::max(target, Real{64} * Real(sector.n))), accepted_g = zero;
   std::vector<Real> accepted_x;
   bool finished = false;
   while (!finished && out.iterations < options.max_iterations && out.stages < options.max_stages)
@@ -334,15 +358,15 @@ template <uni20::Real Real = double>
       auto correction = evaluation.residual;
       for (auto& v : correction)
         v = -v;
-      if (!bethe::detail::newton_step(std::move(jac), correction))
+      if (!bethe::detail::newton_step(std::move(jac), correction, precision))
       {
         out.status = SolveStatus::ill_conditioned;
         break;
       }
       auto trial = x;
-      Real damping{1};
+      Real damping = uni20::scalar_like(zero, 1);
       bool improved = false;
-      for (int backtrack = 0; backtrack <= uni20::numeric_limits<Real>::digits(); ++backtrack)
+      for (int backtrack = 0; backtrack <= uni20::numeric_limits<Real>::digits(precision); ++backtrack)
       {
         for (std::size_t j = 0; j < x.size(); ++j)
           trial[j] = x[j] + damping * correction[j];
@@ -386,7 +410,7 @@ template <uni20::Real Real = double>
     for (auto& level : out.rapidities)
       for (auto& r : level)
         r = detail::physical_root(r, length);
-    out.energy = detail::energy<Real>(out.rapidities[0]);
+    out.energy = detail::energy<Real>(out.rapidities[0], zero);
     out.reached_interaction = accepted_g == target ? c : detail::physical_root(accepted_g, length);
     auto const evaluation = system.evaluate(accepted_x, accepted_g);
     out.residual_norm = evaluation.norm;
