@@ -475,6 +475,8 @@ Heisenberg ladder. Use `--singlets NS` for one singlet-count sector or
 `--sectors` for all sector minima; triplet populations are minimized too.
 `--roots` prints the selected state's highest-weight representative and
 retains the distinction between it and a physical SU(4) descendant.
+The frontend supports explicit `bits-N`/`digits-N` precision with MPLAPACK
+MPFR, including fixed singlet and magnetization sectors and partial scans.
 
 ### Sine-Gordon field theory
 

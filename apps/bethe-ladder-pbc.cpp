@@ -2,6 +2,7 @@
 // Copyright (C) 2026 Ian McCulloch
 #include "program-options.hpp"
 #include "result-output.hpp"
+#include "solver-precision.hpp"
 #include <bethe/ladder.hpp>
 
 namespace
@@ -34,6 +35,7 @@ auto program_info()
                 "An incomplete scan reports only a candidate upper bound, never a minimum.",
                 "See docs/ladder.md for normalization, finite-ring labels and scan cost.",
                 "Use --references for literature and applicability; see CITATIONS.md."};
+  info.notes.push_back("bits-N/digits-N require the configured MPLAPACK MPFR provider.");
   return info;
 }
 void add_options(CLI::App& app, Arguments& args)
@@ -52,7 +54,7 @@ void add_options(CLI::App& app, Arguments& args)
                      "max Bethe residual divided by L (default: 32 epsilon; not an energy-error bound)");
   bethe::cli::option(app, "--max-iterations", args.max_iterations, "total attempted Newton corrections (10000)")
       ->capture_default_str();
-  bethe::cli::precision_option(app, args.precision);
+  bethe::cli::precision_option(app, args.precision, cli::ArbitraryPrecision::real_lu);
   cli::add_data_output_options(
       app, args.output,
       {{.name = "states", .description = "Selected states and diagnostics", .primary = true},
@@ -92,15 +94,12 @@ std::string shape_text(model::detail::Shape const& shape)
   return fmt::format("{}, {}, {}, {}", shape[0], shape[1], shape[2], shape[3]);
 }
 
-template <uni20::Real Real> int run(Arguments const& args, int argc, char** argv)
+template <uni20::Real Real> int run(Arguments const& args, model::SolverOptions<Real> options, int argc, char** argv)
 {
   uni20::run_context context(program_info(), {.invocation = std::vector<std::string>(argv, argv + argc)});
-  Real const rung = uni20::parse_real<Real>(*args.rung);
-  Real const field = args.field ? uni20::parse_real<Real>(*args.field) : Real{0};
-  model::SolverOptions<Real> options;
-  options.max_iterations = args.max_iterations;
+  Real const rung = cli::parse_solver_real<Real>(*args.rung, options);
+  Real const field = args.field ? cli::parse_solver_real<Real>(*args.field, options) : uni20::scalar_like(rung, 0);
   options.max_branches = args.max_branches;
-  if (args.tolerance) options.residual_tolerance = uni20::parse_real<Real>(*args.tolerance);
   auto computation = context.computation();
   model::State<Real> state;
   std::optional<model::SectorScan<Real>> scan;
@@ -232,7 +231,8 @@ int main(int argc, char** argv)
       argc, argv, program_info(), [&](auto& app) { add_options(app, args); },
       [&](auto&) {
         validate(args);
-        return bethe::cli::dispatch_precision(args.precision,
-                                              [&]<uni20::Real Real> { return run<Real>(args, argc, argv); });
+        return cli::dispatch_solver_precision<cli::ArbitraryPrecision::real_lu, model::SolverOptions>(
+            args.precision, args.tolerance, args.max_iterations,
+            [&](auto options) { return run(args, std::move(options), argc, argv); });
       });
 }
