@@ -43,8 +43,8 @@ int run(cli::DataOutputOptions const& options, int argc, char** argv)
                  ? "bethe-xxx-pbc, bethe-xxx-obc, bethe-lieb-liniger-pbc, bethe-lieb-liniger-obc, "
                    "bethe-lieb-liniger-dispersion, bethe-richardson, bethe-central-spin, "
                    "bethe-xxx-structure-factor, bethe-su3-pbc, bethe-xxz-pbc, bethe-xxz-obc, "
-                   "bethe-hubbard-pbc, bethe-hubbard-obc, bethe-gaudin-yang-pbc, bethe-bose-fermi-pbc"
-             : UNI20_HAS_MPREAL ? "bethe-xxx-pbc, bethe-xxx-obc, bethe-richardson, bethe-central-spin"
+                   "bethe-hubbard-pbc, bethe-hubbard-obc, bethe-gaudin-yang-pbc, bethe-bose-fermi-pbc, bethe-su3-dispersion"
+             : UNI20_HAS_MPREAL ? "bethe-xxx-pbc, bethe-xxx-obc, bethe-richardson, bethe-central-spin, bethe-su3-dispersion"
                                 : "none enabled in this build")
       .field("precision_scope", "Native precision scope", "all numerical frontends, subject to availability")
       .field("precision_note", "Precision units", "significand bits; fp64/fp80/fp128 name complete formats")
