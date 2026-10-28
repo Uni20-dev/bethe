@@ -825,9 +825,11 @@ if(BETHE_BUILD_APPS)
     COMMAND "${CMAKE_COMMAND}" "-DPROGRAM=$<TARGET_FILE:bethe-biquadratic-obc>"
       "-DFLOAT128=${BETHE_HAS_FLOAT128}"
       -P "${CMAKE_CURRENT_SOURCE_DIR}/check_biquadratic_cli.cmake")
-  add_test(NAME Ladder.precision
-    COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_ladder_precision.py"
-      "$<TARGET_FILE:bethe-ladder-pbc>" "${BETHE_HAS_MPREAL}" "${BETHE_HAS_MPLAPACK_MPREAL}")
+  if(Python3_Interpreter_FOUND)
+    add_test(NAME Ladder.precision
+      COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_ladder_precision.py"
+        "$<TARGET_FILE:bethe-ladder-pbc>" "${BETHE_HAS_MPREAL}" "${BETHE_HAS_MPLAPACK_MPREAL}")
+  endif()
   add_test(NAME Ladder.cli
     COMMAND "${CMAKE_COMMAND}" "-DPROGRAM=$<TARGET_FILE:bethe-ladder-pbc>"
       "-DFLOAT128=${BETHE_HAS_FLOAT128}"
