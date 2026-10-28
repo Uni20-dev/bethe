@@ -2,6 +2,7 @@
 // Copyright (C) 2026 Ian McCulloch
 #include "execution-options.hpp"
 #include "result-output.hpp"
+#include <bethe/observable_grid.hpp>
 #include <bethe/xxx_thermodynamic_structure_factor.hpp>
 
 namespace
@@ -84,7 +85,7 @@ template <uni20::Real Real> int run(Arguments const& a, int argc, char** argv)
   model::StructureFactorOptions<Real> options;
   options.max_evaluations = a.evaluations;
   if (a.tolerance) options.tolerance = uni20::parse_real<Real>(*a.tolerance);
-  model::ThermodynamicTwoSpinonStructureFactor<Real> sf(exchange, options);
+  model::ThermodynamicTwoSpinonStructureFactor<Real> const sf(exchange, options);
   auto grid = [](std::optional<std::string> const& one, Real lo, Real hi, std::size_t n) {
     if (one) return std::vector<Real>{uni20::parse_real<Real>(*one)};
     if (!uni20::isfinite(lo) || !uni20::isfinite(hi) || !(hi > lo) || n < 2 || n > 1000000)
@@ -102,29 +103,15 @@ template <uni20::Real Real> int run(Arguments const& a, int argc, char** argv)
   for (Real f : w)
     if (!uni20::isfinite(f)) throw std::invalid_argument("frequency must be finite");
   if (q.size() > 1000000 / w.size()) throw std::length_error("spectral grid exceeds 1000000 points");
-  std::vector<model::SpectralDensity<Real>> values(q.size() * w.size());
+  std::size_t const count = q.size() * w.size();
   Real const scale = a.channel == "zz" ? Real{1} : Real{2};
   uni20::async::TbbScheduler scheduler(a.threads);
-  context.measure([&] {
-    for (std::size_t offset = 0; offset < values.size(); offset += 128)
-      scheduler.execute_batch(std::min(std::size_t{128}, values.size() - offset), [&](std::size_t j) {
-        auto const i = offset + j;
-        values[i] = sf(q[i / w.size()], w[i % w.size()]);
-        auto& value = values[i];
-        if (value.value && (!uni20::isfinite(scale * *value.value) || !uni20::isfinite(scale * *value.error)))
-        {
-          value.value.reset();
-          value.error.reset();
-          value.status = model::SpectralDensityStatus::numerical_failure;
-        }
-      });
-  });
+  // Group cheap native samples; binary128 quadrature needs individual tasks
+  // because adjacent points can have very different evaluation costs.
+  constexpr std::size_t block_size = uni20::numeric_limits<Real>::digits() > 64 ? 1 : 16;
+  bethe::ExecutionOptions const execution{
+      .scheduler = &scheduler, .max_in_flight = std::max(std::size_t{128 / block_size}, std::size_t(a.threads) * 2)};
   std::size_t failures = 0, thresholds = 0;
-  for (auto const& v : values)
-  {
-    failures += !v.converged();
-    thresholds += v.status == model::SpectralDensityStatus::lower_threshold;
-  }
   cli::RunReport report(context, "XXX thermodynamic two-spinon structure factor");
   report.field("hamiltonian", "Hamiltonian", "H=J sum S_j.S_(j+1); infinite chain; zero field and temperature")
       .field("exchange", "Exchange J", exchange)
@@ -135,36 +122,93 @@ template <uni20::Real Real> int run(Arguments const& a, int argc, char** argv)
       .field("tolerance", "Kernel tolerance", options.tolerance)
       .field("max_evaluations", "Max kernel evaluations per point", options.max_evaluations)
       .field("threads", "Scheduler concurrency limit", a.threads)
-      .field("points", "Spectral points", values.size())
-      .field("failures", "Failed points", failures)
-      .field("thresholds", "Divergent threshold points", thresholds)
-      .result(failures == 0, failures == 0 ? "converged" : "numerical_failure");
-  cli::ResultOutput output(report, a.output, {"spectrum", "continuum"});
+      .field("max_in_flight", "Maximum points in flight", execution.max_in_flight * block_size)
+      .field("block_size", "Points per task", block_size)
+      .field("cpu_timing_scope", "CPU timing scope", "spectral grid including ordered row output")
+      .field("points", "Spectral points", count);
+  namespace data = cli::data;
   using Optional = std::optional<Real>;
   using cli::column;
-  output.table(
-      "spectrum", "Unbroadened spectral density",
-      [&](auto& table) {
-        for (std::size_t i = 0; i < values.size(); ++i)
-        {
-          auto const& v = values[i];
-          table.append(q[i / w.size()], w[i % w.size()], v.value ? Optional(scale * *v.value) : Optional{},
-                       v.error ? Optional(scale * *v.error) : Optional{}, v.evaluations, std::string(status(v.status)));
-        }
-      },
-      column<Real>("q"), column<Real>("omega"), column<Optional>("density"), column<Optional>("estimated_error"),
-      column<std::size_t>("evaluations"), column<std::string>("status"));
-  output.table(
-      "continuum", "Two-spinon continuum",
-      [&](auto& table) {
-        for (Real p : q)
-        {
-          auto const [lo, hi] = sf.boundaries(p);
-          table.append(p, lo, hi);
-        }
-      },
-      column<Real>("q"), column<Real>("lower"), column<Real>("upper"));
-  output.finish();
+  data::data_table_options const table_options{.retain = a.output.retain ? data::retention::all : data::retention::none,
+                                               .metadata = report.metadata()};
+  auto spectrum =
+      data::make_data_table("Unbroadened spectral density", table_options, column<Real>("q"), column<Real>("omega"),
+                            column<Optional>("density"), column<Optional>("estimated_error"),
+                            column<std::size_t>("evaluations"), column<std::string>("status"));
+  cli::DataOutput output(a.output, {"spectrum", "continuum"});
+  try
+  {
+    output.attach(spectrum, "spectrum");
+    context.measure([&] {
+      bethe::evaluate_observable_grid(
+          (count + block_size - 1) / block_size,
+          [&](std::size_t block) {
+            std::size_t const first = block * block_size, size = std::min(block_size, count - first);
+            std::vector<model::SpectralDensity<Real>> values;
+            values.reserve(size);
+            for (std::size_t j = 0; j < size; ++j)
+            {
+              auto const i = first + j;
+              auto value = sf(q[i / w.size()], w[i % w.size()]);
+              if (value.value && (!uni20::isfinite(scale * *value.value) || !uni20::isfinite(scale * *value.error)))
+              {
+                value.value.reset();
+                value.error.reset();
+                value.status = model::SpectralDensityStatus::numerical_failure;
+              }
+              values.push_back(std::move(value));
+            }
+            return values;
+          },
+          [&](std::size_t block, auto const& values) {
+            for (std::size_t j = 0; j < values.size(); ++j)
+            {
+              auto const i = block * block_size + j;
+              auto const& value = values[j];
+              failures += !value.converged();
+              thresholds += value.status == model::SpectralDensityStatus::lower_threshold;
+              spectrum.append(q[i / w.size()], w[i % w.size()],
+                              value.value ? Optional(scale * *value.value) : Optional{},
+                              value.error ? Optional(scale * *value.error) : Optional{}, value.evaluations,
+                              std::string(status(value.status)));
+            }
+          },
+          execution);
+    });
+    report.result(failures == 0, failures == 0 ? "converged" : "numerical_failure");
+    auto summary = report.finish();
+    // These counts are known only after collection, so streaming tables carry
+    // them in the final summary rather than the initial metadata.
+    summary.emplace("Failed points", std::to_string(failures));
+    summary.emplace("Divergent threshold points", std::to_string(thresholds));
+    output.overview(report.overview(summary));
+    output.finish(spectrum, summary);
+    auto continuum = data::make_data_table("Two-spinon continuum", table_options, column<Real>("q"),
+                                           column<Real>("lower"), column<Real>("upper"));
+    output.write_table(
+        "continuum", continuum,
+        [&](auto& table) {
+          for (Real p : q)
+          {
+            auto const [lo, hi] = sf.boundaries(p);
+            table.append(p, lo, hi);
+          }
+        },
+        summary);
+    output.finish_document();
+  }
+  catch (...)
+  {
+    data::table_metadata aborted{{"Status", "aborted"}};
+    if (!context.finished()) try
+      {
+        aborted = cli::run_summary(context.finish(uni20::run_outcome::failed));
+      }
+      catch (...)
+      {}
+    output.abort(spectrum, std::move(aborted));
+    throw;
+  }
   return failures == 0 ? 0 : 2;
 }
 } // namespace

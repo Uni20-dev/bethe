@@ -2,6 +2,7 @@
 // Copyright (C) 2026 Ian McCulloch
 #include "program-options.hpp"
 #include "result-output.hpp"
+#include "solver-precision.hpp"
 #include <bethe/bose_fermi.hpp>
 
 namespace
@@ -45,7 +46,7 @@ void add_options(CLI::App& app, Arguments& a)
   cli::count_option(app, "--max-iterations", a.iterations, "Accepted Newton updates; zero checks the seed")
       ->capture_default_str();
   app.add_flag("--roots", a.roots, "Export charge/auxiliary roots or exact free modes");
-  cli::precision_option(app, a.precision);
+  cli::precision_option(app, a.precision, cli::ArbitraryPrecision::real_lu);
   cli::add_data_output_options(app, a.output,
                                {{.name = "states", .description = "Selected states and diagnostics", .primary = true},
                                 {.name = "charge_roots",
@@ -76,13 +77,11 @@ char const* name(model::Status status)
   }
   return "unknown";
 }
-template <uni20::Real Real> int run(Arguments const& a, int argc, char** argv)
+template <uni20::Real Real> int run(Arguments const& a, model::SolverOptions<Real> controls, int argc, char** argv)
 {
   uni20::run_context context(program_info(), {.invocation = std::vector<std::string>(argv, argv + argc)});
-  Real const length = uni20::parse_real<Real>(*a.length), c = uni20::parse_real<Real>(*a.coupling);
-  model::SolverOptions<Real> controls;
-  controls.max_iterations = a.iterations;
-  if (a.tolerance) controls.residual_tolerance = uni20::parse_real<Real>(*a.tolerance);
+  Real const length = cli::parse_solver_real<Real>(*a.length, controls),
+             c = cli::parse_solver_real<Real>(*a.coupling, controls);
   // Validate and solve before opening output files, including --force targets.
   auto const state = context.measure([&] { return model::ground_state(a.bosons, a.fermions, length, c, controls); });
   bool const free = c == Real{0} || a.bosons == 0;
@@ -133,7 +132,7 @@ template <uni20::Real Real> int run(Arguments const& a, int argc, char** argv)
         [&](auto& table) {
           for (std::size_t j = 0; j < a.bosons; ++j)
             table.append(0, std::string("boson"), j, std::int64_t{0},
-                         state.converged ? Optional(Real{0}) : std::nullopt);
+                         state.converged ? Optional(state.momenta[j]) : std::nullopt);
           for (std::size_t j = 0; j < a.fermions; ++j)
             table.append(0, std::string("fermion"), j, state.free_fermion_modes[j],
                          state.converged ? Optional(state.momenta[a.bosons + j]) : std::nullopt);
@@ -166,6 +165,8 @@ int main(int argc, char** argv)
       argc, argv, program_info(), [&](auto& app) { add_options(app, a); },
       [&](auto&) {
         a.output.validate();
-        return cli::dispatch_precision(a.precision, [&]<typename Real>() { return run<Real>(a, argc, argv); });
+        return cli::dispatch_solver_precision<cli::ArbitraryPrecision::real_lu>(
+            a.precision, a.tolerance, a.iterations,
+            [&](auto controls) { return run(a, std::move(controls), argc, argv); });
       });
 }

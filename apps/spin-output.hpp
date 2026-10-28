@@ -14,6 +14,9 @@ template <typename State> std::string spin_status(State const& state)
     using Status = decltype(state.status);
     if constexpr (requires { Status::stalled; })
       if (state.status == Status::stalled) return "line search stalled; unconverged estimate";
+    if constexpr (requires { Status::continuation_stalled; })
+      if (state.status == Status::continuation_stalled)
+        return "continuation stalled; increase precision; unconverged estimate";
   }
   return "iteration limit reached; unconverged estimate";
 }
