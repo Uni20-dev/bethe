@@ -377,7 +377,9 @@ Set `BETHE_BUILD_EXAMPLES=ON` to build library composition examples in the
 `examples/` subdirectory. The first example prepares one Lieb–Liniger background
 asynchronously and submits both elementary branches before observing it; see
 [shared backgrounds](async-execution.md#shared-backgrounds). Examples are checked
-in CI and are not installed with the command-line tools.
+in CI and are not installed with the command-line tools. The
+[ladder example](async-execution.md#prepared-ladder-field-and-rung-sweeps) compares
+repeated scans with shared root preparation and dependent field/rung queries.
 
 ### Where code belongs
 
