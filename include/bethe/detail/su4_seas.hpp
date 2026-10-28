@@ -36,7 +36,12 @@ template <uni20::Real Real> struct Branch
 // half-step displaced seas and can have nonzero lattice momentum.
 template <uni20::Real Real> class System {
   public:
-    System(Shape const& shape, std::array<int, 3> const& twice_shift) : pi(Real{4} * std::atan(Real{1}))
+    System(Shape const& shape, std::array<int, 3> const& twice_shift)
+      requires(!uni20::has_runtime_precision_v<Real>)
+        : System(shape, twice_shift, Real{0})
+    {}
+    System(Shape const& shape, std::array<int, 3> const& twice_shift, Real const& exemplar)
+        : zero(bethe::detail::precision_zero(exemplar)), pi(Real{4} * uni20::math::atan(uni20::scalar_like(zero, 1)))
     {
       for (auto p : shape)
         sites += p;
@@ -58,37 +63,41 @@ template <uni20::Real Real> class System {
     std::size_t order() const { return offsets.back(); }
     std::vector<Real> seed() const
     {
-      std::vector<Real> x(order());
+      std::vector<Real> x(order(), zero);
       for (std::size_t a = 0; a < counts.size(); ++a)
         for (std::size_t j = 0; j < counts[a]; ++j)
         {
           Real const label = Real(labels[a][j].twice()) / Real{2};
-          Real const argument =
-              std::tan(pi * label / Real(sites)) * std::tan(pi * Real(a + 1) / (Real{2} * Real(colors)));
+          Real const argument = uni20::math::tan(pi * label / Real(sites)) *
+                                uni20::math::tan(pi * Real(a + 1) / (Real{2} * Real(colors)));
           // The balanced thermodynamic density supplies only a starting
           // guess, including for shifted and imbalanced finite-size seas.
-          Real const bound = Real{97} / Real{100};
-          x[offsets[a] + j] = Real(colors) / pi * std::atanh(std::clamp(argument, -bound, bound));
+          Real const bound = uni20::scalar_like(zero, 97) / Real{100};
+          x[offsets[a] + j] = Real(colors) / pi * uni20::math::atanh(std::clamp(argument, -bound, bound));
         }
       return x;
     }
     bool physical(std::span<Real const> x) const
     {
       if (x.size() != order()) return false;
+      Real const limit = [&] {
+        if constexpr (uni20::has_runtime_precision_v<Real>)
+          return uni20::math::next_down(uni20::scalar_like(zero, std::numeric_limits<double>::infinity())) / Real{8};
+        else
+          return uni20::numeric_limits<Real>::max() / Real{8};
+      }();
       for (std::size_t a = 0; a < counts.size(); ++a)
         for (std::size_t j = 0; j < counts[a]; ++j)
         {
           Real const v = x[offsets[a] + j];
-          if (!uni20::isfinite(v) || std::abs(v) > uni20::numeric_limits<Real>::max() / Real{8} ||
-              (j && v <= x[offsets[a] + j - 1]))
-            return false;
+          if (!uni20::isfinite(v) || uni20::math::abs(v) > limit || (j && v <= x[offsets[a] + j - 1])) return false;
         }
       return true;
     }
-    static Real phase(Real d, Real w) { return Real{2} * std::atan(d / w); }
+    static Real phase(Real d, Real w) { return Real{2} * uni20::math::atan(d / w); }
     static Real derivative(Real d, Real w)
     {
-      if (std::abs(d) > w)
+      if (uni20::math::abs(d) > w)
       {
         Real const r = w / d;
         return (Real{2} * r / d) / (Real{1} + r * r);
@@ -103,23 +112,24 @@ template <uni20::Real Real> class System {
     };
     Evaluation evaluate(std::span<Real const> x, std::vector<Real>* jac = nullptr) const
     {
-      Evaluation out{.residual = std::vector<Real>(order())};
-      if (jac) jac->assign(order() * order(), Real{0});
+      Evaluation out{.residual = std::vector<Real>(order(), zero), .norm = zero};
+      Real const half = uni20::scalar_like(zero, 1) / Real{2};
+      if (jac) jac->assign(order() * order(), zero);
       for (std::size_t a = 0; a < counts.size(); ++a)
         for (std::size_t j = 0; j < counts[a]; ++j)
         {
           auto const row = offsets[a] + j;
           Real const value = x[row];
-          bethe::detail::CompensatedSum<Real> sum, diagonal;
+          bethe::detail::CompensatedSum<Real> sum(zero), diagonal(zero);
           sum.add(-pi * Real(labels[a][j].twice()) / Real(sites));
           if (a == 0)
           {
-            sum.add(phase(value, Real{0.5}));
-            diagonal.add(derivative(value, Real{0.5}));
+            sum.add(phase(value, half));
+            diagonal.add(derivative(value, half));
           }
           for (std::size_t b = a ? a - 1 : 0; b < std::min(counts.size(), a + 2); ++b)
           {
-            Real const sign = a == b ? Real{-1} : Real{1}, w = a == b ? Real{1} : Real{0.5};
+            Real const sign = a == b ? Real{-1} : Real{1}, w = a == b ? uni20::scalar_like(zero, 1) : half;
             for (std::size_t k = 0; k < counts[b]; ++k)
             {
               auto const col = offsets[b] + k;
@@ -136,7 +146,7 @@ template <uni20::Real Real> class System {
           }
           if (!uni20::isfinite(sum.value())) throw std::runtime_error("nonfinite SU(4) sea residual");
           out.residual[row] = sum.value();
-          out.norm = std::max(out.norm, std::abs(sum.value()));
+          out.norm = std::max(out.norm, uni20::math::abs(sum.value()));
           if (jac) (*jac)[row * order() + row] += diagonal.value();
         }
       return out;
@@ -144,14 +154,17 @@ template <uni20::Real Real> class System {
     std::size_t sites = 0, colors = 0;
     std::vector<std::size_t> counts, offsets;
     Labels labels;
-    Real const pi;
+    Real const zero, pi;
 };
 
 template <uni20::Real Real>
 Branch<Real> solve(Shape const& shape, std::array<int, 3> const& shift, Real tolerance, std::size_t budget)
 {
-  System<Real> const system(shape, shift);
+  Real const zero = bethe::detail::precision_zero(tolerance);
+  auto const precision = uni20::precision_of(tolerance);
+  System<Real> const system(shape, shift, zero);
   Branch<Real> out;
+  out.energy = out.residual = zero;
   out.shape = shape;
   out.labels = system.labels;
   auto x = system.seed();
@@ -172,15 +185,15 @@ Branch<Real> solve(Shape const& shape, std::array<int, 3> const& shift, Real tol
     auto correction = evaluation.residual;
     for (auto& v : correction)
       v = -v;
-    if (!bethe::detail::newton_step(std::move(jac), correction))
+    if (!bethe::detail::newton_step(std::move(jac), correction, precision))
     {
       out.status = BranchStatus::ill_conditioned;
       break;
     }
     auto trial = x;
     bool improved = false;
-    Real damping{1};
-    for (int backtrack = 0; backtrack <= uni20::numeric_limits<Real>::digits(); ++backtrack)
+    Real damping = uni20::scalar_like(zero, 1);
+    for (int backtrack = 0; backtrack <= uni20::numeric_limits<Real>::digits(precision); ++backtrack)
     {
       for (std::size_t j = 0; j < x.size(); ++j)
         trial[j] = x[j] + damping * correction[j];
@@ -205,11 +218,12 @@ Branch<Real> solve(Shape const& shape, std::array<int, 3> const& shift, Real tol
   if (!out.converged) return out; // Never expose an unconverged branch as a candidate eigenstate.
   for (std::size_t a = 0; a < system.counts.size(); ++a)
     out.rapidities.emplace_back(x.begin() + system.offsets[a], x.begin() + system.offsets[a + 1]);
-  bethe::detail::CompensatedSum<Real> energy;
+  bethe::detail::CompensatedSum<Real> energy(zero);
   energy.add(Real(system.sites));
+  Real const half = uni20::scalar_like(zero, 1) / Real{2};
   if (!out.rapidities.empty())
     for (Real v : out.rapidities[0])
-      energy.add(-System<Real>::derivative(v, Real{0.5}));
+      energy.add(-System<Real>::derivative(v, half));
   out.energy = energy.value();
   // P=pi*M1-(2*pi/L)*sum(all labels). Wider arithmetic avoids overflow
   // before the exact modulo-L reduction. Infinite-root descendants add no P.

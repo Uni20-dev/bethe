@@ -125,7 +125,7 @@ The arbitrary-precision choices currently apply to `bethe-xxx-pbc`, `bethe-xxx-o
 `bethe-xxz-obc` (all currently supported modes), `bethe-lieb-liniger-dispersion`,
 the finite-ring `bethe-xxx-structure-factor`, `bethe-richardson` and
 `bethe-central-spin`, `bethe-hubbard-pbc`, `bethe-hubbard-obc`, and
-`bethe-gaudin-yang-pbc`, `bethe-bose-fermi-pbc`, `bethe-su3-pbc` and `bethe-su3-dispersion`,
+`bethe-ladder-pbc`, `bethe-gaudin-yang-pbc`, `bethe-bose-fermi-pbc`, `bethe-su3-pbc` and `bethe-su3-dispersion`,
 `bethe-haldane-shastry-pbc`, `bethe-sutherland-pbc`, `bethe-tb-dispersion`,
 `bethe-sine-gordon-dispersion`, `bethe-tb-pbc` and `bethe-sun-fermions-pbc`,
 plus `bethe-potts-pbc` and both branches of `bethe-xxz-qg-obc`, in an
@@ -153,10 +153,10 @@ SU(3)/TB/sine-Gordon dispersions, Potts, Haldane–Shastry and Sutherland need U
 arbitrary-precision scalar family (GMP, MPFR and MPC), but no MPLAPACK.
 Finite-size, zero-temperature and thermal Lieb–Liniger, SU(3) singlet ground
 states, finite XXZ/Hubbard, Gaudin–Yang/Bose–Fermi, q-boson, finite TB, SU(n)
-fermions and structure factors additionally require the MPLAPACK MPFR provider
-for LU operations. See the [capability inventory](app-capabilities.md) for other
-frontends. More precision does not expand the
-supported state family: the excitation scan still excludes strings and infinite roots.
+fermions, t–J, the integrable ladder and structure factors additionally require the
+MPLAPACK MPFR provider for LU operations. The [capability inventory](app-capabilities.md)
+records each frontend's precision support, provider requirements and state-family
+restrictions. More arithmetic precision does not expand those state families.
 
 `bethe-tb-pbc` supports the even-ring singlet ground state with finite
 two-string deviations; see [the model documentation](takhtajan-babujian.md).
@@ -439,6 +439,8 @@ For projected lattice electrons, [`bethe-tj-pbc`](tj.md) fixes t=1, J=2 and
 takes L with optional `--particles N --sz VALUE`. It supports doped sectors
 with odd populations of both spins, plus every no-hole or fully polarized
 sector. Defaults are N=L and the smallest nonnegative Sz compatible with N.
+Explicit `--precision bits-N` or `digits-N` is supported with the MPLAPACK
+MPFR provider, including all three existing branches and root exports.
 
 ### SU(3)/ULS and spin-1 TB chains
 
@@ -505,6 +507,8 @@ Heisenberg ladder. Use `--singlets NS` for one singlet-count sector or
 `--sectors` for all sector minima; triplet populations are minimized too.
 `--roots` prints the selected state's highest-weight representative and
 retains the distinction between it and a physical SU(4) descendant.
+The frontend supports explicit `bits-N`/`digits-N` precision with MPLAPACK
+MPFR, including fixed singlet and magnetization sectors and partial scans.
 
 ### Sine-Gordon field theory
 
