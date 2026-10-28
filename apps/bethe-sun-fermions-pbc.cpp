@@ -2,6 +2,7 @@
 // Copyright (C) 2026 Ian McCulloch
 #include "program-options.hpp"
 #include "result-output.hpp"
+#include "solver-precision.hpp"
 #include <bethe/su_fermions.hpp>
 
 namespace
@@ -30,6 +31,7 @@ auto program_info()
                 "Other periodic shell branches, attraction, excitations, open ends and Bose-Fermi mixtures",
                 "are not implemented. See docs/su-fermions.md for conventions and diagnostics.",
                 "Use --references for literature and applicability; see CITATIONS.md."};
+  info.notes.push_back("bits-N/digits-N require the configured MPLAPACK MPFR provider.");
   return info;
 }
 void add_options(CLI::App& app, Arguments& args)
@@ -44,7 +46,7 @@ void add_options(CLI::App& app, Arguments& args)
   bethe::cli::option(app, "--tolerance", args.tolerance, "scaled equation residual (default: 32 epsilon)");
   bethe::cli::option(app, "--max-iterations", args.max_iterations, "attempted Newton corrections (default: 10000)")
       ->capture_default_str();
-  bethe::cli::precision_option(app, args.precision);
+  bethe::cli::precision_option(app, args.precision, cli::ArbitraryPrecision::real_lu);
   cli::add_data_output_options(app, args.output,
                                {{.name = "states", .description = "Selected states and diagnostics", .primary = true},
                                 {.name = "components", .description = "Physical-to-nesting component mapping"},
@@ -81,7 +83,7 @@ char const* status(model::SolveStatus value)
   }
   return "unknown";
 }
-template <uni20::Real Real> int run(Arguments const& args, int argc, char** argv)
+template <uni20::Real Real> int run(Arguments const& args, model::SolverOptions<Real> options, int argc, char** argv)
 {
   uni20::run_context context(program_info(), {.invocation = std::vector<std::string>(argv, argv + argc)});
   std::vector<std::size_t> pop;
@@ -96,11 +98,9 @@ template <uni20::Real Real> int run(Arguments const& args, int argc, char** argv
     list.remove_prefix(comma + 1);
     if (list.empty()) throw std::invalid_argument("empty population list item");
   }
-  Real const length = uni20::parse_real<Real>(*args.length), c = uni20::parse_real<Real>(*args.c);
-  model::SolverOptions<Real> options;
-  options.max_iterations = args.max_iterations;
+  Real const length = cli::parse_solver_real<Real>(*args.length, options),
+             c = cli::parse_solver_real<Real>(*args.c, options);
   options.max_stages = args.max_stages;
-  if (args.tolerance) options.residual_tolerance = uni20::parse_real<Real>(*args.tolerance);
   auto computation = context.computation();
   auto const state = model::ground_state<Real>(pop, length, c, options);
   computation.finish();
@@ -167,7 +167,7 @@ template <uni20::Real Real> int run(Arguments const& args, int argc, char** argv
       cli::column<std::optional<std::size_t>>("nesting_rank", "Nesting rank"));
   if (args.output.needs("--roots", args.roots) && state.free)
   {
-    Real const pi = Real{4} * std::atan(Real{1});
+    Real const pi = Real{4} * uni20::math::atan(uni20::scalar_like(length, 1));
     output.table(
         "free_modes", "Free modes (original component order)",
         [&](auto& table) {
@@ -201,7 +201,8 @@ int main(int argc, char** argv)
       argc, argv, program_info(), [&](auto& app) { add_options(app, args); },
       [&](auto&) {
         validate(args);
-        return bethe::cli::dispatch_precision(args.precision,
-                                              [&]<uni20::Real Real> { return run<Real>(args, argc, argv); });
+        return cli::dispatch_solver_precision<cli::ArbitraryPrecision::real_lu, model::SolverOptions>(
+            args.precision, args.tolerance, args.max_iterations,
+            [&](auto options) { return run(args, std::move(options), argc, argv); });
       });
 }
