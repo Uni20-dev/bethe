@@ -70,24 +70,33 @@ TEST_P(TBDispersionMpfr, IndependentSeaAndTypedEndpoints)
 
 TEST_P(TBDispersionMpfr, PreserveMomentumWhenHalvingUnderflows)
 {
-  // Construct MPFR's smallest positive value at its current exponent range,
-  // without changing that range or the default precision. No decimal proxy.
-  mpfr_t raw;
-  mpfr_init2(raw, p().bit_count());
-  mpfr_set_ui_2exp(raw, 1, mpfr_get_emin() - 1, MPFR_RNDN);
-  R q(raw, p());
-  mpfr_clear(raw);
-  ASSERT_GT(q, 0);
-  ASSERT_EQ(q / 2, 0);
+  // Include nonzero underflow: between min and 2*min, q/2 can round UP to
+  // min, so merely checking q/2==0 would corrupt the upper edge by O(1).
+  // Construct values at the current exponent range without changing it.
   Band band(v(1));
-  R expected = band.velocity() * q;
-  ASSERT_GT(expected, 0);
-  EXPECT_EQ(band.energy(q), expected);
-  auto two = band.continuum(q);
-  EXPECT_EQ(two.lower, expected);
-  EXPECT_EQ(two.upper, expected);
-  EXPECT_EQ(band.continuum(q, SpinonMomentum::folded).lower, expected);
-  EXPECT_EQ(band.four_spinon_continuum(q, SpinonMomentum::folded).lower, expected);
+  for (unsigned numerator : {4u, 5u, 6u, 7u, 8u, 12u})
+  {
+    SCOPED_TRACE(numerator);
+    mpfr_t raw;
+    mpfr_init2(raw, p().bit_count());
+    mpfr_set_ui_2exp(raw, numerator, mpfr_get_emin() - 3, MPFR_RNDN);
+    R q(raw, p());
+    mpfr_clear(raw);
+    ASSERT_GT(q, 0);
+    if (numerator == 4)
+      EXPECT_EQ(q / 2, 0);
+    else
+      EXPECT_GT(q / 2, 0);
+    EXPECT_EQ((q / 2) * 2 != q, numerator < 8);
+    R expected = band.velocity() * q;
+    ASSERT_GT(expected, 0);
+    EXPECT_EQ(band.energy(q), expected);
+    auto two = band.continuum(q);
+    EXPECT_EQ(two.lower, expected);
+    EXPECT_EQ(two.upper, expected);
+    EXPECT_EQ(band.continuum(q, SpinonMomentum::folded).lower, expected);
+    EXPECT_EQ(band.four_spinon_continuum(q, SpinonMomentum::folded).lower, expected);
+  }
 }
 
 TEST_P(TBDispersionMpfr, ContinuumExtremaAndFoldedUnions)

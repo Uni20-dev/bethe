@@ -79,10 +79,11 @@ template <uni20::Real Real> class SpinonBand {
       if (gap_ == Real{0})
       {
         // Keep a positive subnormal Q intact: Q/2 may round to zero even
-        // when the energy is representable after multiplication by I.
+        // when the energy is representable after multiplication by I. MPFR can
+        // also round a halved value UP to its minimum; test reversibility.
         bool use_linear;
         if constexpr (uni20::has_runtime_precision_v<Real>)
-          use_linear = q / Real{2} == Real{0};
+          use_linear = (q / Real{2}) * Real{2} != q;
         else
           use_linear = q < uni20::numeric_limits<Real>::min();
         Real const upper_factor = use_linear ? q : Real{2} * uni20::math::sin(q / Real{2});
