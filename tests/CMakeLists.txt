@@ -168,6 +168,14 @@ bethe_discover_tests(bethe_xxz_dispersion_tests)
 add_executable(bethe_xyz_dispersion_tests test_xyz_dispersion.cpp)
 target_link_libraries(bethe_xyz_dispersion_tests PRIVATE bethe::bethe)
 bethe_discover_tests(bethe_xyz_dispersion_tests)
+add_executable(bethe_xyz_prepared_tests test_xyz_prepared.cpp)
+target_link_libraries(bethe_xyz_prepared_tests PRIVATE bethe::bethe TBB::tbb)
+bethe_discover_tests(bethe_xyz_prepared_tests)
+add_executable(bethe_xyz_prepared_benchmark EXCLUDE_FROM_ALL benchmark_xyz_prepared.cpp)
+target_link_libraries(bethe_xyz_prepared_benchmark PRIVATE bethe::bethe TBB::tbb)
+set_target_properties(bethe_xyz_prepared_benchmark PROPERTIES CXX_EXTENSIONS OFF)
+
+
 
 add_executable(bethe_su3_dispersion_tests test_su3_dispersion.cpp)
 target_link_libraries(bethe_su3_dispersion_tests PRIVATE bethe::bethe)

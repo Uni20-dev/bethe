@@ -148,3 +148,69 @@ at p=5.412109375 with the default numerical controls. That row, its missing
 energy, and the partial outcome were identical at every worker count; binary64
 and binary128 completed this grid. Parallelism preserves these numerical
 diagnostics rather than changing the tolerance or silently dropping points.
+
+## XYZ prepared bound branches
+
+`xyz::SpinonDispersion::prepare_bound(s)` evaluates the elliptic coefficient
+once and returns an owning immutable branch. Its `energy(Q)` has no theta-function
+calls. The CLI uses one preparation for both parity copies and remains serial;
+independent parameter curves can compose through the existing Async grid.
+
+Matched whole-process measurements on 28 October 2026 used an i7-12700KF,
+GCC 13.3 Release, oneTBB 2022.3 and Uni20 `04163b9b`, with
+`OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1`. These are three-repeat medians on
+a shared workstation, comparing main `46b636e` with prepared branches.
+The numerical output is byte-identical. Timing includes preparation, formatting,
+streaming and file output with table retention disabled.
+
+| Precision | Rows | Previous wall / CPU (s) | Prepared wall / CPU (s) | Previous / prepared peak RSS (MiB) |
+| --- | ---: | ---: | ---: | ---: |
+| binary64 | 786,444 | 2.46 / 2.45 | 1.50 / 1.49 | 4.06 / 4.38 |
+| binary128 | 49,164 | 5.42 / 5.41 | 0.27 / 0.27 | 4.22 / 4.53 |
+
+The gain comes from removing redundant special-function work, not parallelism.
+Reproduce the binary128 curve from a configured build directory:
+
+```sh
+OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 \
+  ./bethe-xyz-dispersion --eta 0.875 --t 0.75 --branch bound \
+  --points 4097 --precision fp128 --format csv --no-preamble --no-retain > xyz.csv
+```
+
+Use `--points 65537 --precision fp64` for the binary64 case. Both include six
+bound branches and their two parity copies. Separate regression comparisons
+cover all native formats, selected branches, both theta regimes, tiny gaps,
+unavailable gaps and per-momentum overflow.
+
+An opt-in library benchmark evaluates both first and second bound branches
+for 256 parameter choices, each at 4,097 reduced momenta: 2,097,664 energies.
+Every task prepares its own band/branches and owns its complete curve; the
+admission window is 16 parameter curves. It compares every result with direct
+serial evaluation before reporting. Scheduler construction and result comparison
+are outside the reported interval; preparation, queries and ordered collection
+are inside. Reference and actual result arrays are both retained for validation.
+
+```sh
+cmake --build . --target bethe_xyz_prepared_benchmark -j2
+OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 \
+  ./tests/bethe_xyz_prepared_benchmark fp128 256 4097
+```
+
+The benchmark reports direct serial execution (`workers=0`) and Async execution
+with 1/4/8 workers. It waits on the operation's final result; no scheduler-wide
+drain is used. It does not add `--threads` to the cheap single-parameter CLI.
+
+On the same workstation, three-repeat median library timings were:
+
+| Execution | Wall (s) | Process CPU (s) |
+| --- | ---: | ---: |
+| Direct serial | 4.480 | 4.480 |
+| Async, 1 worker | 4.470 | 4.470 |
+| Async, 4 workers | 1.152 | 4.577 |
+| Async, 8 workers | 0.585 | 4.643 |
+
+All 2,097,664 energies match the direct calculation exactly at every worker
+count. The whole benchmark's median peak RSS was 73.7 MiB, including both
+validation arrays and all four executions; this is not a per-worker memory
+measurement. Parameter-curve tasks provide useful granularity even though
+individual prepared momentum queries are cheap.

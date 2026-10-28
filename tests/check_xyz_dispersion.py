@@ -80,6 +80,14 @@ for precision in precisions:
     assert all(r["energy"] is None and r["lower"] is None and r["upper"] is None and r["status"] == "precision_limit"
                for r in records(failed))
 
+    # Preparing a coefficient does not pre-judge every energy on that branch:
+    # a huge exchange leaves some momenta representable and others overflowing.
+    huge = "1e308" if precision == "fp64" else "1e4932"
+    partial = records(table(["--eta", "0.75", "--t", "1", "--branch", "bound", "--points", "9",
+                             "--exchange", huge, "--precision", precision], 2))
+    assert any(r["status"] == "converged" and r["energy"] is not None for r in partial)
+    assert any(r["status"] == "precision_limit" and r["energy"] is None for r in partial)
+
 invalid = [["--eta", "0", "--t", "1"], ["--eta", "1", "--t", "1"], ["--eta", "nan", "--t", "1"],
            ["--eta", "0.75", "--t", "0"], ["--eta", "0.75", "--t", "inf"],
            ["--eta", "0.25", "--t", "1", "--branch", "bound"],
