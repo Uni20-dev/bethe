@@ -45,7 +45,7 @@ independent numerical or serial/concurrent validation.
 | `sine-gordon-bethe-yang` | Serial CLI; pending [PR #27](https://github.com/Uni20-dev/bethe/pull/27) adds bounded independent level scans | Native only | Integrate reviewed concurrency; MPFR phase integration needs the proposed [Uni20 quadrature](https://github.com/Uni20-dev/uni20/pull/104) and a model-level precision audit |
 | `biquadratic-obc` | Sector-specific solver/composition audit pending | Native only | Treat real, complex and singular sectors separately; massive quantum-group Newton precision awaits PR #9 |
 | `lee-yang-vacuum`, `lee-yang-excited`, `sine-gordon-vacuum`, `sine-gordon-excited` | Serial baseline; pending [PR #28](https://github.com/Uni20-dev/bethe/pull/28) validates owning parameter sweeps for all four and optional vacuum/excited overlap in the excited-state CLIs | Native only | Integrate reviewed composition; carry explicit precision through Lee–Yang controls/constants/reductions and sine-Gordon complex kernels/quadrature. Coupled iterations remain sequential |
-| `kondo-response` | Integral-equation composition audit pending | Native only | Audit independent field requests, discretization and complex functions |
+| `kondo-response` | Pending #29: bounded field scans and owning Async queries; single-point/default one-worker requests stay direct | Native only | Explicit-precision scaled positive-real Gamma, Euler-series tails and quadrature |
 | `asep-pbc`, `tasep-pbc`, `potts-pbc`, `xyz-pbc` | Complex/nonlinear composition audit pending | Native only | Branch tracking and scalar-function coverage before advertising MPFR |
 
 `bethe-info` reports capabilities and has no numerical parallelism to add.
@@ -139,13 +139,26 @@ The shared finite-integration prerequisite is proposed in
 quadrature carries explicit precision through endpoint distances, accumulation
 and recoverable error diagnostics. Local native/wide/sanitizer checks pass,
 including reflected/translated singularities, cutoff sensitivity and accuracy
-growth through 1,024 bits. Review, upstream CI and merge remain pending.
+growth through 1,024 bits. Upstream CI passes; independent review and merge remain pending.
 Its estimates are not certified bounds. Bethe still needs model-level adoption,
 kernel/tolerance audits and native-output comparisons for sine-Gordon, XXZ bulk,
 Hubbard and Kondo; no new app capability is implied by this upstream proposal.
 
 Update this inventory with each reviewed app checkpoint. A proposed capability
 or a pending audit is not evidence of implemented support.
+
+Kondo's pending [#29](https://github.com/Uni20-dev/bethe/pull/29) adds inclusive
+signed field scans and streams complete rows through the existing bounded grid.
+Every query owns its series/quadrature scratch; owning deferred/threaded
+composition and failed responses retain all diagnostics. Native/wide/sanitizer
+checks pass 15/21/15; 30 single-point cases preserve merged-main outputs.
+Substantial high-field curves scale 7.6–7.7x at eight workers, including a
+65-point binary128 curve taking 74.02 s direct versus 9.64 s parallel. Cheap
+low-field curves saturate earlier; timings and CPU costs are in that PR's
+`docs/parallel-grids.md`. Kondo's Gamma amplitude is positive-real, not complex.
+MPFR requires precision-aware asymptotic order/shift, series-tail and quadrature
+error control, as well as explicit constants and reductions; scheduling does
+not remove that numerical work.
 
 Q-boson's pending #25 retains the existing continuous scanner and compares
 complete states, gaps and failed references in serial/threaded execution.
