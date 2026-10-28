@@ -63,6 +63,14 @@ collection releases their slots. The collector runs serially on the scheduler.
 The synchronous adapter instead collects on its calling thread; cooperative
 waits may execute a kernel there. See [parallel grids](parallel-grids.md).
 
+Independent [Kondo field responses](kondo.md) also compose through this API.
+Capture the field/scale requests and numerical controls by value so they
+survive submission; return the complete `kondo::State<Real>`, including failed
+observables and work/error diagnostics. Every call has its own Euler series
+and quadrature scratch. No background preparation or global scheduler change
+is required. The frontend exposes this as `--field-end`, `--points` and
+`--threads`, collecting rows on its calling thread.
+
 ## Ownership, dependencies and cancellation
 
 For curves that depend on a prepared model, see [shared backgrounds](#shared-backgrounds)

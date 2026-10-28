@@ -238,7 +238,7 @@ bethe_discover_tests(bethe_sine_gordon_excited_tests
   LONG_RUNNING_TESTS SineGordonExcited/fp128.NativeInteractingLevel)
 
 add_executable(bethe_kondo_tests test_kondo.cpp)
-target_link_libraries(bethe_kondo_tests PRIVATE bethe::bethe)
+target_link_libraries(bethe_kondo_tests PRIVATE bethe::bethe TBB::tbb)
 bethe_discover_tests(bethe_kondo_tests)
 
 add_executable(bethe_lee_yang_tests test_lee_yang.cpp)

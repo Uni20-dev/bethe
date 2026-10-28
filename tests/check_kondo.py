@@ -24,6 +24,11 @@ def row(table):
     return dict(zip([c["id"] for c in table["columns"]], table["rows"][0]))
 
 
+def rows(table):
+    names = [c["id"] for c in table["columns"]]
+    return [dict(zip(names, values)) for values in table["rows"]]
+
+
 def table(args, status=0):
     doc = json.loads(run([*args, "--format", "json"], status))
     assert doc["status"] == "complete" and list(doc["tables"]) == ["response"]
@@ -32,6 +37,7 @@ def table(args, status=0):
     assert Decimal(result["summary"]["Run CPU seconds"]) >= 0
     assert "E_imp(b)-E_imp(0)" in result["metadata"]["Energy convention"]
     assert "T_B=2*T1" in result["metadata"]["Scale convention"]
+    assert result["metadata"]["CPU timing scope"] == "field grid including ordered row output"
     return result
 
 
@@ -64,13 +70,59 @@ for precision in precisions:
         assert not r["converged"] and r["status"] == expected
         assert all(r[k] is None for k in ("energy_change", "magnetization", "zero_field_susceptibility"))
 
+    # Cross both sign and series/integral boundaries; every diagnostic must
+    # agree, including in a mixed-success grid with exhausted Fourier work.
+    for budgets, status in (([], 0), (["--max-lobes", "0"], 2)):
+        args = ["--field", "-2", "--field-end", "2", "--points", "9", "--scale", "1", *flags, *budgets]
+        serial = table([*args, "--threads", "1"], status)
+        parallel = table([*args, "--threads", "4", "--no-retain"], status)
+        assert parallel["rows"] == serial["rows"]
+        assert parallel["metadata"]["Execution mode"] == "bounded Async field grid"
+        points = rows(serial)
+        assert [Decimal(p["field"]) for p in points] == [Decimal(i)/2 for i in range(-4, 5)]
+        assert [p["status"] for p in points] == [
+            "tail_limit" if status and abs(i) > 2 else "converged" for i in range(-4, 5)]
+        descending = table(["--field", "2", "--field-end", "-2", "--points", "9", "--scale", "1",
+                            *flags, *budgets, "--threads", "4"], status)
+        assert descending["rows"] == list(reversed(serial["rows"]))
+    single = table([*base, *flags, "--threads", "4"])
+    assert single["metadata"]["Execution mode"] == "direct serial"
+    assert row(single) == positive
+    equal = table(["--field", "0", "--field-end", "0", "--points", "4", "--scale", "1",
+                   "--threads", "4", *flags])
+    assert equal["metadata"]["Execution mode"] == "direct serial"
+    assert equal["rows"] == [equal["rows"][0]] * 4
+    # Non-dyadic abscissae use the requested arithmetic, not a double grid.
+    thirds = rows(table(["--field", "0", "--field-end", "1", "--points", "4", "--scale", "1", *flags]))
+    with localcontext() as ctx:
+        ctx.prec = 100
+        error = {"fp64": Decimal("1e-16"), "long-double": Decimal("1e-19"), "fp128": Decimal("1e-34")}[precision]
+        assert abs(Decimal(thirds[1]["field"]) - Decimal(1)/3) < error
+        assert Decimal(thirds[0]["field"]) == 0 and Decimal(thirds[-1]["field"]) == 1
+
+# Exercise recycling beyond the 128-slot window with inexpensive low fields.
+window = ["--field", "-1", "--field-end", "1", "--points", "129", "--scale", "1"]
+window_serial = table(window)
+assert table([*window, "--threads", "4", "--no-retain"])["rows"] == window_serial["rows"]
+# Wide opposite-sign endpoints would overflow a naive end-start interpolation.
+huge = rows(table(["--field", "-1e308", "--field-end", "1e308", "--scale", "1e308", "--points", "5",
+                   "--threads", "4"]))
+for point, expected in zip(huge, map(Decimal, ["-1", "-0.5", "0", "0.5", "1"])):
+    assert abs(Decimal(point["field"])/Decimal(huge[-1]["field"]) - expected) < Decimal("1e-16")
+assert all(p["converged"] for p in huge)
+same = rows(table(["--field", "1e308", "--field-end", "1e308", "--scale", "1e308", "--points", "3"]))
+assert same == [same[0]] * 3
+
 underflow = row(table(["--field", "1e-300", "--scale", "1e300"], 2))
 assert underflow["status"] == "precision_limit" and underflow["energy_change"] is None
 
 invalid = [["--field", "1"], ["--scale", "1"], ["--field", "1", "--scale", "0"],
            ["--field", "nan", "--scale", "1"], [*base, "--tolerance", "0"],
            [*base, "--max-lobes", "4097"], [*base, "--max-series-terms", "4097"],
-           [*base, "--max-evaluations", "-1"], [*base, "--roots"]]
+           [*base, "--max-evaluations", "-1"], [*base, "--roots"],
+           [*base, "--field-end", "nan"], [*base, "--field-end", "inf"],
+           [*base, "--field-end", "4", "--points", "1"], [*base, "--field-end", "4", "--points", "1000001"],
+           [*base, "--points", "4"], [*base, "--threads", "0"], [*base, "--threads", "-1"]]
 with tempfile.TemporaryDirectory() as directory:
     path = Path(directory)
     flags = ["--json", str(path/"result.json"), "--csv", str(path/"response.csv"), "--tsv", str(path/"response.tsv")]
@@ -95,5 +147,18 @@ with tempfile.TemporaryDirectory() as directory:
     run([*base, "--format", "pretty"])
     failure = run([*base, "--max-series-terms", "0", "--format", "csv", "--no-preamble"], 2)
     assert next(csv.DictReader(failure.splitlines()))["energy_change"] == ""
+
+    # Multiple rows reach all sinks in order without retention; a numerical
+    # failure must still produce a complete document and all diagnostic rows.
+    scan = ["--field", "-2", "--field-end", "2", "--points", "9", "--scale", "1", "--max-lobes", "0"]
+    reference = table(scan, 2)
+    run([*scan, "--threads", "4", *flags, "--force", "--quiet", "--no-retain"], 2)
+    assert json.loads((path/"result.json").read_text())["tables"]["response"]["rows"] == reference["rows"]
+    expected = [{k: "" if v is None else str(v).lower() if isinstance(v, bool) else str(v)
+                 for k, v in r.items()} for r in rows(reference)]
+    for suffix, delimiter in (("csv", ","), ("tsv", "\t")):
+        text = (path/f"response.{suffix}").read_text()
+        actual = list(csv.DictReader((line for line in text.splitlines() if not line.startswith("#")), delimiter=delimiter))
+        assert actual == expected
 
 print("Kondo CLI contracts passed")
