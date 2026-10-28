@@ -132,7 +132,7 @@ add_executable(bethe_parallel_scan_tests test_parallel_scan.cpp)
 target_link_libraries(bethe_parallel_scan_tests PRIVATE bethe::bethe TBB::tbb)
 bethe_discover_tests(bethe_parallel_scan_tests)
 
-foreach(test IN ITEMS async_scan continuous_work async_structure_factor prepared_observable_grid solver_composition async_complex_sweeps prepared_ladder)
+foreach(test IN ITEMS async_scan continuous_work async_structure_factor prepared_observable_grid solver_composition async_complex_sweeps async_nested_sweeps prepared_ladder)
   add_executable(bethe_${test}_tests test_${test}.cpp)
   target_link_libraries(bethe_${test}_tests PRIVATE bethe::bethe TBB::tbb)
   bethe_discover_tests(bethe_${test}_tests)
@@ -160,6 +160,12 @@ if(TARGET bethe-async-complex-sweeps-example)
     add_test(NAME AsyncComplexSweeps.${model}.example
       COMMAND bethe-async-complex-sweeps-example ${model} 8 4 2 fp64)
   endforeach()
+endif()
+
+if(TARGET bethe-async-nested-sweeps-example)
+  add_test(NAME AsyncNestedSweeps.tb.example COMMAND bethe-async-nested-sweeps-example tb 4 3 2 fp64)
+  add_test(NAME AsyncNestedSweeps.sun.example COMMAND bethe-async-nested-sweeps-example sun 1 3 2 fp64)
+  add_test(NAME AsyncNestedSweeps.tj.example COMMAND bethe-async-nested-sweeps-example tj 8 2 2 fp64)
 endif()
 
 if(TARGET bethe-async-ladder-example)
