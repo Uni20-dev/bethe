@@ -161,7 +161,7 @@ if(BETHE_BUILD_APPS)
     bethe-lieb-liniger-pbc bethe-lieb-liniger-obc bethe-q-boson-pbc
     bethe-xxz-qg-obc bethe-biquadratic-obc
     bethe-hubbard-dispersion bethe-lieb-liniger-dispersion bethe-lieb-liniger-thermal
-    bethe-hubbard-continuum)
+    bethe-hubbard-continuum bethe-sine-gordon-bethe-yang)
   foreach(app IN LISTS bethe_parallel_apps)
     target_link_libraries(${app} PRIVATE TBB::tbb)
   endforeach()

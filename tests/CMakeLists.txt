@@ -483,6 +483,11 @@ if(BETHE_BUILD_APPS)
     add_test(NAME SineGordonDispersion.precision
       COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_sine_gordon_dispersion_precision.py"
         "$<TARGET_FILE:bethe-sine-gordon-dispersion>" "${BETHE_HAS_MPREAL}")
+
+    add_test(NAME SineGordonPairGrid.cli
+      COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_sine_gordon_pair_grid.py"
+        "$<TARGET_FILE:bethe-sine-gordon-bethe-yang>" "${BETHE_HAS_FLOAT128}")
+    set_tests_properties(SineGordonPairGrid.cli PROPERTIES TIMEOUT 180)
     add_test(NAME SineGordonExcited.cli
       COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_sine_gordon_excited.py"
         "$<TARGET_FILE:bethe-sine-gordon-excited>" "${BETHE_HAS_FLOAT128}")
