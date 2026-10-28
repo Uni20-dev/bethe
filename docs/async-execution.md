@@ -334,6 +334,46 @@ permutations, spin reversal, numerical budgets and partial continuation. An
 unsupported SU(N) shell fails its grid without cancelling the other two.
 See [parallel-grid measurements](parallel-grids.md#nested-model-parameter-sweeps).
 
+## Prepared ladder field and rung sweeps
+
+The [ladder example](../examples/async_ladder.cpp) prepares an owning
+`ladder::PreparedSectors<Real>` once and submits a bounded query grid through
+`prepare_background_async` and `evaluate_observable_grid_async`. Preparation
+remains sequential to preserve the whole-scan budgets and early failure order.
+Queries reuse roots, retaining exact partial-state diagnostics and the original
+analytic product paths. See the [numerical contract](ladder.md#reusing-roots-across-field-and-rung-queries).
+
+From a build directory configured with `BETHE_BUILD_EXAMPLES=ON`:
+
+```sh
+cmake --build . --target bethe-async-ladder-example -j2
+OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 \
+  ./examples/bethe-async-ladder-example prepared 12 257 4 fp64
+```
+
+Arguments are `MODE RUNGS POINTS THREADS PRECISION`. `MODE=direct` repeats the
+ordinary ground-state scan; `MODE=prepared` reuses one catalogue. Zero threads
+runs serially; positive counts use Async with at most 32 active/uncollected
+requests. For more than one point, h spans [-2,2] inclusively and J_r=2-h/2;
+a single point uses h=0, J_r=2. Precisions are `fp64`, `long-double` and configured
+`fp128`. Failed states are printed and cause exit status 2, without loosening
+controls. These parameter sweeps belong to the library example, not a new
+frontend option.
+
+The example waits on the grid's final result. If consumer admission fails after
+preparation was accepted, it also observes that preparation before unwinding.
+All output is retained and printed afterward in enumeration order, including
+nested roots, labels and every state diagnostic. Thus output memory grows with
+POINTS even though admission is bounded. CSV sequence cells use brackets and
+semicolons; half-integers are decimal.
+
+Internal timing includes scheduler construction, preparation and ordered
+collection but excludes printing. `preparation_seconds` reports the one-time
+root work in prepared mode. Compare direct and prepared modes at zero/one/four/
+eight workers to separate reuse from concurrency. Once roots are cached, queries
+may be too cheap to benefit from parallel execution; measurements belong in
+[parallel grids](parallel-grids.md#prepared-ladder-sweeps).
+
 ## Matched pipeline benchmark
 
 With tests enabled, build the opt-in comparison from a configured build directory:

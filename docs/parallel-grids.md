@@ -870,3 +870,53 @@ binary128 exhausts a 50-update probe near the same residual, about 0.159.
 This leaves a seed/Newton convergence investigation, not evidence that more
 workers or arithmetic bits cure the numerical problem. See the
 [t–J solver limitations and reproducer](tj.md#library-and-numerical-contract).
+
+
+## Prepared ladder sweeps
+
+The [ladder example](async-execution.md#prepared-ladder-field-and-rung-sweeps)
+separates repeated direct scans from a shared root catalogue and dependent
+queries. Reuse and query concurrency are distinct effects; the sequential
+preparation remains inside all end-to-end timings. Physical inputs, controls,
+full-state diagnostics and output order must match before comparing speed.
+
+Three-repeat whole-process medians on a shared Intel Core i7-12700KF, GCC13.3
+Release `-O3`, oneTBB2022.3 and Uni20 `04163b9b` follow. BLAS/OpenMP use one
+thread per solve; no compiler jobs overlap measurement. Variant order is
+reversed on the second repeat and affinity is left to the OS. Native builds
+use normal Uni20 fallback dispatch without MPLAPACK; the binary128 build uses
+the configured Release MPLAPACK3 provider. No backend is forced in the code.
+All times are seconds and include printing complete states. RSS is the maximum
+across worker counts/repeats, including retained results and prepared roots.
+
+| Arithmetic | Rungs / points | Mode | Serial | Async 1 | Async 4 | Async 8 | CPU at 8 | Peak RSS, MiB |
+| --- | --- | --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| binary64 | 24 / 1025 | direct | 10.42 | 10.58 | 2.76 | 1.58 | 12.44 | 6.88 |
+| binary64 | 24 / 1025 | prepared | 0.12 | 0.13 | 0.05 | 0.04 | 0.19 | 7.19 |
+| 80-bit extended | 16 / 2049 | direct | 15.60 | 15.61 | 4.02 | 2.04 | 16.12 | 7.64 |
+| 80-bit extended | 16 / 2049 | prepared | 0.09 | 0.09 | 0.05 | 0.05 | 0.15 | 7.81 |
+| binary128 | 12 / 513 | direct | 16.07 | 16.04 | 4.13 | 2.13 | 16.80 | 6.56 |
+| binary128 | 12 / 513 | prepared | 0.06 | 0.06 | 0.05 | 0.04 | 0.07 | 6.70 |
+
+All 86,088 complete state rows from 72 timed processes converge and match the
+direct serial result exactly, including roots, labels, selected populations,
+branch diagnostics and scan counters. Independent matched-main CLI checks
+retain 1,491 identical rows across 60 requests, including partial budgets,
+fixed sectors, both field signs, large shifts and analytic products. Only
+revision/invocation/time metadata is excluded from that comparison.
+
+The major benefit is root reuse: prepared serial curves are roughly 90–270x
+faster here than repeated serial scans. Those ratios depend strongly on the
+number of repeated parameter values and do not describe a single solve.
+Repeated direct scans also scale across workers, but retain almost all their
+CPU cost. Prepared queries benefit less from parallelism: their whole curves
+already take 0.06–0.12 s serially, including the one preparation. Eight-worker
+curves take about 0.04–0.05 s, with shared-host variation visible at that scale.
+Do not treat this small absolute saving as a reason to parallelize every cheap
+query. Four workers can be preferable when CPU efficiency matters.
+
+The native root preparations themselves take about 0.014–0.017 s and binary128
+about 0.041 s on these cases. They remain sequential and are included above. Changing
+rung count, controls or precision requires another preparation. For a single
+request, especially a proven analytic product state, the ordinary direct API
+avoids catalogue construction and storage entirely.

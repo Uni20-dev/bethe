@@ -29,3 +29,7 @@ set_target_properties(bethe-async-complex-sweeps-example PROPERTIES CXX_EXTENSIO
 add_executable(bethe-async-nested-sweeps-example async_nested_sweeps.cpp)
 target_link_libraries(bethe-async-nested-sweeps-example PRIVATE bethe::bethe TBB::tbb)
 set_target_properties(bethe-async-nested-sweeps-example PROPERTIES CXX_EXTENSIONS OFF)
+
+add_executable(bethe-async-ladder-example async_ladder.cpp)
+target_link_libraries(bethe-async-ladder-example PRIVATE bethe::bethe TBB::tbb)
+set_target_properties(bethe-async-ladder-example PROPERTIES CXX_EXTENSIONS OFF)

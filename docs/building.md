@@ -406,6 +406,8 @@ The [TASEP/XYZ sweep example](async-execution.md#independent-tasep-and-finite-xy
 shows independent complex-root solves with owned requests and bounded admission.
 The [nested sweep example](async-execution.md#owning-nested-model-requests) demonstrates
 independent TB sizes, SU(N) couplings and t–J fillings with complete diagnostics.
+The [ladder example](async-execution.md#prepared-ladder-field-and-rung-sweeps) compares
+repeated scans with shared root preparation and dependent field/rung queries.
 
 ### Where code belongs
 
