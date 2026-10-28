@@ -87,6 +87,10 @@ target_link_libraries(bethe_generated_state_scan_tests PRIVATE bethe::bethe TBB:
 bethe_discover_tests(bethe_generated_state_scan_tests)
 
 if(BETHE_HAS_MPREAL)
+  add_executable(bethe_lee_yang_mpfr_tests test_lee_yang_mpfr.cpp)
+  target_link_libraries(bethe_lee_yang_mpfr_tests PRIVATE bethe::bethe TBB::tbb)
+  bethe_discover_tests(bethe_lee_yang_mpfr_tests)
+
   add_executable(bethe_tj_mpfr_tests test_tj_mpfr.cpp)
   target_link_libraries(bethe_tj_mpfr_tests PRIVATE bethe::bethe TBB::tbb)
   bethe_discover_tests(bethe_tj_mpfr_tests)
@@ -705,6 +709,9 @@ if(BETHE_BUILD_APPS)
     add_test(NAME Citations.bethe-kondo-response.cli
       COMMAND "${CMAKE_COMMAND}" "-DPROGRAM=$<TARGET_FILE:bethe-kondo-response>"
         "-DTOOL=bethe-kondo-response" -P "${CMAKE_CURRENT_SOURCE_DIR}/check_citations_cli.cmake")
+    add_test(NAME LeeYang.precision
+      COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_lee_yang_precision.py"
+        "$<TARGET_FILE:bethe-lee-yang-vacuum>" "$<TARGET_FILE:bethe-lee-yang-excited>" "${BETHE_HAS_MPREAL}")
     add_test(NAME LeeYangExcited.cli
       COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_lee_yang_excited.py"
         "$<TARGET_FILE:bethe-lee-yang-excited>" "${BETHE_HAS_FLOAT128}")
