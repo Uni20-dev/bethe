@@ -8,6 +8,8 @@ adapter.
 
 The first frontends using this path are Hubbard and Lieb–Liniger dispersion.
 See the [command-line examples](command-line.md#parallel-observable-grids).
+Thermodynamic XXX spectral grids also use this path, with ordered spectrum rows
+and final failure/threshold counts; see [the frontend](xxx-structure-factor-thermo.md).
 [Thermal Lieb–Liniger](lieb-liniger-thermal.md) also uses this adapter for
 independent temperature solves in either ensemble, preserving each point's
 iteration and convergence diagnostics.
@@ -151,6 +153,57 @@ at p=5.412109375 with the default numerical controls. That row, its missing
 energy, and the partial outcome were identical at every worker count; binary64
 and binary128 completed this grid. Parallelism preserves these numerical
 diagnostics rather than changing the tolerance or silently dropping points.
+
+### Thermodynamic XXX streaming measurement
+
+The thermodynamic XXX frontend now collects directly into its output tables.
+With `--no-retain`, it no longer stores a second full spectrum in memory.
+The numerical kernel is unchanged. Both implementations produce identical
+CSV rows, including density, estimated error, evaluation count and status.
+
+The 28 October 2026 comparison uses a fresh build of Bethe `46b636e` and the streaming frontend,
+both with Uni20 `04163b9b`, GCC 13.3 Release and oneTBB 2022.3 on an Intel Core
+i7-12700KF (12 physical cores, 20 logical CPUs). It is a shared workstation;
+short timings are indicative, not isolated scaling measurements. BLAS and
+OpenMP each use one thread. Three repeats alternate the old/new execution
+order, reporting medians. The entire process is timed, including CSV formatting.
+CSV output goes to `/dev/null`, except the first one-worker pair, which is saved
+and compared byte for byte. Native formats group 16 points per task; binary128
+uses individual points to balance variable quadrature costs.
+
+Reproduce each row with either executable, selecting `N` as 1, 4 or 8:
+
+```sh
+OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 /usr/bin/time -v \
+  bethe-xxx-structure-factor-thermo --momentum-points 257 --points 1025 \
+  --precision fp64 --threads N --format csv --no-preamble --no-retain > /dev/null
+```
+
+For binary128 use `--momentum-points 129 --points 257 --precision fp128`.
+An exterior-only control uses `--momentum-points 1000 --points 1000`
+with `--omega-min -2 --omega-max -1 --precision fp64`: all one million
+values are zero, so output and scheduling dominate. This control tests memory scaling,
+not useful numerical speedup.
+
+| Grid / arithmetic | Workers | Old / new wall (s) | Old / new CPU (s) | Old / new peak RSS (MiB) |
+| --- | ---: | ---: | ---: | ---: |
+| 257 × 1025, binary64 | 1 | 1.13 / 1.13 | 1.12 / 1.47 | 16.71 / 4.82 |
+| 257 × 1025, binary64 | 4 | 0.56 / 0.49 | 1.28 / 1.87 | 16.72 / 4.66 |
+| 257 × 1025, binary64 | 8 | 0.45 / 0.37 | 1.37 / 2.60 | 16.70 / 4.84 |
+| 129 × 257, binary128 | 1 | 68.79 / 68.60 | 68.78 / 68.70 | 7.33 / 5.30 |
+| 129 × 257, binary128 | 4 | 18.20 / 17.77 | 70.22 / 70.13 | 7.34 / 5.28 |
+| 129 × 257, binary128 | 8 | 9.86 / 9.29 | 71.89 / 71.90 | 7.34 / 5.31 |
+| 1000 × 1000, exterior binary64 | 1 | 0.79 / 1.13 | 0.79 / 2.26 | 50.31 / 4.69 |
+| 1000 × 1000, exterior binary64 | 4 | 1.11 / 1.17 | 1.21 / 4.49 | 50.31 / 4.81 |
+| 1000 × 1000, exterior binary64 | 8 | 1.11 / 1.15 | 1.34 / 7.43 | 50.27 / 4.82 |
+
+The physical binary128 grid takes about 7.4 times less wall time at eight
+workers than at one, with similar total CPU work. Binary64 physical-grid wall
+time also improves over the batched frontend, but scheduling and overlapping
+output consume more CPU time. The exterior-only control gains no useful speedup;
+one worker is preferable for such cheap grids. Its peak RSS falls from about
+50 MiB to about 5 MiB with table retention disabled. The momentum and frequency
+axes still occupy storage proportional to their individual lengths.
 
 ### Thermal Lieb–Liniger temperature scans
 

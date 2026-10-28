@@ -23,6 +23,20 @@ use `./bethe-xxx-structure-factor-thermo`. The common
 [precision and export controls](command-line.md) apply, including optional fp128.
 `--threads` uses the Uni20 scheduler for independent spectral points; output order
 and numerical results do not depend on the worker count.
+The [bounded observable grid](parallel-grids.md) groups 16 adjacent points per
+task for formats up to a 64-bit significand, amortizing scheduling for cheap
+samples. Wider formats use individual-point tasks to balance variable
+quadrature costs. The window holds 128 points or two tasks per requested worker,
+whichever is larger; metadata reports task size and the resulting point bound.
+Collection runs on the calling thread in momentum-major order, without a
+whole-window barrier or a separate full-grid result vector. Tables retain
+their rows by default; use `--no-retain` with a machine format, `--stream` or
+`--quiet` to disable that storage.
+
+The final summary of both tables reports `Failed points` and `Divergent
+threshold points`; these counts are not available in the initial metadata.
+`CPU timing scope` identifies the complete spectral-grid calculation, including
+ordered row output. Continuum-table output is outside that interval.
 
 | Option | Meaning |
 |---|---|
