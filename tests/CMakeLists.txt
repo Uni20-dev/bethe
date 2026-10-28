@@ -206,6 +206,11 @@ bethe_discover_tests(bethe_lieb_liniger_thermal_tests)
 add_executable(bethe_q_boson_tests test_q_boson.cpp)
 target_link_libraries(bethe_q_boson_tests PRIVATE bethe::bethe)
 bethe_discover_tests(bethe_q_boson_tests)
+if(BETHE_HAS_MPREAL)
+  add_executable(bethe_q_boson_mpfr_tests test_q_boson_mpfr.cpp)
+  target_link_libraries(bethe_q_boson_mpfr_tests PRIVATE bethe::bethe uni20_async TBB::tbb)
+  bethe_discover_tests(bethe_q_boson_mpfr_tests)
+endif()
 
 add_executable(bethe_bose_fermi_tests test_bose_fermi.cpp)
 target_link_libraries(bethe_bose_fermi_tests PRIVATE bethe::bethe)
@@ -492,6 +497,9 @@ if(BETHE_BUILD_APPS)
     add_test(NAME LiebLinigerThermal.cli
       COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_lieb_liniger_thermal.py"
         "$<TARGET_FILE:bethe-lieb-liniger-thermal>" "${BETHE_HAS_FLOAT128}")
+    add_test(NAME QBoson.mpfr.cli
+      COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_q_boson_mpfr.py"
+        "$<TARGET_FILE:bethe-q-boson-pbc>" "${bethe_arbitrary_structure_factor}")
     add_test(NAME QBoson.cli
       COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_q_boson.py"
         "$<TARGET_FILE:bethe-q-boson-pbc>" "${BETHE_HAS_FLOAT128}")
