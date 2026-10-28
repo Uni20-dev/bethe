@@ -17,6 +17,8 @@ namespace detail
 {
 template <uni20::Real Real> void validate(std::size_t n, Real length, Real lambda)
 {
+  auto const zero = bethe::detail::precision_zero(length);
+  bethe::detail::require_same_precision(lambda, zero);
   if (n == 0 || n > max_particles) throw std::invalid_argument("Sutherland requires 1<=particles<=1000000");
   if (!uni20::isfinite(length) || length <= Real{0}) throw std::invalid_argument("length must be finite and positive");
   if (!uni20::isfinite(lambda) || lambda < Real{0})
@@ -53,6 +55,7 @@ template <uni20::Real Real> struct State
 
 /// H=-sum d_i^2+2*lambda*(lambda-1)*(pi/L)^2 sum_{i<j} csc^2(pi*(x_i-x_j)/L).
 /// The branch parameter, not just the potential coefficient, fixes the domain.
+/// Runtime length/lambda must have the same finite precision, inherited by results.
 template <uni20::Real Real>
 State<Real> evaluate(std::size_t n, Real length, Real lambda, std::vector<std::int64_t> labels)
 {
@@ -72,7 +75,9 @@ State<Real> evaluate(std::size_t n, Real length, Real lambda, std::vector<std::i
   out.lambda = lambda;
   out.momentum_index = static_cast<std::int64_t>(index);
   out.labels = std::move(labels);
-  Real const pi = Real{4} * std::atan(Real{1}), unit = Real{2} * (pi / length);
+  Real const pi = bethe::detail::pi_like(length), unit = Real{2} * (pi / length);
+  // Integer coefficients stay exact for MPFR until combined with finite-precision
+  // physical factors. Native formats retain compensated accumulation.
   bethe::detail::CompensatedSum<Real> free_weight, interaction_weight;
   out.pseudomomenta.resize(n);
   for (std::size_t j = 0; j < n; ++j)
@@ -93,7 +98,8 @@ State<Real> evaluate(std::size_t n, Real length, Real lambda, std::vector<std::i
     }
   }
   Real const edge = (pi / length) * lambda;
-  out.ground_energy = n == 1 ? Real{0} : edge * edge * Real(n) * Real(n - 1) * Real(n + 1) / Real{3};
+  out.ground_energy =
+      n == 1 ? uni20::scalar_like(length, 0) : edge * edge * Real(n) * Real(n - 1) * Real(n + 1) / Real{3};
   out.gap = unit * (unit * free_weight.value());
   if (interaction_weight.value() != Real{0}) out.gap += (unit * lambda) * (unit * interaction_weight.value());
   out.energy = out.ground_energy + out.gap;

@@ -2,6 +2,7 @@
 // Copyright (C) 2026 Ian McCulloch
 #include "hubbard-report.hpp"
 #include "program-options.hpp"
+#include "solver-precision.hpp"
 #include <bethe/hubbard_open.hpp>
 
 namespace
@@ -48,7 +49,7 @@ void add_options(CLI::App& app, Arguments& args)
                      "max charge/spin residual divided by 2*(L+1) (default: 32 epsilon)");
   bethe::cli::option(app, "--max-iterations", args.max_iterations, "total Newton update budget, including continuation")
       ->capture_default_str();
-  bethe::cli::precision_option(app, args.precision);
+  bethe::cli::precision_option(app, args.precision, cli::ArbitraryPrecision::real_lu);
   cli::add_data_output_options(app, args.output,
                                {{.name = "states", .description = "Selected states and diagnostics", .primary = true},
                                 {.name = "charge_roots",
@@ -70,15 +71,13 @@ void validate(Arguments const& args)
   if (!args.interaction) throw std::invalid_argument("--u VALUE is required");
   args.output.validate();
 }
-template <uni20::Real Real> int run(Arguments const& args, int argc, char** argv)
+template <uni20::Real Real>
+int run(Arguments const& args, model::SolverOptions<Real> const& options, int argc, char** argv)
 {
   uni20::run_context context(program_info(), {.invocation = std::vector<std::string>(argv, argv + argc)});
-  Real const interaction = uni20::parse_real<Real>(*args.interaction);
+  Real const interaction = cli::parse_solver_real<Real>(*args.interaction, options);
   auto const particles = args.particles.value_or(args.sites);
   auto const sz = args.sz.value_or(uni20::from_twice(static_cast<std::int64_t>(particles % 2)));
-  model::SolverOptions<Real> options;
-  options.max_iterations = args.max_iterations;
-  if (args.tolerance) options.residual_tolerance = uni20::parse_real<Real>(*args.tolerance);
   auto computation = context.computation();
   auto const state = model::sector_ground_state<Real>(args.sites, particles, sz, interaction, options);
   computation.finish();
@@ -93,7 +92,8 @@ int main(int argc, char** argv)
       argc, argv, program_info(), [&](auto& app) { add_options(app, args); },
       [&](auto&) {
         validate(args);
-        return bethe::cli::dispatch_precision(args.precision,
-                                              [&]<uni20::Real Real> { return run<Real>(args, argc, argv); });
+        return bethe::cli::dispatch_solver_precision<cli::ArbitraryPrecision::real_lu>(
+            args.precision, args.tolerance, args.max_iterations,
+            [&](auto const& options) { return run(args, options, argc, argv); });
       });
 }

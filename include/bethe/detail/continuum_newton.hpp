@@ -38,7 +38,16 @@ std::size_t continuum_newton(System const& system, std::vector<Real>& q, SolverO
     if (evaluation.norm <= options.residual_tolerance || iterations == options.max_iterations) break;
     for (std::size_t j = 0; j < n; ++j)
       step[j, 0] = -evaluation.residual[j];
-    if (!uni20::linalg::solve_inplace_with_info(jacobian, step, precision).succeeded()) break;
+#if !UNI20_HAS_MPLAPACK_MPREAL
+    // Scalar-only MPFR builds can still evaluate free states and zero-update
+    // diagnostics. Only an actual Newton update needs the LU provider.
+    if constexpr (uni20::has_runtime_precision_v<Real>)
+      throw std::runtime_error("continuum Newton updates require MPLAPACK MPFR in this build");
+    else
+#endif
+    {
+      if (!uni20::linalg::solve_inplace_with_info(jacobian, step, precision).succeeded()) break;
+    }
     bool const accepted = backtrack_newton(
         q, precision, [&](std::size_t j) { return step[j, 0]; },
         [&](auto const& trial, Real damping) {
