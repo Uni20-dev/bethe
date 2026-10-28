@@ -43,9 +43,10 @@ assert (metadata["Uni20 arbitrary-precision real/complex configured"] == "true")
 assert (metadata["MPLAPACK MPFR configured"] == "true") == enabled(arbitrary)
 assert ("bethe-xxx-pbc" in metadata["Arbitrary-precision frontends"]) == enabled(mpfr)
 assert ("bethe-xxx-structure-factor" in metadata["Arbitrary-precision frontends"]) == enabled(arbitrary)
-for name in ("bethe-richardson", "bethe-central-spin", "bethe-xxx-obc"):
+for name in ("bethe-richardson", "bethe-central-spin", "bethe-xxx-obc", "bethe-su3-dispersion", "bethe-haldane-shastry-pbc", "bethe-sutherland-pbc", "bethe-tb-dispersion", "bethe-sine-gordon-dispersion"):
     assert (name in metadata["Arbitrary-precision frontends"]) == enabled(mpfr)
-for name in ("bethe-lieb-liniger-pbc", "bethe-lieb-liniger-obc", "bethe-lieb-liniger-dispersion"):
+for name in ("bethe-lieb-liniger-pbc", "bethe-lieb-liniger-obc", "bethe-lieb-liniger-dispersion",
+             "bethe-su3-pbc", "bethe-xxz-pbc", "bethe-xxz-obc", "bethe-hubbard-pbc", "bethe-hubbard-obc", "bethe-gaudin-yang-pbc", "bethe-bose-fermi-pbc", "bethe-q-boson-pbc"):
     assert (name in metadata["Arbitrary-precision frontends"]) == enabled(arbitrary)
 if enabled(fp128):
     assert rows["fp128"]["significand_bits"] == 113

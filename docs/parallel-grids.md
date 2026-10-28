@@ -13,8 +13,9 @@ and final failure/threshold counts; see [the frontend](xxx-structure-factor-ther
 [Thermal Lieb–Liniger](lieb-liniger-thermal.md) also uses this adapter for
 independent temperature solves in either ensemble, preserving each point's
 iteration and convergence diagnostics.
-Continuum optimizations and other observables can adopt the
-same path after checking their independence and scratch ownership.
+[Hubbard continuum edges](hubbard-continuum.md) also use this adapter for
+independent total momenta, retaining each point's inversion/search diagnostics.
+Other observables can adopt the same path after checking their independence and scratch ownership.
 
 ## Using the library
 
@@ -47,8 +48,11 @@ uses Uni20's active scheduler (serial by default); the adapter never changes it.
 points and defaults to 128. `batch_size` remains for other batched clients; both
 bounds must be positive. Logical
 indices are exactly `[0, count)`, including empty and single-point grids.
-Frontends keep branches in their declared order and evaluate each branch's grid
-in turn; a row's identity is its branch and logical point index.
+Frontends keep branches in their declared output order; a row's identity is
+its branch and logical point index. Hubbard dispersion flattens its selected
+branches into one logical grid, allowing evaluation across branch boundaries
+without changing row order. Lieb–Liniger currently evaluates each branch's grid
+in turn. In both cases the admission window bounds retained results.
 
 ## Ownership, errors and timing
 
@@ -154,6 +158,50 @@ energy, and the partial outcome were identical at every worker count; binary64
 and binary128 completed this grid. Parallelism preserves these numerical
 diagnostics rather than changing the tolerance or silently dropping points.
 
+### Hubbard branch scheduling
+
+A matched frontend comparison on 28 October 2026 measures the additional effect
+of removing the wait between Hubbard branches. The baseline is Bethe `46b636e`,
+which already uses a continuous window within each branch. The new version puts
+all selected branches in one window. Both prepare a doped background once;
+this comparison does not measure a change in preparation cost.
+
+The Intel Core i7-12700KF workstation used GCC 13.3 Release, oneTBB 2022.3,
+Uni20 `04163b9b` and optimized MPLAPACK 3.0.0. Both builds used the same
+dependencies and one BLAS/OpenMP thread. These are medians of three complete
+process runs, reversing measurement order on alternate repeats, including
+preparation and CSV output with retention disabled.
+
+| Workload / version | Rows | 1 worker (s) | 4 workers (s) | 8 workers (s) | CPU at 8 workers (s) | Peak RSS at 8 workers (MiB) |
+|---|---:|---:|---:|---:|---:|---:|
+| Half-filled, separate branches | 195 | 34.13 | 8.85 | 4.72 | 35.33 | 7.00 |
+| Half-filled, shared window | 195 | 34.22 | 8.82 | 4.48 | 35.25 | 7.50 |
+| Doped, separate branches | 387 | 21.59 | 6.13 | 3.53 | 22.46 | 7.19 |
+| Doped, shared window | 387 | 21.56 | 6.12 | 3.48 | 22.43 | 7.64 |
+
+The workloads use all three branches at U=4 in binary128: 65 points per branch
+at half filling and 129 at density 0.5. All full CSV outputs, including
+diagnostics and failed-value fields, match byte for byte between versions at
+1/4/8 workers; every point converged. Reproduce each workload with:
+
+```sh
+OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 bethe-hubbard-dispersion \
+  --u 4 --points 65 --precision fp128 --threads 8 \
+  --format csv --no-preamble --no-retain > half.csv
+OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 bethe-hubbard-dispersion \
+  --u 4 --density 0.5 --points 129 --precision fp128 --threads 8 \
+  --format csv --no-preamble --no-retain > doped.csv
+```
+
+Vary `--threads` and compare equally configured builds. The incremental wall-time
+reduction here is modest (about 5% and 1% at eight workers), and the smaller
+difference should not be generalized from a shared workstation. The substantial
+serial-to-parallel benefit was already present in the baseline. The shared
+window removes unnecessary branch waits and permits single-momentum queries
+across branches to overlap; the separate
+[Async example](async-execution.md#shared-backgrounds) demonstrates composable
+preparation and dependent curves without introducing another numerical solver.
+
 ### Thermodynamic XXX streaming measurement
 
 The thermodynamic XXX frontend now collects directly into its output tables.
@@ -241,3 +289,118 @@ about 4% more total CPU work than the old serial frontend. Independent solver
 workspaces increase peak memory with concurrency; bounded result admission
 does not bound total solver scratch independently of worker count. Single-point
 requests and very short scans have no corresponding parallel benefit.
+
+### Hubbard continuum frontend
+
+Independent total-momentum queries also scale for continuum edges: the outer
+grid can overlap each point's quadrature, inversion and charge-channel extrema
+search. The inner algorithms and stopping rules are unchanged. The frontend
+uses the shared 128-point admission window and writes ordered rows on the caller.
+
+The following measurements on 28 October 2026 compare the serial frontend at
+Bethe `46b636e` with this continuous-grid implementation. Both builds used
+Uni20 `04163b9b`, GCC 13.3 Release (`-O3`, no fast-math), oneTBB 2022.3 and
+the same optimized MPLAPACK 3.0.0 configuration on an Intel Core i7-12700KF.
+These are whole-command wall/process-CPU times and peak RSS, including startup
+and CSV formatting. Three repeats alternate command order on a shared
+workstation, with no simultaneous compilation. BLAS and OpenMP each use one
+thread. All complete CSV rows match the serial baseline exactly at 1/4/8
+workers, including the error estimates, work counts and status columns.
+
+From the corresponding build directory, the two workloads are:
+
+```sh
+OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 \
+  ./bethe-hubbard-continuum --u 4 --channel two-spinon --points 129 \
+  --precision fp128 --threads 8 --format csv --no-preamble --no-retain
+OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 \
+  ./bethe-hubbard-continuum --u 4 --channel spinon-holon --points 65 \
+  --search-tolerance 1e-7 --position-tolerance 1e-5 --tolerance 1e-10 \
+  --precision fp64 --threads 8 --format csv --no-preamble --no-retain
+```
+
+Use `--threads 1` or `--threads 4` for the other measurements; omit that option
+for the old serial frontend. The looser charge controls are part of the
+benchmark definition, not a change to the defaults or a certified error bound.
+
+Median wall times:
+
+| Family | Precision | Points | Old serial (s) | New 1 worker (s) | New 4 workers (s) | New 8 workers (s) |
+| --- | --- | ---: | ---: | ---: | ---: | ---: |
+| Two spinons | binary128 | 129 | 28.55 | 29.64 | 7.65 | 3.95 |
+| Spinon–holon | binary64 | 65 | 18.79 | 18.79 | 4.89 | 2.64 |
+
+Relative to the old serial loop, eight workers give 7.23x and 7.12x speedups.
+Process CPU time increases from 28.55 to 30.64 s and from 18.78 to 19.65 s;
+peak RSS increases from 4.22 to 5.45 MiB and from 4.22 to 6.41 MiB.
+The new single-worker two-spinon path costs about 4% more than the old loop,
+while the charge workload is unchanged at this timing resolution. Thus the
+benefit is concurrent expensive queries; small grids need not become faster.
+Per-query numerical scratch grows with active workers even though admission
+and retained results are bounded.
+
+## XYZ prepared bound branches
+
+`xyz::SpinonDispersion::prepare_bound(s)` evaluates the elliptic coefficient
+once and returns an owning immutable branch. Its `energy(Q)` has no theta-function
+calls. The CLI uses one preparation for both parity copies and remains serial;
+independent parameter curves can compose through the existing Async grid.
+
+Matched whole-process measurements on 28 October 2026 used an i7-12700KF,
+GCC 13.3 Release, oneTBB 2022.3 and Uni20 `04163b9b`, with
+`OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1`. These are three-repeat medians on
+a shared workstation, comparing main `46b636e` with prepared branches.
+The numerical output is byte-identical. Timing includes preparation, formatting,
+streaming and file output with table retention disabled.
+
+| Precision | Rows | Previous wall / CPU (s) | Prepared wall / CPU (s) | Previous / prepared peak RSS (MiB) |
+| --- | ---: | ---: | ---: | ---: |
+| binary64 | 786,444 | 2.46 / 2.45 | 1.50 / 1.49 | 4.06 / 4.38 |
+| binary128 | 49,164 | 5.42 / 5.41 | 0.27 / 0.27 | 4.22 / 4.53 |
+
+The gain comes from removing redundant special-function work, not parallelism.
+Reproduce the binary128 curve from a configured build directory:
+
+```sh
+OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 \
+  ./bethe-xyz-dispersion --eta 0.875 --t 0.75 --branch bound \
+  --points 4097 --precision fp128 --format csv --no-preamble --no-retain > xyz.csv
+```
+
+Use `--points 65537 --precision fp64` for the binary64 case. Both include six
+bound branches and their two parity copies. Separate regression comparisons
+cover all native formats, selected branches, both theta regimes, tiny gaps,
+unavailable gaps and per-momentum overflow.
+
+An opt-in library benchmark evaluates both first and second bound branches
+for 256 parameter choices, each at 4,097 reduced momenta: 2,097,664 energies.
+Every task prepares its own band/branches and owns its complete curve; the
+admission window is 16 parameter curves. It compares every result with direct
+serial evaluation before reporting. Scheduler construction and result comparison
+are outside the reported interval; preparation, queries and ordered collection
+are inside. Reference and actual result arrays are both retained for validation.
+
+```sh
+cmake --build . --target bethe_xyz_prepared_benchmark -j2
+OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 \
+  ./tests/bethe_xyz_prepared_benchmark fp128 256 4097
+```
+
+The benchmark reports direct serial execution (`workers=0`) and Async execution
+with 1/4/8 workers. It waits on the operation's final result; no scheduler-wide
+drain is used. It does not add `--threads` to the cheap single-parameter CLI.
+
+On the same workstation, three-repeat median library timings were:
+
+| Execution | Wall (s) | Process CPU (s) |
+| --- | ---: | ---: |
+| Direct serial | 4.480 | 4.480 |
+| Async, 1 worker | 4.470 | 4.470 |
+| Async, 4 workers | 1.152 | 4.577 |
+| Async, 8 workers | 0.585 | 4.643 |
+
+All 2,097,664 energies match the direct calculation exactly at every worker
+count. The whole benchmark's median peak RSS was 73.7 MiB, including both
+validation arrays and all four executions; this is not a per-worker memory
+measurement. Parameter-curve tasks provide useful granularity even though
+individual prepared momentum queries are cheap.

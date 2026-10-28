@@ -57,6 +57,8 @@ bethe-xxz-pbc 64 --delta -0.9 --roots
 bethe-xxz-pbc 15 --delta 10 --sectors --precision long-double
 # In a binary128-enabled build:
 bethe-xxz-pbc 64 --delta 0.999999999999999999999999 --precision fp128
+# With MPFR scalars and MPLAPACK MPFR enabled:
+bethe-xxz-pbc 16 --delta -0.5 --precision digits-100
 ```
 
 For ground-state and sector-minimum runs, `--sz` and `--sectors` work as in
@@ -70,6 +72,54 @@ generic anisotropy the states are labeled by Sz, not total spin S, and no
 SU(2) multiplet degeneracies are inferred. `--spin` and `--spinons` are not
 options of this front end; use `--sz` for excitation scans as described below.
 Those scans have their own default sector, distinct from the ground-state default.
+
+## Arbitrary precision and composition
+
+Both finite XXZ frontends accept `--precision bits-N` and `digits-N` in a
+[build with MPFR scalars and MPLAPACK MPFR](building.md#enable-arbitrary-precision).
+This covers their existing ground states, sector minima, explicit real-root
+states and excitation scans. Delta, tolerances, roots, energies, momentum and
+diagnostics retain the requested precision, including zero-root states and
+failed iterates. The negative-anisotropy Newton solver and massive open-chain
+boundary-root solver use normal Uni20 LU dispatch. The frontend build requires
+that provider even when a particular nonnegative periodic solve needs no LU.
+
+The C++ interface requires finite precision in both the physical input and the
+controls. It rejects exact-only, unset or differently rounded input values;
+there is no ambient precision default:
+
+```cpp
+using Real = uni20::mpreal;
+auto precision = uni20::Precision::bits(256);
+bethe::xxz::SolverOptions<Real> options(precision);
+Real delta("0.5", precision);
+auto state = bethe::xxz::ground_state(16, delta, options);
+```
+
+Increasing precision does not change the supported quantum-number window,
+add string states, or guarantee convergence within the iteration budget.
+The conservative near-infinity exclusion band uses epsilon at the requested
+precision. Only an exactly represented Delta=1 delegates to XXX; a nearby
+anisotropy remains an XXZ calculation. The same rule applies to Delta=0.
+
+Excitation scans already use the shared bounded continuous scanner and accept
+`--threads N`. Each state solve remains sequential. Independent ground-state
+parameter/sector calculations can use
+[`evaluate_observable_grid_async`](async-execution.md), capturing each input
+and its options by value and waiting on the final operation result. Distinct
+precisions can share a scheduler; the open-chain continuation steps within one
+solve remain sequential. Sector scans reuse spin-reversed partners.
+
+Regression tests compare 128-, 256- and 333-bit results with independent small
+Hamiltonians. The four-site periodic energy is
+$`E_0=-\Delta/2-\sqrt{\Delta^2/4+2}`$. For four open sites, a separately
+evaluated three-dimensional Hamiltonian block supplies a 512-bit reference.
+These checks cover negative, gapless and massive coordinates, resolve energy
+shifts from anisotropies within $`10^{-60}`$ of zero or one, and test accuracy
+growth beyond binary128. They establish these tested cases, not an accuracy
+guarantee at arbitrary length or near a singular branch endpoint.
+
+## Ground-state coordinates
 
 For negative Delta, the CLI reports the scaled residual convention explicitly
 and `--roots` prints both z and the native hyperbolic lambda. For even rings,
