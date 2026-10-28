@@ -163,6 +163,12 @@ Typed tests compare 80-digit momentum-space references, independently expressed
 nested-sea densities, endpoint velocities, exchange scaling, direct constrained
 momentum scans, pair-continuum convolutions, and three-image folding. Tests cover
 fp64, long-double and fp128, including energies at momenta below machine epsilon.
+MPFR tests at 128, 256 and 333 bits additionally compare independent nested-sea
+densities, verify accuracy growth against a 512-bit reference, and retain
+positive energies at momenta as small as `1e-7000`. The CLI tests use an
+independent decimal cosine series, non-dyadic grids, folded envelopes and
+full-precision exports. These tests require only the scalar provider, including
+in the sanitizer configuration.
 
 [The independent ED script](../scripts/reference_su3_excitations.py) swaps colour
 words, projects one-site momentum, and uses the total SU(3) Casimir to isolate
@@ -192,6 +198,38 @@ auto energy = band.energy(bethe::su3::Particle::antifundamental, 0.3L);
 auto edges = band.continuum(3.0L, bethe::su3::Continuum::four_soliton,
                            bethe::su3::Momentum::three_site_folded);
 ```
+
+With [arbitrary precision enabled](building.md#enable-arbitrary-precision),
+all branches and both momentum conventions also support `bits-N` and `digits-N`:
+
+```sh
+bethe-su3-dispersion --branch four-soliton --folded --precision digits-100 --csv uls.csv
+```
+
+This model needs GMP/MPFR/MPC scalar support, without MPLAPACK. The band retains
+the finite precision of its exchange parameter; C++ callers must supply momenta
+at the same precision, including zero. Exact-only or mixed-precision inputs
+are rejected instead of selecting a default or silently rounding:
+
+```cpp
+using Real = uni20::mpreal;
+auto precision = uni20::Precision::bits(256);
+bethe::su3::ExcitationDispersion<Real> band(Real("1", precision));
+auto energy = band.energy(bethe::su3::Particle::antifundamental, Real("0.3", precision));
+```
+
+Endpoint zeros, continuum bounds and exported coordinates keep that precision.
+The product-of-sines formula preserves small positive energies that a difference
+of cosines would lose to cancellation. Additional arithmetic precision does not
+add finite-size levels or spectral weights.
+
+These analytic formulas are cheap, so the frontend evaluates its grid serially.
+For a larger application, an immutable band and its inputs can be captured by
+value in the existing [Async observable grid](async-execution.md). No separate
+SU(3) scheduler or preparation API is needed. Tests exercise owning queries at
+different precisions on the same scheduler, await each final operation result,
+and check that a failed grid leaves an independent one unaffected. This is
+composition support, without a claimed speedup for individual band evaluations.
 
 The existing finite-ring ground-state API is unchanged. Other populations,
 finite-ring excited roots, fields, open ends and general SU(N) excitation tools

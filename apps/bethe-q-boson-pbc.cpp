@@ -3,6 +3,7 @@
 #include "execution-options.hpp"
 #include "program-options.hpp"
 #include "result-output.hpp"
+#include "solver-precision.hpp"
 #include <bethe/q_boson.hpp>
 
 namespace
@@ -37,7 +38,8 @@ auto program_info()
       "COUNT limits retained levels, not solves. --max-candidates defaults to 10000.",
       "The default residual tolerance is 32 epsilon in the selected precision. Failed energies/roots are omitted "
       "(JSON null, CSV/TSV empty), with exit status 2.",
-      "See docs/q-boson.md for equations and limits. Use --references for literature. fp128 requires MPLAPACK."};
+      "See docs/q-boson.md for equations and limits. Use --references for literature. fp128 requires MPLAPACK; "
+      "bits-N/digits-N require its MPFR LU component."};
   return info;
 }
 void add_options(CLI::App& app, Arguments& a)
@@ -55,7 +57,7 @@ void add_options(CLI::App& app, Arguments& a)
       ->type_name("REAL");
   cli::count_option(app, "--max-iterations", a.iterations, "Accepted Newton updates; zero only checks the seed")
       ->capture_default_str();
-  cli::precision_option(app, a.precision);
+  cli::precision_option(app, a.precision, cli::ArbitraryPrecision::real_lu);
   cli::add_data_output_options(app, a.output,
                                {{.name = "states", .description = "Selected states and diagnostics", .primary = true},
                                 {.name = "reference",
@@ -86,14 +88,13 @@ char const* name(model::Status status)
   }
   return "unknown";
 }
-template <uni20::Real Real> int run(Arguments const& a, int argc, char** argv)
+template <uni20::Real Real>
+int run(Arguments const& a, int argc, char** argv, model::SolverOptions<Real> const& controls)
 {
   uni20::run_context context(program_info(), {.invocation = std::vector<std::string>(argv, argv + argc)});
-  Real const eta = a.phase ? uni20::numeric_limits<Real>::infinity() : uni20::parse_real<Real>(*a.eta);
+  Real const zero = bethe::detail::solver_zero(controls);
+  Real const eta = cli::parse_solver_real<Real>(a.phase ? "inf" : *a.eta, controls);
   if (!a.phase && !uni20::isfinite(eta)) throw std::invalid_argument("--eta must be finite; use --phase for the limit");
-  model::SolverOptions<Real> controls;
-  controls.max_iterations = a.iterations;
-  if (a.tolerance) controls.residual_tolerance = uni20::parse_real<Real>(*a.tolerance);
   // Validation and calculation precede opening any output files.
   std::optional<model::ExcitationScan<Real>> scan;
   model::State<Real> single;
@@ -154,7 +155,7 @@ template <uni20::Real Real> int run(Arguments const& a, int argc, char** argv)
   else
   {
     all.push_back(&state);
-    gaps.push_back(state.converged ? Optional(Real{0}) : std::nullopt);
+    gaps.push_back(state.converged ? Optional(zero) : std::nullopt);
   }
   auto write_states = [&](std::string id, std::string title, std::size_t begin, std::size_t end, bool ranked) {
     output.table(
@@ -214,6 +215,7 @@ int main(int argc, char** argv)
         a.output.validate();
         if (a.phase == a.eta.has_value()) throw std::invalid_argument("choose --eta or --phase");
         if (a.max_candidates && !a.count) throw std::invalid_argument("--max-candidates requires --excitations");
-        return cli::dispatch_precision(a.precision, [&]<typename Real>() { return run<Real>(a, argc, argv); });
+        return cli::dispatch_solver_precision<cli::ArbitraryPrecision::real_lu>(
+            a.precision, a.tolerance, a.iterations, [&](auto const& controls) { return run(a, argc, argv, controls); });
       });
 }
