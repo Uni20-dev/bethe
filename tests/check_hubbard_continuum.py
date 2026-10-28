@@ -40,7 +40,11 @@ for precision in precisions:
         ctx.prec = 100
         tol = {"fp64": Decimal("1e-12"), "long-double": Decimal("1e-15"), "fp128": Decimal("1e-30")}[precision]
         maximum = 2*Decimal("1.24228148941956239984591553194945497655659639")
-        grid = rows(table([*base, *flags]))
+        serial = table([*base, *flags])
+        parallel = table([*base, *flags, "--threads", "4", "--no-retain"])
+        assert serial["rows"] == parallel["rows"]
+        assert "ordered row output" in parallel["metadata"]["CPU timing scope"]
+        grid = rows(serial)
         assert len(grid) == 5
         for i, row in enumerate(grid):
             assert row["converged"] and row["status"] == "converged"
@@ -54,7 +58,10 @@ for precision in precisions:
         reference = Decimal("0.180195419367165283255675569344877169275747983")
         single = rows(table(["--u", "4", "--momentum", "-"+p, *flags]))[0]
         assert abs(Decimal(single["lower_energy"])-reference) < tol
-    partial = rows(table([*base, *flags, "--max-evaluations", "0"], 2))
+    partial_table = table([*base, *flags, "--max-evaluations", "0"], 2)
+    assert partial_table["rows"] == table([*base, *flags, "--max-evaluations", "0",
+                                          "--threads", "4", "--no-retain"], 2)["rows"]
+    partial = rows(partial_table)
     assert partial[2]["converged"]
     for i in (0, 1, 3, 4):
         assert partial[i]["lower_energy"] is None and partial[i]["upper_energy"] is None
@@ -63,7 +70,13 @@ for precision in precisions:
         failed = rows(table(["--u", "4", "--momentum", "1", *flags, option, "0"], 2))[0]
         assert failed["status"] == status and failed["lower_energy"] is None
 
-invalid = [[], ["--u", "0"], ["--u", "nan"], ["--u", "4", "--momentum", "4"],
+# Preserve mixed zero-momentum success and failures across the admission window.
+failed_grid = ["--u", "4", "--points", "129", "--max-evaluations", "0"]
+serial = table(failed_grid, 2)
+assert len(serial["rows"]) == 129
+assert serial["rows"] == table([*failed_grid, "--threads", "4", "--no-retain"], 2)["rows"]
+
+invalid = [[], [*base, "--threads", "0"], ["--u", "0"], ["--u", "nan"], ["--u", "4", "--momentum", "4"],
            ["--u", "4", "--momentum", "nan"], [*base, "--momentum", "0"],
            ["--u", "4", "--points", "1"], ["--u", "4", "--points", "1000001"],
            [*base, "--max-levels", "25"], [*base, "--tolerance", "0"],
@@ -114,6 +127,14 @@ for precision in precisions:
     assert abs(float(row["upper_energy"])-3.499612327587533) < 1e-6
     assert abs(float(row["lower_p1"])+float(row["lower_p2"])) < 1e-10
     assert int(row["quadrature_evaluations"]) > 0 and int(row["objective_evaluations"]) > 0
+    args = charge.copy()
+    index = args.index("--momentum")
+    del args[index:index+2]
+    args += ["--points", "3", "--precision", precision]
+    serial = charge_table(args)
+    parallel = charge_table([*args, "--threads", "4", "--no-retain"])
+    assert serial["rows"] == parallel["rows"]
+    assert "ordered row output" in parallel["metadata"]["CPU timing scope"]
     for option, search_status, constituent_status in (
             ("--max-total-evaluations", "objective_failure", "quadrature_limit"),
             ("--max-evaluations", "objective_failure", "quadrature_limit"),
@@ -151,6 +172,15 @@ assert len(grid) == 3 and all(row["converged"] for row in grid)
 assert abs(float(grid[0]["lower_energy"])-3.499612327587533) < 1e-6
 assert abs(float(grid[0]["upper_energy"])-5.885645000426015) < 1e-6
 assert abs(float(grid[0]["lower_energy"])-float(grid[-1]["lower_energy"])) < 1e-10
+
+for channel in ("spinon-antiholon", "holon-antiholon"):
+    args = ["--u", "4", "--channel", channel, "--points", "3", "--search-tolerance", "1e-7",
+            "--position-tolerance", "1e-5", "--tolerance", "1e-10"]
+    assert charge_table(args)["rows"] == charge_table([*args, "--threads", "4", "--no-retain"])["rows"]
+failed_charge = ["--u", "4", "--channel", "holon-antiholon", "--points", "129", "--max-total-evaluations", "0"]
+serial = charge_table(failed_charge, 2)
+assert len(serial["rows"]) == 129
+assert serial["rows"] == charge_table([*failed_charge, "--threads", "4", "--no-retain"], 2)["rows"]
 
 with tempfile.TemporaryDirectory() as directory:
     path = Path(directory)

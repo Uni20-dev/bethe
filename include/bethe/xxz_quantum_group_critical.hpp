@@ -29,13 +29,14 @@ namespace detail
 {
 template <uni20::Real Real> Real label_threshold(std::size_t sites, Real delta, std::size_t m)
 {
+  auto const zero = bethe::detail::precision_zero(delta);
   xxz::detail::checked_sites(sites);
   if (!uni20::isfinite(delta) || !(delta > Real{0}) || !(delta < Real{1}))
     throw std::invalid_argument("critical quantum-group real roots require 0<Delta<1");
   if (m > sites / 2) throw std::invalid_argument("critical quantum-group real roots require M<=N/2");
-  Real const pi = Real{4} * std::atan(Real{1}), gamma = std::acos(delta);
+  Real const pi = bethe::detail::pi_like(zero), gamma = uni20::math::acos(delta);
   Real const bound = Real(sites - m + 1) - Real(sites - 2 * m + 2) * gamma / pi;
-  return bound - Real{32} * uni20::numeric_limits<Real>::epsilon() * std::max(Real{1}, bound);
+  return bound - Real{32} * uni20::numeric_limits<Real>::epsilon(delta) * std::max(Real{1}, bound);
 }
 } // namespace detail
 
@@ -75,11 +76,13 @@ template <uni20::Real Real = double>
 RealState<Real> solve_real(std::size_t sites, Real delta, std::span<uni20::half_int const> numbers,
                            SolverOptions<Real> const& options = {})
 {
+  auto const zero = bethe::detail::solver_zero(options);
+  bethe::detail::require_same_precision(delta, zero);
   auto const m = numbers.size();
   Real const threshold = detail::label_threshold(sites, delta, m);
   if (!uni20::isfinite(options.residual_tolerance) || !(options.residual_tolerance > Real{0}))
     throw std::invalid_argument("residual tolerance must be finite and positive");
-  Real const pi = Real{4} * std::atan(Real{1});
+  Real const pi = bethe::detail::pi_like(zero);
   for (std::size_t i = 0; i < m; ++i)
   {
     auto const twice = numbers[i].twice();
@@ -88,14 +91,15 @@ RealState<Real> solve_real(std::size_t sites, Real delta, std::span<uni20::half_
       throw std::invalid_argument("labels must be increasing positive integers below the finite-root threshold");
   }
   RealState<Real> out;
+  out.residual_norm = zero;
   out.sites = sites;
   out.delta = delta;
   out.quantum_numbers.assign(numbers.begin(), numbers.end());
   Real const plus = Real{1} + delta, minus = Real{1} - delta;
-  std::vector<Real> next(m), angles(m);
-  out.scaled_roots.resize(m);
+  std::vector<Real> next(m, zero), angles(m, zero);
+  out.scaled_roots.assign(m, zero);
   for (std::size_t i = 0; i < m; ++i)
-    out.scaled_roots[i] = std::tan(pi * Real(numbers[i].twice()) / (Real{4} * Real(sites)));
+    out.scaled_roots[i] = uni20::math::tan(pi * Real(numbers[i].twice()) / (Real{4} * Real(sites)));
   auto physical = [&](std::vector<Real> const& z) {
     for (std::size_t i = 0; i < m; ++i)
       if (!uni20::isfinite(z[i]) || z[i] <= Real{0} || minus * z[i] * z[i] >= plus || (i && z[i] <= z[i - 1]))
@@ -105,20 +109,20 @@ RealState<Real> solve_real(std::size_t sites, Real delta, std::span<uni20::half_
   if (!physical(out.scaled_roots)) throw std::invalid_argument("seed lies outside the finite-real branch");
   for (;;)
   {
-    out.residual_norm = Real{0};
+    out.residual_norm = zero;
     for (std::size_t i = 0; i < m; ++i)
     {
       Real const z = out.scaled_roots[i];
-      bethe::detail::CompensatedSum<Real> phase;
+      bethe::detail::CompensatedSum<Real> phase(zero);
       for (std::size_t j = 0; j < m; ++j)
         if (j != i)
         {
           Real const w = out.scaled_roots[j];
-          phase.add(std::atan(delta * (z - w) / (plus - minus * z * w)));
-          phase.add(std::atan(delta * (z + w) / (plus + minus * z * w)));
+          phase.add(uni20::math::atan(delta * (z - w) / (plus - minus * z * w)));
+          phase.add(uni20::math::atan(delta * (z + w) / (plus + minus * z * w)));
         }
       angles[i] = (pi * Real(numbers[i].twice()) / Real{2} + phase.value()) / (Real{2} * Real(sites));
-      out.residual_norm = std::max(out.residual_norm, Real{2} * std::abs(std::atan(z) - angles[i]));
+      out.residual_norm = std::max(out.residual_norm, Real{2} * uni20::math::abs(uni20::math::atan(z) - angles[i]));
     }
     if (out.residual_norm <= options.residual_tolerance)
     {
@@ -128,7 +132,7 @@ RealState<Real> solve_real(std::size_t sites, Real delta, std::span<uni20::half_
     }
     if (out.iterations == options.max_iterations) break;
     for (std::size_t i = 0; i < m; ++i)
-      next[i] = std::tan(angles[i]);
+      next[i] = uni20::math::tan(angles[i]);
     if (!physical(next) || next == out.scaled_roots)
     {
       out.status = Status::precision_limit;
@@ -137,10 +141,10 @@ RealState<Real> solve_real(std::size_t sites, Real delta, std::span<uni20::half_
     out.scaled_roots.swap(next);
     ++out.iterations;
   }
-  Real const t = std::sqrt(minus / plus);
+  Real const t = uni20::math::sqrt(minus / plus);
   for (Real z : out.scaled_roots)
   {
-    auto const lambda = std::atanh(t * z);
+    auto const lambda = uni20::math::atanh(t * z);
     out.rapidities.push_back(lambda);
     if (!uni20::isfinite(lambda))
     {
@@ -150,7 +154,7 @@ RealState<Real> solve_real(std::size_t sites, Real delta, std::span<uni20::half_
   }
   if (out.converged)
   {
-    bethe::detail::CompensatedSum<Real> shift;
+    bethe::detail::CompensatedSum<Real> shift(zero);
     for (Real z : out.scaled_roots)
       shift.add(-(plus - minus * z * z) / (Real{1} + z * z));
     out.energy_shift = shift.value();

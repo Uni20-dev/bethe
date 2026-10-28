@@ -13,7 +13,7 @@ spectrum and follows its ground roots from free bosons to the phase limit.
 ```sh
 bethe-q-boson-pbc 16 --particles 8 --eta 0.5 --roots
 bethe-q-boson-pbc 16 --particles 8 --phase --json phase.json
-bethe-q-boson-pbc 2 --particles 2 --eta 1e-60 --precision fp128
+bethe-q-boson-pbc 2 --particles 2 --eta 1e-60 --precision digits-100
 bethe-q-boson-pbc 5 --particles 3 --eta 0.5 --excitations all --roots --json spectrum.json
 bethe-q-boson-pbc --references
 ```
@@ -51,7 +51,7 @@ levels, with energy gaps relative to the ground reference. If that reference
 fails, gaps are null. Any failed candidate makes the scan incomplete (exit 2),
 even if all requested retained levels were found. Metadata records candidate,
 converged, and retained counts. State IDs are unique across these tables;
-`roots` refers to those IDs and includes integer mode $`m`$ and native-precision
+`roots` refers to those IDs and includes integer mode $`m`$ and selected-precision
 `deviation` as well as $`I`$ and lifted $`k`$. On failure both $`k`$ and `deviation`
 are null. Default ground-state mode still emits one state, with gap zero on
 success.
@@ -149,14 +149,40 @@ Failed candidates are counted and one diagnostic example is retained. Gaps
 are absent if the ground reference failed. A converged candidate family is a
 numerical result, not by itself a proof of spectral completeness.
 
-Use native `long double` or enabled Uni20 fp128 types in place of double.
+Use native `long double`, enabled Uni20 fp128 types, or `uni20::mpreal` in
+place of double. For MPFR, supply `SolverOptions<uni20::mpreal>(precision)` and
+construct eta at that same finite precision; mixed, exact and unset inputs are
+rejected. Precision belongs to each solve and does not change MPFR defaults.
+For example:
+
+```cpp
+#if UNI20_HAS_MPREAL && UNI20_HAS_MPLAPACK_MPREAL
+auto p = uni20::Precision::decimal_digits(100);
+bethe::q_boson::SolverOptions<uni20::mpreal> controls(p);
+auto state = bethe::q_boson::ground_state(2, 2, uni20::mpreal("1e-60", p), controls);
+#endif
+```
+
+The CLI accepts `--precision bits-N` or `digits-N` when Uni20 MPFR scalars and
+MPLAPACK's MPFR LU provider are enabled. Analytic free/vacuum/one-particle/phase library results and zero-update
+diagnostics require only the scalar family; an interacting Newton update
+requires the LU provider. The CLI consistently requires both, including in
+free and phase modes. Working precision controls arithmetic, not the number
+of guaranteed accurate digits.
+
+The existing excitation scanner accepts an `execution` policy with a scheduler.
+It bounds admitted work, preserves the selected ordering and waits for its final
+result. Independent owning parameter requests can also use the
+[observable grid](async-execution.md); each Newton iteration remains sequential.
+Roots, diagnostics and energies retain their requested precision in both paths.
+
 The optional fourth argument is `SolverOptions<Real>`, with residual tolerance
 $`32\,\epsilon`$ and 10000 accepted Newton updates by default. A zero budget only
 checks the seed; exact free/vacuum/one-particle/phase results can still succeed.
 Positive infinity explicitly requests the phase model; negative eta, NaN,
 L<2, and nonpositive/nonfinite tolerances are invalid.
 
-The existing physical-domain Newton driver, native dense solve, and compensated
+The existing physical-domain Newton driver, dispatched dense solve, and compensated
 sums are shared with the continuum solvers. The phase kernel uses `tanh(eta)`
 and scaled trigonometric factors rather than exponentially large hyperbolic
 functions. Roots are solved as $`k_{j} =2\,\pi \,m_{j} /L +u_{j}`$; `modes` and `deviations`
@@ -177,3 +203,11 @@ and phase limits and several finite deformations. They also cover a native
 two-site/two-particle formula, the original complex multiplicative equations,
 the exact phase limit, weak eta=epsilon², larger rings, continuum scaling to
 Lieb–Liniger, and explicit validation/iteration/precision failures.
+
+MPFR tests compare the complete two-site spectrum with its independent
+occupation Hamiltonian and check the original complex Bethe equations. An
+independent 512-bit energy reference verifies accuracy growth at 128, 256 and
+333 bits. Weak-deformation tests resolve the subleading correction at
+eta=1e-60 and retain positive energies and separated deviations at eta=1e-7000.
+Complete and failed scans agree in serial and concurrent execution; mixed
+precision requests retain ownership under deferred and threaded scheduling.

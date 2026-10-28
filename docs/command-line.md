@@ -121,10 +121,13 @@ All frontends support typed tables and file exports; see the
 | `digits-N` | Arbitrary precision sufficient for N decimal digits |
 
 The arbitrary-precision choices currently apply to `bethe-xxx-pbc`, `bethe-xxx-obc`,
-`bethe-lieb-liniger-pbc` and `bethe-lieb-liniger-obc` (all modes),
-`bethe-lieb-liniger-dispersion`,
+`bethe-lieb-liniger-pbc`, `bethe-lieb-liniger-obc`, `bethe-q-boson-pbc`, `bethe-xxz-pbc` and
+`bethe-xxz-obc` (all currently supported modes), `bethe-lieb-liniger-dispersion`,
 the finite-ring `bethe-xxx-structure-factor`, `bethe-richardson` and
-`bethe-central-spin`, in an
+`bethe-central-spin`, `bethe-hubbard-pbc`, `bethe-hubbard-obc`, and
+`bethe-gaudin-yang-pbc`, `bethe-bose-fermi-pbc`, `bethe-su3-pbc` and `bethe-su3-dispersion`,
+`bethe-haldane-shastry-pbc`, `bethe-sutherland-pbc`, `bethe-tb-dispersion`
+and `bethe-sine-gordon-dispersion`, plus both branches of `bethe-xxz-qg-obc`, in an
 [enabled build](building.md#enable-arbitrary-precision):
 
 ```sh
@@ -133,16 +136,23 @@ bethe-xxx-pbc 17 --spinons --precision bits-256
 bethe-xxx-pbc 16 --excitations all --threads 4 --precision bits-256
 bethe-xxx-obc 16 --sectors --precision digits-100
 bethe-lieb-liniger-obc 2 --length 1 --c 1e-50 --precision digits-100
+bethe-xxz-obc 16 --delta 3 --precision bits-256 --roots
 bethe-lieb-liniger-dispersion --c 4 --points 33 --precision digits-100 --threads 4
 bethe-xxx-structure-factor 32 --precision bits-256
+bethe-hubbard-pbc 6 --u -4 --precision digits-100
 bethe-richardson --levels 0,1,2,3 --pairs 2 --g 1 --precision digits-100
 bethe-central-spin --couplings 1,0.7,0.3 --field 1 --sz 0 --precision bits-256
+bethe-su3-dispersion --branch four-soliton --folded --precision digits-100
+bethe-sine-gordon-dispersion --p 0.4 --momentum 0.7 --precision digits-100
+bethe-su3-pbc 24 --precision digits-100
 ```
 
-XXX roots, Richardson pairing and central spin need Uni20's
+XXX roots, Richardson pairing, central spin, quantum-group XXZ, SU(3)/TB/sine-Gordon dispersions, Haldane–Shastry
+and Sutherland need Uni20's
 arbitrary-precision scalar family (GMP, MPFR and MPC), but no MPLAPACK.
-Finite-size and zero-temperature thermodynamic Lieb–Liniger, and structure factors, additionally require the MPLAPACK
-MPFR provider for LU operations. Other frontends still support native precisions only, including
+Finite-size and zero-temperature thermodynamic Lieb–Liniger, SU(3) singlet ground
+states, finite XXZ/Hubbard, Gaudin–Yang/Bose–Fermi, q-boson and structure factors additionally require the MPLAPACK MPFR provider
+for LU operations. Other frontends still support native precisions only, including
 Lieb–Liniger thermal calculations. More precision does not expand the
 supported state family: the excitation scan still excludes strings and infinite roots.
 
@@ -267,7 +277,14 @@ in a bounded window that admits a new point after each collected result.
 Rows retain their serial branch/momentum order, including
 failed points and their diagnostics. Only the calling thread writes tables;
 `--no-retain` still permits bounded-memory streaming. `--momentum` accepts the
-same option but has only one point per branch, so it offers no grid parallelism.
+same option but has only one point per branch. Hubbard places all selected
+branches in one work window, so those queries can still overlap; a single
+selected branch has no single-point parallelism.
+
+`bethe-hubbard-continuum --threads N` evaluates independent total momenta
+through the same bounded grid, for two-spinon and charge-containing edges.
+Each point's quadrature, inversion and extrema search remain sequential;
+rows preserve momentum order, including failures.
 
 `bethe-lieb-liniger-thermal --threads N` uses the same bounded grid for
 temperature scans, at fixed chemical potential or density. Each equilibrium
@@ -279,6 +296,14 @@ and complete grid calls, including row output, since evaluation and collection
 can overlap. Export metadata records this as `CPU timing scope`. Set BLAS/OpenMP
 thread limits to one to avoid nested threading. The library adapter and its
 ownership rules are described in [Parallel observable grids](parallel-grids.md).
+
+`bethe-sine-gordon-bethe-yang` also accepts `--threads N` for its independent
+`--levels` calculations. Root searches and phase quadratures stay sequential
+inside each level. The same bounded window preserves Bethe-number order and
+all failure diagnostics; only the calling thread writes tables. CPU timing
+covers the entire level grid including output. One worker, a single level and
+the analytic free point use direct serial evaluation; see
+[sine-Gordon excitations](sine-gordon-excitations.md).
 
 ### Timing
 

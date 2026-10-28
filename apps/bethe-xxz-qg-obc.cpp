@@ -4,6 +4,7 @@
 #include "execution-options.hpp"
 #include "program-options.hpp"
 #include "result-output.hpp"
+#include "solver-precision.hpp"
 #include <bethe/xxz_quantum_group_critical.hpp>
 #include <bethe/xxz_quantum_group_free.hpp>
 
@@ -41,7 +42,8 @@ auto program_info()
       "Failed candidates are unranked; partial scans exit "
       "2.",
       "Delta=0 blocks are ordered by zero occupation then mode labels, not energy. Equal energies are not merged.",
-      "See docs/xxz-nonhermitian.md; --references for literature."};
+      "MPFR bits-N/digits-N require Uni20 scalar support; MPLAPACK is not needed. See docs/xxz-nonhermitian.md; "
+      "--references for literature."};
   info.examples = {
       {"bethe-xxz-qg-obc 32 --delta 0.25 --roots", "Consecutive-label sea"},
       {"bethe-xxz-qg-obc 8 --delta 0.6 --through-lines 4 --excitations all", "Regular-family scan"},
@@ -71,7 +73,7 @@ void add_options(CLI::App& app, Arguments& a)
   cli::count_option(app, "--max-mode-entries", a.max_mode_entries, "Delta=0 only: total occupied-mode storage budget")
       ->default_str("1000000");
   app.add_flag("--roots", a.roots, "Export last-iterate roots with convergence status");
-  cli::precision_option(app, a.precision);
+  cli::precision_option(app, a.precision, cli::ArbitraryPrecision::real);
   cli::add_data_output_options(app, a.output,
                                {{.name = "state",
                                  .description = "Selected regular-root state",
@@ -111,7 +113,7 @@ char const* name(model::Status s)
   }
   return "unknown";
 }
-template <uni20::Real Real> int run_free(Arguments const& a, uni20::run_context& context)
+template <uni20::Real Real> int run_free(Arguments const& a, uni20::run_context& context, uni20::Precision p)
 {
   namespace free = bethe::xxz::quantum_group::free;
   if (a.through_lines || a.numbers || a.tolerance || a.iterations || a.output.needs("--roots", a.roots) ||
@@ -126,7 +128,7 @@ template <uni20::Real Real> int run_free(Arguments const& a, uni20::run_context&
   free::SectorOptions controls;
   if (a.max_blocks) controls.max_blocks = *a.max_blocks;
   if (a.max_mode_entries) controls.max_mode_entries = *a.max_mode_entries;
-  auto const blocks = context.measure([&] { return free::sector<Real>(a.sites, down, controls); });
+  auto const blocks = context.measure([&] { return free::sector<Real>(a.sites, down, p, controls); });
   std::size_t dimension = 0, defective = 0;
   for (auto const& block : blocks)
   {
@@ -136,8 +138,8 @@ template <uni20::Real Real> int run_free(Arguments const& a, uni20::run_context&
   cli::RunReport report(context, "Non-Hermitian quantum-group XX complete sector");
   report.field("hamiltonian", "Hamiltonian", "sum(SxSx+SySy)+i/2*(Sz_1-Sz_N); spin-half J=1")
       .field("sites", "Sites", a.sites)
-      .field("delta", "Delta", Real{0})
-      .field("boundary_strength", "Imaginary end-field coefficient", Real{1} / Real{2})
+      .field("delta", "Delta", uni20::scalar_at_precision<Real>(0, p))
+      .field("boundary_strength", "Imaginary end-field coefficient", uni20::scalar_at_precision<Real>(1, p) / Real{2})
       .field("sz", "Sz", sz)
       .field("down", "Down spins", down)
       .field("scope", "Scope", "complete fixed-Sz Hamiltonian spectrum and block sizes; no Jordan vectors or CFT fit")
@@ -192,7 +194,7 @@ int run_scan(Arguments const& a, Real delta, bethe::SolverOptions<Real> const& c
       .field("sites", "Sites", a.sites)
       .field("delta", "Delta", delta)
       .field("boundary_strength", "Imaginary end-field coefficient",
-             std::sqrt((Real{1} - delta) * (Real{1} + delta)) / Real{2})
+             uni20::math::sqrt((Real{1} - delta) * (Real{1} + delta)) / Real{2})
       .field("through_lines", "ell=N-2M", ell)
       .field("sz", "Sz", uni20::from_twice(static_cast<std::int64_t>(ell)))
       .field("roots", "Bethe roots", window.roots)
@@ -241,7 +243,8 @@ int run_scan(Arguments const& a, Real delta, bethe::SolverOptions<Real> const& c
       append(table, i, scan.levels[i].state, scan.levels[i].gap);
   });
   rows("reference", "Selected sea reference", [&](auto& table) {
-    append(table, 0, scan.ground_state, scan.ground_state.converged ? Optional{Real{0}} : std::nullopt);
+    append(table, 0, scan.ground_state,
+           scan.ground_state.converged ? Optional{uni20::scalar_like(delta, 0)} : std::nullopt);
   });
   if (scan.first_unconverged)
     rows("failed", "First failed candidate (unranked)",
@@ -266,16 +269,14 @@ int run_scan(Arguments const& a, Real delta, bethe::SolverOptions<Real> const& c
   if (!scan.converged()) std::cerr << "Regular-family scan incomplete; failed candidates are excluded from ranking.\n";
   return scan.converged() ? 0 : 2;
 }
-template <uni20::Real Real> int run(Arguments const& a, int argc, char** argv)
+template <uni20::Real Real>
+int run(Arguments const& a, int argc, char** argv, bethe::SolverOptions<Real> const& controls)
 {
   uni20::run_context context(program_info(), {.invocation = std::vector<std::string>(argv, argv + argc)});
-  Real const delta = uni20::parse_real<Real>(a.delta);
-  if (delta == Real{0}) return run_free<Real>(a, context);
+  Real const delta = cli::parse_solver_real<Real>(a.delta, controls);
+  if (delta == Real{0}) return run_free<Real>(a, context, controls.precision());
   if (a.sz || a.max_blocks || a.max_mode_entries)
     throw std::invalid_argument("--sz, --max-blocks and --max-mode-entries require Delta=0");
-  bethe::SolverOptions<Real> controls;
-  controls.max_iterations = a.iterations.value_or(10000);
-  if (a.tolerance) controls.residual_tolerance = uni20::parse_real<Real>(*a.tolerance);
   if (a.excitations) return run_scan<Real>(a, delta, controls, context);
   // All argument/branch validation and the solve precede opening --force targets.
   auto const s = context.measure([&] {
@@ -288,7 +289,7 @@ template <uni20::Real Real> int run(Arguments const& a, int argc, char** argv)
       .field("sites", "Sites", a.sites)
       .field("delta", "Delta", delta)
       .field("boundary_strength", "Imaginary end-field coefficient",
-             std::sqrt((Real{1} - delta) * (Real{1} + delta)) / Real{2})
+             uni20::math::sqrt((Real{1} - delta) * (Real{1} + delta)) / Real{2})
       .field("roots", "Bethe roots", m)
       .field("through_lines", "ell=N-2M", ell)
       .field("sz", "Sz", uni20::from_twice(static_cast<std::int64_t>(ell)))
@@ -338,6 +339,8 @@ int main(int argc, char** argv)
       argc, argv, program_info(), [&](auto& app) { add_options(app, a); },
       [&](auto&) {
         a.output.validate();
-        return cli::dispatch_precision(a.precision, [&]<typename Real>() { return run<Real>(a, argc, argv); });
+        return cli::dispatch_solver_precision<cli::ArbitraryPrecision::real>(
+            a.precision, a.tolerance, a.iterations.value_or(10000),
+            [&](auto const& controls) { return run(a, argc, argv, controls); });
       });
 }
