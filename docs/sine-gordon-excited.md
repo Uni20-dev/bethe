@@ -48,6 +48,15 @@ The default precision is fp64; long-double and optional MPLAPACK fp128 remain
 native throughout the source, quadrature, nonlinear solve and hole quantization.
 Interacting fp128 calculations can take many minutes; the last example is free.
 
+Use `--threads 2` to overlap the vacuum and excited solves. The default is
+one worker; larger requests still admit at most two solves. Each state retains
+its own sequential iterations, meshes and work limits. The calling thread
+forms the gap and writes the tables after both solves finish, including when
+one returns numerical failure. CPU timing covers the complete pair, including
+scheduler setup and waiting. Speedup is limited by the more expensive state.
+For independent circumference sweeps of either state, see the
+[finite-volume Async example](async-execution.md#finite-volume-integral-equations).
+
 Three tables keep the energy reference and the numerical diagnostics explicit:
 
 - `levels`: separately computed vacuum and two-soliton **bulk-subtracted**

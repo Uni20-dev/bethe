@@ -33,6 +33,14 @@ template <uni20::Real Real> struct State
 };
 namespace detail
 {
+template <uni20::Real Real> void validate(Real field, Real scale, Options<Real> const& options)
+{
+  if (!uni20::isfinite(field) || !uni20::isfinite(scale) || !(scale > Real{0}) || !uni20::isfinite(options.tolerance) ||
+      !(options.tolerance > Real{0}))
+    throw std::invalid_argument("Kondo field must be finite, scale and tolerance finite and positive");
+  if (options.max_series_terms > 4096 || options.max_lobes > 4096)
+    throw std::length_error("Kondo series/lobe work ceiling is 4096");
+}
 template <uni20::Real Real> Real pi() { return Real{4} * std::atan(Real{1}); }
 template <uni20::Real Real> struct Estimate
 {
@@ -219,11 +227,7 @@ std::optional<Pair<Real>> high(Real log_x, Pair<Real> const& anchor, Options<Rea
 template <uni20::Real Real = double>
 [[nodiscard]] State<Real> ground_response(Real field, Real scale, Options<Real> options = {})
 {
-  if (!uni20::isfinite(field) || !uni20::isfinite(scale) || !(scale > Real{0}) || !uni20::isfinite(options.tolerance) ||
-      !(options.tolerance > Real{0}))
-    throw std::invalid_argument("Kondo field must be finite, scale and tolerance finite and positive");
-  if (options.max_series_terms > 4096 || options.max_lobes > 4096)
-    throw std::length_error("Kondo series/lobe work ceiling is 4096");
+  detail::validate(field, scale, options);
   State<Real> out;
   out.field = field;
   out.scale = scale;

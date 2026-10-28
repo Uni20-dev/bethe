@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Copyright (C) 2026 Ian McCulloch
 #pragma once
+#include "generated-state-scan.hpp"
 #include "report.hpp"
 
 namespace bethe::apps::biquadratic
@@ -94,57 +95,50 @@ int run_bound_clusters(Arguments const& args, std::size_t requested, bethe::Solv
   if (count > args.max_candidates.value_or(10000))
     throw std::length_error("bound-cluster rows exceed max_candidates; raise --max-candidates");
   auto const ground = model::ferromagnetic::ground_space<Real>(args.sites);
-  auto solve = [&](std::size_t mode) {
+  struct Request
+  {
+      std::size_t mode, string_label;
+      std::vector<std::size_t> real_labels;
+      std::array<std::size_t, 2> pair_labels;
+  };
+  auto next = [mode = std::size_t{1}, real_labels, pair_labels, selected_j, real_last, pair_last, pair_width, count,
+               selected = selected.has_value(), two_pairs = args.two_pairs.has_value()]() mutable {
+    Request request{mode++, selected_j, real_labels, pair_labels};
     if constexpr (TwoPairs)
-      return model::ferromagnetic::two_bound_pairs<Real>(args.sites, pair_labels, options);
-    else if constexpr (Quartet)
-      return model::ferromagnetic::bound_quartet<Real>(args.sites, mode, options);
-    else if constexpr (TripleMixed)
-      return model::ferromagnetic::triple_defect<Real>(args.sites, real_labels.front(), selected_j, options);
+    {
+      if (!two_pairs && request.mode < count) bethe::detail::advance_combination<std::size_t>(pair_labels, pair_last);
+    }
     else if constexpr (Mixed)
-      return model::ferromagnetic::pair_with_real_roots<Real>(args.sites, real_labels, selected_j, options);
-    else if constexpr (Defects == 2)
-      return model::ferromagnetic::bound_pair<Real>(args.sites, mode, options);
-    else
-      return model::ferromagnetic::bound_triple<Real>(args.sites, mode, options);
-  };
-  std::vector<decltype(solve(1))> states;
-  states.reserve(count);
-  bool complete = true;
-  std::size_t converged_count = 0;
-  auto append = [&](std::size_t mode) {
-    states.push_back(solve(mode));
-    complete = complete && states.back().reference.converged;
-    converged_count += states.back().reference.converged;
-  };
-  if constexpr (TwoPairs)
-  {
-    do
     {
-      append(1);
-    }
-    while (!args.two_pairs && bethe::detail::advance_combination<std::size_t>(pair_labels, pair_last));
-  }
-  else if constexpr (Mixed)
-  {
-    if (selected)
-      append(1);
-    else
-    {
-      do
+      if (!selected)
       {
-        for (std::size_t j = 0; j < pair_width; ++j)
-        {
-          selected_j = pair_last - j;
-          append(1);
-        }
+        request.string_label = pair_last - (request.mode - 1) % pair_width;
+        if (request.mode < count && request.mode % pair_width == 0)
+          bethe::detail::advance_combination<std::size_t>(real_labels, real_last);
       }
-      while (bethe::detail::advance_combination<std::size_t>(real_labels, real_last));
     }
-  }
-  else
-    for (std::size_t mode = 1; mode <= count; ++mode)
-      append(mode);
+    return request;
+  };
+  auto solve = [sites = args.sites, options](Request const& request) {
+    if constexpr (TwoPairs)
+      return model::ferromagnetic::two_bound_pairs<Real>(sites, request.pair_labels, options);
+    else if constexpr (Quartet)
+      return model::ferromagnetic::bound_quartet<Real>(sites, request.mode, options);
+    else if constexpr (TripleMixed)
+      return model::ferromagnetic::triple_defect<Real>(sites, request.real_labels.front(), request.string_label,
+                                                       options);
+    else if constexpr (Mixed)
+      return model::ferromagnetic::pair_with_real_roots<Real>(sites, request.real_labels, request.string_label,
+                                                              options);
+    else if constexpr (Defects == 2)
+      return model::ferromagnetic::bound_pair<Real>(sites, request.mode, options);
+    else
+      return model::ferromagnetic::bound_triple<Real>(sites, request.mode, options);
+  };
+  auto states = cli::scan_generated_states(count, std::move(next), std::move(solve), args.threads);
+  auto const converged_count = static_cast<std::size_t>(
+      std::count_if(states.begin(), states.end(), [](auto const& state) { return state.reference.converged; }));
+  bool const complete = converged_count == count;
   if constexpr (Scan)
   {
     std::stable_sort(states.begin(), states.end(), [](auto const& a, auto const& b) {
@@ -191,7 +185,8 @@ int run_bound_clusters(Arguments const& args, std::size_t requested, bethe::Solv
                  selected ? selected_j : pair_last);
   }
   computation.finish();
-  report
+  report.field("threads", "Scheduler concurrency limit", args.threads)
+      .field("solver_concurrency", "Solver concurrency", std::min(count, static_cast<std::size_t>(args.threads)))
       .field("calculation", "Calculation",
              TwoPairs       ? "two scattering bound pairs"
              : Quartet      ? "targeted four-defect bound-quartet modes"

@@ -25,6 +25,13 @@ template <uni20::Real Real> struct OneParticleState : Diagnostics<Real>
 
 namespace detail
 {
+template <uni20::Real Real> void validate_one_particle(Real mass, Real length, OneParticleOptions<Real> const& options)
+{
+  Real const r = validate(mass, length, static_cast<Options<Real> const&>(options));
+  if (r < Real{5} || r > Real{30})
+    throw std::invalid_argument("Lee-Yang regular one-particle solver requires 5<=mL<=30");
+}
+
 template <uni20::Real Real>
 GridResult<Real> one_particle_grid(Real r, Real cutoff, std::size_t n, OneParticleOptions<Real> const& options,
                                    OneParticleState<Real>& work, Real& final_displacement)
@@ -129,9 +136,7 @@ GridResult<Real> one_particle_grid(Real r, Real cutoff, std::size_t n, OnePartic
 template <uni20::Real Real = double>
 OneParticleState<Real> one_particle(Real mass, Real length, OneParticleOptions<Real> const& options = {})
 {
-  Real const r = detail::validate(mass, length, static_cast<Options<Real> const&>(options));
-  if (r < Real{5} || r > Real{30})
-    throw std::invalid_argument("Lee-Yang regular one-particle solver requires 5<=mL<=30");
+  detail::validate_one_particle(mass, length, options);
   OneParticleState<Real> out;
   Real d{};
   Real const pi = Real{4} * std::atan(Real{1});

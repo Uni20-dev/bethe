@@ -13,3 +13,23 @@ set_target_properties(bethe-async-hubbard-background-example PROPERTIES CXX_EXTE
 add_executable(bethe-async-ground-states-example async_ground_states.cpp)
 target_link_libraries(bethe-async-ground-states-example PRIVATE bethe::bethe TBB::tbb)
 set_target_properties(bethe-async-ground-states-example PROPERTIES CXX_EXTENSIONS OFF)
+
+add_executable(bethe-async-finite-volume-example async_finite_volume.cpp)
+target_link_libraries(bethe-async-finite-volume-example PRIVATE bethe::bethe TBB::tbb)
+set_target_properties(bethe-async-finite-volume-example PROPERTIES CXX_EXTENSIONS OFF)
+
+add_executable(bethe-async-asep-example async_asep.cpp)
+target_link_libraries(bethe-async-asep-example PRIVATE bethe::bethe TBB::tbb)
+set_target_properties(bethe-async-asep-example PROPERTIES CXX_EXTENSIONS OFF)
+
+add_executable(bethe-async-complex-sweeps-example async_complex_sweeps.cpp)
+target_link_libraries(bethe-async-complex-sweeps-example PRIVATE bethe::bethe TBB::tbb)
+set_target_properties(bethe-async-complex-sweeps-example PROPERTIES CXX_EXTENSIONS OFF)
+
+add_executable(bethe-async-nested-sweeps-example async_nested_sweeps.cpp)
+target_link_libraries(bethe-async-nested-sweeps-example PRIVATE bethe::bethe TBB::tbb)
+set_target_properties(bethe-async-nested-sweeps-example PROPERTIES CXX_EXTENSIONS OFF)
+
+add_executable(bethe-async-ladder-example async_ladder.cpp)
+target_link_libraries(bethe-async-ladder-example PRIVATE bethe::bethe TBB::tbb)
+set_target_properties(bethe-async-ladder-example PROPERTIES CXX_EXTENSIONS OFF)

@@ -147,8 +147,8 @@ bethe-sine-gordon-dispersion --p 0.4 --momentum 0.7 --precision digits-100
 bethe-su3-pbc 24 --precision digits-100
 ```
 
-XXX roots, Richardson pairing, central spin, quantum-group XXZ, SU(3)/TB/sine-Gordon dispersions, Haldane–Shastry
-and Sutherland need Uni20's
+XXX roots, Richardson pairing, central spin, quantum-group XXZ,
+SU(3)/TB/sine-Gordon dispersions, Haldane–Shastry and Sutherland need Uni20's
 arbitrary-precision scalar family (GMP, MPFR and MPC), but no MPLAPACK.
 Finite-size and zero-temperature thermodynamic Lieb–Liniger, SU(3) singlet ground
 states, finite XXZ/Hubbard, Gaudin–Yang/Bose–Fermi, q-boson, finite TB and structure
@@ -300,6 +300,14 @@ and complete grid calls, including row output, since evaluation and collection
 can overlap. Export metadata records this as `CPU timing scope`. Set BLAS/OpenMP
 thread limits to one to avoid nested threading. The library adapter and its
 ownership rules are described in [Parallel observable grids](parallel-grids.md).
+
+`bethe-sine-gordon-bethe-yang` also accepts `--threads N` for its independent
+`--levels` calculations. Root searches and phase quadratures stay sequential
+inside each level. The same bounded window preserves Bethe-number order and
+all failure diagnostics; only the calling thread writes tables. CPU timing
+covers the entire level grid including output. One worker, a single level and
+the analytic free point use direct serial evaluation; see
+[sine-Gordon excitations](sine-gordon-excitations.md).
 
 ### Timing
 

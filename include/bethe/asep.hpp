@@ -153,21 +153,24 @@ Status correct(System<Real> const& system, std::vector<std::complex<Real>>& v, O
     ++total_iterations;
   }
 }
-} // namespace detail
-
-/// Leading periodic ASEP relaxation mode. Rates need not sum to one.
-/// Reflection/particle-hole symmetry selects an Im(lambda)>=0 representative.
 template <uni20::Real Real>
-GapState<Real> relaxation_gap(std::size_t l, std::size_t particles, Real right_rate, Real left_rate,
-                              Options<Real> options = {})
+void validate_request(std::size_t l, std::size_t particles, Real right_rate, Real left_rate,
+                      Options<Real> const& options)
 {
-  using C = std::complex<Real>;
   if (l < 2 || particles > l || !uni20::isfinite(right_rate) || !uni20::isfinite(left_rate) || right_rate < Real{0} ||
       left_rate < Real{0} || !(std::max(right_rate, left_rate) > Real{0}) || !uni20::isfinite(options.tolerance) ||
       !(options.tolerance > Real{0}))
     throw std::invalid_argument(
         "ASEP requires L>=2, 0<=N<=L, finite nonnegative rates with one positive, and positive tolerance");
   if (l > options.seed_options.max_sites) throw std::length_error("ASEP L exceeds max_sites work budget");
+}
+
+template <uni20::Real Real, typename Seed>
+GapState<Real> solve_gap(std::size_t l, std::size_t particles, Real right_rate, Real left_rate,
+                         Options<Real> const& options, Seed seed_provider)
+{
+  using C = std::complex<Real>;
+  validate_request(l, particles, right_rate, left_rate, options);
   GapState<Real> out;
   out.sites = l;
   out.particles = particles;
@@ -219,7 +222,9 @@ GapState<Real> relaxation_gap(std::size_t l, std::size_t particles, Real right_r
     out.status = Status::precision_limit;
     return out;
   }
-  auto const seed = tasep::relaxation_gap(l, particles, Real{1}, options.seed_options);
+  // A direct call creates its seed only on this nonanalytic path. Prepared
+  // queries borrow one immutable seed; each continuation owns its scratch.
+  auto const& seed = seed_provider();
   out.seed_iterations = seed.seed_iterations;
   out.seed_newton_iterations = seed.iterations;
   out.residual_norm = seed.residual_norm;
@@ -334,4 +339,43 @@ GapState<Real> relaxation_gap(std::size_t l, std::size_t particles, Real right_r
   publish(value);
   return out;
 }
+} // namespace detail
+
+/// Leading periodic ASEP relaxation mode. Rates need not sum to one.
+/// Reflection/particle-hole symmetry selects an Im(lambda)>=0 representative.
+template <uni20::Real Real>
+GapState<Real> relaxation_gap(std::size_t l, std::size_t particles, Real right_rate, Real left_rate,
+                              Options<Real> options = {})
+{
+  return detail::solve_gap(l, particles, right_rate, left_rate, options,
+                           [&] { return tasep::relaxation_gap(l, particles, Real{1}, options.seed_options); });
+}
+
+/// Own one unit-rate TASEP seed for repeated rate queries at fixed L,N.
+/// Construction performs preparation. Concurrent const queries are independent;
+/// their continuation never changes the seed or starts from another query.
+/// Seed failures remain numerical results. Analytic queries can still succeed.
+/// Per-query seed work counters describe this shared preparation, not new work.
+template <uni20::Real Real> class PreparedGap {
+  public:
+    PreparedGap(std::size_t sites, std::size_t particles, Options<Real> options = {})
+        : sites_(sites), particles_(particles), options_(std::move(options))
+    {
+      detail::validate_request(sites_, particles_, Real{1}, Real{0}, options_);
+      seed_ = tasep::relaxation_gap(sites_, particles_, Real{1}, options_.seed_options);
+    }
+
+    [[nodiscard]] GapState<Real> at_rates(Real right_rate, Real left_rate) const
+    {
+      return detail::solve_gap(sites_, particles_, right_rate, left_rate, options_,
+                               [&]() -> tasep::GapState<Real> const& { return seed_; });
+    }
+
+    [[nodiscard]] tasep::GapState<Real> const& seed_state() const noexcept { return seed_; }
+
+  private:
+    std::size_t sites_, particles_;
+    Options<Real> options_;
+    tasep::GapState<Real> seed_;
+};
 } // namespace bethe::asep
