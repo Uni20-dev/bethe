@@ -83,6 +83,10 @@ target_link_libraries(bethe_cli_precision_tests PRIVATE bethe_cli_output)
 bethe_discover_tests(bethe_cli_precision_tests)
 
 if(BETHE_HAS_MPREAL)
+  add_executable(bethe_bose_fermi_mpfr_tests test_bose_fermi_mpfr.cpp)
+  target_link_libraries(bethe_bose_fermi_mpfr_tests PRIVATE bethe::bethe TBB::tbb)
+  bethe_discover_tests(bethe_bose_fermi_mpfr_tests)
+
   add_executable(bethe_root_solver_mpfr_tests test_root_solver_mpfr.cpp)
   target_link_libraries(bethe_root_solver_mpfr_tests PRIVATE bethe::bethe TBB::tbb)
   bethe_discover_tests(bethe_root_solver_mpfr_tests)
@@ -494,6 +498,9 @@ if(BETHE_BUILD_APPS)
     add_test(NAME BoseFermi.cli
       COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_bose_fermi.py"
         "$<TARGET_FILE:bethe-bose-fermi-pbc>" "${BETHE_HAS_FLOAT128}")
+    add_test(NAME BoseFermiMpfr.cli
+      COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_bose_fermi_precision.py"
+        "$<TARGET_FILE:bethe-bose-fermi-pbc>" "${BETHE_HAS_MPREAL}" "${BETHE_HAS_MPLAPACK_MPREAL}")
     add_test(NAME XYZ.cli
       COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_xyz.py"
         "$<TARGET_FILE:bethe-xyz-pbc>" "${BETHE_HAS_FLOAT128}")
