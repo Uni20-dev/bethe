@@ -203,7 +203,8 @@ cmake --build . --parallel
 ```
 
 For finite-ring structure factors, finite-size or zero-temperature
-thermodynamic Lieb–Liniger, SU(3) singlet ground states and finite XXZ and finite Hubbard ground states, additionally
+thermodynamic Lieb–Liniger, SU(3), finite XXZ/Hubbard and Gaudin–Yang,
+additionally
 enable MPLAPACK matrix kernels. Unlike QR, Uni20's arbitrary-precision square
 LU solves currently require this provider:
 
@@ -238,7 +239,8 @@ Both finite XXZ frontends support their existing ground, sector and real-root
 excitation modes; their physical domain and state-family restrictions still apply.
 It does **not** enable arbitrary precision throughout all models or frontends.
 The XXX real-root and Gaudin solvers need just `UNI20_ENABLE_MPREAL=ON`;
-Lieb–Liniger, SU(3), finite XXZ and form factors additionally need `UNI20_BACKEND_MPLAPACK=ON`.
+Lieb–Liniger, SU(3), finite XXZ/Hubbard, Gaudin–Yang and form factors additionally
+need `UNI20_BACKEND_MPLAPACK=ON`.
 Enabling that provider also lets Uni20 dispatch the Lieb–Liniger LU and Gaudin
 QR operations to MPLAPACK.
 No ambient precision default determines the calculation's

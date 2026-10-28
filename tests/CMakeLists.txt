@@ -83,6 +83,10 @@ target_link_libraries(bethe_cli_precision_tests PRIVATE bethe_cli_output)
 bethe_discover_tests(bethe_cli_precision_tests)
 
 if(BETHE_HAS_MPREAL)
+  add_executable(bethe_gaudin_yang_mpfr_tests test_gaudin_yang_mpfr.cpp)
+  target_link_libraries(bethe_gaudin_yang_mpfr_tests PRIVATE bethe::bethe TBB::tbb)
+  bethe_discover_tests(bethe_gaudin_yang_mpfr_tests)
+
   add_executable(bethe_hubbard_mpfr_tests test_hubbard_mpfr.cpp)
   target_link_libraries(bethe_hubbard_mpfr_tests PRIVATE bethe::bethe TBB::tbb)
   bethe_discover_tests(bethe_hubbard_mpfr_tests)
@@ -681,6 +685,11 @@ if(BETHE_BUILD_APPS)
     add_test(NAME DataOutput.cli
       COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_data_output_cli.py"
         "$<TARGET_FILE:bethe-hubbard-dispersion>" "${BETHE_HAS_FLOAT128}")
+  endif()
+  if(Python3_Interpreter_FOUND)
+    add_test(NAME GaudinYangMpfr.cli
+      COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_gaudin_yang_precision.py"
+        "$<TARGET_FILE:bethe-gaudin-yang-pbc>" "${BETHE_HAS_MPREAL}" "${BETHE_HAS_MPLAPACK_MPREAL}")
   endif()
   foreach(app IN ITEMS bethe-xxx-pbc bethe-xxx-obc bethe-xxz-pbc bethe-xxz-obc bethe-hubbard-pbc bethe-hubbard-obc bethe-hubbard-dispersion bethe-lieb-liniger-pbc bethe-lieb-liniger-obc bethe-su3-pbc bethe-gaudin-yang-pbc bethe-tj-pbc bethe-tb-pbc bethe-biquadratic-obc bethe-richardson bethe-central-spin bethe-sun-fermions-pbc bethe-ladder-pbc bethe-haldane-shastry-pbc bethe-sutherland-pbc)
     if(Python3_Interpreter_FOUND)
