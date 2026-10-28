@@ -80,7 +80,7 @@ with localcontext() as context:
     assert abs(Decimal(t['metadata']['Counting tolerance']) / Decimal('1e-80') - 1) < Decimal('1e-95')
     free = table(['--p', '1', '--length', '10', '--precision', 'bits-160', '--levels', '3', '--threads', '2'])
     assert free['metadata']['Execution mode'] == 'direct serial'
-    assert all(r['evaluations'] == 0 for r in rows(free))
+    assert all(int(r['evaluations']) == 0 for r in rows(free))
 
 with tempfile.TemporaryDirectory() as directory:
     path = Path(directory) / 'preserve.json'
