@@ -2,6 +2,7 @@
 // Copyright (C) 2026 Ian McCulloch
 #include "program-options.hpp"
 #include "result-output.hpp"
+#include "solver-precision.hpp"
 #include <bethe/su3.hpp>
 
 namespace
@@ -40,7 +41,7 @@ void add_options(CLI::App& app, Arguments& args)
                      "max equation residual divided by L (default: 32 epsilon; not an energy-error bound)");
   bethe::cli::option(app, "--max-iterations", args.max_iterations, "accepted Newton updates (default: 10000)")
       ->capture_default_str();
-  bethe::cli::precision_option(app, args.precision);
+  bethe::cli::precision_option(app, args.precision, cli::ArbitraryPrecision::real_lu);
   cli::add_data_output_options(app, args.output,
                                {{.name = "states", .description = "Selected states and diagnostics", .primary = true},
                                 {.name = "first_roots",
@@ -69,12 +70,10 @@ char const* status(model::SolveStatus value)
   return "unknown";
 }
 
-template <uni20::Real Real> int run(Arguments const& args, int argc, char** argv)
+template <uni20::Real Real>
+int run(Arguments const& args, model::SolverOptions<Real> const& options, int argc, char** argv)
 {
   uni20::run_context context(program_info(), {.invocation = std::vector<std::string>(argv, argv + argc)});
-  model::SolverOptions<Real> options;
-  options.max_iterations = args.max_iterations;
-  if (args.tolerance) options.residual_tolerance = uni20::parse_real<Real>(*args.tolerance);
   auto computation = context.computation();
   auto const state = model::ground_state<Real>(args.sites, options);
   computation.finish();
@@ -139,7 +138,8 @@ int main(int argc, char** argv)
       argc, argv, program_info(), [&](auto& app) { add_options(app, args); },
       [&](auto&) {
         validate(args);
-        return bethe::cli::dispatch_precision(args.precision,
-                                              [&]<uni20::Real Real> { return run<Real>(args, argc, argv); });
+        return cli::dispatch_solver_precision<cli::ArbitraryPrecision::real_lu>(
+            args.precision, args.tolerance, args.max_iterations,
+            [&](auto const& options) { return run(args, options, argc, argv); });
       });
 }

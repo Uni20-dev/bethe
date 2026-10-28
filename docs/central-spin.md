@@ -205,3 +205,12 @@ minimization over its allowed projections. Neither case is silently
 perturbed into the distinct-coupling problem. Higher local spins, general
 linear combinations of Gaudin charges, excited states and observable
 matrix elements remain separate future work.
+
+## Independent parameter sweeps
+
+Use the shared [Async observable grid](async-execution.md#independent-richardson-and-central-spin-solves)
+for independent couplings, fields or sectors. Capture input vectors and solver
+options by value so each evaluation's borrowed spans remain valid, and wait on
+the final grid result. Continuation within one solve stays sequential. The
+compiled example and mixed-precision tests preserve full state diagnostics,
+including unsuccessful solves; no additional MPFR provider is required.

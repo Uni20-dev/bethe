@@ -35,6 +35,7 @@ base_arguments = {
     "bethe-bose-fermi-pbc": ["--bosons", "2", "--fermions", "3", "--length", "5", "--c", "1"],
     "bethe-sutherland-pbc": ["4", "--length", "4", "--lambda", "2"],
     "bethe-su3-pbc": ["6"],
+    "bethe-su3-dispersion": ["--points", "3"],
     "bethe-gaudin-yang-pbc": ["6", "--length", "6", "--c", "1"],
     "bethe-richardson": ["--levels", "0,1,2,3", "--pairs", "2", "--g", "1"],
     "bethe-central-spin": ["--couplings", "1,0.7,0.3", "--field", "1", "--sz", "0"],
@@ -74,8 +75,11 @@ for program in sys.argv[1:]:
     assert not duplicate.stdout and "--precision" in duplicate.stderr
     assert "received 2" in duplicate.stderr
     assert "fp80" in help_text and "bethe-info" in help_text
+    # Opted-in frontends have dedicated precision tests covering both numerical
+    # results and unavailable providers; they must not claim no frontend support.
     if name not in ("bethe-xxx-pbc", "bethe-xxx-obc", "bethe-xxx-structure-factor", "bethe-richardson",
-                    "bethe-central-spin", "bethe-lieb-liniger-pbc", "bethe-lieb-liniger-obc", "bethe-xxz-qg-obc"):
+                    "bethe-central-spin", "bethe-lieb-liniger-pbc", "bethe-lieb-liniger-obc",
+                    "bethe-lieb-liniger-dispersion", "bethe-su3-pbc", "bethe-xxz-pbc", "bethe-xxz-obc", "bethe-hubbard-pbc", "bethe-hubbard-obc", "bethe-gaudin-yang-pbc", "bethe-bose-fermi-pbc", "bethe-su3-dispersion", "bethe-haldane-shastry-pbc", "bethe-sutherland-pbc", "bethe-tb-dispersion", "bethe-sine-gordon-dispersion", "bethe-q-boson-pbc", "bethe-xxz-qg-obc"):
         for precision in ("bits-128", "digits-100"):
             rejected = run(program, [*base, "--precision", precision], 1)
             assert not rejected.stdout and "does not support arbitrary precision" in rejected.stderr

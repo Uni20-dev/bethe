@@ -5,6 +5,7 @@
 
 #include "excitation-report.hpp"
 #include "program-options.hpp"
+#include "solver-precision.hpp"
 #include "xxz-cli.hpp"
 
 namespace
@@ -34,14 +35,12 @@ auto program_info()
   return info;
 }
 
-template <uni20::Real Real> int run(Arguments const& args, int argc, char** argv)
+template <uni20::Real Real>
+int run(Arguments const& args, model::SolverOptions<Real> const& options, int argc, char** argv)
 {
   uni20::run_context context(program_info(), {.invocation = std::vector<std::string>(argv, argv + argc)});
   namespace cli = bethe::cli;
-  Real const delta = uni20::parse_real<Real>(*args.delta);
-  model::SolverOptions<Real> options;
-  options.max_iterations = args.max_iterations;
-  if (args.tolerance) options.residual_tolerance = uni20::parse_real<Real>(*args.tolerance);
+  Real const delta = cli::parse_solver_real<Real>(*args.delta, options);
   auto const coordinate = delta > Real{1}   ? "bulk scaled rapidity z; boundary y=1/z_B^2, log distance w"
                           : delta < Real{0} ? "scaled rapidity z=s*tanh(lambda); hyperbolic lambda"
                                             : "scaled rapidity z";
@@ -142,7 +141,8 @@ int main(int argc, char** argv)
       },
       [&](auto&) {
         bethe::cli::validate_xxz_arguments(args);
-        return bethe::cli::dispatch_precision(args.precision,
-                                              [&]<uni20::Real Real> { return run<Real>(args, argc, argv); });
+        return bethe::cli::dispatch_solver_precision<bethe::cli::ArbitraryPrecision::real_lu>(
+            args.precision, args.tolerance, args.max_iterations,
+            [&](auto const& options) { return run(args, options, argc, argv); });
       });
 }
