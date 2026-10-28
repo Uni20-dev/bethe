@@ -88,6 +88,7 @@ for program in sys.argv[1:]:
                           "--json", str(output), "--force"], 1)
             assert output.read_text() == "do not overwrite\n"
     elif name == "bethe-biquadratic-obc":
+        same_tables(program, ["8", "--ferromagnetic", "--bound-pairs", "all"])
         for window in ([], ["--real-window", "3"]):
             for extra, code in (([], 0), (["--max-iterations", "0"], 2)):
                 same_tables(program, ["9", "--ferromagnetic", "--through-lines", "5",
@@ -96,8 +97,7 @@ for program in sys.argv[1:]:
             output = Path(tmp) / "keep.json"
             output.write_text("do not overwrite\n")
             for mode in (["--q-spectrum"], ["--singlet-excitation"],
-                         ["--ferromagnetic", "--one-defect"],
-                         ["--ferromagnetic", "--bound-pairs", "all"]):
+                         ["--ferromagnetic", "--one-defect"]):
                 for extra in ([], ["--excitations", "all"]):
                     run(program, ["8", *mode, *extra, "--threads", "4",
                                   "--json", str(output), "--force"], 1)
