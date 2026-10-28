@@ -93,6 +93,13 @@ The root iterations themselves stay sequential.
 
 ## Ownership, dependencies and cancellation
 
+[ASEP rate curves](asep.md#reusing-a-seed-across-rate-queries) can share an owning
+`asep::PreparedGap` through the reader-dependent grid. Preparation solves one
+unit-rate TASEP state; each rate query owns its continuation scratch and returns
+its full diagnostics. The compiled [example](../examples/async_asep.cpp) submits
+the consumer before preparation is ready, then waits on the final grid result.
+Numerical seed failure does not erase an independently valid analytic query.
+
 For curves that depend on a prepared model, see [shared backgrounds](#shared-backgrounds)
 below. They use the same bounded grid and add a reader dependency on preparation.
 

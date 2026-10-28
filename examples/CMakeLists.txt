@@ -17,3 +17,7 @@ set_target_properties(bethe-async-ground-states-example PROPERTIES CXX_EXTENSION
 add_executable(bethe-async-finite-volume-example async_finite_volume.cpp)
 target_link_libraries(bethe-async-finite-volume-example PRIVATE bethe::bethe TBB::tbb)
 set_target_properties(bethe-async-finite-volume-example PROPERTIES CXX_EXTENSIONS OFF)
+
+add_executable(bethe-async-asep-example async_asep.cpp)
+target_link_libraries(bethe-async-asep-example PRIVATE bethe::bethe TBB::tbb)
+set_target_properties(bethe-async-asep-example PROPERTIES CXX_EXTENSIONS OFF)
