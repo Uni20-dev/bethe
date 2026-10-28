@@ -25,6 +25,10 @@ bethe-lieb-liniger-thermal --c 4 --temperature 0.5 \
 bethe-lieb-liniger-thermal --c 4 --temperature 1 --density 0.1 \
   --precision fp128 --json thermal.json --tsv thermal.tsv
 
+# Explicit 256-bit arithmetic; quadrature still has its own accuracy budget.
+bethe-lieb-liniger-thermal --c 4 --temperature 1 --mu -1 \
+  --precision bits-256 --tolerance 1e-55 --max-nodes 512
+
 bethe-lieb-liniger-thermal --references
 ```
 
@@ -41,7 +45,8 @@ in the requested temperature order, including failures. It admits at most 128
 active or completed-but-uncollected temperatures. No continuation seed is passed
 between temperatures, so concurrent execution preserves the serial calculation.
 Set `OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1` to avoid nested threading.
-Single-temperature requests have no grid parallelism.
+Single-temperature requests have no grid parallelism. Explicit MPFR scans use the same scheduler;
+working precision and convergence controls stay local to each request.
 
 The named table `thermodynamics` reports temperature, chemical potential,
 density, pressure, energy/length, entropy/length, quadrature nodes and cutoff,
@@ -55,7 +60,7 @@ known. Neither publishes failed physical observables.
 The numerical controls mirror the C++ options below: `--tolerance`,
 `--initial-nodes`, `--max-nodes`, `--initial-cutoff`, `--max-cutoffs`, and
 `--max-iterations`. Fixed-density runs additionally accept `--density-tolerance`
-and `--max-evaluations`. Native defaults depend on the selected precision.
+and `--max-evaluations`. Defaults depend on the selected working precision.
 
 The shared [output options](output.md) provide presentation-layer screen output,
 CSV/TSV/JSON files, provenance metadata and CPU timing. Rows stream to attached
@@ -107,8 +112,39 @@ if (state.converged) {
 }
 ```
 
-Use `long double` or enabled Uni20 fp128 scalars for extended arithmetic.
-There is no narrowing to fp64 inside the solver or its quadrature rules.
+Use `long double`, configured binary128, or `uni20::mpreal` for extended
+arithmetic. MPFR equilibrium solves require the configured MPLAPACK MPFR
+provider. Runtime precision is explicit in both the inputs and controls:
+
+```cpp
+auto p = uni20::Precision::bits(128);
+using R = uni20::mpreal;
+yy::Options<R> options(p);
+options.tolerance = R("1e-20", p);
+auto state = yy::equilibrium(R(4, p), R(1, p), R(-1, p), options);
+yy::DensityOptions<R> canonical(p);
+canonical.equilibrium.tolerance = R("1e-18", p);
+canonical.tolerance = R("1e-16", p);
+auto fixed = yy::at_density(R(4, p), R(1, p), R("0.1", p), canonical);
+```
+
+These explicit tolerances keep the introductory examples inexpensive. Increase
+arithmetic precision and numerical accuracy independently; a high-accuracy
+fixed-density request performs several complete equilibrium solves.
+
+Inputs, tolerances and an optional cutoff must have the controls' finite
+precision. Mixed, exact-only and unset runtime values are rejected before
+solving. Constants, quadrature, compensated reductions, Newton corrections,
+thermal factors and failure diagnostics retain that precision. The solver
+changes neither ambient MPFR precision nor its exponent range. There is no
+narrowing to binary64 inside the solver or its quadrature rules.
+
+The CLI accepts `--precision bits-N` and `digits-N` when the MPFR LU provider
+is configured. More arithmetic bits do not establish quadrature or tail
+convergence: insufficient mesh/cutoff budgets still return a failure. Very
+small observables are rejected if their requested absolute accuracy cannot
+be resolved on the scalar's finite grid; MPFR uses its current minimum
+positive value rather than a native floating-point underflow threshold.
 The default `Options<Real>` has relative tolerance `16384*epsilon`, 16 initial
 nodes, at most 256 nodes, 512 accepted Newton updates across the whole solve,
 and at most four rapidity cutoffs. Node budgets may be increased to 512;
@@ -134,6 +170,14 @@ change. They are estimates, not rigorous bounds on omitted tails or quadrature.
 The library reports no physical observable until both checks pass. Small c,
 low T, or a large user-selected initial cutoff may need more nodes than allowed.
 
+The mesh comparison is conservative: its difference can be dominated by the
+coarser rule even when the finer result is much more accurate. In a 256-bit
+Tonks-limit check at T=1, mu=-1 and c=1e120, tolerances from 1e-55 to 1e-65
+converge at 512 nodes and agree with the independent fugacity-series values
+to about 1e-76 relative error. A 1e-70 request instead reports `mesh_limit`.
+Arithmetic accuracy in this example is established by that independent
+reference; the convergence diagnostic alone does not certify those extra digits.
+
 Calculations scale energies by $`S =\max (T,\lvert \mu \rvert)`$ and rapidities by `sqrt(S)`.
 `nonlinear_residual` is the largest scaled-equation residual divided by
 `max(1,abs(epsilon),abs(k²-mu))` in these dimensionless variables. Its target is
@@ -141,7 +185,7 @@ Calculations scale energies by $`S =\max (T,\lvert \mu \rvert)`$ and rapidities 
 
 Stable shared thermal factors avoid exponentially overflowing expressions.
 Entropy is calculated directly, not by subtracting $`p +e -\mu \,n`$ at low T.
-Native Gauss–Legendre rules, compensated sums, rational scattering kernels, and
+Precision-generic Gauss–Legendre rules, compensated sums, rational scattering kernels, and
 recoverable pivoting solves are shared with existing continuum/Hubbard solvers.
 
 `iteration_limit`, `mesh_limit`, `cutoff_limit`, and `precision_limit` distinguish
