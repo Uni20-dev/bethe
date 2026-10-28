@@ -153,7 +153,7 @@ SU(3)/TB/sine-Gordon dispersions, Haldane–Shastry and Sutherland need Uni20's
 arbitrary-precision scalar family (GMP, MPFR and MPC), but no MPLAPACK.
 Finite-size, zero-temperature and thermal Lieb–Liniger, SU(3) singlet ground
 states, finite XXZ/Hubbard, Gaudin–Yang/Bose–Fermi, q-boson, finite TB, SU(n)
-fermions, the integrable ladder and structure factors additionally require the
+fermions, t–J, the integrable ladder and structure factors additionally require the
 MPLAPACK MPFR provider for LU operations. The [capability inventory](app-capabilities.md)
 records each frontend's precision support, provider requirements and state-family
 restrictions. More arithmetic precision does not expand those state families.
@@ -439,6 +439,8 @@ For projected lattice electrons, [`bethe-tj-pbc`](tj.md) fixes t=1, J=2 and
 takes L with optional `--particles N --sz VALUE`. It supports doped sectors
 with odd populations of both spins, plus every no-hole or fully polarized
 sector. Defaults are N=L and the smallest nonnegative Sz compatible with N.
+Explicit `--precision bits-N` or `digits-N` is supported with the MPLAPACK
+MPFR provider, including all three existing branches and root exports.
 
 ### SU(3)/ULS and spin-1 TB chains
 

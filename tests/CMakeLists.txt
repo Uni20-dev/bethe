@@ -87,6 +87,10 @@ target_link_libraries(bethe_generated_state_scan_tests PRIVATE bethe::bethe TBB:
 bethe_discover_tests(bethe_generated_state_scan_tests)
 
 if(BETHE_HAS_MPREAL)
+  add_executable(bethe_tj_mpfr_tests test_tj_mpfr.cpp)
+  target_link_libraries(bethe_tj_mpfr_tests PRIVATE bethe::bethe TBB::tbb)
+  bethe_discover_tests(bethe_tj_mpfr_tests)
+
   add_executable(bethe_bose_fermi_mpfr_tests test_bose_fermi_mpfr.cpp)
   target_link_libraries(bethe_bose_fermi_mpfr_tests PRIVATE bethe::bethe TBB::tbb)
   bethe_discover_tests(bethe_bose_fermi_mpfr_tests)
@@ -845,6 +849,9 @@ if(BETHE_BUILD_APPS)
     COMMAND "${CMAKE_COMMAND}" "-DPROGRAM=$<TARGET_FILE:bethe-gaudin-yang-pbc>"
       "-DFLOAT128=${BETHE_HAS_FLOAT128}"
       -P "${CMAKE_CURRENT_SOURCE_DIR}/check_gaudin_yang_cli.cmake")
+  add_test(NAME TJ.precision
+    COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_tj_precision.py"
+      "$<TARGET_FILE:bethe-tj-pbc>" "${BETHE_HAS_MPREAL}" "${BETHE_HAS_MPLAPACK_MPREAL}")
   add_test(NAME TJ.cli
     COMMAND "${CMAKE_COMMAND}" "-DPROGRAM=$<TARGET_FILE:bethe-tj-pbc>"
       "-DFLOAT128=${BETHE_HAS_FLOAT128}"
