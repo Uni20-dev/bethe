@@ -3,7 +3,8 @@
 `bethe-haldane-shastry-pbc` evaluates exact finite-ring spectral rules for the
 spin-1/2 antiferromagnetic inverse-chord-square chain. This is not the
 nearest-neighbor XXX model: there are no nonlinear root solves or convergence
-tolerances. Arithmetic supports fp64, long-double and optional fp128.
+tolerances. Arithmetic supports fp64, long-double, optional fp128, and explicit MPFR
+precision with `bits-N` or `digits-N`.
 
 The [worked motif tutorial](tutorials/haldane-shastry.md) plots complete small
 rings and shows how their SU(2) multiplets account for every spin state.
@@ -16,6 +17,42 @@ bethe-haldane-shastry-pbc 12 --levels 10 --precision fp128
 bethe-haldane-shastry-pbc 8 --levels all --format csv
 bethe-haldane-shastry-pbc 6 --motif 3 --spin-content --format json
 ```
+
+## Precision and independent calculations
+
+```sh
+bethe-haldane-shastry-pbc 15 --sz 3/2 --precision digits-100
+bethe-haldane-shastry-pbc 8 --levels all --precision bits-256 --json levels.json
+```
+
+These MPFR calculations require `UNI20_ENABLE_MPREAL=ON`, without MPLAPACK.
+All state labels, energy numerators and level ordering remain exact integers.
+Only the factors involving pi and the reported energies and momenta are
+rounded at the requested precision. Ground-state gaps and zero momenta carry
+that same precision. The site limit, motif budgets and count-overflow rules
+are unchanged; extra bits do not enlarge the enumerated state family.
+
+For C++ callers the inputs are integers, so the numerical precision is explicit:
+
+```cpp
+auto precision = uni20::Precision::bits(256);
+auto ground = bethe::haldane_shastry::ground_levels<uni20::mpreal>(15, precision);
+auto level = bethe::haldane_shastry::evaluate<uni20::mpreal>(8, {1, 3, 6}, precision);
+auto scan = bethe::haldane_shastry::spectrum<uni20::mpreal>(8, precision);
+```
+
+`sector_ground_levels(N, sz, precision)` follows the same contract. Native
+convenience overloads remain available; MPFR requires finite precision even
+when a spectrum budget prevents enumeration. Independent size/sector scans
+can be owned by an [Async observable grid](async-execution.md). Capture labels
+and precision by value and wait on the final operation. The CLI keeps its
+cheap analytic formulas serial; no per-motif task or speedup is implied.
+
+MPFR checks apply the spin Hamiltonian to polarized states, compare the dimer
+singlet against a 512-bit reference, verify accuracy growth at 128/256/333
+bits, and compare complete spectra under independent concurrent precisions.
+The native small-chain ED checks remain an independent test of motif energies,
+translation momenta and sector minima.
 
 ## Normalization
 

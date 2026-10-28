@@ -58,6 +58,35 @@ TEST(CliPrecision, NativeFormatAndNoFallback)
                  std::invalid_argument);
 }
 
+TEST(CliPrecision, ScalarDispatchAndParsing)
+{
+  auto native = []<typename Real>(uni20::Precision p) {
+    static_assert(!uni20::has_runtime_precision_v<Real>);
+    EXPECT_EQ(p, uni20::native_precision<Real>());
+    EXPECT_EQ(cli::parse_scalar<Real>("1.25", p), Real{1.25});
+    return int(p.bit_count());
+  };
+  EXPECT_EQ(cli::dispatch_scalar_precision<cli::ArbitraryPrecision::none>("fp64", native), 53);
+  EXPECT_THROW(cli::dispatch_scalar_precision<cli::ArbitraryPrecision::none>("bits-128", native),
+               std::invalid_argument);
+  EXPECT_THROW(cli::parse_scalar<double>("1", uni20::Precision::bits(128)), std::invalid_argument);
+  EXPECT_THROW(cli::parse_scalar<double>("1", uni20::Precision::exact()), std::invalid_argument);
+  auto real = []<typename Real>(uni20::Precision p) {
+    EXPECT_EQ(p.bit_count(), 333);
+    auto value = cli::parse_scalar<Real>("1.00000000000000000000000000000000000000000000000001", p);
+    EXPECT_GT(value, Real{1});
+    if constexpr (uni20::has_runtime_precision_v<Real>) EXPECT_EQ(value.precision(), p);
+    return 0;
+  };
+#if UNI20_HAS_MPREAL
+  EXPECT_EQ(cli::dispatch_scalar_precision<cli::ArbitraryPrecision::real>("digits-100", real), 0);
+  EXPECT_THROW(cli::parse_scalar<uni20::mpreal>("1", uni20::Precision::exact()), std::invalid_argument);
+#else
+  EXPECT_THROW(cli::dispatch_scalar_precision<cli::ArbitraryPrecision::real>("digits-100", real),
+               std::invalid_argument);
+#endif
+}
+
 #if UNI20_HAS_MPREAL
 TEST(CliPrecision, DecimalAndBinaryWorkingPrecision)
 {

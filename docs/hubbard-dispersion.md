@@ -30,7 +30,18 @@ every selected branch.
 
 Use `--threads N` to evaluate independent grid points concurrently (default 1),
 for either half-filled or doped backgrounds. Rows and numerical diagnostics keep
-their serial order; see [parallel observable grids](command-line.md#parallel-observable-grids).
+their serial order: branch order first, then momentum. Selected branches share
+one bounded work window, so a later branch can start before all queries from
+the previous one have finished. This also permits overlap between branches
+with `--momentum` and `--branch all`; a single-branch single-point request has
+no query parallelism. See [parallel observable grids](command-line.md#parallel-observable-grids).
+
+The doped frontend prepares its background once and shares the meshes across
+all queries. Background preparation remains sequential and finishes before
+the report validates momenta and opens output files. C++ clients can instead
+submit background preparation and several dependent curves together; see the
+[Async Hubbard example](../examples/async_hubbard_background.cpp) and
+[shared-background contract](async-execution.md#shared-backgrounds).
 
 Use `--help` or $`-h`$ for Uni20-rendered options and examples, and `--references`
 for the literature and its applicability. `--version` and `--build-info`

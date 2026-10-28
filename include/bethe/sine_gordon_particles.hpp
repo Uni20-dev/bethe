@@ -23,10 +23,13 @@ struct Particle
 
 /// Infinite-volume particle spectrum. M is the physical soliton mass;
 /// p=beta^2/(8*pi-beta^2), velocity=hbar=1. No lattice momentum folding.
+/// Runtime-precision parameters and query momenta must share finite precision.
 template <uni20::Real Real> class ParticleSpectrum {
   public:
-    ParticleSpectrum(Real mass, Real p) : mass_(mass), p_(p)
+    ParticleSpectrum(Real mass, Real p)
+        : zero_(bethe::detail::precision_zero(mass)), pi_(bethe::detail::pi_like(zero_)), mass_(mass), p_(p)
     {
+      bethe::detail::require_same_precision(p, zero_);
       if (!uni20::isfinite(mass) || mass <= Real{0} || !uni20::isfinite(p) || p <= Real{0})
         throw std::invalid_argument("sine-Gordon particles require finite M>0 and p>0");
     }
@@ -47,8 +50,7 @@ template <uni20::Real Real> class ParticleSpectrum {
     {
       if (!exists(particle)) throw std::invalid_argument("particle absent from stable sine-Gordon spectrum");
       if (particle.kind != ParticleKind::breather) return mass_;
-      Real const pi = Real{4} * std::atan(Real{1});
-      Real const ratio = Real{2} * std::sin((Real(particle.index) * p_) * (pi / Real{2}));
+      Real const ratio = Real{2} * uni20::math::sin((Real(particle.index) * p_) * (pi_ / Real{2}));
       Real const value = mass_ * ratio;
       if (!uni20::isfinite(value)) throw std::overflow_error("breather mass exceeds scalar range");
       if (value == Real{0}) throw std::underflow_error("positive breather mass underflows scalar range");
@@ -60,7 +62,7 @@ template <uni20::Real Real> class ParticleSpectrum {
     Real threshold(std::span<Particle const> particles, Real momentum) const
     {
       if (particles.size() < 2) throw std::invalid_argument("a continuum needs at least two particles");
-      bethe::detail::CompensatedSum<Real> sum;
+      bethe::detail::CompensatedSum<Real> sum(zero_);
       for (auto particle : particles)
         sum.add(mass(particle));
       return relativistic_energy(sum.value(), momentum);
@@ -79,13 +81,14 @@ template <uni20::Real Real> class ParticleSpectrum {
     }
 
   private:
-    static Real relativistic_energy(Real mass, Real momentum)
+    Real relativistic_energy(Real mass, Real momentum) const
     {
+      bethe::detail::require_same_precision(momentum, zero_);
       if (!uni20::isfinite(momentum)) throw std::invalid_argument("momentum must be finite");
-      Real const value = std::hypot(mass, momentum);
+      Real const value = uni20::math::hypot(mass, momentum);
       if (!uni20::isfinite(value)) throw std::overflow_error("relativistic energy exceeds scalar range");
       return value;
     }
-    Real mass_, p_;
+    Real zero_, pi_, mass_, p_;
 };
 } // namespace bethe::sine_gordon
