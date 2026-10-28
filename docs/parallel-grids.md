@@ -799,3 +799,74 @@ One-worker Async overhead is small here; small or analytic-only requests need
 not benefit. These shared-workstation measurements establish useful scaling
 for these inputs, not a universal performance guarantee. Numerical kernels,
 physical state families and precision support are unchanged.
+
+## Nested-model parameter sweeps
+
+The [nested sweep example](async-execution.md#owning-nested-model-requests)
+compares direct scalar calls with owning Async grids for TB sizes, SU(N)
+repulsive couplings and t–J balanced odd fillings. Each complete state owns its
+roots and diagnostics; the coupled scalar iterations remain sequential.
+
+Build `bethe-async-nested-sweeps-example` with `BETHE_BUILD_EXAMPLES=ON` and
+run the documented `MODEL SIZE POINTS THREADS PRECISION` commands with zero
+threads for the direct control, then one/four/eight threads for Async. Set
+`OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1` to prevent nested oversubscription.
+Compare all CSV rows after the leading timing comment lines, including nested
+roots, labels, residuals, convergence, requested/reached coupling and counters.
+Internal timing includes the scheduler and ordered collection, excluding
+printing. Whole-process timing includes printing; the retained output means
+memory grows with the curve even though admission is bounded at 32 states.
+
+Three-repeat whole-process medians follow, including printing all state fields.
+The machine was a shared Intel Core i7-12700KF with GCC 13.3 Release `-O3`,
+oneTBB 2022.3 and Uni20 `04163b9b`; no compiler jobs ran during measurement.
+Worker order was reversed on the second repeat, with OS-default affinity.
+The native configuration disables MPLAPACK and uses normal Uni20 fallback
+dispatch; the binary128 configuration enables the Release MPLAPACK 3.0 provider.
+No backend is forced by the model or example. All times are seconds; CPU is
+user plus system, and peak RSS is the maximum over all repeats/worker counts.
+
+| Model | Arithmetic | SIZE | Points | Direct | Async 1 | Async 4 | Async 8 | CPU direct / 8 | Peak RSS, MiB |
+| --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| TB | binary64 | 128 | 449 | 13.61 | 13.63 | 3.56 | 1.94 | 13.60 / 14.57 | 46.37 |
+| TB | 80-bit extended | 64 | 193 | 8.73 | 8.72 | 2.31 | 1.26 | 8.73 / 8.88 | 17.83 |
+| TB | binary128 | 32 | 81 | 9.33 | 9.32 | 2.49 | 1.34 | 9.33 / 9.56 | 8.43 |
+| SU(3) fermions | binary64 | 15 | 4097 | 8.17 | 8.16 | 2.13 | 1.11 | 8.16 / 8.42 | 14.82 |
+| SU(3) fermions | 80-bit extended | 9 | 2049 | 8.64 | 8.66 | 2.26 | 1.21 | 8.63 / 9.00 | 10.44 |
+| SU(3) fermions | binary128 | 5 | 513 | 9.21 | 9.22 | 2.35 | 1.23 | 9.20 / 9.72 | 6.85 |
+| t–J | binary64 | 384 | 96 | 1.59 | 1.58 | 0.41 | 0.24 | 1.59 / 1.73 | 19.24 |
+| t–J | 80-bit extended | 256 | 64 | 4.53 | 4.55 | 1.18 | 0.61 | 4.53 / 4.72 | 13.77 |
+| t–J | binary128 | 128 | 32 | 5.07 | 5.03 | 1.31 | 0.79 | 5.07 / 5.66 | 7.86 |
+
+The TB curves cover even sizes 128–1024, 64–448 and 32–192 respectively.
+The SU(3) curves have three populations of 15, 9 or 5 at total density one,
+with c from 1/2 to 4. All TB and SU(3) points converge, as do the two wider
+precision t–J curves. These are library sweep benchmarks: the single-request
+frontends do not gain a sweep option or parallel Newton iterations.
+
+All 90,888 complete state rows from the 108 timed processes match their direct
+counterparts exactly, including unsuccessful iterates. Eight workers give
+6.4–7.5x wall-time speedup here, with roughly 2–12% more CPU time. One-worker
+overhead is small on these curves. Shorter curves, different population ranges,
+providers and shared-machine load can behave differently; the binary64 t–J
+curve is substantially shorter than the others.
+
+The 384-site binary64 t–J sweep returns 94 converged states and two failures,
+at balanced populations (1,1) and (31,31). Both fail in direct execution too;
+the table measures all 96 requests, without dropping failed rows or changing
+controls. A larger 512-site trial returned 116 converged states and 12 failures
+at balanced populations n=1,5,29,31,...,47. At n=37 and 39 the solver exhausts
+its default 10,000-update budget; the others report a stalled line search.
+Those failed iterates are not physical energies. The two long runs dominate
+that trial's cost, so it is not used for the repeated throughput table.
+All 128 full states, including the 12 failures, agree exactly between direct
+and eight-worker execution. That single comparison took 135.44 and 66.27 s
+respectively (135.42 and 136.19 CPU seconds). Two slow requests limit the gain
+despite eight available workers; this is not an eight-worker scaling estimate
+from repeated successful curves.
+
+The 512-site two-electron CLI probe also stalls in 80-bit extended precision;
+binary128 exhausts a 50-update probe near the same residual, about 0.159.
+This leaves a seed/Newton convergence investigation, not evidence that more
+workers or arithmetic bits cure the numerical problem. See the
+[t–J solver limitations and reproducer](tj.md#library-and-numerical-contract).

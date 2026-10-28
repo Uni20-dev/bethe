@@ -404,6 +404,8 @@ The [ASEP example](asep.md#reusing-a-seed-across-rate-queries) compares independ
 rate solves with queries sharing one TASEP seed, using direct or Async execution.
 The [TASEP/XYZ sweep example](async-execution.md#independent-tasep-and-finite-xyz-solves)
 shows independent complex-root solves with owned requests and bounded admission.
+The [nested sweep example](async-execution.md#owning-nested-model-requests) demonstrates
+independent TB sizes, SU(N) couplings and t–J fillings with complete diagnostics.
 
 ### Where code belongs
 

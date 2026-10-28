@@ -285,6 +285,55 @@ and XYZ Newton steps are coupled and remain sequential. For a TASEP rate-only
 curve, reuse a unit-rate result and rescale its eigenvalue/gap; the roots do not
 depend on the positive jump rate.
 
+## Owning nested-model requests
+
+The [nested sweep example](../examples/async_nested_sweeps.cpp) composes
+independent TB, SU(N) fermion and t–J solves through the ordinary owning grid.
+Each request retains its controls and inputs, including component-population
+vectors. Its Newton iterations and coupling continuation stay sequential.
+No new state family or arbitrary-precision support is introduced.
+
+From a build directory configured with `BETHE_BUILD_EXAMPLES=ON`:
+
+```sh
+cmake --build . --target bethe-async-nested-sweeps-example -j2
+OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 \
+  ./examples/bethe-async-nested-sweeps-example tb 32 33 4 fp64
+OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 \
+  ./examples/bethe-async-nested-sweeps-example sun 5 129 4 long-double
+OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 \
+  ./examples/bethe-async-nested-sweeps-example tj 64 16 4 fp64
+```
+
+Arguments are `MODEL SIZE POINTS THREADS PRECISION`. Their physical meaning is:
+
+| Model | SIZE | Sweep |
+| --- | --- | --- |
+| `tb` | First even site count, at least 4 | Sizes `SIZE, SIZE+2, ...`, last at most 10,000 |
+| `sun` | Odd positive population of each of three components | Coupling c from 1/2 to 4 at circumference `3*SIZE`, hence total density one; one point uses c=1 |
+| `tj` | Site count, at least 3 | Balanced odd spin populations 1,3,...,`2*POINTS-1`, requiring their sum not to exceed SIZE |
+
+Zero threads uses direct scalar calls; a positive count uses Async, capped at
+the smaller of 32 and the number of points. Precisions are `fp64`, `long-double`
+and configured `fp128`. These are fixed-precision native paths. The single-request
+frontends remain serial.
+
+The example waits on the final grid result and prints complete states afterward.
+Collection is ordered on the scheduler; at most 32 states are active or awaiting
+collection. Collected output is retained, so its memory grows with the sweep.
+CSV sequence cells use brackets/semicolons and complex entries use `real:imag`;
+half-integer quantum labels are decimal. The example returns 2 if any numerical
+solve fails. Failed TB/t–J rows retain their final-iterate estimates. A partial
+SU(N) result retains the **last reached coupling** and its energy; it is not an
+energy at the requested coupling. An absent energy remains an empty cell.
+
+Tests compose all three models on one scheduler, including deferred execution
+after submission-local vectors disappear and one/four-worker scheduling. They
+compare every field against direct calls, including free/XXX limits, population
+permutations, spin reversal, numerical budgets and partial continuation. An
+unsupported SU(N) shell fails its grid without cancelling the other two.
+See [parallel-grid measurements](parallel-grids.md#nested-model-parameter-sweeps).
+
 ## Matched pipeline benchmark
 
 With tests enabled, build the opt-in comparison from a configured build directory:
