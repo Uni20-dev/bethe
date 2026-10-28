@@ -44,7 +44,7 @@ independent numerical or serial/concurrent validation.
 | `xxz-dispersion` | Immutable band with cheap queries; bulk preparation remains serial | Native only | Theta constants await [Uni20 PR #103](https://github.com/Uni20-dev/uni20/pull/103); finite quadrature is proposed in [Uni20 PR #104](https://github.com/Uni20-dev/uni20/pull/104), with model integration still required. Cheap band queries stay serial |
 | `xxz-qg-obc` | Shared continuous regular-root scans; owning regular/free-sector queries validated in pending PR #26 | Native only on merged baseline; [PR #26](https://github.com/Uni20-dev/bethe/pull/26) adds MPFR scalars, no MPLAPACK | Integrate reviewed critical regular-root and free-endpoint precision; individual cheap free blocks stay serial |
 | `sine-gordon-bethe-yang` | Serial CLI; pending [PR #27](https://github.com/Uni20-dev/bethe/pull/27) adds bounded independent level scans | Native only | Integrate reviewed concurrency; MPFR phase integration needs the proposed [Uni20 quadrature](https://github.com/Uni20-dev/uni20/pull/104) and a model-level precision audit |
-| `biquadratic-obc` | Sector-specific solver/composition audit pending | Native only | Treat real, complex and singular sectors separately; massive quantum-group Newton precision awaits PR #9 |
+| `biquadratic-obc` | Real-root scans already continuous; pending [PR #35](https://github.com/Uni20-dev/bethe/pull/35) adds owned continuous bound-cluster candidates and independent AF sector minima | Native only | Preserve enumeration/ranking and first-failure diagnostics; selected states and dependent Q-system/singlet paths stay direct. Massive Newton precision awaits PR #9 |
 | `lee-yang-vacuum`, `lee-yang-excited`, `sine-gordon-vacuum`, `sine-gordon-excited` | Serial baseline; pending [PR #28](https://github.com/Uni20-dev/bethe/pull/28) validates owning parameter sweeps for all four and optional vacuum/excited overlap in the excited-state CLIs | Native only | Integrate reviewed composition; carry explicit precision through Lee–Yang controls/constants/reductions and sine-Gordon complex kernels/quadrature. Coupled iterations remain sequential |
 | `kondo-response` | Pending #29: bounded field scans and owning Async queries; single-point/default one-worker requests stay direct | Native only | Explicit-precision scaled positive-real Gamma, Euler-series tails and quadrature |
 | `potts-pbc` | Pending [PR #30](https://github.com/Uni20-dev/bethe/pull/30): bounded charged-momentum scans and owning Async levels after one vacuum solve | Native only | Auxiliary real-root XXZ precision awaits PR #15; audit Potts constants, twists, labels and failure values. No complex-function dependency |
@@ -244,3 +244,18 @@ benchmark state rows converge and match direct calls. Reuse is the primary gain
 (roughly 90–270x on these many-parameter curves); subsequent query parallelism
 saves only hundredths of a second. Fixed-sector scans and native precision
 support remain unchanged. Catalogue/output retention costs are documented.
+
+Pending #35 extends the biquadratic frontend's `--threads` to six ferromagnetic
+bound-cluster families and AF module minima. A shared CLI adapter owns its
+sequential label generator and per-candidate requests, uses existing continuous
+runners, and waits on the final Async result before ranking or output. Numerical
+families, budgets, ordering and first-failure rows are preserved; all candidates
+are still retained before ranking. Native/wide/sanitizer checks pass 18/18/18,
+including held-peer failure completion and complete CLI comparisons. Fresh-main
+comparison covers 135 requests / 3,192 rows; standalone long-double bound-pair
+fields have documented rounding-scale differences, while worker-count outputs
+match exactly. All 45 substantial benchmark runs converge and their 6,309,585
+exported rows match main and serial output. Whole-frontend eight-worker scaling
+is 5.9–7.4x, with unchanged serial cost. Native precision support is unchanged;
+no MPFR claim is made. Single-state and dependent Q-system/singlet modes remain
+serial; cheap scans do not justify changing the one-worker default.
