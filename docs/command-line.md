@@ -122,7 +122,7 @@ All frontends support typed tables and file exports; see the
 
 The arbitrary-precision choices currently apply to `bethe-xxx-pbc`, `bethe-xxx-obc`,
 `bethe-lieb-liniger-pbc` and `bethe-lieb-liniger-obc` (all modes),
-`bethe-lieb-liniger-dispersion`,
+`bethe-lieb-liniger-dispersion`, `bethe-sun-fermions-pbc`,
 the finite-ring `bethe-xxx-structure-factor`, `bethe-richardson` and
 `bethe-central-spin`, in an
 [enabled build](building.md#enable-arbitrary-precision):
@@ -141,7 +141,7 @@ bethe-central-spin --couplings 1,0.7,0.3 --field 1 --sz 0 --precision bits-256
 
 XXX roots, Richardson pairing and central spin need Uni20's
 arbitrary-precision scalar family (GMP, MPFR and MPC), but no MPLAPACK.
-Finite-size and zero-temperature thermodynamic Lieb–Liniger, and structure factors, additionally require the MPLAPACK
+Finite-size and zero-temperature thermodynamic Lieb–Liniger, SU(n) fermions, and structure factors additionally require the MPLAPACK
 MPFR provider for LU operations. Other frontends still support native precisions only, including
 Lieb–Liniger thermal calculations. More precision does not expand the
 supported state family: the excitation scan still excludes strings and infinite roots.

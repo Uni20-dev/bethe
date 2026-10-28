@@ -58,6 +58,38 @@ frontend with `--sz`. This frontend instead takes an explicit population
 list. It does not implement Bose–Fermi mixtures, attraction, excitations,
 open ends, unequal masses or unequal pair couplings.
 
+## Explicit arithmetic precision
+
+With the MPLAPACK MPFR provider configured, both the current interacting branch
+and the free limits accept `--precision bits-N` or `digits-N`:
+
+```sh
+bethe-sun-fermions-pbc --populations 1,1,1 --length 1 --c 1 --precision bits-256 --roots
+```
+
+The library requires finite precision in the options and matching precision in
+length, coupling and residual tolerance. Constants, central zero roots, nested
+Newton solves, reductions and failure diagnostics keep that precision. Exact
+or mixed-precision inputs require explicit conversion; no ambient MPFR setting
+is changed. The continuation and iteration budgets retain their existing
+meaning. An incomplete solve still reports only its last accepted coupling,
+which can differ from the requested one.
+
+```cpp
+using R = uni20::mpreal;
+auto p = uni20::Precision::bits(128);
+bethe::su_fermions::SolverOptions<R> controls(p);
+std::vector<std::size_t> populations{1,1,1};
+auto state = bethe::su_fermions::ground_state<R>(populations, R(1,p), R(1,p), controls);
+```
+
+Independent checks use the two-body contact jump condition at c=pi, ell=1
+(energy pi²/2), evaluated at higher precision, and the Lieb–Liniger reduction
+with one particle per component. The original complex nested equations are
+checked separately. Independent parameter requests can use owning
+[Async observable grids](async-execution.md); continuation within each solve
+remains sequential. The single-request CLI stays serial.
+
 ## Nested Bethe equations
 
 The original multicomponent solution is due to
