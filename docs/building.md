@@ -402,6 +402,8 @@ using `mpreal` when its LU provider is configured. Examples are checked
 in CI and are not installed with the command-line tools.
 The [ASEP example](asep.md#reusing-a-seed-across-rate-queries) compares independent
 rate solves with queries sharing one TASEP seed, using direct or Async execution.
+The [TASEP/XYZ sweep example](async-execution.md#independent-tasep-and-finite-xyz-solves)
+shows independent complex-root solves with owned requests and bounded admission.
 
 ### Where code belongs
 

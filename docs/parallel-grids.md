@@ -745,3 +745,57 @@ be summed as additional CPU work. Timing distinguishes that one-time cost from
 the rate queries. An entirely analytic curve should use direct analytic calls;
 preparing a TASEP state for it would be unnecessary. The generic grid can also
 compose independent geometries or fillings, where each request owns its seed.
+
+## TASEP and finite XYZ parameter sweeps
+
+The [complex-root sweep example](async-execution.md#independent-tasep-and-finite-xyz-solves)
+compares direct scalar calls with the same calls submitted through the owning
+grid. TASEP varies the filling from one particle to half filling, without
+particle-hole duplicates; XYZ varies eta across [1/5,4/5] at t=3/4. These are
+independent requests. Their coupled root iterations remain sequential, and
+the single-request CLIs remain serial.
+
+From a build directory configured with examples enabled:
+
+```sh
+cmake --build . --target bethe-async-complex-sweeps-example -j2
+OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 \
+  ./examples/bethe-async-complex-sweeps-example tasep 256 128 0 fp64 > direct.csv
+OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 \
+  ./examples/bethe-async-complex-sweeps-example tasep 256 128 8 fp64 > async.csv
+```
+
+The example's leading comment lines contain timings and worker counts. Compare
+the remaining CSV header and **all** rows, including complex roots, quantum
+numbers, residuals, statuses and work counters, before interpreting speedup.
+The internal timing includes the scheduler and ordered collection, but excludes
+printing; external process timing includes both. The grid admits at most 32
+active or uncollected states. The example retains collected states for output,
+so total memory still grows with the number and size of results.
+
+### Measurement on 28 October 2026
+
+These are whole-process wall medians over three repeats on a shared Intel
+Core i7-12700KF workstation, GCC 13.3 Release (`-O3`, no fast-math), oneTBB
+2022.3 and Uni20 `04163b9b`. Binary128 uses MPLAPACK 3.0.0 built in Release
+mode. BLAS/OpenMP each use one thread; no compilation overlaps the timings.
+Worker order is reversed in the middle repeat, with OS-default affinity.
+Here `long-double` is x86 binary80 (64 significand bits); these are native
+fixed-precision measurements, not MPFR benchmarks.
+
+| Model / precision | Sites | Points | Direct (s) | Async 1 (s) | Async 4 (s) | Async 8 (s) | CPU direct / 8 (s) |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| TASEP / binary64 | 256 | 128 | 3.05 | 3.07 | 0.81 | 0.42 | 3.05 / 3.23 |
+| TASEP / binary80 | 256 | 128 | 12.53 | 12.54 | 3.24 | 1.65 | 12.52 / 12.87 |
+| TASEP / binary128 | 128 | 64 | 16.21 | 16.18 | 4.20 | 2.19 | 16.20 / 16.80 |
+| XYZ / binary64 | 128 | 1025 | 8.98 | 9.03 | 2.33 | 1.18 | 8.97 / 9.30 |
+| XYZ / binary80 | 64 | 513 | 9.71 | 9.72 | 2.50 | 1.30 | 9.70 / 10.14 |
+| XYZ / binary128 | 32 | 129 | 8.83 | 8.86 | 2.24 | 1.19 | 8.82 / 9.22 |
+
+All **23,844 complete state rows in 72 processes** match byte for byte, and
+every solve converges. Eight-worker speedups range from 7.3 to 7.6; total CPU
+work rises by about 3–6%. Peak RSS across these workloads is 14.42 MiB.
+One-worker Async overhead is small here; small or analytic-only requests need
+not benefit. These shared-workstation measurements establish useful scaling
+for these inputs, not a universal performance guarantee. Numerical kernels,
+physical state families and precision support are unchanged.
