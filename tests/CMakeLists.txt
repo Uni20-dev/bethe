@@ -178,7 +178,7 @@ target_link_libraries(bethe_tb_dispersion_tests PRIVATE bethe::bethe)
 bethe_discover_tests(bethe_tb_dispersion_tests)
 
 add_executable(bethe_potts_tests test_potts.cpp)
-target_link_libraries(bethe_potts_tests PRIVATE bethe::bethe)
+target_link_libraries(bethe_potts_tests PRIVATE bethe::bethe TBB::tbb)
 bethe_discover_tests(bethe_potts_tests)
 
 foreach(module IN ITEMS heisenberg sectors open excitations xxz xxz_open xxz_open_massive xxz_open_negative xxz_periodic_negative xxz_negative xxz_polynomial xxz_open_qsystem xxz_open_two_string xxz_odd_continuation xxz_odd_bounds xxz_wronskian xxz_odd_sectors xxz_regularity xxz_spin_helix xxz_phantom xxz_phantom_wave xxz_phantom_check xxz_coordinate_wave polynomial_roots hubbard hubbard_open hubbard_thermo hubbard_doped lieb_liniger su3 gaudin_yang tj takhtajan_babujian temperley_lieb biquadratic_ferromagnetic biquadratic_bound_pair biquadratic_bound_triple biquadratic_scattering richardson central_spin su_fermions ladder haldane_shastry sutherland support)

@@ -63,6 +63,13 @@ collection releases their slots. The collector runs serially on the scheduler.
 The synchronous adapter instead collects on its calling thread; cooperative
 waits may execute a kernel there. See [parallel grids](parallel-grids.md).
 
+The [Potts frontend](potts.md) uses this grid for its charged momenta after
+one vacuum solve. Charge conjugation reuses each result for both charge rows.
+Independent library calls to `potts::ground_state` and `charged_one_hole` can
+also be captured as owning requests in an Async grid: retain the full returned
+state, including auxiliary roots, labels, residual and convergence diagnostics.
+The root iterations themselves stay sequential.
+
 ## Ownership, dependencies and cancellation
 
 For curves that depend on a prepared model, see [shared backgrounds](#shared-backgrounds)

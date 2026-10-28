@@ -148,3 +148,73 @@ at p=5.412109375 with the default numerical controls. That row, its missing
 energy, and the partial outcome were identical at every worker count; binary64
 and binary128 completed this grid. Parallelism preserves these numerical
 diagnostics rather than changing the tolerance or silently dropping points.
+
+## Potts momentum scans
+
+The periodic three-state Potts frontend prepares its vacuum reference once,
+then evaluates independent charged momenta through the bounded grid:
+
+```sh
+OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 \
+  bethe-potts-pbc 192 --precision fp64 --threads 8 \
+  --no-retain --format csv --no-preamble > potts.csv
+```
+
+Each momentum owns a complete auxiliary XXZ solve. Its charge-conjugate rows
+reuse that solve, so a full L-site curve performs L charged solves and emits
+2L+1 rows including the vacuum. Rows retain increasing momentum order and the
+original +1/-1 charge order. Each root iteration remains sequential. The
+one-worker default, a selected single momentum and vacuum-only calculations
+use direct serial evaluation.
+
+At most 128 charged states are active or awaiting collection; requested
+concurrency is also capped by the selected momentum count. Root vectors and
+iteration scratch scale with system size, so this is a bound on outstanding
+states, not a fixed byte budget. With retention disabled, delivered rows are
+discarded. Numerical failures and unavailable reference gaps remain rows;
+unexpected exceptions use the shared grid and output completion contracts.
+CPU metadata includes the vacuum solve and complete ordered grid with row output.
+
+### Whole-process measurements
+
+Measurements on 28 October 2026 use an Intel Core i7-12700KF, GCC 13.3 Release,
+Uni20 `04163b9b`, oneTBB 2022.3 and one BLAS/OpenMP thread. The matched serial
+baseline is main `46b636e`; native and wide builds share their dependency and
+compiler configuration. Binary80 means this machine's 80-bit extended
+`long double`; binary128 is available through the MPLAPACK-enabled build.
+These Potts solves use scalar root iterations, not matrix factorizations.
+
+The command above was repeated with 192 binary64 sites, 96 binary80 sites
+(`--precision long-double`) and 48 binary128 sites (`--precision fp128`).
+Numerical controls were unchanged: at most 10000 sweeps per solve, residual
+tolerance 32 epsilon. Whole-process wall/CPU measurements include preparation,
+all root solves, formatting and CSV output. Each configuration has three
+repeats, reversing execution order on the middle repeat. The baseline omits
+`--threads`; the candidate uses 1, 4 or 8.
+
+| Arithmetic | Sites | Baseline serial (s) | New serial (s) | 4 workers (s) | 8 workers (s) |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| binary64 | 192 | 12.76 | 12.74 | 3.30 | 1.72 |
+| binary80 | 96 | 11.26 | 11.28 | 2.93 | 1.53 |
+| binary128 | 48 | 25.20 | 25.19 | 6.69 | 3.78 |
+
+Eight-worker speedups relative to the new serial path are 7.4x, 7.4x and 6.7x.
+CPU work rises modestly; memory includes the scheduler and concurrent root states:
+
+| Arithmetic | Serial CPU (s) | 4-worker CPU (s) | 8-worker CPU (s) | Peak RSS serial / 4 / 8 (MiB) |
+| --- | ---: | ---: | ---: | ---: |
+| binary64 | 12.74 | 12.99 | 13.15 | 4.50 / 5.00 / 5.00 |
+| binary80 | 11.27 | 11.45 | 11.60 | 4.69 / 5.00 / 5.14 |
+| binary128 | 25.18 | 25.70 | 26.34 | 4.82 / 5.15 / 5.16 |
+
+All 8,100 rows from the 36 timed processes match the baseline CSV byte for byte
+and report convergence. Separate baseline comparisons cover 33 cases across
+the three formats, including failed solves, missing vacuum references and
+selected charges/momenta. Library tests compare complete returned states,
+including roots and labels, under deferred and one/four-worker scheduling.
+
+The serial vacuum solve, ordered collection and unequal momentum costs limit
+scaling. These are shared-desktop measurements without CPU affinity, not an
+isolated scaling experiment. The change neither enlarges the selected physical
+state family nor adds arbitrary precision. Explicit MPFR requires a separate
+audit of the auxiliary XXZ solver, model constants, twists and diagnostics.

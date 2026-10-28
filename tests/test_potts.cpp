@@ -1,14 +1,70 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Copyright (C) 2026 Ian McCulloch
 #include "test_support.hpp"
+#include <bethe/observable_grid.hpp>
 #include <bethe/potts.hpp>
 #include <complex>
+#include <tuple>
+#include <uni20/async/tbb_scheduler.hpp>
 #include <uni20/linalg/ops/self_adjoint_eigh.hpp>
 
 namespace
 {
 template <typename Real> class Potts : public ::testing::Test {};
 TYPED_TEST_SUITE(Potts, test_support::RealTypes, test_support::PrecisionNames);
+
+TYPED_TEST(Potts, OwningAsyncLevelsRetainRootsAndFailures)
+{
+  using R = TypeParam;
+  using State = bethe::potts::State<R>;
+  using namespace uni20::async;
+  struct Request
+  {
+      std::size_t sites, momentum;
+      int charge;
+      bethe::SolverOptions<R> options{};
+  };
+  std::vector<Request> requests{{4, 0, 0}, {3, 1, 1}, {4, 2, -1}, {4, 1, 1}};
+  requests.back().options.max_iterations = 0;
+  auto evaluate = [requests](std::size_t i) {
+    auto const& r = requests[i];
+    return r.charge == 0 ? bethe::potts::ground_state<R>(r.sites, r.options)
+                         : bethe::potts::charged_one_hole<R>(r.sites, r.charge, r.momentum, r.options);
+  };
+  std::vector<State> reference;
+  for (std::size_t i = 0; i < requests.size(); ++i)
+    reference.push_back(evaluate(i));
+  for (std::size_t i = 0; i + 1 < requests.size(); ++i)
+    ASSERT_TRUE(reference[i].converged);
+  ASSERT_FALSE(reference.back().converged);
+  auto fields = [](State const& s) {
+    return std::tie(s.energy, s.momentum, s.residual_norm, s.sites, s.momentum_index, s.iterations, s.charge,
+                    s.converged, s.auxiliary_roots, s.auxiliary_numbers, s.auxiliary_twist);
+  };
+  auto check = [&](IAsyncScheduler& scheduler) {
+    std::vector<State> actual;
+    auto completion = [&] {
+      auto owned = evaluate;
+      return bethe::evaluate_observable_grid_async(requests.size(), std::move(owned),
+                                                   [&](std::size_t i, State state) {
+                                                     EXPECT_EQ(i, actual.size());
+                                                     actual.push_back(std::move(state));
+                                                   },
+                                                   {.scheduler = &scheduler, .max_in_flight = 2});
+    }();
+    EXPECT_EQ(completion.get_wait(scheduler), requests.size());
+    ASSERT_EQ(actual.size(), reference.size());
+    for (std::size_t i = 0; i < actual.size(); ++i)
+      EXPECT_TRUE(fields(actual[i]) == fields(reference[i])) << i;
+  };
+  DebugScheduler deferred({.order = DebugSchedulerOrder::reverse});
+  check(deferred);
+  for (int workers : {1, 4})
+  {
+    TbbScheduler scheduler(workers);
+    check(scheduler);
+  }
+}
 
 TYPED_TEST(Potts, NativePrecisionClockHamiltonianReferences)
 {
