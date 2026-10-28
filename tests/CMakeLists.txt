@@ -111,6 +111,10 @@ if(BETHE_HAS_MPREAL)
   target_link_libraries(bethe_su3_mpfr_tests PRIVATE bethe::bethe TBB::tbb)
   bethe_discover_tests(bethe_su3_mpfr_tests)
 
+  add_executable(bethe_ladder_mpfr_tests test_ladder_mpfr.cpp)
+  target_link_libraries(bethe_ladder_mpfr_tests PRIVATE bethe::bethe TBB::tbb)
+  bethe_discover_tests(bethe_ladder_mpfr_tests)
+
   add_executable(bethe_root_solver_mpfr_tests test_root_solver_mpfr.cpp)
   target_link_libraries(bethe_root_solver_mpfr_tests PRIVATE bethe::bethe TBB::tbb)
   bethe_discover_tests(bethe_root_solver_mpfr_tests)
@@ -832,6 +836,11 @@ if(BETHE_BUILD_APPS)
     COMMAND "${CMAKE_COMMAND}" "-DPROGRAM=$<TARGET_FILE:bethe-biquadratic-obc>"
       "-DFLOAT128=${BETHE_HAS_FLOAT128}"
       -P "${CMAKE_CURRENT_SOURCE_DIR}/check_biquadratic_cli.cmake")
+  if(Python3_Interpreter_FOUND)
+    add_test(NAME Ladder.precision
+      COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_ladder_precision.py"
+        "$<TARGET_FILE:bethe-ladder-pbc>" "${BETHE_HAS_MPREAL}" "${BETHE_HAS_MPLAPACK_MPREAL}")
+  endif()
   add_test(NAME Ladder.cli
     COMMAND "${CMAKE_COMMAND}" "-DPROGRAM=$<TARGET_FILE:bethe-ladder-pbc>"
       "-DFLOAT128=${BETHE_HAS_FLOAT128}"

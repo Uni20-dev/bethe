@@ -286,6 +286,38 @@ failures, parsing, formatting and generated literature citations are also
 checked. See [the centralized bibliography](../CITATIONS.md#wang-1999).
 
 
+## Explicit precision
+
+`bethe-ladder-pbc` accepts `--precision bits-N` or `digits-N` with the configured
+MPLAPACK MPFR provider, in addition to its native scalar formats:
+
+```sh
+bethe-ladder-pbc 6 --rung 0 --singlets 4 --precision bits-256 --roots
+bethe-ladder-pbc 6 --rung 0 --singlets 4 --sz 1 --field 1 --precision digits-80
+```
+
+For library calls construct `SolverOptions<uni20::mpreal>` at a finite
+`uni20::Precision` and create couplings, fields and custom tolerances at that
+same precision. Omitting the field uses a zero at the solver's precision.
+This also applies to `PreparedSectors<uni20::mpreal>`: its controls, branches
+and all subsequent queries share one explicit precision. Copies own immutable
+prepared data; a query with mismatched, exact or unset scalar inputs is rejected.
+Different preparations can use different precisions on one Async scheduler.
+
+More arithmetic bits do not enlarge the scanned branch family or guarantee
+Newton convergence. Branch and iteration budgets retain the same whole-scan
+meaning. Partial scans keep candidate states and diagnostics; an analytic
+product ground state can still be certified after an incomplete preparation.
+Product paths and zero-branch scans work without an MPFR LU provider in the
+library; the general frontend requires that provider.
+
+Independent 768-bit algebraic references check accuracy growth through 256 bits,
+including the six-rung descendant minimum $`-1/2-\sqrt{5}`$ at zero rung
+coupling and four singlets. Separate original complex Bethe equations, shifted
+seas, incomplete scans and full direct/prepared/Async result comparisons
+check the implementation. Arithmetic accuracy remains distinct from the
+residual and from completion of the finite branch scan.
+
 ## Reusing roots across field and rung queries
 
 The permutation-chain roots depend on the rung count and numerical controls,
