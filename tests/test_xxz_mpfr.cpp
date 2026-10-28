@@ -125,6 +125,51 @@ TEST(XxzMpfrControls, RejectsMixedExactAndUnsetInputs)
 }
 
 #if UNI20_HAS_MPLAPACK_MPREAL
+TEST(XxzMpfrControls, MassiveContinuationRequiresRepresentableProgress)
+{
+  auto p = Precision::bits(4);
+  R d(2, p);
+  model::SolverOptions<R> options(p);
+  // The loose default tolerance accepts the seed without a Newton update;
+  // 1.125 + (1.125-1)/4 rounds back to 1.125 at four bits.
+  for (std::size_t budget : {1u, 10000u})
+  {
+    options.max_iterations = budget;
+    auto state = model::open::ground_state(3, d, options);
+    EXPECT_FALSE(state.converged);
+    EXPECT_EQ(state.status, model::open::GroundSolveStatus::continuation_stalled);
+    EXPECT_EQ(state.iterations, 0u);
+    EXPECT_EQ(state.delta, d);
+    EXPECT_EQ(state.root_delta, R(9, p) / 8);
+    EXPECT_LT(state.root_delta, state.delta);
+    check(state, p);
+    ASSERT_EQ(state.rapidities.size(), 1u);
+    // Returned energy still refers to the requested Hamiltonian, not the
+    // unfinished continuation stage, even when no update was possible.
+    R theta = math::atan(state.rapidities.front());
+    EXPECT_EQ(state.energy, -d / 2 - math::cos(2 * theta));
+  }
+  options.max_iterations = 0;
+  auto budget = model::open::ground_state(3, d, options);
+  EXPECT_EQ(budget.status, model::open::GroundSolveStatus::iteration_limit);
+  // Reaching the requested stage needs no continuation step, even with zero
+  // remaining updates; do not reject low precision as a blanket policy.
+  auto reached = model::open::ground_state(3, R(9, p) / 8, options);
+  EXPECT_TRUE(reached.converged);
+  auto q = Precision::bits(3);
+  auto boundary = model::open::ground_state(4, R(2, q), model::SolverOptions<R>(q));
+  EXPECT_FALSE(boundary.converged);
+  EXPECT_EQ(boundary.status, model::open::GroundSolveStatus::continuation_stalled);
+  check(boundary, q);
+  q = Precision::bits(2);
+  // The near-isotropic initial point itself rounds to one. Reject before
+  // constructing the even-chain boundary seed, which would divide by zero.
+  EXPECT_THROW((void)model::open::ground_state(4, R(2, q), model::SolverOptions<R>(q)), std::invalid_argument);
+  auto vacuum = model::open::sector_ground_state(4, R(2, q), uni20::half_int(2), model::SolverOptions<R>(q));
+  EXPECT_TRUE(vacuum.converged);
+  check(vacuum, q);
+}
+
 TEST_P(XxzMpfr, AllGroundRepresentationsAgainstSmallChainHamiltonians)
 {
   auto p = Precision::bits(GetParam());

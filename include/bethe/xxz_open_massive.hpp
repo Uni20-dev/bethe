@@ -212,6 +212,8 @@ template <uni20::Real Real = double>
   if (m > elements / m) throw std::length_error("massive open XXZ Newton matrix is too large");
   detail::GroundSystem<Real> const system(sites, m, options.precision());
   Real d = std::min(delta, uni20::scalar_like(delta, 11) / Real{10});
+  if (d <= Real{1})
+    throw std::invalid_argument("massive open XXZ precision is too low to seed continuation above Delta=1");
   auto x = system.seed(d);
   uni20::DenseMatrix<Real> jacobian(m, m, options.precision()), step(m, 1, options.precision());
   Real const difference_scale = uni20::math::cbrt(uni20::numeric_limits<Real>::epsilon(options.precision()));
@@ -229,6 +231,13 @@ template <uni20::Real Real = double>
       }
       if (state.iterations == options.max_iterations) break;
       Real const next = std::min(delta, d + (d - Real{1}) / Real{4});
+      // A converged stage consumes no Newton iteration. If its increment
+      // rounds away, the iteration budget cannot terminate the loop.
+      if (!(next > d))
+      {
+        state.status = SolveStatus::continuation_stalled;
+        break;
+      }
       // Before crossing infinity, keep the real z fixed. Afterwards, keep
       // the logarithmic distance to the moving boundary pole as the guess;
       // fixing y would discard exponentially small deviations at each step.

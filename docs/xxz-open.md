@@ -147,7 +147,8 @@ of it). Alongside delta, bulk scaled roots and labels, Sz, spin reversal,
 energy, and convergence diagnostics, this includes `log_rapidities`, a
 `GroundResidualConvention` tag, an optional `boundary_root`,
 `root_delta`, and a `GroundSolveStatus` distinguishing convergence, budget
-exhaustion, and a stalled line search. Bulk arrays exclude the distinguished
+exhaustion, a stalled line search, and a continuation step lost to rounding
+(`continuation_stalled`; increase working precision). Bulk arrays exclude the distinguished
 root and its label. `log_rapidities` stores the solver's lambda coordinates
 only for negative Delta; do not reconstruct them from rounded z values.
 The convention tag distinguishes `logarithmic_phase` (0<=Delta<=1),

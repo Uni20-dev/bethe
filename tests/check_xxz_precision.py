@@ -40,6 +40,14 @@ def check_precision(tables, precision, bits):
 
 
 if enabled:
+    # A rounded-away continuation increment must terminate without waiting
+    # for a Newton iteration to consume the budget. Keep the established
+    # unconverged-energy output policy, with an explicit precision diagnostic.
+    stalled = document(obc, ["3", "--delta", "2", "--precision", "bits-4"], 2)
+    check_precision(stalled, "bits-4", 4)
+    state = rows(stalled["states"])[0]
+    assert not state["converged"] and "continuation stalled; increase precision" in state["status"], state
+    assert state["energy"] is not None and int(state["iterations"]) == 0, state
     for precision, bits in (("bits-128", 128), ("bits-256", 256), ("digits-100", 333)):
         opts = ["--precision", precision, "--roots"]
         for delta in ("-0.5", "0", "0.5", "1", "2"):
@@ -121,4 +129,9 @@ for program in (pbc, obc):
             result = run(program, ["4", "--delta", "-0.5", "--excitations", "all", "--precision", "bits-128",
                                    "--csv", str(path), "--force"], 1)
             assert not result.stdout and path.read_text() == "preserve\n"
+            if program == obc:
+                result = run(program, ["4", "--delta", "2", "--precision", "bits-2",
+                                       "--csv", str(path), "--force"], 1)
+                assert "too low to seed continuation" in result.stderr
+                assert not result.stdout and path.read_text() == "preserve\n"
 print("XXZ precision contracts passed")
