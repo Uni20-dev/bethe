@@ -122,6 +122,7 @@ All frontends support typed tables and file exports; see the
 
 The arbitrary-precision choices currently apply to `bethe-xxx-pbc`, `bethe-xxx-obc`,
 `bethe-lieb-liniger-pbc` and `bethe-lieb-liniger-obc` (all modes),
+`bethe-lieb-liniger-dispersion`,
 the finite-ring `bethe-xxx-structure-factor`, `bethe-richardson` and
 `bethe-central-spin`, in an
 [enabled build](building.md#enable-arbitrary-precision):
@@ -132,16 +133,19 @@ bethe-xxx-pbc 17 --spinons --precision bits-256
 bethe-xxx-pbc 16 --excitations all --threads 4 --precision bits-256
 bethe-xxx-obc 16 --sectors --precision digits-100
 bethe-lieb-liniger-obc 2 --length 1 --c 1e-50 --precision digits-100
+bethe-lieb-liniger-dispersion --c 4 --points 33 --precision digits-100 --threads 4
 bethe-xxx-structure-factor 32 --precision bits-256
 bethe-richardson --levels 0,1,2,3 --pairs 2 --g 1 --precision digits-100
 bethe-central-spin --couplings 1,0.7,0.3 --field 1 --sz 0 --precision bits-256
+bethe-su3-pbc 24 --precision digits-100
 ```
 
 XXX roots, Richardson pairing and central spin need Uni20's
 arbitrary-precision scalar family (GMP, MPFR and MPC), but no MPLAPACK.
-Finite-size Lieb–Liniger and structure factors additionally require the MPLAPACK
-MPFR provider for LU operations. Other frontends still support native precisions only, including
-Lieb–Liniger thermodynamic dispersion and thermal calculations. More precision does not expand the
+Finite-size and zero-temperature thermodynamic Lieb–Liniger, SU(3) singlet ground
+states and structure factors additionally require the MPLAPACK MPFR provider
+for LU operations. Other frontends still support native precisions only, including
+Lieb–Liniger thermal calculations. More precision does not expand the
 supported state family: the excitation scan still excludes strings and infinite roots.
 
 `digits-100` resolves to 333 bits through Uni20's decimal-precision conversion.
@@ -248,6 +252,10 @@ for examples. Set BLAS/OpenMP thread limits to one to avoid nested threading.
 
 ### Parallel observable grids
 
+`bethe-xxx-structure-factor-thermo` uses a bounded grid for independent spectral
+points, collecting rows in momentum-major order. See its
+[streaming and summary conventions](xxx-structure-factor-thermo.md).
+
 `bethe-hubbard-dispersion` (half-filled and doped) and
 `bethe-lieb-liniger-dispersion` also accept `--threads N`, defaulting to 1:
 
@@ -264,6 +272,15 @@ failed points and their diagnostics. Only the calling thread writes tables;
 same option but has only one point per branch. Hubbard places all selected
 branches in one work window, so those queries can still overlap; a single
 selected branch has no single-point parallelism.
+
+`bethe-hubbard-continuum --threads N` evaluates independent total momenta
+through the same bounded grid, for two-spinon and charge-containing edges.
+Each point's quadrature, inversion and extrema search remain sequential;
+rows preserve momentum order, including failures.
+
+`bethe-lieb-liniger-thermal --threads N` uses the same bounded grid for
+temperature scans, at fixed chemical potential or density. Each equilibrium
+solve remains sequential; rows preserve the requested temperature order.
 
 The benefit depends on the cost and number of points: background preparation
 remains serial and short grids may not benefit. CPU timing covers preparation
