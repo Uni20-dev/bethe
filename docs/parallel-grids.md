@@ -8,8 +8,10 @@ adapter.
 
 The first frontends using this path are Hubbard and Lieb–Liniger dispersion.
 See the [command-line examples](command-line.md#parallel-observable-grids).
-Continuum optimizations, thermal grids and other observables can adopt the
-same path after checking their independence and scratch ownership.
+Sine-Gordon Bethe–Yang levels also use this adapter: each level owns an
+independent root search and repeated phase integrals. Continuum optimizations,
+thermal grids and other observables can adopt the same path after checking
+their independence and scratch ownership.
 
 ## Using the library
 
@@ -148,3 +150,67 @@ at p=5.412109375 with the default numerical controls. That row, its missing
 energy, and the partial outcome were identical at every worker count; binary64
 and binary128 completed this grid. Parallelism preserves these numerical
 diagnostics rather than changing the tolerance or silently dropping points.
+
+
+## Sine-Gordon Bethe–Yang level scans
+
+`bethe-sine-gordon-bethe-yang --threads N` schedules independent interacting
+levels with the shared bounded grid. Each level keeps its bisection and phase
+quadratures sequential. The window holds at most 128 active or uncollected
+results; collection preserves Bethe-number order, complete failure diagnostics
+and calling-thread table output. One worker, one level and the analytic free
+point use direct serial evaluation. Execution mode, requested concurrency and
+whole-grid CPU timing are recorded in metadata.
+
+The CLI regression compares every field under direct and threaded execution
+for each configured native precision. It includes complete scans, mixed
+successes/failures, exhausted iteration/quadrature/cutoff budgets, both charge
+signs, non-retained CSV/TSV/JSON, a 129-level interacting scan crossing the
+admission window, and preservation of existing files on invalid requests.
+Existing independent energy/phase references remain unchanged.
+
+Benchmarks compare main `46b636e` with this implementation, both using GCC 13.3
+Release, Uni20 `04163b9b`, oneTBB 2022.3 and one BLAS/OpenMP thread. They ran on
+a shared Intel Core i7-12700KF desktop on 28 October 2026, without concurrent
+local compilation. The end-to-end timings include startup, solving and CSV
+output; each result is the median of three repeats, with execution order
+alternated. Peak RSS is the maximum observed for that variant. All numerical
+CSV rows match the baseline exactly at one/four/eight workers, including 2,066
+benchmark rows and 495 additional selected/failure/free rows. This comparison
+does not establish the physical accuracy of the asymptotic Bethe–Yang levels.
+
+The binary64 workload uses 2,049 levels at tolerance 1e-9; the binary128 workload
+uses 17 levels at its default tolerance. Both use mass 1, p=2 and L=100. For
+example, compare the following with `--threads 1`, `4` and `8`; omit `--threads`
+for the baseline executable:
+
+```sh
+OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 \
+  bethe-sine-gordon-bethe-yang --p 2 --length 100 --levels 2049 \
+  --tolerance 1e-9 --precision fp64 --threads 8 \
+  --format csv --no-preamble --no-retain > levels.csv
+
+OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 \
+  bethe-sine-gordon-bethe-yang --p 2 --length 100 --levels 17 \
+  --precision fp128 --threads 8 \
+  --format csv --no-preamble --no-retain > levels-wide.csv
+```
+
+| Workload | Execution | Wall (s) | CPU (s) | Peak RSS (MiB) |
+| --- | --- | ---: | ---: | ---: |
+| binary64, 2,049 levels | baseline serial | 6.33 | 6.33 | 3.91 |
+| binary64, 2,049 levels | new, 1 worker | 6.32 | 6.32 | 4.50 |
+| binary64, 2,049 levels | new, 4 workers | 1.61 | 6.43 | 5.00 |
+| binary64, 2,049 levels | new, 8 workers | 0.85 | 6.82 | 5.00 |
+| binary128, 17 levels | baseline serial | 30.82 | 30.81 | 4.06 |
+| binary128, 17 levels | new, 1 worker | 31.94 | 31.94 | 4.84 |
+| binary128, 17 levels | new, 4 workers | 9.43 | 32.33 | 5.16 |
+| binary128, 17 levels | new, 8 workers | 5.71 | 32.71 | 4.93 |
+
+The eight-worker wall-time improvement against the baseline is about 7.4x for
+binary64 and 5.4x for binary128, with modest additional total CPU work. The new
+one-worker binary128 process is about 4% slower in this measurement; the table
+includes that cost. The smaller 17-level workload has limited parallelism and
+uneven finishing times. These shared-desktop measurements do not establish
+scaling beyond eight workers or a benefit for short/free scans. No worker
+changes the arithmetic, tolerance or stopping criteria of its scalar solve.

@@ -95,6 +95,24 @@ The free solution brackets the positive root in the repulsive regime. The
 constant S-matrix sign accounts for the half-odd quantization. At p=1, chi=0,
 giving momenta ±2pi I/L directly.
 
+Each requested level has its own root search and phase integrals. Use
+`--threads N` to overlap these independent calculations, for example:
+
+```sh
+OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 \
+  bethe-sine-gordon-bethe-yang --p 2 --length 100 --levels 129 \
+  --threads 4 --no-retain --csv pairs.csv
+```
+
+One worker (the default), a single level, or the analytic free point p=1 uses
+direct serial evaluation. Otherwise a bounded window holds at most 128 active or
+uncollected results; rows are written on the calling thread in Bethe-number
+order, including failed levels and their diagnostics. `--no-retain` disables
+table storage after delivery. Each bisection and phase quadrature remains
+sequential. Short interacting scans may not benefit from scheduling. CPU timing
+covers the whole level grid including ordered output; its scope, the execution
+mode and the requested concurrency limit are recorded in metadata.
+
 We do not solve mixed soliton–antisoliton transfer-matrix channels, breather
 Bethe–Yang levels, or nonzero-total-momentum pairs here. In particular, simply
 relabeling this pair as neutral would give the wrong state-selection rules.
