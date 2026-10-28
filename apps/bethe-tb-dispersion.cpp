@@ -49,20 +49,20 @@ void add_options(CLI::App& app, Arguments& a)
   cli::text_option(app, "--momentum", a.momentum, "Single momentum, in radians/site")
       ->type_name("REAL")
       ->excludes(points);
-  cli::precision_option(app, a.precision);
+  cli::precision_option(app, a.precision, cli::ArbitraryPrecision::real);
   cli::add_data_output_options(
       app, a.output,
       {{.name = "dispersion", .description = "Excitation branches and/or continuum bounds", .primary = true}});
 }
-template <uni20::Real Real> int run(Arguments const& a, int argc, char** argv)
+template <uni20::Real Real> int run(Arguments const& a, uni20::Precision precision, int argc, char** argv)
 {
   uni20::run_context context(program_info(), {.invocation = std::vector<std::string>(argv, argv + argc)});
-  Real const exchange = uni20::parse_real<Real>(a.exchange), pi = bethe::detail::pi<Real>();
+  Real const exchange = cli::parse_scalar<Real>(a.exchange, precision), pi = bethe::detail::spinon_pi(exchange);
   model::SpinonDispersion<Real> const band(exchange);
   std::optional<Real> momentum;
   if (a.momentum)
   {
-    momentum = uni20::parse_real<Real>(*a.momentum);
+    momentum = cli::parse_scalar<Real>(*a.momentum, precision);
     Real const end = a.branch == "spinon" || a.branch == "all" ? pi : Real{2} * pi;
     if (!uni20::isfinite(*momentum) || *momentum < Real{0} || *momentum > end)
       throw std::invalid_argument("momentum outside a selected branch's range");
@@ -133,7 +133,7 @@ template <uni20::Real Real> int run(Arguments const& a, int argc, char** argv)
           status = "precision_limit";
           success = false;
         }
-        Real const cell = Real{2} * (p < pi ? p : p < Real{2} * pi ? p - pi : Real{0});
+        Real const cell = Real{2} * (p < pi ? p : p < Real{2} * pi ? p - pi : uni20::scalar_like(exchange, 0));
         table.append(branch, elementary ? Spin{band.spin()} : Spin{},
                      elementary               ? "S=1/2"
                      : branch == "two-spinon" ? "S=0,1"
@@ -156,6 +156,7 @@ int main(int argc, char** argv)
         if (!a.momentum && (a.points < 2 || a.points > 1000000))
           throw std::invalid_argument("require 2<=points<=1000000");
         if (a.folded && a.branch == "spinon") throw std::invalid_argument("--folded changes continuum envelopes only");
-        return cli::dispatch_precision(a.precision, [&]<typename Real>() { return run<Real>(a, argc, argv); });
+        return cli::dispatch_scalar_precision<cli::ArbitraryPrecision::real>(
+            a.precision, [&]<typename Real>(uni20::Precision p) { return run<Real>(a, p, argc, argv); });
       });
 }

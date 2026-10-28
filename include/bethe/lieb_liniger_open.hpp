@@ -176,18 +176,29 @@ inline std::size_t excitation_count(std::size_t particles, std::size_t padding,
 
 template <uni20::Real Real> using ExcitationScan = bethe::RealExcitationScan<State<Real>>;
 
+/// Owning hard-wall scan; only the scheduler is borrowed through completion.
 template <uni20::Real Real>
-ExcitationScan<Real> real_excitations(std::size_t particles, Real length, Real c, std::size_t padding,
-                                      RealExcitationOptions const& enumeration = {},
-                                      SolverOptions<Real> const& options = {})
+[[nodiscard]] uni20::async::Async<ExcitationScan<Real>>
+real_excitations_async(std::size_t particles, Real length, Real c, std::size_t padding,
+                       RealExcitationOptions enumeration = {}, SolverOptions<Real> options = {})
 {
   (void)lieb_liniger::detail::validate_parameters(particles, length, c, options);
   if (enumeration.count == 0 || enumeration.max_candidates == 0)
     throw std::invalid_argument("excitation count and max_candidates must be positive");
   (void)excitation_count(particles, padding, enumeration.max_candidates);
-  return bethe::detail::scan_real_combinations<ExcitationScan<Real>>(
+  return bethe::detail::scan_real_combinations_async<ExcitationScan<Real>>(
       particles + padding, particles, 2, enumeration,
-      [&](QuantumNumbers const& numbers) { return solve_real(length, c, numbers, options); },
-      [&] { return ground_state(particles, length, c, options); });
+      [length, c, options](QuantumNumbers const& numbers) { return solve_real(length, c, numbers, options); },
+      [particles, length, c, options] { return ground_state(particles, length, c, options); });
+}
+
+template <uni20::Real Real>
+ExcitationScan<Real> real_excitations(std::size_t particles, Real length, Real c, std::size_t padding,
+                                      RealExcitationOptions const& enumeration = {},
+                                      SolverOptions<Real> const& options = {})
+{
+  auto& scheduler = enumeration.execution.resolved_scheduler();
+  auto result = open::real_excitations_async(particles, std::move(length), std::move(c), padding, enumeration, options);
+  return bethe::detail::take_scan_result(result, scheduler);
 }
 } // namespace bethe::lieb_liniger::open

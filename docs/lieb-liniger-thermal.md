@@ -19,7 +19,7 @@ bethe-lieb-liniger-thermal --c 4 --temperature 1 --mu -1
 
 # Fixed-density temperature scan; mu is solved independently at each point.
 bethe-lieb-liniger-thermal --c 4 --temperature 0.5 \
-  --temperature-end 2 --points 9 --density 1 --max-nodes 512 --csv thermal.csv
+  --temperature-end 2 --points 9 --density 1 --max-nodes 512 --threads 4 --csv thermal.csv
 
 # Extended precision and simultaneous structured exports.
 bethe-lieb-liniger-thermal --c 4 --temperature 1 --density 0.1 \
@@ -32,6 +32,16 @@ Choose exactly one of `--mu` and `--density`. Without `--temperature-end`, the
 tool evaluates one point. With it, `--points` defaults to 17 samples, includes
 both endpoints, and permits ascending or descending positive temperatures.
 The specified c and ensemble parameter stay fixed throughout the scan.
+
+`--threads N` uses Uni20's scheduler for independent temperatures (default 1).
+Each point owns its equilibrium solve and, for fixed density, its chemical-potential
+search; those internal iterations remain sequential. The shared
+[bounded observable grid](parallel-grids.md) collects rows on the calling thread
+in the requested temperature order, including failures. It admits at most 128
+active or completed-but-uncollected temperatures. No continuation seed is passed
+between temperatures, so concurrent execution preserves the serial calculation.
+Set `OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1` to avoid nested threading.
+Single-temperature requests have no grid parallelism.
 
 The named table `thermodynamics` reports temperature, chemical potential,
 density, pressure, energy/length, entropy/length, quadrature nodes and cutoff,
@@ -50,6 +60,8 @@ and `--max-evaluations`. Native defaults depend on the selected precision.
 The shared [output options](output.md) provide presentation-layer screen output,
 CSV/TSV/JSON files, provenance metadata and CPU timing. Rows stream to attached
 exports during the scan; `--no-retain` avoids keeping a second copy in memory.
+CPU timing covers the complete temperature grid, including ordered row output;
+the exported `CPU timing scope` states this explicitly.
 Failure at a point does not stop subsequent temperatures: its physical values
 are null in JSON or empty in CSV/TSV, and the final exit code is 2. Invalid input
 returns 1, before opening output files. References appear only with `--references`.

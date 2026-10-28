@@ -13,7 +13,7 @@ template <typename State> using RealExcitation = bethe::RealExcitation<State>;
 template <typename State> struct RealExcitationScan : bethe::RealExcitationScan<State>
 {
     uni20::half_int sz;
-    decltype(State{}.delta) delta = 0;
+    decltype(State{}.delta) delta{0};
     RealQuantumNumberWindow window;
 };
 

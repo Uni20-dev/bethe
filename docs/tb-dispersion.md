@@ -16,13 +16,49 @@ bethe-tb-dispersion --branch four-spinon --folded --json quadrupole-bounds.json
 bethe-tb-dispersion --points 65 --precision fp128 --tsv tb.tsv
 ```
 
-The default is fp64, with native long-double and optional MPLAPACK-enabled fp128.
+The default is fp64, with native long-double, optional fp128, and explicit
+MPFR precision (`bits-N` or `digits-N`). MPFR needs Uni20 scalar support only,
+without MPLAPACK.
 Each branch's grid spans its own momentum interval. `--momentum` replaces the
 grid and must be valid for every selected branch. `--references` prints the
 literature; normal reports retain the Hamiltonian, conventions, provenance and
 CPU time. Spin labels use Uni20's `half_int`, exported as decimal 0.5 rather
 than a plotting-unfriendly fraction. CSV/TSV/JSON, streaming and retention use
 the same output facilities as the [ULS tool](su3-dispersion.md).
+
+## Explicit precision and independent queries
+
+```sh
+bethe-tb-dispersion --branch spinon --momentum 0.3 --precision digits-100
+bethe-tb-dispersion --branch four-spinon --folded --precision bits-256 --csv tb.csv
+```
+
+Exchange and momentum are parsed directly at the requested precision. The
+band owns that precision for pi, its amplitude and its endpoint zeros; all
+subsequent momenta must have the same finite precision. For example:
+
+```cpp
+auto precision = uni20::Precision::bits(256);
+bethe::takhtajan_babujian::SpinonDispersion<uni20::mpreal> band(
+    uni20::mpreal("1", precision));
+auto energy = band.energy(uni20::mpreal("0.3", precision));
+auto four = band.four_spinon_continuum(uni20::mpreal("1.5", precision));
+```
+
+Mixed, exact or unset runtime-precision inputs are rejected. Native convenience
+construction is unchanged. Independent owning band/momentum requests compose
+through the existing [Async observable grid](async-execution.md); capture the
+band and momenta by value and await the final result. These elementary formulas
+are cheap, so the frontend keeps per-point evaluation serial.
+
+The shared sine/elliptic-band helper carries explicit precision too. This does
+not by itself extend the model-level elliptic functions in XXZ or XYZ to MPFR.
+Tests retain their native massive-band checks and add scalar-only MPFR tests
+for typed endpoints, tiny positive momenta and massive-band extrema. TB
+accuracy grows at 128/256/333 bits against an independent 512-bit dressed-sea
+reference; a separate Decimal series checks CLI normalization and folded
+bounds. Mixed-precision Async comparisons include complete results and failure
+isolation. No quadrature or root-solving convergence error is introduced.
 
 ## A factor of four worth keeping explicit
 

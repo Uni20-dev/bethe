@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Copyright (C) 2026 Ian McCulloch
+#include "execution-options.hpp"
+#include "independent-solves.hpp"
 #include "lee-yang-common.hpp"
 #include "result-output.hpp"
 #include <bethe/lee_yang_excited.hpp>
@@ -11,6 +13,7 @@ namespace model = bethe::lee_yang;
 using cli::lee_yang::name;
 struct Arguments : cli::lee_yang::Arguments
 {
+    int threads = 1;
     std::size_t root_iterations = 256;
     Arguments() { products = 1000000000; }
 };
@@ -19,6 +22,7 @@ auto program_info()
   auto info = cli::program_info("bethe-lee-yang-excited", "Periodic Lee-Yang spin-zero one-particle TBA.",
                                 bethe::citations::Tool::lee_yang_excited);
   info.notes = {
+      "--threads overlaps the independent vacuum and excited solves (at most two); each solve stays sequential.",
       "Positive mass m and circumference L, with 5<=r=mL<=30; velocity=hbar=1.",
       "Regular one-particle branch only: no UV continuation, moving particles, higher levels or boundaries.",
       "E1_C and E0_C are bulk-subtracted levels; the excitation gap is E1_C-E0_C, not E1_C.",
@@ -36,10 +40,15 @@ template <uni20::Real Real> int run(Arguments const& a, int argc, char** argv)
   Real const length = uni20::parse_real<Real>(*a.length);
   auto options = cli::lee_yang::options_from<Real>(a, model::OneParticleOptions<Real>{});
   options.max_root_iterations = a.root_iterations;
-  // Both validations/solves precede opening output files, including --force.
-  auto const excited = context.measure([&] { return model::one_particle(mass, length, options); });
-  auto const vacuum = context.measure(
-      [&] { return model::ground_state(mass, length, static_cast<model::Options<Real> const&>(options)); });
+  // Reject invalid requests before admitting either independent solve.
+  model::detail::validate_one_particle(mass, length, options);
+  // Both solves finish before opening exports, including --force targets.
+  auto const [excited, vacuum] = context.measure([&] {
+    return cli::independent_solves(
+        [=] { return model::one_particle(mass, length, options); },
+        [=] { return model::ground_state(mass, length, static_cast<model::Options<Real> const&>(options)); },
+        a.threads);
+  });
   using Optional = std::optional<Real>;
   auto finite = [](Real x) -> Optional { return uni20::isfinite(x) ? Optional{x} : std::nullopt; };
   Optional gap, scaled_gap, gap_error;
@@ -74,6 +83,9 @@ template <uni20::Real Real> int run(Arguments const& a, int argc, char** argv)
       .field("scope", "Scope", "periodic spin-zero one-particle regular branch; 5<=mL<=30; no UV continuation")
       .field("energy_convention", "Energy convention", "bulk-subtracted E_j_C=E_j-L*e_bulk; Y_j=L*E_j_C")
       .field("gap_convention", "Gap convention", "gap=E1_C-E0_C; scaled_gap=L*gap; requires both states converged")
+      .field("threads", "Requested threads", a.threads)
+      .field("solver_concurrency", "Solver concurrency", std::min(a.threads, 2))
+      .field("execution", "Execution", a.threads == 1 ? "serial" : "independent vacuum/excited solves")
       .precision(a.precision)
       .field("tolerance", "Absolute Y tolerance per state", options.tolerance)
       .field("initial_cutoff", "Requested initial cutoff", options.initial_cutoff)
@@ -138,6 +150,8 @@ int main(int argc, char** argv)
             {{.name = "levels", .description = "Vacuum and excited levels", .primary = true},
              {.name = "source", .description = "Excited-source quantization and diagnostics"},
              {.name = "gap", .description = "Vacuum-relative gap; values missing if either solve fails"}});
+        cli::threads_option(app, a.threads)
+            ->description("Concurrency for vacuum and excited solves (at most 2; default 1)");
         cli::count_option(app, "--max-root-iterations", a.root_iterations, "Source-root updates per grid")
             ->capture_default_str();
       },

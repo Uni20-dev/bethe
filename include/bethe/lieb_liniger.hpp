@@ -274,24 +274,37 @@ template <uni20::Real Real> struct ExcitationScan : bethe::RealExcitationScan<St
     Real length = Real{1}, interaction = Real{1};
 };
 
+/// Owns the physical parameters, label window and solver options through completion.
+/// The scheduler is borrowed; keep it alive until the result and its consumers finish.
 template <uni20::Real Real>
-ExcitationScan<Real> real_excitations(std::size_t particles, Real length, Real c, std::size_t padding,
-                                      RealExcitationOptions const& enumeration = {},
-                                      SolverOptions<Real> const& options = {})
+[[nodiscard]] uni20::async::Async<ExcitationScan<Real>>
+real_excitations_async(std::size_t particles, Real length, Real c, std::size_t padding,
+                       RealExcitationOptions enumeration = {}, SolverOptions<Real> options = {})
 {
   (void)detail::validate_parameters(particles, length, c, options);
   if (enumeration.count == 0 || enumeration.max_candidates == 0)
     throw std::invalid_argument("excitation count and max_candidates must be positive");
   (void)excitation_count(particles, padding, enumeration.max_candidates);
   auto const first = particles ? -static_cast<std::int64_t>(particles - 1) - 2 * static_cast<std::int64_t>(padding) : 0;
-  auto result = bethe::detail::scan_real_combinations<ExcitationScan<Real>>(
+  ExcitationScan<Real> seed;
+  seed.particles = particles;
+  seed.padding = padding;
+  seed.length = length;
+  seed.interaction = c;
+  return bethe::detail::scan_real_combinations_async<ExcitationScan<Real>>(
       particles + 2 * padding, particles, first, enumeration,
-      [&](QuantumNumbers const& numbers) { return solve_real(length, c, numbers, options); },
-      [&] { return ground_state(particles, length, c, options); });
-  result.particles = particles;
-  result.padding = padding;
-  result.length = length;
-  result.interaction = c;
-  return result;
+      [length, c, options](QuantumNumbers const& numbers) { return solve_real(length, c, numbers, options); },
+      [particles, length, c, options] { return ground_state(particles, length, c, options); },
+      bethe::detail::EnergyOrder::ascending, bethe::detail::StateEnergy{}, std::move(seed));
+}
+
+template <uni20::Real Real>
+ExcitationScan<Real> real_excitations(std::size_t particles, Real length, Real c, std::size_t padding,
+                                      RealExcitationOptions const& enumeration = {},
+                                      SolverOptions<Real> const& options = {})
+{
+  auto& scheduler = enumeration.execution.resolved_scheduler();
+  auto result = real_excitations_async(particles, std::move(length), std::move(c), padding, enumeration, options);
+  return bethe::detail::take_scan_result(result, scheduler);
 }
 } // namespace bethe::lieb_liniger

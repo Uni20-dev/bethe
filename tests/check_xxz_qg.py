@@ -168,6 +168,12 @@ for precision in precisions:
     partial = scan_tables([*scan_base, "--excitations", "all", "--roots", "--max-iterations", str(budget), *flags], 2)
     assert 0 < len(records(partial["levels"])) < 10
     assert records(partial["failed"])[0]["energy"] is None
+    for budget_value, expected, code in ((10000, full, 0), (0, failed, 2), (budget, partial, 2)):
+        for workers in (1, 4):
+            actual = scan_tables([*scan_base, "--excitations", "all", "--roots", *flags,
+                                  "--max-iterations", str(budget_value), "--threads", str(workers), "--no-retain"], code)
+            assert actual.keys() == expected.keys()
+            assert all(actual[name]["rows"] == expected[name]["rows"] for name in expected)
     vacuum = scan_tables(["7", "--delta", "0.6", "--through-lines", "7", "--excitations", "all", "--roots", *flags])
     assert len(records(vacuum["levels"])) == 1
     assert Decimal(records(vacuum["levels"])[0]["gap_from_sea"]) == 0

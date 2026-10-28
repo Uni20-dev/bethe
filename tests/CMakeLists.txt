@@ -83,6 +83,26 @@ target_link_libraries(bethe_cli_precision_tests PRIVATE bethe_cli_output)
 bethe_discover_tests(bethe_cli_precision_tests)
 
 if(BETHE_HAS_MPREAL)
+  add_executable(bethe_bose_fermi_mpfr_tests test_bose_fermi_mpfr.cpp)
+  target_link_libraries(bethe_bose_fermi_mpfr_tests PRIVATE bethe::bethe TBB::tbb)
+  bethe_discover_tests(bethe_bose_fermi_mpfr_tests)
+
+  add_executable(bethe_gaudin_yang_mpfr_tests test_gaudin_yang_mpfr.cpp)
+  target_link_libraries(bethe_gaudin_yang_mpfr_tests PRIVATE bethe::bethe TBB::tbb)
+  bethe_discover_tests(bethe_gaudin_yang_mpfr_tests)
+
+  add_executable(bethe_hubbard_mpfr_tests test_hubbard_mpfr.cpp)
+  target_link_libraries(bethe_hubbard_mpfr_tests PRIVATE bethe::bethe TBB::tbb)
+  bethe_discover_tests(bethe_hubbard_mpfr_tests)
+
+  add_executable(bethe_xxz_mpfr_tests test_xxz_mpfr.cpp)
+  target_link_libraries(bethe_xxz_mpfr_tests PRIVATE bethe::bethe TBB::tbb)
+  bethe_discover_tests(bethe_xxz_mpfr_tests)
+
+  add_executable(bethe_su3_mpfr_tests test_su3_mpfr.cpp)
+  target_link_libraries(bethe_su3_mpfr_tests PRIVATE bethe::bethe TBB::tbb)
+  bethe_discover_tests(bethe_su3_mpfr_tests)
+
   add_executable(bethe_root_solver_mpfr_tests test_root_solver_mpfr.cpp)
   target_link_libraries(bethe_root_solver_mpfr_tests PRIVATE bethe::bethe TBB::tbb)
   bethe_discover_tests(bethe_root_solver_mpfr_tests)
@@ -98,20 +118,34 @@ if(BETHE_HAS_MPREAL)
   add_executable(bethe_async_mpfr_tests test_async_mpfr.cpp)
   target_link_libraries(bethe_async_mpfr_tests PRIVATE bethe::bethe TBB::tbb)
   bethe_discover_tests(bethe_async_mpfr_tests)
+
+  add_executable(bethe_thermodynamics_mpfr_tests test_thermodynamics_mpfr.cpp)
+  target_link_libraries(bethe_thermodynamics_mpfr_tests PRIVATE bethe::bethe TBB::tbb)
+  bethe_discover_tests(bethe_thermodynamics_mpfr_tests)
 endif()
 
 add_executable(bethe_parallel_scan_tests test_parallel_scan.cpp)
 target_link_libraries(bethe_parallel_scan_tests PRIVATE bethe::bethe TBB::tbb)
 bethe_discover_tests(bethe_parallel_scan_tests)
 
-foreach(test IN ITEMS async_scan continuous_work async_structure_factor prepared_observable_grid)
+foreach(test IN ITEMS async_scan continuous_work async_structure_factor prepared_observable_grid solver_composition)
   add_executable(bethe_${test}_tests test_${test}.cpp)
   target_link_libraries(bethe_${test}_tests PRIVATE bethe::bethe TBB::tbb)
   bethe_discover_tests(bethe_${test}_tests)
 endforeach()
 
+if(TARGET bethe-async-gaudin-sweep-example)
+  add_test(NAME SolverComposition.example COMMAND bethe-async-gaudin-sweep-example)
+endif()
+
 if(TARGET bethe-async-background-example)
   add_test(NAME AsyncBackground.example COMMAND bethe-async-background-example)
+endif()
+if(TARGET bethe-async-hubbard-background-example)
+  add_test(NAME AsyncHubbardBackground.example COMMAND bethe-async-hubbard-background-example)
+endif()
+if(TARGET bethe-async-ground-states-example)
+  add_test(NAME AsyncGroundStates.example COMMAND bethe-async-ground-states-example)
 endif()
 
 add_executable(bethe_parallel_excitation_tests test_parallel_excitation_models.cpp)
@@ -168,10 +202,31 @@ bethe_discover_tests(bethe_xxz_dispersion_tests)
 add_executable(bethe_xyz_dispersion_tests test_xyz_dispersion.cpp)
 target_link_libraries(bethe_xyz_dispersion_tests PRIVATE bethe::bethe)
 bethe_discover_tests(bethe_xyz_dispersion_tests)
+add_executable(bethe_xyz_prepared_tests test_xyz_prepared.cpp)
+target_link_libraries(bethe_xyz_prepared_tests PRIVATE bethe::bethe TBB::tbb)
+bethe_discover_tests(bethe_xyz_prepared_tests)
+add_executable(bethe_xyz_prepared_benchmark EXCLUDE_FROM_ALL benchmark_xyz_prepared.cpp)
+target_link_libraries(bethe_xyz_prepared_benchmark PRIVATE bethe::bethe TBB::tbb)
+set_target_properties(bethe_xyz_prepared_benchmark PROPERTIES CXX_EXTENSIONS OFF)
+
+
 
 add_executable(bethe_su3_dispersion_tests test_su3_dispersion.cpp)
 target_link_libraries(bethe_su3_dispersion_tests PRIVATE bethe::bethe)
 bethe_discover_tests(bethe_su3_dispersion_tests)
+if(BETHE_HAS_MPREAL)
+  add_executable(bethe_tb_dispersion_mpfr_tests test_tb_dispersion_mpfr.cpp)
+  target_link_libraries(bethe_tb_dispersion_mpfr_tests PRIVATE bethe::bethe TBB::tbb)
+  bethe_discover_tests(bethe_tb_dispersion_mpfr_tests)
+
+  add_executable(bethe_inverse_square_mpfr_tests test_inverse_square_mpfr.cpp)
+  target_link_libraries(bethe_inverse_square_mpfr_tests PRIVATE bethe::bethe TBB::tbb)
+  bethe_discover_tests(bethe_inverse_square_mpfr_tests)
+
+  add_executable(bethe_su3_dispersion_mpfr_tests test_su3_dispersion_mpfr.cpp)
+  target_link_libraries(bethe_su3_dispersion_mpfr_tests PRIVATE bethe::bethe TBB::tbb)
+  bethe_discover_tests(bethe_su3_dispersion_mpfr_tests)
+endif()
 
 add_executable(bethe_tb_dispersion_tests test_tb_dispersion.cpp)
 target_link_libraries(bethe_tb_dispersion_tests PRIVATE bethe::bethe)
@@ -202,6 +257,11 @@ bethe_discover_tests(bethe_lieb_liniger_thermal_tests)
 add_executable(bethe_q_boson_tests test_q_boson.cpp)
 target_link_libraries(bethe_q_boson_tests PRIVATE bethe::bethe)
 bethe_discover_tests(bethe_q_boson_tests)
+if(BETHE_HAS_MPREAL)
+  add_executable(bethe_q_boson_mpfr_tests test_q_boson_mpfr.cpp)
+  target_link_libraries(bethe_q_boson_mpfr_tests PRIVATE bethe::bethe uni20_async TBB::tbb)
+  bethe_discover_tests(bethe_q_boson_mpfr_tests)
+endif()
 
 add_executable(bethe_bose_fermi_tests test_bose_fermi.cpp)
 target_link_libraries(bethe_bose_fermi_tests PRIVATE bethe::bethe)
@@ -231,6 +291,11 @@ bethe_discover_tests(bethe_sine_gordon_tests
 add_executable(bethe_sine_gordon_excitation_tests test_sine_gordon_excitations.cpp)
 target_link_libraries(bethe_sine_gordon_excitation_tests PRIVATE bethe::bethe)
 bethe_discover_tests(bethe_sine_gordon_excitation_tests)
+if(BETHE_HAS_MPREAL)
+  add_executable(bethe_sine_gordon_particle_mpfr_tests test_sine_gordon_particles_mpfr.cpp)
+  target_link_libraries(bethe_sine_gordon_particle_mpfr_tests PRIVATE bethe::bethe TBB::tbb)
+  bethe_discover_tests(bethe_sine_gordon_particle_mpfr_tests)
+endif()
 
 add_executable(bethe_sine_gordon_excited_tests test_sine_gordon_excited.cpp)
 target_link_libraries(bethe_sine_gordon_excited_tests PRIVATE bethe::bethe)
@@ -238,8 +303,12 @@ bethe_discover_tests(bethe_sine_gordon_excited_tests
   LONG_RUNNING_TESTS SineGordonExcited/fp128.NativeInteractingLevel)
 
 add_executable(bethe_kondo_tests test_kondo.cpp)
-target_link_libraries(bethe_kondo_tests PRIVATE bethe::bethe)
+target_link_libraries(bethe_kondo_tests PRIVATE bethe::bethe TBB::tbb)
 bethe_discover_tests(bethe_kondo_tests)
+
+add_executable(bethe_finite_volume_async_tests test_finite_volume_async.cpp)
+target_link_libraries(bethe_finite_volume_async_tests PRIVATE bethe::bethe TBB::tbb)
+bethe_discover_tests(bethe_finite_volume_async_tests)
 
 add_executable(bethe_lee_yang_tests test_lee_yang.cpp)
 target_link_libraries(bethe_lee_yang_tests PRIVATE bethe::bethe)
@@ -252,6 +321,11 @@ bethe_discover_tests(bethe_xxz_quantum_group_critical_tests)
 add_executable(bethe_xxz_quantum_group_free_tests test_xxz_quantum_group_free.cpp)
 target_link_libraries(bethe_xxz_quantum_group_free_tests PRIVATE bethe::bethe)
 bethe_discover_tests(bethe_xxz_quantum_group_free_tests)
+if(BETHE_HAS_MPREAL)
+  add_executable(bethe_xxz_qg_mpfr_tests test_xxz_qg_mpfr.cpp)
+  target_link_libraries(bethe_xxz_qg_mpfr_tests PRIVATE bethe::bethe uni20_async TBB::tbb)
+  bethe_discover_tests(bethe_xxz_qg_mpfr_tests)
+endif()
 
 add_executable(bethe_hubbard_continuum_tests test_hubbard_continuum.cpp)
 target_link_libraries(bethe_hubbard_continuum_tests PRIVATE bethe::bethe)
@@ -312,6 +386,9 @@ if(BETHE_BUILD_APPS)
     set(bethe_arbitrary_structure_factor ON)
   endif()
   if(Python3_Interpreter_FOUND)
+    add_test(NAME SU3Precision.cli
+      COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_su3_precision.py"
+        "$<TARGET_FILE:bethe-su3-pbc>" "${BETHE_HAS_MPREAL}" "${BETHE_HAS_MPLAPACK_MPREAL}")
     add_test(NAME RootSolverPrecision.cli
       COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_root_solver_precision.py"
         "$<TARGET_FILE:bethe-xxx-obc>" "$<TARGET_FILE:bethe-lieb-liniger-pbc>"
@@ -384,6 +461,16 @@ if(BETHE_BUILD_APPS)
       COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_table_contracts.py"
         "$<TARGET_FILE_DIR:bethe-su3-dispersion>")
   endif()
+  if(Python3_Interpreter_FOUND)
+    add_test(NAME Hubbard.precision
+      COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_hubbard_precision.py"
+        "$<TARGET_FILE:bethe-hubbard-pbc>" "$<TARGET_FILE:bethe-hubbard-obc>"
+        "${BETHE_HAS_MPREAL}" "${BETHE_HAS_MPLAPACK_MPREAL}")
+    add_test(NAME XXZ.precision
+      COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_xxz_precision.py"
+        "$<TARGET_FILE:bethe-xxz-pbc>" "$<TARGET_FILE:bethe-xxz-obc>"
+        "${BETHE_HAS_MPREAL}" "${BETHE_HAS_MPLAPACK_MPREAL}")
+  endif()
   foreach(app IN ITEMS bethe-sine-gordon-dispersion bethe-sine-gordon-bethe-yang bethe-sine-gordon-excited)
     add_test(NAME Citations.${app}.cli
       COMMAND "${CMAKE_COMMAND}" "-DPROGRAM=$<TARGET_FILE:${app}>"
@@ -397,6 +484,14 @@ if(BETHE_BUILD_APPS)
     add_test(NAME SineGordonExcitations.cli
       COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_sine_gordon_excitations.py"
         "$<TARGET_FILE:bethe-sine-gordon-dispersion>" "$<TARGET_FILE:bethe-sine-gordon-bethe-yang>" "${BETHE_HAS_FLOAT128}")
+    add_test(NAME SineGordonDispersion.precision
+      COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_sine_gordon_dispersion_precision.py"
+        "$<TARGET_FILE:bethe-sine-gordon-dispersion>" "${BETHE_HAS_MPREAL}")
+
+    add_test(NAME SineGordonPairGrid.cli
+      COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_sine_gordon_pair_grid.py"
+        "$<TARGET_FILE:bethe-sine-gordon-bethe-yang>" "${BETHE_HAS_FLOAT128}")
+    set_tests_properties(SineGordonPairGrid.cli PROPERTIES TIMEOUT 180)
     add_test(NAME SineGordonExcited.cli
       COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_sine_gordon_excited.py"
         "$<TARGET_FILE:bethe-sine-gordon-excited>" "${BETHE_HAS_FLOAT128}")
@@ -405,6 +500,9 @@ if(BETHE_BUILD_APPS)
     COMMAND "${CMAKE_COMMAND}" "-DPROGRAM=$<TARGET_FILE:bethe-tb-dispersion>"
       "-DTOOL=bethe-tb-dispersion" -P "${CMAKE_CURRENT_SOURCE_DIR}/check_citations_cli.cmake")
   if(Python3_Interpreter_FOUND)
+    add_test(NAME TBDispersion.precision.cli
+      COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_tb_dispersion_precision.py"
+        "$<TARGET_FILE:bethe-tb-dispersion>" "${BETHE_HAS_MPREAL}")
     add_test(NAME TBDispersion.cli
       COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_tb_dispersion.py"
         "$<TARGET_FILE:bethe-tb-dispersion>" "${BETHE_HAS_FLOAT128}")
@@ -419,6 +517,9 @@ if(BETHE_BUILD_APPS)
     add_test(NAME SU3Dispersion.cli
       COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_su3_dispersion.py"
         "$<TARGET_FILE:bethe-su3-dispersion>" "${BETHE_HAS_FLOAT128}")
+    add_test(NAME SU3Dispersion.precision
+      COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_su3_dispersion_precision.py"
+        "$<TARGET_FILE:bethe-su3-dispersion>" "${BETHE_HAS_MPREAL}")
     add_test(NAME Arguments.bethe-su3-dispersion.cli
       COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_shared_arguments.py"
         "$<TARGET_FILE:bethe-su3-dispersion>")
@@ -485,21 +586,33 @@ if(BETHE_BUILD_APPS)
     add_test(NAME LiebLinigerThermo.cli
       COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_lieb_liniger_thermo.py"
         "$<TARGET_FILE:bethe-lieb-liniger-dispersion>" "${BETHE_HAS_FLOAT128}")
+    add_test(NAME LiebLinigerThermo.precision
+      COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_thermodynamics_precision.py"
+        "$<TARGET_FILE:bethe-lieb-liniger-dispersion>" "${BETHE_HAS_MPREAL}" "${BETHE_HAS_MPLAPACK_MPREAL}")
     add_test(NAME LiebLinigerThermal.cli
       COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_lieb_liniger_thermal.py"
         "$<TARGET_FILE:bethe-lieb-liniger-thermal>" "${BETHE_HAS_FLOAT128}")
+    add_test(NAME QBoson.mpfr.cli
+      COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_q_boson_mpfr.py"
+        "$<TARGET_FILE:bethe-q-boson-pbc>" "${bethe_arbitrary_structure_factor}")
     add_test(NAME QBoson.cli
       COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_q_boson.py"
         "$<TARGET_FILE:bethe-q-boson-pbc>" "${BETHE_HAS_FLOAT128}")
     add_test(NAME BoseFermi.cli
       COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_bose_fermi.py"
         "$<TARGET_FILE:bethe-bose-fermi-pbc>" "${BETHE_HAS_FLOAT128}")
+    add_test(NAME BoseFermiMpfr.cli
+      COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_bose_fermi_precision.py"
+        "$<TARGET_FILE:bethe-bose-fermi-pbc>" "${BETHE_HAS_MPREAL}" "${BETHE_HAS_MPLAPACK_MPREAL}")
     add_test(NAME XYZ.cli
       COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_xyz.py"
         "$<TARGET_FILE:bethe-xyz-pbc>" "${BETHE_HAS_FLOAT128}")
     add_test(NAME HubbardContinuum.cli
       COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_hubbard_continuum.py"
         "$<TARGET_FILE:bethe-hubbard-continuum>" "${BETHE_HAS_FLOAT128}")
+    add_test(NAME QuantumGroupMpfr.cli
+      COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_xxz_qg_mpfr.py"
+        "$<TARGET_FILE:bethe-xxz-qg-obc>" "${BETHE_HAS_MPREAL}")
     add_test(NAME CriticalQuantumGroup.cli
       COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_xxz_qg.py"
         "$<TARGET_FILE:bethe-xxz-qg-obc>" "${BETHE_HAS_FLOAT128}")
@@ -627,6 +740,9 @@ if(BETHE_BUILD_APPS)
     add_test(NAME Sutherland.cli
       COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_sutherland_cli.py"
         "$<TARGET_FILE:bethe-sutherland-pbc>" "${BETHE_HAS_FLOAT128}")
+    add_test(NAME InverseSquare.precision.cli
+      COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_inverse_square_precision.py"
+        "$<TARGET_FILE:bethe-haldane-shastry-pbc>" "$<TARGET_FILE:bethe-sutherland-pbc>" "${BETHE_HAS_MPREAL}")
     add_test(NAME HaldaneShastry.cli
       COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_haldane_shastry_cli.py"
         "$<TARGET_FILE:bethe-haldane-shastry-pbc>" "${BETHE_HAS_FLOAT128}")
@@ -639,6 +755,11 @@ if(BETHE_BUILD_APPS)
     add_test(NAME DataOutput.cli
       COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_data_output_cli.py"
         "$<TARGET_FILE:bethe-hubbard-dispersion>" "${BETHE_HAS_FLOAT128}")
+  endif()
+  if(Python3_Interpreter_FOUND)
+    add_test(NAME GaudinYangMpfr.cli
+      COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_gaudin_yang_precision.py"
+        "$<TARGET_FILE:bethe-gaudin-yang-pbc>" "${BETHE_HAS_MPREAL}" "${BETHE_HAS_MPLAPACK_MPREAL}")
   endif()
   foreach(app IN ITEMS bethe-xxx-pbc bethe-xxx-obc bethe-xxz-pbc bethe-xxz-obc bethe-hubbard-pbc bethe-hubbard-obc bethe-hubbard-dispersion bethe-lieb-liniger-pbc bethe-lieb-liniger-obc bethe-su3-pbc bethe-gaudin-yang-pbc bethe-tj-pbc bethe-tb-pbc bethe-biquadratic-obc bethe-richardson bethe-central-spin bethe-sun-fermions-pbc bethe-ladder-pbc bethe-haldane-shastry-pbc bethe-sutherland-pbc)
     if(Python3_Interpreter_FOUND)

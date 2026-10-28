@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 #include "test_support.hpp"
+#include <bethe/hubbard_doped.hpp>
 #include <bethe/lieb_liniger_thermo.hpp>
 #include <bethe/prepared_observable_grid.hpp>
 #include <uni20/async/tbb_scheduler.hpp>
@@ -563,6 +564,96 @@ TYPED_TEST(PreparedGridModels, LiebLinigerBothBranchesAndFailureDiagnostics)
         }
       }
     }
+  }
+}
+
+TYPED_TEST(PreparedGridModels, HubbardBranchesShareBackgroundAndPreserveFailures)
+{
+  using R = TypeParam;
+  namespace model = bethe::hubbard::thermo;
+  std::array const branches{model::DopedBranch::spinon, model::DopedBranch::holon, model::DopedBranch::charge_particle};
+  // Exercise both queued dependency submission and actual simultaneous queries.
+  auto check = [&](auto& scheduler, int failure) {
+    model::DopedOptions<R> options;
+    if (failure == 1) options.max_background_iterations = 0;
+    if (failure == 2) options.max_iterations = 0;
+    model::DopedSolver<R> const reference(R{4}, R{1} / R{2}, options);
+    auto preparations = std::make_shared<std::atomic<int>>(0);
+    auto results = std::make_shared<std::array<std::vector<model::DopedPoint<R>>, 3>>();
+    auto background = bethe::prepare_background_async(
+        [options, preparations] {
+          ++*preparations;
+          return model::DopedSolver<R>(R{4}, R{1} / R{2}, options);
+        },
+        {&scheduler});
+    auto submit = [&](std::size_t b) {
+      return bethe::evaluate_observable_grid_async(
+          background.read(), 5,
+          [branch = branches[b], b](model::DopedSolver<R> const& solver, std::size_t i) {
+            auto const [low, high] = solver.momentum_range(branch);
+            auto const p = i == 4 ? high : low + (high - low) * R(i) / R{4};
+            return solver.at_momentum(branch, p, model::Convention::unshifted,
+                                      b == 1 ? model::EnergyReference::fermi : model::EnergyReference::hamiltonian);
+          },
+          [results, b](std::size_t i, auto point) {
+            EXPECT_EQ(i, (*results)[b].size());
+            (*results)[b].push_back(std::move(point));
+          },
+          {.scheduler = &scheduler, .max_in_flight = 2});
+    };
+    auto a = submit(0), b = submit(1), c = submit(2);
+    if constexpr (std::is_same_v<std::decay_t<decltype(scheduler)>, DebugScheduler>) EXPECT_EQ(*preparations, 0);
+    EXPECT_EQ(a.get_wait(scheduler), 5u);
+    EXPECT_EQ(b.get_wait(scheduler), 5u);
+    EXPECT_EQ(c.get_wait(scheduler), 5u);
+    EXPECT_EQ(*preparations, 1);
+    auto const& prepared = background.get_wait(scheduler).background();
+    EXPECT_EQ(prepared.status, reference.background().status);
+    EXPECT_EQ(prepared.fermi_rapidity, reference.background().fermi_rapidity);
+    EXPECT_EQ(prepared.mu_unshifted, reference.background().mu_unshifted);
+    EXPECT_EQ(prepared.energy_per_site_unshifted, reference.background().energy_per_site_unshifted);
+    std::size_t failed = 0;
+    for (std::size_t branch = 0; branch < branches.size(); ++branch)
+    {
+      ASSERT_EQ((*results)[branch].size(), 5u);
+      auto const [low, high] = reference.momentum_range(branches[branch]);
+      for (std::size_t i = 0; i < 5; ++i)
+      {
+        auto const p = i == 4 ? high : low + (high - low) * R(i) / R{4};
+        auto const expected =
+            reference.at_momentum(branches[branch], p, model::Convention::unshifted,
+                                  branch == 1 ? model::EnergyReference::fermi : model::EnergyReference::hamiltonian);
+        auto const& got = (*results)[branch][i];
+        EXPECT_EQ(got.branch, expected.branch);
+        EXPECT_EQ(got.convention, expected.convention);
+        EXPECT_EQ(got.reference, expected.reference);
+        EXPECT_EQ(got.momentum, expected.momentum);
+        EXPECT_EQ(got.parameter, expected.parameter);
+        EXPECT_EQ(got.energy, expected.energy);
+        EXPECT_EQ(got.symmetric_energy, expected.symmetric_energy);
+        EXPECT_EQ(got.fermi_energy, expected.fermi_energy);
+        EXPECT_EQ(got.delta_particles, expected.delta_particles);
+        EXPECT_EQ(got.spin, expected.spin);
+        EXPECT_EQ(got.energy_error, expected.energy_error);
+        EXPECT_EQ(got.momentum_error, expected.momentum_error);
+        EXPECT_EQ(got.iterations, expected.iterations);
+        EXPECT_EQ(got.converged, expected.converged);
+        EXPECT_EQ(got.status, expected.status);
+        failed += !got.converged;
+        if (failure == 1) EXPECT_EQ(got.status, model::DopedStatus::density_limit);
+      }
+    }
+    if (failure)
+      EXPECT_GT(failed, 0u);
+    else
+      EXPECT_EQ(failed, 0u);
+  };
+  for (int failure : {0, 1, 2})
+  {
+    DebugScheduler queued;
+    check(queued, failure);
+    TbbScheduler threaded(3);
+    check(threaded, failure);
   }
 }
 
