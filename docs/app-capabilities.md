@@ -40,7 +40,7 @@ independent numerical or serial/concurrent validation.
 | `tb-dispersion` | Serial analytic CLI; owning mixed-precision Async queries validated in pending PR #22 | Native only on merged baseline; [PR #22](https://github.com/Uni20-dev/bethe/pull/22) adds MPFR scalars, no MPLAPACK | Integrate reviewed shared-band precision; XXZ/XYZ elliptic models still need separate audits |
 | `sine-gordon-dispersion` | Serial analytic CLI; owning mixed-precision Async queries validated in pending PR #23 | Native only on merged baseline; [PR #23](https://github.com/Uni20-dev/bethe/pull/23) adds MPFR scalars, no MPLAPACK | Integrate reviewed masses, strict breather selection and pair thresholds; cheap formulas stay serial |
 | `xyz-dispersion` | Serial CLI; pending [PR #24](https://github.com/Uni20-dev/bethe/pull/24) reuses owning bound branches and validates shared Async preparation / parameter curves | Native only | Integrate reviewed reuse and measured curve-level concurrency; explicit-precision elliptic/theta functions remain necessary |
-| `xxz-dispersion` | Immutable band with cheap queries; bulk preparation remains serial | Native only | Explicit-precision theta constants and bulk quadrature; a per-momentum task is unlikely to help after preparation |
+| `xxz-dispersion` | Immutable band with cheap queries; bulk preparation remains serial | Native only | Theta constants await [Uni20 PR #103](https://github.com/Uni20-dev/uni20/pull/103); bulk quadrature still needs explicit precision. Cheap band queries stay serial |
 | `sine-gordon-bethe-yang`, `biquadratic-obc`, `xxz-qg-obc` | Sector-specific solver/composition audit pending | Native only | Treat real, complex and singular sectors separately |
 | `lee-yang-vacuum`, `lee-yang-excited`, `sine-gordon-vacuum`, `sine-gordon-excited`, `kondo-response` | Integral-equation composition audit pending | Native only | Preserve coupled iterations and continuation; audit discretization and complex functions |
 | `asep-pbc`, `tasep-pbc`, `potts-pbc`, `xyz-pbc` | Complex/nonlinear composition audit pending | Native only | Branch tracking and scalar-function coverage before advertising MPFR |
@@ -121,6 +121,15 @@ output; an independent 2,097,664-energy parameter sweep falls from 4.480 to
 0.585 seconds with eight workers. These are distinct reuse and scheduling
 measurements; the CLI stays serial. Commands and limits are in the PR's
 `docs/parallel-grids.md`. It does not extend the theta helper to MPFR.
+
+The theta-constant prerequisite is proposed separately in
+[Uni20 PR #103](https://github.com/Uni20-dev/uni20/pull/103). It provides scaled
+zero-argument rectangular constants at native and explicit MPFR precision,
+with independent product/Gamma references and accuracy growth through 1,024
+bits. Local native/wide/sanitizer checks pass; upstream review and CI are
+pending. Bethe has not changed its Uni20 pin or enabled MPFR for XXZ/XYZ.
+XXZ bulk-energy quadrature and XYZ complex theta arguments/derivatives remain
+separate work.
 
 Update this inventory with each reviewed app checkpoint. A proposed capability
 or a pending audit is not evidence of implemented support.
