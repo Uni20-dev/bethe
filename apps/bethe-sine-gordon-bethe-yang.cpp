@@ -2,6 +2,7 @@
 // Copyright (C) 2026 Ian McCulloch
 #include "execution-options.hpp"
 #include "result-output.hpp"
+#include "solver-precision.hpp"
 #include <bethe/observable_grid.hpp>
 #include <bethe/sine_gordon_bethe_yang.hpp>
 
@@ -55,7 +56,7 @@ void add_options(CLI::App& app, Arguments& a)
   cli::count_option(app, "--max-phase-levels", a.quadrature_levels, "Quadrature refinement levels")
       ->capture_default_str();
   cli::count_option(app, "--max-fourier-cutoffs", a.cutoffs, "Fourier cutoff attempts")->capture_default_str();
-  cli::precision_option(app, a.precision);
+  cli::precision_option(app, a.precision, cli::ArbitraryPrecision::real);
   cli::threads_option(app, a.threads)->description("Scheduler concurrency limit for independent Bethe-Yang levels");
   cli::add_data_output_options(app, a.output,
                                {{.name = "levels", .description = "Selected energy levels", .primary = true}});
@@ -90,16 +91,16 @@ char const* name(model::KernelStatus status)
   }
   return "unknown";
 }
-template <uni20::Real Real> int run(Arguments const& a, int argc, char** argv)
+template <uni20::Real Real> int run(Arguments const& a, int argc, char** argv, model::BetheYangOptions<Real> options)
 {
   uni20::run_context context(program_info(), {.invocation = std::vector<std::string>(argv, argv + argc)});
-  Real const mass = uni20::parse_real<Real>(a.mass), p = uni20::parse_real<Real>(*a.coupling),
-             length = uni20::parse_real<Real>(*a.length);
+  Real const mass = cli::parse_solver_real<Real>(a.mass, options),
+             p = cli::parse_solver_real<Real>(*a.coupling, options),
+             length = cli::parse_solver_real<Real>(*a.length, options);
   auto const first = uni20::half_int::parse(a.number);
   if (first.twice() > std::numeric_limits<std::int64_t>::max() - 2 * std::int64_t(a.levels))
     throw std::invalid_argument("Bethe label overflow");
-  model::BetheYangOptions<Real> options;
-  if (a.tolerance) options.tolerance = uni20::parse_real<Real>(*a.tolerance);
+  if (a.tolerance) options.tolerance = cli::parse_solver_real<Real>(*a.tolerance, options);
   options.max_iterations = a.iterations;
   options.phase.max_evaluations = a.evaluations;
   options.phase.max_levels = a.quadrature_levels;
@@ -174,6 +175,9 @@ int main(int argc, char** argv)
       [&](auto&) {
         a.output.validate();
         if (a.levels < 1 || a.levels > 10000) throw std::invalid_argument("require 1<=levels<=10000");
-        return cli::dispatch_precision(a.precision, [&]<typename Real>() { return run<Real>(a, argc, argv); });
+        return cli::dispatch_options_precision<cli::ArbitraryPrecision::real, model::BetheYangOptions>(
+            a.precision, [&]<typename Real>(model::BetheYangOptions<Real> options) {
+              return run<Real>(a, argc, argv, std::move(options));
+            });
       });
 }

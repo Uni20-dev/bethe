@@ -45,7 +45,7 @@ validation; their measurements are historical records, not new integration runs.
 | `xyz-dispersion` | Serial CLI; owning bound branches and shared Async preparation / parameter curves ([#24](https://github.com/Uni20-dev/bethe/pull/24)) | Native only | Explicit-precision elliptic/theta functions |
 | `xxz-dispersion` | Immutable band with cheap queries; bulk preparation remains serial | Native only | Model adoption of theta constants and finite quadrature; see upstream prerequisites below |
 | `xxz-qg-obc` | Continuous regular-root scans; owning regular/free-sector queries ([#26](https://github.com/Uni20-dev/bethe/pull/26)) | Yes, MPFR scalars | Preserve critical regular-root/free-endpoint scope; cheap free blocks stay serial |
-| `sine-gordon-bethe-yang` | Bounded independent level scans ([#27](https://github.com/Uni20-dev/bethe/pull/27)) | Native only | MPFR phase integration and a model-level precision audit |
+| `sine-gordon-bethe-yang` | Bounded independent level scans ([#27](https://github.com/Uni20-dev/bethe/pull/27)) | Explicit MPFR scalars | No MPLAPACK; Fourier, iteration and omitted-wrapping limits remain separate |
 | `biquadratic-obc` | Continuous real-root and owned bound-cluster scans; independent AF sector minima ([#35](https://github.com/Uni20-dev/bethe/pull/35)) | Native only | Model-level explicit precision; selected states and dependent Q-system/singlet paths stay direct |
 | `lee-yang-vacuum`, `lee-yang-excited`, `sine-gordon-vacuum`, `sine-gordon-excited` | Owning parameter sweeps; optional vacuum/excited overlap in excited-state CLIs ([#28](https://github.com/Uni20-dev/bethe/pull/28)) | Native only | Explicit precision through controls/constants/reductions and complex kernels/quadrature; coupled iterations remain sequential |
 | `kondo-response` | Bounded field scans and owning Async queries ([#29](https://github.com/Uni20-dev/bethe/pull/29)); single-point/default one-worker requests stay direct | Native only | Explicit-precision scaled positive-real Gamma, Euler-series tails and quadrature |
@@ -265,3 +265,11 @@ exported rows match main and serial output. Whole-frontend eight-worker scaling
 is 5.9–7.4x, with unchanged serial cost. Native precision support is unchanged;
 no MPFR claim is made. Single-state and dependent Q-system/singlet modes remain
 serial; cheap scans do not justify changing the one-worker default.
+
+### Bethe–Yang precision
+
+The same-charge sine-Gordon pair solver and its real phase/complex Fourier kernel
+carry explicit MPFR precision through constants, quadrature, tail bounds and
+failed-state diagnostics. These paths use scalar arithmetic without MPLAPACK.
+The existing bounded level grid also accepts owning requests at different
+precisions. Exact finite-volume NLIE frontends still need their own MPFR audit.
