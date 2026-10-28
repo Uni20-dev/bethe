@@ -187,11 +187,11 @@ or `UNI20_ENABLE_MPC` options.
 
 Arbitrary precision is optional. Uni20 enables its real and complex scalars
 together, requiring GMP, MPFR >= 4.2, and MPC development packages. All modes of
-`bethe-xxx-pbc`, `bethe-xxx-obc`, `bethe-richardson`, `bethe-central-spin`,
+`bethe-xxx-pbc`, `bethe-xxx-obc`, `bethe-xxz-qg-obc`, `bethe-richardson`, `bethe-central-spin`,
 `bethe-su3-dispersion`, `bethe-tb-dispersion`, `bethe-sine-gordon-dispersion`, `bethe-haldane-shastry-pbc` and `bethe-sutherland-pbc`
 work without MPLAPACK. Uni20 supplies CPU QR for
 Richardson and central spin; SU(3)/TB/sine-Gordon dispersions, Haldane–Shastry and Sutherland
-use scalar functions only.
+and quantum-group XXZ use scalar functions only.
 In a separate build directory:
 
 ```sh
@@ -242,10 +242,11 @@ singlet energies, and Richardson/central-spin ground-state continuation and fini
 SU(3)/TB thermodynamic elementary lines and continuum bounds and Haldane–Shastry/Sutherland finite spectra are also supported.
 Q-boson ground states and canonical scans also retain explicit precision.
 Sine-Gordon particle lines and pair thresholds also support MPFR.
+Both branches of the quantum-group XXZ frontend also retain explicit precision.
 Both finite XXZ frontends support their existing ground, sector and real-root
 excitation modes; their physical domain and state-family restrictions still apply.
 It does **not** enable arbitrary precision throughout all models or frontends.
-The XXX real-root and Gaudin solvers, SU(3)/TB/sine-Gordon dispersions and Haldane–Shastry/Sutherland need just `UNI20_ENABLE_MPREAL=ON`;
+The XXX real-root, quantum-group XXZ and Gaudin solvers, SU(3)/TB/sine-Gordon dispersions and Haldane–Shastry/Sutherland need just `UNI20_ENABLE_MPREAL=ON`;
 Lieb–Liniger, SU(3), finite XXZ/Hubbard, Gaudin–Yang/Bose–Fermi, q-boson and form factors additionally
 need `UNI20_BACKEND_MPLAPACK=ON`.
 Enabling that provider also lets Uni20 dispatch the Lieb–Liniger LU and Gaudin
