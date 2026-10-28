@@ -235,5 +235,5 @@ Analytic endpoints and unsuccessful solves retain that precision; unavailable
 energies remain absent. Owning Async level requests may mix precisions, and
 completion is awaited through the final grid result. The shared Fourier
 integrals use Uni20's finite tanh–sinh quadrature with separate analytic tail
-bounds. The independent reference generator uses the closed $p=2$ rapidity-space
+bounds. The independent reference generator uses the closed $`p=2`$ rapidity-space
 phase instead of that Fourier representation.
