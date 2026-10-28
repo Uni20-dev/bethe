@@ -25,6 +25,8 @@ bethe-xxz-obc 16 --delta 3 --roots
 bethe-xxz-obc 33 --delta -0.9 --sz -1/2 --roots
 # In a binary128-enabled build:
 bethe-xxz-obc 64 --delta 0.999999999999999999999999 --precision fp128
+# With MPFR scalars and MPLAPACK MPFR enabled:
+bethe-xxz-obc 16 --delta 3 --precision bits-256 --roots
 ```
 
 The default is the ground state, represented by Sz=0 for even N and Sz=1/2
@@ -33,6 +35,13 @@ per magnetization sector. Negative sectors use spin reversal. There is no
 lattice momentum for free ends, and generic XXZ states are not classified
 by total spin S or SU(2) multiplets. There is no `--spin`, `--spinons`, or
 boundary-selection option.
+
+Explicit arbitrary precision covers the same physical regimes, including the
+negative-anisotropy coordinates and the massive boundary root. The separate
+boundary inverse square and logarithmic distance retain the working precision;
+failed continuation still reports the requested Hamiltonian and the stage
+reached. See [precision and Async composition](xxz.md#arbitrary-precision-and-composition)
+for the build requirements, input contract and independent numerical checks.
 
 For $`-1\lt \Delta \lt 0`$, the solver uses positive hyperbolic lambda coordinates
 and Newton iteration. `--roots` prints both lambda and
