@@ -153,8 +153,9 @@ std::optional<DopedMesh<Real>> doped_mesh(Real q, bethe::detail::GaussLegendreRu
     for (std::size_t j = 0; j < n; ++j)
     {
       Real const kernel = out.kernel->value(out.sine[i] - out.sine[j]) + out.kernel->value(out.sine[i] + out.sine[j]);
-      arho[i * n + j] = Real(i == j) - out.cosine[i] * out.w[j] * kernel;
-      ae[i * n + j] = Real(i == j) - out.cosine[j] * out.w[j] * kernel;
+      Real const identity = uni20::scalar_like(zero, i == j ? 1 : 0);
+      arho[i * n + j] = identity - out.cosine[i] * out.w[j] * kernel;
+      ae[i * n + j] = identity - out.cosine[j] * out.w[j] * kernel;
     }
   // Normal Uni20 dispatch selects the configured provider at working precision;
   // singular systems remain recoverable without a process-global error policy.

@@ -75,7 +75,7 @@ template <uni20::Real Real, typename Function>
 ExtremaResult<Real> bounded_extrema(Function const& function, Real lo, Real hi, ExtremaOptions<Real> const& o = {})
 {
   Real const zero = uni20::scalar_at_precision<Real>(0, o.precision());
-  for (auto const* value : {&lo, &hi, &o.tolerance, &o.position_tolerance})
+  for (auto const* value : std::array<Real const*, 4>{&lo, &hi, &o.tolerance, &o.position_tolerance})
     require_same_precision(*value, zero);
   if (!uni20::isfinite(lo) || !uni20::isfinite(hi) || !(lo < hi) || !uni20::isfinite(hi - lo) ||
       !uni20::isfinite(o.tolerance) || !(o.tolerance > Real{0}) || !uni20::isfinite(o.position_tolerance) ||

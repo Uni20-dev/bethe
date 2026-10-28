@@ -232,8 +232,10 @@ template <uni20::Real Real> class Evaluator {
       Real const ratio = cut * s;
       if (!uni20::isfinite(a) || !uni20::isfinite(ratio)) return out;
       Real const end = Real{2} * uni20::math::asinh(uni20::math::sqrt(ratio / Real{2}));
-      Real dm = Real{2} * uni20::math::pow(uni20::math::sin((k - p / Real{2}) / Real{2}), 2);
-      Real dp = Real{2} * uni20::math::pow(uni20::math::sin((k + p / Real{2}) / Real{2}), 2);
+      Real const sm = uni20::math::sin((k - p / Real{2}) / Real{2});
+      Real const sp = uni20::math::sin((k + p / Real{2}) / Real{2});
+      Real dm = Real{2} * (sm * sm);
+      Real dp = Real{2} * (sp * sp);
       if (k == Real{0} || uni20::math::abs(k) == p) dm = dp = uni20::scalar_like(zero, 1);
       bool const outer = uni20::math::abs(k) < p / Real{2};
       auto f = [&](uni20::quadrature_point<Real> const& point) {

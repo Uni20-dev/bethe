@@ -82,7 +82,7 @@ void add_options(CLI::App& app, Arguments& args)
   cli::threads_option(*numerics, args.threads)
       ->description("Scheduler concurrency limit for independent momentum points");
   cli::precision_option(*numerics, args.precision, cli::ArbitraryPrecision::real);
-  cli::text_option(*numerics, "--tolerance", args.tolerance, "Target in native precision; see conventions below")
+  cli::text_option(*numerics, "--tolerance", args.tolerance, "Target in selected precision; see conventions below")
       ->type_name("REAL")
       ->default_str("256 epsilon (half-filled); 4096 epsilon (doped)");
   options::add_count_option(*numerics, "--max-iterations", args.max_iterations, "Momentum inversion updates")
