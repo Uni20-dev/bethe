@@ -3,11 +3,45 @@
 Start with the [worked vacuum and gap tutorial](tutorials/lee-yang.md) for
 plots, downloadable exports and an explanation of effective central charge.
 
-**Status: native fp64/long-double/fp128 periodic ground-state TBA library and
-frontend implemented and checked against an independent oracle.** This is a continuum
+**Status: periodic ground-state TBA and regular one-particle levels support
+fp64, long-double, fp128 and explicit MPFR arithmetic.** This is a continuum
 field-theory calculation, not a finite spin-chain or RSOS Hamiltonian solver.
 The regular spin-zero one-particle library and frontend are also available
 for $`5\le mL\le30`$; continuation to small volume is not yet implemented.
+
+## Arithmetic and convergence
+
+Both frontends accept `--precision bits-N` and `--precision digits-N` in an
+[MPFR-enabled build](building.md#enable-arbitrary-precision). These TBA solves
+use scalar arithmetic and do not require MPLAPACK. For example:
+
+```sh
+bethe-lee-yang-vacuum --length 30 --precision bits-160 --tolerance 1e-30
+bethe-lee-yang-excited --length 30 --precision bits-160 --tolerance 1e-30 --threads 2
+```
+
+Arithmetic bits control rounding. They do not increase `--max-intervals`,
+`--max-cutoffs`, nonlinear iterations or the kernel-product budget. The solver
+still requires separate nonlinear, mesh and cutoff checks; failure returns
+missing physical outputs and exit status 2. Reported refinement errors are
+estimates, not certified intervals. Increasing precision while retaining an
+unresolved mesh does not establish a more accurate energy.
+
+Library callers construct `Options<uni20::mpreal>(precision)` or
+`OneParticleOptions<uni20::mpreal>(precision)` and supply masses, lengths and
+real-valued controls at that same finite precision. Diagnostic zeros and
+infinities retain it even on failure. Owning Async sweeps may mix independently
+prepared requests at different precisions; the ambient MPFR default is untouched.
+The excited frontend overlaps its vacuum and one-particle solves with
+`--threads 2`; each nonlinear solve and its mesh refinement remain sequential.
+
+`scripts/reference_lee_yang_mpfr.py` provides an independent high-precision
+check at $`mL=30`$: composite Gauss–Legendre integration and the complex
+scattering amplitude, compared with the production trapezoid and reduced real
+source expressions. Increasing decimal precision from 96 to 112, Gauss order
+from 64 to 80 and rapidity cutoff from 4 to 5 gives agreement beyond 80 decimal
+digits. The regression checks arithmetic growth at 80, 160 and 256 bits against
+these values, separately from refinement budgets and failure diagnostics.
 
 ## Command line
 
@@ -308,8 +342,8 @@ if (excited.converged && vacuum.converged) {
 }
 ```
 
-The library has the oracle's explicit $`5\le mL\le30`$ domain. It computes native
-fp64, long-double or fp128 values without a double fallback. The optional
+The library has the oracle's explicit $`5\le mL\le30`$ domain. It computes at
+the selected native or explicit MPFR precision without a double fallback. The optional
 outputs are `scaling_function` $`Y_1`$, `casimir_energy` $`E_{1,C}`$, $`\beta`$ and
 `pole_displacement` $`\beta-\pi/6`$. All are absent on failure. There is deliberately
 no excited-state `effective_central_charge` field: this is an energy level,

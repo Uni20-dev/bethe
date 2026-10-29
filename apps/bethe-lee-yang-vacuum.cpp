@@ -20,6 +20,7 @@ auto program_info()
       "Computed c_eff(r)=-6Y/pi approaches 2/5 in the UV; it is not the theory's c=-22/5 (h_min=-1/5).",
       "Tolerance is absolute in Y, default 8192 epsilon. Nonlinear, mesh and cutoff checks are separate.",
       "Failed observables and unavailable diagnostics are missing; incomplete solves exit 2.",
+      "bits-N/digits-N select explicit MPFR arithmetic; refinement/work budgets remain independent.",
       "See docs/lee-yang.md; --references for literature and conventions."};
   info.examples = {
       {"bethe-lee-yang-vacuum --length 1", "Unit-mass periodic ground state"},
@@ -32,12 +33,13 @@ void add_options(CLI::App& app, Arguments& a)
   bethe::cli::add_data_output_options(
       app, a.output, {{.name = "vacuum", .description = "Vacuum energy and numerical diagnostics", .primary = true}});
 }
-template <uni20::Real Real> int run(Arguments const& a, int argc, char** argv)
+template <uni20::Real Real> int run(Arguments const& a, model::Options<Real> options, int argc, char** argv)
 {
   uni20::run_context context(program_info(), {.invocation = std::vector<std::string>(argv, argv + argc)});
-  Real const mass = a.mass ? uni20::parse_real<Real>(*a.mass) : Real{1};
-  Real const length = uni20::parse_real<Real>(*a.length);
-  auto const options = cli::lee_yang::options_from<Real>(a, model::Options<Real>{});
+  Real const mass = a.mass ? cli::parse_solver_real<Real>(*a.mass, options)
+                           : uni20::scalar_at_precision<Real>(1, options.precision());
+  Real const length = cli::parse_solver_real<Real>(*a.length, options);
+  options = cli::lee_yang::options_from<Real>(a, std::move(options));
   // Validation and the solve precede opening any --force targets.
   auto const s = context.measure([&] { return model::ground_state(mass, length, options); });
   cli::RunReport report(context, "Scaling Lee-Yang ground state (bulk-subtracted)");
@@ -93,6 +95,7 @@ int main(int argc, char** argv)
       argc, argv, program_info(), [&](auto& app) { add_options(app, a); },
       [&](auto&) {
         a.output.validate();
-        return cli::dispatch_precision(a.precision, [&]<typename Real>() { return run<Real>(a, argc, argv); });
+        return cli::dispatch_options_precision<cli::ArbitraryPrecision::real, model::Options>(
+            a.precision, [&](auto options) { return run(a, std::move(options), argc, argv); });
       });
 }

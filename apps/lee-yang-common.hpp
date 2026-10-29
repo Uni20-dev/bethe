@@ -3,6 +3,7 @@
 #pragma once
 #include "data-output-options.hpp"
 #include "program-options.hpp"
+#include "solver-precision.hpp"
 #include <bethe/lee_yang.hpp>
 
 namespace bethe::cli::lee_yang
@@ -30,12 +31,12 @@ inline void add_options(CLI::App& app, Arguments& a, char const* tolerance_help)
       ->capture_default_str();
   count_option(app, "--max-kernel-products", a.products, "Maximum folded kernel-times-logarithm terms per state")
       ->capture_default_str();
-  precision_option(app, a.precision);
+  precision_option(app, a.precision, ArbitraryPrecision::real);
 }
 template <uni20::Real Real, typename Options> Options options_from(Arguments const& a, Options options)
 {
-  if (a.tolerance) options.tolerance = uni20::parse_real<Real>(*a.tolerance);
-  if (a.cutoff) options.initial_cutoff = uni20::parse_real<Real>(*a.cutoff);
+  if (a.tolerance) options.tolerance = parse_solver_real<Real>(*a.tolerance, options);
+  if (a.cutoff) options.initial_cutoff = parse_solver_real<Real>(*a.cutoff, options);
   options.initial_intervals = a.initial_intervals;
   options.max_intervals = a.max_intervals;
   options.max_iterations = a.iterations;

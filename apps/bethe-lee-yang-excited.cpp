@@ -27,18 +27,20 @@ auto program_info()
       "Regular one-particle branch only: no UV continuation, moving particles, higher levels or boundaries.",
       "E1_C and E0_C are bulk-subtracted levels; the excitation gap is E1_C-E0_C, not E1_C.",
       "Tolerance is absolute in each Y=L*E_C, default 65536 epsilon; work limits apply separately to each state.",
+      "bits-N/digits-N select explicit MPFR arithmetic; refinement/work budgets remain independent.",
       "Gap values require both states converged; failed values are missing.",
       "Failures exit 2 with missing affected observables. See docs/lee-yang.md; --references for literature."};
   info.examples = {{"bethe-lee-yang-excited --length 5", "Unit-mass zero-momentum one-particle gap"},
                    {"bethe-lee-yang-excited --length 10 --precision fp128 --json levels.json", "Native fp128 export"}};
   return info;
 }
-template <uni20::Real Real> int run(Arguments const& a, int argc, char** argv)
+template <uni20::Real Real> int run(Arguments const& a, model::OneParticleOptions<Real> options, int argc, char** argv)
 {
   uni20::run_context context(program_info(), {.invocation = std::vector<std::string>(argv, argv + argc)});
-  Real const mass = a.mass ? uni20::parse_real<Real>(*a.mass) : Real{1};
-  Real const length = uni20::parse_real<Real>(*a.length);
-  auto options = cli::lee_yang::options_from<Real>(a, model::OneParticleOptions<Real>{});
+  Real const mass = a.mass ? cli::parse_solver_real<Real>(*a.mass, options)
+                           : uni20::scalar_at_precision<Real>(1, options.precision());
+  Real const length = cli::parse_solver_real<Real>(*a.length, options);
+  options = cli::lee_yang::options_from<Real>(a, std::move(options));
   options.max_root_iterations = a.root_iterations;
   // Reject invalid requests before admitting either independent solve.
   model::detail::validate_one_particle(mass, length, options);
@@ -58,8 +60,8 @@ template <uni20::Real Real> int run(Arguments const& a, int argc, char** argv)
     // Subtract dimensionless levels before dividing by L; each state has
     // separately passed mesh/cutoff verification. Include subtraction rounding.
     Real const y = *excited.scaling_function - *vacuum.scaling_function;
-    Real const rounding = Real{8} * uni20::numeric_limits<Real>::epsilon() *
-                          (std::abs(*excited.scaling_function) + std::abs(*vacuum.scaling_function));
+    Real const rounding = Real{8} * uni20::numeric_limits<Real>::epsilon(options.precision()) *
+                          (uni20::math::abs(*excited.scaling_function) + uni20::math::abs(*vacuum.scaling_function));
     scaled_gap = finite(y);
     gap = finite(y / length);
     gap_error = finite((excited.cutoff_error + vacuum.cutoff_error + rounding) / length);
@@ -157,6 +159,7 @@ int main(int argc, char** argv)
       },
       [&](auto&) {
         a.output.validate();
-        return cli::dispatch_precision(a.precision, [&]<typename Real>() { return run<Real>(a, argc, argv); });
+        return cli::dispatch_options_precision<cli::ArbitraryPrecision::real, model::OneParticleOptions>(
+            a.precision, [&](auto options) { return run(a, std::move(options), argc, argv); });
       });
 }
