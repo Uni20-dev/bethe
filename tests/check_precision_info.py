@@ -37,7 +37,7 @@ assert rows["fp64"]["available"] and rows["fp64"]["significand_bits"] == 53
 assert rows["fp128"]["available"] == enabled(fp128)
 assert rows["bits-N"]["available"] == rows["digits-N"]["available"] == enabled(mpfr)
 metadata = table["metadata"]
-frontends = {name.strip() for name in frontends.split(",")}
+frontends = {name.strip() for name in metadata["Arbitrary-precision frontends"].split(",")}
 assert (metadata["Uni20 float128 configured"] == "true") == enabled(fp128)
 assert (metadata["MPLAPACK binary128 configured"] == "true") == enabled(mplapack_fp128)
 assert (metadata["Uni20 arbitrary-precision real/complex configured"] == "true") == enabled(mpfr)
