@@ -45,7 +45,8 @@ template <uni20::Real Real = double>
 [[nodiscard]] State<Real> solve_real(std::size_t sites, std::span<uni20::half_int const> numbers,
                                      SolverOptions<Real> const& options = {})
 {
-  return detail::from_tl(temperley_lieb::solve_real<Real>(sites, Real{3}, numbers, options));
+  return detail::from_tl(temperley_lieb::solve_real<Real>(
+      sites, uni20::scalar_at_precision<Real>(3, options.precision()), numbers, options));
 }
 
 /// Lowest energy in one TL module, even ell in [0,N]. Not a physical-spin sector minimum.
@@ -53,7 +54,8 @@ template <uni20::Real Real = double>
 [[nodiscard]] State<Real> sector_ground_state(std::size_t sites, std::size_t through_lines,
                                               SolverOptions<Real> const& options = {})
 {
-  return detail::from_tl(temperley_lieb::sector_ground_state(sites, Real{3}, through_lines, options));
+  return detail::from_tl(temperley_lieb::sector_ground_state(
+      sites, uni20::scalar_at_precision<Real>(3, options.precision()), through_lines, options));
 }
 
 /// e_i=(S_i.S_(i+1))^2-1=3*P_singlet: H=H_TL-(N-1).
@@ -76,7 +78,8 @@ template <uni20::Real Real = double>
                                                         SolverOptions<Real> const& solver = {})
 {
   return temperley_lieb::detail::map_real_scan(
-      temperley_lieb::real_excitations(sites, Real{3}, through_lines, scan, solver),
+      temperley_lieb::real_excitations(sites, uni20::scalar_at_precision<Real>(3, solver.precision()), through_lines,
+                                       scan, solver),
       [](auto state) { return detail::from_tl(std::move(state)); }, Real{1});
 }
 } // namespace bethe::biquadratic
