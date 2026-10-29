@@ -136,7 +136,8 @@ Selected failures preserve their coefficients and available energy estimate;
 missing/pole energies are optional, not plausible-looking zeroes.
 
 The library also accepts explicit MPFR precision, with MPC complex root
-recovery and the configured MPLAPACK MPFR provider for Newton corrections:
+recovery and Uni20's normal LU dispatch for Newton corrections. CPU MPFR
+works without MPLAPACK; an enabled provider is preferred by the dispatch:
 
 ```cpp
 using R = uni20::mpreal;
