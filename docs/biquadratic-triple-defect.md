@@ -25,9 +25,10 @@ threshold, not the minimum of the full four-defect module. These are TL
 singlet insertions, not physical spin flips; no SU(2) decomposition or
 spectral weights are implied.
 
-The C++ API also supports explicit MPFR precision, following the
+The frontend accepts `--precision bits-N` and `digits-N` when Uni20 MPFR
+scalars are configured. The C++ API follows the
 [shared cluster precision contract](biquadratic-bound-triples.md#explicit-precision-in-the-library).
-This does not yet enable MPFR in the frontend.
+Arithmetic precision and solver work limits remain independent.
 
 ## Command-line selections and scans
 
