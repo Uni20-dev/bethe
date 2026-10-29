@@ -75,7 +75,8 @@ curve; they are not a promise that a chosen lattice bandwidth supports them.
 
 ## 3. Follow the crossover and slow saturation
 
-![The impurity-induced magnetization approaches one half slowly; the energy change divided by field approaches minus one half.](figures/kondo-response.svg)
+![The impurity-induced magnetization approaches one half slowly; the energy change divided by field approaches minus one half.](figures/kondo-response.svg#gh-light-mode-only)
+![The impurity-induced magnetization approaches one half slowly; the energy change divided by field approaches minus one half.](figures/kondo-response-dark.svg#gh-dark-mode-only)
 
 All markers are native fp64 evaluations, including both sides of x=1.
 The line segments connect them; no interpolation supplies additional solver

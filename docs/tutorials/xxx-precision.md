@@ -95,7 +95,8 @@ the number of printed digits after a binary64 solve cannot recover it either.
 
 ## 3. Better formulas and more precision solve different problems
 
-![Relative error in the one-magnon energy lowering, obtained either from total energy or directly from the exported root, across five working precisions](figures/xxx-precision.svg)
+![Relative error in the one-magnon energy lowering, obtained either from total energy or directly from the exported root, across five working precisions](figures/xxx-precision.svg#gh-light-mode-only)
+![Relative error in the one-magnon energy lowering, obtained either from total energy or directly from the exported root, across five working precisions](figures/xxx-precision-dark.svg#gh-dark-mode-only)
 
 [Download the numerical exports and provenance](data/xxx-precision.jsonl).
 

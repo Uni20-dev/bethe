@@ -62,7 +62,8 @@ done
 The reproduction script also runs quarter filling and N=1, exporting roots
 alongside the mode. It validates those roots before saving any regenerated data.
 
-![TASEP gaps for half filling, quarter filling and one particle, with local finite-size exponents.](figures/tasep-scaling.svg)
+![TASEP gaps for half filling, quarter filling and one particle, with local finite-size exponents.](figures/tasep-scaling.svg#gh-light-mode-only)
+![TASEP gaps for half filling, quarter filling and one particle, with local finite-size exponents.](figures/tasep-scaling-dark.svg#gh-dark-mode-only)
 
 For fixed density $`0\lt\rho=N/L\lt1`$, the large-L relaxation gap scales as
 $`g\propto L^{-3/2}`$, the one-dimensional Kardar–Parisi–Zhang dynamical
@@ -95,7 +96,8 @@ diffusive decay should not be compared as if they had the same size scaling.
 
 ## 3. Separate decay from drift
 
-![Rescaled angular frequency tends to one half at quarter filling, is zero at half filling, and tends to one for a single particle.](figures/tasep-frequency.svg)
+![Rescaled angular frequency tends to one half at quarter filling, is zero at half filling, and tends to one for a single particle.](figures/tasep-frequency.svg#gh-light-mode-only)
+![Rescaled angular frequency tends to one half at quarter filling, is zero at half filling, and tends to one for a single particle.](figures/tasep-frequency-dark.svg#gh-dark-mode-only)
 
 The large-ring fixed-density prediction is
 

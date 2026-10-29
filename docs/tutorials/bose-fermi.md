@@ -43,7 +43,8 @@ zero. Length is a physical circumference, not five lattice sites.
 
 ## 2. Sweep repulsion, then compare compositions
 
-![A two-boson three-fermion energy rises with repulsion; composition benchmarks at c=1 show the pure-boson and one-fermion energies coincide.](figures/bf-composition.svg)
+![A two-boson three-fermion energy rises with repulsion; composition benchmarks at c=1 show the pure-boson and one-fermion energies coincide.](figures/bf-composition.svg#gh-light-mode-only)
+![A two-boson three-fermion energy rises with repulsion; composition benchmarks at c=1 show the pure-boson and one-fermion energies coincide.](figures/bf-composition-dark.svg#gh-dark-mode-only)
 
 The left panel divides by the finite-size impenetrable limit
 

@@ -46,7 +46,8 @@ Do not reuse the velocity of a differently normalized Potts or Pauli Hamiltonian
 
 ## 2. Plot the selected charged branch
 
-![Potts charged gaps at three ring lengths approach a sinusoidal branch; the vacuum Casimir estimator approaches four fifths.](figures/potts-levels.svg)
+![Potts charged gaps at three ring lengths approach a sinusoidal branch; the vacuum Casimir estimator approaches four fifths.](figures/potts-levels.svg#gh-light-mode-only)
+![Potts charged gaps at three ring lengths approach a sinusoidal branch; the vacuum Casimir estimator approaches four fifths.](figures/potts-levels-dark.svg#gh-dark-mode-only)
 
 The left panel plots q=+1; q=-1 lies exactly on top of it. Every gap subtracts
 the **same-length** independently solved vacuum, not the extensive estimate

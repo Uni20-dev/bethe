@@ -41,9 +41,10 @@ The grids are uniform in physical momentum, not in rapidity.
 \epsilon(p)=2\pi J\sin p,\qquad0\le p\le\pi.
 ```
 
-![The TB spinon sine band and two-/four-spinon continua. The continua share their lower edge but have different upper edges.](figures/tb-spectrum.svg)
+![The TB spinon sine band and two-/four-spinon continua. The continua share their lower edge but have different upper edges.](figures/tb-spectrum.svg#gh-light-mode-only)
+![The TB spinon sine band and two-/four-spinon continua. The continua share their lower edge but have different upper edges.](figures/tb-spectrum-dark.svg#gh-dark-mode-only)
 
-[Open the full-size figure](figures/tb-spectrum.svg).
+Full-size figure: [light](figures/tb-spectrum.svg) · [dark](figures/tb-spectrum-dark.svg).
 
 The endpoints are gapless and the maximum is **2πJ**, approximately 6.283185 J.
 Each elementary spinon carries spin **1/2**, although the physical sites have
@@ -88,9 +89,10 @@ the allowed four-spinon energy interval.
 bethe-tb-dispersion --exchange 1 --points 193 --folded --csv tb-folded.csv
 ```
 
-![TB continuum envelopes at one-site momenta and after combining the two images seen by a two-site unit cell.](figures/tb-folding.svg)
+![TB continuum envelopes at one-site momenta and after combining the two images seen by a two-site unit cell.](figures/tb-folding.svg#gh-light-mode-only)
+![TB continuum envelopes at one-site momenta and after combining the two images seen by a two-site unit cell.](figures/tb-folding-dark.svg#gh-dark-mode-only)
 
-[Open the full-size folding comparison](figures/tb-folding.svg).
+Full-size folding comparison: [light](figures/tb-folding.svg) · [dark](figures/tb-folding-dark.svg).
 
 Translation by two sites measures $`K=2Q\pmod{2\pi}`$. The folded envelopes
 combine Q and Q+π, retaining Q/π on the plotted horizontal axis. The right

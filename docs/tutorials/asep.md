@@ -47,7 +47,8 @@ is already zero.
 
 ## 2. Follow decay and oscillation separately
 
-![ASEP gap and frequency as the bias decreases to zero at fixed total hopping rate.](figures/asep-bias.svg)
+![ASEP gap and frequency as the bias decreases to zero at fixed total hopping rate.](figures/asep-bias.svg#gh-light-mode-only)
+![ASEP gap and frequency as the bias decreases to zero at fixed total hopping rate.](figures/asep-bias-dark.svg#gh-dark-mode-only)
 
 On this finite ring, the gap decreases toward a **nonzero** symmetric value
 while the frequency tends to zero. Consequently the long-time oscillation

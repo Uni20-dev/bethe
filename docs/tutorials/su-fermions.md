@@ -43,7 +43,8 @@ a thermodynamic or string approximation.
 
 ## 2. Repulsion raises the charge energy
 
-![The three-component energy increases toward the impenetrable limit; a second panel shows charge and two auxiliary root seas at c=1.](figures/sun-seas.svg)
+![The three-component energy increases toward the impenetrable limit; a second panel shows charge and two auxiliary root seas at c=1.](figures/sun-seas.svg#gh-light-mode-only)
+![The three-component energy increases toward the impenetrable limit; a second panel shows charge and two auxiliary root seas at c=1.](figures/sun-seas-dark.svg#gh-dark-mode-only)
 
 The left panel uses seven native calculations from c=0.001 to 1000, with
 dimensionless interaction $`\gamma=c/(N/\ell)`$. Its reference energy is

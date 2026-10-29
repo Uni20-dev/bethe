@@ -30,7 +30,8 @@ S^{zz}_2(q,\omega)=2\pi\sum_n w_n(q)\delta(\omega-\Delta E_n),
 state momentum. `weight` is w, without the factor $`2\pi`$. A line has no
 height until we choose a broadening kernel or bin width.
 
-![XXX two-spinon lines colored by weight, and a fixed-momentum cut](figures/xxx-structure-factor.svg)
+![XXX two-spinon lines colored by weight, and a fixed-momentum cut](figures/xxx-structure-factor.svg#gh-light-mode-only)
+![XXX two-spinon lines colored by weight, and a fixed-momentum cut](figures/xxx-structure-factor-dark.svg#gh-dark-mode-only)
 
 The left panel shows the unbroadened lines with color encoding their weights.
 The dashed curves are infinite-chain two-spinon boundaries,
@@ -74,9 +75,10 @@ bethe-xxx-structure-factor 256 --csv xxx-n256-spectrum.csv \
   --csv-table moments=xxx-n256-moments.csv
 ```
 
-![Broadened XXX two-spinon spectral function across the full Brillouin zone](figures/xxx-structure-factor-heatmap.svg)
+![Broadened XXX two-spinon spectral function across the full Brillouin zone](figures/xxx-structure-factor-heatmap.svg#gh-light-mode-only)
+![Broadened XXX two-spinon spectral function across the full Brillouin zone](figures/xxx-structure-factor-heatmap-dark.svg#gh-dark-mode-only)
 
-[Open the full-resolution figure](figures/xxx-structure-factor-heatmap.svg) ·
+Full-resolution figure: [light](figures/xxx-structure-factor-heatmap.svg) · [dark](figures/xxx-structure-factor-heatmap-dark.svg) ·
 [Download spectral lines](data/xxx-dsf-n256-spectrum.csv) ·
 [Download moment sums](data/xxx-dsf-n256-moments.csv)
 

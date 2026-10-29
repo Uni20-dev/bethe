@@ -52,9 +52,10 @@ The grid is uniform in **physical dressed momentum**, not the Bethe parameter.
 Each branch has 129 points, including endpoints. The charge endpoints −π
 and π represent the same Brillouin-zone point.
 
-![Gapless Hubbard spinon line and gapped holon and antiholon lines at U over t equal to 4, half filling, in the symmetric convention.](figures/hubbard-half-lines.svg)
+![Gapless Hubbard spinon line and gapped holon and antiholon lines at U over t equal to 4, half filling, in the symmetric convention.](figures/hubbard-half-lines.svg#gh-light-mode-only)
+![Gapless Hubbard spinon line and gapped holon and antiholon lines at U over t equal to 4, half filling, in the symmetric convention.](figures/hubbard-half-lines-dark.svg#gh-dark-mode-only)
 
-[Open the full-size figure](figures/hubbard-half-lines.svg).
+Full-size figure: [light](figures/hubbard-half-lines.svg) · [dark](figures/hubbard-half-lines-dark.svg).
 
 The spinon energy vanishes at both ends and reaches about **1.242281 t** at
 $`p=\pi/2`$. The charge branches have the same minimum, **0.643364 t**, at
@@ -93,9 +94,10 @@ bethe-hubbard-dispersion --u 4 --points 129 \
   --convention unshifted --reference fermi --csv hubbard-half-fermi.csv
 ```
 
-![Three panels compare charge lines for the symmetric Hamiltonian, unshifted Hamiltonian, and unshifted Hamiltonian with the chemical potential subtracted. The first and third coincide.](figures/hubbard-half-conventions.svg)
+![Three panels compare charge lines for the symmetric Hamiltonian, unshifted Hamiltonian, and unshifted Hamiltonian with the chemical potential subtracted. The first and third coincide.](figures/hubbard-half-conventions.svg#gh-light-mode-only)
+![Three panels compare charge lines for the symmetric Hamiltonian, unshifted Hamiltonian, and unshifted Hamiltonian with the chemical potential subtracted. The first and third coincide.](figures/hubbard-half-conventions-dark.svg#gh-dark-mode-only)
 
-[Open the full-size comparison](figures/hubbard-half-conventions.svg).
+Full-size comparison: [light](figures/hubbard-half-conventions.svg) · [dark](figures/hubbard-half-conventions-dark.svg).
 
 A negative unshifted holon energy is **not** a numerical failure or evidence
 that the fixed-density ground state is unstable. Removing an electron also

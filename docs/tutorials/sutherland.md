@@ -46,7 +46,8 @@ bethe-sutherland-pbc 4 --length 4 --lambda 1 --levels all --window 1 \
   --precision fp64 --format csv > sutherland-lambda1.csv
 ```
 
-![Excitation gaps for collision exponents zero, one and two](figures/sutherland-collision-branches.svg)
+![Excitation gaps for collision exponents zero, one and two](figures/sutherland-collision-branches.svg#gh-light-mode-only)
+![Excitation gaps for collision exponents zero, one and two](figures/sutherland-collision-branches-dark.svg#gh-dark-mode-only)
 
 Each panel uses an actual frontend export: [lambda = 0](data/sutherland-lambda0.csv),
 [lambda = 1](data/sutherland-lambda1.csv), [lambda = 2](data/sutherland-lambda2.csv).
@@ -111,7 +112,8 @@ bethe-sutherland-pbc 4 --length 4 --lambda 1 --levels all --window 2 \
   --precision fp64 --format csv > sutherland-window2.csv
 ```
 
-![States added by enlarging the label window from one to two](figures/sutherland-windows.svg)
+![States added by enlarging the label window from one to two](figures/sutherland-windows.svg#gh-light-mode-only)
+![States added by enlarging the label window from one to two](figures/sutherland-windows-dark.svg#gh-dark-mode-only)
 
 The [larger export](data/sutherland-window2.csv) contains seventy states. Blue
 points are the original window; orange rings mark additional label sequences.

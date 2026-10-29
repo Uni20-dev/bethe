@@ -42,7 +42,8 @@ showing the spin decomposition on screen.
 
 ## 2. Read the motif plot
 
-![Complete eight- and nine-site motif spectra, coloured by spinon count](figures/hs-motif-spectra.svg)
+![Complete eight- and nine-site motif spectra, coloured by spinon count](figures/hs-motif-spectra.svg#gh-light-mode-only)
+![Complete eight- and nine-site motif spectra, coloured by spinon count](figures/hs-motif-spectra-dark.svg#gh-dark-mode-only)
 
 These are full motif enumerations at N=8 and N=9:
 
@@ -100,7 +101,8 @@ motif dimension into a fixed-projection count.
 
 ## 4. Account for the whole Hilbert space
 
-![Numbers of ordinary SU(2) multiplets summed over every motif](figures/hs-spin-counts.svg)
+![Numbers of ordinary SU(2) multiplets summed over every motif](figures/hs-spin-counts.svg#gh-light-mode-only)
+![Numbers of ordinary SU(2) multiplets summed over every motif](figures/hs-spin-counts-dark.svg#gh-dark-mode-only)
 
 These bars sum the exported SU(2) multiplicities over all motifs. For N=8,
 there are 14 singlets, 28 triplets, 20 quintets, 7 spin-3 multiplets and one

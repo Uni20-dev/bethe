@@ -41,7 +41,8 @@ quantities separate.
 
 ## 2. Why does the plot approach +0.4 instead of -4.4?
 
-![The periodic Lee–Yang vacuum effective charge approaches two fifths at small mL and zero at large mL.](figures/ly-vacuum.svg)
+![The periodic Lee–Yang vacuum effective charge approaches two fifths at small mL and zero at large mL.](figures/ly-vacuum.svg#gh-light-mode-only)
+![The periodic Lee–Yang vacuum effective charge approaches two fifths at small mL and zero at large mL.](figures/ly-vacuum-dark.svg#gh-dark-mode-only)
 
 The ultraviolet CFT is $`M(2,5)`$, with central charge $`c=-22/5`$ and lowest
 left/right conformal weight $`h_{\min}=\bar h_{\min}=-1/5`$. On a periodic
@@ -91,7 +92,8 @@ At m=1, L=5, the vacuum Casimir energy is about -0.0012816882 and the
 one-particle Casimir energy is 1.0293562331. Their difference is **1.0306379213**.
 Replacing the gap by the excited row would lose a visible vacuum correction.
 
-![The one-particle level and vacuum-relative gap approach the mass, while the finite-size gap correction stays much larger than the numerical error estimate.](figures/ly-gap.svg)
+![The one-particle level and vacuum-relative gap approach the mass, while the finite-size gap correction stays much larger than the numerical error estimate.](figures/ly-gap.svg#gh-light-mode-only)
+![The one-particle level and vacuum-relative gap approach the mass, while the finite-size gap correction stays much larger than the numerical error estimate.](figures/ly-gap-dark.svg#gh-dark-mode-only)
 
 The right panel separates the physical finite-size correction from the
 estimated numerical error. At mL=20 the gap is still above m by roughly

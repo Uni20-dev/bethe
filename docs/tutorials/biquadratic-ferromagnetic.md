@@ -48,7 +48,8 @@ not a translation eigenvalue. The frontend lists decreasing j, hence increasing
 energy. It computes the gap directly, rather than subtracting two rounded
 extensive energies.
 
-![One-defect standing waves and selected bound pair/triple modes](figures/bq-ferro-branches.svg)
+![One-defect standing waves and selected bound pair/triple modes](figures/bq-ferro-branches.svg#gh-light-mode-only)
+![One-defect standing waves and selected bound pair/triple modes](figures/bq-ferro-branches-dark.svg#gh-dark-mode-only)
 
 The left panel reads the [N=32 analytic-band export](data/bq-ferro-band-n32-states.csv).
 Its lowest level also gives the global positive gap:
@@ -91,7 +92,8 @@ A triple's limiting gap equals the two-single-defect threshold numerically,
 but those states are in different TL modules. Equality of energy is not an
 identity of quantum numbers or scattering channels.
 
-![Finite-size approach to the one-, two- and three-defect bulk edges](figures/bq-ferro-size.svg)
+![Finite-size approach to the one-, two- and three-defect bulk edges](figures/bq-ferro-size.svg#gh-light-mode-only)
+![Finite-size approach to the one-, two- and three-defect bulk edges](figures/bq-ferro-size-dark.svg#gh-dark-mode-only)
 
 This plot subtracts each family's own limiting edge to expose the finite-size
 correction. The one-defect gap comes from exact metadata; pair and triple
@@ -114,7 +116,8 @@ finite-N global ordering of arbitrary targeted branches.
 Sign reversal keeps the auxiliary roots but reverses the physical energies.
 The four-site example makes the consequence visible:
 
-![Four-site spectra for both signs, showing the missing complex singlet](figures/bq-four-site.svg)
+![Four-site spectra for both signs, showing the missing complex singlet](figures/bq-four-site.svg#gh-light-mode-only)
+![Four-site spectra for both signs, showing the missing complex singlet](figures/bq-four-site-dark.svg#gh-dark-mode-only)
 
 In the positive-sign panel, the ground level at energy 3 has 55 physical
 states. The first positive level is $`6-\sqrt2`$, with multiplicity 8. The

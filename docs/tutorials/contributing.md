@@ -132,6 +132,48 @@ separate `reference_kondo.py` uses mpmath for the continuum response.
 `scripts/tutorial_common.py` shares CSV/provenance validation and deterministic
 SVG writing; each model's script and tests own its schema and physics checks.
 
+### Light and dark figures
+
+The site follows the visitor's system colour preference initially. The sun/moon
+button beside search selects an explicit light or dark theme and remembers it.
+Scientific figures can have separate versions for the two themes, using the
+[theme-specific image support](https://zensical.org/docs/authoring/images/).
+Use the same descriptive alt text for both images:
+
+```md
+![Spinon dispersion and continuum boundaries](figures/xxz-spinons.svg#gh-light-mode-only)
+![Spinon dispersion and continuum boundaries](figures/xxz-spinons-dark.svg#gh-dark-mode-only)
+```
+
+These selectors work on the site and in
+[GitHub Markdown](https://github.blog/changelog/2021-11-24-specify-theme-context-for-images-in-markdown/). They follow the site's
+chosen theme, including a manual override of the operating-system preference.
+Printing uses the light version. An unpaired figure can stay as a normal image;
+the site supplies a white background for figures with transparent areas.
+
+`tutorial_common.save_svg(fig, path)` writes the original light SVG and a
+`-dark.svg` companion. Both render the same data, axes and numerical scales.
+The shared style adapts text, ticks, spines, legends and the common categorical
+line colours. It preserves heatmap/scatter colour maps and normalization,
+including logarithmic scales, and never applies an image-inversion filter.
+The caller's original Matplotlib figure is not modified by the dark styling.
+
+Regenerate both versions from saved exports with the usual plotting command,
+without a solver option, for example:
+
+```sh
+python3 scripts/plot_xxz_tutorial.py
+python3 -m unittest discover -s scripts -p 'test_tutorial_plot_style.py'
+```
+
+Review both versions, especially filled regions, coloured annotations and
+heatmap overlays. Unknown categorical colours remain the author's choice.
+If a figure needs a different design, use `save_svg(fig, path, dark=False)`
+and create its dark companion explicitly in the same plotting script. Keep
+scientific colour scales consistent unless the caption explains a difference.
+The rendering tests require the plotting environment; the ordinary data checks
+and site build do not. Documentation CI installs it to run those checks too.
+
 ## Build the site locally
 
 From the source checkout, use a Python environment and an output directory of

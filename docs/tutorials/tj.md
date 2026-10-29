@@ -39,7 +39,8 @@ populations**, not a minimization over particle number.
 
 ## 2. Compare selected fillings
 
-![Selected balanced and polarized t–J populations on a sixteen-site ring, and the two root families for a two-hole state.](figures/tj-filling.svg)
+![Selected balanced and polarized t–J populations on a sixteen-site ring, and the two root families for a two-hole state.](figures/tj-filling.svg#gh-light-mode-only)
+![Selected balanced and polarized t–J populations on a sixteen-site ring, and the two root families for a two-hole state.](figures/tj-filling-dark.svg#gh-dark-mode-only)
 
 The blue markers use N_e=0, 2, 6, 10, 14 and 16. The orange markers have the
 same electron counts but all spins aligned. Dashed lines only connect the

@@ -77,7 +77,8 @@ For positive h, construct
 E_{\mathrm{ground}}(h)=\min_{M=0,\ldots,L}\{E_M(0)-hM\}.
 ```
 
-![Linear fixed-magnetization branches give the lower energy envelope and a finite-size magnetization staircase, checked against independent field runs.](figures/ladder-field.svg)
+![Linear fixed-magnetization branches give the lower energy envelope and a finite-size magnetization staircase, checked against independent field runs.](figures/ladder-field.svg#gh-light-mode-only)
+![Linear fixed-magnetization branches give the lower energy envelope and a finite-size magnetization staircase, checked against independent field runs.](figures/ladder-field-dark.svg#gh-dark-mode-only)
 
 The grey lines use the seven native zero-field energies; the blue curve is
 their minimum. Orange markers are **separate native field calculations**

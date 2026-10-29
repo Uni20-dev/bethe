@@ -14,7 +14,8 @@ lives**, not just which energies are kinematically allowed.
 
 ## A continuum with intensity
 
-![Exact thermodynamic XXX two-spinon density, heat map and frequency cuts](figures/xxx-structure-factor-thermo.svg)
+![Exact thermodynamic XXX two-spinon density, heat map and frequency cuts](figures/xxx-structure-factor-thermo.svg#gh-light-mode-only)
+![Exact thermodynamic XXX two-spinon density, heat map and frequency cuts](figures/xxx-structure-factor-thermo-dark.svg#gh-dark-mode-only)
 
 The Hamiltonian is $`H=\sum_j\mathbf S_j\cdot\mathbf S_{j+1}`$, with lattice
 spacing and $`J`$ set to one. The heat map shows $`S^{zz}_2(q,\omega)`$ on a
