@@ -224,4 +224,5 @@ The [nested sweep example](async-execution.md#owning-nested-model-requests)
 demonstrates a coupling curve. Complete partial results retain their reached
 coupling and must not be interpreted as converged at the requested coupling.
 Each continuation remains sequential, and the single-request CLI stays serial.
-MPFR still requires explicit controls, constants, reductions and Newton precision.
+MPFR calls carry the requested precision through controls, constants, reductions
+and Newton updates; see [explicit arithmetic precision](#explicit-arithmetic-precision).
