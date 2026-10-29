@@ -356,6 +356,9 @@ if(BETHE_HAS_MPREAL)
   add_executable(bethe_sine_gordon_particle_mpfr_tests test_sine_gordon_particles_mpfr.cpp)
   target_link_libraries(bethe_sine_gordon_particle_mpfr_tests PRIVATE bethe::bethe TBB::tbb)
   bethe_discover_tests(bethe_sine_gordon_particle_mpfr_tests)
+  add_executable(bethe_sine_gordon_bethe_yang_mpfr_tests test_sine_gordon_bethe_yang_mpfr.cpp)
+  target_link_libraries(bethe_sine_gordon_bethe_yang_mpfr_tests PRIVATE bethe::bethe TBB::tbb)
+  bethe_discover_tests(bethe_sine_gordon_bethe_yang_mpfr_tests)
 endif()
 
 add_executable(bethe_sine_gordon_excited_tests test_sine_gordon_excited.cpp)
@@ -549,6 +552,16 @@ if(BETHE_BUILD_APPS)
       COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_sine_gordon_dispersion_precision.py"
         "$<TARGET_FILE:bethe-sine-gordon-dispersion>" "${BETHE_HAS_MPREAL}")
 
+    add_test(NAME SineGordonBetheYang.precision
+      COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_sine_gordon_bethe_yang_precision.py"
+        "$<TARGET_FILE:bethe-sine-gordon-bethe-yang>" "${BETHE_HAS_MPREAL}")
+    set_tests_properties(SineGordonBetheYang.precision PROPERTIES TIMEOUT 600)
+    if(BETHE_HAS_MPREAL)
+      add_test(NAME SineGordonBetheYang.high_precision
+        COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_sine_gordon_bethe_yang_precision.py"
+          "$<TARGET_FILE:bethe-sine-gordon-bethe-yang>" "${BETHE_HAS_MPREAL}" --long-running)
+      set_tests_properties(SineGordonBetheYang.high_precision PROPERTIES LABELS "long-running" TIMEOUT 1800)
+    endif()
     add_test(NAME SineGordonPairGrid.cli
       COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_sine_gordon_pair_grid.py"
         "$<TARGET_FILE:bethe-sine-gordon-bethe-yang>" "${BETHE_HAS_FLOAT128}")
