@@ -82,7 +82,7 @@ CLI export/provider contracts and ownership in composed Async calculations.
 The scheduling checkpoints #11, #12, #14 and #27 compare complete results
 against serial/baseline calculations and document measured wall/CPU and memory
 behavior. Finite Hubbard's scalar/LU work is independent of the complex
-Gamma-ratio functions still required by thermodynamic Hubbard.
+Gamma-ratio functions used by thermodynamic Hubbard.
 
 The composition audit in #17 adds finite Lieb–Liniger owning scan APIs
 and a compiled Richardson/central-spin sweep. Deferred input destruction,
@@ -116,14 +116,16 @@ extends the common sine/massive-band helper rather than duplicating kinematics.
 Independent dressed-sea and continuum references, scalar-only MPFR physics,
 positive momenta at the MPFR exponent floor and owning mixed-precision queries
 pass. Existing TB/XXZ/XYZ checks and 1,710 identical native output rows validate
-shared-band consumers. This does not enable XXZ/XYZ's elliptic models in MPFR.
+shared-band consumers. That checkpoint did not enable XXZ/XYZ's elliptic models
+in MPFR; the inventory above records subsequent model-level support.
 
 Sine-Gordon particle dispersion's #23 also uses #20's scalar dispatcher.
 Independent algebraic breather masses, precision-sensitive stable-species
 selection, unequal-mass threshold minimization and full owning Async queries
 pass at 128/256/333 bits. Full MPFR physics runs in scalar-only sanitizers;
 1,095 native/binary128 output rows match the baseline. The scattering phase,
-Bethe–Yang and finite-volume integral equations remain separate precision work.
+Bethe–Yang and finite-volume integral equations required separate precision
+checkpoints; their current coverage is listed above.
 
 XYZ's #24 prepares the bound coefficient once per branch and reuses it
 for both parity copies. Independent elliptic/limiting references, owning Async
@@ -132,11 +134,15 @@ End-to-end binary128 curve time falls from 5.42 to 0.27 seconds with identical
 output; an independent 2,097,664-energy parameter sweep falls from 4.480 to
 0.585 seconds with eight workers. These are distinct reuse and scheduling
 measurements; the CLI stays serial. Commands and limits are in the PR's
-`docs/parallel-grids.md`. It does not extend the theta helper to MPFR.
+`docs/parallel-grids.md`. That scheduling checkpoint did not extend the theta
+helper to MPFR.
 
-[Uni20 #103](https://github.com/Uni20-dev/uni20/pull/103) supplies scaled
-zero-argument rectangular theta constants at native and explicit MPFR precision,
-with independent product/Gamma references and accuracy growth through 1,024 bits.
+Merged [Uni20 PR #103](https://github.com/Uni20-dev/uni20/pull/103) supplies
+scaled zero-argument rectangular theta constants at native and explicit MPFR
+precision. Independent product/Gamma references demonstrate accuracy growth
+through 1,024 bits; native/wide/sanitizer checks and upstream CI passed at that
+checkpoint. Bethe's [XXZ dispersion](xxz-dispersion.md) uses these constants.
+
 XYZ excitation bands now use the shared complex theta values and derivatives in
 [Uni20 #115](https://github.com/Uni20-dev/uni20/pull/115), replacing Bethe's duplicate
 evaluator. Explicit MPFR reaches couplings, spinon/bound bands, continuum edges
@@ -144,15 +150,13 @@ and owning Async readers. The finite XYZ nonlinear solve also carries explicit
 precision through its controls, complex roots and Newton arithmetic, with
 independent spin-Hamiltonian and XY references beyond binary128.
 
-The shared finite-integration prerequisite is proposed in
-[Uni20 PR #104](https://github.com/Uni20-dev/uni20/pull/104). Array-valued tanh-sinh
-quadrature carries explicit precision through endpoint distances, accumulation
-and recoverable error diagnostics. Local native/wide/sanitizer checks pass,
-including reflected/translated singularities, cutoff sensitivity and accuracy
-growth through 1,024 bits. Upstream CI passes; independent review and merge remain pending.
-Its estimates are not certified bounds. Bethe still needs model-level adoption,
-kernel/tolerance audits and native-output comparisons for sine-Gordon, XXZ bulk,
-Hubbard and Kondo; no new app capability is implied by this upstream proposal.
+Merged [Uni20 PR #104](https://github.com/Uni20-dev/uni20/pull/104) supplies
+array-valued tanh-sinh quadrature with explicit precision in endpoint distances,
+accumulation and recoverable error diagnostics. Its validation includes
+reflected/translated singularities, cutoff sensitivity and accuracy growth
+through 1,024 bits. The error estimates are not certified bounds. Each Bethe
+consumer still needs model-specific kernel, tolerance and native-output checks;
+the inventory above and individual model pages record implemented support.
 
 Update this inventory with each integrated app checkpoint. A proposed capability
 or a pending audit is not evidence of implemented support.
