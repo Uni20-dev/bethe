@@ -94,7 +94,7 @@ int run_bound_clusters(Arguments const& args, std::size_t requested, bethe::Solv
   }
   if (count > args.max_candidates.value_or(10000))
     throw std::length_error("bound-cluster rows exceed max_candidates; raise --max-candidates");
-  auto const ground = model::ferromagnetic::ground_space<Real>(args.sites);
+  auto const ground = model::ferromagnetic::ground_space<Real>(args.sites, options.precision());
   struct Request
   {
       std::size_t mode, string_label;
@@ -246,12 +246,12 @@ int run_bound_clusters(Arguments const& args, std::size_t requested, bethe::Solv
              : Mixed        ? "Bulk pair-plus-defect threshold"
              : Defects == 2 ? "Bulk bound-pair threshold"
                             : "Bulk bound-triple threshold",
-             TwoPairs       ? Real{10} / Real{3}
-             : Quartet      ? Real{15} / Real{7}
-             : TripleMixed  ? Real{3}
-             : Mixed        ? Real{5} / Real{3} + Real(sea)
-             : Defects == 2 ? Real{5} / Real{3}
-                            : Real{2})
+             TwoPairs       ? uni20::scalar_at_precision<Real>(10, options.precision()) / Real{3}
+             : Quartet      ? uni20::scalar_at_precision<Real>(15, options.precision()) / Real{7}
+             : TripleMixed  ? uni20::scalar_at_precision<Real>(3, options.precision())
+             : Mixed        ? uni20::scalar_at_precision<Real>(5, options.precision()) / Real{3} + Real(sea)
+             : Defects == 2 ? uni20::scalar_at_precision<Real>(5, options.precision()) / Real{3}
+                            : uni20::scalar_at_precision<Real>(2, options.precision()))
       .result(complete, complete ? "converged targeted branches" : "incomplete; unconverged estimates");
   std::vector<std::string> names{"states", "reference", "string"};
   if constexpr (Mixed) names.push_back("labels");
@@ -310,13 +310,13 @@ int run_bound_clusters(Arguments const& args, std::size_t requested, bethe::Solv
           for (std::size_t i = 0; i < states.size(); ++i)
           {
             auto const& r = states[i].reference;
-            Real const d = Real(r.inner_deviation_sign) * std::exp(-r.inner_log_deviation);
-            Real const z = std::exp(-r.outer_log_deviation);
-            table.append(i, r.string_label, r.center, r.inner_deviation_sign, r.inner_log_deviation,
-                         d != Real{0} ? std::optional<Real>{d} : std::nullopt, r.outer_log_deviation,
-                         r.outer_deviation_phase,
-                         z != Real{0} ? std::optional<Real>{z * std::cos(r.outer_deviation_phase)} : std::nullopt,
-                         z != Real{0} ? std::optional<Real>{z * std::sin(r.outer_deviation_phase)} : std::nullopt);
+            Real const d = Real(r.inner_deviation_sign) * uni20::math::exp(-r.inner_log_deviation);
+            Real const z = uni20::math::exp(-r.outer_log_deviation);
+            table.append(
+                i, r.string_label, r.center, r.inner_deviation_sign, r.inner_log_deviation,
+                d != Real{0} ? std::optional<Real>{d} : std::nullopt, r.outer_log_deviation, r.outer_deviation_phase,
+                z != Real{0} ? std::optional<Real>{z * uni20::math::cos(r.outer_deviation_phase)} : std::nullopt,
+                z != Real{0} ? std::optional<Real>{z * uni20::math::sin(r.outer_deviation_phase)} : std::nullopt);
           }
         },
         cli::column<std::size_t>("state_id"), cli::column<std::size_t>("string_label", "J"),
@@ -335,7 +335,7 @@ int run_bound_clusters(Arguments const& args, std::size_t requested, bethe::Solv
             auto const& r = states[i].reference;
             for (std::size_t p = 0; p < 2; ++p)
             {
-              Real const d = Real(r.deviation_signs[p]) * std::exp(-r.log_deviations[p]);
+              Real const d = Real(r.deviation_signs[p]) * uni20::math::exp(-r.log_deviations[p]);
               table.append(i, p, r.string_labels[p], r.centers[p], r.deviation_signs[p], r.log_deviations[p],
                            d != Real{0} ? std::optional<Real>{d} : std::nullopt);
             }
@@ -352,7 +352,7 @@ int run_bound_clusters(Arguments const& args, std::size_t requested, bethe::Solv
           for (std::size_t i = 0; i < states.size(); ++i)
           {
             auto const& r = states[i].reference;
-            Real const d = Real(r.deviation_sign) * std::exp(-r.log_deviation);
+            Real const d = Real(r.deviation_sign) * uni20::math::exp(-r.log_deviation);
             table.append(i, r.string_label, r.center, r.deviation_sign, r.log_deviation,
                          d != Real{0} ? std::optional<Real>{d} : std::nullopt);
           }
@@ -368,11 +368,12 @@ int run_bound_clusters(Arguments const& args, std::size_t requested, bethe::Solv
           for (std::size_t i = 0; i < states.size(); ++i)
           {
             auto const& r = states[i].reference;
-            Real const magnitude = std::exp(-r.log_deviation);
-            table.append(
-                i, r.string_label, r.center, r.log_deviation, r.deviation_phase,
-                magnitude != Real{0} ? std::optional<Real>{magnitude * std::cos(r.deviation_phase)} : std::nullopt,
-                magnitude != Real{0} ? std::optional<Real>{magnitude * std::sin(r.deviation_phase)} : std::nullopt);
+            Real const magnitude = uni20::math::exp(-r.log_deviation);
+            table.append(i, r.string_label, r.center, r.log_deviation, r.deviation_phase,
+                         magnitude != Real{0} ? std::optional<Real>{magnitude * uni20::math::cos(r.deviation_phase)}
+                                              : std::nullopt,
+                         magnitude != Real{0} ? std::optional<Real>{magnitude * uni20::math::sin(r.deviation_phase)}
+                                              : std::nullopt);
           }
         },
         cli::column<std::size_t>("state_id"), cli::column<std::size_t>("string_label", "J"),
@@ -389,10 +390,11 @@ int run_bound_clusters(Arguments const& args, std::size_t requested, bethe::Solv
             auto const& r = states[i].reference;
             if constexpr (Quartet)
             {
-              Real const eta = std::acosh(r.delta), d = Real(r.inner_deviation_sign) * std::exp(-r.inner_log_deviation);
-              Real const z = std::exp(-r.outer_log_deviation), inner = (eta + d) / Real{2};
-              Real const outer = inner + eta + z * std::cos(r.outer_deviation_phase);
-              Real const imag = r.center / Real{2} + z * std::sin(r.outer_deviation_phase);
+              Real const eta = uni20::math::acosh(r.delta),
+                         d = Real(r.inner_deviation_sign) * uni20::math::exp(-r.inner_log_deviation);
+              Real const z = uni20::math::exp(-r.outer_log_deviation), inner = (eta + d) / Real{2};
+              Real const outer = inner + eta + z * uni20::math::cos(r.outer_deviation_phase);
+              Real const imag = r.center / Real{2} + z * uni20::math::sin(r.outer_deviation_phase);
               table.append(i, 0, inner, r.center / Real{2});
               table.append(i, 1, inner, -r.center / Real{2});
               table.append(i, 2, outer, imag);
@@ -402,29 +404,31 @@ int run_bound_clusters(Arguments const& args, std::size_t requested, bethe::Solv
             {
               for (std::size_t p = 0; p < 2; ++p)
               {
-                Real const width = std::acosh(r.delta) + Real(r.deviation_signs[p]) * std::exp(-r.log_deviations[p]);
+                Real const width =
+                    uni20::math::acosh(r.delta) + Real(r.deviation_signs[p]) * uni20::math::exp(-r.log_deviations[p]);
                 table.append(i, 2 * p, width / Real{2}, r.centers[p] / Real{2});
                 table.append(i, 2 * p + 1, width / Real{2}, -r.centers[p] / Real{2});
               }
             }
             else if constexpr (Defects == 2 || PairMixed)
             {
-              Real const width = std::acosh(r.delta) + Real(r.deviation_sign) * std::exp(-r.log_deviation);
+              Real const width =
+                  uni20::math::acosh(r.delta) + Real(r.deviation_sign) * uni20::math::exp(-r.log_deviation);
               if constexpr (Mixed)
                 for (std::size_t j = 0; j < r.rapidities.size(); ++j)
-                  table.append(i, j, Real{0}, r.rapidities[j] / Real{2});
+                  table.append(i, j, uni20::scalar_like(r.delta, 0), r.rapidities[j] / Real{2});
               for (std::size_t j = 0; j < 2; ++j)
                 table.append(i, j + r.rapidities.size(), width / Real{2}, (j ? -r.center : r.center) / Real{2});
             }
             else
             {
-              Real const magnitude = std::exp(-r.log_deviation);
-              Real const real = std::acosh(r.delta) + magnitude * std::cos(r.deviation_phase);
-              Real const imag = r.center / Real{2} + magnitude * std::sin(r.deviation_phase);
-              table.append(i, 0, Real{0}, r.center / Real{2});
+              Real const magnitude = uni20::math::exp(-r.log_deviation);
+              Real const real = uni20::math::acosh(r.delta) + magnitude * uni20::math::cos(r.deviation_phase);
+              Real const imag = r.center / Real{2} + magnitude * uni20::math::sin(r.deviation_phase);
+              table.append(i, 0, uni20::scalar_like(r.delta, 0), r.center / Real{2});
               table.append(i, 1, real, imag);
               table.append(i, 2, real, -imag);
-              if constexpr (TripleMixed) table.append(i, 3, Real{0}, r.rapidity / Real{2});
+              if constexpr (TripleMixed) table.append(i, 3, uni20::scalar_like(r.delta, 0), r.rapidity / Real{2});
             }
           }
         },
