@@ -87,6 +87,9 @@ target_link_libraries(bethe_generated_state_scan_tests PRIVATE bethe::bethe TBB:
 bethe_discover_tests(bethe_generated_state_scan_tests)
 
 if(BETHE_HAS_MPREAL)
+  add_executable(bethe_asep_mpfr_tests test_asep_mpfr.cpp)
+  target_link_libraries(bethe_asep_mpfr_tests PRIVATE bethe::bethe TBB::tbb)
+  bethe_discover_tests(bethe_asep_mpfr_tests)
   add_executable(bethe_tasep_mpfr_tests test_tasep_mpfr.cpp)
   target_link_libraries(bethe_tasep_mpfr_tests PRIVATE bethe::bethe TBB::tbb)
   bethe_discover_tests(bethe_tasep_mpfr_tests)
