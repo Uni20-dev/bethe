@@ -6,6 +6,7 @@
 
 namespace bethe::asep
 {
+namespace math = uni20::math;
 enum class Status
 {
   converged,
@@ -21,17 +22,45 @@ template <uni20::Real Real> struct Options
     Real tolerance = Real{128} * uni20::numeric_limits<Real>::epsilon();
     std::size_t max_iterations = 100, max_continuation_steps = 256;
     tasep::Options<Real> seed_options{};
+    uni20::Precision precision() const { return uni20::native_precision<Real>(); }
 };
+#if UNI20_HAS_MPREAL
+template <> struct Options<uni20::mpreal>
+{
+    explicit Options(uni20::Precision p) : tolerance(default_tolerance(p)), seed_options(p), precision_(p) {}
+    uni20::mpreal tolerance;
+    std::size_t max_iterations = 100, max_continuation_steps = 256;
+    tasep::Options<uni20::mpreal> seed_options;
+    uni20::Precision precision() const { return precision_; }
+
+  private:
+    static uni20::mpreal default_tolerance(uni20::Precision p)
+    {
+      if (p.is_exact()) throw std::invalid_argument("ASEP requires finite working precision");
+      return 128 * uni20::numeric_limits<uni20::mpreal>::epsilon(p);
+    }
+    uni20::Precision precision_;
+};
+#endif
 template <uni20::Real Real> struct GapState
 {
+    GapState()
+      requires(!uni20::has_runtime_precision_v<Real>)
+        : GapState(uni20::native_precision<Real>())
+    {}
+    explicit GapState(uni20::Precision p)
+        : right_rate(uni20::scalar_at_precision<Real>(0, p)), left_rate(right_rate), reached_ratio(right_rate),
+          residual_norm(uni20::scalar_like(right_rate, uni20::numeric_limits<double>::infinity())),
+          wave_base(right_rate, right_rate)
+    {}
     std::size_t sites = 0, particles = 0, effective_particles = 0, wave_index = 0;
     std::size_t iterations = 0, continuation_steps = 0, seed_iterations = 0, seed_newton_iterations = 0;
-    Real right_rate{}, left_rate{}, reached_ratio{}, residual_norm = uni20::numeric_limits<Real>::infinity();
-    std::complex<Real> wave_base{}; // z0-1, exact first harmonic
+    Real right_rate, left_rate, reached_ratio, residual_norm;
+    uni20::complex<Real> wave_base; // z0-1, exact first harmonic
     // z_j=1+(1-x)*v_j, except z_wave=1+wave_base+(1-x)*v_wave.
     // Analytic symmetric/one-particle results need no regular Bethe roots.
-    std::vector<std::complex<Real>> scaled_roots;
-    std::optional<std::complex<Real>> eigenvalue;
+    std::vector<uni20::complex<Real>> scaled_roots;
+    std::optional<uni20::complex<Real>> eigenvalue;
     std::optional<Real> gap;
     bool converged = false, analytic = false;
     Status status = Status::iteration_limit;
@@ -40,7 +69,7 @@ namespace detail
 {
 template <uni20::Real Real> struct System
 {
-    using C = std::complex<Real>;
+    using C = uni20::complex<Real>;
     std::size_t l, n, wave;
     Real x, delta;
     C base;
@@ -52,7 +81,10 @@ template <uni20::Real Real> struct System
     Evaluation evaluate(std::span<C const> v, bool jacobian = false) const
     {
       auto const order = 2 * n;
-      Evaluation out{std::vector<Real>(order), jacobian ? std::vector<Real>(order * order) : std::vector<Real>{}};
+      Real const zero = bethe::detail::precision_zero(x);
+      C const complex_zero(zero, zero);
+      Evaluation out{std::vector<Real>(order, zero),
+                     jacobian ? std::vector<Real>(order * order, zero) : std::vector<Real>{}, zero};
       auto put = [&](std::size_t i, std::size_t j, C value) {
         if (!jacobian) return;
         out.jacobian[(2 * i) * order + 2 * j] = value.real();
@@ -60,11 +92,11 @@ template <uni20::Real Real> struct System
         out.jacobian[(2 * i + 1) * order + 2 * j] = value.imag();
         out.jacobian[(2 * i + 1) * order + 2 * j + 1] = value.real();
       };
-      auto u = [&](std::size_t j) { return delta * v[j] + (j == wave ? base : C{}); };
+      auto u = [&](std::size_t j) { return delta * v[j] + (j == wave ? base : complex_zero); };
       for (std::size_t i = 0; i < n; ++i)
       {
-        C const ui = u(i), reference = i == wave ? Real{1} + base : C(1);
-        bethe::detail::CompensatedSum<C> f, diagonal;
+        C const ui = u(i), reference = i == wave ? Real{1} + base : C(uni20::scalar_like(zero, 1), zero);
+        bethe::detail::CompensatedSum<C> f(complex_zero), diagonal(complex_zero);
         f.add(Real(l) * bethe::detail::complex_log1p(delta * v[i] / reference) / delta);
         diagonal.add(Real(l) / (Real{1} + ui));
         for (std::size_t j = 0; j < n; ++j)
@@ -108,23 +140,23 @@ template <uni20::Real Real> struct System
         value.imag(tasep::detail::wrap(value.imag() * delta) / delta);
         if (!tasep::detail::finite(value))
         {
-          out.norm = uni20::numeric_limits<Real>::infinity();
+          out.norm = uni20::scalar_like(zero, uni20::numeric_limits<double>::infinity());
           return out;
         }
         put(i, i, diagonal.value());
         out.residual[2 * i] = value.real();
         out.residual[2 * i + 1] = value.imag();
-        out.norm = std::max(out.norm, std::abs(value) / Real(l));
+        out.norm = std::max(out.norm, math::abs(value) / Real(l));
       }
       return out;
     }
 };
 
 template <uni20::Real Real>
-Status correct(System<Real> const& system, std::vector<std::complex<Real>>& v, Options<Real> const& options,
+Status correct(System<Real> const& system, std::vector<uni20::complex<Real>>& v, Options<Real> const& options,
                std::size_t& total_iterations)
 {
-  using C = std::complex<Real>;
+  using C = uni20::complex<Real>;
   for (std::size_t iteration = 0;; ++iteration)
   {
     auto e = system.evaluate(v, true);
@@ -133,11 +165,12 @@ Status correct(System<Real> const& system, std::vector<std::complex<Real>>& v, O
     if (iteration == options.max_iterations) return Status::iteration_limit;
     for (auto& r : e.residual)
       r = -r;
-    if (!bethe::detail::newton_step(std::move(e.jacobian), e.residual)) return Status::precision_limit;
+    if (!bethe::detail::newton_step(std::move(e.jacobian), e.residual, options.precision()))
+      return Status::precision_limit;
     auto trial = v;
-    Real damping{1};
+    Real damping = uni20::scalar_at_precision<Real>(1, options.precision());
     bool accepted = false;
-    for (int backtrack = 0; backtrack <= uni20::numeric_limits<Real>::digits(); ++backtrack)
+    for (int backtrack = 0; backtrack <= uni20::numeric_limits<Real>::digits(options.precision()); ++backtrack)
     {
       for (std::size_t j = 0; j < v.size(); ++j)
         trial[j] = v[j] + damping * C(e.residual[2 * j], e.residual[2 * j + 1]);
@@ -157,6 +190,15 @@ template <uni20::Real Real>
 void validate_request(std::size_t l, std::size_t particles, Real right_rate, Real left_rate,
                       Options<Real> const& options)
 {
+  Real const zero = uni20::scalar_at_precision<Real>(0, options.precision());
+  bethe::detail::require_same_precision(right_rate, zero);
+  bethe::detail::require_same_precision(left_rate, zero);
+  bethe::detail::require_same_precision(options.tolerance, zero);
+  bethe::detail::require_same_precision(options.seed_options.tolerance, zero);
+  if (options.seed_options.precision() != options.precision())
+    throw std::invalid_argument("ASEP seed and continuation precision must match");
+  if (!uni20::isfinite(options.seed_options.tolerance) || !(options.seed_options.tolerance > Real{0}))
+    throw std::invalid_argument("ASEP seed tolerance must be finite and positive");
   if (l < 2 || particles > l || !uni20::isfinite(right_rate) || !uni20::isfinite(left_rate) || right_rate < Real{0} ||
       left_rate < Real{0} || !(std::max(right_rate, left_rate) > Real{0}) || !uni20::isfinite(options.tolerance) ||
       !(options.tolerance > Real{0}))
@@ -169,9 +211,11 @@ template <uni20::Real Real, typename Seed>
 GapState<Real> solve_gap(std::size_t l, std::size_t particles, Real right_rate, Real left_rate,
                          Options<Real> const& options, Seed seed_provider)
 {
-  using C = std::complex<Real>;
+  using C = uni20::complex<Real>;
   validate_request(l, particles, right_rate, left_rate, options);
-  GapState<Real> out;
+  Real const zero = uni20::scalar_at_precision<Real>(0, options.precision());
+  C const complex_zero(zero, zero);
+  GapState<Real> out(options.precision());
   out.sites = l;
   out.particles = particles;
   out.effective_particles = std::min(particles, l - particles);
@@ -179,15 +223,15 @@ GapState<Real> solve_gap(std::size_t l, std::size_t particles, Real right_rate, 
   out.left_rate = left_rate;
   auto const n = out.effective_particles;
   Real const scale = std::max(right_rate, left_rate), small = std::min(right_rate, left_rate), x = small / scale;
-  Real const delta = (scale - small) / scale, pi = Real{4} * std::atan(Real{1}), sine = std::sin(pi / Real(l));
+  Real const delta = (scale - small) / scale, pi = tasep::detail::pi(zero), sine = math::sin(pi / Real(l));
   auto publish = [&](C value) {
     value *= scale;
     if (value.imag() < Real{0})
     {
-      value = std::conj(value);
-      out.wave_base = std::conj(out.wave_base);
+      value = math::conj(value);
+      out.wave_base = math::conj(out.wave_base);
       for (auto& root : out.scaled_roots)
-        root = std::conj(root);
+        root = math::conj(root);
     }
     if (!tasep::detail::finite(value) || !(value.real() < Real{0}))
     {
@@ -204,17 +248,17 @@ GapState<Real> solve_gap(std::size_t l, std::size_t particles, Real right_rate, 
     out.converged = true;
     out.analytic = true;
     out.status = Status::stationary_only;
-    out.residual_norm = Real{0};
+    out.residual_norm = zero;
     out.reached_ratio = x;
     return out;
   }
   if (n == 1 || right_rate == left_rate)
   {
     out.analytic = true;
-    out.residual_norm = Real{0};
+    out.residual_norm = zero;
     out.reached_ratio = x;
     publish(C(-Real{2} * (Real{1} + x) * sine * sine,
-              l == 2 || right_rate == left_rate ? Real{0} : delta * std::sin(Real{2} * pi / Real(l))));
+              l == 2 || right_rate == left_rate ? zero : delta * math::sin(Real{2} * pi / Real(l))));
     return out;
   }
   if ((small > Real{0} && x == Real{0}) || !(delta > Real{0}))
@@ -236,25 +280,26 @@ GapState<Real> solve_gap(std::size_t l, std::size_t particles, Real right_rate, 
     return out;
   }
   std::vector<C> z;
-  bethe::detail::CompensatedSum<C> translation;
+  bethe::detail::CompensatedSum<C> translation(complex_zero);
   for (C root : seed.roots)
   {
     z.push_back(Real{2} / (Real{1} + root));
-    translation.add(std::log(z.back()));
+    translation.add(math::log(z.back()));
   }
-  Real const theta = std::copysign(Real{2} * pi / Real(l), tasep::detail::wrap(translation.value().imag()));
-  out.wave_base = C(-Real{2} * sine * sine, std::sin(theta));
+  Real const theta = math::copysign(Real{2} * pi / Real(l), tasep::detail::wrap(translation.value().imag()));
+  out.wave_base = C(-Real{2} * sine * sine, math::sin(theta));
   for (std::size_t j = 0; j < n; ++j)
-    if (std::abs(z[j] - Real{1}) > std::abs(z[out.wave_index] - Real{1})) out.wave_index = j;
+    if (math::abs(z[j] - Real{1}) > math::abs(z[out.wave_index] - Real{1})) out.wave_index = j;
   for (std::size_t j = 0; j < n; ++j)
-    out.scaled_roots.push_back(z[j] - Real{1} - (j == out.wave_index ? out.wave_base : C{}));
+    out.scaled_roots.push_back(z[j] - Real{1} - (j == out.wave_index ? out.wave_base : complex_zero));
   if (x == Real{0})
   {
     out.residual_norm = seed.residual_norm;
     publish(*seed.eigenvalue);
     return out;
   }
-  Real step = Real{1} / Real{20};
+  Real const max_step = uni20::scalar_like(zero, 1) / Real{20};
+  Real step = max_step;
   while (out.reached_ratio < x)
   {
     if (out.continuation_steps == options.max_continuation_steps)
@@ -285,28 +330,28 @@ GapState<Real> solve_gap(std::size_t l, std::size_t particles, Real right_rate, 
     out.scaled_roots = std::move(trial);
     out.reached_ratio = next;
     out.residual_norm = system.evaluate(out.scaled_roots).norm;
-    step = std::min(Real{1} / Real{20}, step * Real{1.5});
+    step = std::min(max_step, step * (Real{3} / Real{2}));
   }
   // Retain tiny drift frequencies: evaluate the finite wave analytically,
   // then its correction, rather than subtracting nearly conjugate O(1) terms.
   C const z0 = Real{1} + out.wave_base;
   // Test non-wave separation in scaled coordinates: physical z separations
   // legitimately vanish with the bias and must not be compared to sqrt(eps).
-  Real const separation = Real{32} * uni20::numeric_limits<Real>::epsilon();
+  Real const separation = Real{32} * uni20::numeric_limits<Real>::epsilon(options.precision());
   for (std::size_t i = 0; i < n; ++i)
     for (std::size_t j = 0; j < i; ++j)
     {
       C difference = out.scaled_roots[i] - out.scaled_roots[j];
       if (i == out.wave_index || j == out.wave_index)
         difference = delta * difference + (i == out.wave_index ? out.wave_base : -out.wave_base);
-      if (!tasep::detail::finite(difference) || std::abs(difference) <= separation)
+      if (!tasep::detail::finite(difference) || math::abs(difference) <= separation)
       {
         out.status = Status::precision_limit;
         return out;
       }
     }
-  bethe::detail::CompensatedSum<C> eigen, phase;
-  eigen.add(C(-Real{2} * (Real{1} + x) * sine * sine, -delta * std::sin(theta)));
+  bethe::detail::CompensatedSum<C> eigen(complex_zero), phase(complex_zero);
+  eigen.add(C(-Real{2} * (Real{1} + x) * sine * sine, -delta * math::sin(theta)));
   for (std::size_t j = 0; j < n; ++j)
   {
     C const u = delta * out.scaled_roots[j];
@@ -321,7 +366,7 @@ GapState<Real> solve_gap(std::size_t l, std::size_t particles, Real right_rate, 
       phase.add(bethe::detail::complex_log1p(u));
     }
   }
-  if (std::abs(phase.value()) > Real{8} * Real(l) * delta * options.tolerance)
+  if (math::abs(phase.value()) > Real{8} * Real(l) * delta * options.tolerance)
   {
     out.status = Status::precision_limit;
     return out;
@@ -329,12 +374,12 @@ GapState<Real> solve_gap(std::size_t l, std::size_t particles, Real right_rate, 
   C value = eigen.value();
   if (n == l - n)
   {
-    if (std::abs(value.imag()) > Real{8} * Real(l) * delta * options.tolerance)
+    if (math::abs(value.imag()) > Real{8} * Real(l) * delta * options.tolerance)
     {
       out.status = Status::precision_limit;
       return out;
     }
-    value.imag(Real{0});
+    value.imag(zero);
   }
   publish(value);
   return out;
@@ -347,8 +392,10 @@ template <uni20::Real Real>
 GapState<Real> relaxation_gap(std::size_t l, std::size_t particles, Real right_rate, Real left_rate,
                               Options<Real> options = {})
 {
-  return detail::solve_gap(l, particles, right_rate, left_rate, options,
-                           [&] { return tasep::relaxation_gap(l, particles, Real{1}, options.seed_options); });
+  return detail::solve_gap(l, particles, right_rate, left_rate, options, [&] {
+    return tasep::relaxation_gap(l, particles, uni20::scalar_at_precision<Real>(1, options.precision()),
+                                 options.seed_options);
+  });
 }
 
 /// Own one unit-rate TASEP seed for repeated rate queries at fixed L,N.
@@ -359,10 +406,11 @@ GapState<Real> relaxation_gap(std::size_t l, std::size_t particles, Real right_r
 template <uni20::Real Real> class PreparedGap {
   public:
     PreparedGap(std::size_t sites, std::size_t particles, Options<Real> options = {})
-        : sites_(sites), particles_(particles), options_(std::move(options))
+        : sites_(sites), particles_(particles), options_(std::move(options)), seed_(options_.precision())
     {
-      detail::validate_request(sites_, particles_, Real{1}, Real{0}, options_);
-      seed_ = tasep::relaxation_gap(sites_, particles_, Real{1}, options_.seed_options);
+      Real const one = uni20::scalar_at_precision<Real>(1, options_.precision()), zero = uni20::scalar_like(one, 0);
+      detail::validate_request(sites_, particles_, one, zero, options_);
+      seed_ = tasep::relaxation_gap(sites_, particles_, one, options_.seed_options);
     }
 
     [[nodiscard]] GapState<Real> at_rates(Real right_rate, Real left_rate) const

@@ -526,3 +526,10 @@ arithmetic precision; see [Kondo controls](kondo.md#library-use-and-numerical-co
 Hubbard thermodynamic MPFR uses explicit precision for quadrature and extrema.
 All paths need MPFR scalars; doped dispersion backgrounds use normal Uni20
 CPU/provider LU dispatch. See [Hubbard dispersions](hubbard-dispersion.md#explicit-precision-in-c).
+
+`bethe-tasep-pbc` accepts `bits-N` and `digits-N` with Uni20 MPFR/MPC
+scalars, using normal CPU/provider LU dispatch. Seed and Newton work budgets
+remain independent of arithmetic precision; see [TASEP](tasep.md#explicit-precision).
+
+`bethe-asep-pbc` also accepts explicit MPFR precision for its TASEP seed and
+continuation; see [ASEP controls and shared seeds](asep.md#explicit-precision).

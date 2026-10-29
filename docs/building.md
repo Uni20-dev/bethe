@@ -339,6 +339,14 @@ Suppression statistics are quiet so successful commands retain their normal
 stderr behavior; actual sanitizer errors still print and fail the process.
 The preset clears `DEBUGINFOD_URLS` so symbolization uses locally available
 debug information without waiting for remote downloads during CLI checks.
+Remainder operations also use an MPFR integer pool whose private frame needs
+matching debug symbols. The sanitizer CI job prepares these with Uni20's
+`scripts/prepare-sanitizer-symbols.py` before running tests, verifies the loaded
+library's build ID and records `sanitizer-symbols/symbols.json` in its artifacts.
+For local sanitizer runs, follow Uni20's
+[symbol preparation instructions](https://github.com/Uni20-dev/uni20/blob/main/docs/development/testing.md)
+and set `ASAN_SYMBOLIZER_PATH` to the resulting wrapper. Downloads happen only
+during preparation; neither the solvers nor sanitizer reports fetch symbols.
 
 Weekly CI (Monday 02:00 Asia/Taipei) additionally runs `ci-long-running` on the
 wide-precision build. A manual **C++ CI** run includes it by default, controlled

@@ -44,9 +44,23 @@ bethe-sine-gordon-excited --p 1 --length 1 --precision fp128 --json free.json
 
 The physical inputs are soliton mass M (default one), circumference L, coupling
 p and velocity=hbar=1, with the [vacuum solver's canonical normalization](sine-gordon.md#physical-convention).
-The default precision is fp64; long-double and optional MPLAPACK fp128 remain
-native throughout the source, quadrature, nonlinear solve and hole quantization.
-Interacting fp128 calculations can take many minutes; the last example is free.
+The default precision is fp64. Native long-double and configured fp128, and
+explicit MPFR `bits-N` / `digits-N`, retain their precision throughout source
+quadrature, nonlinear solves, hole quantization and exports. MPFR/MPC does not
+require MPLAPACK for this solver. Interacting high-precision calculations can
+take many minutes; the last example is free.
+
+A free-Dirac check at 256 bits, with explicit mesh and hole-trial budgets:
+
+```sh
+bethe-sine-gordon-excited --p 1 --length 1 --precision bits-256 --max-intervals 8192 --max-root-iterations 8192
+```
+
+Higher precision does not increase work budgets automatically. Fourier tables
+may also need `--max-kernel-evaluations 1000000`. The default 1024 hole trials
+can be exhausted even at the free point: the 333-bit `u=0.25`, `I=0.5` accuracy
+check used 1450 trials across all grids and contours. Raising a budget permits
+more work; it does not weaken the residual, refinement or contour requirements.
 
 Use `--threads 2` to overlap the vacuum and excited solves. The default is
 one worker; larger requests still admit at most two solves. Each state retains
@@ -87,7 +101,7 @@ shared metadata, CPU-time, streaming and overwrite-protection conventions;
 
 ## Equation and branch audit
 
-Let G be the existing native Fourier kernel and define the odd scattering phase
+Let G be the shared precision-aware Fourier kernel and define the odd scattering phase
 by its zero at the origin:
 
 ```math
@@ -127,7 +141,7 @@ classification of sine-Gordon states.
 
 ## Error controls and validation
 
-`--tolerance` is absolute in Y per state, default **16777216 native epsilons**.
+`--tolerance` is absolute in Y per state, default **16777216 arithmetic epsilons**.
 This is an estimated numerical accuracy, not an interval certificate or a
 relative bound for exponentially small finite-volume corrections. A gap can
 accumulate errors from both level solves; no stronger gap bound is claimed.
@@ -177,8 +191,20 @@ uses the closed p=2 rapidity kernel, a nonuniform Gauss grid and a separate root
 solver. Refining 256 to 512 nodes with two contours/cutoffs gives, at M=L=1,
 bulk-subtracted energies 5.11055662981005 and 17.14609634255262 for the two
 labels. These are fp64 reference values, not high-precision fixtures.
-Native closed-kernel source tests and free-point tests check for precision
-narrowing; budget and input tests check that failed solves publish no level.
+MPFR checks compare source and counting tables through 333 bits against the
+closed p=2 kernel and its direct rapidity integral, using independently refined
+192/256-point Gauss rules at 768 bits. Free-point absolute levels combine the
+independent real-axis Dirac integral with the analytic two-particle energy;
+these checks demonstrate precision growth beyond binary128. The extreme-scale
+333-bit tests and the interacting/scaling checks run separately as long tests.
+The interacting whole-level reference remains fp64; the source and free-point
+checks do not turn it into a high-precision interacting-energy fixture.
+
+Owning Async queries retain every result field under deferred and one/two-worker
+scheduling, with mixed precisions and isolated numerical failures. CLI checks
+compare serial/concurrent levels, source diagnostics and gaps, inspect every
+real-valued JSON field and CSV/TSV export, and protect existing output files
+from invalid requests. Exhausted budgets still publish no unconverged level.
 
 ## Library entry point
 
@@ -198,3 +224,9 @@ if (state.converged) {
 not a vacuum central-charge measurement. Subtract a separately converged
 `vacuum_energy` with the same mass, circumference, coupling and conventions to
 obtain the physical excitation gap, as the frontend does.
+
+For MPFR, construct `TwoSolitonOptions<uni20::mpreal>` with an explicit finite
+`uni20::Precision` and create all scales and optional controls at that same
+precision. Exact, unset and mixed-precision inputs are rejected. The resulting
+states, including unavailable diagnostics on failures, retain the requested
+precision. No ambient precision setting is changed.
