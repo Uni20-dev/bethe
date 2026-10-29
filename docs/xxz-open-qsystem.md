@@ -134,6 +134,27 @@ Only the biquadratic adapter fixes Delta=3/2 and attaches spin-1 multiplicities.
 Selected failures preserve their coefficients and available energy estimate;
 missing/pole energies are optional, not plausible-looking zeroes.
 
+The library also accepts explicit MPFR precision, with MPC complex root
+recovery and the configured MPLAPACK MPFR provider for Newton corrections:
+
+```cpp
+using R = uni20::mpreal;
+auto p = uni20::Precision::bits(160);
+bethe::SolverOptions<R> controls(p);
+std::vector<R> seed{R(3, p) / 2, -R(4, p) / 3};
+auto level = bethe::biquadratic::qsystem::solve<R>(4, seed, controls);
+```
+
+Delta, seeds and solver controls must share that finite precision; exact,
+unset or mixed-precision inputs are rejected. Coefficients, recovered roots,
+energies and failure diagnostics retain the requested precision. The bounded
+multistart search keeps its deterministic seed sequence and attempt budget;
+more arithmetic bits do not establish completeness or replace root
+admissibility checks. Independent solves can use owning Async query grids,
+while Newton iteration, continuation and the multistart search stay sequential.
+This library support does not yet enable MPFR in the biquadratic frontend's
+other complex-state modes.
+
 The regression suite checks the analytic Jacobian, the complex Wronskian
 identity, the original Bethe equations, branch continuation, native-precision
 four-site singlets, failure budgets, small TL-module ED spectra and the full
@@ -141,3 +162,7 @@ physical N=2,4,6 Hilbert-space spectra with representation weights.
 Eight-site module spectra are checked against independent auxiliary XXZ ED:
 with the tested extended precision and sufficient attempts all module counts
 are recovered, while fp64 can leave nearly ideal strings unverified.
+MPFR checks at 80/160/256 bits compare the four-site complex branch with an
+independent TL eigenvalue beyond binary128 accuracy. They also check the
+shifted hyperbolic Wronskian, analytic one-root bands, bounded searches and
+complete mixed-precision success/failure results under Async execution.
