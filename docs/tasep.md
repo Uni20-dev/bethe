@@ -3,7 +3,7 @@
 See the [worked relaxation and scaling tutorial](tutorials/tasep.md) for plots,
 downloadable exports and a comparison of fixed density with one particle.
 
-**Status: native-precision library and `bethe-tasep-pbc` frontend implemented.** This is the
+**Status: precision-generic library and `bethe-tasep-pbc` frontend implemented.** This is the
 totally asymmetric member of the ASEP family. It is not yet a solver for
 bidirectional hopping, open reservoirs, or a complete non-Hermitian spectrum.
 Bidirectional hopping is available in the separate [ASEP library/frontend](asep.md).
@@ -35,6 +35,8 @@ bethe-tasep-pbc --references
 
 L and `--particles` are required. `--rate` defaults to one; the shared
 `--precision` choices are fp64, long-double and fp128 when MPLAPACK is enabled.
+With Uni20 MPFR scalars enabled, `bits-N` and `digits-N` select explicit
+arbitrary precision, using normal CPU/provider LU dispatch.
 The `relaxation` table has one row, with `lambda_real`, `lambda_imag`, `gap`,
 `frequency`, residual, iteration counts, convergence and status. Frequency is
 the nonnegative angular frequency, equal to `lambda_imag`, in inverse time—not
@@ -68,13 +70,13 @@ if (state.converged && state.gap) {
 }
 ```
 
-All arithmetic stays in the selected fp64, long-double or fp128 type. Particle–hole
+All arithmetic stays in the selected native type or explicit MPFR precision. Particle–hole
 symmetry reduces the root count to `effective_particles=min(N,L-N)`. The retained
 roots therefore describe this reduced filling, not necessarily the user's particle
 coordinates. Choosing the nonnegative-frequency representative fixes a conjugate
 pair convention, not an independently assigned physical momentum.
 
-`Options<Real>` supplies a scaled equation tolerance (default 128 native epsilons),
+`Options<Real>` supplies a scaled equation tolerance (default 128 working-precision epsilons),
 `max_seed_iterations` (1000 all-root sweeps), `max_iterations` (100 coupled Newton
 updates), and a `max_sites` work budget (256). Both iteration budgets are explicit;
 there are no hidden retries. One-particle/one-hole rates are analytic and need no
@@ -143,5 +145,29 @@ the [TASEP/XYZ example](async-execution.md#independent-tasep-and-finite-xyz-solv
 demonstrates a filling curve with bounded admission and complete diagnostics.
 Each Cassini seed and Newton solve remains sequential. A positive rate change
 only scales the final eigenvalue and gap, so a rate-only curve should reuse one
-unit-rate state. The single-request CLI stays serial. MPFR requires a separate
-audit of complex arithmetic, explicit controls and the real-block Newton path.
+unit-rate state. The single-request CLI stays serial. Mixed-precision requests
+own their rates and options until their final Async result completes.
+
+
+## Explicit precision
+
+```sh
+bethe-tasep-pbc 32 --particles 8 --precision bits-160 --roots
+```
+
+```cpp
+using Real = uni20::mpreal;
+auto p = uni20::Precision::bits(160);
+bethe::tasep::Options<Real> options(p);
+auto state = bethe::tasep::relaxation_gap(32, 8, Real(1, p), options);
+```
+
+Rate, tolerance, complex roots, seed constants, real-block Newton solves and
+failure diagnostics retain the requested precision. Inputs must match the
+options' finite precision; no ambient MPFR precision is changed. Independent
+90-digit Markov-matrix eigenvalues demonstrate accuracy growth at 80, 160 and
+256 bits. Mixed-precision owning Async tests include successful and failed
+requests, and compare every result field with direct evaluation.
+
+The seed and Newton budgets retain their native defaults. More bits do not
+guarantee convergence within these budgets or a better state-family selection.

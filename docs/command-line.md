@@ -520,3 +520,7 @@ from the [finite-volume vacuum](sine-gordon.md) calculation.
 Hubbard thermodynamic MPFR uses explicit precision for quadrature and extrema.
 Half-filled lines and continua need MPFR scalars; doped dispersion backgrounds
 also require MPLAPACK MPFR. See [Hubbard dispersions](hubbard-dispersion.md#explicit-precision-in-c).
+
+`bethe-tasep-pbc` accepts `bits-N` and `digits-N` with Uni20 MPFR/MPC
+scalars, using normal CPU/provider LU dispatch. Seed and Newton work budgets
+remain independent of arithmetic precision; see [TASEP](tasep.md#explicit-precision).

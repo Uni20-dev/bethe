@@ -801,6 +801,9 @@ if(BETHE_BUILD_APPS)
     add_test(NAME Citations.bethe-asep-pbc.cli
       COMMAND "${CMAKE_COMMAND}" "-DPROGRAM=$<TARGET_FILE:bethe-asep-pbc>"
         "-DTOOL=bethe-asep-pbc" -P "${CMAKE_CURRENT_SOURCE_DIR}/check_citations_cli.cmake")
+    add_test(NAME TASEP.precision
+      COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_tasep_precision.py"
+        "$<TARGET_FILE:bethe-tasep-pbc>" "${BETHE_HAS_MPREAL}")
     add_test(NAME TASEP.cli
       COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_tasep.py"
         "$<TARGET_FILE:bethe-tasep-pbc>" "${BETHE_HAS_FLOAT128}")

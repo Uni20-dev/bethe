@@ -52,7 +52,8 @@ validation; their measurements are historical records, not new integration runs.
 | `kondo-response` | Bounded field scans and owning Async queries ([#29](https://github.com/Uni20-dev/bethe/pull/29)); single-point/default one-worker requests stay direct | Native only | Explicit-precision scaled positive-real Gamma, Euler-series tails and quadrature |
 | `potts-pbc` | Bounded charged-momentum scans and owning mixed-precision levels after one vacuum solve | Yes, MPFR scalars; no MPLAPACK required | Explicit constants, twists, auxiliary roots and complete failure diagnostics; vacuum and charged one-hole family only |
 | `asep-pbc` | Serial CLI; owning shared TASEP seed and dependent Async rate grids ([#31](https://github.com/Uni20-dev/bethe/pull/31)) | Native only | Explicit complex arithmetic, seed/continuation controls and diagnostics |
-| `tasep-pbc`, `xyz-pbc` | Serial CLIs; owning size/filling/eta/t sweeps with a compiled example ([#32](https://github.com/Uni20-dev/bethe/pull/32)) | Native only | Explicit complex arithmetic, controls and diagnostics; finite XYZ also needs complex theta arguments/derivatives |
+| `tasep-pbc` | Serial CLI; owning mixed-precision size/filling requests | Explicit MPFR/MPC; CPU/provider real LU | Existing gap branch and work budgets; no full-spectrum claim |
+| `xyz-pbc` | Serial CLIs; owning size/filling/eta/t sweeps with a compiled example ([#32](https://github.com/Uni20-dev/bethe/pull/32)) | Native only | Explicit complex arithmetic, controls and diagnostics; finite XYZ also needs complex theta arguments/derivatives |
 
 `bethe-info` reports capabilities and has no numerical parallelism to add.
 The inventory covers 43 numerical frontends; it does not extend any model's
