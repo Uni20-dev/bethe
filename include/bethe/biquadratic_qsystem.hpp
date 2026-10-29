@@ -30,7 +30,8 @@ template <uni20::Real Real> [[nodiscard]] State<Real> from_reference(xxz::quantu
 template <uni20::Real Real = double>
 [[nodiscard]] State<Real> solve(std::size_t sites, std::span<Real const> seed, SolverOptions<Real> const& options = {})
 {
-  return from_reference(xxz::quantum_group::qsystem::solve<Real>(sites, Real{3} / Real{2}, seed, options));
+  return from_reference(xxz::quantum_group::qsystem::solve<Real>(
+      sites, uni20::scalar_at_precision<Real>(3, options.precision()) / Real{2}, seed, options));
 }
 
 template <uni20::Real Real> struct Spectrum
@@ -46,7 +47,8 @@ template <uni20::Real Real = double>
                                       xxz::quantum_group::qsystem::SearchOptions const& search = {},
                                       SolverOptions<Real> const& options = {})
 {
-  auto input = xxz::quantum_group::qsystem::spectrum<Real>(sites, Real{3} / Real{2}, through_lines, search, options);
+  auto input = xxz::quantum_group::qsystem::spectrum<Real>(
+      sites, uni20::scalar_at_precision<Real>(3, options.precision()) / Real{2}, through_lines, search, options);
   Spectrum<Real> result{.states = {},
                         .expected_count = input.expected_count,
                         .attempts = input.attempts,
