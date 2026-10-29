@@ -87,6 +87,9 @@ target_link_libraries(bethe_generated_state_scan_tests PRIVATE bethe::bethe TBB:
 bethe_discover_tests(bethe_generated_state_scan_tests)
 
 if(BETHE_HAS_MPREAL)
+  add_executable(bethe_asep_mpfr_tests test_asep_mpfr.cpp)
+  target_link_libraries(bethe_asep_mpfr_tests PRIVATE bethe::bethe TBB::tbb)
+  bethe_discover_tests(bethe_asep_mpfr_tests)
   add_executable(bethe_tasep_mpfr_tests test_tasep_mpfr.cpp)
   target_link_libraries(bethe_tasep_mpfr_tests PRIVATE bethe::bethe TBB::tbb)
   bethe_discover_tests(bethe_tasep_mpfr_tests)
@@ -830,6 +833,9 @@ if(BETHE_BUILD_APPS)
     add_test(NAME Citations.bethe-sine-gordon-vacuum.cli
       COMMAND "${CMAKE_COMMAND}" "-DPROGRAM=$<TARGET_FILE:bethe-sine-gordon-vacuum>"
         "-DTOOL=bethe-sine-gordon-vacuum" -P "${CMAKE_CURRENT_SOURCE_DIR}/check_citations_cli.cmake")
+    add_test(NAME ASEP.precision
+      COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_asep_precision.py"
+        "$<TARGET_FILE:bethe-asep-pbc>" "${BETHE_HAS_MPREAL}")
     add_test(NAME ASEP.cli
       COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_asep.py"
         "$<TARGET_FILE:bethe-asep-pbc>" "${BETHE_HAS_FLOAT128}")

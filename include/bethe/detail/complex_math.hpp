@@ -7,10 +7,11 @@
 namespace bethe::detail
 {
 /// Principal log(1+z), retaining small complex increments without forming 1+z.
-template <uni20::Real Real> std::complex<Real> complex_log1p(std::complex<Real> z)
+template <uni20::Complex C> C complex_log1p(C z)
 {
-  if (std::abs(z) > Real{0.25}) return std::log(Real{1} + z);
+  using Real = decltype(z.real());
+  if (uni20::math::abs(z) > Real{1} / Real{4}) return uni20::math::log(Real{1} + z);
   Real const a = z.real(), b = z.imag();
-  return {std::log1p(Real{2} * a + a * a + b * b) / Real{2}, std::atan2(b, Real{1} + a)};
+  return {uni20::math::log1p(Real{2} * a + a * a + b * b) / Real{2}, uni20::math::atan2(b, Real{1} + a)};
 }
 } // namespace bethe::detail
