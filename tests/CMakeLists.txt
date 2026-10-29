@@ -407,7 +407,7 @@ if(BETHE_HAS_MPREAL)
   target_link_libraries(bethe_sine_gordon_vacuum_mpfr_tests PRIVATE bethe::bethe TBB::tbb)
   bethe_discover_tests(bethe_sine_gordon_vacuum_mpfr_tests
     LONG_RUNNING_TESTS SineGordonVacuumMpfr.InteractingStatesAndScaling
-      SineGordonVacuumMpfr.IndependentInteractingD3BeyondBinary128)
+      SineGordonVacuumMpfr.IndependentInteractingD3PrecisionGrowth)
   add_executable(bethe_sine_gordon_d3_reference EXCLUDE_FROM_ALL ../scripts/reference_sine_gordon_d3.cpp)
   target_link_libraries(bethe_sine_gordon_d3_reference PRIVATE bethe::bethe)
   add_executable(bethe_sine_gordon_particle_mpfr_tests test_sine_gordon_particles_mpfr.cpp)
