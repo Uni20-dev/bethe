@@ -87,6 +87,10 @@ target_link_libraries(bethe_generated_state_scan_tests PRIVATE bethe::bethe TBB:
 bethe_discover_tests(bethe_generated_state_scan_tests)
 
 if(BETHE_HAS_MPREAL)
+  add_executable(bethe_open_qsystem_mpfr_tests test_open_qsystem_mpfr.cpp)
+  target_link_libraries(bethe_open_qsystem_mpfr_tests PRIVATE bethe::bethe TBB::tbb)
+  bethe_discover_tests(bethe_open_qsystem_mpfr_tests)
+
   add_executable(bethe_xxx_thermodynamic_mpfr_tests test_xxx_thermodynamic_mpfr.cpp)
   target_link_libraries(bethe_xxx_thermodynamic_mpfr_tests PRIVATE bethe::bethe TBB::tbb)
   bethe_discover_tests(bethe_xxx_thermodynamic_mpfr_tests)
