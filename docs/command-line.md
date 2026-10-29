@@ -128,7 +128,7 @@ the finite-ring `bethe-xxx-structure-factor`, `bethe-richardson` and
 `bethe-ladder-pbc`, `bethe-gaudin-yang-pbc`, `bethe-bose-fermi-pbc`, `bethe-su3-pbc` and `bethe-su3-dispersion`,
 `bethe-haldane-shastry-pbc`, `bethe-sutherland-pbc`, `bethe-tb-dispersion`,
 `bethe-sine-gordon-dispersion`, `bethe-tb-pbc` and `bethe-sun-fermions-pbc`,
-plus `bethe-potts-pbc` and both branches of `bethe-xxz-qg-obc`, in an
+plus `bethe-potts-pbc`, `bethe-xxz-dispersion` and both branches of `bethe-xxz-qg-obc`, in an
 [enabled build](building.md#enable-arbitrary-precision):
 
 ```sh

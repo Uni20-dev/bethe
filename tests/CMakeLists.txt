@@ -246,6 +246,11 @@ bethe_discover_tests(bethe_least_squares_tests)
 add_executable(bethe_xxz_dispersion_tests test_xxz_dispersion.cpp)
 target_link_libraries(bethe_xxz_dispersion_tests PRIVATE bethe::bethe)
 bethe_discover_tests(bethe_xxz_dispersion_tests)
+if(BETHE_HAS_MPREAL)
+  add_executable(bethe_xxz_dispersion_mpfr_tests test_xxz_dispersion_mpfr.cpp)
+  target_link_libraries(bethe_xxz_dispersion_mpfr_tests PRIVATE bethe::bethe)
+  bethe_discover_tests(bethe_xxz_dispersion_mpfr_tests)
+endif()
 
 add_executable(bethe_xyz_dispersion_tests test_xyz_dispersion.cpp)
 target_link_libraries(bethe_xyz_dispersion_tests PRIVATE bethe::bethe)
@@ -605,6 +610,9 @@ if(BETHE_BUILD_APPS)
     COMMAND "${CMAKE_COMMAND}" "-DPROGRAM=$<TARGET_FILE:bethe-xxz-dispersion>"
       "-DTOOL=bethe-xxz-dispersion" -P "${CMAKE_CURRENT_SOURCE_DIR}/check_citations_cli.cmake")
   if(Python3_Interpreter_FOUND)
+    add_test(NAME XXZDispersion.precision
+      COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_xxz_dispersion_precision.py"
+        "$<TARGET_FILE:bethe-xxz-dispersion>" "${BETHE_HAS_MPREAL}")
     add_test(NAME XXZDispersion.cli
       COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_xxz_dispersion.py"
         "$<TARGET_FILE:bethe-xxz-dispersion>" "${BETHE_HAS_FLOAT128}")

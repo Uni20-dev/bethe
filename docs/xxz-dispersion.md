@@ -19,6 +19,38 @@ There is no subtraction of the ferromagnetic constant. The overview gives
 the bulk ground-state energy **per site**; the plotted energies are excitation
 energies **above** that ground state, not extensive energies.
 
+## Arithmetic precision
+
+The frontend accepts `--precision bits-N` or `digits-N` when MPFR is enabled;
+MPLAPACK is not required. For example:
+
+```sh
+bethe-xxz-dispersion --delta 1.0001 --precision bits-256 --points 65 --json curves.json
+```
+
+Library callers give `SpinonDispersion<uni20::mpreal>` a finite-precision
+anisotropy and query momenta at the same precision. An exact exchange constant
+(including the default one) is rounded at that precision; finite exchange
+values must match. Bulk calculations additionally take
+`BulkOptions<uni20::mpreal>(precision)`, with tolerance at the same precision.
+No ambient MPFR precision is read or changed. Native option aggregates remain
+available.
+
+The massive dispersion uses Uni20’s scaled theta constants, and bulk integrals
+use its finite tanh–sinh quadrature. The direct Fourier-series and analytic
+bulk limits retain their separate tail/error controls. More arithmetic bits do
+not increase the evaluation or refinement budgets. Error estimates are not
+interval certificates; failed bulk results stay missing. Exponent range remains
+finite, including with MPFR: a massive gap that cannot be represented is an
+error, never a zero-gap phase. Band queries stay serial because they are cheap
+once the immutable band has been prepared.
+
+`scripts/reference_xxz_dispersion_mpfr.py` checks the band against independent
+mpmath theta constants and the bulk energy against the original Fourier
+expressions. The 128- and 160-digit runs agree beyond 120 digits. Regressions
+separately exercise precision growth, folded/unfolded endpoints, analytic
+limits, work exhaustion and complete file exports.
+
 ## Run and export
 
 ```sh
@@ -113,7 +145,7 @@ $`I/J=\Delta/2+1+1/(4\Delta)+O(\Delta^{-2})`$.
 
 Near Δ=1 the gap is exponentially small. Numerically we evaluate theta
 constants with nome $`e^{-\eta}`$ or its modular transform
-$`e^{-\pi^2/\eta}`$, reusing the native-precision elliptic infrastructure.
+$`e^{-\pi^2/\eta}`$, using Uni20’s scaled theta constants at the selected precision.
 We **never** obtain the complementary modulus by subtracting rounded k²
 from one. Endpoint sine values are handled explicitly so a rounded sin(π)
 does not swamp the gap.
