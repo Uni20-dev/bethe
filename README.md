@@ -13,15 +13,14 @@ High precision is a first-class feature: the solvers support
 Parameters, numerical calculations, excitation gaps, and output retain the
 selected precision. See [precision controls](docs/command-line.md#select-arithmetic-precision)
 and [binary128 setup](docs/building.md#enable-binary128).
-XXX and supported XXZ states with periodic or open boundaries, finite-size Lieb–Liniger states,
-zero-temperature Lieb–Liniger bulk energies and dispersions,
-their real-root excitation scans, periodic XXX spinon branches and finite-ring
-two-spinon structure factors, Richardson pairing, central-spin and finite Hubbard ground states
-also support **arbitrary precision**, explicitly
-chosen per calculation; for example, `bethe-xxx-pbc 32 --precision digits-100`
-or `bethe-xxx-structure-factor 32 --precision bits-256`.
+All numerical frontends also support **arbitrary precision**, explicitly
+chosen per calculation in an MPFR-enabled build; for example,
+`bethe-xxx-pbc 32 --precision digits-100` or
+`bethe-xxx-structure-factor 32 --precision bits-256`.
 Run `bethe-info` to inspect the formats and numerical providers available in your build.
-See [MPFR setup and scope](docs/building.md#enable-arbitrary-precision).
+See [MPFR setup](docs/building.md#enable-arbitrary-precision) and the
+[app capability inventory](docs/app-capabilities.md) for model limits and
+execution paths. More arithmetic bits do not by themselves establish numerical convergence.
 
 A calculation starts with a model, a boundary condition, and a choice of
 Bethe quantum numbers. The solver finds the corresponding rapidities and
@@ -121,20 +120,20 @@ Thermodynamic dispersion tools use `bethe-<model>-dispersion`.
 - [Hubbard two-particle continua](docs/hubbard-continuum.md):
   `bethe-hubbard-continuum` gives half-filled lower and upper edges versus
   total momentum for two spinons, spinon–holon, spinon–antiholon and
-  holon–antiholon families, reusing the native-precision elementary solver.
+  holon–antiholon families, reusing the elementary solver at the selected precision.
 - [Kondo response](docs/kondo.md): `bethe-kondo-response` gives universal
   zero-temperature impurity energy changes, magnetization and susceptibility
-  in a uniform field, in native fp64, long-double and fp128 precision.
+  in a uniform field.
 - [Sine-Gordon vacuum](docs/sine-gordon.md): `bethe-sine-gordon-vacuum` gives
   the bulk-subtracted finite-volume vacuum energy, scaling function and effective
-  central charge, for attractive and repulsive coupling in native precision.
+  central charge, for attractive and repulsive coupling.
 - [Sine-Gordon excitations](docs/sine-gordon-excitations.md): soliton/breather
   lines and pair thresholds, plus explicitly asymptotic same-charge
   two-soliton Bethe–Yang levels. [Exact finite-volume two-soliton levels](docs/sine-gordon-excited.md)
   add selected charge-two states and vacuum-relative gaps with `bethe-sine-gordon-excited`.
 - [Scaling Lee–Yang](docs/lee-yang.md): `bethe-lee-yang-vacuum` gives the
   bulk-subtracted periodic ground-state energy of the non-unitary model,
-  with native fp64/long-double/fp128 and separate convergence diagnostics.
+  with separate nonlinear, mesh and cutoff convergence diagnostics.
   `bethe-lee-yang-excited` adds the zero-momentum one-particle level and
   vacuum-relative gap on the regular branch, $`5\le mL\le30`$.
 - [Periodic TASEP](docs/tasep.md): `bethe-tasep-pbc` gives the leading relaxation
@@ -273,11 +272,11 @@ magnetization with `--sz`. Both include the sector minimum and report gaps
 relative to the global ground state.
 
 The default arithmetic is fp64. Select `--precision long-double` or, in an
-enabled build, `--precision fp128` for higher precision. Add `--roots` to inspect
-rapidities and quantum numbers.
+enabled build, `--precision fp128` or `--precision digits-100` for higher precision.
+Add `--roots` to inspect rapidities and quantum numbers.
 Reports are formatted on a terminal and plain when redirected; `--format plain`
 makes that choice explicit. Every frontend can also save CSV, TSV, and JSON
-with provenance and native-precision values; see the [output guide](docs/output.md).
+with provenance and values retaining the selected precision; see the [output guide](docs/output.md).
 Always check convergence: the equation residual
 is not an energy-error bound. See [CLI controls and diagnostics](docs/command-line.md)
 for precision, tolerances, output formats, and exit statuses.

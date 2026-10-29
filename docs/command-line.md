@@ -118,20 +118,15 @@ All frontends support typed tables and file exports; see the
 | `fp64` (default) | Binary64, 53 significand bits |
 | `long-double` | This platform's native `long double` |
 | `fp80` | Extended80, 64 significand bits; requires that native format |
-| `fp128` | Binary128, 113 significand bits; requires the configured provider |
+| `fp128` | Binary128, 113 significand bits; requires the configured binary128 scalar |
 | `bits-N` | Arbitrary precision with N binary significand bits |
 | `digits-N` | Arbitrary precision sufficient for N decimal digits |
 
-The arbitrary-precision choices currently apply to `bethe-hubbard-dispersion`, `bethe-hubbard-continuum`, `bethe-xxx-pbc`, `bethe-xxx-obc`,
-`bethe-lieb-liniger-pbc`, `bethe-lieb-liniger-obc`, `bethe-q-boson-pbc`, `bethe-xxz-pbc` and
-`bethe-xxz-obc` (all currently supported modes), `bethe-lieb-liniger-dispersion`,
-the finite-ring `bethe-xxx-structure-factor`, `bethe-richardson` and
-`bethe-central-spin`, `bethe-hubbard-pbc`, `bethe-hubbard-obc`, and
-`bethe-ladder-pbc`, `bethe-gaudin-yang-pbc`, `bethe-bose-fermi-pbc`, `bethe-su3-pbc` and `bethe-su3-dispersion`,
-`bethe-haldane-shastry-pbc`, `bethe-sutherland-pbc`, `bethe-tb-dispersion`,
-`bethe-sine-gordon-dispersion`, `bethe-sine-gordon-bethe-yang`, `bethe-tb-pbc` and `bethe-sun-fermions-pbc`,
-plus `bethe-potts-pbc`, `bethe-xxz-dispersion`, `bethe-lee-yang-vacuum`, `bethe-lee-yang-excited` and both branches of `bethe-xxz-qg-obc`, in an
-[enabled build](building.md#enable-arbitrary-precision):
+All numerical frontends accept `bits-N` and `digits-N` in an
+[MPFR-enabled build](building.md#enable-arbitrary-precision). Their physical
+state families and numerical work limits are unchanged; consult the
+[app capability inventory](app-capabilities.md) and the individual model guide.
+For example:
 
 ```sh
 bethe-xxx-pbc 32 --precision digits-100

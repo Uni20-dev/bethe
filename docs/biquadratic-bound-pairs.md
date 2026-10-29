@@ -127,8 +127,10 @@ or fail to converge; no general-anisotropy completeness claim is made.
 
 The bound-pair library and its biquadratic mapping also accept explicit MPFR
 controls, as described in the [two-string precision guide](xxz-open-two-string.md#algorithm-precision-and-output).
-The CLI retains its native precision choices until all its complex-state
-modes have been migrated.
+The CLI supports the same explicit precision, for example
+`bethe-biquadratic-obc 32 --ferromagnetic --bound-pairs 1 --precision bits-256`.
+All biquadratic frontend modes accept `bits-N`/`digits-N` in an MPFR-enabled
+build; their state-family and convergence restrictions still apply.
 
 Validation covers independent ED on N=4,...,10, both deviation signs in the
 original complex equations, analytic Jacobians and native-precision exact

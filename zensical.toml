@@ -45,6 +45,11 @@ nav = [
     { "Building" = "docs/building.md" },
     { "Command line" = "docs/command-line.md" },
     { "Output and exports" = "docs/output.md" },
+    { "App capabilities and precision" = "docs/app-capabilities.md" },
+  ] },
+  { "C++ library" = [
+    { "Async execution" = "docs/async-execution.md" },
+    { "Parallel grids and benchmarks" = "docs/parallel-grids.md" },
   ] },
   { "Models" = "docs/models.md" },
   { "References" = "CITATIONS.md" },

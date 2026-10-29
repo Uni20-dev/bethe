@@ -149,7 +149,7 @@ No momentum or momentum-offset member exists in the open-chain state type.
 
 The open-chain equations and analytic Jacobian are boundary-specific; the
 damped Newton driver, interaction continuation, symmetry mappings, and
-native-precision Uni20 linear solve are shared with the periodic solver.
+precision-generic Uni20 linear solve are shared with the periodic solver.
 There are N+M positive-root unknowns, requiring O((N+M)^2) dense storage and
 O((N+M)^3) work per update. This is a moderate-chain solver, not a matrix-free
 large-system implementation.

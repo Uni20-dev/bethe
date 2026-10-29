@@ -9,14 +9,12 @@ need the extra precision.
 CMake 3.28+, a C++23 compiler supported by Uni20 (GCC 13+ or Clang 19+),
 and Uni20's numerical dependencies are required. Uni20 is pinned to a tested
 commit and fetched automatically unless a parent already supplies `uni20_core`.
-The current pin is `04163b9b`, including Uni20 PR #99's sanitizer policy and
-PR #98's notification-based scheduler waits, alongside recoverable square
-and QR least-squares solves, reusable LU/log-determinants, binary80 provider
-integration, explicit-precision MPFR/MPC scalars and conversions,
-uniform scalar/backend configuration, typed run metadata, runtime-precision
-data tables, and token-preserving help.
-Local overrides must provide these APIs too; configuration rejects checkouts
-without the recoverable-solve/least-squares/log-determinant headers and scalar-capability API.
+The exact source revision is recorded in
+[`CMakeLists.txt`](../CMakeLists.txt); `bethe-info` reports the revision actually
+used by an installed build, including a local source override. Use the pinned
+version unless developing both libraries together. It supplies the numerical,
+Async, precision and presentation APIs used throughout Bethe; an older checkout
+that passes the initial configuration checks may still lack newer APIs.
 Application builds also enable Uni20's
 optional CLI11 dependency; library-only builds do not require it.
 Scheduler-backed state scans use `uni20_async`. The parallel frontends and
@@ -163,7 +161,9 @@ For binary128, use a separate build directory and add
 To use an installed MPLAPACK 3.0+ binary128
 package, add `-DUNI20_USE_SYSTEM_MPLAPACK=ON` and
 `-Dmplapack_DIR=/path/to/lib/cmake/mplapack`; otherwise Uni20 can fetch it.
-See [Uni20's scalar and provider setup](https://github.com/Uni20-dev/uni20/blob/717c798c047c9e844535d9b21a09c152b49ea9af/docs/linalg/scalar_configuration.md).
+See [Uni20's latest scalar and provider setup](https://github.com/Uni20-dev/uni20/blob/main/docs/linalg/scalar_configuration.md).
+For a revision-matched reference, read `docs/linalg/scalar_configuration.md`
+in the Uni20 source tree used by your build.
 
 `UNI20_USE_SYSTEM_MPLAPACK=OFF` forces a v3.0.0 source fetch. Alternatively,
 build MPLAPACK v3.0.0 separately and pass its **build directory** as
@@ -185,16 +185,13 @@ or `UNI20_ENABLE_MPC` options.
 
 ## Enable arbitrary precision
 
-Hubbard half-filled and doped dispersions and continuum edges support MPFR.
-Doped Fredholm linear systems use Uni20 CPU/provider LU dispatch; MPLAPACK
-is preferred when available, but is not required.
-
-Arbitrary precision is optional. Uni20 enables its real and complex scalars
-together, requiring GMP, MPFR >= 4.2, and MPC development packages. Every
-currently supported MPFR frontend works with `UNI20_ENABLE_MPREAL=ON` and
-`UNI20_BACKEND_MPLAPACK=OFF`. Uni20 supplies CPU real/complex LU and QR;
-normal dispatch prefers an enabled LAPACK provider. Model-specific arithmetic
-support is listed in the [capability inventory](app-capabilities.md).
+All numerical frontends support explicit MPFR precision. Uni20 enables
+its arbitrary-precision real and complex scalars together, requiring GMP,
+MPFR >= 4.2, and MPC development packages. Set `UNI20_ENABLE_MPREAL=ON`;
+MPLAPACK matrix kernels are optional. With `UNI20_BACKEND_MPLAPACK=OFF`,
+Uni20 supplies CPU real/complex LU and QR where needed; normal dispatch prefers
+an enabled LAPACK provider. See the [capability inventory](app-capabilities.md)
+for each model's execution path and numerical limits.
 In a separate build directory:
 
 ```sh
@@ -232,16 +229,10 @@ enabled; use `-DUNI20_ENABLE_FLOAT80=OFF` with an MPFR-only package. Binary128
 can be enabled alongside arbitrary precision with `-DUNI20_ENABLE_FLOAT128=ON`
 on supported configurations.
 
-This MPFR path covers the existing ground, sector and real-root scan families
-of periodic/open XXX and finite XXZ, both quantum-group XXZ branches, finite
-Hubbard ground states, finite TB singlets, SU(3) balanced singlets, finite-size Lieb–Liniger,
-Gaudin–Yang, Bose–Fermi and SU(n) fermion states, q-boson ground/canonical states, and
-Richardson/central-spin continuation. It also covers prepared raising form
-factors and the finite two-spinon DSF, zero-temperature Lieb–Liniger bulk
-energies and dispersions, SU(3)/TB elementary lines and continuum bounds,
-sine-Gordon particle lines and pair thresholds, and Haldane–Shastry/Sutherland
-finite spectra. Each model's physical domain and state-family restrictions
-still apply; see the [capability inventory](app-capabilities.md).
+The selected precision applies within each model's existing physical domain
+and state families. More bits do not add missing sectors, remove a quadrature
+cutoff or guarantee convergence. Model-specific controls remain in the
+[model guides](models.md#current-coverage).
 
 CPU and MPLAPACK paths use the same explicit-precision interfaces. Enabling
 MPLAPACK lets Uni20 dispatch supported LU and QR operations to that provider;
