@@ -46,7 +46,7 @@ template <uni20::Real Real> class ThermodynamicTwoSpinonStructureFactor {
       Real const upper = exchange_ * (pi * uni20::math::sin(q / Real{2}));
       Real const lower = q == pi ? uni20::scalar_like(exchange_, 0) : upper * uni20::math::cos(q / Real{2});
       if (!uni20::isfinite(upper)) throw std::overflow_error("continuum energy exceeds scalar range");
-      if (q > Real{0} && upper < uni20::numeric_limits<Real>::min(uni20::precision_of(exchange_)))
+      if (q > Real{0} && upper < positive_minimum())
         throw std::underflow_error("continuum energy is below the normal scalar range");
       return {lower, upper};
     }
@@ -75,8 +75,7 @@ template <uni20::Real Real> class ThermodynamicTwoSpinonStructureFactor {
       Real const log_value = *rate.log_rate - uni20::math::log(uni20::scalar_like(exchange_, 2)) -
                              uni20::math::log(upper) - uni20::math::log(below) / Real{2};
       Real const value = uni20::math::exp(log_value);
-      if (!uni20::isfinite(value) || value < uni20::numeric_limits<Real>::min(uni20::precision_of(exchange_)))
-        return out;
+      if (!uni20::isfinite(value) || value < positive_minimum()) return out;
       out.value = value;
       out.error =
           value * (*rate.error + Real{32} * uni20::numeric_limits<Real>::epsilon(uni20::precision_of(exchange_)) *
@@ -86,6 +85,13 @@ template <uni20::Real Real> class ThermodynamicTwoSpinonStructureFactor {
     }
 
   private:
+    Real positive_minimum() const
+    {
+      if constexpr (uni20::has_runtime_precision_v<Real>)
+        return uni20::math::next_up(uni20::scalar_like(exchange_, 0));
+      else
+        return uni20::numeric_limits<Real>::min();
+    }
     Real exchange_;
     detail::XXXTransitionRate<Real> kernel_;
 };

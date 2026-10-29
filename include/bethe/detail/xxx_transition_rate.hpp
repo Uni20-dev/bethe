@@ -78,7 +78,24 @@ template <uni20::Real Real> class XXXTransitionRate {
       Real const panels_real = uni20::math::ceil(end_ * std::max(Real{1}, a / pi));
       // Bound before converting to an integer (also rejects overflow).
       if (!uni20::isfinite(panels_real) || panels_real > Real(options_.max_evaluations / 48)) return out;
-      auto const panels = static_cast<std::size_t>(panels_real);
+      std::size_t panels;
+      if constexpr (uni20::has_runtime_precision_v<Real>)
+      {
+        // Convert the bounded integral count using exact integer comparisons;
+        // never narrow an MPFR coordinate through a native floating type.
+        std::size_t first = 1, last = options_.max_evaluations / 48;
+        while (first < last)
+        {
+          auto const middle = first + (last - first) / 2;
+          if (panels_real <= Real(middle))
+            last = middle;
+          else
+            first = middle + 1;
+        }
+        panels = first;
+      }
+      else
+        panels = static_cast<std::size_t>(panels_real);
       Real const width = end_ / Real(panels);
       Real const analytic = a < Real{2} ? uni20::math::log1p(a * a / Real{4}) +
                                               Real{2} * (uni20::math::log(Real{2} * one) - uni20::math::log(a))
@@ -94,7 +111,7 @@ template <uni20::Real Real> class XXXTransitionRate {
             Real const x = width * (Real(p) + (Real{1} + rule.x[j]) / Real{2});
             Real const u = uni20::math::exp(-Real{2} * x), cosine = uni20::math::cos(a * x);
             Real f;
-            if (x < Real{0.25})
+            if (x < one / Real{4})
             {
               Real const t = uni20::math::tanh(x), sine = uni20::math::sin(a * x / Real{2});
               f = (-Real{2} * (Real{1} + t) / uni20::math::tanh(Real{2} * x) * sine * sine + t + t * t +
