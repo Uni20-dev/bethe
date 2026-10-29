@@ -94,7 +94,8 @@ with tempfile.TemporaryDirectory() as directory:
             # The roots export requests that table without selecting screen output.
             run([*base, "--precision", selector, *files, "--no-retain", "--quiet", "--force"])
             exported = json.loads((root/"state.json").read_text())["tables"]
-            assert all(t["rows"] == exported[name]["rows"] for name, t in result.items())
+            assert set(exported) == {"states"}
+            assert result["states"]["rows"] == exported["states"]["rows"]
             for suffix, separator in [("csv", ","), ("tsv", "\t")]:
                 for name, table in result.items():
                     text = (root/f"{name}.{suffix}").read_text()
@@ -103,6 +104,9 @@ with tempfile.TemporaryDirectory() as directory:
                     expected = [{k: "" if v is None else str(v).lower() if isinstance(v, bool) else str(v)
                                  for k, v in row.items()} for row in rows(table)]
                     assert records == expected
+            run([*args, "--json", str(root/"state.json"), "--no-retain", "--quiet", "--force"])
+            exported = json.loads((root/"state.json").read_text())["tables"]
+            assert all(t["rows"] == exported[name]["rows"] for name, t in result.items())
 
         invalid = [["3", "--eta", "0.4", "--t", "0.7"],
                    ["4", "--eta", "nan", "--t", "0.7"],
