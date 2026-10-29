@@ -12,7 +12,7 @@ For `--density n` with $`n \lt 1`$, see the [doped dispersion guide](hubbard-dop
 Attraction, nonzero magnetic fields, spectral weights, and multiparticle
 continuum thresholds are not implemented in this frontend. A separate
 [two-spinon continuum tool](hubbard-continuum.md) now provides the
-half-filled lower and upper edges; charge-containing continua remain open.
+half-filled spinon and charge-containing family edges.
 
 ```sh
 bethe-hubbard-dispersion --u 4 --points 101 --format csv
@@ -22,7 +22,10 @@ bethe-hubbard-dispersion --u 4 --precision fp128 --points 33 --format csv
 ```
 
 Calculations and output retain the selected `fp64` (default), `long-double`, or
-optional `fp128` precision. Grids are uniform in **dressed physical momentum**,
+optional `fp128` precision, or explicit MPFR `bits-N`/`digits-N` precision.
+MPFR curves require `UNI20_ENABLE_MPREAL=ON`. Doped backgrounds use Uni20's
+normal LU dispatch, with CPU MPFR available and MPLAPACK preferred when enabled. Arithmetic bits do not replace convergence
+of the quadrature, tail cutoff, momentum inversion or doped meshes. Grids are uniform in **dressed physical momentum**,
 not the auxiliary Bethe parameter. `--points` includes both endpoints; charge
 endpoints $`-\pi`$ and $`\pi`$ are the same point in the Brillouin zone. `--momentum`
 instead selects one point in radians. With `--branch all` it must belong to
@@ -203,3 +206,19 @@ auto charge = charge_at_bare_momentum(Branch::antiholon, 4.0, 1.0);
 spin, parameters, error estimates, work counts and status. Tests use independent
 Fourier-Bessel references at all three precisions, a weak-coupling relative-gap
 reference, convention shifts, symmetry, budgets and the large-U XXX limit.
+
+## Explicit precision in C++
+
+Construct `Options<uni20::mpreal>(precision)` or
+`DopedOptions<uni20::mpreal>(precision)` and supply finite inputs and tolerances
+at that same precision. Native options retain their default construction.
+Mixed, exact and unset runtime inputs are rejected before numerical work.
+Result diagnostics, analytic endpoints and failed iterates retain the selected
+precision; unconverged physical energies remain absent.
+
+Half-filled integrals use Uni20's finite tanh–sinh quadrature. The weak-coupling
+spinon convolution is split at its square-root support boundaries, and the
+integrand uses independently computed endpoint distances there. The omitted
+physical rapidity tail remains a separate model-specific estimate. Quadrature
+mesh agreement and endpoint diagnostics are numerical estimates, not rigorous
+interval bounds or a guarantee against unresolved interior features.

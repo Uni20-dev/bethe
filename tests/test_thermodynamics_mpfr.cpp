@@ -81,7 +81,6 @@ TEST(ThermodynamicsMpfr, OptionsRequireFinitePrecision)
   EXPECT_EQ(options.tolerance, 4096 * uni20::numeric_limits<R>::epsilon(p));
 }
 
-#if UNI20_HAS_MPLAPACK_MPREAL
 TEST(ThermodynamicsMpfr, RequiresMatchingPrecisionBeforeNumericalWork)
 {
   auto const p = Precision::bits(160);
@@ -268,4 +267,3 @@ TEST(ThermodynamicsMpfr, FailedBackgroundsAndInversionsRetainDiagnostics)
   EXPECT_FALSE(point.energy);
   EXPECT_EQ(point.status, model::Status::momentum_limit);
 }
-#endif

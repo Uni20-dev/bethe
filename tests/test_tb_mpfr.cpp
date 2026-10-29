@@ -51,7 +51,6 @@ TEST(TBMpfr, ExplicitPrecisionSeedsIncludeCentralZero)
   EXPECT_EQ(uni20::precision_of(evaluation.modulus), p);
 }
 
-#if UNI20_HAS_MPLAPACK_MPREAL
 TEST(TBMpfr, FourSiteAnalyticEnergyGainsAccuracyBeyondBinary128)
 {
   auto const reference_precision = uni20::Precision::bits(768);
@@ -187,4 +186,3 @@ TEST(TBMpfr, OwningMixedPrecisionGridsMatchCompleteStates)
   }
   EXPECT_EQ(mpfr_get_default_prec(), ambient);
 }
-#endif

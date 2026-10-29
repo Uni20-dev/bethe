@@ -100,7 +100,8 @@ TYPED_TEST(HubbardDoped, DensityEnergyAdjointIdentity)
 {
   using Real = TypeParam;
   auto const rule = bethe::detail::gauss_legendre<Real>(48);
-  auto const mesh = model::detail::doped_mesh(Real{1}, Real{1}, rule);
+  auto const kernel = std::make_shared<bethe::detail::HubbardKernel<Real> const>(Real{1});
+  auto const mesh = model::detail::doped_mesh(Real{1}, rule, kernel);
   ASSERT_TRUE(mesh);
   bethe::detail::CompensatedSum<Real> sum;
   for (std::size_t j = 0; j < mesh->w.size(); ++j)

@@ -34,7 +34,7 @@ bethe-hubbard-pbc 16 --u -4 --particles 8 --roots
 bethe-hubbard-pbc 16 --u 4 --sz 2
 # In a binary128-enabled build:
 bethe-hubbard-pbc 32 --u 4 --precision fp128
-# With MPFR scalars and MPLAPACK MPFR enabled:
+# With MPFR scalars enabled:
 bethe-hubbard-pbc 6 --u -4 --precision digits-100 --roots
 ```
 
@@ -48,13 +48,12 @@ apply, including solver CPU time and parsing at the selected arithmetic precisio
 ## Arbitrary precision and independent solves
 
 Both finite Hubbard frontends accept `--precision bits-N` and `digits-N` with
-[MPFR scalars and MPLAPACK MPFR enabled](building.md#enable-arbitrary-precision).
+[MPFR scalars enabled](building.md#enable-arbitrary-precision).
 This covers both signs of U, symmetry-mapped sectors and analytic free-fermion
 paths within each frontend's existing sector restrictions. Root coordinates,
 physical and auxiliary interaction values, energy offsets, equation residuals
-and exact-zero observables retain the requested precision. The full frontend
-requires the LU provider even when a particular free-fermion request needs no
-matrix solve.
+and exact-zero observables retain the requested precision. Interacting solves use normal Uni20 dispatch, with CPU MPFR LU available
+when MPLAPACK is disabled.
 
 The C++ interface requires explicit finite precision in the interaction and
 solver controls, including U=0. Exact-only, unset or mismatched input values

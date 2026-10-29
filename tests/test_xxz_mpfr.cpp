@@ -107,11 +107,9 @@ TEST(XxzMpfrControls, RejectsMixedExactAndUnsetInputs)
   for (R d : {R(1), R(1, q), R(uni20::uninitialized)})
   {
     EXPECT_THROW((void)model::solve_real<R>(4, d, numbers, options), std::invalid_argument);
-#if UNI20_HAS_MPLAPACK_MPREAL
     EXPECT_THROW((void)model::ground_state(4, d, options), std::invalid_argument);
     EXPECT_THROW((void)model::open::ground_state(4, d, options), std::invalid_argument);
     EXPECT_THROW((void)model::open::sector_ground_states(4, d, options), std::invalid_argument);
-#endif
   }
   options.residual_tolerance = R(1);
   EXPECT_THROW((void)model::solve_real<R>(4, R(1, p), numbers, options), std::invalid_argument);
@@ -124,7 +122,6 @@ TEST(XxzMpfrControls, RejectsMixedExactAndUnsetInputs)
                std::invalid_argument);
 }
 
-#if UNI20_HAS_MPLAPACK_MPREAL
 TEST(XxzMpfrControls, MassiveContinuationRequiresRepresentableProgress)
 {
   auto p = Precision::bits(4);
@@ -319,4 +316,3 @@ TEST(XxzMpfrAsync, OwningMixedPrecisionSweepAndExistingContinuousScans)
             model::open::real_excitations(6, R(1, p) / 2, uni20::half_int(1), parallel, options));
   }
 }
-#endif

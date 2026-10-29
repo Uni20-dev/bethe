@@ -185,14 +185,16 @@ or `UNI20_ENABLE_MPC` options.
 
 ## Enable arbitrary precision
 
+Hubbard half-filled dispersions and continuum edges support scalar-only MPFR;
+doped Hubbard dispersions additionally need MPLAPACK MPFR for their Fredholm
+linear systems.
+
 Arbitrary precision is optional. Uni20 enables its real and complex scalars
-together, requiring GMP, MPFR >= 4.2, and MPC development packages. All modes of
-`bethe-xxx-pbc`, `bethe-xxx-obc`, `bethe-xxz-qg-obc`, `bethe-richardson`,
-`bethe-central-spin`, `bethe-su3-dispersion`, `bethe-tb-dispersion`,
-`bethe-sine-gordon-dispersion`, `bethe-haldane-shastry-pbc` and
-`bethe-sutherland-pbc` work without MPLAPACK. Uni20 supplies CPU QR for
-Richardson and central spin; SU(3)/TB/sine-Gordon dispersions,
-Haldane–Shastry, Sutherland, Potts and quantum-group XXZ use scalar functions only.
+together, requiring GMP, MPFR >= 4.2, and MPC development packages. Every
+currently supported MPFR frontend works with `UNI20_ENABLE_MPREAL=ON` and
+`UNI20_BACKEND_MPLAPACK=OFF`. Uni20 supplies CPU real/complex LU and QR;
+normal dispatch prefers an enabled LAPACK provider. Model-specific arithmetic
+support is listed in the [capability inventory](app-capabilities.md).
 In a separate build directory:
 
 ```sh
@@ -208,15 +210,9 @@ cmake --build . --parallel
 ./bethe-info
 ```
 
-For finite-ring structure factors, finite-size or zero-temperature
-thermodynamic Lieb–Liniger, SU(3), finite XXZ/Hubbard/TB, Gaudin–Yang/Bose–Fermi,
-SU(n) fermions and q-boson, additionally enable MPLAPACK matrix kernels. Unlike QR, Uni20's
-arbitrary-precision square LU solves currently require this provider:
+The same build also supports Newton solves and complex form-factor determinants:
 
 ```sh
-cmake /path/to/bethe -G Ninja -DCMAKE_BUILD_TYPE=Release \
-  -DUNI20_ENABLE_MPREAL=ON -DUNI20_BACKEND_MPLAPACK=ON
-cmake --build . --parallel
 ./bethe-xxx-structure-factor 32 --precision bits-256 --threads 4
 ./bethe-lieb-liniger-obc 2 --length 1 --c 1e-50 --precision digits-100
 ./bethe-hubbard-obc 5 --u -4 --precision bits-256
@@ -227,6 +223,7 @@ cmake --build . --parallel
 ./bethe-info
 ```
 
+For optional MPLAPACK matrix kernels, add `-DUNI20_BACKEND_MPLAPACK=ON`.
 Uni20 can fetch MPLAPACK 3.0+ or use an installed/build-tree package with
 `-DUNI20_USE_SYSTEM_MPLAPACK=ON -Dmplapack_DIR=/path/to/mplapack`.
 That package must include its **MPFR component**; a binary128-only build is
@@ -246,12 +243,11 @@ sine-Gordon particle lines and pair thresholds, and Haldane–Shastry/Sutherland
 finite spectra. Each model's physical domain and state-family restrictions
 still apply; see the [capability inventory](app-capabilities.md).
 
-The XXX real-root, quantum-group XXZ and Gaudin solvers, SU(3)/TB/sine-Gordon
-dispersions and Haldane–Shastry/Sutherland need just `UNI20_ENABLE_MPREAL=ON`.
-Lieb–Liniger, SU(3), finite XXZ/Hubbard/TB, Gaudin–Yang/Bose–Fermi, SU(n) fermions, q-boson and form
-factors additionally need `UNI20_BACKEND_MPLAPACK=ON`.
-Enabling that provider also lets Uni20 dispatch the Lieb–Liniger LU and Gaudin
-QR operations to MPLAPACK.
+CPU and MPLAPACK paths use the same explicit-precision interfaces. Enabling
+MPLAPACK lets Uni20 dispatch supported LU and QR operations to that provider;
+Bethe does not select a backend manually. This CPU coverage does not imply
+that every Uni20 operation has an MPFR fallback: condition estimation, SVD
+and eigensystems retain their provider requirements.
 No ambient precision default determines the calculation's
 working precision. At the provider boundary, Uni20 temporarily sets and restores
 MPLAPACK's thread-local defaults around each synchronous call.
@@ -323,9 +319,9 @@ Pull requests and pushes to `main` run three Linux configurations, defined in
 
 Each builds **all frontends and test targets** and runs the routine CTest suite,
 including CLI/export checks and the installed-program relocation test.
-Runtime-precision Lieb–Liniger and form-factor coverage belongs to
-`ci-wide`; the scalar-only sanitizer configuration also checks that unavailable
-provider requests fail clearly. These jobs do not claim macOS, Windows or GPU
+Runtime-precision Lieb–Liniger, nested Newton and complex form-factor tests
+run in both `ci-wide` and the MPFR CPU sanitizer configuration, exercising
+MPLAPACK and CPU LU through normal dispatch. These jobs do not claim macOS, Windows or GPU
 coverage. Documentation has its own workflow.
 
 The sanitizer preset sets `UNI20_SANITIZE` as well as the application's compiler
@@ -399,7 +395,7 @@ Set `BETHE_BUILD_EXAMPLES=ON` to build library composition examples in the
 asynchronously and submits both elementary branches before observing it; see
 [shared backgrounds](async-execution.md#shared-backgrounds). A second example
 evaluates a bounded [ground-state parameter sweep](async-execution.md#ground-state-parameter-sweeps),
-using `mpreal` when its LU provider is configured. Examples are checked
+using `mpreal` when Uni20 MPFR scalars are configured. Examples are checked
 in CI and are not installed with the command-line tools.
 The [ASEP example](asep.md#reusing-a-seed-across-rate-queries) compares independent
 rate solves with queries sharing one TASEP seed, using direct or Async execution.

@@ -121,8 +121,13 @@ TYPED_TEST(FourString, BudgetsAndValidation)
     EXPECT_EQ(s.status, qg::SolveStatus::iteration_limit);
     qg::four_string::detail::System<R> system(16, s.delta, s.string_label);
     std::vector<R> x{s.center, s.inner_log_deviation, s.outer_log_deviation, s.outer_deviation_phase};
-    EXPECT_EQ(s.residual_norm, system.evaluate(x).norm);
-    EXPECT_EQ(s.energy_shift, system.energy_shift(x));
+    // Constant-folded and runtime acosh(Delta) can differ by an extended80
+    // ULP. Reconstructing the diagnostics must allow that rounding difference,
+    // including a unit-scale absolute allowance for a nearly cancelled norm.
+    R const eps = uni20::numeric_limits<R>::epsilon();
+    R const energy = system.energy_shift(x);
+    EXPECT_REAL_NEAR(s.residual_norm, system.evaluate(x).norm, R{32} * eps);
+    EXPECT_REAL_NEAR(s.energy_shift, energy, R{32} * eps * (R{1} + std::abs(energy)));
   }
   for (std::size_t n : {0, 6, 7})
     EXPECT_THROW((void)qg::four_string::bound_quartet<R>(n, R{3} / R{2}), std::invalid_argument);

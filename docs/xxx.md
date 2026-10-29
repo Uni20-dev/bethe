@@ -137,9 +137,9 @@ The bulk-energy helper requires a finite-precision exchange argument for
 momentum. Parallel excitation scans carry precision per calculation, so
 independent scans at different precisions can share a scheduler.
 
-The root-only algorithm uses real arithmetic and needs no MPLAPACK. Uni20's
-arbitrary-precision scalar family enables MPFR and MPC together; MPLAPACK is
-additionally required for [finite-ring form factors](xxx-structure-factor.md#arbitrary-precision).
+Uni20's arbitrary-precision scalar family enables MPFR and MPC together. Both
+root solves and [finite-ring form factors](xxx-structure-factor.md#arbitrary-precision)
+work without MPLAPACK; normal dispatch supplies CPU LU where needed.
 The [OBC solver/frontend](open-chains.md) supports the same per-call precision
 contract for states, sector minima and real-root scans.
 

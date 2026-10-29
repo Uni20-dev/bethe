@@ -20,7 +20,7 @@ bethe-hubbard-obc 32 --u 4 --precision long-double
 bethe-hubbard-obc 6 --u 0 --max-iterations 0
 # In a binary128-enabled build:
 bethe-hubbard-obc 32 --u 4 --precision fp128
-# With MPFR scalars and MPLAPACK MPFR enabled:
+# With MPFR scalars enabled:
 bethe-hubbard-obc 5 --u -4 --precision bits-256 --roots
 ```
 

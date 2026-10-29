@@ -136,7 +136,7 @@ set must not be used as an eigenstate at the requested interaction.
 
 fp64, platform-native long double, optional fp128, and explicit MPFR precision
 run the same equations without narrowing parameters or output. The MPFR frontend
-requires [GMP/MPFR/MPC and MPLAPACK MPFR](building.md#enable-arbitrary-precision).
+requires [GMP/MPFR/MPC](building.md#enable-arbitrary-precision).
 For example:
 
 ```sh
@@ -146,8 +146,8 @@ bethe-gaudin-yang-pbc 6 --length 6 --c 1 --precision digits-100 --roots
 Working precision reaches constants, continuation couplings, Newton matrices,
 backtracking, residuals, energy sums and analytic zeros. A higher bit count does
 not expand the supported shell branches or guarantee that an iteration budget
-converges. Free-state library calls need MPFR scalars only, but the frontend
-requires the LU provider consistently for all MPFR requests. Finite positive ell, finite c>=0,
+converges. Both library and frontend work with MPFR scalars; Uni20 supplies
+CPU LU when MPLAPACK is disabled. Finite positive ell, finite c>=0,
 and a finite positive tolerance are required; interacting $`c \,\ell /2`$ must be
 finite and nonzero. Particle-label and dense-matrix allocation sizes are
 checked before allocation. Nonfinite physical roots/observables and complete

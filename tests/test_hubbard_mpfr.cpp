@@ -139,13 +139,10 @@ TEST(HubbardMpfrControls, RejectsMixedExactAndUnsetInputs)
   controls.residual_tolerance = R(1);
   EXPECT_THROW((void)model::detail::validate_sector(4, 4, uni20::half_int(0), R(4, p), controls),
                std::invalid_argument);
-#if UNI20_HAS_MPLAPACK_MPREAL
   EXPECT_THROW((void)model::ground_state(4, R(4, p), controls), std::invalid_argument);
   EXPECT_THROW((void)model::open::ground_state(4, R(4, p), controls), std::invalid_argument);
-#endif
 }
 
-#if UNI20_HAS_MPLAPACK_MPREAL
 TEST_P(HubbardMpfr, DimersMappedSectorsAndFailureDiagnostics)
 {
   auto p = Precision::bits(GetParam());
@@ -314,4 +311,3 @@ TEST(HubbardMpfrAsync, OwningMixedPrecisionGroundSweeps)
     EXPECT_FALSE(results.back().second.converged);
   }
 }
-#endif

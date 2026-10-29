@@ -107,7 +107,6 @@ TEST_P(QBosonMpfr, RejectsMixedExactUnsetAndInvalidInputs)
   EXPECT_THROW((void)model::ground_state(4, 0, v(1), options), std::invalid_argument);
 }
 
-#if UNI20_HAS_MPLAPACK_MPREAL
 TEST_P(QBosonMpfr, IndependentTwoSiteSpectrumAndMultiplicativeEquations)
 {
   model::SolverOptions<R> options(p());
@@ -209,7 +208,6 @@ TEST_P(QBosonMpfr, CompleteAndPartialParallelScans)
     }
   }
 }
-#endif
 
 TEST(QBosonMpfrShared, OwningMixedPrecisionQueries)
 {
@@ -226,9 +224,7 @@ TEST(QBosonMpfrShared, OwningMixedPrecisionQueries)
       auto const p = uni20::Precision::bits(bits);
       model::SolverOptions<R> options(p);
       requests.push_back({4, 3, R(0, p), options});
-#if UNI20_HAS_MPLAPACK_MPREAL
       requests.push_back({6, 4, R(1, p), options});
-#endif
       options.max_iterations = 0;
       requests.push_back({5, 3, R(1, p), options});
     }
@@ -248,7 +244,7 @@ TEST(QBosonMpfrShared, OwningMixedPrecisionQueries)
   uni20::async::DebugScheduler deferred({.order = uni20::async::DebugSchedulerOrder::reverse});
   std::vector<model::State<R>> expected;
   auto serial = submit(deferred, expected);
-  EXPECT_EQ(serial.get_wait(deferred), UNI20_HAS_MPLAPACK_MPREAL ? 9u : 6u);
+  EXPECT_EQ(serial.get_wait(deferred), 9u);
   ASSERT_FALSE(expected.back().converged);
   for (int workers : {1, 4})
   {

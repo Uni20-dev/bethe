@@ -60,7 +60,7 @@ open ends, unequal masses or unequal pair couplings.
 
 ## Explicit arithmetic precision
 
-With the MPLAPACK MPFR provider configured, both the current interacting branch
+With Uni20 MPFR scalars configured, both the current interacting branch
 and the free limits accept `--precision bits-N` or `digits-N`:
 
 ```sh

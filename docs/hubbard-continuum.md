@@ -157,3 +157,14 @@ propagating constituent failures. Its mesh-convergence evidence is not a
 global certificate, nor is a chosen particle family's lower edge a minimum
 over arbitrary additional particles. Doped continua and spectral weights
 remain separate work.
+
+## Arbitrary precision
+
+`--precision bits-N` and `digits-N` use MPFR for constituent dispersions and
+extrema searches, without requiring MPLAPACK. In C++, construct
+`Options<uni20::mpreal>(precision)` for two-spinon edges or
+`ChargeContinuumOptions<uni20::mpreal>(precision)` for charge-containing families.
+Search and constituent tolerances and all inputs must use the same precision.
+Mesh, search and total quadrature budgets remain independent of arithmetic bits.
+A high-precision result is still a heuristic numerical family boundary, with
+vertical errors excluding propagation of momentum-inversion error.

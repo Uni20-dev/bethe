@@ -66,7 +66,6 @@ TEST(ThermalMpfr, ControlsAndStableFactorsHaveExplicitPrecision)
   EXPECT_EQ(mpfr_get_default_prec(), ambient);
 }
 
-#if UNI20_HAS_MPLAPACK_MPREAL
 TEST(ThermalMpfr, RejectsMixedExactAndUnsetInputsBeforeSolving)
 {
   auto const p = Precision::bits(160), other = Precision::bits(80);
@@ -268,4 +267,3 @@ TEST(ThermalMpfr, OwningMixedPrecisionGridMatchesCompleteStates)
   }
   EXPECT_EQ(mpfr_get_default_prec(), ambient);
 }
-#endif

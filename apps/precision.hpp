@@ -23,23 +23,21 @@ inline constexpr bool is_extended80 =
     uni20::numeric_limits<T>::radix == 2 && uni20::numeric_limits<T>::digits() == 64 &&
     uni20::numeric_limits<T>::min_exponent == -16381 && uni20::numeric_limits<T>::max_exponent == 16384;
 inline constexpr bool has_fp80 = is_extended80<long double>;
-inline constexpr bool has_arbitrary_structure_factor = UNI20_HAS_MPREAL && UNI20_HAS_MPLAPACK_MPREAL;
+inline constexpr bool has_arbitrary_structure_factor = UNI20_HAS_MPREAL;
 
 // The frontend declares which operations it needs; arithmetic metadata itself
-// must not impose the complex/LU requirements of a form-factor calculation.
+// stays separate from model support. Uni20 provides CPU QR and real/complex
+// LU for enabled scalars, preferring an available LAPACK provider.
 enum class ArbitraryPrecision
 {
   none,
   real,
-  real_lu, // Unlike QR, the current runtime-precision LU requires MPLAPACK.
+  real_lu,
   complex_linalg
 };
 constexpr bool has_arbitrary_precision(ArbitraryPrecision support)
 {
-  return support == ArbitraryPrecision::real ? bool(UNI20_HAS_MPREAL)
-         : support == ArbitraryPrecision::real_lu || support == ArbitraryPrecision::complex_linalg
-             ? bool(UNI20_HAS_MPREAL && UNI20_HAS_MPLAPACK_MPREAL)
-             : false;
+  return support != ArbitraryPrecision::none && bool(UNI20_HAS_MPREAL);
 }
 
 enum class PrecisionKind
@@ -102,13 +100,11 @@ inline void validate_precision(PrecisionRequest request, ArbitraryPrecision supp
     if (support == ArbitraryPrecision::none)
       throw std::invalid_argument("this frontend does not support arbitrary precision");
     if (!has_arbitrary_precision(support))
-      throw std::invalid_argument(support == ArbitraryPrecision::real
-                                      ? "arbitrary precision requires -DUNI20_ENABLE_MPREAL=ON; see bethe-info"
-                                  : support == ArbitraryPrecision::real_lu
-                                      ? "arbitrary-precision linear solves require -DUNI20_ENABLE_MPREAL=ON and "
-                                        "-DUNI20_BACKEND_MPLAPACK=ON; see bethe-info"
-                                      : "arbitrary-precision form factors require -DUNI20_ENABLE_MPREAL=ON and "
-                                        "-DUNI20_BACKEND_MPLAPACK=ON; see bethe-info");
+      throw std::invalid_argument(
+          support == ArbitraryPrecision::real ? "arbitrary precision requires -DUNI20_ENABLE_MPREAL=ON; see bethe-info"
+          : support == ArbitraryPrecision::real_lu
+              ? "arbitrary-precision linear solves require -DUNI20_ENABLE_MPREAL=ON; see bethe-info"
+              : "arbitrary-precision form factors require -DUNI20_ENABLE_MPREAL=ON; see bethe-info");
 #if UNI20_HAS_MPREAL
     (void)request.working_precision();
 #endif
