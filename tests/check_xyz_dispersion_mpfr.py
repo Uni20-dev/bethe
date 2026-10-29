@@ -26,7 +26,8 @@ def table(args):
     return result
 
 def rows(t):
-    return [dict(zip([c["id"] for c in t["columns"]], r)) for r in t["rows"]]
+    return [dict(zip([c["id"] for c in t["columns"]],
+                     (v["value"] if isinstance(v, dict) else v for v in r))) for r in t["rows"]]
 
 with tempfile.TemporaryDirectory() as directory:
     root = Path(directory)
@@ -72,7 +73,7 @@ with tempfile.TemporaryDirectory() as directory:
             assert selected == r[:16]+r[32:]
             out = root/selector
             run([*args, "--json", str(out.with_suffix('.json')), "--csv", str(out.with_suffix('.csv')),
-                 "--tsv", str(out.with_suffix('.tsv')), "--no-retain"])
+                 "--tsv", str(out.with_suffix('.tsv')), "--no-retain", "--quiet"])
             exported = json.loads(out.with_suffix('.json').read_text())["tables"]["dispersion"]
             assert exported["rows"] == t["rows"]
             for suffix, separator in [('.csv',','),('.tsv','\t')]:
