@@ -182,9 +182,10 @@ the [TASEP/XYZ example](async-execution.md#independent-tasep-and-finite-xyz-solv
 demonstrates an eta sweep. All roots, controls, scratch and diagnostics belong to
 their individual solve. Tests compare complete successful and failed states
 under deferred and one/multiple-worker scheduling. The coupled Newton iterations
-and single-request CLI remain serial. Arbitrary precision additionally needs
-explicit-precision complex theta arguments and derivatives, not just theta
-constants at zero argument, as well as controls and Newton arithmetic.
+and single-request CLI remain serial. Extending this solver to arbitrary
+precision still requires precision-aware controls, complex root storage and
+Newton arithmetic. The shared theta dependency already supports explicit
+MPFR values and derivatives.
 
 The theta evaluation is shared with Uni20. Explicit MPFR support for the
 [thermodynamic excitation bands](xyz-dispersion.md) does not yet imply MPFR

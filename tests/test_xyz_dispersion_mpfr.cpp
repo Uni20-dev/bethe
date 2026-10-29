@@ -107,7 +107,7 @@ TEST(XYZDispersionMpfr, InvalidPrecisionAndQueries)
   R eta("0.75", p), one(1, p);
   Band band(eta, one);
   auto branch = band.prepare_bound(1);
-  for (R const& bad : {R{}, R(1), R(1, P::bits(80)), R("nan", p)})
+  for (R const& bad : {R(uni20::uninitialized), R{}, R(1), R(1, P::bits(80)), R("nan", p)})
   {
     EXPECT_THROW((void)Band(bad, one), std::invalid_argument);
     EXPECT_THROW((void)Band(eta, bad), std::invalid_argument);

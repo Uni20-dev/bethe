@@ -133,14 +133,14 @@ output; an independent 2,097,664-energy parameter sweep falls from 4.480 to
 measurements; the CLI stays serial. Commands and limits are in the PR's
 `docs/parallel-grids.md`. It does not extend the theta helper to MPFR.
 
-The theta-constant prerequisite is proposed separately in
-[Uni20 PR #103](https://github.com/Uni20-dev/uni20/pull/103). It provides scaled
-zero-argument rectangular constants at native and explicit MPFR precision,
-with independent product/Gamma references and accuracy growth through 1,024
-bits. Local native/wide/sanitizer checks and upstream CI pass; independent
-review and merge remain pending. Bethe has not changed its Uni20 pin or enabled MPFR for XXZ/XYZ.
-XXZ bulk-energy integration and XYZ complex theta arguments/derivatives remain
-separate work.
+[Uni20 #103](https://github.com/Uni20-dev/uni20/pull/103) supplies scaled
+zero-argument rectangular theta constants at native and explicit MPFR precision,
+with independent product/Gamma references and accuracy growth through 1,024 bits.
+XYZ excitation bands now use the shared complex theta values and derivatives in
+[Uni20 #115](https://github.com/Uni20-dev/uni20/pull/115), replacing Bethe's duplicate
+evaluator. Explicit MPFR reaches couplings, spinon/bound bands, continuum edges
+and owning Async readers. The finite XYZ nonlinear solve still needs its own
+precision-aware controls and Newton arithmetic.
 
 The shared finite-integration prerequisite is proposed in
 [Uni20 PR #104](https://github.com/Uni20-dev/uni20/pull/104). Array-valued tanh-sinh

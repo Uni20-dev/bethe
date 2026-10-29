@@ -52,6 +52,11 @@ with tempfile.TemporaryDirectory() as directory:
             assert len(r) == 48 and all(x["status"] == "converged" for x in r)
             assert int(t["metadata"]["Working precision (bits)"]) == bits
             assert t["metadata"]["Precision"] == selector
+            real_fields = {"p", "p_over_pi", "cell_momentum", "reduced_q", "energy", "lower", "upper"}
+            for row in t["rows"]:
+                for column, cell in zip(t["columns"], row):
+                    if column["id"] in real_fields and cell is not None:
+                        assert isinstance(cell, dict) and cell["precision"] == bits, (column, cell)
             error = max(abs(Decimal(t["metadata"]["Spinon maximum energy"]) - maximum),
                         abs(Decimal(t["metadata"]["Single-spinon gap"]) - gap))
             assert error < Decimal(2)**(-bits+12), (selector, error)
