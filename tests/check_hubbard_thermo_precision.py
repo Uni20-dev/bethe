@@ -44,9 +44,20 @@ with localcontext() as context:
         assert error < Decimal('1e-32' if bits==128 else '1e-70'),r
     assert errors[1] < errors[0]*Decimal('1e-30')
 
-    cases=[(lines,[*base,'--points','3']), (edges,[*base,'--points','3'])]
+    # Non-dyadic grid fractions remain exact rationals until multiplied by pi.
+    # Check their eventual working precision and value, as well as complete exports.
+    cases=[(lines,[*base,'--points','4','--tolerance','1e-10']),
+           (edges,[*base,'--points','4','--tolerance','1e-10'])]
     for program,args in cases:
         serial=table(program,args)
+        for r in serial['rows']:
+            for cell in r:
+                if isinstance(cell,dict) and 'precision' in cell:
+                    assert cell['precision']==128,cell
+        for i,r in enumerate(rows(serial)):
+            fraction=Decimal(i % 4)/3
+            expected=(fraction if r.get('branch')=='spinon' else 2*fraction-1)
+            assert abs(Decimal(r['p_over_pi' if program==lines else 'momentum_over_pi'])-expected)<Decimal('1e-36'),r
         parallel=table(program,[*args,'--threads','2'])
         assert serial['columns']==parallel['columns'] and serial['rows']==parallel['rows']
         streamed=table(program,[*args,'--threads','2','--no-retain'])
