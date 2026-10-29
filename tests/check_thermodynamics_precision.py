@@ -1,4 +1,5 @@
 """Explicit precision, physical corrections and exports for Lieb-Liniger thermodynamics."""
+import argparse
 from decimal import Decimal, localcontext
 import csv
 import json
@@ -8,13 +9,18 @@ import subprocess
 import sys
 import tempfile
 
-program, mpfr = sys.argv[1:]
+parser = argparse.ArgumentParser(description=__doc__)
+parser.add_argument("program")
+parser.add_argument("mpfr")
+parser.add_argument("--case", choices=("all", "128", "256", "333", "physical"), default="all")
+args = parser.parse_args()
+program, mpfr, case = args.program, args.mpfr, args.case
 enabled = mpfr.upper() in ("ON", "TRUE", "1")
 env = dict(os.environ, OPENBLAS_NUM_THREADS="1", OMP_NUM_THREADS="1", UNI20_COLOR="never")
 
 
 def run(args, status=0, error=None):
-    result = subprocess.run([program, *args], text=True, capture_output=True, env=env, timeout=60)
+    result = subprocess.run([program, *args], text=True, capture_output=True, env=env, timeout=180)
     assert result.returncode == status, (args, result.returncode, result.stdout, result.stderr)
     if error is not None:
         assert not result.stdout and error in result.stderr, (args, result.stdout, result.stderr)
@@ -46,6 +52,8 @@ def check_precision(t, precision, bits):
 
 if enabled:
     for precision, bits in (("bits-128", 128), ("bits-256", 256), ("digits-100", 333)):
+        if case not in ("all", str(bits)):
+            continue
         base = ["--c", "4", "--points", "3", "--precision", precision]
         serial = table([*base, "--threads", "1"])
         parallel = table([*base, "--threads", "3", "--no-retain"])
@@ -86,6 +94,7 @@ if enabled:
                     assert row["branch"] == "type-ii"
                     assert abs(Decimal(row["p"])-endpoint*Decimal(i)/Decimal(count-1)) < endpoint*bound
 
+if enabled and case in ("all", "physical"):
     with localcontext() as ctx:
         ctx.prec = 120
         # Independently known strong-coupling asymptotics expose a real energy

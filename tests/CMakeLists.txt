@@ -157,7 +157,8 @@ if(BETHE_HAS_MPREAL)
   add_executable(bethe_hubbard_thermo_mpfr_tests test_hubbard_thermo_mpfr.cpp)
   target_link_libraries(bethe_hubbard_thermo_mpfr_tests PRIVATE bethe::bethe TBB::tbb)
   bethe_discover_tests(bethe_hubbard_thermo_mpfr_tests
-    LONG_RUNNING_TESTS HubbardThermoMpfr.PhysicalChargeContinuumRetainsExplicitPrecision)
+    LONG_RUNNING_TESTS HubbardThermoMpfr.PhysicalChargeContinuumRetainsExplicitPrecision
+                       HubbardThermoMpfr.DopedFredholmReferencesAndPhysicalPrecisionGrowth)
 
   add_executable(bethe_potts_mpfr_tests test_potts_mpfr.cpp)
   target_link_libraries(bethe_potts_mpfr_tests PRIVATE bethe::bethe TBB::tbb)
@@ -702,7 +703,16 @@ if(BETHE_BUILD_APPS)
         "$<TARGET_FILE:bethe-lieb-liniger-dispersion>" "${BETHE_HAS_FLOAT128}")
     add_test(NAME LiebLinigerThermo.precision
       COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_thermodynamics_precision.py"
-        "$<TARGET_FILE:bethe-lieb-liniger-dispersion>" "${BETHE_HAS_MPREAL}")
+        "$<TARGET_FILE:bethe-lieb-liniger-dispersion>" "${BETHE_HAS_MPREAL}" --case physical)
+    if(BETHE_HAS_MPREAL)
+      # Each precision gets its own bounded CTest invocation. Keep all numerical
+      # and export assertions when CPU MPFR solves run under sanitizers.
+      foreach(bits IN ITEMS 128 256 333)
+        add_test(NAME LiebLinigerThermo.precision.bits${bits}
+          COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_thermodynamics_precision.py"
+            "$<TARGET_FILE:bethe-lieb-liniger-dispersion>" "${BETHE_HAS_MPREAL}" --case ${bits})
+      endforeach()
+    endif()
     add_test(NAME TB.precision
       COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_tb_precision.py"
         "$<TARGET_FILE:bethe-tb-pbc>" "${BETHE_HAS_MPREAL}")
