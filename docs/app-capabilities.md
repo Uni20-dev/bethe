@@ -20,24 +20,24 @@ validation; their measurements are historical records, not new integration runs.
 | Apps | Existing execution path | MPFR frontend support | Next check / dependency |
 | --- | --- | --- | --- |
 | `xxx-pbc`, `xxx-obc` | Continuous real-root scans; owning Async scan API | Yes, MPFR scalars | Preserve owned solver options through final consumers |
-| `xxx-structure-factor` | Async preparation, fused root/form-factor runners, ordered reduction | Yes, MPLAPACK MPFR required | Preserve mixed-precision and failed-reference coverage |
-| `lieb-liniger-pbc`, `lieb-liniger-obc` | Shared continuous real-root scanner; owning Async scans ([#17](https://github.com/Uni20-dev/bethe/pull/17)) | Yes, MPLAPACK MPFR required | Preserve downstream-consumer and concurrent-precision checks |
+| `xxx-structure-factor` | Async preparation, fused root/form-factor runners, ordered reduction | Yes, MPFR scalars; CPU LU available | Preserve mixed-precision and failed-reference coverage |
+| `lieb-liniger-pbc`, `lieb-liniger-obc` | Shared continuous real-root scanner; owning Async scans ([#17](https://github.com/Uni20-dev/bethe/pull/17)) | Yes, MPFR scalars; CPU LU available | Preserve downstream-consumer and concurrent-precision checks |
 | `richardson`, `central-spin` | Individual solver calls; owning grid-sweep example and full-state composition checks ([#17](https://github.com/Uni20-dev/bethe/pull/17)) | Yes, MPFR scalars | Keep continuation within each solve sequential |
 | `xxx-structure-factor-thermo` | Bounded ordered grid, direct table collection | Native only | Precision-aware transition-rate integrals |
-| `lieb-liniger-dispersion` | Prepared solver and bounded grids; shared Async backgrounds | Yes, MPLAPACK MPFR required ([#9](https://github.com/Uni20-dev/bethe/pull/9)) | Preserve explicit-precision thermodynamic validation |
-| `lieb-liniger-thermal` | Bounded independent CLI temperature solves; owning mixed-precision library grids | MPFR + MPLAPACK, grand-canonical and fixed-density equilibrium | Mesh, rapidity cutoff and density inversion budgets remain independent of arithmetic precision |
-| `hubbard-dispersion` | Shared Async preparation and one branch-spanning query window ([#14](https://github.com/Uni20-dev/bethe/pull/14)) | Yes; doped backgrounds require MPLAPACK MPFR | Explicit quadrature, stable gamma-ratio phase and shared immutable kernel |
+| `lieb-liniger-dispersion` | Prepared solver and bounded grids; shared Async backgrounds | Yes, MPFR scalars; CPU LU available ([#9](https://github.com/Uni20-dev/bethe/pull/9)) | Preserve explicit-precision thermodynamic validation |
+| `lieb-liniger-thermal` | Bounded independent CLI temperature solves; owning mixed-precision library grids | MPFR scalars, grand-canonical and fixed-density equilibrium | Mesh, rapidity cutoff and density inversion budgets remain independent of arithmetic precision |
+| `hubbard-dispersion` | Shared Async preparation and one branch-spanning query window ([#14](https://github.com/Uni20-dev/bethe/pull/14)) | Yes, MPFR scalars; doped backgrounds use CPU/provider LU | Explicit quadrature, stable gamma-ratio phase and shared immutable kernel |
 | `hubbard-continuum` | Bounded independent extrema queries ([#12](https://github.com/Uni20-dev/bethe/pull/12)) | Yes, no MPLAPACK required | Explicit constituent and extrema precision; independent work budgets |
-| `xxz-pbc`, `xxz-obc` | Continuous real-root scans; owning parameter sweeps ([#15](https://github.com/Uni20-dev/bethe/pull/15)) | Yes, MPLAPACK MPFR required | Preserve existing ground/excitation restrictions and low-precision failure diagnostics |
-| `q-boson-pbc` | Continuous real-root scans; owning mixed-precision queries ([#25](https://github.com/Uni20-dev/bethe/pull/25)) | Yes, MPLAPACK MPFR required | Preserve ground/canonical-state precision and scalar-only zero-update diagnostics |
-| `su3-pbc` | Individual nested solves; owning mixed-precision sweeps ([#13](https://github.com/Uni20-dev/bethe/pull/13)) | Yes, MPLAPACK MPFR required | Balanced singlets retain their existing physical scope |
-| `tb-pbc` | Single-request CLI stays serial; owning mixed-precision Async size sweeps compare complete states ([#37](https://github.com/Uni20-dev/bethe/pull/37)) | MPFR + MPLAPACK, including finite string deviations and owning complex rapidities | Preserve the even-ring singlet ground-state branch; the residual tolerance is not an energy-error bound |
-| `hubbard-pbc`, `hubbard-obc` | Individual finite-size solves; owning parameter sweeps ([#16](https://github.com/Uni20-dev/bethe/pull/16)) | Yes, MPLAPACK MPFR required | Preserve existing sectors, both interaction signs and symmetry mappings |
-| `gaudin-yang-pbc` | Individual nested solves; owning mixed-precision sector sweeps ([#18](https://github.com/Uni20-dev/bethe/pull/18)) | Yes, MPLAPACK MPFR required | Preserve repulsive-shell restrictions and requested-coupling failure diagnostics |
-| `sun-fermions-pbc` | Single-request CLI stays serial; owning mixed-precision population/coupling grids preserve complete states ([#38](https://github.com/Uni20-dev/bethe/pull/38)) | Yes, MPLAPACK MPFR required | Existing odd-population interacting branch, free limits and partial accepted stages; independent two-body and boson-reduction checks |
-| `tj-pbc` | Single-request CLI stays serial; owning one/two-worker mixed-precision grids preserve complete states | Native and explicit MPFR with MPLAPACK; library free/XXX/zero-update paths also work without that provider | Existing doped parity restrictions remain; higher precision does not resolve the known large dilute-sector seed/Newton limitation |
-| `ladder-pbc` | Owning prepared branch catalogue with dependent Async field/rung queries; complete mixed-precision results checked against direct scans | Native and explicit MPFR with MPLAPACK; library product/zero-branch paths work without the provider | Fixed-Sz/singlet scans retain their direct paths, physical branch scope and whole-scan budgets; one precision per preparation |
-| `bose-fermi-pbc` | Individual nested solves; owning mixed-precision requests ([#19](https://github.com/Uni20-dev/bethe/pull/19)) | Yes, MPLAPACK MPFR required | Preserve mixed-shell restrictions and scalar-only zero-update diagnostics |
+| `xxz-pbc`, `xxz-obc` | Continuous real-root scans; owning parameter sweeps ([#15](https://github.com/Uni20-dev/bethe/pull/15)) | Yes, MPFR scalars; CPU LU available | Preserve existing ground/excitation restrictions and low-precision failure diagnostics |
+| `q-boson-pbc` | Continuous real-root scans; owning mixed-precision queries ([#25](https://github.com/Uni20-dev/bethe/pull/25)) | Yes, MPFR scalars; CPU LU available | Preserve ground/canonical-state precision and scalar-only zero-update diagnostics |
+| `su3-pbc` | Individual nested solves; owning mixed-precision sweeps ([#13](https://github.com/Uni20-dev/bethe/pull/13)) | Yes, MPFR scalars; CPU LU available | Balanced singlets retain their existing physical scope |
+| `tb-pbc` | Single-request CLI stays serial; owning mixed-precision Async size sweeps compare complete states ([#37](https://github.com/Uni20-dev/bethe/pull/37)) | MPFR scalars, including finite string deviations and owning complex rapidities | Preserve the even-ring singlet ground-state branch; the residual tolerance is not an energy-error bound |
+| `hubbard-pbc`, `hubbard-obc` | Individual finite-size solves; owning parameter sweeps ([#16](https://github.com/Uni20-dev/bethe/pull/16)) | Yes, MPFR scalars; CPU LU available | Preserve existing sectors, both interaction signs and symmetry mappings |
+| `gaudin-yang-pbc` | Individual nested solves; owning mixed-precision sector sweeps ([#18](https://github.com/Uni20-dev/bethe/pull/18)) | Yes, MPFR scalars; CPU LU available | Preserve repulsive-shell restrictions and requested-coupling failure diagnostics |
+| `sun-fermions-pbc` | Single-request CLI stays serial; owning mixed-precision population/coupling grids preserve complete states ([#38](https://github.com/Uni20-dev/bethe/pull/38)) | Yes, MPFR scalars; CPU LU available | Existing odd-population interacting branch, free limits and partial accepted stages; independent two-body and boson-reduction checks |
+| `tj-pbc` | Single-request CLI stays serial; owning one/two-worker mixed-precision grids preserve complete states | Native and explicit MPFR; CPU LU available | Existing doped parity restrictions remain; higher precision does not resolve the known large dilute-sector seed/Newton limitation |
+| `ladder-pbc` | Owning prepared branch catalogue with dependent Async field/rung queries; complete mixed-precision results checked against direct scans | Native and explicit MPFR; CPU LU available | Fixed-Sz/singlet scans retain their direct paths, physical branch scope and whole-scan budgets; one precision per preparation |
+| `bose-fermi-pbc` | Individual nested solves; owning mixed-precision requests ([#19](https://github.com/Uni20-dev/bethe/pull/19)) | Yes, MPFR scalars; CPU LU available | Preserve mixed-shell restrictions and scalar-only zero-update diagnostics |
 | `su3-dispersion` | Serial analytic CLI; owning mixed-precision Async queries ([#20](https://github.com/Uni20-dev/bethe/pull/20)) | Yes, MPFR scalars | Individual formulas remain too cheap to justify per-point scheduling |
 | `haldane-shastry-pbc`, `sutherland-pbc` | Serial analytic CLIs; owning mixed-precision window/parameter scans ([#21](https://github.com/Uni20-dev/bethe/pull/21)) | Yes, MPFR scalars | Preserve exact-integer gap/order handling; cheap formulas stay serial |
 | `tb-dispersion` | Serial analytic CLI; owning mixed-precision Async queries ([#22](https://github.com/Uni20-dev/bethe/pull/22)) | Yes, MPFR scalars | XXZ/XYZ elliptic models still need separate precision audits |
@@ -91,15 +91,13 @@ composition tests were rerun; their APIs need no new wrapper. No new precision
 support or parallel speedup is claimed by that audit.
 
 Gaudin–Yang's #18 verifies the unreduced complex Bethe equations and
-two-body accuracy growth at 128/256/333 bits. Free states and zero-update
-diagnostics also work with MPFR scalars alone at the library level; Newton
-updates and the MPFR frontend require MPLAPACK. Mixed interacting populations
+two-body accuracy growth at 128/256/333 bits. Free states, zero-update diagnostics and Newton
+updates work with MPFR scalars, using Uni20 CPU LU when MPLAPACK is unavailable. Mixed interacting populations
 remain odd, and continuation within each independent solve remains sequential.
 
 Bose–Fermi's #19 validates mixed-species equations, Lieb–Liniger
 reductions, free states and missing-energy failures. The shared continuum
-Newton guard keeps zero-update diagnostics usable in scalar-only MPFR builds;
-actual updates and the frontend require MPLAPACK. Tests resolve a weak-coupling
+Newton driver uses normal Uni20 dispatch, including MPFR CPU LU. Tests resolve a weak-coupling
 shift above a nonzero Fermi sea beyond binary128 resolution and compare complete
 states under owning, mixed-precision grid composition. Mixed interacting shells
 still require odd fermion number.
@@ -174,9 +172,8 @@ Q-boson's #25 retains the existing continuous scanner and compares
 complete states, gaps and failed references in serial/threaded execution.
 Independent occupation-Hamiltonian energies and the unreduced Bethe equations
 validate MPFR, including a weak-deformation correction beyond binary128 and
-positive energies at eta=1e-7000. The scalar-only library supports analytic
-limits and zero-update diagnostics through #19's shared guard; actual Newton
-updates and the CLI require MPLAPACK. No new scheduling mechanism is needed.
+positive energies at eta=1e-7000. Analytic limits, zero-update diagnostics and actual Newton
+updates work with MPFR scalars, including Uni20 CPU LU. No new scheduling mechanism is needed.
 
 Quantum-group XXZ's #26 validates both the regular critical real-root
 family and complete free-endpoint sectors with MPFR scalars alone. Independent

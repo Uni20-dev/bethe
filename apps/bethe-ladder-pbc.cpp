@@ -35,7 +35,7 @@ auto program_info()
                 "An incomplete scan reports only a candidate upper bound, never a minimum.",
                 "See docs/ladder.md for normalization, finite-ring labels and scan cost.",
                 "Use --references for literature and applicability; see CITATIONS.md."};
-  info.notes.push_back("bits-N/digits-N require the configured MPLAPACK MPFR provider.");
+  info.notes.push_back("bits-N/digits-N require Uni20 MPFR scalar support.");
   return info;
 }
 void add_options(CLI::App& app, Arguments& args)

@@ -130,8 +130,8 @@ and `bethe::xxz::quantum_group::two_string::singlet(N,Delta)`, with loop weight
 >2 and Delta>1 respectively. The public biquadratic adapter fixes Delta=3/2.
 
 MPFR library calls require finite precision in both the physical input and
-solver controls. Newton corrections use normal Uni20 dispatch to the
-configured MPLAPACK MPFR provider:
+solver controls. Newton corrections use normal Uni20 dispatch, with CPU
+MPFR support and an enabled MPLAPACK provider preferred when available:
 
 ```cpp
 using R = uni20::mpreal;

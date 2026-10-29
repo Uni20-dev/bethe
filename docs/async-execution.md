@@ -44,7 +44,7 @@ points own the physical parameters, label-window controls and solver options.
 The periodic result also retains its window and physical metadata. The same
 finite-family cutoff and top-K selection apply as in the blocking APIs.
 Independent MPFR scans can carry different precisions on the same scheduler;
-they require the configured MPLAPACK MPFR real-solve provider.
+their solves use normal Uni20 dispatch, including CPU MPFR LU.
 
 ## XXX two-spinon structure factor
 
@@ -234,7 +234,7 @@ cmake --build . --target bethe-async-ground-states-example -j2
 OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 ./examples/bethe-async-ground-states-example
 ```
 
-It uses explicit 160-bit `mpreal` when MPLAPACK MPFR is configured, otherwise
+It uses explicit 160-bit `mpreal` when MPFR scalars are configured, otherwise
 binary64. The printed header identifies the working precision. It waits once
 on the grid result, then checks scientific convergence before reporting energies.
 

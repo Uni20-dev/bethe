@@ -255,7 +255,6 @@ TEST(HubbardThermoMpfr, PhysicalChargeContinuumRetainsExplicitPrecision)
   check_charge_continuum(controls);
 }
 
-#if UNI20_HAS_MPLAPACK_MPREAL
 auto fields(model::DopedPoint<R> const& s)
 {
   return std::tie(s.branch, s.convention, s.reference, s.momentum, s.parameter, s.energy_error, s.momentum_error,
@@ -348,7 +347,7 @@ TEST(HubbardThermoMpfr, OwningDopedPreparationsShareMixedPrecisionBackgrounds)
   EXPECT_EQ(mpfr_get_default_prec(), ambient);
 }
 
-TEST(HubbardThermoMpfr, DopedFredholmReferencesAndPhysicalPrecisionGrowth)
+void check_doped_fredholm_references(std::initializer_list<int> precisions)
 {
   // Independent mpmath Gauss-Legendre/digamma equations at U=40, Q=1.
   // 64 nodes/96 digits and 96 nodes/112 digits agree beyond 85 decimal digits;
@@ -360,7 +359,7 @@ TEST(HubbardThermoMpfr, DopedFredholmReferencesAndPhysicalPrecisionGrowth)
       e0_ref("-0.54608999560441398159217752191704366471571732920728089904214447782014521020325842074560681", refp),
       es_ref("0.0272174980551578681104364045656371182104776147423962347936780945405613311251388154515130903", refp);
   R previous(1, refp);
-  for (int bits : {80, 160, 256})
+  for (int bits : precisions)
   {
     SCOPED_TRACE(bits);
     auto const p = Precision::bits(bits);
@@ -398,14 +397,19 @@ TEST(HubbardThermoMpfr, DopedFredholmReferencesAndPhysicalPrecisionGrowth)
     EXPECT_EQ(uni20::precision_of(endpoint.parameter), p);
   }
 }
-#else
-TEST(HubbardThermoMpfr, DopedMissingProviderIsAnExplicitConfigurationError)
+
+TEST(HubbardThermoMpfr, DopedFredholmReferenceAt80Bits)
 {
-  auto const p = Precision::bits(80);
-  model::DopedOptions<R> controls(p);
-  EXPECT_THROW((model::DopedSolver<R>(R(40, p), R(1, p) / 3, controls)), std::runtime_error);
+  // Keep an independent numerical oracle in routine CPU/sanitizer validation.
+  check_doped_fredholm_references({80});
 }
-#endif
+
+TEST(HubbardThermoMpfr, DopedFredholmReferencesAndPhysicalPrecisionGrowth)
+{
+  // Full mesh and precision convergence is expensive under CPU sanitizers.
+  // Run every original precision and accuracy assertion in long-running validation.
+  check_doped_fredholm_references({80, 160, 256});
+}
 
 TEST(HubbardThermoMpfr, DopedInputAndEarlyBudgetFailuresRetainPrecision)
 {

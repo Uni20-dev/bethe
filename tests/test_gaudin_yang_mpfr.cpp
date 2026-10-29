@@ -162,22 +162,6 @@ TEST_P(GaudinYangMpfr, ZeroBudgetPreservesRequestedCouplingDiagnosticsWithoutLU)
   original_equations(state);
 }
 
-#if !UNI20_HAS_MPLAPACK_MPREAL
-TEST_P(GaudinYangMpfr, MissingLUProviderThrowsOnlyWhenAnUpdateIsNeeded)
-{
-  try
-  {
-    (void)model::ground_state(1, 1, v(1), v(1), model::SolverOptions<R>(p()));
-    FAIL() << "MPFR LU should not be available in this configuration";
-  }
-  catch (std::runtime_error const& error)
-  {
-    EXPECT_NE(std::string(error.what()).find("require MPLAPACK MPFR"), std::string::npos);
-  }
-}
-#endif
-
-#if UNI20_HAS_MPLAPACK_MPREAL
 TEST_P(GaudinYangMpfr, NestedEquationsSpinReversalAndScaling)
 {
   model::SolverOptions<R> options(p());
@@ -295,5 +279,4 @@ TEST(GaudinYangMpfrShared, OwningConcurrentSectorSweepAndFailureValues)
   }
   EXPECT_EQ(mpfr_get_default_prec(), ambient);
 }
-#endif
 } // namespace

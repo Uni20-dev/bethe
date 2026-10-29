@@ -125,8 +125,7 @@ adjacent conjugate rapidities, energy, momentum, residuals, status and update
 count. Computation and reporting retain fp64, long double, optional fp128 or
 explicit MPFR precision. There is no precision fallback or tolerance relaxation.
 
-MPFR requires the configured MPLAPACK MPFR provider for the real Newton
-corrections. Construct controls at a finite working precision; custom tolerances
+Real MPFR Newton corrections use normal Uni20 dispatch, including CPU LU. Construct controls at a finite working precision; custom tolerances
 must have that same precision:
 
 ```cpp
@@ -141,7 +140,7 @@ Constants, central zero roots, Newton corrections, sums and incomplete states
 retain the requested precision without changing ambient MPFR settings.
 Rapidities use `uni20::complex<Real>`: native types retain their usual complex
 representation, while MPFR uses Uni20's owning MPC scalar. Structured output
-keeps separate real and imaginary columns. Missing provider support is rejected
+keeps separate real and imaginary columns. Disabled scalar support is rejected
 before exports are opened.
 
 Newton uses an analytic real Jacobian, recoverable partial-pivot linear

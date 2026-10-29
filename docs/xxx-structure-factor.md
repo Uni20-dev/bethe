@@ -271,7 +271,7 @@ if (!result.converged()) {
 
 ### Arbitrary precision
 
-With [MPFR/MPC and MPLAPACK MPFR enabled](building.md#enable-arbitrary-precision):
+With [MPFR/MPC enabled](building.md#enable-arbitrary-precision):
 
 ```sh
 bethe-xxx-structure-factor 32 --precision bits-256 --threads 4 \

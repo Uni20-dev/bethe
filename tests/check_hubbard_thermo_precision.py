@@ -1,4 +1,4 @@
-"""Explicit Hubbard precision, provider boundaries, failures and full exports."""
+"""Explicit Hubbard precision, CPU/provider solves, failures and full exports."""
 import csv
 from decimal import Decimal, localcontext
 import io
@@ -9,7 +9,7 @@ import subprocess
 import sys
 import tempfile
 
-lines, edges, arbitrary, provider = sys.argv[1:]
+lines, edges, arbitrary = sys.argv[1:]
 enabled = lambda x: x.upper() in ('ON','TRUE','1')
 env = dict(os.environ, OPENBLAS_NUM_THREADS='1', OMP_NUM_THREADS='1', UNI20_COLOR='never')
 
@@ -83,12 +83,9 @@ with localcontext() as context:
     doped=[*base,'--density','0.324321270322984098050102851457799211925925445763299821413665672162111298405245789656083022','--branch','spinon','--momentum','0','--u','40']
     # Replace the unique interaction token rather than pass a repeated scalar option.
     doped=doped[:-2];doped[1]='40'
-    if enabled(provider):
-        t=table(lines,doped)
-        assert rows(t)[0]['status']=='converged'
-        assert abs(Decimal(t['metadata']['Fermi rapidity Q'])-1)<Decimal('1e-32')
-    else:
-        assert 'linear-solve backend' in run(lines,doped,1).stderr
+    t=table(lines,doped)
+    assert rows(t)[0]['status']=='converged'
+    assert abs(Decimal(t['metadata']['Fermi rapidity Q'])-1)<Decimal('1e-32')
 
 with tempfile.TemporaryDirectory() as directory:
     path=Path(directory)/'preserve.json'

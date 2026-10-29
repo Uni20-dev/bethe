@@ -26,7 +26,7 @@ The fp128 command requires an [MPLAPACK-enabled build](building.md#enable-binary
 fp64 is the default; long-double and fp128 retain their native arithmetic,
 tolerance parsing, and output precision.
 `bits-N` and `digits-N` select [arbitrary precision](building.md#enable-arbitrary-precision)
-when Uni20's MPFR scalars and MPLAPACK MPFR LU provider are configured.
+when Uni20's MPFR scalars are configured.
 `digits-100` uses 333 significand bits. It selects working precision, not a
 guarantee of 100 accurate digits: the residual tolerance and Newton budget
 still control convergence. An unavailable provider is an error.

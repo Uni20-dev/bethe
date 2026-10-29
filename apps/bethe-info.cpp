@@ -41,13 +41,17 @@ int run(cli::DataOutputOptions const& options, int argc, char** argv)
       .field("arbitrary_frontends", "Arbitrary-precision frontends",
              cli::has_arbitrary_structure_factor
                  ? "bethe-xxx-pbc, bethe-xxx-obc, bethe-lieb-liniger-pbc, bethe-lieb-liniger-obc, "
-                   "bethe-lieb-liniger-dispersion, bethe-lieb-liniger-thermal, bethe-ladder-pbc, bethe-tj-pbc, bethe-richardson, bethe-central-spin, "
+                   "bethe-lieb-liniger-dispersion, bethe-lieb-liniger-thermal, bethe-ladder-pbc, bethe-tj-pbc, "
+                   "bethe-richardson, bethe-central-spin, "
                    "bethe-xxx-structure-factor, bethe-su3-pbc, bethe-xxz-pbc, bethe-xxz-obc, "
-                   "bethe-hubbard-pbc, bethe-hubbard-obc, bethe-gaudin-yang-pbc, bethe-bose-fermi-pbc, bethe-q-boson-pbc, bethe-su3-dispersion, "
-                   "bethe-haldane-shastry-pbc, bethe-sutherland-pbc, bethe-tb-dispersion, bethe-sine-gordon-dispersion, bethe-sine-gordon-bethe-yang, bethe-lee-yang-vacuum, bethe-lee-yang-excited, bethe-potts-pbc, bethe-xxz-dispersion, bethe-hubbard-dispersion, bethe-hubbard-continuum, bethe-xxz-qg-obc, bethe-tb-pbc, bethe-sun-fermions-pbc"
-             : UNI20_HAS_MPREAL ? "bethe-xxx-pbc, bethe-xxx-obc, bethe-richardson, bethe-central-spin, bethe-su3-dispersion, "
-                   "bethe-haldane-shastry-pbc, bethe-sutherland-pbc, bethe-tb-dispersion, bethe-sine-gordon-dispersion, bethe-sine-gordon-bethe-yang, bethe-lee-yang-vacuum, bethe-lee-yang-excited, bethe-potts-pbc, bethe-xxz-dispersion, bethe-hubbard-dispersion, bethe-hubbard-continuum, bethe-xxz-qg-obc"
-                                : "none enabled in this build")
+                   "bethe-hubbard-pbc, bethe-hubbard-obc, bethe-hubbard-dispersion, bethe-hubbard-continuum, "
+                   "bethe-gaudin-yang-pbc, bethe-bose-fermi-pbc, "
+                   "bethe-q-boson-pbc, bethe-su3-dispersion, "
+                   "bethe-haldane-shastry-pbc, bethe-sutherland-pbc, bethe-tb-dispersion, "
+                   "bethe-sine-gordon-dispersion, bethe-sine-gordon-bethe-yang, bethe-lee-yang-vacuum, "
+                   "bethe-lee-yang-excited, bethe-potts-pbc, bethe-xxz-dispersion, bethe-xxz-qg-obc, bethe-tb-pbc, "
+                   "bethe-sun-fermions-pbc"
+                 : "none enabled in this build")
       .field("precision_scope", "Native precision scope", "all numerical frontends, subject to availability")
       .field("precision_note", "Precision units", "significand bits; fp64/fp80/fp128 name complete formats")
       .field("storage_note", "Storage", "native object bytes, including any padding")

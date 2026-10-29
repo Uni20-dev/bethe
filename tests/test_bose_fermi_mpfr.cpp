@@ -46,7 +46,6 @@ void same_state(model::State<R> const& a, model::State<R> const& b)
   finite_state(a, b.length.precision());
 }
 
-#if UNI20_HAS_MPLAPACK_MPREAL
 // Independent, unreduced rational equations in physical units. No reflected
 // coordinates, analytic rank subtraction or model Jacobian is reused here.
 void rational_equations(model::State<R> const& s)
@@ -72,8 +71,6 @@ void rational_equations(model::State<R> const& s)
     EXPECT_REAL_NEAR(product.imag(), zero, tolerance);
   }
 }
-
-#endif
 
 TEST_P(BoseFermiMpfr, FreeStatesAndPureSingletonNeedOnlyScalars)
 {
@@ -139,23 +136,6 @@ TEST_P(BoseFermiMpfr, ZeroBudgetAndInputValidation)
   EXPECT_THROW((void)model::ground_state(0, 0, v(1), v(0), options), std::invalid_argument);
 }
 
-#if !UNI20_HAS_MPLAPACK_MPREAL
-TEST_P(BoseFermiMpfr, MissingProviderOnlyRejectsActualNewtonUpdates)
-{
-  for (auto [b, f] : {std::pair{2u, 3u}, std::pair{3u, 0u}})
-    try
-    {
-      (void)model::ground_state(b, f, v(1), v(1), model::SolverOptions<R>(p()));
-      FAIL() << "MPFR LU should not be configured";
-    }
-    catch (std::runtime_error const& error)
-    {
-      EXPECT_NE(std::string(error.what()).find("require MPLAPACK MPFR"), std::string::npos);
-    }
-}
-#endif
-
-#if UNI20_HAS_MPLAPACK_MPREAL
 TEST_P(BoseFermiMpfr, MixedEquationsScalingAndLiebLinigerReductions)
 {
   model::SolverOptions<R> options(p());
@@ -223,7 +203,6 @@ TEST(BoseFermiMpfrShared, IndependentTwoBodyAccuracyAndWeakCouplingCorrection)
   ASSERT_TRUE(free.converged && mixture.converged && free.energy && mixture.energy);
   EXPECT_REAL_NEAR((*mixture.energy - *free.energy) / c, R(14, q), R("1e-35", q));
 }
-#endif
 
 TEST(BoseFermiMpfrShared, OwningMixedPrecisionGridAndPartialStates)
 {
@@ -241,9 +220,7 @@ TEST(BoseFermiMpfrShared, OwningMixedPrecisionGridAndPartialStates)
       auto p = uni20::Precision::bits(bits);
       model::SolverOptions<R> options(p);
       requests.push_back({2, 2, R(1, p), R(0, p), options});
-#if UNI20_HAS_MPLAPACK_MPREAL
       requests.push_back({2, 3, R(5, p), R(1, p), options});
-#endif
       options.max_iterations = 0;
       requests.push_back({3, 3, R(6, p), R(1, p), options});
     }
@@ -263,7 +240,7 @@ TEST(BoseFermiMpfrShared, OwningMixedPrecisionGridAndPartialStates)
   std::vector<model::State<R>> reference;
   auto serial = submit(deferred, reference);
   auto const count = serial.get_wait(deferred);
-  EXPECT_EQ(count, UNI20_HAS_MPLAPACK_MPREAL ? 9u : 6u);
+  EXPECT_EQ(count, 9u);
   EXPECT_TRUE(reference.front().converged);
   EXPECT_FALSE(reference.back().converged);
   for (int workers : {1, 4})

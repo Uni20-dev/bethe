@@ -287,7 +287,7 @@ TEST(SolverCompositionMpfr, GaudinSweepsOwnIndependentPrecisionsWithoutChangingD
   EXPECT_EQ(mpfr_get_default_prec(), ambient);
 }
 #endif
-#if UNI20_HAS_MPLAPACK_MPREAL
+#if UNI20_HAS_MPREAL
 TEST(SolverCompositionMpfr, FiniteLiebLinigerConcurrentPrecisionsAndFailureDiagnostics)
 {
   using Real = uni20::mpreal;

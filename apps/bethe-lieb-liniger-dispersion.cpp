@@ -35,8 +35,8 @@ auto program_info()
       "The default grid ends at 2*pi*n on both branches. --p-max changes only the type-I grid. "
       "These are elementary lines, not matrix elements, spectral weights, or a complete multiparticle spectrum.",
       "Tolerance defaults to 4096 epsilon in the selected precision. Independent mesh refinement and momentum "
-      "inversion are required; very weak coupling can exceed the node budget. fp128 and arbitrary-precision "
-      "linear solves require MPLAPACK.",
+      "inversion are required; very weak coupling can exceed the node budget. Arbitrary-precision "
+      "linear solves use normal Uni20 dispatch, including CPU LU without MPLAPACK.",
       "Failed energies are omitted (JSON null, CSV/TSV empty) and exit status is 2. Exports stream during computation; "
       "--no-retain discards delivered rows. See docs/lieb-liniger-thermo.md and docs/output.md. "
       "Use --references for literature and applicability."};

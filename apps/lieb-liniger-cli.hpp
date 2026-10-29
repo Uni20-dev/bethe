@@ -40,7 +40,7 @@ template <bool HardWalls> auto program_info()
                 HardWalls ? "Positive k are standing-wave Bethe coordinates, not a conserved total momentum."
                           : "Momentum P=2*pi*sum(I)/ELL is signed, with no Brillouin-zone reduction.",
                 "Attraction, c=0, c=infinity, and thermodynamics are not implemented.",
-                "bits-N/digits-N require MPLAPACK MPFR for the Newton solves; inspect this build with bethe-info.",
+                "bits-N/digits-N require Uni20 MPFR scalar support; inspect this build with bethe-info.",
                 HardWalls ? "Dirichlet walls only. See docs/lieb-liniger-open.md for equations and numerical limits."
                           : "See docs/lieb-liniger.md for equations, residual scaling, and numerical limits.",
                 "Use --references for literature and applicability; see CITATIONS.md."};

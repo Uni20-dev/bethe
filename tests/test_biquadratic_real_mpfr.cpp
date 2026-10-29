@@ -84,13 +84,8 @@ TEST(BiquadraticRealMpfr, InvalidInputsFailBeforeNumericalWork)
   EXPECT_THROW(model::ferromagnetic::ground_space<R>(4, Precision::exact()), std::invalid_argument);
   EXPECT_THROW(model::ferromagnetic::spectral_gap<R>(4, Precision::exact()), std::invalid_argument);
   EXPECT_THROW(model::ferromagnetic::one_defect_level<R>(4, 3, Precision::exact()), std::invalid_argument);
-#if !UNI20_HAS_MPLAPACK_MPREAL
-  options = bethe::SolverOptions<R>(p);
-  EXPECT_THROW(model::ground_state<R>(4, options), std::runtime_error);
-#endif
 }
 
-#if UNI20_HAS_MPLAPACK_MPREAL
 TEST(BiquadraticRealMpfr, SpinHamiltonianEnergiesGainAccuracyBeyondBinary128)
 {
   auto const oracle = Precision::bits(768);
@@ -231,5 +226,4 @@ TEST(BiquadraticRealMpfr, OwningMixedPrecisionSweepsAndConcurrentScans)
   }
   EXPECT_EQ(mpfr_get_default_prec(), ambient);
 }
-#endif
 } // namespace

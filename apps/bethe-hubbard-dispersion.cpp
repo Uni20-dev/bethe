@@ -47,7 +47,7 @@ auto program_info()
       "All doped lines are gapless in the Fermi reference.",
       "Default tolerance: 256 epsilon at half filling (relative target); 4096 epsilon when doped "
       "(absolute background / max(1,|E|) point energy), evaluated in the selected precision.",
-      "bits-N/digits-N select explicit MPFR precision. Doped backgrounds require MPLAPACK MPFR; half filling does not.",
+      "bits-N/digits-N select explicit MPFR precision. Doped backgrounds use Uni20 CPU/provider LU dispatch.",
       "Files and machine stdout stream rows; human stdout is a final report "
       "unless --stream is set. --no-retain requires live output or --quiet.",
       "CSV/TSV have # metadata and empty energies on failure (exit 2). JSON uses null. "

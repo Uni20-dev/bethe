@@ -328,14 +328,7 @@ State<Real> ground_state(std::size_t up, std::size_t down, Real length, Real c, 
     if (state.iterations == options.max_iterations) break;
     for (std::size_t j = 0; j < order; ++j)
       step[j, 0] = -evaluation.residual[j];
-#if !UNI20_HAS_MPLAPACK_MPREAL
-    // Keep free states and zero-update diagnostics usable with MPFR scalars
-    // alone. This is an availability check, not a backend override/fallback.
-    if constexpr (uni20::has_runtime_precision_v<Real>)
-      throw std::runtime_error("Gaudin-Yang Newton updates require MPLAPACK MPFR in this build");
-    else
-#endif
-        if (!uni20::linalg::solve_inplace_with_info(jacobian, step, options.precision()).succeeded())
+    if (!uni20::linalg::solve_inplace_with_info(jacobian, step, options.precision()).succeeded())
     {
       state.status = SolveStatus::stalled;
       break;
