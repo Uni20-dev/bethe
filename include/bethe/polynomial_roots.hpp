@@ -24,21 +24,29 @@ template <uni20::Real Real> std::pair<Real, Real> root_two_sum(Real a, Real b)
 
 template <uni20::Real Real> std::pair<Real, Real> root_two_product(Real a, Real b)
 {
-  Real const splitter = std::ldexp(Real{1}, (uni20::numeric_limits<Real>::digits() + 1) / 2) + Real{1};
-  Real const ca = splitter * a, cb = splitter * b;
-  Real const ah = ca - (ca - a), al = a - ah, bh = cb - (cb - b), bl = b - bh;
-  Real const product = a * b;
-  Real const error1 = product - ah * bh;
-  Real const error2 = error1 - al * bh;
-  Real const error3 = error2 - ah * bl;
-  return {product, al * bl - error3};
+  if constexpr (uni20::has_runtime_precision_v<Real>)
+  {
+    Real const product = a * b;
+    return {product, uni20::math::fma(a, b, -product)};
+  }
+  else
+  {
+    Real const splitter = std::ldexp(Real{1}, (uni20::numeric_limits<Real>::digits() + 1) / 2) + Real{1};
+    Real const ca = splitter * a, cb = splitter * b;
+    Real const ah = ca - (ca - a), al = a - ah, bh = cb - (cb - b), bl = b - bh;
+    Real const product = a * b;
+    Real const error1 = product - ah * bh;
+    Real const error2 = error1 - al * bh;
+    Real const error3 = error2 - ah * bl;
+    return {product, al * bl - error3};
+  }
 }
 
 // Rounded complex a*b+c and its first-order rounding correction. This is
 // the elementary building block of compensated Horner evaluation.
 template <uni20::Real Real>
-std::pair<std::complex<Real>, std::complex<Real>> root_multiply_add(std::complex<Real> a, std::complex<Real> b,
-                                                                    std::complex<Real> c)
+std::pair<uni20::complex<Real>, uni20::complex<Real>> root_multiply_add(uni20::complex<Real> a, uni20::complex<Real> b,
+                                                                        uni20::complex<Real> c)
 {
   auto const [rr, err] = root_two_product(a.real(), b.real());
   auto const [ii, eii] = root_two_product(-a.imag(), b.imag());
@@ -65,33 +73,63 @@ template <uni20::Real Real> struct PolynomialRootOptions
     Real tolerance = Real{128} * uni20::numeric_limits<Real>::epsilon();
     std::size_t max_iterations = 200;
     std::size_t max_degree = 64;
+    uni20::Precision precision() const { return uni20::native_precision<Real>(); }
 };
+#if UNI20_HAS_MPREAL
+template <> struct PolynomialRootOptions<uni20::mpreal>
+{
+    explicit PolynomialRootOptions(uni20::Precision p) : tolerance(default_tolerance(p)), precision_(p) {}
+    uni20::mpreal tolerance;
+    std::size_t max_iterations = 200, max_degree = 64;
+    uni20::Precision precision() const { return precision_; }
+
+  private:
+    static uni20::mpreal default_tolerance(uni20::Precision p)
+    {
+      if (p.is_exact()) throw std::invalid_argument("polynomial recovery requires finite precision");
+      return 128 * uni20::numeric_limits<uni20::mpreal>::epsilon(p);
+    }
+    uni20::Precision precision_;
+};
+#endif
 
 /// Numerical diagnostics, not interval enclosures or a proof of simplicity.
 /// Roots use the original polynomial coordinate; their order is unspecified.
 template <uni20::Real Real> struct PolynomialRoots
 {
-    std::vector<std::complex<Real>> roots;
+    PolynomialRoots()
+      requires(!uni20::has_runtime_precision_v<Real>)
+        : PolynomialRoots(uni20::native_precision<Real>())
+    {}
+    explicit PolynomialRoots(uni20::Precision p)
+        : residual_norm(uni20::scalar_at_precision<Real>(std::numeric_limits<double>::infinity(), p)),
+          reconstruction_error(residual_norm), max_root_uncertainty(residual_norm),
+          separation_ratio(uni20::scalar_at_precision<Real>(0, p))
+    {}
+    std::vector<uni20::complex<Real>> roots;
     PolynomialRootStatus status = PolynomialRootStatus::nonfinite_or_unrepresentable;
     std::size_t iterations = 0; // Attempted full-root sweeps; no hidden retries.
-    Real residual_norm = uni20::numeric_limits<Real>::infinity();
-    Real reconstruction_error = uni20::numeric_limits<Real>::infinity();
-    Real max_root_uncertainty = uni20::numeric_limits<Real>::infinity();
-    Real separation_ratio = Real{0}; // min |x_i-x_j|/(estimated radii_i+radii_j)
+    Real residual_norm;
+    Real reconstruction_error;
+    Real max_root_uncertainty;
+    Real separation_ratio; // min |x_i-x_j|/(estimated radii_i+radii_j)
 };
 
 /// Recover the roots of monic Q(x)=x^n+sum_(k<n) c[k]*x^k, with REAL c.
-/// Native-precision Ehrlich-Aberth iteration (Gauss-Seidel sweeps), no explicit
+/// Explicit-precision Ehrlich-Aberth iteration (Gauss-Seidel sweeps), no explicit
 /// deflation. A resolved result has small backward errors and numerically
 /// separated roots; it does NOT promise tolerance-sized forward errors.
 /// See docs/polynomial-roots.md for scaling, diagnostics, and limitations.
 template <uni20::Real Real>
 PolynomialRoots<Real> recover_polynomial_roots(std::span<Real const> coefficients,
                                                PolynomialRootOptions<Real> options = {},
-                                               std::span<std::complex<Real> const> initial = {})
+                                               std::span<uni20::complex<Real> const> initial = {})
 {
-  using C = std::complex<Real>;
-  Real const infinity = uni20::numeric_limits<Real>::infinity();
+  using C = uni20::complex<Real>;
+  Real const zero = uni20::scalar_at_precision<Real>(0, options.precision()), one = uni20::scalar_like(zero, 1);
+  require_same_precision(options.tolerance, zero);
+  Real const infinity = uni20::scalar_like(zero, std::numeric_limits<double>::infinity());
+  C const czero(zero, zero), cone(one, zero);
   auto finite = [](C z) { return uni20::isfinite(z.real()) && uni20::isfinite(z.imag()); };
   auto const n = coefficients.size();
   if (!uni20::isfinite(options.tolerance) || options.tolerance <= Real{0})
@@ -99,33 +137,50 @@ PolynomialRoots<Real> recover_polynomial_roots(std::span<Real const> coefficient
   if (n > options.max_degree) throw std::length_error("polynomial root degree exceeds the work budget");
   if (!initial.empty() && initial.size() != n)
     throw std::invalid_argument("polynomial root seed count differs from degree");
-  for (Real c : coefficients)
+  for (Real const& c : coefficients)
+  {
+    require_same_precision(c, zero);
     if (!uni20::isfinite(c)) throw std::invalid_argument("nonfinite polynomial coefficient");
-  for (C x : initial)
+  }
+  for (C const& x : initial)
+  {
+#if UNI20_HAS_MPREAL
+    if constexpr (uni20::has_runtime_precision_v<Real>)
+      if (!x.initialized() || x.is_exact())
+        throw std::invalid_argument("polynomial root seeds require finite working precision");
+#endif
+    require_same_precision(x.real(), zero);
+    require_same_precision(x.imag(), zero);
     if (!finite(x)) throw std::invalid_argument("nonfinite polynomial root seed");
-  PolynomialRoots<Real> out;
+  }
+  PolynomialRoots<Real> out(options.precision());
   // Use a power-of-two coordinate scale, so scaling does not perturb the
   // represented coefficients. Reject subnormal scaled coefficients rather
   // than silently lose input bits. The usual bound is <=1; if rounding the
   // scale upward overflows, the last finite power of two is retained.
-  Real scale{1};
+  Real scale = one;
   for (std::size_t k = 0; k < n; ++k)
-    scale = std::max(scale, std::pow(std::abs(coefficients[k]), Real{1} / Real(n - k)));
+    scale = std::max(scale, uni20::math::pow(uni20::math::abs(coefficients[k]), one / Real(n - k)));
   if (!uni20::isfinite(scale)) return out;
-  int exponent = 0;
-  Real const mantissa = std::frexp(scale, &exponent);
-  scale = std::ldexp(Real{1}, exponent - 1);
+  auto const parts = uni20::math::frexp(scale);
+  Real const mantissa = parts.fraction;
+  scale = uni20::math::ldexp(one, parts.exponent - 1);
+  Real const minimum = [&] {
+    if constexpr (uni20::has_runtime_precision_v<Real>)
+      return uni20::math::next_up(zero);
+    else
+      return uni20::numeric_limits<Real>::min();
+  }();
   if (mantissa > Real{1} / Real{2} && uni20::isfinite(Real{2} * scale)) scale *= Real{2};
   std::vector<Real> c(coefficients.begin(), coefficients.end());
   for (std::size_t k = 0; k < n; ++k)
   {
     for (std::size_t j = k; j < n; ++j)
       c[k] /= scale;
-    if (!uni20::isfinite(c[k]) || (coefficients[k] != Real{0} && std::abs(c[k]) < uni20::numeric_limits<Real>::min()))
-      return out;
+    if (!uni20::isfinite(c[k]) || (coefficients[k] != Real{0} && uni20::math::abs(c[k]) < minimum)) return out;
   }
   std::vector<C> roots(n);
-  Real const pi = Real{4} * std::atan(Real{1});
+  Real const pi = Real{4} * uni20::math::atan(one);
   for (std::size_t j = 0; j < n; ++j)
   {
     if (!initial.empty())
@@ -135,27 +190,27 @@ PolynomialRoots<Real> recover_polynomial_roots(std::span<Real const> coefficient
     else
     {
       Real const angle = Real{2} * pi * (Real(j) + Real{1} / Real{3}) / Real(n);
-      roots[j] = Real{4} * C{std::cos(angle), std::sin(angle)};
+      roots[j] = Real{4} * C{uni20::math::cos(angle), uni20::math::sin(angle)};
     }
-    if (!finite(roots[j]) || (!initial.empty() && initial[j] != C{} && roots[j] == C{})) return out;
+    if (!finite(roots[j]) || (!initial.empty() && initial[j] != czero && roots[j] == czero)) return out;
   }
   struct Evaluation
   {
-      C value{1}, derivative{};
-      Real magnitude{1}, derivative_magnitude{};
+      C value, derivative;
+      Real magnitude, derivative_magnitude;
   };
   auto evaluate = [&](C x) {
-    Evaluation e;
-    C correction{};
-    Real const radius = std::abs(x);
+    Evaluation e{cone, czero, one, zero};
+    C correction = czero;
+    Real const radius = uni20::math::abs(x);
     for (std::size_t k = n; k-- > 0;)
     {
       e.derivative = e.derivative * x + e.value;
-      auto const [value, error] = root_multiply_add(e.value, x, C{c[k]});
+      auto const [value, error] = root_multiply_add<Real>(e.value, x, C{c[k]});
       correction = correction * x + error;
       e.value = value;
       e.derivative_magnitude = e.derivative_magnitude * radius + e.magnitude;
-      e.magnitude = e.magnitude * radius + std::abs(c[k]);
+      e.magnitude = e.magnitude * radius + uni20::math::abs(c[k]);
     }
     e.value += correction;
     return e;
@@ -176,16 +231,16 @@ PolynomialRoots<Real> recover_polynomial_roots(std::span<Real const> coefficient
     if (!diagnostics_current)
     {
       out.residual_norm = out.reconstruction_error = out.max_root_uncertainty = infinity;
-      out.separation_ratio = Real{0};
+      out.separation_ratio = zero;
     }
     return out;
   };
-  Real const roundoff = Real{16} * Real(n) * uni20::numeric_limits<Real>::epsilon();
+  Real const roundoff = Real{16} * Real(n) * uni20::numeric_limits<Real>::epsilon(options.precision());
   for (;;)
   {
     diagnostics_current = false;
-    out.residual_norm = Real{0};
-    out.max_root_uncertainty = Real{0};
+    out.residual_norm = zero;
+    out.max_root_uncertainty = zero;
     out.separation_ratio = infinity;
     std::vector<Real> radii(n);
     for (std::size_t j = 0; j < n; ++j)
@@ -195,25 +250,25 @@ PolynomialRoots<Real> recover_polynomial_roots(std::span<Real const> coefficient
           !uni20::isfinite(e.derivative_magnitude))
         return finish(PolynomialRootStatus::nonfinite_or_unrepresentable);
       Real const residual =
-          e.magnitude > Real{0} ? std::abs(e.value) / e.magnitude : (e.value == C{} ? Real{0} : infinity);
+          e.magnitude > Real{0} ? uni20::math::abs(e.value) / e.magnitude : (e.value == czero ? zero : infinity);
       out.residual_norm = std::max(out.residual_norm, residual);
-      Real const derivative = std::abs(e.derivative) - roundoff * e.derivative_magnitude;
-      radii[j] = derivative > Real{0} ? (std::abs(e.value) + roundoff * e.magnitude) / derivative : infinity;
+      Real const derivative = uni20::math::abs(e.derivative) - roundoff * e.derivative_magnitude;
+      radii[j] = derivative > Real{0} ? (uni20::math::abs(e.value) + roundoff * e.magnitude) / derivative : infinity;
       out.max_root_uncertainty = std::max(out.max_root_uncertainty, radii[j] * scale);
     }
     bool collision = false;
     for (std::size_t i = 0; i < n; ++i)
       for (std::size_t j = i + 1; j < n; ++j)
       {
-        Real const distance = std::abs(roots[i] - roots[j]), radius = radii[i] + radii[j];
+        Real const distance = uni20::math::abs(roots[i] - roots[j]), radius = radii[i] + radii[j];
         collision = collision || distance == Real{0};
-        Real const ratio = distance == Real{0} ? Real{0} : (radius > Real{0} ? distance / radius : infinity);
+        Real const ratio = distance == Real{0} ? zero : (radius > Real{0} ? distance / radius : infinity);
         out.separation_ratio = std::min(out.separation_ratio, ratio);
       }
     // Leja-style ordering distributes roots before multiplying factors;
     // neighboring roots on a circle are a poorly conditioned product order.
     std::vector<C> ordered = roots;
-    std::vector<Real> distances(n, Real{1});
+    std::vector<Real> distances(n, one);
     for (std::size_t j = 0; j < n; ++j)
     {
       auto best = j;
@@ -222,27 +277,27 @@ PolynomialRoots<Real> recover_polynomial_roots(std::span<Real const> coefficient
       std::swap(ordered[j], ordered[best]);
       std::swap(distances[j], distances[best]);
       for (std::size_t k = j + 1; k < n; ++k)
-        distances[k] *= std::abs(ordered[k] - ordered[j]);
+        distances[k] *= uni20::math::abs(ordered[k] - ordered[j]);
     }
-    std::vector<C> reconstructed{C{1}}, corrections{C{0}};
+    std::vector<C> reconstructed{cone}, corrections{czero};
     for (C x : ordered)
     {
-      reconstructed.push_back(C{});
-      corrections.push_back(C{});
+      reconstructed.push_back(czero);
+      corrections.push_back(czero);
       for (std::size_t k = reconstructed.size(); k-- > 0;)
       {
-        auto const [value, error] = root_multiply_add(reconstructed[k], -x, k ? reconstructed[k - 1] : C{});
-        corrections[k] = (k ? corrections[k - 1] : C{}) - x * corrections[k] + error;
+        auto const [value, error] = root_multiply_add<Real>(reconstructed[k], -x, k ? reconstructed[k - 1] : czero);
+        corrections[k] = (k ? corrections[k - 1] : czero) - x * corrections[k] + error;
         reconstructed[k] = value;
         if (!finite(value) || !finite(corrections[k]))
           return finish(PolynomialRootStatus::nonfinite_or_unrepresentable);
       }
     }
-    out.reconstruction_error = Real{0};
+    out.reconstruction_error = zero;
     for (std::size_t k = 0; k < n; ++k)
       out.reconstruction_error =
-          std::max(out.reconstruction_error,
-                   std::abs((reconstructed[k] - c[k]) + corrections[k]) / std::max(Real{1}, std::abs(c[k])));
+          std::max(out.reconstruction_error, uni20::math::abs((reconstructed[k] - c[k]) + corrections[k]) /
+                                                 std::max(Real{1}, uni20::math::abs(c[k])));
     diagnostics_current = true;
     bool const backward = out.residual_norm <= options.tolerance && out.reconstruction_error <= options.tolerance;
     if (backward)
@@ -256,7 +311,7 @@ PolynomialRoots<Real> recover_polynomial_roots(std::span<Real const> coefficient
     for (std::size_t j = 0; j < n; ++j)
     {
       auto const e = evaluate(roots[j]);
-      CompensatedSum<Real> real, imag;
+      CompensatedSum<Real> real(zero), imag(zero);
       for (std::size_t k = 0; k < n; ++k)
         if (j != k)
         {
@@ -269,7 +324,7 @@ PolynomialRoots<Real> recover_polynomial_roots(std::span<Real const> coefficient
       // at Q'=0 when the Ehrlich-Aberth denominator is nonzero.
       C const denominator = e.derivative - e.value * C{real.value(), imag.value()};
       if (!finite(denominator)) return finish(PolynomialRootStatus::nonfinite_or_unrepresentable);
-      if (denominator == C{}) return finish(PolynomialRootStatus::stalled);
+      if (denominator == czero) return finish(PolynomialRootStatus::stalled);
       C const next = roots[j] - e.value / denominator;
       if (!finite(next)) return finish(PolynomialRootStatus::nonfinite_or_unrepresentable);
       if (next != roots[j])
