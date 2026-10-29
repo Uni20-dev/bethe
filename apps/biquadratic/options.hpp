@@ -4,6 +4,7 @@
 #include "data-output-options.hpp"
 #include "execution-options.hpp"
 #include "program-options.hpp"
+#include "solver-precision.hpp"
 #include <bethe/xxz_common.hpp>
 
 namespace bethe::apps::biquadratic
@@ -57,6 +58,7 @@ inline auto program_info()
       "TL through-lines are not physical spin; AF ground/sector helpers and Q-system modes require even N.",
       "Selected real roots and ferro real-root scans accept odd/even N; no lattice momentum.",
       "This is not the TB point, ULS point, or zero-boundary-field XXZ chain.",
+      "bits-N/digits-N uses explicit MPFR precision in every mode; requires UNI20_ENABLE_MPREAL=ON.",
       "See docs/biquadratic.md for the TL mapping and representation multiplicities.",
       "Use --references for literature and applicability; see CITATIONS.md."};
   return info;
@@ -126,7 +128,7 @@ inline void add_options(CLI::App& app, Arguments& args)
       "equation tolerance (default: 32 epsilon); Q-system uses coefficient backward error, not phase error");
   bethe::cli::option(app, "--max-iterations", args.max_iterations, "accepted Newton updates (default: 10000)")
       ->capture_default_str();
-  bethe::cli::precision_option(app, args.precision);
+  bethe::cli::precision_option(app, args.precision, cli::ArbitraryPrecision::complex_linalg);
   cli::add_data_output_options(
       app, args.output,
       {{.name = "states", .description = "Selected states and diagnostics", .primary = true},
