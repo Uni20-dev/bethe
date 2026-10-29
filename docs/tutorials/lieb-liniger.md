@@ -42,7 +42,8 @@ potential to these curves.
 
 ## 2. Two ways to excite the Bethe sea
 
-![Type-I and type-II spectra at three repulsions, with the Tonks limiting curves](figures/ll-branches.svg)
+![Type-I and type-II spectra at three repulsions, with the Tonks limiting curves](figures/ll-branches.svg#gh-light-mode-only)
+![Type-I and type-II spectra at three repulsions, with the Tonks limiting curves](figures/ll-branches-dark.svg#gh-dark-mode-only)
 
 The coloured curves are solver exports at $`n=1`$:
 [c = 1](data/ll-c1-n1.csv), [c = 10](data/ll-c10-n1.csv) and
@@ -95,7 +96,8 @@ bethe-lieb-liniger-dispersion --c 2 --density 2 --points 129 \
   --precision fp64 --format csv > ll-c2-n2.csv
 ```
 
-![Physical spectra change with density, but scaled spectra coincide](figures/ll-density-scaling.svg)
+![Physical spectra change with density, but scaled spectra coincide](figures/ll-density-scaling.svg#gh-light-mode-only)
+![Physical spectra change with density, but scaled spectra coincide](figures/ll-density-scaling-dark.svg#gh-dark-mode-only)
 
 The left panel uses physical units; the right plots the same data using
 $`p/(\pi n)`$ and $`E/n^2`$. Both branches collapse. Download the

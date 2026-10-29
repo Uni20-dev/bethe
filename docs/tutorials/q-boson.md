@@ -49,7 +49,8 @@ bethe-q-boson-pbc 5 --particles 3 --eta 0.5 --excitations all
 bethe-q-boson-pbc 5 --particles 3 --phase --excitations all
 ```
 
-![Five-site, three-particle spectra from free bosons to the phase limit](figures/q-boson-spectra.svg)
+![Five-site, three-particle spectra from free bosons to the phase limit](figures/q-boson-spectra.svg#gh-light-mode-only)
+![Five-site, three-particle spectra from free bosons to the phase limit](figures/q-boson-spectra-dark.svg#gh-dark-mode-only)
 
 Each panel contains 35 canonical states; degenerate dots can overlap. The
 dotted horizontal line is the ground energy. The vertical axis shows
@@ -84,7 +85,8 @@ Join tables through `state_id`. The ground `reference` has its own ID, distinct
 from the ranked copy of the ground state in `states`; its root rows occur in
 the same `roots` export. `root_index` orders roots within each state.
 
-![Ground rapidities and ground energy in the three deformation regimes](figures/q-boson-ground.svg)
+![Ground rapidities and ground energy in the three deformation regimes](figures/q-boson-ground.svg#gh-light-mode-only)
+![Ground rapidities and ground energy in the three deformation regimes](figures/q-boson-ground-dark.svg#gh-dark-mode-only)
 
 All ground roots coincide at zero in the free limit. At finite deformation
 they spread symmetrically, even though the total momentum remains zero.

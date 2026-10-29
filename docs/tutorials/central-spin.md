@@ -46,7 +46,8 @@ do not approximate them by silent perturbations.
 
 ## 2. Compare sectors across field
 
-![Three central-spin sector energies separate under field; energy secants estimate interval-averaged central polarization.](figures/central-spin-field.svg)
+![Three central-spin sector energies separate under field; energy secants estimate interval-averaged central polarization.](figures/central-spin-field.svg#gh-light-mode-only)
+![Three central-spin sector energies separate under field; energy secants estimate interval-averaged central polarization.](figures/central-spin-field-dark.svg#gh-dark-mode-only)
 
 The left panel plots **E+B/2** to remove the leading central-down Zeeman
 term visually. The CSV files contain the absolute Hamiltonian energy E;

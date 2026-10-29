@@ -37,9 +37,10 @@ Hamiltonian convention.
 
 ## 2. Read the three branches
 
-![Doped Hubbard spinon and charge-hole/charge-particle lines at density 0.75 and U over t equal to 4. All lines have zero Fermi-referenced energy at their own endpoints.](figures/hubbard-doped-lines.svg)
+![Doped Hubbard spinon and charge-hole/charge-particle lines at density 0.75 and U over t equal to 4. All lines have zero Fermi-referenced energy at their own endpoints.](figures/hubbard-doped-lines.svg#gh-light-mode-only)
+![Doped Hubbard spinon and charge-hole/charge-particle lines at density 0.75 and U over t equal to 4. All lines have zero Fermi-referenced energy at their own endpoints.](figures/hubbard-doped-lines-dark.svg#gh-dark-mode-only)
 
-[Open the full-size figure](figures/hubbard-doped-lines.svg).
+Full-size figure: [light](figures/hubbard-doped-lines.svg) · [dark](figures/hubbard-doped-lines-dark.svg).
 
 All three branches have zero **Fermi-referenced** energy at their endpoints.
 The momenta are unwrapped one-site momenta, in this frontend's fixed convention:
@@ -75,9 +76,10 @@ Unlike at half filling, the symmetric Hamiltonian difference alone is **not**
 Fermi-referenced. Its chemical potential is nonzero. The CSV includes both
 `symmetric_energy` and `fermi_energy`, so we can plot that difference directly:
 
-![Doped charge lines before and after subtracting the chemical-potential term. The symmetric Hamiltonian charge-particle energy is negative, but both Fermi-referenced branches end at zero.](figures/hubbard-doped-reference.svg)
+![Doped charge lines before and after subtracting the chemical-potential term. The symmetric Hamiltonian charge-particle energy is negative, but both Fermi-referenced branches end at zero.](figures/hubbard-doped-reference.svg#gh-light-mode-only)
+![Doped charge lines before and after subtracting the chemical-potential term. The symmetric Hamiltonian charge-particle energy is negative, but both Fermi-referenced branches end at zero.](figures/hubbard-doped-reference-dark.svg#gh-dark-mode-only)
 
-[Open the full-size energy-reference comparison](figures/hubbard-doped-reference.svg).
+Full-size energy-reference comparison: [light](figures/hubbard-doped-reference.svg) · [dark](figures/hubbard-doped-reference-dark.svg).
 
 At the charge-particle endpoints, the symmetric Hamiltonian cost is
 $`\mu_{\mathrm{sym}}`$, approximately −1.62956 t. At the holon endpoints it

@@ -46,9 +46,10 @@ tables: `--branch bar3 --csv narrow.csv` selects just the narrow elementary band
 | `two-soliton` | One of each | [0, 2] | `lower`, `upper` |
 | `four-soliton` | Two of each | [0, 2] | `lower`, `upper` |
 
-![ULS fundamental and antifundamental elementary dispersions, alongside shaded two- and four-soliton energy intervals.](figures/su3-spectrum.svg)
+![ULS fundamental and antifundamental elementary dispersions, alongside shaded two- and four-soliton energy intervals.](figures/su3-spectrum.svg#gh-light-mode-only)
+![ULS fundamental and antifundamental elementary dispersions, alongside shaded two- and four-soliton energy intervals.](figures/su3-spectrum-dark.svg#gh-dark-mode-only)
 
-[Open the full-size figure](figures/su3-spectrum.svg).
+Full-size figure: [light](figures/su3-spectrum.svg) · [dark](figures/su3-spectrum-dark.svg).
 
 Both elementary branches are gapless at their endpoints, with endpoint speed
 $`v=2\pi J/3`$. Their maxima differ by a factor of three: approximately
@@ -97,9 +98,10 @@ four-soliton kinematic interval has nonzero width there.
 bethe-su3-dispersion --exchange 1 --points 193 --folded --csv su3-folded.csv
 ```
 
-![ULS continuum intervals before and after combining three momentum images for a three-site unit cell.](figures/su3-folding.svg)
+![ULS continuum intervals before and after combining three momentum images for a three-site unit cell.](figures/su3-folding.svg#gh-light-mode-only)
+![ULS continuum intervals before and after combining three momentum images for a three-site unit cell.](figures/su3-folding-dark.svg#gh-dark-mode-only)
 
-[Open the full-size folding comparison](figures/su3-folding.svg).
+Full-size folding comparison: [light](figures/su3-folding.svg) · [dark](figures/su3-folding-dark.svg).
 
 For a three-site cell the translation eigenphase is
 

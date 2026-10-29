@@ -1,0 +1,20 @@
+/* Single-version scientific figures keep a light canvas. Paired figures use
+   Zensical's built-in theme selectors; no colour inversion or CSS filters. */
+.md-typeset img[src*="figures/"] {
+  background-color: white;
+  border-radius: 0.2rem;
+}
+
+.md-typeset img[src$="#gh-dark-mode-only"] {
+  background-color: #1e2129;
+}
+
+/* Printed scientific figures use the light companion even from a dark page. */
+@media print {
+  body .md-typeset img[src$="#gh-light-mode-only"] {
+    display: inline;
+  }
+  body .md-typeset img[src$="#gh-dark-mode-only"] {
+    display: none;
+  }
+}

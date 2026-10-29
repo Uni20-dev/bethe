@@ -44,7 +44,8 @@ The reproduction script runs c=0, 0.001, 0.01, 0.1, 1, 10, 100 and 1000.
 The positive-c results appear on a logarithmic axis; c=0 supplies the green
 reference line rather than an artificial logarithmic coordinate.
 
-![The balanced Gaudin–Yang energy rises from its free limit toward the interacting strong-coupling limit, below the distinct polarized periodic shell.](figures/gy-coupling.svg)
+![The balanced Gaudin–Yang energy rises from its free limit toward the interacting strong-coupling limit, below the distinct polarized periodic shell.](figures/gy-coupling.svg#gh-light-mode-only)
+![The balanced Gaudin–Yang energy rises from its free limit toward the interacting strong-coupling limit, below the distinct polarized periodic shell.](figures/gy-coupling-dark.svg#gh-dark-mode-only)
 
 The normalization is the **finite-N strong-coupling limit of this branch**,
 
@@ -72,7 +73,8 @@ It becomes a finite-size issue rather than a different bulk energy density.
 
 ## 3. Read two families of roots
 
-![Charge momenta and spin rapidities at three couplings, plotted against their distinct Bethe labels.](figures/gy-roots.svg)
+![Charge momenta and spin rapidities at three couplings, plotted against their distinct Bethe labels.](figures/gy-roots.svg#gh-light-mode-only)
+![Charge momenta and spin rapidities at three couplings, plotted against their distinct Bethe labels.](figures/gy-roots-dark.svg#gh-dark-mode-only)
 
 The six charge roots are **physical momenta k**; their squares sum to E.
 The three spin roots are auxiliary rapidities, not additional particles whose

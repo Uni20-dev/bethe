@@ -84,7 +84,8 @@ E_{\pm}=\frac{-15\pm\sqrt{17}}2,
 \qquad E_+-E_-=\sqrt{17}.
 ```
 
-![Four-site gaps grouped by TL module for both Hamiltonian signs](figures/bq-four-site.svg)
+![Four-site gaps grouped by TL module for both Hamiltonian signs](figures/bq-four-site.svg#gh-light-mode-only)
+![Four-site gaps grouped by TL module for both Hamiltonian signs](figures/bq-four-site-dark.svg#gh-dark-mode-only)
 
 The left panel is the default negative sign. Orange marks the singlet absent
 from the real-root scan; each annotation gives the number of physical states
@@ -130,7 +131,8 @@ bethe-biquadratic-obc 64 --singlet-excitation \
   --csv-table states=singlet.csv --csv-table reference=ground.csv
 ```
 
-![Finite-size gaps of the targeted negative-sign singlet](figures/bq-af-singlet.svg)
+![Finite-size gaps of the targeted negative-sign singlet](figures/bq-af-singlet.svg#gh-light-mode-only)
+![Finite-size gaps of the targeted negative-sign singlet](figures/bq-af-singlet-dark.svg#gh-dark-mode-only)
 
 This selects a positive-deviation two-string above a real-root sea in ell=0.
 Its multiplicity is one physical singlet. It reproduces the excited

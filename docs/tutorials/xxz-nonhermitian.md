@@ -61,7 +61,8 @@ It lists the **complete fixed-magnetization Hamiltonian spectrum and block
 sizes**. The regular `--through-lines`, `--excitations` and `--roots` options
 do not apply here. `--sz` keeps its sign; it is not folded to an absolute value.
 
-![Fourteen Hamiltonian Jordan blocks at N=6 occupy a twenty-dimensional sector; even and odd chains have distinct Casimir limits.](figures/qg-blocks.svg)
+![Fourteen Hamiltonian Jordan blocks at N=6 occupy a twenty-dimensional sector; even and odd chains have distinct Casimir limits.](figures/qg-blocks.svg#gh-light-mode-only)
+![Fourteen Hamiltonian Jordan blocks at N=6 occupy a twenty-dimensional sector; even and odd chains have distinct Casimir limits.](figures/qg-blocks-dark.svg#gh-dark-mode-only)
 
 The left panel has 14 rows but a sector dimension of 20: eight size-one blocks
 and six size-two blocks. Each square denotes **one** eigenvector plus one

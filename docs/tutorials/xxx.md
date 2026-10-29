@@ -57,7 +57,8 @@ k=\frac\pi2-\frac{2\pi I_h}{N},\qquad
 \epsilon_N(k)=E_N-Ne_\infty.
 ```
 
-![Odd-ring spinon energies and finite-size corrections](figures/xxx-finite-spinons.svg)
+![Odd-ring spinon energies and finite-size corrections](figures/xxx-finite-spinons.svg#gh-light-mode-only)
+![Odd-ring spinon energies and finite-size corrections](figures/xxx-finite-spinons-dark.svg#gh-dark-mode-only)
 
 The plotted points come from N=15, 31 and 63 exports. The dotted reference
 uses the frontend's thermodynamic column,
@@ -102,7 +103,8 @@ bethe-xxx-pbc 12 --excitations all --spin 1 --format csv > xxx-pbc.csv
 bethe-xxx-obc 12 --excitations all --spin 1 --format csv > xxx-obc.csv
 ```
 
-![Periodic triplet momenta and ranked periodic versus open-chain gaps](figures/xxx-boundary-scans.svg)
+![Periodic triplet momenta and ranked periodic versus open-chain gaps](figures/xxx-boundary-scans.svg#gh-light-mode-only)
+![Periodic triplet momenta and ranked periodic versus open-chain gaps](figures/xxx-boundary-scans-dark.svg#gh-dark-mode-only)
 
 Downloads: [periodic scan](data/xxx-n12-pbc.csv), [free-end scan](data/xxx-n12-obc.csv).
 Unlike the odd-ring spinon plot, these `gap` columns subtract the **global

@@ -62,8 +62,26 @@ def finite_number(row, key):
     return value
 
 
-def save_svg(fig, path):
+def _write_svg(fig, path):
     output = io.StringIO()
     fig.savefig(output, format='svg', metadata={'Date': None})
     # Normalize Matplotlib's trailing spaces in path coordinates for Git.
     path.write_text('\n'.join(line.rstrip() for line in output.getvalue().splitlines()) + '\n')
+
+
+def save_svg(fig, path, *, dark=True):
+    """Write the light SVG and, by default, a separately styled -dark.svg.
+
+    Set dark=False for a custom figure needing a hand-designed companion.
+    Import plotting helpers only here: data validation needs no Matplotlib.
+    """
+    _write_svg(fig, path)
+    if dark:
+        from tutorial_plot_style import dark_figure
+        import matplotlib.pyplot as plt
+
+        companion = dark_figure(fig)
+        try:
+            _write_svg(companion, path.with_name(path.stem + '-dark.svg'))
+        finally:
+            plt.close(companion)

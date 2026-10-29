@@ -57,7 +57,8 @@ E_{\mathrm{blocked}}=6-g-\sqrt{9+g^2}.
 
 At g=1 this is 1.83772234, or **3.32737450 above the paired sector**.
 
-![The energy cost of specified blocked levels grows with attraction; regular eigenvalue variables remain smooth at the pair-root collision.](figures/richardson-pairing.svg)
+![The energy cost of specified blocked levels grows with attraction; regular eigenvalue variables remain smooth at the pair-root collision.](figures/richardson-pairing.svg#gh-light-mode-only)
+![The energy cost of specified blocked levels grows with attraction; regular eigenvalue variables remain smooth at the pair-root collision.](figures/richardson-pairing-dark.svg#gh-dark-mode-only)
 
 The left panel subtracts the fully paired energy at the **same g**. The cost
 is already 1 at g=0 because blocking changes the kinetic occupation. It is not

@@ -49,7 +49,8 @@ triples or a general coupling-inversion problem.
 
 ## 2. A single spinon is a domain wall
 
-![Single-spinon bands at three elliptic parameters](figures/xyz-spinon-bands.svg)
+![Single-spinon bands at three elliptic parameters](figures/xyz-spinon-bands.svg#gh-light-mode-only)
+![Single-spinon bands at three elliptic parameters](figures/xyz-spinon-bands-dark.svg#gh-dark-mode-only)
 
 The ordered chain has two x-Néel vacua. A single spinon connects different
 vacua at its two ends; its energy is appropriate for a domain-wall excitation
@@ -90,7 +91,8 @@ in a region without one is an input error.
 bethe-xyz-dispersion --eta 0.75 --t 1 --branch bound --bound-state 1
 ```
 
-![Physical and reduced momentum views of both bound branches](figures/xyz-bound-copies.svg)
+![Physical and reduced momentum views of both bound branches](figures/xyz-bound-copies.svg#gh-light-mode-only)
+![Physical and reduced momentum views of both bound branches](figures/xyz-bound-copies-dark.svg#gh-dark-mode-only)
 
 Each bound index appears in two relative z-parity channels. Their physical
 momenta differ by pi, but their **reduced-momentum dispersions coincide**:

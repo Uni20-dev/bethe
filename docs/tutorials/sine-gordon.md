@@ -46,7 +46,8 @@ bethe-sine-gordon-dispersion --p 0.4 --mass 1 --points 65 \
   --max-momentum 5 --csv-table dispersion=sg-particles.csv
 ```
 
-![Soliton and two neutral breather dispersions at p=0.4, with the neutral soliton–antisoliton threshold.](figures/sg-particles.svg)
+![Soliton and two neutral breather dispersions at p=0.4, with the neutral soliton–antisoliton threshold.](figures/sg-particles.svg#gh-light-mode-only)
+![Soliton and two neutral breather dispersions at p=0.4, with the neutral soliton–antisoliton threshold.](figures/sg-particles-dark.svg#gh-dark-mode-only)
 
 The blue line represents two degenerate species with opposite topological
 charges, not a neutral particle. The breather rest energies are approximately
@@ -108,7 +109,8 @@ is **not** the gap. At M=L=1 the excited Casimir energy is approximately
 5.11055663, the vacuum energy is -0.33346197, and the gap is 5.44401860.
 Bethe–Yang instead gives 5.31094355.
 
-![Finite-volume NLIE and Bethe–Yang scaled gaps at p=2, and their difference as the circumference increases.](figures/sg-finite-volume.svg)
+![Finite-volume NLIE and Bethe–Yang scaled gaps at p=2, and their difference as the circumference increases.](figures/sg-finite-volume.svg#gh-light-mode-only)
+![Finite-volume NLIE and Bethe–Yang scaled gaps at p=2, and their difference as the circumference increases.](figures/sg-finite-volume-dark.svg#gh-dark-mode-only)
 
 Markers are calculated volumes; connecting lines guide the eye. Bethe–Yang
 becomes accurate at large ML, but a converged counting equation at small ML

@@ -59,9 +59,10 @@ selects this same table explicitly; see [export options](../output.md).
 
 ## 3. Read the spectrum
 
-![Single-spinon energies above unfolded two-spinon continuum bounds, with Delta 1 on the left and Delta 2 on the right. The Delta 2 spinon has a nonzero endpoint gap.](figures/xxz-spinons.svg)
+![Single-spinon energies above unfolded two-spinon continuum bounds, with Delta 1 on the left and Delta 2 on the right. The Delta 2 spinon has a nonzero endpoint gap.](figures/xxz-spinons.svg#gh-light-mode-only)
+![Single-spinon energies above unfolded two-spinon continuum bounds, with Delta 1 on the left and Delta 2 on the right. The Delta 2 spinon has a nonzero endpoint gap.](figures/xxz-spinons-dark.svg#gh-dark-mode-only)
 
-[Open the full-size figure](figures/xxz-spinons.svg).
+Full-size figure: [light](figures/xxz-spinons.svg) · [dark](figures/xxz-spinons-dark.svg).
 
 At $`\Delta=1`$, the elementary line is
 
@@ -113,9 +114,10 @@ ask for the union with the π-shifted translation branch:
 bethe-xxz-dispersion --delta 2 --points 401 --folded --csv xxz-delta2-folded.csv
 ```
 
-![Delta 2 two-spinon continuum before and after folding. The folded union repeats with period pi and includes the broad continuum at both zero and pi.](figures/xxz-folding.svg)
+![Delta 2 two-spinon continuum before and after folding. The folded union repeats with period pi and includes the broad continuum at both zero and pi.](figures/xxz-folding.svg#gh-light-mode-only)
+![Delta 2 two-spinon continuum before and after folding. The folded union repeats with period pi and includes the broad continuum at both zero and pi.](figures/xxz-folding-dark.svg#gh-dark-mode-only)
 
-[Open the full-size folding comparison](figures/xxz-folding.svg).
+Full-size folding comparison: [light](figures/xxz-folding.svg) · [dark](figures/xxz-folding-dark.svg).
 
 The right panel still uses the exported representative Q/π on [0,2], so it
 shows **two copies** of the reduced zone. For an MPS plot against
