@@ -25,8 +25,8 @@ with other state selectors, including `--bound-pairs`.
 ## Explicit precision in the library
 
 The triple, quartet, two-pair and triple-plus-defect C++ solvers also accept
-`uni20::mpreal`. Enable MPFR/MPC and the MPLAPACK MPFR provider, then construct
-solver controls at the desired precision:
+`uni20::mpreal`. Enable MPFR/MPC and construct solver controls at the desired
+precision. Uni20 supplies CPU LU; normal dispatch prefers MPLAPACK when enabled:
 
 ```cpp
 using Real = uni20::mpreal;
