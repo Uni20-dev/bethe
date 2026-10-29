@@ -35,17 +35,19 @@ auto program_info()
       "Y=L*E_C; scaled_gap=L*gap/(2*pi), tending to Delta+ + Delta- in the ultraviolet.",
       "UV weights: Delta+=Delta-=(p+1)/(4*p)+I-0.5. No complete spectrum or spectral weights.",
       "Tolerance is absolute in Y=L*E_C per state, default 16777216 epsilon. fp128 may take many minutes.",
+      "bits-N/digits-N selects MPFR; nonlinear, mesh, hole and Fourier budgets remain independent.",
       "Failed observables are missing; exit 2 if either solve is incomplete.",
       "See docs/sine-gordon-excited.md for scope and controls; --references prints literature."};
   return info;
 }
-template <uni20::Real Real> int run(Arguments const& a, int argc, char** argv)
+template <uni20::Real Real> int run(Arguments const& a, model::TwoSolitonOptions<Real> controls, int argc, char** argv)
 {
   uni20::run_context context(program_info(), {.invocation = std::vector<std::string>(argv, argv + argc)});
-  Real const mass = a.mass ? uni20::parse_real<Real>(*a.mass) : Real{1};
-  Real const length = uni20::parse_real<Real>(*a.length), p = uni20::parse_real<Real>(*a.coupling);
+  Real const mass = a.mass ? cli::parse_solver_real<Real>(*a.mass, controls)
+                           : uni20::scalar_at_precision<Real>(1, controls.precision());
+  Real const length = cli::parse_solver_real<Real>(*a.length, controls),
+             p = cli::parse_solver_real<Real>(*a.coupling, controls);
   auto const number = uni20::half_int::parse(a.number);
-  model::TwoSolitonOptions<Real> controls;
   cli::sine_gordon::configure<Real>(a, controls);
   controls.max_root_iterations = a.root_iterations;
   // Reject invalid requests before admitting either independent solve.
@@ -64,7 +66,8 @@ template <uni20::Real Real> int run(Arguments const& a, int argc, char** argv)
   if (converged)
   {
     gap = finite(*excited.casimir_energy - *vacuum.casimir_energy);
-    scaled_gap = finite((*excited.scaling_function - *vacuum.scaling_function) / (Real{8} * std::atan(Real{1})));
+    scaled_gap = finite((*excited.scaling_function - *vacuum.scaling_function) /
+                        (Real{8} * uni20::math::atan(uni20::scalar_at_precision<Real>(1, controls.precision()))));
   }
   bool const complete = converged && gap && scaled_gap;
   std::string const status = complete             ? "converged"
@@ -141,7 +144,8 @@ int main(int argc, char** argv)
       argc, argv, program_info(),
       [&](auto& app) {
         cli::sine_gordon::add_options(app, a, "Sine-Gordon coupling p>=1",
-                                      "Absolute Y tolerance per state; default 16777216 epsilon");
+                                      "Absolute Y tolerance per state; default 16777216 epsilon",
+                                      cli::ArbitraryPrecision::real);
         bethe::cli::add_data_output_options(
             app, a.output,
             {{.name = "levels", .description = "Vacuum and excited levels", .primary = true},
@@ -159,6 +163,7 @@ int main(int argc, char** argv)
       },
       [&](auto&) {
         a.output.validate();
-        return cli::dispatch_precision(a.precision, [&]<typename Real>() { return run<Real>(a, argc, argv); });
+        return cli::dispatch_options_precision<cli::ArbitraryPrecision::real, model::TwoSolitonOptions>(
+            a.precision, [&](auto controls) { return run(a, std::move(controls), argc, argv); });
       });
 }
