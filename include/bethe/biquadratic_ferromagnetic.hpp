@@ -246,7 +246,9 @@ template <uni20::Real Real = double>
                                                   SolverOptions<Real> const& options = {})
 {
   return detail::from_cluster<Real>(
-      xxz::quantum_group::three_string::bound_triple<Real>(sites, Real{3} / Real{2}, mode, options), 3, mode);
+      xxz::quantum_group::three_string::bound_triple<Real>(
+          sites, uni20::scalar_at_precision<Real>(3, options.precision()) / Real{2}, mode, options),
+      3, mode);
 }
 
 /// Selected bound pair plus one unbound defect, ell=N-6, odd/even N>=6.
@@ -282,7 +284,9 @@ template <uni20::Real Real = double>
                                                   SolverOptions<Real> const& options = {})
 {
   return detail::from_cluster<Real>(
-      xxz::quantum_group::two_pairs::solve<Real>(sites, Real{3} / Real{2}, labels, options), 4, 0);
+      xxz::quantum_group::two_pairs::solve<Real>(
+          sites, uni20::scalar_at_precision<Real>(3, options.precision()) / Real{2}, labels, options),
+      4, 0);
 }
 
 /// One bound triple plus one real root, ell=N-8; labels are not energy ranks.
@@ -291,8 +295,9 @@ template <uni20::Real Real = double>
                                                     SolverOptions<Real> const& options = {})
 {
   return detail::from_cluster<Real>(
-      xxz::quantum_group::triple_defect::solve<Real>(sites, Real{3} / Real{2}, real_label, string_label, options), 4,
-      0);
+      xxz::quantum_group::triple_defect::solve<Real>(
+          sites, uni20::scalar_at_precision<Real>(3, options.precision()) / Real{2}, real_label, string_label, options),
+      4, 0);
 }
 
 /// Four-defect droplet, ell=N-8; mode is not a full-module energy rank.
@@ -301,7 +306,9 @@ template <uni20::Real Real = double>
                                                     SolverOptions<Real> const& options = {})
 {
   return detail::from_cluster<Real>(
-      xxz::quantum_group::four_string::bound_quartet<Real>(sites, Real{3} / Real{2}, mode, options), 4, mode);
+      xxz::quantum_group::four_string::bound_quartet<Real>(
+          sites, uni20::scalar_at_precision<Real>(3, options.precision()) / Real{2}, mode, options),
+      4, mode);
 }
 
 namespace qsystem
