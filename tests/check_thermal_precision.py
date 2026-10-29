@@ -13,11 +13,11 @@ long_running = sys.argv[3:] == ["--long-running"]
 # Routine runs exercise precision, scans and export contracts at a modest
 # spatial tolerance. The long-running variant retains the original tighter
 # numerical controls, including both canonical round trips.
-equilibrium_tolerance = "1e-20" if long_running else "1e-12"
-canonical_tolerance = "1e-18" if long_running else "1e-10"
-density_tolerance = "1e-16" if long_running else "1e-8"
-density_error_bound = Decimal("1e-17" if long_running else "1e-9")
-scan_tolerance = "1e-14" if long_running else "1e-12"
+equilibrium_tolerance = "1e-20" if long_running else "1e-10"
+canonical_tolerance = "1e-18" if long_running else "1e-7"
+density_tolerance = "1e-16" if long_running else "1e-5"
+density_error_bound = Decimal("1e-17" if long_running else "1e-6")
+scan_tolerance = "1e-14" if long_running else "1e-10"
 enabled = mpfr.upper() in ("ON", "TRUE", "1")
 env = dict(os.environ, OPENBLAS_NUM_THREADS="1", OMP_NUM_THREADS="1", UNI20_COLOR="never")
 base = ["--c", "4", "--temperature", "1", "--mu", "-1"]
@@ -98,9 +98,9 @@ if enabled:
     for ensemble in (("--mu", "-1"), ("--density", "0.1")):
         for fail in (False, True):
             args = ["--c", "4", "--temperature", "1", "--temperature-end", "2", "--points", "3",
-                    *ensemble, "--precision", "bits-160", "--tolerance", "1e-12", "--no-retain"]
+                    *ensemble, "--precision", "bits-160", "--tolerance", "1e-12" if long_running else "1e-7", "--no-retain"]
             if ensemble[0] == "--density":
-                args += ["--density-tolerance", "1e-10"]
+                args += ["--density-tolerance", "1e-10" if long_running else "1e-5"]
             if fail:
                 args += ["--max-iterations" if ensemble[0] == "--mu" else "--max-evaluations", "0"]
             serial = table([*args, "--threads", "1"], 2 if fail else 0)

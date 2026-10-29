@@ -299,10 +299,9 @@ auto state = bethe::biquadratic::ground_state<Real>(16, controls);
 auto selected = bethe::biquadratic::real_excitations<Real>(8, 4, {.count=6}, controls);
 ```
 
-Numerical Newton updates require the configured MPLAPACK MPFR provider,
-selected through Uni20's normal dispatch. Scalar-only MPFR builds can evaluate
-zero-update diagnostics and the analytic ferromagnetic helpers; those helpers
-take an explicit `Precision` argument. TL loop weights and reference XXZ Delta
+Numerical Newton updates use Uni20's normal dispatch, with CPU LU available
+when MPLAPACK is not configured. Analytic ferromagnetic helpers take an
+explicit `Precision` argument. TL loop weights and reference XXZ Delta
 must carry the same finite precision as the controls. Unset, exact and mixed
 precision inputs are rejected before numerical work. Failed states retain
 their roots, energies and diagnostics at that precision. Existing bounded
