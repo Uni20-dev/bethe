@@ -19,14 +19,30 @@ template <uni20::Real Real> struct BetheYangOptions
     Real tolerance = Real{16384} * uni20::numeric_limits<Real>::epsilon(); // absolute counting residual
     std::size_t max_iterations = 256;
     KernelOptions<Real> phase; // tolerance assigned from counting budget
+    uni20::Precision precision() const { return uni20::native_precision<Real>(); }
 };
+#if UNI20_HAS_MPREAL
+template <> struct BetheYangOptions<uni20::mpreal>
+{
+    explicit BetheYangOptions(uni20::Precision p) : tolerance(default_tolerance(p)), phase(p), precision_(p) {}
+    uni20::mpreal tolerance;
+    std::size_t max_iterations = 256;
+    KernelOptions<uni20::mpreal> phase;
+    uni20::Precision precision() const { return precision_; }
+
+  private:
+    static uni20::mpreal default_tolerance(uni20::Precision p)
+    {
+      if (p.is_exact()) throw std::invalid_argument("Bethe-Yang levels require finite working precision");
+      return 16384 * uni20::numeric_limits<uni20::mpreal>::epsilon(p);
+    }
+    uni20::Precision precision_;
+};
+#endif
 template <uni20::Real Real> struct BetheYangResult
 {
     std::optional<Real> rapidity, energy; // roots +/-rapidity; excitation energy, NOT E-L*e_bulk
-    Real residual = uni20::numeric_limits<Real>::infinity();
-    Real phase_error = uni20::numeric_limits<Real>::infinity();
-    Real quadrature_error = uni20::numeric_limits<Real>::infinity();
-    Real tail_bound = uni20::numeric_limits<Real>::infinity();
+    Real residual{}, phase_error{}, quadrature_error{}, tail_bound{};
     std::size_t iterations = 0, evaluations = 0;
     KernelStatus phase_status = KernelStatus::converged;
     BetheYangStatus status = BetheYangStatus::iteration_limit;
@@ -41,18 +57,26 @@ template <uni20::Real Real>
 BetheYangResult<Real> same_charge_pair(Real mass, Real length, Real p, uni20::half_int number,
                                        BetheYangOptions<Real> options = {})
 {
+  Real const zero = uni20::scalar_at_precision<Real>(0, options.precision());
+  for (auto const& value : {mass, length, p, options.tolerance})
+    bethe::detail::require_same_precision(value, zero);
+  if (options.phase.precision() != options.precision())
+    throw std::invalid_argument("Bethe-Yang phase and solve controls require matching precision");
+  (void)detail::validate_kernel_options(options.phase);
   ParticleSpectrum<Real> const spectrum(mass, p);
   if (!uni20::isfinite(length) || length <= Real{0} || p < Real{1} || number.twice() <= 0 || number.is_integral() ||
       !uni20::isfinite(options.tolerance) || options.tolerance <= Real{0})
     throw std::invalid_argument("same-charge pair requires L>0, p>=1, positive half-odd I and tolerance>0");
   BetheYangResult<Real> out;
-  Real const twice_number = Real(number.twice());
+  out.residual = out.phase_error = out.quadrature_error = out.tail_bound =
+      uni20::scalar_like(zero, std::numeric_limits<double>::infinity());
+  Real const twice_number = uni20::scalar_like(zero, number.twice());
   if (twice_number + Real{1} == twice_number)
   {
     out.status = BetheYangStatus::precision_limit;
     return out; // Do not round a half-odd label onto an integral one.
   }
-  Real const pi = Real{4} * std::atan(Real{1}), u = mass * length, target = pi * twice_number;
+  Real const pi = bethe::detail::pi_like(zero), u = mass * length, target = pi * twice_number;
   if (!uni20::isfinite(u) || u == Real{0} || !uni20::isfinite(target))
   {
     out.status = BetheYangStatus::precision_limit;
@@ -60,7 +84,7 @@ BetheYangResult<Real> same_charge_pair(Real mass, Real length, Real p, uni20::ha
   }
   // chi is nonnegative on theta>=0 in the repulsive regime. The free
   // solution brackets the unique positive root from above.
-  Real lo = Real{0}, hi = std::asinh(target / u);
+  Real lo = zero, hi = uni20::math::asinh(target / u);
   if (!uni20::isfinite(hi) || hi == Real{0})
   {
     out.status = BetheYangStatus::precision_limit;
@@ -82,8 +106,8 @@ BetheYangResult<Real> same_charge_pair(Real mass, Real length, Real p, uni20::ha
       out.status = BetheYangStatus::phase_limit;
       return out;
     }
-    Real const residual = u * std::sinh(theta) + *phase.phase - target;
-    out.residual = std::abs(residual);
+    Real const residual = u * uni20::math::sinh(theta) + *phase.phase - target;
+    out.residual = uni20::math::abs(residual);
     if (!uni20::isfinite(residual))
     {
       out.status = BetheYangStatus::precision_limit;
@@ -91,7 +115,7 @@ BetheYangResult<Real> same_charge_pair(Real mass, Real length, Real p, uni20::ha
     }
     if (out.residual + out.phase_error <= options.tolerance)
     {
-      Real const energy = mass * (Real{2} * std::cosh(theta));
+      Real const energy = mass * (Real{2} * uni20::math::cosh(theta));
       if (!uni20::isfinite(energy))
       {
         out.status = BetheYangStatus::precision_limit;
