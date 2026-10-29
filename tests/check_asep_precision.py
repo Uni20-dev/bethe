@@ -60,7 +60,8 @@ if enabled:
             if bits == 256:
                 assert error < Decimal('1e-70')
             for rate in ('3.125', '1e-100'):
-                scaled = row(result([*base, *flags, '--right-rate', rate, '--left-rate', str(Decimal(rate)/2)], bits))
+                scaled = row(result(['5', '--particles', '2', *flags,
+                                     '--right-rate', rate, '--left-rate', str(Decimal(rate)/2)], bits))
                 assert abs(Decimal(scaled['gap'])/Decimal(rate) - reference) < Decimal(8192)*Decimal(2)**(1-bits)
             streamed = result([*base, *flags, '--no-retain'], bits)
             assert {k: t['rows'] for k, t in direct.items()} == {k: t['rows'] for k, t in streamed.items()}
