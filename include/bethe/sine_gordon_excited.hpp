@@ -10,19 +10,41 @@ template <uni20::Real Real> struct TwoSolitonOptions : VacuumOptions<Real>
 {
     std::size_t max_root_iterations = 1024; // total across meshes/contours
     TwoSolitonOptions()
+      requires(!uni20::has_runtime_precision_v<Real>)
     {
-      this->tolerance = Real{16777216} * uni20::numeric_limits<Real>::epsilon();
+      set_defaults();
+    }
+    explicit TwoSolitonOptions(uni20::Precision p)
+      requires(uni20::has_runtime_precision_v<Real>)
+        : VacuumOptions<Real>(p)
+    {
+      set_defaults();
+    }
+
+  private:
+    void set_defaults()
+    {
+      this->tolerance = Real{16777216} * uni20::numeric_limits<Real>::epsilon(this->precision());
       this->max_iterations = 32768; // coupled hole trials require more updates than a vacuum solve
     }
 };
 template <uni20::Real Real> struct TwoSolitonState : VacuumState<Real>
 {
+    TwoSolitonState()
+      requires(!uni20::has_runtime_precision_v<Real>)
+        : TwoSolitonState(Real{})
+    {}
+    explicit TwoSolitonState(Real const& zero)
+        : VacuumState<Real>(zero),
+          quantization_residual(uni20::scalar_like(zero, std::numeric_limits<double>::infinity())),
+          hole_error(quantization_residual), source_quadrature_error(quantization_residual),
+          source_tail_bound(quantization_residual)
+    {}
     std::optional<Real> rapidity;
     uni20::half_int number = uni20::from_twice(1);
-    Real quantization_residual = uni20::numeric_limits<Real>::infinity();
-    Real hole_error = uni20::numeric_limits<Real>::infinity(); // estimate in Y and 2*u*sinh(H)
-    Real source_quadrature_error = uni20::numeric_limits<Real>::infinity();
-    Real source_tail_bound = uni20::numeric_limits<Real>::infinity();
+    Real quantization_residual;
+    Real hole_error; // estimate in Y and 2*u*sinh(H)
+    Real source_quadrature_error, source_tail_bound;
     std::size_t root_iterations = 0, source_evaluations = 0;
 };
 namespace detail
@@ -31,7 +53,15 @@ template <uni20::Real Real>
 Real validate_two_soliton(Real mass, Real length, Real p, uni20::half_int number,
                           TwoSolitonOptions<Real> const& options)
 {
-  Real const pi = Real{4} * std::atan(Real{1}), eta = options.contour_shift.value_or(pi / Real{4});
+  Real const zero = uni20::scalar_at_precision<Real>(0, options.precision()), one = uni20::scalar_like(zero, 1);
+  for (auto const& value : {mass, length, p, options.tolerance})
+    bethe::detail::require_same_precision(value, zero);
+  if (options.contour_shift) bethe::detail::require_same_precision(*options.contour_shift, zero);
+  if (options.initial_cutoff) bethe::detail::require_same_precision(*options.initial_cutoff, zero);
+  if (options.kernel.precision() != options.precision())
+    throw std::invalid_argument("sine-Gordon two-hole kernel controls require matching precision");
+  bethe::detail::require_same_precision(options.kernel.tolerance, zero);
+  Real const pi = Real{4} * uni20::math::atan(one), eta = options.contour_shift.value_or(pi / Real{4});
   if (!uni20::isfinite(mass) || mass <= Real{0} || !uni20::isfinite(length) || length <= Real{0} ||
       !uni20::isfinite(p) || p < Real{1} || (number.twice() != 1 && number.twice() != 3) || !uni20::isfinite(eta) ||
       eta <= Real{0} || eta >= pi / Real{2} || !uni20::isfinite(options.tolerance) || options.tolerance <= Real{0} ||
@@ -45,24 +75,30 @@ Real validate_two_soliton(Real mass, Real length, Real p, uni20::half_int number
 
 template <uni20::Real Real> struct TwoSolitonMesh : VacuumMesh<Real>
 {
-    Real hole{}, coordinate{};
+    TwoSolitonMesh()
+      requires(!uni20::has_runtime_precision_v<Real>)
+        : TwoSolitonMesh(Real{})
+    {}
+    explicit TwoSolitonMesh(Real const& zero) : VacuumMesh<Real>(zero), hole(zero), coordinate(zero) {}
+    Real hole, coordinate;
 };
 template <uni20::Real Real>
 TwoSolitonMesh<Real> two_soliton_mesh(Real p, Real u, Real eta, Real cutoff, std::size_t n,
                                       TwoSolitonOptions<Real> const& options, TwoSolitonState<Real>& work,
                                       std::optional<Real> initial_hole = {})
 {
-  TwoSolitonMesh<Real> failed;
+  Real const zero = uni20::scalar_at_precision<Real>(0, options.precision()), one = uni20::scalar_like(zero, 1);
+  TwoSolitonMesh<Real> failed(zero);
   work.quantization_residual = work.hole_error = work.source_quadrature_error = work.source_tail_bound =
-      uni20::numeric_limits<Real>::infinity();
+      uni20::scalar_at_precision<Real>(std::numeric_limits<double>::infinity(), options.precision());
   if (work.root_iterations == options.max_root_iterations) return failed;
   Real const h = Real{2} * cutoff / Real(n);
-  if (!uni20::isfinite(h) || !(h > Real{0}) || !uni20::isfinite(u * std::cosh(cutoff)))
+  if (!uni20::isfinite(h) || !(h > Real{0}) || !uni20::isfinite(u * uni20::math::cosh(cutoff)))
   {
     failed.status = VacuumStatus::precision_limit;
     return failed;
   }
-  Real const pi = Real{4} * std::atan(Real{1}), target = pi * Real(work.number.twice());
+  Real const pi = Real{4} * uni20::math::atan(one), target = pi * Real(work.number.twice());
   auto kernel_options = options.kernel;
   kernel_options.tolerance = options.tolerance / (Real{128} * (Real{1} + cutoff));
   auto const kernel = kernel_table(p, eta, h, n, kernel_options, work.kernel_evaluations);
@@ -72,13 +108,13 @@ TwoSolitonMesh<Real> two_soliton_mesh(Real p, Real u, Real eta, Real cutoff, std
     failed.status = VacuumStatus::kernel_limit;
     return failed;
   }
-  Real lower{}, upper = std::asinh(target / u) + Real{1};
-  Real previous = upper, previous_f{}, slope = u * std::cosh(upper);
+  Real lower = zero, upper = uni20::math::asinh(target / u) + Real{1};
+  Real previous = upper, previous_f = zero, slope = u * uni20::math::cosh(upper);
   bool have_previous = false;
   bool upper_verified = false; // Z(0)=0 by parity; verify the positive bracket endpoint numerically.
   // Coarse-grid roots are guesses only: solve the new source/counting equation
   // and check its residual before accepting any result on this grid.
-  Real candidate = initial_hole.value_or(std::asinh(target / u));
+  Real candidate = initial_hole.value_or(uni20::math::asinh(target / u));
   if (!uni20::isfinite(candidate) || !uni20::isfinite(slope))
   {
     failed.status = VacuumStatus::precision_limit;
@@ -86,7 +122,7 @@ TwoSolitonMesh<Real> two_soliton_mesh(Real p, Real u, Real eta, Real cutoff, std
   }
   auto inner_options = static_cast<VacuumOptions<Real> const&>(options);
   inner_options.tolerance /= Real{64};
-  std::vector<std::complex<Real>> seed; // never shared between grids, cutoffs or contours
+  std::vector<uni20::complex<Real>> seed; // never shared between grids, cutoffs or contours
   // A safeguarded secant solves the real-axis hole equation. Every trial
   // solves the contour NLIE, not just its infinite-volume driving term.
   while (work.root_iterations < options.max_root_iterations)
@@ -94,7 +130,8 @@ TwoSolitonMesh<Real> two_soliton_mesh(Real p, Real u, Real eta, Real cutoff, std
     ++work.root_iterations;
     Real const hole = candidate;
     auto const source = hole_table(p, eta, cutoff, n, hole, kernel_options, work.source_evaluations);
-    work.quantization_residual = work.hole_error = uni20::numeric_limits<Real>::infinity();
+    work.quantization_residual = work.hole_error =
+        uni20::scalar_at_precision<Real>(std::numeric_limits<double>::infinity(), options.precision());
     work.source_quadrature_error = source.quadrature_error;
     work.source_tail_bound = source.tail_bound;
     if (!source.converged)
@@ -104,31 +141,35 @@ TwoSolitonMesh<Real> two_soliton_mesh(Real p, Real u, Real eta, Real cutoff, std
     }
     auto const inner =
         nlie_mesh<Real>(p, u, eta, cutoff, n, inner_options, work, kernel, source.source, source.counting, &seed);
-    TwoSolitonMesh<Real> out;
+    TwoSolitonMesh<Real> out(zero);
     static_cast<VacuumMesh<Real>&>(out) = inner;
     if (!inner.converged) return out;
     out.converged = false;
     out.status = VacuumStatus::iteration_limit;
-    Real const f = u * std::sinh(hole) + source.phase + inner.counting_integral - target;
+    Real const f = u * uni20::math::sinh(hole) + source.phase + inner.counting_integral - target;
     Real const uncertainty = (Real{1} + Real{8} * cutoff) * (source.error + inner.residual);
-    work.quantization_residual = std::abs(f);
-    out.value += Real{2} * u * std::cosh(hole);
+    work.quantization_residual = uni20::math::abs(f);
+    out.value += Real{2} * u * uni20::math::cosh(hole);
     out.hole = hole;
-    out.coordinate = Real{2} * u * std::sinh(hole);
+    out.coordinate = Real{2} * u * uni20::math::sinh(hole);
     if (!uni20::isfinite(f) || !uni20::isfinite(out.value))
     {
       out.status = VacuumStatus::precision_limit;
       return out;
     }
-    if (have_previous && hole != previous && std::abs(f - previous_f) > Real{4} * uncertainty)
+    if (have_previous && hole != previous && uni20::math::abs(f - previous_f) > Real{4} * uncertainty)
     {
       Real const secant = (f - previous_f) / (hole - previous);
       if (secant > Real{0} && uni20::isfinite(secant)) slope = secant;
     }
-    if (!have_previous) slope = u * std::cosh(hole) + Real{2} * source.phase_derivative;
-    Real const step = have_previous ? std::abs(hole - previous) : uni20::numeric_limits<Real>::infinity();
-    work.hole_error = (Real{1} + std::abs(out.coordinate)) * (step + (std::abs(f) + uncertainty) / slope);
-    if (have_previous && work.hole_error <= options.tolerance / Real{8} && std::abs(f) <= options.tolerance / Real{8})
+    if (!have_previous) slope = u * uni20::math::cosh(hole) + Real{2} * source.phase_derivative;
+    Real const step =
+        have_previous ? uni20::math::abs(hole - previous)
+                      : uni20::scalar_at_precision<Real>(std::numeric_limits<double>::infinity(), options.precision());
+    work.hole_error =
+        (Real{1} + uni20::math::abs(out.coordinate)) * (step + (uni20::math::abs(f) + uncertainty) / slope);
+    if (have_previous && work.hole_error <= options.tolerance / Real{8} &&
+        uni20::math::abs(f) <= options.tolerance / Real{8})
     {
       out.converged = true;
       out.status = VacuumStatus::converged;
@@ -178,8 +219,9 @@ std::optional<TwoSolitonMesh<Real>> resolved_two_soliton_mesh(Real p, Real u, Re
       return {};
     }
     work.mesh_error =
-        previous ? std::max(std::abs(mesh.value - previous->value), std::abs(mesh.coordinate - previous->coordinate))
-                 : uni20::numeric_limits<Real>::infinity();
+        previous ? std::max(uni20::math::abs(mesh.value - previous->value),
+                            uni20::math::abs(mesh.coordinate - previous->coordinate))
+                 : uni20::scalar_at_precision<Real>(std::numeric_limits<double>::infinity(), options.precision());
     stable = previous && work.mesh_error <= options.tolerance / Real{4} ? stable + 1 : 0;
     if (stable == 2) return mesh;
     previous = mesh;
@@ -203,8 +245,9 @@ std::optional<TwoSolitonMesh<Real>> resolved_two_soliton_cutoff(Real p, Real u, 
     auto const mesh = resolved_two_soliton_mesh(p, u, eta, cutoff, options, work);
     if (!mesh) return {};
     work.cutoff_error =
-        previous ? std::max(std::abs(mesh->value - previous->value), std::abs(mesh->coordinate - previous->coordinate))
-                 : uni20::numeric_limits<Real>::infinity();
+        previous ? std::max(uni20::math::abs(mesh->value - previous->value),
+                            uni20::math::abs(mesh->coordinate - previous->coordinate))
+                 : uni20::scalar_at_precision<Real>(std::numeric_limits<double>::infinity(), options.precision());
     if (previous && work.cutoff_error <= options.tolerance / Real{4}) return mesh;
     previous = mesh;
     cutoff += Real{1};
@@ -223,22 +266,30 @@ TwoSolitonState<Real> two_soliton_level(Real mass, Real length, Real p, uni20::h
                                         TwoSolitonOptions<Real> options = {})
 {
   Real const eta = detail::validate_two_soliton(mass, length, p, number, options);
-  TwoSolitonState<Real> out;
+  Real const zero = uni20::scalar_at_precision<Real>(0, options.precision()), one = uni20::scalar_like(zero, 1);
+  TwoSolitonState<Real> out(zero);
   out.mass = mass;
   out.length = length;
   out.coupling = p;
   out.number = number;
   out.scaled_length = mass * length;
   out.contour_shift = eta;
-  out.verification_contour_shift = eta * Real{0.75};
+  out.verification_contour_shift = eta * (Real{3} * one / Real{4});
   if (!uni20::isfinite(out.scaled_length) || out.scaled_length <= Real{0})
   {
     out.status = VacuumStatus::precision_limit;
     return out;
   }
-  Real const tail_scale = (-std::log(std::min(options.tolerance, Real{0.1})) + Real{8}) / out.scaled_length /
-                          std::sin(out.verification_contour_shift);
-  Real const cutoff = options.initial_cutoff.value_or(std::acosh(std::max(Real{2}, tail_scale)));
+  Real const tail_scale = (-uni20::math::log(std::min(options.tolerance,
+                                                      [&] {
+                                                        if constexpr (uni20::has_runtime_precision_v<Real>)
+                                                          return one / Real{10};
+                                                        else
+                                                          return Real{0.1};
+                                                      }())) +
+                           Real{8}) /
+                          out.scaled_length / uni20::math::sin(out.verification_contour_shift);
+  Real const cutoff = options.initial_cutoff.value_or(uni20::math::acosh(std::max(Real{2} * one, tail_scale)));
   if (!uni20::isfinite(cutoff))
   {
     out.status = VacuumStatus::precision_limit;
@@ -250,8 +301,8 @@ TwoSolitonState<Real> two_soliton_level(Real mass, Real length, Real p, uni20::h
   auto const second =
       detail::resolved_two_soliton_cutoff(p, out.scaled_length, out.verification_contour_shift, cutoff, options, out);
   if (!second) return out;
-  out.contour_error =
-      std::max(std::abs(first->value - second->value), std::abs(first->coordinate - second->coordinate));
+  out.contour_error = std::max(uni20::math::abs(first->value - second->value),
+                               uni20::math::abs(first->coordinate - second->coordinate));
   out.intervals = std::max(out.intervals, primary.intervals);
   out.cutoff = std::max(out.cutoff, primary.cutoff);
   out.mesh_error = std::max(out.mesh_error, primary.mesh_error);

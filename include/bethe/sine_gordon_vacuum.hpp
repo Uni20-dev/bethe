@@ -74,6 +74,13 @@ template <uni20::Real Real> struct KernelTable
     Real error;
     bool converged = false;
 };
+template <uni20::Real Real> std::size_t batch_fourier_order(uni20::Precision precision)
+{
+  if constexpr (uni20::has_runtime_precision_v<Real>)
+    return std::clamp<std::size_t>(precision.bit_count() / 4, 16, 128);
+  else
+    return 16;
+}
 // Composite Gauss quadrature at the requested precision for all difference-grid entries at once.
 // Expensive Fourier multipliers are shared; phase recurrences restart every
 // 16 entries to limit drift. Two successive mesh agreements are required.
@@ -111,9 +118,7 @@ KernelTable<Real> kernel_table(Real p, Real eta, Real h, std::size_t n, KernelOp
   // Higher arithmetic precision benefits from increasing the existing Gauss
   // order before refining panels. Native rules and all work-budget semantics
   // are unchanged; every sampled node still counts as one Fourier evaluation.
-  std::size_t order = 16;
-  if constexpr (uni20::has_runtime_precision_v<Real>)
-    order = std::clamp<std::size_t>(options.precision().bit_count() / 4, 16, 128);
+  std::size_t const order = batch_fourier_order<Real>(options.precision());
   if (order > options.max_evaluations || options.max_levels == 0) return out;
   auto const rule = bethe::detail::gauss_legendre<Real>(order, options.precision());
   unsigned stable = 0;
