@@ -185,9 +185,9 @@ or `UNI20_ENABLE_MPC` options.
 
 ## Enable arbitrary precision
 
-Hubbard half-filled dispersions and continuum edges support scalar-only MPFR;
-doped Hubbard dispersions additionally need MPLAPACK MPFR for their Fredholm
-linear systems.
+Hubbard half-filled and doped dispersions and continuum edges support MPFR.
+Doped Fredholm linear systems use Uni20 CPU/provider LU dispatch; MPLAPACK
+is preferred when available, but is not required.
 
 Arbitrary precision is optional. Uni20 enables its real and complex scalars
 together, requiring GMP, MPFR >= 4.2, and MPC development packages. Every
@@ -297,14 +297,15 @@ ctest --label-regex '^long-running$' --output-on-failure
 ctest --output-on-failure
 ```
 
-The long group currently contains five binary128 cases: the interacting
-sine-Gordon vacuum and excited level, and the Hubbard charge-continuum oracle,
-native-default accuracy and convention checks. Previous local runs took roughly
-one to fifteen minutes each. Their full numerical tolerances remain unchanged;
-each has a 30-minute timeout. The corresponding fp64/long-double cases and
-faster binary128 kernel, precision and failure-path checks stay in the routine
-suite. New costly cases should be declared with `LONG_RUNNING_TESTS` alongside
-their target's `bethe_discover_tests` call, using GoogleTest names.
+The long group includes expensive binary128 and MPFR continuum, thermal and
+precision-convergence checks. The full Hubbard doped Fredholm reference retains
+its 80/160/256-bit accuracy assertions there; an independent 80-bit reference,
+mixed-precision Async checks and failure paths remain in routine validation.
+Long checks normally have a 30-minute timeout; individual cases can declare a
+larger budget. Lieb–Liniger thermodynamic CLI checks run separately for each
+precision and for physical corrections, retaining every original assertion.
+New costly cases should be declared with `LONG_RUNNING_TESTS` alongside their
+target's `bethe_discover_tests` call, using GoogleTest names.
 
 ### Continuous integration
 
