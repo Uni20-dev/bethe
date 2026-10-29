@@ -173,8 +173,13 @@ TYPED_TEST(TripleDefect, BudgetsAndValidation)
     EXPECT_EQ(s.status, qg::SolveStatus::iteration_limit);
     qg::triple_defect::detail::System<R> system(16, s.delta, 13, 9);
     std::vector<R> x{s.center, s.log_deviation, s.deviation_phase, s.rapidity};
-    EXPECT_EQ(s.residual_norm, system.evaluate(x).norm);
-    EXPECT_EQ(s.energy_shift, system.energy_shift(x));
+    // Constant-folded and runtime acosh(Delta) can differ by an extended80
+    // ULP. Reconstructing the diagnostics must allow that rounding difference,
+    // including a unit-scale absolute allowance for a nearly cancelled norm.
+    R const eps = uni20::numeric_limits<R>::epsilon();
+    R const energy = system.energy_shift(x);
+    EXPECT_REAL_NEAR(s.residual_norm, system.evaluate(x).norm, R{32} * eps);
+    EXPECT_REAL_NEAR(s.energy_shift, energy, R{32} * eps * (R{1} + std::abs(energy)));
   }
   for (std::size_t n : {0, 6, 7})
     EXPECT_THROW((void)qg::triple_defect::solve<R>(n, R{3} / R{2}, 1, 1), std::invalid_argument);
