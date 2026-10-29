@@ -3,7 +3,9 @@
 `bethe-xyz-dispersion` supplies infinite-chain excitation energies for the
 [same XYZ Hamiltonian](xyz.md#convention-and-initial-target) as `bethe-xyz-pbc`.
 It does not enumerate finite-ring eigenstates. All arithmetic and exports use
-the selected fp64, native long-double, or optional fp128 precision.
+the selected fp64, native long-double, optional fp128 or explicit MPFR precision.
+Use `--precision bits-256` or `--precision digits-100` when MPFR is configured;
+MPLAPACK kernels are not required for these excitation bands.
 
 For a worked comparison of bands, bound branches and their momentum copies,
 see the [XYZ tutorial](tutorials/xyz.md).
@@ -211,8 +213,25 @@ one branch and evaluate a whole curve within each independent task. The latter
 amortizes scheduling costs after the expensive theta evaluations are removed
 from individual queries. The single-parameter CLI stays serial. See the
 [reuse and sweep measurements](parallel-grids.md#xyz-prepared-bound-branches).
-Precision remains native/long-double/binary128; MPFR theta functions and
-their error control are separate work.
+Native/long-double/binary128 and explicit MPFR use the same owning API. For
+MPFR, construct `eta` and `t` at the same finite precision; the optional exchange
+may be exact (including the default one), or have that same precision. Momentum
+queries must match the prepared band/branch. Mixed, exact or unset query values
+are rejected; no ambient MPFR precision is changed. Each result retains its
+working precision, including zeros, gaps and continuum endpoints.
+
+Uni20 supplies scaled complex theta values and derivatives. Its reduction and
+series controls are separate from physical accuracy; reconstructing a very small
+gap amplifies absolute error in a rounded logarithmic scale. More arithmetic
+bits resolve that error but do not change branch existence or model conventions.
+The finite-chain `xyz-pbc` solver has a separate precision boundary.
+
+Independent JKM Jacobi-function references at 110/140 decimal digits agree beyond
+105 digits. The MPFR tests measure precision growth at 80/160/256/333 bits,
+including couplings, gaps and multiple bound branches. Mixed-precision Debug/TBB
+readers share owning preparations and isolate failed queries. CLI checks cover
+non-dyadic grids, every exported field, tiny momenta, strict mergers and all three
+file formats. Cheap per-momentum formulas remain serial in the CLI.
 
 The independent oracle can be rerun with mpmath (not a build dependency):
 

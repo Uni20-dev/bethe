@@ -50,8 +50,8 @@ TYPED_TEST(XYZ, OriginalEquationsAndJacobian)
         auto const state = bethe::xyz::ground_state(n, eta, t);
         ASSERT_TRUE(state.converged);
         auto ratio = [&](Complex a, Complex b) {
-          return bethe::detail::theta_ratio(bethe::detail::elliptic_theta(1, a, t), 0,
-                                            bethe::detail::elliptic_theta(1, b, t), 0);
+          return uni20::elliptic_theta_ratio(uni20::elliptic_theta_jet(1, a, t), 0, uni20::elliptic_theta_jet(1, b, t),
+                                             0);
         };
         for (std::size_t j = 0; j < state.roots.size(); ++j)
         {

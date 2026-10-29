@@ -38,6 +38,8 @@ auto program_info()
       "The total output is limited to 1000000 rows. --momentum is in radians/site, not units of pi.",
       "These are thermodynamic lines, not exact finite-ring levels or spectral intensities. "
       "Numerical failures leave values empty (JSON null) and exit 2; an unrepresentable gap is not reported as zero.",
+      "bits-N/digits-N select explicit MPFR arithmetic without MPLAPACK. Parameters, theta functions and queries "
+      "retain the requested precision; more arithmetic bits do not add a new physical branch.",
       "See docs/xyz-dispersion.md for the Hamiltonian map, momenta, bound-state thresholds and validation."};
   return info;
 }
@@ -55,16 +57,16 @@ void add_options(CLI::App& app, Arguments& a)
   cli::text_option(app, "--momentum", a.momentum, "One physical momentum instead of a grid")
       ->type_name("REAL")
       ->excludes(points);
-  cli::precision_option(app, a.precision);
+  cli::precision_option(app, a.precision, cli::ArbitraryPrecision::real);
   cli::add_data_output_options(
       app, a.output,
       {{.name = "dispersion", .description = "Excitation branches and/or continuum bounds", .primary = true}});
 }
-template <uni20::Real Real> int run(Arguments const& a, int argc, char** argv)
+template <uni20::Real Real> int run(Arguments const& a, uni20::Precision precision, int argc, char** argv)
 {
   uni20::run_context context(program_info(), {.invocation = std::vector<std::string>(argv, argv + argc)});
-  Real const eta = uni20::parse_real<Real>(a.eta), t = uni20::parse_real<Real>(a.t);
-  Real const exchange = uni20::parse_real<Real>(a.exchange), pi = bethe::detail::pi<Real>();
+  Real const eta = cli::parse_scalar<Real>(a.eta, precision), t = cli::parse_scalar<Real>(a.t, precision);
+  Real const exchange = cli::parse_scalar<Real>(a.exchange, precision), pi = bethe::detail::spinon_pi(eta);
   if (!uni20::isfinite(eta) || eta <= Real{0} || eta >= Real{1} || !uni20::isfinite(t) || t <= Real{0} ||
       !uni20::isfinite(exchange) || exchange <= Real{0})
     throw std::invalid_argument("require finite 0<eta<1, t>0 and exchange>0");
@@ -74,7 +76,7 @@ template <uni20::Real Real> int run(Arguments const& a, int argc, char** argv)
   if (a.bound_state && (!bounds || *a.bound_state == 0 || *a.bound_state > std::numeric_limits<unsigned>::max()))
     throw std::invalid_argument("--bound-state requires branch all/bound and a positive unsigned index");
   std::optional<Real> momentum;
-  if (a.momentum) momentum = uni20::parse_real<Real>(*a.momentum);
+  if (a.momentum) momentum = cli::parse_scalar<Real>(*a.momentum, precision);
   if (momentum && (!uni20::isfinite(*momentum) || *momentum < Real{0} || *momentum > (spinons ? pi : Real{2} * pi)))
     throw std::invalid_argument("momentum outside the selected branch range");
   std::vector<unsigned> bound_indices;
@@ -166,7 +168,9 @@ template <uni20::Real Real> int run(Arguments const& a, int argc, char** argv)
       Real const end = branch == "spinon" ? pi : Real{2} * pi;
       for (std::size_t i = 0; i < count; ++i)
       {
-        Real const p = momentum ? *momentum : i == count - 1 ? end : end * (Real(i) / Real(count - 1));
+        Real const p = momentum         ? *momentum
+                       : i == count - 1 ? end
+                                        : end * (uni20::scalar_like(end, i) / Real(count - 1));
         Real const q = rz && *rz == -1 ? (p < pi ? p + pi : p - pi) : p;
         Optional energy, lower, upper;
         std::string row_status = s && band && !prepared ? "precision_limit" : status;
@@ -190,7 +194,7 @@ template <uni20::Real Real> int run(Arguments const& a, int argc, char** argv)
             row_status = "precision_limit";
             complete = false;
           }
-        Real const cell = Real{2} * (p < pi ? p : p < Real{2} * pi ? p - pi : Real{0});
+        Real const cell = Real{2} * (p < pi ? p : p < Real{2} * pi ? p - pi : uni20::scalar_like(p, 0));
         table.append(branch, s, s ? Parity(*s % 2 ? -1 : 1) : Parity{}, rz, p, p / pi, cell,
                      s ? Optional(q) : Optional{}, energy, lower, upper, row_status);
       }
@@ -242,6 +246,7 @@ int main(int argc, char** argv)
         a.output.validate();
         if (!a.momentum && (a.points < 2 || a.points > 1000000))
           throw std::invalid_argument("require 2<=points<=1000000");
-        return cli::dispatch_precision(a.precision, [&]<typename Real>() { return run<Real>(a, argc, argv); });
+        return cli::dispatch_scalar_precision<cli::ArbitraryPrecision::real>(
+            a.precision, [&]<typename Real>(uni20::Precision p) { return run<Real>(a, p, argc, argv); });
       });
 }

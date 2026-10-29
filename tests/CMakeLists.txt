@@ -304,6 +304,12 @@ if(BETHE_HAS_MPREAL)
   bethe_discover_tests(bethe_xxz_dispersion_mpfr_tests)
 endif()
 
+if(BETHE_HAS_MPREAL)
+  add_executable(bethe_xyz_dispersion_mpfr_tests test_xyz_dispersion_mpfr.cpp)
+  target_link_libraries(bethe_xyz_dispersion_mpfr_tests PRIVATE bethe::bethe TBB::tbb)
+  bethe_discover_tests(bethe_xyz_dispersion_mpfr_tests)
+endif()
+
 add_executable(bethe_xyz_dispersion_tests test_xyz_dispersion.cpp)
 target_link_libraries(bethe_xyz_dispersion_tests PRIVATE bethe::bethe)
 bethe_discover_tests(bethe_xyz_dispersion_tests)
@@ -688,6 +694,9 @@ if(BETHE_BUILD_APPS)
     add_test(NAME XYZDispersion.cli
       COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_xyz_dispersion.py"
         "$<TARGET_FILE:bethe-xyz-dispersion>" "${BETHE_HAS_FLOAT128}")
+    add_test(NAME XYZDispersion.mpfr_cli
+      COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_xyz_dispersion_mpfr.py"
+        "$<TARGET_FILE:bethe-xyz-dispersion>" "${BETHE_HAS_MPREAL}")
     add_test(NAME Arguments.bethe-xyz-dispersion.cli
       COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_shared_arguments.py"
         "$<TARGET_FILE:bethe-xyz-dispersion>")
