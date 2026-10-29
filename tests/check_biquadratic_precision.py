@@ -25,6 +25,10 @@ def tables(args, code=0, bits=160):
     assert document["status"] == "complete"
     for table in document["tables"].values():
         assert int(table["metadata"]["Working precision (bits)"]) == bits
+        for row in table["rows"]:
+            for value in row:
+                if isinstance(value, dict):
+                    assert value["precision"] == bits, value
         assert table["summary"]["Outcome"] == ("success" if code == 0 else "partial")
     return document["tables"]
 
