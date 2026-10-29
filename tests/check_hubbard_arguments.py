@@ -29,7 +29,7 @@ empty = run(status=1)
 assert not empty.stdout and empty.stderr == help_text
 for text in ("bethe-hubbard-dispersion", "Copyright", "GPL-3.0-or-later", "--references",
              "Examples", "default: 33", "--u REAL", "required", "--momentum", "excludes: --points",
-             "--csv FILE", "--no-preamble", "--no-retain", "fp128", "MPLAPACK", "CITATIONS.md"):
+             "--csv FILE", "--no-preamble", "--no-retain", "fp128", "CPU/provider LU dispatch", "CITATIONS.md"):
     assert text in help_text, (text, help_text)
 references = run("--references").stdout
 assert "\nReferences\n" in references and "Used for:" in references
