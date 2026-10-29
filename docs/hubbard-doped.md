@@ -122,9 +122,12 @@ from $`\pi`$ to $`-\pi`$. Spinons have infinite rapidity at the two endpoints.
 
 Evenness reduces the linear systems to `[0,Q]`. Gauss–Legendre nodes,
 kernel evaluations, pivoted solves and momentum inversion all use the selected
-scalar. $`R`$ uses a convergent Euler series; $`A`$ uses a paired log-gamma-ratio
-expansion with rational coefficients. No fp64 kernel table or external Python
-runtime is used. The background is solved once and reused across every point.
+scalar. $`R`$ uses a convergent Euler series; its stopping test bounds the
+remaining terms using their geometric decrease and reports budget exhaustion.
+$`A`$ uses Uni20's paired log-Gamma ratio, with coefficients and recurrence
+chosen for the working precision. The immutable kernel context is prepared
+once and shared by successive background meshes and dispersion queries. No
+fp64 kernel table or external Python runtime is used. The background is solved once and reused across every point.
 
 ## Accuracy, budgets and failure
 
@@ -183,3 +186,11 @@ digamma/log-gamma reference calculations, thermodynamic energy identities,
 to half filling, invalid inputs, work budgets and native-precision CLI parsing.
 The optional reference generator is
 [`scripts/reference_hubbard_doped.py`](../scripts/reference_hubbard_doped.py).
+
+MPFR evaluation uses `--precision bits-N` or `digits-N` with MPFR scalars
+enabled. Background solves use normal Uni20 dispatch: MPLAPACK when available,
+or CPU MPFR LU otherwise. The background, Gamma-ratio phase, Euler kernel, quadrature mesh,
+linear solves and query diagnostics all share the requested precision.
+`DopedOptions<uni20::mpreal>` takes an explicit `uni20::Precision`; supplied
+inputs and custom tolerances must match it. Increasing bits does not converge
+the finite mesh or density inversion automatically.

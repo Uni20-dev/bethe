@@ -11,10 +11,10 @@ template <uni20::Real Real> struct TwoSpinonContinuum
     std::optional<Real> lower_energy, upper_energy;
     std::array<Real, 2> lower_momenta{}, upper_momenta{};
     // Quadrature energy errors exclude propagation of momentum-inversion error.
-    Real lower_energy_quad_error = uni20::numeric_limits<Real>::infinity();
-    Real upper_energy_quad_error = uni20::numeric_limits<Real>::infinity();
-    Real lower_momentum_error = uni20::numeric_limits<Real>::infinity();
-    Real upper_momentum_error = uni20::numeric_limits<Real>::infinity();
+    Real lower_energy_quad_error{};
+    Real upper_energy_quad_error{};
+    Real lower_momentum_error{};
+    Real upper_momentum_error{};
     std::size_t evaluations = 0, iterations = 0;
     bool converged = false;
     Status status = Status::precision_limit;
@@ -30,14 +30,19 @@ template <uni20::Real Real = double>
                                                             Options<Real> const& options = {})
 {
   detail::validate(interaction, options, Convention::symmetric);
-  Real const pi = detail::pi<Real>();
-  if (!uni20::isfinite(momentum) || std::abs(momentum) > pi)
+  bethe::detail::require_same_precision(momentum, interaction);
+  Real const zero = uni20::scalar_like(interaction, 0);
+  Real const infinity = uni20::scalar_like(interaction, std::numeric_limits<double>::infinity());
+  Real const pi = detail::pi(interaction);
+  if (!uni20::isfinite(momentum) || uni20::math::abs(momentum) > pi)
     throw std::invalid_argument("two-spinon total momentum must be in [-pi,pi]");
   TwoSpinonContinuum<Real> out;
+  out.lower_energy_quad_error = out.upper_energy_quad_error = out.lower_momentum_error = out.upper_momentum_error =
+      infinity;
   out.interaction = interaction;
   out.momentum = momentum;
-  Real const q = std::abs(momentum);
-  out.lower_momenta = momentum < Real{0} ? std::array<Real, 2>{pi, pi - q} : std::array<Real, 2>{Real{0}, q};
+  Real const q = uni20::math::abs(momentum);
+  out.lower_momenta = momentum < Real{0} ? std::array<Real, 2>{pi, pi - q} : std::array<Real, 2>{zero, q};
   Real const upper_p = momentum < Real{0} ? pi - q / Real{2} : q / Real{2};
   out.upper_momenta = {upper_p, upper_p};
   // Reflection lets the native small-momentum inversion retain accuracy.
