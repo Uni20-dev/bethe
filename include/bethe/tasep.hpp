@@ -237,7 +237,7 @@ GapState<Real> relaxation_gap(std::size_t l, std::size_t particles, Real rate = 
   }
   Real const rho = uni20::scalar_like(rate, n) / Real(l);
   out.log_y = C(Real(l) * math::log(uni20::scalar_like(zero, 2)) + Real(n) * math::log(rho) +
-                    Real(l - n) * math::log1p(-rho) + Real{3.5},
+                    Real(l - n) * math::log1p(-rho) + Real{7} / Real{2},
                 pi);
   std::vector<C> all;
   if (!detail::seed(l, n, out.log_y, all, out.seed_iterations, options))
@@ -283,7 +283,7 @@ GapState<Real> relaxation_gap(std::size_t l, std::size_t particles, Real rate = 
     }
     for (auto& v : evaluation.residual)
       v = -v;
-    if (!bethe::detail::newton_step(std::move(evaluation.jacobian), evaluation.residual))
+    if (!bethe::detail::newton_step(std::move(evaluation.jacobian), evaluation.residual, options.precision()))
     {
       out.status = Status::precision_limit;
       return out;
