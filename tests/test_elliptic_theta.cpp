@@ -1,14 +1,14 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Copyright (C) 2026 Ian McCulloch
 #include "test_support.hpp"
-#include <bethe/detail/elliptic_theta.hpp>
 #include <bethe/xyz.hpp>
+#include <uni20/core/elliptic_theta_jet.hpp>
 
 namespace
 {
 template <typename Real> class EllipticTheta : public ::testing::Test {};
 TYPED_TEST_SUITE(EllipticTheta, test_support::RealTypes, test_support::PrecisionNames);
-template <typename Real> auto actual(bethe::detail::ThetaJet<Real> const& jet, unsigned derivative = 0)
+template <typename Real> auto actual(uni20::theta_jet_result<std::complex<Real>> const& jet, unsigned derivative = 0)
 {
   return std::exp(jet.log_scale) * jet.derivative[derivative];
 }
@@ -31,11 +31,11 @@ TYPED_TEST(EllipticTheta, IndependentHighPrecisionValues)
   Complex const u(uni20::parse_real<Real>("0.2"), uni20::parse_real<Real>("0.1"));
   for (unsigned k = 1; k <= 4; ++k)
   {
-    auto const jet = bethe::detail::elliptic_theta(k, u, t);
+    auto const jet = uni20::elliptic_theta_jet(k, u, t);
     Complex const expected(uni20::parse_real<Real>(reference[k - 1][0]), uni20::parse_real<Real>(reference[k - 1][1]));
     EXPECT_REAL_NEAR(std::abs(actual(jet) - expected), Real{0}, Real{512} * eps);
   }
-  auto const jet = bethe::detail::elliptic_theta(1, u, t);
+  auto const jet = uni20::elliptic_theta_jet(1, u, t);
   Complex const first(
       uni20::parse_real<Real>("3.140373175101863767109126990443280790919216481608393060449146373266355474"),
       uni20::parse_real<Real>("-0.542140463819793229105053265208634636705604224096074518836382433938263608"));
@@ -46,7 +46,7 @@ TYPED_TEST(EllipticTheta, IndependentHighPrecisionValues)
   EXPECT_REAL_NEAR(std::abs(actual(jet, 2) - second), Real{0}, Real{4096} * eps);
 }
 
-TYPED_TEST(EllipticTheta, DualSeriesPeriodsAndDerivatives)
+TYPED_TEST(EllipticTheta, ModularPeriodsAndDerivatives)
 {
   using Real = TypeParam;
   using Complex = std::complex<Real>;
@@ -54,18 +54,26 @@ TYPED_TEST(EllipticTheta, DualSeriesPeriodsAndDerivatives)
   for (Real t : {Real{0.5}, Real{1}, Real{2}})
   {
     Complex const u(Real{0.125}, t / Real{8});
-    auto const fourier = bethe::detail::theta_detail::theta1_reduced(u, t, false);
-    auto const gaussian = bethe::detail::theta_detail::theta1_reduced(u, t, true);
+    // Check the modular identity through the public API, including its
+    // differentiated Gaussian prefactor, rather than forcing a private series.
+    auto const direct = uni20::elliptic_theta_jet(1, u, t);
+    auto const dual = uni20::elliptic_theta_jet(1, Complex(0, -Real{1} / t) * u, Real{1} / t);
+    Complex const prefactor = Complex(0, Real{1} / std::sqrt(t)) * std::exp(-pi * u * u / t);
+    Complex const slope = -Real{2} * pi * u / t, argument_slope(0, -Real{1} / t);
+    std::array<Complex, 3> expected{actual(dual), slope * actual(dual) + argument_slope * actual(dual, 1),
+                                    (slope * slope - Real{2} * pi / t) * actual(dual) +
+                                        Real{2} * slope * argument_slope * actual(dual, 1) +
+                                        argument_slope * argument_slope * actual(dual, 2)};
     for (unsigned d = 0; d < 3; ++d)
-      EXPECT_REAL_NEAR(std::abs(actual(fourier, d) - actual(gaussian, d)), Real{0},
-                       Real{4096} * eps * (Real{1} + std::abs(actual(fourier, d))));
+      EXPECT_REAL_NEAR(std::abs(actual(direct, d) - prefactor * expected[d]), Real{0},
+                       Real{4096} * eps * (Real{1} + std::abs(actual(direct, d))));
     for (unsigned k = 1; k <= 4; ++k)
     {
-      auto const base = bethe::detail::elliptic_theta(k, u, t);
+      auto const base = uni20::elliptic_theta_jet(k, u, t);
       for (int n : {-2, -1, 0, 1, 2})
         for (int m : {-2, -1, 0, 1, 2})
         {
-          auto const shifted = bethe::detail::elliptic_theta(k, u + Complex(Real(n), Real(m) * t), t);
+          auto const shifted = uni20::elliptic_theta_jet(k, u + Complex(Real(n), Real(m) * t), t);
           int const sign = ((k == 1 ? n + m : k == 2 ? n : k == 4 ? m : 0) % 2) ? -1 : 1;
           Complex const slope(0, -Real{2} * pi * Real(m)),
               phase = Real(sign) * std::exp(Complex(0, -Real{2} * pi * Real(m) * u.real()));
@@ -81,7 +89,7 @@ TYPED_TEST(EllipticTheta, DualSeriesPeriodsAndDerivatives)
           }
         }
       Real const h = std::cbrt(eps);
-      auto const plus = bethe::detail::elliptic_theta(k, u + h, t), minus = bethe::detail::elliptic_theta(k, u - h, t);
+      auto const plus = uni20::elliptic_theta_jet(k, u + h, t), minus = uni20::elliptic_theta_jet(k, u - h, t);
       EXPECT_REAL_NEAR(std::abs((actual(plus) - actual(minus)) / (Real{2} * h) - actual(base, 1)), Real{0},
                        Real{10000} * h * h);
       EXPECT_REAL_NEAR(std::abs((actual(plus, 1) - actual(minus, 1)) / (Real{2} * h) - actual(base, 2)), Real{0},
@@ -97,10 +105,10 @@ TYPED_TEST(EllipticTheta, ZerosTinyArgumentsAndScaledLimits)
   Real const eps = uni20::numeric_limits<Real>::epsilon(), pi = Real{4} * std::atan(Real{1});
   for (Real t : {Real{0.001}, Real{0.1}, Real{1}, Real{10}, Real{10000}})
   {
-    auto const zero = bethe::detail::elliptic_theta(1, Complex{}, t);
+    auto const zero = uni20::elliptic_theta_jet(1, Complex{}, t);
     EXPECT_EQ(std::abs(zero.derivative[0]), Real{0});
     EXPECT_EQ(std::abs(zero.derivative[2]), Real{0});
-    auto const tiny = bethe::detail::elliptic_theta(1, Complex(eps * eps, 0), t);
+    auto const tiny = uni20::elliptic_theta_jet(1, Complex(eps * eps, 0), t);
     EXPECT_REAL_NEAR(std::abs(tiny.derivative[0] / (eps * eps * tiny.derivative[1]) - Real{1}), Real{0},
                      Real{2048} * eps);
     for (unsigned k = 2; k <= 4; ++k)
@@ -108,16 +116,16 @@ TYPED_TEST(EllipticTheta, ZerosTinyArgumentsAndScaledLimits)
       Complex const u = k == 2   ? Complex(Real{0.5}, 0)
                         : k == 3 ? Complex(Real{0.5}, t / Real{2})
                                  : Complex(0, t / Real{2});
-      auto const root = bethe::detail::elliptic_theta(k, u, t);
+      auto const root = uni20::elliptic_theta_jet(k, u, t);
       EXPECT_EQ(std::abs(root.derivative[0]), Real{0});
     }
   }
-  auto const trigonometric = bethe::detail::elliptic_theta(1, Complex(Real{0.25}, 0), Real{10000});
+  auto const trigonometric = uni20::elliptic_theta_jet(1, Complex(Real{0.25}, 0), Real{10000});
   for (Real t : {Real{0.01}, Real{0.5}, Real{1}, Real{10}})
     for (unsigned kind = 2; kind <= 4; ++kind)
     {
-      auto const zero = bethe::detail::elliptic_theta(kind, Complex{}, t);
-      auto const tiny = bethe::detail::elliptic_theta(kind, Complex(eps * eps, 0), t);
+      auto const zero = uni20::elliptic_theta_jet(kind, Complex{}, t);
+      auto const tiny = uni20::elliptic_theta_jet(kind, Complex(eps * eps, 0), t);
       EXPECT_EQ(std::abs(zero.derivative[1]), Real{0});
       auto const normalized =
           tiny.derivative[1] * std::exp(tiny.log_scale - zero.log_scale) / (eps * eps * zero.derivative[2]);
@@ -126,17 +134,17 @@ TYPED_TEST(EllipticTheta, ZerosTinyArgumentsAndScaledLimits)
   EXPECT_REAL_NEAR(trigonometric.log_scale, -pi * Real{2500}, Real{64} * eps * pi * Real{2500});
   EXPECT_REAL_NEAR(std::abs(trigonometric.derivative[1] / trigonometric.derivative[0] - pi), Real{0},
                    Real{256} * eps * pi);
-  auto const narrow = bethe::detail::elliptic_theta(1, Complex(Real{0.25}, 0), Real{1} / Real{1000000});
+  auto const narrow = uni20::elliptic_theta_jet(1, Complex(Real{0.25}, 0), Real{1} / Real{1000000});
   EXPECT_REAL_NEAR(std::abs(narrow.derivative[1] / narrow.derivative[0] - pi * Real{500000}), Real{0},
                    Real{256} * eps * pi * Real{500000});
-  EXPECT_THROW(bethe::detail::elliptic_theta(0, Complex{}, Real{1}), std::invalid_argument);
-  EXPECT_THROW(bethe::detail::elliptic_theta(1, Complex{}, Real{0}), std::invalid_argument);
-  EXPECT_THROW(bethe::detail::elliptic_theta(1, Complex(uni20::numeric_limits<Real>::infinity(), 0), Real{1}),
+  EXPECT_THROW(uni20::elliptic_theta_jet(0, Complex{}, Real{1}), std::invalid_argument);
+  EXPECT_THROW(uni20::elliptic_theta_jet(1, Complex{}, Real{0}), std::invalid_argument);
+  EXPECT_THROW(uni20::elliptic_theta_jet(1, Complex(uni20::numeric_limits<Real>::infinity(), 0), Real{1}),
                std::invalid_argument);
-  EXPECT_THROW(bethe::detail::elliptic_theta(1, Complex(Real{1} / eps, 0), Real{1}), std::overflow_error);
-  auto const zero = bethe::detail::elliptic_theta(1, Complex{}, Real{1});
-  EXPECT_THROW(bethe::detail::theta_ratio(zero, 1, zero, 0), std::domain_error);
-  EXPECT_THROW(bethe::detail::theta_ratio(zero, 3, zero, 1), std::invalid_argument);
+  EXPECT_THROW(uni20::elliptic_theta_jet(1, Complex(Real{1} / eps, 0), Real{1}), std::overflow_error);
+  auto const zero = uni20::elliptic_theta_jet(1, Complex{}, Real{1});
+  EXPECT_THROW(uni20::elliptic_theta_ratio(zero, 1, zero, 0), std::domain_error);
+  EXPECT_THROW(uni20::elliptic_theta_ratio(zero, 3, zero, 1), std::invalid_argument);
 }
 
 TYPED_TEST(EllipticTheta, XYZCouplingNormalization)

@@ -282,6 +282,12 @@ if(BETHE_HAS_MPREAL)
   bethe_discover_tests(bethe_xxz_dispersion_mpfr_tests)
 endif()
 
+if(BETHE_HAS_MPREAL)
+  add_executable(bethe_xyz_dispersion_mpfr_tests test_xyz_dispersion_mpfr.cpp)
+  target_link_libraries(bethe_xyz_dispersion_mpfr_tests PRIVATE bethe::bethe TBB::tbb)
+  bethe_discover_tests(bethe_xyz_dispersion_mpfr_tests)
+endif()
+
 add_executable(bethe_xyz_dispersion_tests test_xyz_dispersion.cpp)
 target_link_libraries(bethe_xyz_dispersion_tests PRIVATE bethe::bethe)
 bethe_discover_tests(bethe_xyz_dispersion_tests)

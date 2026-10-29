@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Copyright (C) 2026 Ian McCulloch
 #pragma once
-#include <bethe/detail/elliptic_theta.hpp>
 #include <bethe/detail/spinon_band.hpp>
+#include <uni20/core/elliptic_theta_jet.hpp>
 
 namespace bethe::xyz
 {
@@ -50,16 +50,17 @@ template <uni20::Real Real> class SpinonDispersion {
         /// q is reduced Q in [0,2*pi], not a parity-shifted physical momentum.
         Real energy(Real q) const
         {
-          Real const pi = bethe::detail::pi<Real>();
+          bethe::detail::require_same_precision(q, maximum_);
+          Real const pi = bethe::detail::spinon_pi(maximum_);
           if (!uni20::isfinite(q) || q < Real{0} || q > Real{2} * pi)
             throw std::invalid_argument("XYZ bound momentum must be finite and in [0, 2*pi]");
           q = std::min(q, Real{2} * pi - q);
           if (q == Real{0}) return gap();
           if (q == pi) return normal_energy((Real{2} / a_) * maximum_);
-          Real const sine = std::sin(q / Real{2}), cosine = std::cos(q / Real{2});
+          Real const sine = uni20::math::sin(q / Real{2}), cosine = uni20::math::cos(q / Real{2});
           // Retain the small mass without forming sqrt(1-k1*k1).
-          Real const first = std::hypot(maximum_ * sine, spinon_gap_ * a_ * cosine);
-          Real const second = std::hypot(sine, a_ * cosine);
+          Real const first = uni20::math::hypot(maximum_ * sine, spinon_gap_ * a_ * cosine);
+          Real const second = uni20::math::hypot(sine, a_ * cosine);
           return normal_energy((Real{2} * second / a_) * first);
         }
 
@@ -88,20 +89,28 @@ template <uni20::Real Real> class SpinonDispersion {
       if (!bound_exists(s)) throw std::invalid_argument("XYZ bound branch requires s>=1 and s*(1-eta)<eta");
     }
 
+    static Real minimum_energy(Real const& exemplar)
+    {
+      if constexpr (uni20::has_runtime_precision_v<Real>)
+        return uni20::math::next_up(bethe::detail::precision_zero(exemplar));
+      else
+        return uni20::numeric_limits<Real>::min();
+    }
+
     static Real normal_energy(Real energy)
     {
       if (!uni20::isfinite(energy)) throw std::overflow_error("XYZ excitation energy exceeds scalar range");
-      if (energy < uni20::numeric_limits<Real>::min())
+      if (energy < minimum_energy(energy))
         throw std::underflow_error("XYZ excitation energy is below the normal scalar range; use higher precision");
       return energy;
     }
 
     static Real log_theta(unsigned kind, Real u, Real t)
     {
-      auto const jet = bethe::detail::elliptic_theta(kind, std::complex<Real>(u, 0), t);
+      auto const jet = uni20::elliptic_theta_jet(kind, uni20::complex<Real>(u, bethe::detail::precision_zero(t)), t);
       Real const value = jet.derivative[0].real();
       if (!(value > Real{0})) throw std::runtime_error("XYZ positive theta value lost at working precision");
-      return jet.log_scale + std::log(value);
+      return jet.log_scale + uni20::math::log(value);
     }
 
     Real bound_parameter(unsigned s) const
@@ -110,41 +119,50 @@ template <uni20::Real Real> class SpinonDispersion {
       // a_s=sn(s*K1*(1-eta)/t, k1'). In the complementary nome its
       // normalized argument is s*(1-eta)/(2*eta), strictly between 0 and 1/2.
       Real const u = (Real(s) * (Real{1} - eta_) / eta_) / Real{2}, tc = t_ / eta_;
-      Real const log_a =
-          log_theta(3, Real{0}, tc) - log_theta(2, Real{0}, tc) + log_theta(1, u, tc) - log_theta(4, u, tc);
-      Real const a = std::exp(log_a);
-      if (!uni20::isfinite(a) || !(a > Real{0}) || a > Real{1} + Real{128} * uni20::numeric_limits<Real>::epsilon())
+      Real const log_a = log_theta(3, bethe::detail::precision_zero(tc), tc) -
+                         log_theta(2, bethe::detail::precision_zero(tc), tc) + log_theta(1, u, tc) -
+                         log_theta(4, u, tc);
+      Real const a = uni20::math::exp(log_a);
+      if (!uni20::isfinite(a) || !(a > Real{0}) || a > Real{1} + Real{128} * uni20::numeric_limits<Real>::epsilon(eta_))
         throw std::runtime_error("XYZ bound parameter lost at working precision");
-      return std::min(a, Real{1});
+      return std::min(a, uni20::scalar_like(a, 1));
     }
 
     static bethe::detail::SpinonBand<Real> make_band(Real eta, Real t, Real exchange)
     {
-      bethe::detail::validate_spinon_parameters(Real{0}, exchange);
+      Real const zero = bethe::detail::precision_zero(eta);
+      bethe::detail::require_same_precision(t, eta);
+#if UNI20_HAS_MPREAL
+      if constexpr (uni20::has_runtime_precision_v<Real>)
+        if (!exchange.is_exact()) bethe::detail::require_same_precision(exchange, eta);
+#endif
+      exchange = uni20::scalar_like(eta, exchange);
+      bethe::detail::validate_spinon_parameters(zero, exchange);
       if (!uni20::isfinite(eta) || eta <= Real{0} || eta >= Real{1} || !uni20::isfinite(t) || t <= Real{0})
         throw std::invalid_argument("XYZ spinons require finite 0<eta<1 and t>0");
-      auto const numerator = bethe::detail::elliptic_theta(1, std::complex<Real>(eta, 0), t);
-      auto const denominator = bethe::detail::elliptic_theta(1, std::complex<Real>{}, t);
-      Real const ratio = bethe::detail::theta_ratio(numerator, 0, denominator, 1).real();
+      auto const numerator = uni20::elliptic_theta_jet(1, uni20::complex<Real>(eta, zero), t);
+      auto const denominator = uni20::elliptic_theta_jet(1, uni20::complex<Real>(zero, zero), t);
+      Real const ratio = uni20::elliptic_theta_ratio(numerator, 0, denominator, 1).real();
       Real const nome_t = eta / t;
       if (!(nome_t > Real{0}) || !uni20::isfinite(nome_t))
         throw std::overflow_error("XYZ excitation nome exceeds scalar range");
       bool const dual = nome_t < Real{1};
       Real const theta_t = dual ? t / eta : nome_t;
-      auto const top = bethe::detail::elliptic_theta(3, std::complex<Real>{}, theta_t);
-      auto const bottom = bethe::detail::elliptic_theta(dual ? 2 : 4, std::complex<Real>{}, theta_t);
+      auto const top = uni20::elliptic_theta_jet(3, uni20::complex<Real>(zero, zero), theta_t);
+      auto const bottom = uni20::elliptic_theta_jet(dual ? 2 : 4, uni20::complex<Real>(zero, zero), theta_t);
       // I=pi*theta1(eta|it)*theta3(0|i*eta/t)^2/(2*t*theta1'(0|it)).
       // After the modular transform t cancels, avoiding an intermediate tiny
       // prefactor and evaluating the mass from theta2, never from 1-k1^2.
-      Real const factor = (bethe::detail::pi<Real>() / Real{2}) * (ratio / (dual ? eta : t));
+      Real const factor = (bethe::detail::spinon_pi(eta) / Real{2}) * (ratio / (dual ? eta : t));
       Real const scale = exchange * factor;
       Real const maximum = normal_energy(scale * top.derivative[0].real() * top.derivative[0].real());
-      Real const log_gap = std::log(scale) + Real{2} * (bottom.log_scale + std::log(bottom.derivative[0].real()));
-      if (log_gap < std::log(uni20::numeric_limits<Real>::min()))
+      Real const log_gap =
+          uni20::math::log(scale) + Real{2} * (bottom.log_scale + uni20::math::log(bottom.derivative[0].real()));
+      if (log_gap < uni20::math::log(minimum_energy(scale)))
         throw std::underflow_error("XYZ spinon gap is below the normal scalar range; use higher precision");
       Real const gap =
           normal_energy(bottom.log_scale == Real{0} ? scale * bottom.derivative[0].real() * bottom.derivative[0].real()
-                                                    : std::exp(log_gap));
+                                                    : uni20::math::exp(log_gap));
       return {maximum, std::min(gap, maximum)};
     }
     Real eta_, t_;
