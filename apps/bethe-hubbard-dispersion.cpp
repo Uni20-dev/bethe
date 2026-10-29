@@ -4,6 +4,7 @@
 #include "execution-options.hpp"
 #include "program-options.hpp"
 #include "run-metadata.hpp"
+#include "solver-precision.hpp"
 #include <bethe/hubbard_doped.hpp>
 #include <bethe/observable_grid.hpp>
 #include <limits>
@@ -46,7 +47,8 @@ auto program_info()
       "All doped lines are gapless in the Fermi reference.",
       "Default tolerance: 256 epsilon at half filling (relative target); 4096 epsilon when doped "
       "(absolute background / max(1,|E|) point energy), evaluated in the selected precision.",
-      "fp128 requires a build with MPLAPACK. Files and machine stdout stream rows; human stdout is a final report "
+      "bits-N/digits-N select explicit MPFR precision. Doped backgrounds require MPLAPACK MPFR; half filling does not.",
+      "Files and machine stdout stream rows; human stdout is a final report "
       "unless --stream is set. --no-retain requires live output or --quiet.",
       "CSV/TSV have # metadata and empty energies on failure (exit 2). JSON uses null. "
       "See docs/output.md for export and overwrite rules.",
@@ -79,8 +81,8 @@ void add_options(CLI::App& app, Arguments& args)
   auto* numerics = app.add_option_group("Numerics");
   cli::threads_option(*numerics, args.threads)
       ->description("Scheduler concurrency limit for independent momentum points");
-  cli::precision_option(*numerics, args.precision);
-  cli::text_option(*numerics, "--tolerance", args.tolerance, "Target in native precision; see conventions below")
+  cli::precision_option(*numerics, args.precision, cli::ArbitraryPrecision::real);
+  cli::text_option(*numerics, "--tolerance", args.tolerance, "Target in selected precision; see conventions below")
       ->type_name("REAL")
       ->default_str("256 epsilon (half-filled); 4096 epsilon (doped)");
   options::add_count_option(*numerics, "--max-iterations", args.max_iterations, "Momentum inversion updates")
@@ -162,12 +164,13 @@ char const* name(model::DopedStatus s)
   }
   return "unknown";
 }
-template <uni20::Real Real> int run(Arguments const& args, int argc, char** argv)
+template <uni20::Real Real> int run(Arguments const& args, model::Options<Real> options, int argc, char** argv)
 {
   uni20::run_context context(program_info(), {.invocation = std::vector<std::string>(argv, argv + argc)});
-  Real const u = uni20::parse_real<Real>(args.u), pi = Real{4} * std::atan(Real{1});
-  Real const density = uni20::parse_real<Real>(args.density);
-  if (!uni20::isfinite(density) || density <= Real{0} || density > Real{1})
+  Real const u = cli::parse_solver_real<Real>(args.u, options), pi = model::detail::pi(u);
+  Real const zero = uni20::scalar_like(u, 0);
+  Real const density = cli::parse_solver_real<Real>(args.density, options);
+  if (!uni20::isfinite(density) || density <= zero || density > Real{1})
     throw std::invalid_argument("density must be in (0,1]");
   bool const doped = density < Real{1};
   if (doped && args.branch == "antiholon")
@@ -179,17 +182,21 @@ template <uni20::Real Real> int run(Arguments const& args, int argc, char** argv
   auto const convention = args.convention == "symmetric" ? model::Convention::symmetric : model::Convention::unshifted;
   auto const reference =
       args.reference == "fermi" ? model::EnergyReference::fermi : model::EnergyReference::hamiltonian;
-  model::Options<Real> options;
   options.max_evaluations = args.max_evaluations;
   options.max_levels = args.max_levels;
   options.max_iterations = args.max_iterations;
-  if (args.tolerance) options.relative_tolerance = uni20::parse_real<Real>(*args.tolerance);
+  if (args.tolerance) options.relative_tolerance = cli::parse_solver_real<Real>(*args.tolerance, options);
   std::optional<model::DopedSolver<Real>> solver;
-  model::DopedOptions<Real> controls;
+  auto controls = [&] {
+    if constexpr (uni20::has_runtime_precision_v<Real>)
+      return model::DopedOptions<Real>(options.precision());
+    else
+      return model::DopedOptions<Real>{};
+  }();
   bool complete = true;
   if (doped)
   {
-    if (args.tolerance) controls.tolerance = uni20::parse_real<Real>(*args.tolerance);
+    if (args.tolerance) controls.tolerance = cli::parse_solver_real<Real>(*args.tolerance, options);
     controls.initial_nodes = args.initial_nodes;
     controls.max_nodes = args.max_nodes;
     controls.max_background_iterations = args.max_background_iterations;
@@ -201,14 +208,14 @@ template <uni20::Real Real> int run(Arguments const& args, int argc, char** argv
   else
   {
     // Validate before opening any output file, even when all requested points are endpoints.
-    if (!uni20::isfinite(u) || u <= Real{0}) throw std::invalid_argument("Hubbard dispersions require finite U>0");
-    if (!uni20::isfinite(options.relative_tolerance) || options.relative_tolerance <= Real{0} ||
+    if (!uni20::isfinite(u) || u <= zero) throw std::invalid_argument("Hubbard dispersions require finite U>0");
+    if (!uni20::isfinite(options.relative_tolerance) || options.relative_tolerance <= zero ||
         options.relative_tolerance >= Real{1})
       throw std::invalid_argument("relative tolerance must be finite and in (0,1)");
     if (options.max_levels > 24) throw std::invalid_argument("quadrature levels must not exceed 24");
   }
   std::optional<Real> momentum;
-  if (args.momentum) momentum = uni20::parse_real<Real>(*args.momentum);
+  if (args.momentum) momentum = cli::parse_solver_real<Real>(*args.momentum, options);
   auto check_momentum = [&](Real lo, Real hi) {
     if (momentum && (!uni20::isfinite(*momentum) || *momentum < lo || *momentum > hi))
       throw std::invalid_argument("momentum is outside a selected branch's interval");
@@ -227,7 +234,7 @@ template <uni20::Real Real> int run(Arguments const& args, int argc, char** argv
     for (auto b : {model::Branch::spinon, model::Branch::holon, model::Branch::antiholon})
       if (args.branch == "all" || args.branch == name(b))
       {
-        check_momentum(b == model::Branch::spinon ? Real{0} : -pi, pi);
+        check_momentum(b == model::Branch::spinon ? zero : -pi, pi);
         half_branches.push_back(b);
       }
 
@@ -295,7 +302,7 @@ template <uni20::Real Real> int run(Arguments const& args, int argc, char** argv
   else
   {
     field("background", "mu_unshifted", "Mu unshifted", Real(u / Real{2}));
-    field("background", "mu_symmetric", "Mu symmetric", Real{0});
+    field("background", "mu_symmetric", "Mu symmetric", zero);
     field("numerics", "max_evaluations", "Max evaluations", options.max_evaluations);
     field("numerics", "max_levels", "Max levels", options.max_levels);
   }
@@ -365,7 +372,7 @@ template <uni20::Real Real> int run(Arguments const& args, int argc, char** argv
           [&](std::size_t index) {
             auto const b = half_branches[index / count];
             auto const i = index % count;
-            Real const fraction = momentum ? Real{0} : Real(i) / Real(count - 1);
+            Real const fraction = momentum ? zero : Real(i) / Real(count - 1);
             Real const p = momentum                     ? *momentum
                            : b == model::Branch::spinon ? pi * fraction
                                                         : pi * (Real{2} * fraction - Real{1});
@@ -409,6 +416,7 @@ int main(int argc, char** argv)
             app.count("--initial-nodes") || app.count("--max-nodes") || app.count("--max-background-iterations");
         args.output.validate();
         if (!args.momentum && args.points < 2) throw std::invalid_argument("--points must be at least 2");
-        return cli::dispatch_precision(args.precision, [&]<typename Real>() { return run<Real>(args, argc, argv); });
+        return cli::dispatch_options_precision<cli::ArbitraryPrecision::real, model::Options>(
+            args.precision, [&](auto options) { return run(args, std::move(options), argc, argv); });
       });
 }

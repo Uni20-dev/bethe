@@ -1,9 +1,11 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Copyright (C) 2026 Ian McCulloch
 #pragma once
+#include <bethe/detail/gauss_legendre.hpp>
 #include <bethe/detail/hubbard_kernel.hpp>
 #include <bethe/detail/newton.hpp>
 #include <bethe/hubbard_thermo.hpp>
+#include <memory>
 
 namespace bethe::hubbard::thermo
 {
@@ -31,7 +33,25 @@ template <uni20::Real Real> struct DopedOptions
 {
     Real tolerance = Real{4096} * uni20::numeric_limits<Real>::epsilon();
     std::size_t initial_nodes = 16, max_nodes = 256, max_background_iterations = 64, max_iterations = 160;
+    uni20::Precision precision() const { return uni20::native_precision<Real>(); }
 };
+#if UNI20_HAS_MPREAL
+template <> struct DopedOptions<uni20::mpreal>
+{
+    explicit DopedOptions(uni20::Precision p) : tolerance(default_tolerance(p)), precision_(p) {}
+    uni20::mpreal tolerance;
+    std::size_t initial_nodes = 16, max_nodes = 256, max_background_iterations = 64, max_iterations = 160;
+    uni20::Precision precision() const { return precision_; }
+
+  private:
+    static uni20::mpreal default_tolerance(uni20::Precision p)
+    {
+      if (p.is_exact()) throw std::invalid_argument("doped Hubbard dispersions require finite working precision");
+      return 4096 * uni20::numeric_limits<uni20::mpreal>::epsilon(p);
+    }
+    uni20::Precision precision_;
+};
+#endif
 template <uni20::Real Real> struct DopedBackground
 {
     Real interaction{}, density{};
@@ -60,35 +80,35 @@ template <uni20::Real Real> struct DopedMesh
 {
     Real u{}, q{}, density{}, mu{}, e0{}, density_derivative{};
     std::vector<Real> k, w, sine, cosine, rho, epsilon;
+    std::shared_ptr<bethe::detail::HubbardKernel<Real> const> kernel;
 
     // Returns (epsilon_c(k), p_c(k)); p_c grows from -pi to pi.
     std::array<Real, 2> charge(Real parameter) const
     {
-      Real const sk = std::sin(parameter), p = pi<Real>();
-      bethe::detail::CompensatedSum<Real> energy, momentum;
+      Real const sk = uni20::math::sin(parameter), p = pi(u), zero = uni20::scalar_like(u, 0);
+      bethe::detail::CompensatedSum<Real> energy(zero), momentum(zero);
       for (std::size_t j = 0; j < k.size(); ++j)
       {
-        Real const r = bethe::detail::hubbard_r(sk - sine[j], u) + bethe::detail::hubbard_r(sk + sine[j], u);
+        Real const r = kernel->value(sk - sine[j]) + kernel->value(sk + sine[j]);
         energy.add(w[j] * cosine[j] * r * epsilon[j]);
-        Real const phase =
-            bethe::detail::hubbard_r_primitive(sk - sine[j], u) + bethe::detail::hubbard_r_primitive(sk + sine[j], u);
+        Real const phase = kernel->primitive(sk - sine[j]) + kernel->primitive(sk + sine[j]);
         momentum.add(w[j] * rho[j] * phase);
       }
-      Real e = -Real{2} * std::cos(parameter) - mu + energy.value();
+      Real e = -Real{2} * uni20::math::cos(parameter) - mu + energy.value();
       Real pc = parameter + Real{2} * p * momentum.value();
-      if (std::abs(parameter) == q)
+      if (uni20::math::abs(parameter) == q)
       {
-        e = Real{0};
-        pc = std::copysign(p * density, parameter);
+        e = zero;
+        pc = uni20::math::copysign(p * density, parameter);
       }
-      if (std::abs(parameter) == p) pc = parameter;
+      if (uni20::math::abs(parameter) == p) pc = parameter;
       return {e, pc};
     }
     // Hole momentum convention: p_s in [0,pi*n], matching the half-filled path.
     std::array<Real, 2> spinon(Real lambda) const
     {
-      Real const l = std::abs(lambda), scale = Real{2} * u / pi<Real>();
-      bethe::detail::CompensatedSum<Real> energy, momentum;
+      Real const l = uni20::math::abs(lambda), scale = Real{2} * u / pi(u), zero = uni20::scalar_like(u, 0);
+      bethe::detail::CompensatedSum<Real> energy(zero), momentum(zero);
       for (std::size_t j = 0; j < k.size(); ++j)
       {
         Real const minus = (l - sine[j]) / scale, plus = (l + sine[j]) / scale;
@@ -97,61 +117,65 @@ template <uni20::Real Real> struct DopedMesh
       }
       Real ps = momentum.value();
       if (l == Real{0})
-        ps = pi<Real>() * density / Real{2};
+        ps = pi(u) * density / Real{2};
       else if (lambda < Real{0})
-        ps = pi<Real>() * density - ps;
+        ps = pi(u) * density - ps;
       return {energy.value(), ps};
     }
 };
 
 template <uni20::Real Real>
-std::optional<DopedMesh<Real>> doped_mesh(Real u, Real q, bethe::detail::GaussLegendreRule<Real> const& rule)
+std::optional<DopedMesh<Real>> doped_mesh(Real q, bethe::detail::GaussLegendreRule<Real> const& rule,
+                                          std::shared_ptr<bethe::detail::HubbardKernel<Real> const> kernel)
 {
   std::size_t const n = rule.x.size();
+  Real const zero = uni20::scalar_like(q, 0), one = uni20::scalar_like(q, 1);
+  auto const precision = uni20::precision_of(q);
   DopedMesh<Real> out;
-  out.u = u;
+  out.u = kernel->u();
+  out.kernel = std::move(kernel);
   out.q = q;
   out.k.resize(n);
   out.w.resize(n);
   out.sine.resize(n);
   out.cosine.resize(n);
-  out.rho.assign(n, Real{1} / (Real{2} * pi<Real>()));
-  std::vector<Real> arho(n * n), ae(n * n), h(n), xi(n, Real{1});
+  out.rho.assign(n, Real{1} / (Real{2} * pi(q)));
+  std::vector<Real> arho(n * n), ae(n * n), h(n), xi(n, one);
   for (std::size_t j = 0; j < n; ++j)
   {
     out.k[j] = q * (rule.x[j] + Real{1}) / Real{2};
     out.w[j] = q * rule.w[j] / Real{2};
-    out.sine[j] = std::sin(out.k[j]);
-    out.cosine[j] = std::cos(out.k[j]);
+    out.sine[j] = uni20::math::sin(out.k[j]);
+    out.cosine[j] = uni20::math::cos(out.k[j]);
     h[j] = -Real{2} * out.cosine[j];
   }
   for (std::size_t i = 0; i < n; ++i)
     for (std::size_t j = 0; j < n; ++j)
     {
-      Real const kernel = bethe::detail::hubbard_r(out.sine[i] - out.sine[j], u) +
-                          bethe::detail::hubbard_r(out.sine[i] + out.sine[j], u);
-      arho[i * n + j] = Real(i == j) - out.cosine[i] * out.w[j] * kernel;
-      ae[i * n + j] = Real(i == j) - out.cosine[j] * out.w[j] * kernel;
+      Real const kernel = out.kernel->value(out.sine[i] - out.sine[j]) + out.kernel->value(out.sine[i] + out.sine[j]);
+      Real const identity = uni20::scalar_like(zero, i == j ? 1 : 0);
+      arho[i * n + j] = identity - out.cosine[i] * out.w[j] * kernel;
+      ae[i * n + j] = identity - out.cosine[j] * out.w[j] * kernel;
     }
-  // Existing recoverable native-real pivoting solver: no process-global error
-  // policy changes, including for native long double without BLAS support.
-  if (!bethe::detail::newton_step(arho, out.rho) || !bethe::detail::newton_step(ae, h) ||
-      !bethe::detail::newton_step(ae, xi))
+  // Normal Uni20 dispatch selects the configured provider at working precision;
+  // singular systems remain recoverable without a process-global error policy.
+  if (!bethe::detail::newton_step(arho, out.rho, precision) || !bethe::detail::newton_step(ae, h, precision) ||
+      !bethe::detail::newton_step(ae, xi, precision))
     return std::nullopt;
-  bethe::detail::CompensatedSum<Real> number, e0, hq, xiq, rhoq;
-  hq.add(-Real{2} * std::cos(q));
-  xiq.add(Real{1});
-  rhoq.add(Real{1} / (Real{2} * pi<Real>()));
+  bethe::detail::CompensatedSum<Real> number(zero), e0(zero), hq(zero), xiq(zero), rhoq(zero);
+  hq.add(-Real{2} * uni20::math::cos(q));
+  xiq.add(one);
+  rhoq.add(Real{1} / (Real{2} * pi(q)));
   for (std::size_t j = 0; j < n; ++j)
   {
     if (!(out.rho[j] > Real{0})) return std::nullopt;
     number.add(Real{2} * out.w[j] * out.rho[j]);
     e0.add(-Real{4} * out.w[j] * out.cosine[j] * out.rho[j]);
     Real const r =
-        bethe::detail::hubbard_r(std::sin(q) - out.sine[j], u) + bethe::detail::hubbard_r(std::sin(q) + out.sine[j], u);
+        out.kernel->value(uni20::math::sin(q) - out.sine[j]) + out.kernel->value(uni20::math::sin(q) + out.sine[j]);
     hq.add(out.w[j] * out.cosine[j] * r * h[j]);
     xiq.add(out.w[j] * out.cosine[j] * r * xi[j]);
-    rhoq.add(std::cos(q) * out.w[j] * r * out.rho[j]);
+    rhoq.add(uni20::math::cos(q) * out.w[j] * r * out.rho[j]);
   }
   out.mu = hq.value() / xiq.value();
   out.density = number.value();
@@ -166,11 +190,17 @@ std::optional<DopedMesh<Real>> doped_mesh(Real u, Real q, bethe::detail::GaussLe
 } // namespace detail
 
 /// Zero-field repulsive background below half filling. Mesh refinement is
-/// native precision; mesh differences are estimates, not interval bounds.
+/// at explicit working precision; mesh differences are estimates, not interval bounds.
 template <uni20::Real Real> class DopedSolver {
   public:
     DopedSolver(Real interaction, Real density, DopedOptions<Real> options = {}) : options_(options)
     {
+      auto const precision = options.precision();
+      Real const zero = uni20::scalar_at_precision<Real>(0, precision);
+      bethe::detail::require_same_precision(interaction, zero);
+      bethe::detail::require_same_precision(density, zero);
+      bethe::detail::require_same_precision(options.tolerance, zero);
+      info_.mesh_error = info_.density_error = zero;
       info_.interaction = interaction;
       info_.density = density;
       if (!uni20::isfinite(interaction) || interaction <= Real{0} || !uni20::isfinite(density) || density <= Real{0} ||
@@ -180,17 +210,18 @@ template <uni20::Real Real> class DopedSolver {
           options.initial_nodes < 4 || options.max_nodes > 512 || options.initial_nodes > options.max_nodes)
         throw std::invalid_argument(
             "invalid doped tolerance/mesh: require 0<tol<1 and 4<=initial_nodes<=max_nodes<=512");
-      Real const u = interaction / Real{4}, p = detail::pi<Real>();
+      Real const u = interaction / Real{4}, p = detail::pi(info_.interaction);
       if (!(u > Real{0}) || !uni20::isfinite(Real{1} / u))
       {
         info_.status = DopedStatus::precision_limit;
         return;
       }
+      auto const kernel = std::make_shared<bethe::detail::HubbardKernel<Real> const>(u, precision);
       Real q = p * density * (Real{1} + interaction / (interaction + Real{4})) / Real{2};
       for (std::size_t n = options.initial_nodes;; n *= 2)
       {
-        auto const rule = bethe::detail::gauss_legendre<Real>(n);
-        Real lo{0}, hi = p;
+        auto const rule = bethe::detail::gauss_legendre<Real>(n, precision);
+        Real lo = zero, hi = p;
         std::optional<detail::DopedMesh<Real>> candidate;
         for (;;)
         {
@@ -200,14 +231,14 @@ template <uni20::Real Real> class DopedSolver {
             return;
           }
           ++info_.iterations;
-          candidate = detail::doped_mesh(u, q, rule);
+          candidate = detail::doped_mesh(q, rule, kernel);
           if (!candidate)
           {
             info_.status = DopedStatus::linear_failure;
             return;
           }
           Real const residual = candidate->density - density;
-          if (std::abs(residual) <= options.tolerance * density / Real{64}) break;
+          if (uni20::math::abs(residual) <= options.tolerance * density / Real{64}) break;
           if (residual > Real{0})
             hi = q;
           else
@@ -222,21 +253,21 @@ template <uni20::Real Real> class DopedSolver {
           q = next;
         }
         info_.nodes = n;
-        info_.density_error = std::abs(candidate->density - density);
+        info_.density_error = uni20::math::abs(candidate->density - density);
         if (fine_)
         {
-          Real error = std::max({std::abs(candidate->q - fine_->q), std::abs(candidate->mu - fine_->mu),
-                                 std::abs(candidate->e0 - fine_->e0)});
+          Real error = std::max({uni20::math::abs(candidate->q - fine_->q), uni20::math::abs(candidate->mu - fine_->mu),
+                                 uni20::math::abs(candidate->e0 - fine_->e0)});
           for (int j = 0; j <= 8; ++j)
           {
             Real const k = p * Real(j) / Real{8};
             auto const a = candidate->charge(k), b = fine_->charge(k);
             for (int v = 0; v < 2; ++v)
-              error = std::max(error, std::abs(a[v] - b[v]));
+              error = std::max(error, uni20::math::abs(a[v] - b[v]));
             Real const lambda = (Real{1} + u) * Real(j) / Real{4};
             auto const sa = candidate->spinon(lambda), sb = fine_->spinon(lambda);
             for (int v = 0; v < 2; ++v)
-              error = std::max(error, std::abs(sa[v] - sb[v]));
+              error = std::max(error, uni20::math::abs(sa[v] - sb[v]));
           }
           info_.mesh_error = Real{8} * error;
           coarse_ = std::move(fine_);
@@ -260,11 +291,11 @@ template <uni20::Real Real> class DopedSolver {
     /// Unwrapped momenta chosen to agree with the half-filled hole convention.
     std::pair<Real, Real> momentum_range(DopedBranch branch) const
     {
-      Real const p = detail::pi<Real>(), pn = p * info_.density;
+      Real const p = detail::pi(info_.interaction), pn = p * info_.density;
       switch (branch)
       {
         case DopedBranch::spinon:
-          return {Real{0}, pn};
+          return {uni20::scalar_like(p, 0), pn};
         case DopedBranch::holon:
           return {-pn / Real{2}, Real{3} * pn / Real{2}};
         case DopedBranch::charge_particle:
@@ -278,6 +309,8 @@ template <uni20::Real Real> class DopedSolver {
     DopedPoint<Real> at_momentum(DopedBranch branch, Real momentum, Convention convention = Convention::symmetric,
                                  EnergyReference reference = EnergyReference::hamiltonian) const
     {
+      bethe::detail::require_same_precision(momentum, info_.interaction);
+      Real const zero = uni20::scalar_like(info_.interaction, 0);
       auto const [low, high] = momentum_range(branch);
       if (!uni20::isfinite(momentum) || momentum < low || momentum > high)
         throw std::invalid_argument("momentum is outside this doped branch's unwrapped interval");
@@ -286,6 +319,7 @@ template <uni20::Real Real> class DopedSolver {
       if (reference != EnergyReference::hamiltonian && reference != EnergyReference::fermi)
         throw std::invalid_argument("invalid excitation energy reference");
       DopedPoint<Real> out;
+      out.parameter = out.energy_error = out.momentum_error = zero;
       out.branch = branch;
       out.momentum = momentum;
       out.convention = convention;
@@ -297,10 +331,12 @@ template <uni20::Real Real> class DopedSolver {
         out.status = info_.status;
         return out;
       }
-      Real ef{}, ec{};
+      Real ef = zero, ec = zero;
       if (momentum == low || momentum == high)
       {
-        out.parameter = branch == DopedBranch::spinon ? uni20::numeric_limits<Real>::infinity() : fine_->q;
+        out.parameter = branch == DopedBranch::spinon
+                            ? uni20::scalar_like(zero, std::numeric_limits<double>::infinity())
+                            : fine_->q;
         if (momentum == high) out.parameter = -out.parameter;
       }
       else
@@ -329,22 +365,23 @@ template <uni20::Real Real> class DopedSolver {
         out.momentum_error = std::max(fine.error, coarse.error);
         auto const mf = branch == DopedBranch::spinon ? fine_->spinon(out.parameter) : fine_->charge(out.parameter);
         auto const mc = branch == DopedBranch::spinon ? coarse_->spinon(out.parameter) : coarse_->charge(out.parameter);
-        out.momentum_error += Real{8} * std::abs(mf[1] - mc[1]);
+        out.momentum_error += Real{8} * uni20::math::abs(mf[1] - mc[1]);
       }
-      out.momentum_error +=
-          Real{2} * detail::pi<Real>() * std::max(info_.density_error, std::abs(coarse_->density - info_.density));
-      Real const dn = Real(out.delta_particles), mu = fine_->mu;
-      Real const offset =
-          reference == EnergyReference::fermi
-              ? Real{0}
-              : (mu - (convention == Convention::symmetric ? info_.interaction / Real{2} : Real{0})) * dn;
+      out.momentum_error += Real{2} * detail::pi(info_.interaction) *
+                            std::max(info_.density_error, uni20::math::abs(coarse_->density - info_.density));
+      Real const dn = uni20::scalar_like(zero, out.delta_particles), mu = fine_->mu;
+      Real const offset = reference == EnergyReference::fermi
+                              ? zero
+                              : (mu - (convention == Convention::symmetric ? info_.interaction / Real{2} : zero)) * dn;
       Real const energy = ef + offset;
-      out.energy_error =
-          Real{8} * std::abs(ef - ec) +
-          (reference == EnergyReference::fermi ? Real{0} : Real{8} * std::abs(fine_->mu - coarse_->mu) * std::abs(dn)) +
-          Real{64} * uni20::numeric_limits<Real>::epsilon() * std::max(Real{1}, std::abs(energy));
+      out.energy_error = Real{8} * uni20::math::abs(ef - ec) +
+                         (reference == EnergyReference::fermi
+                              ? zero
+                              : Real{8} * uni20::math::abs(fine_->mu - coarse_->mu) * uni20::math::abs(dn)) +
+                         Real{64} * uni20::numeric_limits<Real>::epsilon(options_.precision()) *
+                             std::max(Real{1}, uni20::math::abs(energy));
       if (!uni20::isfinite(energy) || !uni20::isfinite(out.momentum_error) || out.momentum_error > options_.tolerance ||
-          ef < Real{0} || out.energy_error > options_.tolerance * std::max(Real{1}, std::abs(energy)))
+          ef < Real{0} || out.energy_error > options_.tolerance * std::max(Real{1}, uni20::math::abs(energy)))
       {
         out.status = DopedStatus::mesh_limit;
         return out;
@@ -366,8 +403,9 @@ template <uni20::Real Real> class DopedSolver {
     Inversion invert(detail::DopedMesh<Real> const& mesh, DopedBranch branch, Real momentum, std::size_t& iterations,
                      std::optional<Real> seed = {}) const
     {
-      Inversion result;
-      Real const p = detail::pi<Real>(), pn = p * info_.density;
+      Real const zero = uni20::scalar_like(info_.interaction, 0), one = uni20::scalar_like(info_.interaction, 1);
+      Inversion result{zero, zero, zero};
+      Real const p = detail::pi(info_.interaction), pn = p * info_.density;
       bool const spin = branch == DopedBranch::spinon;
       Real target;
       bool reflect;
@@ -381,27 +419,27 @@ template <uni20::Real Real> class DopedSolver {
         target = branch == DopedBranch::holon ? pn / Real{2} - momentum : momentum + pn / Real{2};
         if (target > p) target -= Real{2} * p;
         reflect = target < Real{0};
-        target = std::abs(target);
+        target = uni20::math::abs(target);
       }
-      Real lo = spin || branch == DopedBranch::holon ? Real{0} : mesh.q;
-      Real hi = spin ? Real{1} + Real{2} * mesh.u / p * std::log(Real{4} * info_.density / target)
+      Real lo = spin || branch == DopedBranch::holon ? zero : mesh.q;
+      Real hi = spin ? Real{1} + Real{2} * mesh.u / p * uni20::math::log(Real{4} * info_.density / target)
                 : branch == DopedBranch::holon ? mesh.q
                                                : p;
-      Real flo = spin ? std::log((pn / Real{2}) / target) : target - (lo == Real{0} ? Real{0} : pn);
-      Real fhi = spin ? -Real{1} : target - (hi == p ? p : pn);
-      Real x = spin                           ? (target == pn / Real{2} ? Real{0} : (lo + hi) / Real{2})
+      Real flo = spin ? uni20::math::log((pn / Real{2}) / target) : target - (lo == Real{0} ? zero : pn);
+      Real fhi = spin ? -one : target - (hi == p ? p : pn);
+      Real x = spin                           ? (target == pn / Real{2} ? zero : (lo + hi) / Real{2})
                : branch == DopedBranch::holon ? mesh.q * target / pn
                                               : mesh.q + (p - mesh.q) * (target - pn) / (p - pn);
-      if (seed && std::abs(*seed) >= lo && std::abs(*seed) <= hi) x = std::abs(*seed);
+      if (seed && uni20::math::abs(*seed) >= lo && uni20::math::abs(*seed) <= hi) x = uni20::math::abs(*seed);
       int side = 0;
       for (;;)
       {
         auto const values = spin ? mesh.spinon(x) : mesh.charge(x);
         result.energy = spin || branch == DopedBranch::charge_particle ? values[0] : -values[0];
-        result.error = std::abs(values[1] - target);
+        result.error = uni20::math::abs(values[1] - target);
         result.parameter = reflect ? -x : x;
         if (!uni20::isfinite(result.energy) || !uni20::isfinite(result.error)) return result;
-        if (result.error <= options_.tolerance * (spin ? target : Real{1}) / Real{16})
+        if (result.error <= options_.tolerance * (spin ? target : one) / Real{16})
         {
           result.status = DopedStatus::converged;
           return result;
@@ -412,7 +450,7 @@ template <uni20::Real Real> class DopedSolver {
           return result;
         }
         ++iterations;
-        Real const f = spin ? std::log(values[1] / target) : target - values[1];
+        Real const f = spin ? uni20::math::log(values[1] / target) : target - values[1];
         if (f > Real{0})
         {
           lo = x;
@@ -428,7 +466,7 @@ template <uni20::Real Real> class DopedSolver {
           side = -1;
         }
         Real fraction = flo / (flo - fhi);
-        if (!(fraction > Real{0} && fraction < Real{1})) fraction = Real{.5};
+        if (!(fraction > Real{0} && fraction < Real{1})) fraction = one / Real{2};
         Real const next = lo + fraction * (hi - lo);
         if (next == x || next == lo || next == hi) return result;
         x = next;
