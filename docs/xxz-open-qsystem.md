@@ -6,7 +6,8 @@ This is a separate solver for the **same opposite-end-field reference
 Hamiltonian** used by the TL layer, not the ordinary zero-field XXZ front end.
 Even N, M<=N/2 and finite Delta>1 are supported. It keeps finite complex-root
 deviations; no ideal-string hypothesis is imposed. All arithmetic stays in the
-selected fp64, long-double or optional binary128 precision.
+selected fp64, long-double, binary128 or explicit MPFR precision. MPFR is
+currently available through the C++ library interface described below.
 
 ## Why solve a polynomial?
 
@@ -68,7 +69,7 @@ the energy formula.
 A small coefficient residual is not by itself an accepted physical state.
 The solver also:
 
-- recovers separated roots using the native-precision
+- recovers separated roots at the selected precision using the
   [polynomial-root engine](polynomial-roots.md);
 - rejects roots numerically indistinguishable from x=1, -1 or Delta
   (the excluded u=0, i*pi/2 and eta/2 solutions);
