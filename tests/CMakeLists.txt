@@ -409,6 +409,12 @@ bethe_discover_tests(bethe_sine_gordon_excited_tests
 add_executable(bethe_kondo_tests test_kondo.cpp)
 target_link_libraries(bethe_kondo_tests PRIVATE bethe::bethe TBB::tbb)
 bethe_discover_tests(bethe_kondo_tests)
+if(BETHE_HAS_MPREAL)
+  add_executable(bethe_kondo_mpfr_tests test_kondo_mpfr.cpp)
+  target_link_libraries(bethe_kondo_mpfr_tests PRIVATE bethe::bethe TBB::tbb)
+  bethe_discover_tests(bethe_kondo_mpfr_tests
+    LONG_RUNNING_TESTS KondoMpfr.HighPrecisionIntegralGainsAccuracy)
+endif()
 
 add_executable(bethe_finite_volume_async_tests test_finite_volume_async.cpp)
 target_link_libraries(bethe_finite_volume_async_tests PRIVATE bethe::bethe TBB::tbb)
@@ -778,6 +784,9 @@ if(BETHE_BUILD_APPS)
     add_test(NAME Citations.bethe-hubbard-continuum.cli
       COMMAND "${CMAKE_COMMAND}" "-DPROGRAM=$<TARGET_FILE:bethe-hubbard-continuum>"
         "-DTOOL=bethe-hubbard-continuum" -P "${CMAKE_CURRENT_SOURCE_DIR}/check_citations_cli.cmake")
+    add_test(NAME Kondo.precision
+      COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_kondo_precision.py"
+        "$<TARGET_FILE:bethe-kondo-response>" "${BETHE_HAS_MPREAL}")
     add_test(NAME Kondo.cli
       COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_kondo.py"
         "$<TARGET_FILE:bethe-kondo-response>" "${BETHE_HAS_FLOAT128}")
