@@ -489,6 +489,9 @@ if(BETHE_BUILD_APPS)
     add_test(NAME Arguments.bethe-xxx-structure-factor-thermo.cli
       COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_shared_arguments.py"
         "$<TARGET_FILE:bethe-xxx-structure-factor-thermo>")
+    add_test(NAME XXXThermodynamicDSF.precision
+      COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_xxx_thermodynamic_precision.py"
+        "$<TARGET_FILE:bethe-xxx-structure-factor-thermo>" "${BETHE_HAS_MPREAL}")
     add_test(NAME XXXThermodynamicDSF.cli
       COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_xxx_thermodynamic_structure_factor.py"
         "$<TARGET_FILE:bethe-xxx-structure-factor-thermo>" "${BETHE_HAS_FLOAT128}")

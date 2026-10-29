@@ -115,8 +115,8 @@ int run(Arguments const& a, model::StructureFactorOptions<Real> options, int arg
   std::size_t const count = q.size() * w.size();
   Real const scale = a.channel == "zz" ? one : Real{2} * one;
   uni20::async::TbbScheduler scheduler(a.threads);
-  // Group cheap native samples; binary128 quadrature needs individual tasks
-  // because adjacent points can have very different evaluation costs.
+  // Group cheap native samples; higher-precision quadrature uses individual
+  // tasks because adjacent points can have very different evaluation costs.
   std::size_t const block_size = uni20::numeric_limits<Real>::digits(options.precision()) > 64 ? 1 : 16;
   bethe::ExecutionOptions const execution{
       .scheduler = &scheduler, .max_in_flight = std::max(std::size_t{128 / block_size}, std::size_t(a.threads) * 2)};
