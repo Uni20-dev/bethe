@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Copyright (C) 2026 Ian McCulloch
 #pragma once
+#include <array>
 #include <bethe/detail/thermal.hpp>
 #include <bethe/solver.hpp>
 #include <optional>
@@ -24,21 +25,48 @@ template <uni20::Real Real> struct Options
     std::size_t initial_intervals = 32, max_intervals = 2048, max_iterations = 1000, max_cutoffs = 3;
     std::size_t max_kernel_products = 200000000;
     std::optional<Real> initial_cutoff{};
+    uni20::Precision precision() const { return uni20::native_precision<Real>(); }
 };
+#if UNI20_HAS_MPREAL
+template <> struct Options<uni20::mpreal>
+{
+    explicit Options(uni20::Precision p) : tolerance(default_tolerance(p)), precision_(p) {}
+    uni20::mpreal tolerance;
+    std::size_t initial_intervals = 32, max_intervals = 2048, max_iterations = 1000, max_cutoffs = 3;
+    std::size_t max_kernel_products = 200000000;
+    std::optional<uni20::mpreal> initial_cutoff{};
+    uni20::Precision precision() const { return precision_; }
+
+  private:
+    static uni20::mpreal default_tolerance(uni20::Precision p)
+    {
+      if (p.is_exact()) throw std::invalid_argument("Lee-Yang TBA requires finite working precision");
+      return 8192 * uni20::numeric_limits<uni20::mpreal>::epsilon(p);
+    }
+    uni20::Precision precision_;
+};
+#endif
 template <uni20::Real Real> struct Diagnostics
 {
-    Real mass{}, length{}, scaled_length{}, cutoff{};
-    Real nonlinear_residual = uni20::numeric_limits<Real>::infinity();
-    Real nonlinear_error = uni20::numeric_limits<Real>::infinity();
-    Real mesh_error = uni20::numeric_limits<Real>::infinity();
-    Real cutoff_error = uni20::numeric_limits<Real>::infinity();
-    Real direct_tail_bound = uni20::numeric_limits<Real>::infinity();
+    Diagnostics()
+      requires(!uni20::has_runtime_precision_v<Real>)
+        : Diagnostics(Real{})
+    {}
+    explicit Diagnostics(Real const& zero)
+        : mass(zero), length(zero), scaled_length(zero), cutoff(zero),
+          nonlinear_residual(uni20::scalar_like(zero, std::numeric_limits<double>::infinity())),
+          nonlinear_error(nonlinear_residual), mesh_error(nonlinear_residual), cutoff_error(nonlinear_residual),
+          direct_tail_bound(nonlinear_residual)
+    {}
+    Real mass, length, scaled_length, cutoff;
+    Real nonlinear_residual, nonlinear_error, mesh_error, cutoff_error, direct_tail_bound;
     std::size_t intervals = 0, iterations = 0, cutoffs = 0, kernel_products = 0;
     bool converged = false;
     Status status = Status::mesh_limit;
 };
 template <uni20::Real Real> struct State : Diagnostics<Real>
 {
+    using Diagnostics<Real>::Diagnostics;
     std::optional<Real> scaling_function, casimir_energy, effective_central_charge;
 };
 
@@ -46,17 +74,26 @@ template <uni20::Real Real> struct State : Diagnostics<Real>
 template <uni20::Real Real> Real kernel(Real x)
 {
   if (!uni20::isfinite(x)) throw std::invalid_argument("Lee-Yang kernel requires a finite argument");
-  Real const t = std::exp(-std::abs(x)), t2 = t * t, pi = Real{4} * std::atan(Real{1});
-  return std::sqrt(Real{3}) / pi * t * (Real{1} + t2) / (Real{1} + t2 + t2 * t2);
+  (void)bethe::detail::precision_zero(x);
+  Real const t = uni20::math::exp(-uni20::math::abs(x)), t2 = t * t,
+             pi = Real{4} * uni20::math::atan(uni20::scalar_like(x, 1));
+  return uni20::math::sqrt(uni20::scalar_like(x, 3)) / pi * t * (Real{1} + t2) / (Real{1} + t2 + t2 * t2);
 }
 
 namespace detail
 {
 template <uni20::Real Real> struct GridResult
 {
-    Real y{}, error{}, residual{};
-    Real source_integral{}, source_error{};
-    Real source_coordinate{}; // Zero for vacuum; excited displacement in error-estimate units.
+    GridResult()
+      requires(!uni20::has_runtime_precision_v<Real>)
+        : GridResult(Real{})
+    {}
+    explicit GridResult(Real const& zero)
+        : y(zero), error(zero), residual(zero), source_integral(zero), source_error(zero), source_coordinate(zero)
+    {}
+    Real y, error, residual;
+    Real source_integral, source_error;
+    Real source_coordinate; // Zero for vacuum; excited displacement in error-estimate units.
     bool converged = false;
     Status status = Status::iteration_limit;
 };
@@ -65,32 +102,34 @@ template <uni20::Real Real> struct GridResult
 // or overflowing hyperbolic functions. beta=0 denotes the vacuum problem.
 template <uni20::Real Real> Real particle_source(Real x, Real beta)
 {
-  Real const t = std::exp(-x), a = std::sqrt(Real{3}) * t / Real{2};
-  Real const u = (Real{1} - t * t) * std::cos(beta) / Real{2};
-  Real const v = (Real{1} + t * t) * std::sin(beta) / Real{2};
-  return std::log1p(-Real{4} * v * a / (u * u + (v + a) * (v + a)));
+  Real const t = uni20::math::exp(-x), a = uni20::math::sqrt(uni20::scalar_like(x, 3)) * t / Real{2};
+  Real const u = (Real{1} - t * t) * uni20::math::cos(beta) / Real{2};
+  Real const v = (Real{1} + t * t) * uni20::math::sin(beta) / Real{2};
+  return uni20::math::log1p(-Real{4} * v * a / (u * u + (v + a) * (v + a)));
 }
 template <uni20::Real Real> Real continued_kernel(Real x, Real beta)
 {
-  Real const t = std::exp(-x), s = (Real{1} - t * t) / Real{2}, c = (Real{1} + t * t) / Real{2};
-  Real const cb = std::cos(beta), sb = std::sin(beta);
+  Real const t = uni20::math::exp(-x), s = (Real{1} - t * t) / Real{2}, c = (Real{1} + t * t) / Real{2};
+  Real const cb = uni20::math::cos(beta), sb = uni20::math::sin(beta);
   Real const re = s * s * cb * cb - c * c * sb * sb + Real{3} * t * t / Real{4};
   Real const im = -Real{2} * s * c * cb * sb;
-  Real const pi = Real{4} * std::atan(Real{1});
-  return std::sqrt(Real{3}) / (Real{2} * pi) * t * (c * cb * re - s * sb * im) / (re * re + im * im);
+  Real const pi = Real{4} * uni20::math::atan(uni20::scalar_like(x, 1));
+  return uni20::math::sqrt(uni20::scalar_like(x, 3)) / (Real{2} * pi) * t * (c * cb * re - s * sb * im) /
+         (re * re + im * im);
 }
 
 // Even half-line trapezoid. Difference/sum kernel cache is O(N), not a dense
 // matrix. Work counts one folded kernel-times-logarithm term per (i,j).
 template <uni20::Real Real>
 GridResult<Real> grid(Real r, Real cutoff, std::size_t n, Options<Real> const& options, Diagnostics<Real>& work,
-                      Real beta = Real{0})
+                      Real beta)
 {
   using bethe::detail::CompensatedSum;
   using bethe::detail::thermal_factors;
-  GridResult<Real> out;
-  work.nonlinear_residual = uni20::numeric_limits<Real>::infinity();
-  work.nonlinear_error = uni20::numeric_limits<Real>::infinity();
+  Real const zero = uni20::scalar_at_precision<Real>(0, options.precision()), one = uni20::scalar_like(zero, 1);
+  GridResult<Real> out(zero);
+  work.nonlinear_residual = uni20::scalar_like(r, std::numeric_limits<double>::infinity());
+  work.nonlinear_error = uni20::scalar_like(r, std::numeric_limits<double>::infinity());
   if (!uni20::isfinite(Real{2} * cutoff))
   {
     out.status = Status::precision_limit;
@@ -102,29 +141,30 @@ GridResult<Real> grid(Real r, Real cutoff, std::size_t n, Options<Real> const& o
     out.status = Status::work_limit;
     return out;
   }
-  Real const pi = Real{4} * std::atan(Real{1}), h = cutoff / Real(n), eps = uni20::numeric_limits<Real>::epsilon();
-  Real const logr = std::log(r), log2 = std::log(Real{2});
-  std::vector<Real> k(2 * n + 1), drive(points), weights(points), u(points), next(points), logs(points), source(points),
-      continued(points);
-  CompensatedSum<Real> mass;
+  Real const pi = Real{4} * uni20::math::atan(one), h = cutoff / Real(n),
+             eps = uni20::numeric_limits<Real>::epsilon(options.precision());
+  Real const logr = uni20::math::log(r), log2 = uni20::math::log(uni20::scalar_like(r, 2));
+  std::vector<Real> k(2 * n + 1, zero), drive(points, zero), weights(points, zero), u(points, zero), next(points, zero),
+      logs(points, zero), source(points, zero), continued(points, zero);
+  CompensatedSum<Real> mass(zero);
   for (std::size_t j = 0; j < k.size(); ++j)
   {
     k[j] = kernel(h * Real(j));
     mass.add((j ? Real{2} : Real{1}) * h * k[j]);
   }
   // This full difference-grid sum bounds every folded row sum from above.
-  Real const q = mass.value() * thermal_factors(r + particle_source(Real{0}, beta), Real{1}).filling;
+  Real const q = mass.value() * thermal_factors(r + particle_source(zero, beta), one).filling;
   if (!uni20::isfinite(q) || q >= Real{1})
   {
     out.status = Status::mesh_limit;
     return out;
   }
-  CompensatedSum<Real> response;
-  CompensatedSum<Real> source_response;
+  CompensatedSum<Real> response(zero);
+  CompensatedSum<Real> source_response(zero);
   for (std::size_t j = 0; j < points; ++j)
   {
     Real const x = h * Real(j);
-    drive[j] = j == 0 ? r : std::exp(logr + x - log2) + std::exp(logr - x - log2);
+    drive[j] = j == 0 ? r : uni20::math::exp(logr + x - log2) + uni20::math::exp(logr - x - log2);
     if (!uni20::isfinite(drive[j]))
     {
       out.status = Status::precision_limit;
@@ -132,10 +172,10 @@ GridResult<Real> grid(Real r, Real cutoff, std::size_t n, Options<Real> const& o
     }
     weights[j] = j == 0 || j == n ? h / Real{2} : h;
     source[j] = particle_source(x, beta);
-    continued[j] = beta == Real{0} ? Real{0} : Real{2} * continued_kernel(x, beta);
-    Real const filling = thermal_factors(drive[j] + source[j], Real{1}).filling;
+    continued[j] = beta == zero ? zero : Real{2} * continued_kernel(x, beta);
+    Real const filling = thermal_factors(drive[j] + source[j], one).filling;
     response.add(weights[j] * drive[j] * filling / pi);
-    source_response.add(weights[j] * std::abs(continued[j]) * filling);
+    source_response.add(weights[j] * uni20::math::abs(continued[j]) * filling);
   }
   for (std::size_t iteration = 0;; ++iteration)
   {
@@ -146,13 +186,13 @@ GridResult<Real> grid(Real r, Real cutoff, std::size_t n, Options<Real> const& o
     }
     work.kernel_products += cost;
     for (std::size_t j = 0; j < points; ++j)
-      logs[j] = weights[j] * thermal_factors(drive[j] + source[j] + u[j], Real{1}).log_weight;
-    out.residual = Real{0};
-    Real magnitude = Real{1};
+      logs[j] = weights[j] * thermal_factors(drive[j] + source[j] + u[j], one).log_weight;
+    out.residual = zero;
+    Real magnitude = one;
     bool changed = false;
     for (std::size_t i = 0; i < points; ++i)
     {
-      CompensatedSum<Real> sum;
+      CompensatedSum<Real> sum(zero);
       for (std::size_t j = 0; j < points; ++j)
         sum.add((k[i > j ? i - j : j - i] + k[i + j]) * logs[j]);
       next[i] = sum.value();
@@ -161,8 +201,8 @@ GridResult<Real> grid(Real r, Real cutoff, std::size_t n, Options<Real> const& o
         out.status = Status::precision_limit;
         return out;
       }
-      out.residual = std::max(out.residual, std::abs(next[i] - u[i]));
-      magnitude = std::max(magnitude, std::abs(next[i]));
+      out.residual = std::max(out.residual, uni20::math::abs(next[i] - u[i]));
+      magnitude = std::max(magnitude, uni20::math::abs(next[i]));
       changed = changed || next[i] != u[i];
     }
     Real const floor = Real{64} * eps * magnitude * response.value() / (Real{1} - q);
@@ -172,15 +212,15 @@ GridResult<Real> grid(Real r, Real cutoff, std::size_t n, Options<Real> const& o
     work.nonlinear_error = out.error;
     if (out.error <= options.tolerance / Real{64} && out.source_error <= options.tolerance / Real{64})
     {
-      CompensatedSum<Real> sum;
+      CompensatedSum<Real> sum(zero);
       for (std::size_t j = 0; j < points; ++j)
         sum.add(drive[j] * logs[j]);
       out.y = -sum.value() / pi;
-      CompensatedSum<Real> integral;
+      CompensatedSum<Real> integral(zero);
       for (std::size_t j = 0; j < points; ++j)
         integral.add(continued[j] * logs[j]);
       out.source_integral = integral.value();
-      out.error += Real{64} * eps * std::abs(out.y);
+      out.error += Real{64} * eps * uni20::math::abs(out.y);
       work.nonlinear_error = out.error;
       out.converged = true;
       out.status = Status::converged;
@@ -198,6 +238,10 @@ GridResult<Real> grid(Real r, Real cutoff, std::size_t n, Options<Real> const& o
 }
 template <uni20::Real Real> Real validate(Real mass, Real length, Options<Real> const& options)
 {
+  Real const zero = uni20::scalar_at_precision<Real>(0, options.precision());
+  for (Real const* value : std::array<Real const*, 3>{&mass, &length, &options.tolerance})
+    bethe::detail::require_same_precision(*value, zero);
+  if (options.initial_cutoff) bethe::detail::require_same_precision(*options.initial_cutoff, zero);
   if (!uni20::isfinite(mass) || !uni20::isfinite(length) || mass <= Real{0} || length <= Real{0})
     throw std::invalid_argument("Lee-Yang mass and length must be finite and positive");
   Real const r = mass * length;
@@ -223,22 +267,24 @@ std::optional<Real> refine(Real mass, Real length, Options<Real> const& options,
   out.mass = mass;
   out.length = length;
   out.scaled_length = r;
-  Real const pi = Real{4} * std::atan(Real{1});
-  Real const target = std::max(Real{2}, -std::log(options.tolerance) + std::log(Real{128}));
-  out.cutoff = options.initial_cutoff.value_or(std::max(Real{2}, std::log(Real{2} * target) - std::log(r)));
+  Real const pi = Real{4} * uni20::math::atan(uni20::scalar_like(mass, 1));
+  Real const target = std::max(uni20::scalar_like(mass, 2),
+                               -uni20::math::log(options.tolerance) + uni20::math::log(uni20::scalar_like(mass, 128)));
+  out.cutoff = options.initial_cutoff.value_or(
+      std::max(uni20::scalar_like(mass, 2), uni20::math::log(Real{2} * target) - uni20::math::log(r)));
   std::optional<Real> previous_cutoff_y;
-  Real previous_cutoff_source{};
-  Real previous_cutoff_error{};
+  Real previous_cutoff_source = uni20::scalar_like(mass, 0);
+  Real previous_cutoff_error = uni20::scalar_like(mass, 0);
   for (std::size_t cut = 0; cut < options.max_cutoffs; ++cut)
   {
     ++out.cutoffs;
     std::optional<Real> previous_y;
-    Real previous_error{};
-    Real previous_source{};
-    detail::GridResult<Real> last;
+    Real previous_error = uni20::scalar_like(mass, 0);
+    Real previous_source = uni20::scalar_like(mass, 0);
+    detail::GridResult<Real> last(uni20::scalar_like(mass, 0));
     unsigned stable = 0;
     bool mesh_ok = false;
-    out.mesh_error = uni20::numeric_limits<Real>::infinity();
+    out.mesh_error = uni20::scalar_like(r, std::numeric_limits<double>::infinity());
     for (std::size_t n = options.initial_intervals;;)
     {
       out.intervals = n;
@@ -252,8 +298,8 @@ std::optional<Real> refine(Real mass, Real length, Options<Real> const& options,
       {
         if (previous_y)
         {
-          out.mesh_error = std::abs(last.y - *previous_y) + last.error + previous_error;
-          out.mesh_error += std::abs(last.source_coordinate - previous_source);
+          out.mesh_error = uni20::math::abs(last.y - *previous_y) + last.error + previous_error;
+          out.mesh_error += uni20::math::abs(last.source_coordinate - previous_source);
           stable = out.mesh_error <= options.tolerance / Real{8} ? stable + 1 : 0;
           if (stable == 2)
           {
@@ -273,14 +319,14 @@ std::optional<Real> refine(Real mass, Real length, Options<Real> const& options,
       out.status = Status::mesh_limit;
       return {};
     }
-    Real const drive =
-        std::exp(std::log(r) + out.cutoff - std::log(Real{2})) + std::exp(std::log(r) - out.cutoff - std::log(Real{2}));
-    out.direct_tail_bound = tail_multiplier * std::exp(-drive) / std::tanh(out.cutoff) / pi;
+    Real const drive = uni20::math::exp(uni20::math::log(r) + out.cutoff - uni20::math::log(uni20::scalar_like(r, 2))) +
+                       uni20::math::exp(uni20::math::log(r) - out.cutoff - uni20::math::log(uni20::scalar_like(r, 2)));
+    out.direct_tail_bound = tail_multiplier * uni20::math::exp(-drive) / uni20::math::tanh(out.cutoff) / pi;
     if (previous_cutoff_y)
     {
-      out.cutoff_error = std::abs(last.y - *previous_cutoff_y) + last.error + out.mesh_error + previous_cutoff_error +
-                         out.direct_tail_bound;
-      out.cutoff_error += std::abs(last.source_coordinate - previous_cutoff_source);
+      out.cutoff_error = uni20::math::abs(last.y - *previous_cutoff_y) + last.error + out.mesh_error +
+                         previous_cutoff_error + out.direct_tail_bound;
+      out.cutoff_error += uni20::math::abs(last.source_coordinate - previous_cutoff_source);
       if (out.cutoff_error <= options.tolerance / Real{2})
       {
         if (!uni20::isfinite(last.y / length))
@@ -319,14 +365,14 @@ std::optional<Real> refine(Real mass, Real length, Options<Real> const& options,
 template <uni20::Real Real = double> State<Real> ground_state(Real mass, Real length, Options<Real> const& options = {})
 {
   detail::validate(mass, length, options);
-  State<Real> out;
+  State<Real> out(uni20::scalar_like(mass, 0));
   auto const y = detail::refine(mass, length, options, out, Real{1},
                                 [](Real r, Real cutoff, std::size_t n, auto const& opt, auto& work) {
-                                  return detail::grid(r, cutoff, n, opt, work);
+                                  return detail::grid(r, cutoff, n, opt, work, uni20::scalar_like(r, 0));
                                 });
   if (y)
   {
-    Real const pi = Real{4} * std::atan(Real{1}), ceff = -Real{6} * *y / pi;
+    Real const pi = Real{4} * uni20::math::atan(uni20::scalar_like(mass, 1)), ceff = -Real{6} * *y / pi;
     if (!uni20::isfinite(ceff))
     {
       out.converged = false;
