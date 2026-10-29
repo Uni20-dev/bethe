@@ -2,6 +2,7 @@
 // Copyright (C) 2026 Ian McCulloch
 #include "program-options.hpp"
 #include "result-output.hpp"
+#include "solver-precision.hpp"
 #include <bethe/xyz.hpp>
 
 namespace
@@ -28,7 +29,8 @@ auto program_info()
       "t->infinity gives XXZ with Delta=cos(pi*eta); eta=1/2 gives the anisotropic XY chain.",
       "Residual=max|F|/[L*(1-eta)], default tolerance 32 epsilon. Extreme parameters may stall or exceed range.",
       "Failed energies/roots are missing, with exit status 2.",
-      "See docs/xyz.md for conventions and limits; --references for literature. fp128 requires MPLAPACK."};
+      "bits-N/digits-N select explicit MPFR precision, using Uni20 CPU/provider LU dispatch.",
+      "See docs/xyz.md for conventions and limits; --references for literature."};
   return info;
 }
 void add_options(CLI::App& app, Arguments& a)
@@ -40,7 +42,7 @@ void add_options(CLI::App& app, Arguments& a)
   cli::count_option(app, "--max-iterations", a.iterations, "Accepted Newton updates; zero checks the seed")
       ->capture_default_str();
   app.add_flag("--roots", a.roots, "Export labels and converged complex roots as real/imaginary columns");
-  cli::precision_option(app, a.precision);
+  cli::precision_option(app, a.precision, cli::ArbitraryPrecision::real_lu);
   cli::add_data_output_options(app, a.output,
                                {{.name = "states", .description = "Selected states and diagnostics", .primary = true},
                                 {.name = "roots",
@@ -63,13 +65,11 @@ char const* name(model::Status status)
   }
   return "unknown";
 }
-template <uni20::Real Real> int run(Arguments const& a, int argc, char** argv)
+template <uni20::Real Real>
+int run(Arguments const& a, model::SolverOptions<Real> const& controls, int argc, char** argv)
 {
   uni20::run_context context(program_info(), {.invocation = std::vector<std::string>(argv, argv + argc)});
-  Real const eta = uni20::parse_real<Real>(*a.eta), t = uni20::parse_real<Real>(*a.t);
-  model::SolverOptions<Real> controls;
-  controls.max_iterations = a.iterations;
-  if (a.tolerance) controls.residual_tolerance = uni20::parse_real<Real>(*a.tolerance);
+  Real const eta = cli::parse_solver_real<Real>(*a.eta, controls), t = cli::parse_solver_real<Real>(*a.t, controls);
   // Validate and solve before opening files, including --force targets.
   auto const state = context.measure([&] { return model::ground_state(a.sites, eta, t, controls); });
   using Optional = std::optional<Real>;
@@ -130,6 +130,7 @@ int main(int argc, char** argv)
       argc, argv, program_info(), [&](auto& app) { add_options(app, a); },
       [&](auto&) {
         a.output.validate();
-        return cli::dispatch_precision(a.precision, [&]<typename Real>() { return run<Real>(a, argc, argv); });
+        return cli::dispatch_solver_precision<cli::ArbitraryPrecision::real_lu>(
+            a.precision, a.tolerance, a.iterations, [&](auto const& controls) { return run(a, controls, argc, argv); });
       });
 }

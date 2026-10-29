@@ -87,6 +87,10 @@ target_link_libraries(bethe_generated_state_scan_tests PRIVATE bethe::bethe TBB:
 bethe_discover_tests(bethe_generated_state_scan_tests)
 
 if(BETHE_HAS_MPREAL)
+  add_executable(bethe_xyz_mpfr_tests test_xyz_mpfr.cpp)
+  target_link_libraries(bethe_xyz_mpfr_tests PRIVATE bethe::bethe TBB::tbb)
+  bethe_discover_tests(bethe_xyz_mpfr_tests)
+
   add_executable(bethe_open_two_string_mpfr_tests test_open_two_string_mpfr.cpp)
   target_link_libraries(bethe_open_two_string_mpfr_tests PRIVATE bethe::bethe TBB::tbb)
   bethe_discover_tests(bethe_open_two_string_mpfr_tests)
@@ -747,6 +751,9 @@ if(BETHE_BUILD_APPS)
     add_test(NAME XYZ.cli
       COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_xyz.py"
         "$<TARGET_FILE:bethe-xyz-pbc>" "${BETHE_HAS_FLOAT128}")
+    add_test(NAME XYZ.mpfr_cli
+      COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_xyz_mpfr.py"
+        "$<TARGET_FILE:bethe-xyz-pbc>" "${BETHE_HAS_MPREAL}")
     add_test(NAME HubbardContinuum.cli
       COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_hubbard_continuum.py"
         "$<TARGET_FILE:bethe-hubbard-continuum>" "${BETHE_HAS_FLOAT128}")
