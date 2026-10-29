@@ -299,19 +299,32 @@ auto state = bethe::biquadratic::ground_state<Real>(16, controls);
 auto selected = bethe::biquadratic::real_excitations<Real>(8, 4, {.count=6}, controls);
 ```
 
-Numerical Newton updates require the configured MPLAPACK MPFR provider,
-selected through Uni20's normal dispatch. Scalar-only MPFR builds can evaluate
-zero-update diagnostics and the analytic ferromagnetic helpers; those helpers
-take an explicit `Precision` argument. TL loop weights and reference XXZ Delta
-must carry the same finite precision as the controls. Unset, exact and mixed
-precision inputs are rejected before numerical work. Failed states retain
-their roots, energies and diagnostics at that precision. Existing bounded
-scans and owning Async sweeps preserve it independently for each request.
+All existing frontend modes also accept `--precision bits-N` or
+`--precision digits-N` when built with `UNI20_ENABLE_MPREAL=ON`. This includes
+real-root solves and scans, analytic ferro levels, the selected singlet,
+all supported bound-cluster families, and Q-system seeds and spectrum searches.
 
-This library support currently covers real roots and analytic ferromagnetic
-levels. The string and Q-system paths still need their own precision migration;
-the `bethe-biquadratic-obc` frontend therefore continues to advertise only its
-native formats.
+```sh
+bethe-biquadratic-obc 16 --sectors --threads 4 --precision bits-160
+bethe-biquadratic-obc 4 --singlet-excitation --roots --precision digits-100
+bethe-biquadratic-obc 12 --ferromagnetic --bound-triples 2 --threads 2 --precision bits-160
+bethe-biquadratic-obc 4 --q-seed 1.5,-1.3333333333333333333333333333333333 --precision bits-256
+```
+
+Newton updates use Uni20's normal dispatch: MPLAPACK when available, or its
+CPU MPFR LU implementation otherwise. Analytic ferro helpers take an explicit
+`Precision` argument. TL loop weights and reference XXZ Delta carry the same
+finite precision as the controls. Unset, exact and mixed precision library
+inputs are rejected before numerical work. CLI tolerances and polynomial
+seeds are parsed directly at the requested precision. Root reconstructions,
+energy references and exported values retain that precision as well.
+
+Existing bounded scans and owning Async sweeps preserve precision independently
+for each request. `--threads` has the same scope in every arithmetic format;
+single selected states and Q-system searches remain direct. Failed iterates
+retain their diagnostics and have no verified gap. More bits do not enlarge the
+state family, guarantee a complete Q-system search, or replace convergence and
+candidate-budget checks.
 
 ## Validation and future slices
 
