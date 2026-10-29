@@ -27,47 +27,71 @@ explicit executable path. Multi-tool scripts take an executable directory via
 need not be named `bin`. Without these options, scripts read the checked-in data.
 Regeneration replaces the repository's example data, not files in your calculation directory.
 
+## Suggested starting paths
+
+- **First Bethe calculation:** [four-site XXX](../getting-started.md), then
+  [finite-chain excitations](xxx.md) and [precision](xxx-precision.md).
+- **MPS/iMPS excitation comparisons:** [XXZ spinons](xxz-spinons.md),
+  [Hubbard spin/charge lines](hubbard-half-filled.md), then the relevant
+  model guide for normalization and supported families.
+- **Spectral intensity:** [finite XXX two-spinon weights](xxx-structure-factor.md)
+  and [the thermodynamic density](xxx-structure-factor-thermo.md).
+
 ## Available tutorials
 
-- [XXZ spinons and continua](xxz-spinons.md): gapless/gapped bands and two-site folding.
-- [Hubbard at half filling](hubbard-half-filled.md): spin–charge separation and energy conventions.
-- [Doped Hubbard](hubbard-doped.md): gapless charge branches and chemical-potential subtraction.
-- [SU(3)/ULS](su3-uls.md): representations, two-/four-soliton thresholds and three-site folding.
-- [Takhtajan–Babujian](takhtajan-babujian.md): spin selection rules and quadrupolar continua.
-- [Lieb–Liniger](lieb-liniger.md): particle/hole branches and density scaling.
-- [Sutherland](sutherland.md): collision exponents, excitation labels and bounded scans.
+### Spin chains
+
 - [XXX](xxx.md): finite-ring spinons and periodic/free-end excitation scans.
 - [XXX precision](xxx-precision.md): resolving small energy scales, stable formulas and arbitrary precision.
 - [XXX spectral weights](xxx-structure-factor.md): two-spinon intensities, sum rules and plotting broadening.
 - [Thermodynamic XXX intensity](xxx-structure-factor-thermo.md): exact two-spinon spectral density without broadening.
-- [Haldane–Shastry](haldane-shastry.md): motifs, spin multiplicities and complete finite spectra.
+- [XXZ spinons and continua](xxz-spinons.md): gapless/gapped bands and two-site folding.
 - [XYZ](xyz.md): gapped spinons, bound branches and discrete parity copies.
-- [q-bosons](q-boson.md): occupation-dependent hopping from free bosons to the phase limit.
+- [SU(3)/ULS](su3-uls.md): representations, two-/four-soliton thresholds and three-site folding.
+- [Takhtajan–Babujian](takhtajan-babujian.md): spin selection rules and quadrupolar continua.
 - [Negative biquadratic chain](biquadratic.md): TL sectors, spin multiplicities and complex-root singlets.
 - [Ferromagnetic biquadratic chain](biquadratic-ferromagnetic.md): one-defect bands and bound droplets.
-- [Sine-Gordon](sine-gordon.md): breather thresholds and exact versus asymptotic finite-volume gaps.
-- [Scaling Lee–Yang](lee-yang.md): effective central charge and a nonunitary one-particle gap.
-- [TASEP](tasep.md): relaxation times, oscillation and density-dependent size scaling.
-- [ASEP](asep.md): a fixed-total-rate bias scan and the symmetric limit.
+- [Haldane–Shastry](haldane-shastry.md): motifs, spin multiplicities and complete finite spectra.
+- [Three-state Potts](potts.md): charged branches, discrete symmetries and finite-size CFT estimators.
+- [Non-Hermitian XXZ](xxz-nonhermitian.md): regular-root families, Jordan blocks and parity-dependent Casimir terms.
+- [Integrable ladder](ladder.md): field envelopes, magnetization steps and highest-weight descendants.
+
+### Electrons and gases
+
+- [Hubbard at half filling](hubbard-half-filled.md): spin–charge separation and energy conventions.
+- [Doped Hubbard](hubbard-doped.md): gapless charge branches and chemical-potential subtraction.
+- [Lieb–Liniger](lieb-liniger.md): particle/hole branches and density scaling.
+- [q-bosons](q-boson.md): occupation-dependent hopping from free bosons to the phase limit.
 - [Gaudin–Yang](gaudin-yang.md): repulsion, nested roots and finite-ring shell conventions.
 - [Supersymmetric t–J](tj.md): selected dopings, projected fermions and the no-hole XXX limit.
 - [SU(n) fermions](su-fermions.md): component populations, nested seas and cross-model reductions.
 - [Bose–Fermi mixtures](bose-fermi.md): equal-coupling composition benchmarks and particle statistics.
-- [Three-state Potts](potts.md): charged branches, discrete symmetries and finite-size CFT estimators.
-- [Non-Hermitian XXZ](xxz-nonhermitian.md): regular-root families, Jordan blocks and parity-dependent Casimir terms.
+- [Sutherland](sutherland.md): collision exponents, excitation labels and bounded scans.
+
+### Pairing and impurities
+
 - [Richardson pairing](richardson.md): blocked sectors and regular variables through pair-root collisions.
 - [Central spin](central-spin.md): fixed-sector field response and energy-derived central polarization.
 - [Kondo](kondo.md): host subtraction, susceptibility calibration and universal impurity response.
-- [Integrable ladder](ladder.md): field envelopes, magnetization steps and highest-weight descendants.
+
+### Field theory
+
+- [Sine-Gordon](sine-gordon.md): breather thresholds and exact versus asymptotic finite-volume gaps.
+- [Scaling Lee–Yang](lee-yang.md): effective central charge and a nonunitary one-particle gap.
+
+### Stochastic systems
+
+- [TASEP](tasep.md): relaxation times, oscillation and density-dependent size scaling.
+- [ASEP](asep.md): a fixed-total-rate bias scan and the symmetric limit.
 
 ## Coverage of implemented models
 
-All **26 implemented model families** have worked tutorials:
+Every implemented model family has a worked tutorial:
 Hubbard has separate half-filled/doped examples and XXX has energies,
 spectral weights and a high-precision example. This inventory
 includes finite systems and impurity response, not only thermodynamic
 excitation tools. Proposed but unimplemented models in the
-[model survey](../models.md) are outside this inventory.
+[model roadmap](../model-roadmap.md) are outside this inventory.
 
 | Model family | Worked tutorial |
 | --- | --- |
