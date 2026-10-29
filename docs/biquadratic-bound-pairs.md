@@ -125,6 +125,11 @@ It returns auxiliary-sign energies, not physical ferro energies. Delta>1
 is accepted, but away from 3/2 an individual finite-size branch can collapse
 or fail to converge; no general-anisotropy completeness claim is made.
 
+The bound-pair library and its biquadratic mapping also accept explicit MPFR
+controls, as described in the [two-string precision guide](xxz-open-two-string.md#algorithm-precision-and-output).
+The CLI retains its native precision choices until all its complex-state
+modes have been migrated.
+
 Validation covers independent ED on N=4,...,10, both deviation signs in the
 original complex equations, analytic Jacobians and native-precision exact
 values. Long-chain tests reach N=100000, including deviation underflow.

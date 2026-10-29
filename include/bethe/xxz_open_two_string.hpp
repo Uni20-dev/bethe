@@ -34,9 +34,12 @@ template <uni20::Real Real> class System {
   public:
     System(std::size_t n, Real delta) : System(n, delta, n / 2, 1, 1) {}
     System(std::size_t n, Real delta, std::size_t roots, std::size_t label, int sign)
-        : sites(n), order(roots), sea(order - 2), string_label(label), deviation_sign(sign), eta(std::acosh(delta)),
-          pi(Real{4} * std::atan(Real{1}))
+        : sites(n), order(roots), sea(order - 2), string_label(label), deviation_sign(sign),
+          zero(bethe::detail::precision_zero(delta)), eta(uni20::math::acosh(delta)),
+          pi(Real{4} * uni20::math::atan(uni20::scalar_like(zero, 1)))
     {
+      if (!uni20::isfinite(delta) || delta <= Real{1})
+        throw std::invalid_argument("two-string requires finite Delta>1");
       quantum_group::detail::check_matrix_size<Real>(order);
       real_labels.resize(sea);
       for (std::size_t i = 0; i < sea; ++i)
@@ -62,16 +65,16 @@ template <uni20::Real Real> class System {
     // log|sinh(w+i*beta/2)| and derivatives. Widths here are O(eta), not L.
     static Function log_sinh(Real beta, Real w)
     {
-      Real const s = std::sin(beta / Real{2}), c = std::cos(beta / Real{2}), sh = std::sinh(w);
+      Real const s = uni20::math::sin(beta / Real{2}), c = uni20::math::cos(beta / Real{2}), sh = uni20::math::sinh(w);
       Real const den = sh * sh + s * s;
-      return {std::log(den) / Real{2}, s * c / (Real{2} * den), sh * std::cosh(w) / den};
+      return {uni20::math::log(den) / Real{2}, s * c / (Real{2} * den), sh * uni20::math::cosh(w) / den};
     }
     // log(sinh(d)/d), and d*coth(d), including d=0 after underflow.
     static std::pair<Real, Real> sinh_correction(Real d)
     {
-      if (std::abs(d) < std::sqrt(uni20::numeric_limits<Real>::epsilon()))
+      if (uni20::math::abs(d) < uni20::math::sqrt(uni20::numeric_limits<Real>::epsilon(d)))
         return {d * d / Real{6}, Real{1} + d * d / Real{3}};
-      return {std::log(std::sinh(d) / d), d / std::tanh(d)};
+      return {uni20::math::log(uni20::math::sinh(d) / d), d / uni20::math::tanh(d)};
     }
     bool physical(std::span<Real const> x) const
     {
@@ -80,21 +83,21 @@ template <uni20::Real Real> class System {
         if (!uni20::isfinite(v)) return false;
       for (std::size_t i = 0; i < sea; ++i)
         if (!(x[i] > Real{0} && x[i] < pi) || (i && x[i] <= x[i - 1])) return false;
-      return x[sea] > Real{0} && x[sea] < pi && x[sea + 1] > -std::log(eta);
+      return x[sea] > Real{0} && x[sea] < pi && x[sea + 1] > -uni20::math::log(eta);
     }
     std::vector<Real> seed() const
     {
-      std::vector<Real> x(order);
+      std::vector<Real> x(order, zero);
       for (std::size_t i = 0; i < sea; ++i)
-        x[i] = Real{2} *
-               std::atan(std::tanh(eta / Real{2}) * std::tan(pi * Real(real_labels[i]) / (Real{2} * Real(sites))));
+        x[i] = Real{2} * uni20::math::atan(uni20::math::tanh(eta / Real{2}) *
+                                           uni20::math::tan(pi * Real(real_labels[i]) / (Real{2} * Real(sites))));
       x[sea] = selected_labels ? pi * (Real(string_label) / Real(sites - 2 - 2 * sea))
                : sea           ? pi / Real{2}
                                : pi * (Real(string_label) / Real(sites - 2));
-      x[sea + 1] = Real{8} + std::abs(std::log(eta));
+      x[sea + 1] = Real{8} + uni20::math::abs(uni20::math::log(eta));
       // Solve the ideal-string modulus equation for L at the bare sea seed.
       x[sea + 1] += Real{2} * Real(sites) * evaluate(x, nullptr, true).residual.back();
-      x[sea + 1] = std::max(x[sea + 1], Real{2} - std::log(eta));
+      x[sea + 1] = std::max(x[sea + 1], Real{2} - uni20::math::log(eta));
       return x;
     }
     struct Evaluation
@@ -106,18 +109,19 @@ template <uni20::Real Real> class System {
     // convergence always uses the finite-deviation system (ideal=false).
     Evaluation evaluate(std::span<Real const> x, std::vector<Real>* jac = nullptr, bool ideal = false) const
     {
-      Real const scale = Real{1} / (Real{2} * Real(sites));
-      Real const a = x[sea], L = x[sea + 1], d = ideal ? Real{0} : Real(deviation_sign) * std::exp(-L);
+      Real const scale = uni20::scalar_like(zero, 1) / (Real{2} * Real(sites));
+      Real const a = x[sea], L = x[sea + 1], d = ideal ? zero : Real(deviation_sign) * uni20::math::exp(-L);
       Real const wp = (Real{3} * eta + d) / Real{2}, wm = (eta - d) / Real{2};
-      if (jac) jac->assign(order * order, Real{0});
+      if (jac) jac->assign(order * order, zero);
       auto add = [&](std::size_t i, std::size_t j, Real v) {
         if (jac) (*jac)[i * order + j] += v * scale;
       };
-      Evaluation out{.residual = std::vector<Real>(order)};
+      Evaluation out{
+          .residual = std::vector<Real>(order, zero), .norm = zero, .phase_norm = zero, .modulus_norm = zero};
       for (std::size_t i = 0; i < sea; ++i)
       {
         auto drive = phase(x[i], eta / Real{2});
-        bethe::detail::CompensatedSum<Real> f;
+        bethe::detail::CompensatedSum<Real> f(zero);
         f.add(drive.value - Real{2} * pi * Real(real_labels[i]) * scale);
         add(i, i, Real{2} * Real(sites) * drive.angle);
         for (std::size_t j = 0; j < sea; ++j)
@@ -141,7 +145,7 @@ template <uni20::Real Real> class System {
         out.residual[i] = f.value();
       }
       auto p = phase(a, eta + d / Real{2}), c = phase(a, d / Real{2}, true), self = phase(Real{2} * a, eta);
-      bethe::detail::CompensatedSum<Real> ph, mod;
+      bethe::detail::CompensatedSum<Real> ph(zero), mod(zero);
       ph.add(p.value + c.value);
       ph.add(-scale * (Real{2} * self.value + Real{2} * pi * Real(string_label)));
       add(sea, sea, Real{2} * Real(sites) * (p.angle + c.angle) - Real{4} * self.angle);
@@ -149,9 +153,10 @@ template <uni20::Real Real> class System {
       auto lp = log_sinh(a, eta + d / Real{2}), lm = log_sinh(a, d / Real{2});
       auto const [correction, dcoth] = sinh_correction(d);
       mod.add(lp.value - lm.value);
-      mod.add(scale * (-std::log(std::sinh(Real{2} * eta + d)) - L + correction));
+      mod.add(scale * (-uni20::math::log(uni20::math::sinh(Real{2} * eta + d)) - L + correction));
       add(sea + 1, sea, Real{2} * Real(sites) * (lp.angle - lm.angle));
-      add(sea + 1, sea + 1, -Real(sites) * d * (lp.width - lm.width) + d / std::tanh(Real{2} * eta + d) - dcoth);
+      add(sea + 1, sea + 1,
+          -Real(sites) * d * (lp.width - lm.width) + d / uni20::math::tanh(Real{2} * eta + d) - dcoth);
       for (std::size_t j = 0; j < sea; ++j)
         for (int sign : {-1, 1})
           for (int side : {-1, 1})
@@ -172,28 +177,29 @@ template <uni20::Real Real> class System {
       for (std::size_t i = 0; i < order; ++i)
       {
         if (!uni20::isfinite(out.residual[i])) throw std::overflow_error("nonfinite two-string residual");
-        out.norm = std::max(out.norm, std::abs(out.residual[i]));
-        if (i <= sea) out.phase_norm = std::max(out.phase_norm, std::abs(out.residual[i]));
+        out.norm = std::max(out.norm, uni20::math::abs(out.residual[i]));
+        if (i <= sea) out.phase_norm = std::max(out.phase_norm, uni20::math::abs(out.residual[i]));
       }
-      out.modulus_norm = std::abs(mod.value());
+      out.modulus_norm = uni20::math::abs(mod.value());
       return out;
     }
     Real energy_sum(std::span<Real const> x, Real delta, Real offset) const
     {
-      Real const sh = std::sinh(eta), s2 = sh * sh;
-      bethe::detail::CompensatedSum<Real> sum;
+      Real const sh = uni20::math::sinh(eta), s2 = sh * sh;
+      bethe::detail::CompensatedSum<Real> sum(zero);
       sum.add(offset);
       for (std::size_t i = 0; i < sea; ++i)
-        sum.add(-s2 / (delta - std::cos(x[i])));
-      Real const d = Real(deviation_sign) * std::exp(-x[sea + 1]), a = x[sea];
-      Real const sa = std::sin(a / Real{2}), sd = std::sinh(d / Real{2});
+        sum.add(-s2 / (delta - uni20::math::cos(x[i])));
+      Real const d = Real(deviation_sign) * uni20::math::exp(-x[sea + 1]), a = x[sea];
+      Real const sa = uni20::math::sin(a / Real{2}), sd = uni20::math::sinh(d / Real{2});
       // delta-cosh(eta+d)*cos(a), without cancellation as a->0 or d->0.
-      Real const re = Real{2} * delta * sa * sa - (Real{2} * delta * sd * sd + sh * std::sinh(d)) * std::cos(a);
-      Real const im = std::sinh(eta + d) * std::sin(a);
+      Real const re =
+          Real{2} * delta * sa * sa - (Real{2} * delta * sd * sd + sh * uni20::math::sinh(d)) * uni20::math::cos(a);
+      Real const im = uni20::math::sinh(eta + d) * uni20::math::sin(a);
       sum.add(-Real{2} * s2 * re / (re * re + im * im));
       return sum.value();
     }
-    Real energy_shift(std::span<Real const> x, Real delta) const { return energy_sum(x, delta, Real{0}); }
+    Real energy_shift(std::span<Real const> x, Real delta) const { return energy_sum(x, delta, zero); }
     Real energy(std::span<Real const> x, Real delta) const
     {
       return energy_sum(x, delta, Real(sites - 1) * delta / Real{4});
@@ -202,18 +208,18 @@ template <uni20::Real Real> class System {
     {
       if (selected_labels)
       {
-        std::vector<Real> scales(order);
+        std::vector<Real> scales(order, zero);
         for (std::size_t i = 0; i <= sea; ++i)
           scales[i] = std::min(x[i], pi - x[i]);
-        scales.back() = Real{2} * Real(sites);
+        scales.back() = uni20::scalar_like(zero, 2) * Real(sites);
         return scales;
       }
       if (sea) return {};
-      return {std::min(x[0], pi - x[0]), Real{2} * Real(sites)};
+      return {std::min(x[0], pi - x[0]), uni20::scalar_like(zero, 2) * Real(sites)};
     }
     std::size_t sites, order, sea, string_label;
     int deviation_sign;
-    Real eta, pi;
+    Real zero, eta, pi;
     std::vector<std::size_t> real_labels;
     bool selected_labels = false;
 };
@@ -221,6 +227,7 @@ template <uni20::Real Real> class System {
 template <uni20::Real Real>
 State<Real> solve(System<Real> const& system, Real delta, SolverOptions<Real> const& options)
 {
+  (void)xxz::detail::solver_zero(delta, options);
   if (!uni20::isfinite(delta) || delta <= Real{1}) throw std::invalid_argument("two-string requires finite Delta>1");
   auto const iteration = quantum_group::detail::solve_log_string<Real>(system, options);
   auto const& x = iteration.x;
@@ -265,11 +272,12 @@ template <uni20::Real Real = double>
   for (std::size_t i = 0; i < labels.size(); ++i)
     if (labels[i] == 0 || labels[i] > sites - m || (i && labels[i] <= labels[i - 1]))
       throw std::invalid_argument("real labels must be ordered distinct integers in [1,N-M]");
+  (void)xxz::detail::solver_zero(delta, options);
   return detail::solve(detail::System<Real>(sites, delta, labels, pair_label), delta, options);
 }
 
 /// One positive-deviation two-string above a real sea, even N>=4, Delta>1.
-/// Native precision, O(N^2) memory/O(N^3) per update; no enumeration or site cap.
+/// Selected explicit precision, O(N^2) memory/O(N^3) per update; no enumeration or site cap.
 /// Equations are the exact open-chain Bethe equations regularized in L=-log(d),
 /// not an ideal-string approximation. See docs/xxz-open-two-string.md.
 template <uni20::Real Real = double>
@@ -277,6 +285,7 @@ template <uni20::Real Real = double>
 {
   (void)quantum_group::detail::sector_roots(sites, 0);
   if (sites < 4) throw std::invalid_argument("two-string singlet requires even N>=4");
+  (void)xxz::detail::solver_zero(delta, options);
   return detail::solve(detail::System<Real>(sites, delta), delta, options);
 }
 
@@ -293,6 +302,7 @@ template <uni20::Real Real = double>
   if (mode == 0 || mode > sites - 3) throw std::invalid_argument("bound-pair mode requires 1<=mode<=N-3");
   auto const label = sites - 2 - mode;
   auto const sign = mode % 2 ? 1 : -1;
+  (void)xxz::detail::solver_zero(delta, options);
   return detail::solve(detail::System<Real>(sites, delta, 2, label, sign), delta, options);
 }
 

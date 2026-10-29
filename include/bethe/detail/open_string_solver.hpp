@@ -14,11 +14,11 @@ template <uni20::Real Real> struct StringPhase
 /// Theta(beta;w), with derivatives, and its complementary phase near w=0.
 template <uni20::Real Real> StringPhase<Real> string_phase(Real beta, Real w, bool complement = false)
 {
-  Real const s = std::sin(beta / Real{2}), c = std::cos(beta / Real{2}), t = std::tanh(w);
+  Real const s = uni20::math::sin(beta / Real{2}), c = uni20::math::cos(beta / Real{2}), t = uni20::math::tanh(w);
   Real const den = s * s + t * t * c * c;
   Real const da = t / den, dw = -Real{2} * s * c * (Real{1} - t * t) / den;
-  if (complement) return {Real{2} * std::atan2(t * c, s), -da, -dw};
-  return {Real{2} * std::atan2(s, t * c), da, dw};
+  if (complement) return {Real{2} * uni20::math::atan2(t * c, s), -da, -dw};
+  return {Real{2} * uni20::math::atan2(s, t * c), da, dw};
 }
 
 template <uni20::Real Real> struct StringIteration
@@ -35,18 +35,21 @@ template <uni20::Real Real> struct StringIteration
 template <uni20::Real Real, typename System>
 StringIteration<Real> solve_log_string(System const& system, SolverOptions<Real> const& options)
 {
+  Real const zero = bethe::detail::solver_zero(options);
   if (!uni20::isfinite(options.residual_tolerance) || options.residual_tolerance <= Real{0})
     throw std::invalid_argument("residual tolerance must be finite and positive");
   check_matrix_size<Real>(system.order);
   StringIteration<Real> result{.x = system.seed()};
   auto& x = result.x;
+  for (auto const& value : x)
+    bethe::detail::require_same_precision(value, zero);
   if (!system.physical(x)) throw std::overflow_error("string seed is not resolvable at the selected precision");
-  std::vector<Real> jac, step(system.order);
+  std::vector<Real> jac, step(system.order, zero);
   bool ideal = true;
   for (;;)
   {
     auto evaluation = system.evaluate(x, &jac, ideal);
-    if (ideal && evaluation.norm <= std::sqrt(uni20::numeric_limits<Real>::epsilon()))
+    if (ideal && evaluation.norm <= uni20::math::sqrt(uni20::numeric_limits<Real>::epsilon(options.precision())))
     {
       ideal = false;
       evaluation = system.evaluate(x, &jac);
@@ -64,11 +67,11 @@ StringIteration<Real> solve_log_string(System const& system, SolverOptions<Real>
     if (!scales.empty())
       for (std::size_t i = 0; i < system.order; ++i)
       {
-        Real row_scale{};
+        Real row_scale = zero;
         for (std::size_t j = 0; j < system.order; ++j)
         {
           jac[i * system.order + j] *= scales[j];
-          row_scale = std::max(row_scale, std::abs(jac[i * system.order + j]));
+          row_scale = std::max(row_scale, uni20::math::abs(jac[i * system.order + j]));
         }
         if (row_scale > Real{0})
         {
@@ -77,7 +80,7 @@ StringIteration<Real> solve_log_string(System const& system, SolverOptions<Real>
           step[i] /= row_scale;
         }
       }
-    if (!bethe::detail::newton_step(jac, step))
+    if (!bethe::detail::newton_step(jac, step, options.precision()))
     {
       result.status = SolveStatus::singular_jacobian;
       break;
@@ -86,7 +89,7 @@ StringIteration<Real> solve_log_string(System const& system, SolverOptions<Real>
       for (std::size_t j = 0; j < system.order; ++j)
         step[j] *= scales[j];
     bool const accepted = bethe::detail::backtrack_newton(
-        x, [&](std::size_t i) { return step[i]; },
+        x, options.precision(), [&](std::size_t i) { return step[i]; },
         [&](auto const& trial, Real damping) {
           // String solves deliberately require strict decrease, even below tolerance.
           return system.physical(trial) &&
