@@ -203,3 +203,37 @@ Independent spectra at different precisions can be captured by value in an
 final result. Complete masses, particle energies and pair thresholds agree with
 serial evaluation under deferred and one/four-worker execution, including an
 independent failing query. No ambient MPFR precision is changed.
+
+## Explicit precision for asymptotic levels
+
+Both excitation tools accept `--precision bits-N` and `digits-N` when Uni20's
+MPFR scalar support is enabled; no MPLAPACK provider is required. For example:
+
+```sh
+bethe-sine-gordon-bethe-yang --p 2 --length 10 --precision bits-256
+bethe-sine-gordon-bethe-yang --p 2 --length 10 --precision bits-333 \
+    --tolerance 1e-80 --max-iterations 512 --levels 3 --threads 2
+```
+
+Arithmetic precision, bisection iterations and Fourier quadrature budgets are
+independent. The default 256 iterations can be insufficient at larger bit
+counts. A converged counting equation remains an asymptotic Bethe–Yang energy:
+extra digits do not restore the omitted wrapping corrections.
+
+```cpp
+using R = uni20::mpreal;
+auto p = uni20::Precision::bits(256);
+sg::BetheYangOptions<R> options(p);
+auto pair = sg::same_charge_pair(R(1, p), R(10, p), R(2, p),
+                                uni20::from_twice(1), options);
+sg::KernelOptions<R> phase_options(p);
+auto phase = sg::soliton_phase(R("0.7", p), R(2, p), phase_options);
+```
+
+All numerical inputs and controls require the same explicit finite precision.
+Analytic endpoints and unsuccessful solves retain that precision; unavailable
+energies remain absent. Owning Async level requests may mix precisions, and
+completion is awaited through the final grid result. The shared Fourier
+integrals use Uni20's finite tanh–sinh quadrature with separate analytic tail
+bounds. The independent reference generator uses the closed $`p=2`$ rapidity-space
+phase instead of that Fourier representation.

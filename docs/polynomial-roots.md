@@ -26,14 +26,15 @@ not a guarantee of convergence from every initial configuration.
 
 Ordinary Horner evaluation can lose the small residual needed to refine
 close roots. We therefore propagate a rounding correction alongside the
-complex Horner recurrence, using real TwoSum and split-product transforms
-at the selected precision. The compensated-evaluation strategy is described
+complex Horner recurrence, using real TwoSum and product-error transforms
+at the selected precision. Native formats use split products; MPFR uses
+the same-precision fused residual `fma(a,b,-(a*b))`. The compensated-evaluation strategy is described
 by [Cameron and Graillat](../CITATIONS.md#cameron-graillat-2022).
 This implementation does **not** reproduce their full running-error-bound
 algorithm or claim its validated stopping guarantees.
 
 All scalars, roots, and correction terms remain in the requested `Real`:
-fp64, long double, or fp128. There is no hidden cast through double, extra
+fp64, long double, fp128, or explicit-precision MPFR/MPC. There is no hidden cast through double, extra
 precision backend, or eigenvalue/LAPACK dependency. Compensation requires
 round-to-nearest arithmetic without fast-math reassociation. The error-free
 transform identities also assume no underflow or overflow; nonfinite
@@ -99,6 +100,24 @@ iteration budget assesses only the seeds (automatic or supplied); exact
 resolved seeds may succeed without a sweep. The count records attempted
 full-root sweeps, including a failed partial sweep. Per-sweep work is O(n²)
 and scratch memory O(n). Root order is unspecified.
+
+Runtime precision is a per-call control, independent of the MPFR default:
+
+```cpp
+using Real = uni20::mpreal;
+auto p = uni20::Precision::bits(256);
+bethe::detail::PolynomialRootOptions<Real> controls(p);
+std::array<Real, 2> coefficients{Real(-2, p), Real(0, p)};
+auto result = bethe::detail::recover_polynomial_roots<Real>(coefficients, controls);
+// result.roots contains uni20::complex<Real> (MPC for Real=mpreal).
+```
+
+Coefficients, optional complex seeds and tolerance must all carry the same
+finite precision. Exact, unset and mixed-precision inputs are rejected before
+iteration. Roots and diagnostics retain the requested precision on success
+and failure, including vacuum and zero-budget calls. No MPLAPACK provider is
+needed. Higher precision does not increase iteration or degree budgets, and
+root recovery alone does not enable a model's complete MPFR solver.
 
 For the XXZ continuation's affine polynomial, convert each recovered root
 with `z=center+coordinate_scale*x`, then $`v =-(1-i \,z)/(1+i \,z)`$ and pass the
