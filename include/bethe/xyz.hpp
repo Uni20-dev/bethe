@@ -125,7 +125,7 @@ template <uni20::Real Real> struct GroundSystem
     };
     Phase phase(Real a, Real x) const
     {
-      if (a == Real{0.5}) return {zero, zero};
+      if (a == uni20::scalar_like(zero, 1) / Real{2}) return {zero, zero};
       auto const jet = uni20::elliptic_theta_jet(1, uni20::complex<Real>(a, x), t);
       auto const value = jet.derivative[0];
       return {Real{2} * uni20::math::atan2(value.imag(), value.real()),
