@@ -49,7 +49,7 @@ validation; their measurements are historical records, not new integration runs.
 | `biquadratic-obc` | Continuous real-root and owned bound-cluster scans; independent AF sector minima ([#35](https://github.com/Uni20-dev/bethe/pull/35)) | Native only | Model-level explicit precision; selected states and dependent Q-system/singlet paths stay direct |
 | `lee-yang-vacuum`, `lee-yang-excited` | Owning mixed-precision parameter sweeps; optional vacuum/excited overlap | Yes, MPFR scalars | Keep nonlinear, mesh, cutoff and work convergence separate from arithmetic bits |
 | `sine-gordon-vacuum` | Serial single-scale CLI; owning mixed-precision Async parameter sweeps | Explicit MPFR/MPC; no MPLAPACK required | Independent kernel, nonlinear, mesh, cutoff and contour controls; more bits can require larger work budgets |
-| `sine-gordon-excited` | Owning parameter sweeps; optional vacuum/excited overlap ([#28](https://github.com/Uni20-dev/bethe/pull/28)) | Native only | Explicit source, hole-quantization and coupled NLIE precision remains separate work |
+| `sine-gordon-excited` | Owning mixed-precision parameter sweeps; optional independent vacuum/excited overlap | Explicit MPFR/MPC; no MPLAPACK required | Selected p>=1, I=1/2 or 3/2 family; independent Fourier, hole, nonlinear and refinement budgets; coupled iterations remain sequential |
 | `kondo-response` | Bounded field scans and owning Async queries ([#29](https://github.com/Uni20-dev/bethe/pull/29)); single-point/default one-worker requests stay direct | Native only | Explicit-precision scaled positive-real Gamma, Euler-series tails and quadrature |
 | `potts-pbc` | Bounded charged-momentum scans and owning mixed-precision levels after one vacuum solve | Yes, MPFR scalars; no MPLAPACK required | Explicit constants, twists, auxiliary roots and complete failure diagnostics; vacuum and charged one-hole family only |
 | `asep-pbc` | Serial CLI; owning mixed-precision shared TASEP seeds and dependent Async rate grids | Explicit MPFR/MPC; CPU/provider real LU | Existing continuation and work budgets; tiny-bias drift remains explicit |
@@ -274,5 +274,7 @@ failed-state diagnostics. These paths use scalar arithmetic without MPLAPACK.
 The existing bounded level grid also accepts owning requests at different
 precisions. The vacuum NLIE also supports explicit MPFR/MPC, including independently checked
 Fourier tables, free-Dirac energies and interacting D3 reference comparisons.
-Its arithmetic precision and work budgets remain independent. The excited
-NLIE frontend's source and hole-quantization precision audit is separate.
+Both vacuum and selected excited NLIE frontends retain explicit precision in
+all controls and success/failure diagnostics. Source-table and free-Dirac level
+checks reach 333 bits. Arithmetic precision and Fourier, hole, nonlinear, mesh
+and cutoff budgets remain independent; more bits can require more work.
