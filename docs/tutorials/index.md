@@ -91,7 +91,7 @@ Hubbard has separate half-filled/doped examples and XXX has energies,
 spectral weights and a high-precision example. This inventory
 includes finite systems and impurity response, not only thermodynamic
 excitation tools. Proposed but unimplemented models in the
-[model survey](../models.md) are outside this inventory.
+[model roadmap](../model-roadmap.md) are outside this inventory.
 
 | Model family | Worked tutorial |
 | --- | --- |
