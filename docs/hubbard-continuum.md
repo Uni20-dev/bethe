@@ -1,5 +1,7 @@
 # Half-filled Hubbard continuum edges
 
+[Hubbard family](hubbard-family.md) · [Supported models](models.md)
+
 **Status: two-spinon and three charge-containing families implemented in
 the library and the shared frontend.**
 
@@ -20,7 +22,10 @@ both endpoints (the same Brillouin-zone point). `--momentum` selects one point
 and excludes `--points`. The `two_spinon` table reports both energies,
 constituent momenta, separate error estimates, work counts and status.
 `--tolerance`, `--max-evaluations`, `--max-levels` and `--max-iterations`
-control the native solver. Precision defaults to fp64; fp128 requires MPLAPACK.
+control the solver independently of arithmetic precision. The default is fp64;
+long-double, enabled fp128 and [explicit MPFR](#arbitrary-precision) are also
+available. The current fp128 build uses MPLAPACK scalar support; these scalar
+continuum calculations do not require its linear-algebra kernels.
 
 `--threads N` evaluates independent total momenta using Uni20's scheduler
 (default 1), for both the two-spinon and charge-containing families. Each
@@ -123,7 +128,7 @@ on failure. An `objective_failure` means a constituent failed; inspect
 `constituent_status` for its reason. A search budget failure can occur
 even when every sampled constituent converged.
 
-Charge channels reuse the native elementary-line solver and a shared
+Charge channels reuse the selected-precision elementary-line solver and a shared
 bounded-extrema search. Controls are separated by layer:
 
 - `--tolerance`, `--max-evaluations` (default 1000000), `--max-levels`

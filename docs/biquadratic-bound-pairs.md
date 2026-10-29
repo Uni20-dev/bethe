@@ -1,12 +1,13 @@
 # Two-defect bound pairs on long open chains
 
-[Ferromagnetic overview](biquadratic-ferromagnetic.md) · [Signed-string equations](#equations-and-branch-labels) · [Exports](output.md)
+[Biquadratic/TL family](biquadratic-family.md) · [Supported models](models.md) · [Ferromagnetic overview](biquadratic-ferromagnetic.md) · [Signed-string equations](#equations-and-branch-labels) · [Exports](output.md)
 
 For the spin-1 chain `H=+sum(S.S)^2`, two singlet insertions can bind.
 The targeted solver follows the **one-two-string family in ell=N-4**, without
 enumerating scattering states or searching for every Q polynomial.
 It has only two unknowns, independent of chain length, and supports odd/even
-N>=4 in fp64, native long double and enabled fp128.
+N>=4 in fp64, native long double, enabled fp128 and explicit MPFR.
+See [precision and validation](#precision-and-validation) for runtime controls.
 
 ```sh
 # First eight modes of the bound-pair family, not the first eight levels
@@ -125,6 +126,8 @@ It returns auxiliary-sign energies, not physical ferro energies. Delta>1
 is accepted, but away from 3/2 an individual finite-size branch can collapse
 or fail to converge; no general-anisotropy completeness claim is made.
 
+### Precision and validation
+
 The bound-pair library and its biquadratic mapping also accept explicit MPFR
 controls, as described in the [two-string precision guide](xxz-open-two-string.md#algorithm-precision-and-output).
 The CLI supports the same explicit precision, for example
@@ -138,5 +141,8 @@ values. Long-chain tests reach N=100000, including deviation underflow.
 The [three-defect droplet family](biquadratic-bound-triples.md) reuses the
 same logarithmic-string Newton driver and CLI reporting machinery.
 [Real-root scattering windows](biquadratic-scattering.md) cover the unbound
-family. Remaining extensions include larger droplets and mixed-string scattering, physical-spin
-resolution, and operator-dependent spectral weights.
+family. [Bound quartets](biquadratic-bound-quartets.md),
+[mixed cluster families](biquadratic-family.md#choose-a-calculation) and
+[physical-spin multiplicities](biquadratic-spin-content.md) are also implemented.
+Droplets of five or more defects, general string mixtures and operator-dependent
+spectral weights remain outside the supported families.

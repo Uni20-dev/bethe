@@ -1,6 +1,6 @@
 # Low-energy real-root scattering windows
 
-[Ferromagnetic overview](biquadratic-ferromagnetic.md) · [Bound pairs](biquadratic-bound-pairs.md) · [Three-defect droplets](biquadratic-bound-triples.md)
+[Biquadratic/TL family](biquadratic-family.md) · [Supported models](models.md) · [Ferromagnetic overview](biquadratic-ferromagnetic.md) · [Bound pairs](biquadratic-bound-pairs.md) · [Three-defect droplets](biquadratic-bound-triples.md)
 
 The bound branches are only part of the excitation structure. Two singlet
 defects can also scatter rather than bind; three can scatter independently,
@@ -108,8 +108,8 @@ subtracting extensive XXZ energies.
 
 The root solver, bounded-combination enumeration, heap selection, TL mapping,
 and all state/root/export tables are reused. There is no separate scattering
-Newton implementation. fp64, native long double and enabled fp128 all use
-the same path. Roots that cannot be resolved as distinct interior points
+Newton implementation. Native and explicit MPFR arithmetic use the same path;
+see [biquadratic precision controls](biquadratic.md#arbitrary-precision). Roots that cannot be resolved as distinct interior points
 at the selected precision are rejected, rather than reported as converged
 endpoint states.
 

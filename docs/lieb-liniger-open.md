@@ -1,6 +1,6 @@
 # Lieb–Liniger bosons in a hard-wall box
 
-[Periodic gas](lieb-liniger.md) · [Model catalogue](models.md)
+[Periodic gas](lieb-liniger.md) · [Supported models](models.md)
 
 The library supports repulsive bosons with Dirichlet walls at x=0 and x=L,
 in the same units as the ring: `H=-sum d_j^2 + 2c sum_(i<j) delta(x_i-x_j)`.

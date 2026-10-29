@@ -1,13 +1,14 @@
 # Complex roots for the quantum-group-invariant open XXZ chain
 
-[Biquadratic application](biquadratic.md) · [Overview](../README.md)
+[XXZ family](xxz-family.md) · [Supported models](models.md) · [Biquadratic application](biquadratic.md)
 
 This is a separate solver for the **same opposite-end-field reference
 Hamiltonian** used by the TL layer, not the ordinary zero-field XXZ front end.
 Even N, M<=N/2 and finite Delta>1 are supported. It keeps finite complex-root
 deviations; no ideal-string hypothesis is imposed. All arithmetic stays in the
-selected fp64, long-double, binary128 or explicit MPFR precision. MPFR is
-currently available through the C++ library interface described below.
+selected fp64, long-double, binary128 or explicit MPFR precision. Explicit MPFR is available in the C++ interface and in the biquadratic
+frontend's `--q-seed` and `--q-spectrum` modes. Use `--precision bits-N` or
+`digits-N`; the same even-chain and bounded-search restrictions apply.
 
 ## Why solve a polynomial?
 

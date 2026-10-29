@@ -1,6 +1,6 @@
 # Numerical witnesses for mixed phantom states
 
-[Phantom reduction](xxz-phantom.md) | [Dressing map](xxz-phantom-wave.md) | [Odd-ring scan](xxz-odd-continuation.md)
+[XXZ family](xxz-family.md) · [Supported models](models.md) · [Phantom reduction](xxz-phantom.md) · [Dressing map](xxz-phantom-wave.md) · [Odd-ring scan](xxz-odd-continuation.md)
 
 `check_phantom_lift<Real>` in
 [xxz_phantom_check.hpp](../include/bethe/xxz_phantom_check.hpp) combines

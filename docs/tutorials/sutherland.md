@@ -134,8 +134,9 @@ of states elsewhere.
 
 The solver applies exact spectral rules, evaluated in the selected floating-
 point precision. The CSV status `exact spectral rules` does not mean infinite-
-precision arithmetic. fp64 is the default; long-double and fp128 are also
-supported where available.
+precision arithmetic. fp64 is the default; long-double, configured fp128 and
+[explicit MPFR](../sutherland.md#precision-and-independent-calculations) are also
+available. The saved examples retain their original arithmetic.
 
 For a continuum MPS or a discretized calculation, check the collision branch
 as carefully as the written potential. A naive zero-potential discretization

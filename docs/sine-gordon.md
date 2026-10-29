@@ -121,10 +121,10 @@ Its Fourier representation is used only inside
 this strip and nonpositive tolerances throw. We enforce the same strip at p=1
 even though the identically zero kernel can itself be continued further.
 
-`KernelOptions<Real>` provides an absolute component tolerance (1024 native
-epsilons), up to 100000 integrand evaluations, 16 quadrature levels, and 64
-Fourier-cutoff attempts. All arithmetic stays in the chosen fp64, long-double
-or fp128 type. The implementation reuses the common compensated tanh-sinh
+`KernelOptions<Real>` provides an absolute component tolerance (1024 epsilons
+at the working precision), up to 100000 integrand evaluations, 16 quadrature levels, and 64
+Fourier-cutoff attempts. All arithmetic stays in the chosen native or explicit
+MPFR/MPC precision. The implementation reuses the common compensated tanh-sinh
 quadrature; it does not introduce a double-only special-functions dependency.
 
 The hyperbolic ratio is evaluated with `expm1` and decaying exponentials.

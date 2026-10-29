@@ -1,6 +1,6 @@
 # Massive free-end XXZ: ground-state boundary root
 
-[Open XXZ guide](xxz-open.md) | [Model catalogue](models.md)
+[XXZ family](xxz-family.md) · [Supported models](models.md) · [Open XXZ guide](xxz-open.md)
 
 The library module `bethe/xxz_open_massive.hpp` implements sector minima at
 $`\Delta \gt 1`$, for either chain parity and either sign of Sz. It uses the same
@@ -18,7 +18,9 @@ auto sector = bethe::xxz::open::sector_ground_state(
 ```
 
 All arithmetic, including the boundary-root equation and Newton matrix, uses
-the selected real type: fp64, long-double, or optional fp128. Check
+the selected real type: fp64, long-double, optional fp128 or explicit MPFR.
+See [finite XXZ precision controls](xxz.md#arbitrary-precision-and-composition).
+Check
 `converged`, `status`, and `residual_norm` before using an energy. This module
 does not implement excited states, boundary fields, or general complex strings.
 
@@ -178,7 +180,7 @@ fully polarized.
 Massive reports name the regularized residual convention and show `Root Delta`.
 The typed state table includes `root_delta`, `converged`, and descriptive
 `status` columns, distinguishing iteration limits from stalled line searches.
-CSV/TSV and JSON exports preserve these diagnostics and native-precision
+CSV/TSV and JSON exports preserve these diagnostics and selected-precision
 coordinates; see [output schemas](output.md). A nonconverged calculation exits with status 2;
 invalid requests exit with status 1. Neither output mode invents momentum.
 

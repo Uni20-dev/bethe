@@ -1,6 +1,6 @@
 # Testing odd-ring XXZ polynomials independently
 
-[Odd-ring continuation](xxz-odd-continuation.md) | [Polynomial equations](xxz-polynomial.md)
+[XXZ family](xxz-family.md) · [Supported models](models.md) · [Odd-ring continuation](xxz-odd-continuation.md) · [Polynomial equations](xxz-polynomial.md)
 
 The internal `check_odd_wronskian<Real>` in
 [xxz_wronskian.hpp](../include/bethe/xxz_wronskian.hpp) supplies an independent

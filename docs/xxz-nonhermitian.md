@@ -1,5 +1,7 @@
 # Non-Hermitian quantum-group XXZ chain
 
+[XXZ family](xxz-family.md) · [Supported models](models.md)
+
 The [worked tutorial](tutorials/xxz-nonhermitian.md) compares regular scans with
 complete endpoint sectors, explains Jordan blocks and plots parity-dependent
 Casimir estimators.

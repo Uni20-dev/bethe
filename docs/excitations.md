@@ -1,6 +1,6 @@
 # XXX real-root excitation scans
 
-[Back to the overview](../README.md)
+[XXX family](xxx-family.md) · [Supported models](models.md)
 
 An excitation scan answers a narrower question than full diagonalization:
 what are the lowest energies among the supported real-root states in a chosen

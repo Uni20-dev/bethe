@@ -1,6 +1,6 @@
 # Following odd-ring XXZ states through root collisions
 
-[Polynomial equations](xxz-polynomial.md) | [Negative anisotropy](xxz-negative.md) | [Model catalogue](models.md)
+[XXZ family](xxz-family.md) · [Supported models](models.md) · [Polynomial equations](xxz-polynomial.md) · [Negative anisotropy](xxz-negative.md)
 
 The internal driver `bethe::xxz::detail::continue_odd_polynomial<Real>` in
 [xxz_odd_continuation.hpp](../include/bethe/xxz_odd_continuation.hpp) follows

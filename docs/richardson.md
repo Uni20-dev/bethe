@@ -1,6 +1,6 @@
 # Richardson pairing
 
-[Overview](../README.md) | [Model catalogue](models.md) | [Precision and CLI controls](command-line.md)
+[Overview](../README.md) | [Supported models](models.md) | [Precision and CLI controls](command-line.md)
 
 The [worked tutorial](tutorials/richardson.md) plots a specified blocked-sector
 energy cost and regular variables through a pair-root collision.

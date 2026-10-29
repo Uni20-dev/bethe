@@ -1,6 +1,6 @@
 # A bound triple scattering with a single defect
 
-[Ferromagnetic overview](biquadratic-ferromagnetic.md) · [Isolated triples](biquadratic-bound-triples.md) · [Two pairs](biquadratic-two-pairs.md)
+[Biquadratic/TL family](biquadratic-family.md) · [Supported models](models.md) · [Ferromagnetic overview](biquadratic-ferromagnetic.md) · [Isolated triples](biquadratic-bound-triples.md) · [Two pairs](biquadratic-two-pairs.md)
 
 A three-string plus one real root is another four-defect family, in the
 TL module `ell=N-8`. The selected-state library API accepts odd/even N>=8:
@@ -130,7 +130,7 @@ fused phase F, while L and phi use the isolated triple equations. This avoids
 the removable external-factor poles at $`\alpha =a`$ in the ideal limit.
 The finite stage then restores **all** coupled equations above; convergence
 is never accepted using the initializer alone. The common Newton driver
-uses one iteration budget and the requested native precision throughout.
+uses one iteration budget and the requested arithmetic precision throughout.
 It solves four real unknowns, independent of N. Failed iterates retain
 consistent diagnostics and estimates, not verified energies.
 

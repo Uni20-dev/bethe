@@ -1,6 +1,6 @@
 # Free-end Hubbard ground states
 
-[Back to the overview](../README.md) · [Periodic Hubbard](hubbard.md)
+[Hubbard family](hubbard-family.md) · [Supported models](models.md) · [Periodic Hubbard](hubbard.md)
 
 `bethe-hubbard-obc` solves the Hubbard chain with free ends: electrons hop
 between neighboring sites, but there is no bond closing the chain and no

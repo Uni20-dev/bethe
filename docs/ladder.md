@@ -1,6 +1,6 @@
 # An integrable two-leg spin ladder
 
-[Overview](../README.md) · [SU(3) chain](su3.md) · [Model catalogue](models.md)
+[Overview](../README.md) · [SU(3) chain](su3.md) · [Supported models](models.md)
 
 The [worked tutorial](tutorials/ladder.md) reconstructs a finite-size field
 envelope and explains physical populations versus highest-weight roots.

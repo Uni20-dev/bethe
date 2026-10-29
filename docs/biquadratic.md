@@ -1,6 +1,6 @@
 # Free-end spin-1 biquadratic chains and Temperley–Lieb models
 
-[Overview](../README.md) · [Model catalogue](models.md) · [Precision and CLI controls](command-line.md)
+[Biquadratic/TL family](biquadratic-family.md) · [Supported models](models.md) · [Precision and CLI controls](command-line.md)
 
 The [worked negative-sign tutorial](tutorials/biquadratic.md) plots small-chain
 sectors and follows a complex-root singlet to longer chains.
@@ -152,7 +152,7 @@ sea in ell=0, with physical multiplicity one. It reproduces the lowest
 excited singlet in the small-chain tests and follows that branch to long
 chains, without an exhaustive spectrum or global first-excitation claim.
 The deviation is retained logarithmically even when rounded roots look like
-an exact string. It supports the same native precisions and typed exports;
+an exact string. It supports native and explicit MPFR precision and typed exports;
 see [the two-string guide](xxz-open-two-string.md) for equations, budgets,
 output coordinates and scope. This mode does not combine with other state
 selection or scan options.
@@ -281,13 +281,15 @@ The three layers have separate responsibilities:
 - [biquadratic.hpp](../include/bethe/biquadratic.hpp): the physical spin-1
   Hamiltonian and its additive energy shift.
 
-All numerical layers retain fp64, native long double, or enabled fp128.
+All numerical layers support fp64, native long double, enabled fp128 and explicit MPFR.
 The multiplicity helper uses checked integer arithmetic, not floating point.
 `sector_ground_state`, `solve_real`, and `real_excitations` are available in
 both the TL and physical biquadratic layers. TL calls additionally take a
 loop weight; their energies do not include the physical spin-1 shift. The
 generic TL layer leaves representation multiplicities to its caller.
 The `GroundState`/`OpenGroundState` type aliases retain the original ground API.
+
+## Arbitrary precision
 
 The C++ real-root APIs also accept `uni20::mpreal` with explicit controls:
 

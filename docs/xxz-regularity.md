@@ -1,6 +1,6 @@
 # A regular-state test without extracting Bethe roots
 
-[Odd-ring continuation and scans](xxz-odd-continuation.md) | [Wronskian diagnostic](xxz-wronskian.md)
+[XXZ family](xxz-family.md) · [Supported models](models.md) · [Odd-ring continuation and scans](xxz-odd-continuation.md) · [Wronskian diagnostic](xxz-wronskian.md)
 
 The internal `check_regular_polynomial<Real>` in
 [xxz_regularity.hpp](../include/bethe/xxz_regularity.hpp) tests a sufficient

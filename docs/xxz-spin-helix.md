@@ -1,6 +1,6 @@
 # Explicit periodic XXZ spin-helix states
 
-[XXZ guide](xxz.md) | [Odd-ring continuation](xxz-odd-continuation.md) | [Regular-state test](xxz-regularity.md)
+[XXZ family](xxz-family.md) · [Supported models](models.md) · [XXZ guide](xxz.md) · [Odd-ring continuation](xxz-odd-continuation.md) · [Regular-state test](xxz-regularity.md)
 
 `periodic_spin_helix<Real>` in
 [xxz_spin_helix.hpp](../include/bethe/xxz_spin_helix.hpp) constructs a special

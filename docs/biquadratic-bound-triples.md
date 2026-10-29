@@ -1,6 +1,6 @@
 # Three-defect bound droplets on open chains
 
-[Ferromagnetic overview](biquadratic-ferromagnetic.md) · [Bound pairs](biquadratic-bound-pairs.md) · [Exports](output.md)
+[Biquadratic/TL family](biquadratic-family.md) · [Supported models](models.md) · [Ferromagnetic overview](biquadratic-ferromagnetic.md) · [Bound pairs](biquadratic-bound-pairs.md) · [Exports](output.md)
 
 Three TL singlet insertions can bind into a droplet, just as two can form a
 bound pair. `--bound-triples` follows the **one-three-string family in
@@ -171,5 +171,9 @@ Jacobians, native-precision N=6 energies, all branch labels at small odd/even
 sizes, and ED through N=10. XXZ ED checks also exercise Delta=1.25, 2 and 3.
 Long-chain checks reach N=100000, including both family edges and deviation
 underflow. [Real-root scattering windows](biquadratic-scattering.md) cover
-three unbound defects; mixed-string scattering, larger droplets, physical-spin resolution
-and operator-dependent spectral weights remain separate extensions.
+three unbound defects. Separate guides cover [a pair with real roots](biquadratic-pair-defect.md),
+[a triple with one real root](biquadratic-triple-defect.md),
+[two pairs](biquadratic-two-pairs.md), [bound quartets](biquadratic-bound-quartets.md)
+and [physical-spin multiplicities](biquadratic-spin-content.md).
+General string mixtures, droplets of five or more defects and operator-dependent
+spectral weights remain separate extensions.

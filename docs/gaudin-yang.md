@@ -1,6 +1,6 @@
 # Repulsive Gaudin–Yang gas on a ring
 
-[Overview](../README.md) · [Command-line controls](command-line.md) · [Model catalogue](models.md)
+[Overview](../README.md) · [Command-line controls](command-line.md) · [Supported models](models.md)
 
 Start with the [worked coupling and root tutorial](tutorials/gaudin-yang.md)
 for plots, downloadable data and finite-ring normalization checks.

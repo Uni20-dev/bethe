@@ -8,7 +8,7 @@ of references with a short explanation of their relevance. A reference may
 also be library-only, appearing in the bibliography without being selected
 by any executable. Thermodynamic XXZ references are selected by
 `bethe-xxz-dispersion`, not by the finite-chain `bethe-xxz-pbc`.
-References used only by the [model catalogue](models.md) follow the same rule:
+References used only by the [model roadmap](model-roadmap.md) follow the same rule:
 add bibliographic records, but no tool selection for an unimplemented model.
 Presence in the registry or bibliography does not imply solver support.
 

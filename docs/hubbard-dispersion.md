@@ -1,5 +1,7 @@
 # Hubbard spinon and charge dispersions
 
+[Hubbard family](hubbard-family.md) · [Supported models](models.md)
+
 For a worked example with plots and downloadable data, start with the
 [half-filled tutorial](tutorials/hubbard-half-filled.md).
 
@@ -184,7 +186,7 @@ a budget or changing precision.
 The [output guide](output.md) explains streaming, memory retention, provenance,
 overwrite protection, and precision-preserving JSON.
 
-CSV/TSV have one header row, unwrapped native-precision tokens, decimal spins
+CSV/TSV have one header row, unwrapped selected-precision tokens, decimal spins
 (`0.5`), empty failed-energy cells, and initial `#` metadata. Status and solver
 CPU time are **trailing** comments. `--no-preamble` produces strict CSV/TSV.
 JSON has typed column metadata, decimal strings for real values, numerical

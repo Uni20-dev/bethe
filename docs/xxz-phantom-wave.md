@@ -1,6 +1,6 @@
 # Constructing phantom-dressed wavefunctions
 
-[Mixed-root reduction](xxz-phantom.md) | [Spin helices](xxz-spin-helix.md) | [Odd-ring continuation](xxz-odd-continuation.md)
+[XXZ family](xxz-family.md) · [Supported models](models.md) · [Mixed-root reduction](xxz-phantom.md) · [Spin helices](xxz-spin-helix.md) · [Odd-ring continuation](xxz-odd-continuation.md)
 
 `PhantomDressing<Real>` in
 [xxz_phantom_wave.hpp](../include/bethe/xxz_phantom_wave.hpp) implements the

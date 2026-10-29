@@ -1,6 +1,6 @@
 # Supersymmetric t–J chains
 
-[Overview](../README.md) | [Model catalogue](models.md) | [Precision and CLI controls](command-line.md)
+[Overview](../README.md) | [Supported models](models.md) | [Precision and CLI controls](command-line.md)
 
 The [worked filling tutorial](tutorials/tj.md) compares supported populations,
 explains the nested roots and checks the fermionic no-hole momentum convention.

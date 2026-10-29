@@ -1,5 +1,7 @@
 # Doped Hubbard spinon and charge lines
 
+[Hubbard family](hubbard-family.md) · [Supported models](models.md)
+
 For a worked example at U=4 and n=0.75, see the
 [doped-chain tutorial](tutorials/hubbard-doped.md).
 

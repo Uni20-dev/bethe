@@ -1,6 +1,6 @@
 # Spin-1 Takhtajan–Babujian chains
 
-[Overview](../README.md) | [Model catalogue](models.md) | [Precision and CLI controls](command-line.md)
+[Overview](../README.md) | [Supported models](models.md) | [Precision and CLI controls](command-line.md)
 
 `bethe-tb-pbc` calculates the zero-field singlet ground state of the periodic
 spin-1 Takhtajan–Babujian (TB, also Babujan–Takhtajan) chain for **even L>=4**:
