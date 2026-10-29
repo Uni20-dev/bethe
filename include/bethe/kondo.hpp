@@ -64,7 +64,7 @@ namespace detail
 {
 namespace math = uni20::math;
 template <uni20::Real Real> Real pi(Real const& one) { return Real{4} * math::atan(one); }
-template <uni20::Real Real> void validate(Real field, Real scale, Options<Real> const& options)
+template <uni20::Real Real> void validate(Real const& field, Real const& scale, Options<Real> const& options)
 {
   Real const zero = uni20::scalar_at_precision<Real>(0, options.precision());
   for (auto const* x : {&field, &scale, &options.tolerance})

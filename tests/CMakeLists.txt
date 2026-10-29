@@ -380,6 +380,11 @@ bethe_discover_tests(bethe_sine_gordon_excited_tests
 add_executable(bethe_kondo_tests test_kondo.cpp)
 target_link_libraries(bethe_kondo_tests PRIVATE bethe::bethe TBB::tbb)
 bethe_discover_tests(bethe_kondo_tests)
+if(BETHE_HAS_MPREAL)
+  add_executable(bethe_kondo_mpfr_tests test_kondo_mpfr.cpp)
+  target_link_libraries(bethe_kondo_mpfr_tests PRIVATE bethe::bethe TBB::tbb)
+  bethe_discover_tests(bethe_kondo_mpfr_tests)
+endif()
 
 add_executable(bethe_finite_volume_async_tests test_finite_volume_async.cpp)
 target_link_libraries(bethe_finite_volume_async_tests PRIVATE bethe::bethe TBB::tbb)
