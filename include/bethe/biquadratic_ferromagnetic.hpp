@@ -234,7 +234,9 @@ template <uni20::Real Real = double>
                                               SolverOptions<Real> const& options = {})
 {
   return detail::from_cluster<Real>(
-      xxz::quantum_group::two_string::bound_pair<Real>(sites, Real{3} / Real{2}, mode, options), 2, mode);
+      xxz::quantum_group::two_string::bound_pair<Real>(
+          sites, uni20::scalar_at_precision<Real>(3, options.precision()) / Real{2}, mode, options),
+      2, mode);
 }
 
 /// Selected three-singlet droplet family; ell=N-6, mode=1,...,N-5, odd/even.
@@ -255,8 +257,9 @@ template <uni20::Real Real = double>
                                                 SolverOptions<Real> const& options = {})
 {
   return detail::from_cluster<Real>(
-      xxz::quantum_group::two_string::pair_defect<Real>(sites, Real{3} / Real{2}, real_label, pair_label, options), 3,
-      0);
+      xxz::quantum_group::two_string::pair_defect<Real>(
+          sites, uni20::scalar_at_precision<Real>(3, options.precision()) / Real{2}, real_label, pair_label, options),
+      3, 0);
 }
 
 /// One bound pair plus selected real roots: M=labels.size()+2 TL insertions.
@@ -267,7 +270,8 @@ template <uni20::Real Real = double>
                                                          SolverOptions<Real> const& options = {})
 {
   return detail::from_cluster<Real>(
-      xxz::quantum_group::two_string::pair_with_real_roots<Real>(sites, Real{3} / Real{2}, labels, pair_label, options),
+      xxz::quantum_group::two_string::pair_with_real_roots<Real>(
+          sites, uni20::scalar_at_precision<Real>(3, options.precision()) / Real{2}, labels, pair_label, options),
       labels.size() + 2, 0);
 }
 
