@@ -54,6 +54,8 @@ contribution to the zz or raising-channel sum rules.
 For an infinite-chain spectral density, use
 [`bethe-xxx-structure-factor-thermo`](xxx-structure-factor-thermo.md), with
 `--momentum Q` for a frequency cut or `--momentum-points N` for a heat-map grid.
+It supports scalar MPFR with `--precision bits-N`; quadrature order and
+evaluation budgets are independent of the selected arithmetic precision.
 
 XXZ uses the same common precision and output controls, but different mode
 combinations: `--excitations` selects a family at fixed `--sz`, not `--spin`.

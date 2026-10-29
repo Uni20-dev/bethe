@@ -22,6 +22,26 @@ three-string labels, **not all states of the three-defect module**. The
 This option requires `--ferromagnetic`, fixes ell=N-6, and cannot be mixed
 with other state selectors, including `--bound-pairs`.
 
+## Explicit precision in the library
+
+The triple, quartet, two-pair and triple-plus-defect C++ solvers also accept
+`uni20::mpreal`. Enable MPFR/MPC and construct solver controls at the desired
+precision. Uni20 supplies CPU LU; normal dispatch prefers MPLAPACK when enabled:
+
+```cpp
+using Real = uni20::mpreal;
+auto p = uni20::Precision::bits(256);
+bethe::SolverOptions<Real> options(p);
+auto triple = bethe::biquadratic::ferromagnetic::bound_triple<Real>(128, 1, options);
+```
+
+For the lower quantum-group APIs, construct `Delta` at the same precision.
+Constants, complex scattering, small-deviation corrections, Jacobians, Newton
+steps and returned diagnostics retain that precision. Unset, exact or mismatched
+numerical inputs are rejected. More bits do not increase iteration budgets or
+establish a new branch or a complete module. The CLI examples on this page
+still use native formats; frontend MPFR enablement is separate.
+
 ## Where this branch lies
 
 The gap is measured from the entire exact ground space, $`E_0 =N -1`$. Its
@@ -47,7 +67,7 @@ interleave these modes. The global positive gap still approaches 1.
 At N=6 the three-defect module has dimension five. Its TL characteristic
 polynomial is $`(g -6)(g -7)(g ^{3}-17g ^{2}+80g -106)`$. The targeted droplet is the
 smallest cubic root, `g=2.28668884804195...`, with physical energy $`5+g`$.
-This makes a useful native-precision check independent of the Bethe equations.
+This also provides a precision-growth check independent of the Bethe equations.
 At N=128 the first gap is approximately `2.00008198366582`.
 
 ## Why the deviation needs a phase

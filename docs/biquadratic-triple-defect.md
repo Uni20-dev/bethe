@@ -25,6 +25,10 @@ threshold, not the minimum of the full four-defect module. These are TL
 singlet insertions, not physical spin flips; no SU(2) decomposition or
 spectral weights are implied.
 
+The C++ API also supports explicit MPFR precision, following the
+[shared cluster precision contract](biquadratic-bound-triples.md#explicit-precision-in-the-library).
+This does not yet enable MPFR in the frontend.
+
 ## Command-line selections and scans
 
 ```sh

@@ -6,7 +6,9 @@ Four TL singlet insertions can bind into one droplet, or **quartet**. This
 is the last of the five four-defect string topologies, alongside four real
 roots, one pair plus two real roots, two pairs, and one triple plus a real
 root. The selected-state library API accepts odd/even N>=8 in fp64, native
-long double, or enabled fp128:
+long double, enabled fp128, or explicit MPFR precision. See the
+[shared precision contract](biquadratic-bound-triples.md#explicit-precision-in-the-library).
+For example, in native precision:
 
 ```cpp
 #include <bethe/biquadratic_ferromagnetic.hpp>
