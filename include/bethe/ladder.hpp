@@ -14,6 +14,13 @@ template <uni20::Real Real> struct SolverOptions : bethe::SolverOptions<Real>
     // scan. Already-exact seas need none; it is not reset for each branch.
     std::size_t max_branches = 10000; // Whole scan, not per singlet sector.
 };
+#if UNI20_HAS_MPREAL
+template <> struct SolverOptions<uni20::mpreal> : bethe::SolverOptions<uni20::mpreal>
+{
+    explicit SolverOptions(uni20::Precision p) : bethe::SolverOptions<uni20::mpreal>(p) {}
+    std::size_t max_branches = 10000;
+};
+#endif
 enum class SolveStatus
 {
   converged,
@@ -102,6 +109,8 @@ template <uni20::Real Real> void validate(std::size_t l, Real rung, SolverOption
 {
   if (l < 2 || l > std::size_t(std::numeric_limits<std::int64_t>::max() / 8))
     throw std::invalid_argument("integrable ladder requires 2<=rungs<=INT64_MAX/8");
+  auto const zero = bethe::detail::solver_zero<Real>(options);
+  bethe::detail::require_same_precision(rung, zero);
   if (!uni20::isfinite(rung)) throw std::invalid_argument("rung coupling must be finite");
   if (!uni20::isfinite(options.residual_tolerance) || options.residual_tolerance <= Real{0})
     throw std::invalid_argument("ladder residual tolerance must be finite and positive");
@@ -113,7 +122,7 @@ template <uni20::Real Real> void set_energy(State<Real>& s, Branch<Real> const& 
   std::sort(sorted.begin(), sorted.end(), std::greater<>{});
   s.descendant = sorted != branch.shape;
   s.magnetization = magnetization(s.populations);
-  bethe::detail::CompensatedSum<Real> sum;
+  bethe::detail::CompensatedSum<Real> sum(bethe::detail::precision_zero(s.rung_coupling));
   sum.add(branch.energy);
   sum.add(-Real(s.rungs) / Real{4});
   sum.add(s.rung_coupling * (Real(s.rungs) / Real{4} - Real(s.singlets)));
@@ -131,7 +140,8 @@ template <uni20::Real Real> State<Real> product(std::size_t l, Real rung, Real f
   s.populations[color] = l;
   Branch<Real> b;
   b.shape = {l, 0, 0, 0};
-  b.energy = Real(l);
+  b.energy = uni20::scalar_like(rung, l);
+  b.residual = uni20::scalar_like(rung, 0);
   b.converged = true;
   b.status = BranchStatus::converged;
   set_energy(s, b);
@@ -145,6 +155,8 @@ SectorScan<Real> scan_with_branches(std::size_t l, Real rung, Real field, std::o
                                     SolveBranch&& solve_branch)
 {
   validate(l, rung, options);
+  Real const zero = bethe::detail::solver_zero<Real>(options);
+  bethe::detail::require_same_precision(field, zero);
   if (!uni20::isfinite(field)) throw std::invalid_argument("ladder magnetic field must be finite");
   if (only && *only > l) throw std::invalid_argument("singlet count must not exceed the number of rungs");
   if (projection && (*projection < -std::int64_t(l) || *projection > std::int64_t(l)))
@@ -165,6 +177,7 @@ SectorScan<Real> scan_with_branches(std::size_t l, Real rung, Real field, std::o
   for (std::size_t ns = begin; ns <= end; ++ns)
   {
     State<Real> s;
+    s.highest_weight.energy = s.highest_weight.residual = zero;
     s.rungs = l;
     s.singlets = ns;
     s.rung_coupling = rung;
@@ -272,10 +285,11 @@ std::optional<State<Real>> analytic_ground_state(std::size_t rungs, Real rung_co
                                                  SolverOptions<Real> const& options)
 {
   validate(rungs, rung_coupling, options);
+  bethe::detail::require_same_precision(magnetic_field, bethe::detail::solver_zero<Real>(options));
   if (!uni20::isfinite(magnetic_field)) throw std::invalid_argument("ladder magnetic field must be finite");
   // Operator bound sum(P-1)>=-4*N_triplet proves these product ground states,
   // independently of parity and iteration/branch budgets.
-  auto const magnitude = std::abs(magnetic_field);
+  auto const magnitude = uni20::math::abs(magnetic_field);
   if (rung_coupling >= Real{4} && rung_coupling - magnitude >= Real{4})
     return product(rungs, rung_coupling, magnetic_field, 0);
   if (magnitude >= Real{4} && magnitude - std::max(rung_coupling, Real{0}) >= Real{4})
@@ -293,7 +307,7 @@ template <uni20::Real Real> [[nodiscard]] State<Real> minimum_candidate(SectorSc
   for (auto const& state : scan.sectors)
     if (state.energy)
     {
-      bethe::detail::CompensatedSum<Real> shift;
+      bethe::detail::CompensatedSum<Real> shift(bethe::detail::precision_zero(state.rung_coupling));
       shift.add(state.rung_coupling * Real(std::int64_t(state.singlets) - std::int64_t(best.singlets)));
       shift.add(state.magnetic_field * Real(state.magnetization - best.magnetization));
       if (!best.energy || state.highest_weight.energy - best.highest_weight.energy < shift.value()) best = state;
@@ -356,8 +370,9 @@ template <uni20::Real Real = double> class PreparedSectors {
     explicit PreparedSectors(std::size_t rungs, SolverOptions<Real> const& options = {})
     {
       auto data = std::make_shared<Data>(Data{.rungs = rungs, .options = options, .entries = {}});
+      Real const zero = bethe::detail::solver_zero<Real>(options);
       auto const scan = detail::scan_with_branches(
-          rungs, Real{0}, Real{0}, std::nullopt, options, std::nullopt,
+          rungs, zero, zero, std::nullopt, options, std::nullopt,
           [&data](detail::Shape const& shape, std::array<int, 3> const& shift, Real tolerance,
                   std::size_t budget) -> detail::Branch<Real> const& {
             data->entries.push_back({shift, budget, detail::solve<Real>(shape, shift, tolerance, budget)});
@@ -377,7 +392,7 @@ template <uni20::Real Real = double> class PreparedSectors {
     [[nodiscard]] bool complete() const { return data_->complete; }
     [[nodiscard]] SolveStatus status() const { return data_->status; }
 
-    [[nodiscard]] SectorScan<Real> sector_ground_states(Real rung, Real field = Real{0}) const
+    [[nodiscard]] SectorScan<Real> sector_ground_states(Real rung, Real field) const
     {
       std::size_t cursor = 0;
       return detail::scan_with_branches(rungs(), rung, field, std::nullopt, options(), std::nullopt,
@@ -390,7 +405,15 @@ template <uni20::Real Real = double> class PreparedSectors {
                                           return entry.branch;
                                         });
     }
-    [[nodiscard]] State<Real> ground_state(Real rung, Real field = Real{0}) const
+    [[nodiscard]] SectorScan<Real> sector_ground_states(Real rung) const
+    {
+      return sector_ground_states(rung, bethe::detail::solver_zero<Real>(options()));
+    }
+    [[nodiscard]] State<Real> ground_state(Real rung) const
+    {
+      return ground_state(rung, bethe::detail::solver_zero<Real>(options()));
+    }
+    [[nodiscard]] State<Real> ground_state(Real rung, Real field) const
     {
       if (auto exact = detail::analytic_ground_state(rungs(), rung, field, options())) return std::move(*exact);
       return minimum_candidate(sector_ground_states(rung, field));
@@ -402,36 +425,50 @@ template <uni20::Real Real = double>
 [[nodiscard]] SectorScan<Real> sector_ground_states(std::size_t rungs, Real rung,
                                                     SolverOptions<Real> const& options = {})
 {
-  return sector_ground_states(rungs, rung, Real{0}, options);
+  return sector_ground_states(rungs, rung, bethe::detail::solver_zero<Real>(options), options);
 }
 template <uni20::Real Real = double>
 [[nodiscard]] State<Real> sector_ground_state(std::size_t rungs, std::size_t singlets, Real rung,
                                               SolverOptions<Real> const& options = {})
 {
-  return sector_ground_state(rungs, singlets, rung, Real{0}, options);
+  return sector_ground_state(rungs, singlets, rung, bethe::detail::solver_zero<Real>(options), options);
 }
 template <uni20::Real Real = double>
 [[nodiscard]] State<Real> ground_state(std::size_t rungs, Real rung, SolverOptions<Real> const& options = {})
 {
-  return ground_state(rungs, rung, Real{0}, options);
+  return ground_state(rungs, rung, bethe::detail::solver_zero<Real>(options), options);
 }
 
 /// All allowed singlet-count sectors at fixed total physical Sz. No parity
 /// restriction on integer Sz: a rung triplet also has a zero-projection state.
 template <uni20::Real Real = double>
 [[nodiscard]] SectorScan<Real> magnetization_sector_ground_states(std::size_t rungs, std::int64_t projection, Real rung,
-                                                                  Real field = Real{0},
-                                                                  SolverOptions<Real> const& options = {})
+                                                                  Real field, SolverOptions<Real> const& options = {})
 {
   return detail::scan(rungs, rung, field, std::nullopt, options, projection);
 }
 /// Lowest energy at fixed total Sz, optionally also fixing the singlet count.
 /// Field only adds -h*Sz here; it cannot change the selected multiplet.
 template <uni20::Real Real = double>
-[[nodiscard]] State<Real> magnetization_ground_state(std::size_t rungs, std::int64_t projection, Real rung,
-                                                     Real field = Real{0}, SolverOptions<Real> const& options = {},
+[[nodiscard]] State<Real> magnetization_ground_state(std::size_t rungs, std::int64_t projection, Real rung, Real field,
+                                                     SolverOptions<Real> const& options = {},
                                                      std::optional<std::size_t> singlets = {})
 {
   return minimum_candidate(detail::scan(rungs, rung, field, singlets, options, projection));
+}
+template <uni20::Real Real = double>
+[[nodiscard]] SectorScan<Real> magnetization_sector_ground_states(std::size_t rungs, std::int64_t projection, Real rung,
+                                                                  SolverOptions<Real> const& options = {})
+{
+  return magnetization_sector_ground_states(rungs, projection, rung, bethe::detail::solver_zero<Real>(options),
+                                            options);
+}
+template <uni20::Real Real = double>
+[[nodiscard]] State<Real> magnetization_ground_state(std::size_t rungs, std::int64_t projection, Real rung,
+                                                     SolverOptions<Real> const& options = {},
+                                                     std::optional<std::size_t> singlets = {})
+{
+  return magnetization_ground_state(rungs, projection, rung, bethe::detail::solver_zero<Real>(options), options,
+                                    singlets);
 }
 } // namespace bethe::ladder

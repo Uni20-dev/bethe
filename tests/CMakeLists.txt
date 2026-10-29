@@ -87,6 +87,10 @@ target_link_libraries(bethe_generated_state_scan_tests PRIVATE bethe::bethe TBB:
 bethe_discover_tests(bethe_generated_state_scan_tests)
 
 if(BETHE_HAS_MPREAL)
+  add_executable(bethe_tj_mpfr_tests test_tj_mpfr.cpp)
+  target_link_libraries(bethe_tj_mpfr_tests PRIVATE bethe::bethe TBB::tbb)
+  bethe_discover_tests(bethe_tj_mpfr_tests)
+
   add_executable(bethe_bose_fermi_mpfr_tests test_bose_fermi_mpfr.cpp)
   target_link_libraries(bethe_bose_fermi_mpfr_tests PRIVATE bethe::bethe TBB::tbb)
   bethe_discover_tests(bethe_bose_fermi_mpfr_tests)
@@ -106,6 +110,10 @@ if(BETHE_HAS_MPREAL)
   add_executable(bethe_su3_mpfr_tests test_su3_mpfr.cpp)
   target_link_libraries(bethe_su3_mpfr_tests PRIVATE bethe::bethe TBB::tbb)
   bethe_discover_tests(bethe_su3_mpfr_tests)
+
+  add_executable(bethe_ladder_mpfr_tests test_ladder_mpfr.cpp)
+  target_link_libraries(bethe_ladder_mpfr_tests PRIVATE bethe::bethe TBB::tbb)
+  bethe_discover_tests(bethe_ladder_mpfr_tests)
 
   add_executable(bethe_root_solver_mpfr_tests test_root_solver_mpfr.cpp)
   target_link_libraries(bethe_root_solver_mpfr_tests PRIVATE bethe::bethe TBB::tbb)
@@ -130,6 +138,14 @@ if(BETHE_HAS_MPREAL)
   add_executable(bethe_hubbard_thermo_mpfr_tests test_hubbard_thermo_mpfr.cpp)
   target_link_libraries(bethe_hubbard_thermo_mpfr_tests PRIVATE bethe::bethe TBB::tbb)
   bethe_discover_tests(bethe_hubbard_thermo_mpfr_tests)
+
+  add_executable(bethe_potts_mpfr_tests test_potts_mpfr.cpp)
+  target_link_libraries(bethe_potts_mpfr_tests PRIVATE bethe::bethe TBB::tbb)
+  bethe_discover_tests(bethe_potts_mpfr_tests)
+
+  add_executable(bethe_thermal_mpfr_tests test_thermal_mpfr.cpp)
+  target_link_libraries(bethe_thermal_mpfr_tests PRIVATE bethe::bethe TBB::tbb)
+  bethe_discover_tests(bethe_thermal_mpfr_tests)
 
   add_executable(bethe_tb_mpfr_tests test_tb_mpfr.cpp)
   target_link_libraries(bethe_tb_mpfr_tests PRIVATE bethe::bethe TBB::tbb)
@@ -572,6 +588,9 @@ if(BETHE_BUILD_APPS)
     COMMAND "${CMAKE_COMMAND}" "-DPROGRAM=$<TARGET_FILE:bethe-potts-pbc>"
       "-DTOOL=bethe-potts-pbc" -P "${CMAKE_CURRENT_SOURCE_DIR}/check_citations_cli.cmake")
   if(Python3_Interpreter_FOUND)
+    add_test(NAME PottsMpfr.cli
+      COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_potts_precision.py"
+        "$<TARGET_FILE:bethe-potts-pbc>" "${BETHE_HAS_MPREAL}")
     add_test(NAME Potts.cli
       COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_potts.py"
         "$<TARGET_FILE:bethe-potts-pbc>" "${BETHE_HAS_FLOAT128}")
@@ -646,6 +665,9 @@ if(BETHE_BUILD_APPS)
     add_test(NAME LiebLinigerThermal.cli
       COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_lieb_liniger_thermal.py"
         "$<TARGET_FILE:bethe-lieb-liniger-thermal>" "${BETHE_HAS_FLOAT128}")
+    add_test(NAME LiebLinigerThermal.precision
+      COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_thermal_precision.py"
+        "$<TARGET_FILE:bethe-lieb-liniger-thermal>" "${BETHE_HAS_MPREAL}" "${BETHE_HAS_MPLAPACK_MPREAL}")
     add_test(NAME QBoson.mpfr.cli
       COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_q_boson_mpfr.py"
         "$<TARGET_FILE:bethe-q-boson-pbc>" "${bethe_arbitrary_structure_factor}")
@@ -833,6 +855,11 @@ if(BETHE_BUILD_APPS)
     COMMAND "${CMAKE_COMMAND}" "-DPROGRAM=$<TARGET_FILE:bethe-biquadratic-obc>"
       "-DFLOAT128=${BETHE_HAS_FLOAT128}"
       -P "${CMAKE_CURRENT_SOURCE_DIR}/check_biquadratic_cli.cmake")
+  if(Python3_Interpreter_FOUND)
+    add_test(NAME Ladder.precision
+      COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_ladder_precision.py"
+        "$<TARGET_FILE:bethe-ladder-pbc>" "${BETHE_HAS_MPREAL}" "${BETHE_HAS_MPLAPACK_MPREAL}")
+  endif()
   add_test(NAME Ladder.cli
     COMMAND "${CMAKE_COMMAND}" "-DPROGRAM=$<TARGET_FILE:bethe-ladder-pbc>"
       "-DFLOAT128=${BETHE_HAS_FLOAT128}"
@@ -841,6 +868,9 @@ if(BETHE_BUILD_APPS)
     COMMAND "${CMAKE_COMMAND}" "-DPROGRAM=$<TARGET_FILE:bethe-gaudin-yang-pbc>"
       "-DFLOAT128=${BETHE_HAS_FLOAT128}"
       -P "${CMAKE_CURRENT_SOURCE_DIR}/check_gaudin_yang_cli.cmake")
+  add_test(NAME TJ.precision
+    COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_tj_precision.py"
+      "$<TARGET_FILE:bethe-tj-pbc>" "${BETHE_HAS_MPREAL}" "${BETHE_HAS_MPLAPACK_MPREAL}")
   add_test(NAME TJ.cli
     COMMAND "${CMAKE_COMMAND}" "-DPROGRAM=$<TARGET_FILE:bethe-tj-pbc>"
       "-DFLOAT128=${BETHE_HAS_FLOAT128}"
