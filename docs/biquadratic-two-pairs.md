@@ -4,8 +4,8 @@
 
 Four TL singlet insertions can form two bound pairs. This selected-state
 library solver follows that family in **ell=N-8**, for odd/even N>=8.
-It retains both finite string deviations in fp64, native long double or
-enabled fp128. `--pair-defects` means **one** pair plus real roots;
+It retains both finite string deviations in fp64, native long double,
+enabled fp128 or explicit MPFR precision. `--pair-defects` means **one** pair plus real roots;
 the two-pair family has separate selections and scans:
 
 ```sh
@@ -52,9 +52,10 @@ It does not give the minimum of the entire four-defect module; other
 string topologies are missing. These are TL insertions, not spin flips,
 and no operator spectral weights or physical SU(2) labels are supplied.
 
-The C++ API also supports explicit MPFR precision, following the
+The frontend accepts `--precision bits-N` and `digits-N` when Uni20 MPFR
+scalars are configured. The C++ API follows the
 [shared cluster precision contract](biquadratic-bound-triples.md#explicit-precision-in-the-library).
-This does not yet enable MPFR in the frontend.
+Arithmetic precision and solver work limits remain independent.
 
 ## Coupling two existing pair systems
 
