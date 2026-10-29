@@ -9,7 +9,7 @@ namespace bethe::xxz::quantum_group::triple_defect::detail
 template <uni20::Real Real> class System {
   public:
     using Triple = three_string::detail::System<Real>;
-    using C = std::complex<Real>;
+    using C = uni20::complex<Real>;
     static constexpr std::size_t order = 4;
     System(std::size_t n, Real delta, std::size_t real_label, std::size_t string_label)
         : triple(n, delta, string_label), real_label(real_label)
@@ -22,7 +22,7 @@ template <uni20::Real Real> class System {
     void normalize(std::vector<Real>& x, bool ideal) const
     {
       triple.normalize(x);
-      if (!ideal && physical(x) && std::exp(-x[1]) == Real{0})
+      if (!ideal && physical(x) && uni20::math::exp(-x[1]) == Real{0})
       {
         // Once z underflows, L and phi enter the exact residuals linearly.
         // Solve those two rows at the *rounded* trial angles. Near coincident
@@ -30,7 +30,7 @@ template <uni20::Real Real> class System {
         // compensating L update although the represented angles never move.
         auto const f = evaluate(x);
         Real const L = x[1] + Real{2} * Real(triple.sites) * f.residual[1];
-        if (uni20::isfinite(L) && std::exp(-L) == Real{0})
+        if (uni20::isfinite(L) && uni20::math::exp(-L) == Real{0})
         {
           x[1] = L;
           x[2] = Triple::wrap(x[2] - Real{2} * Real(triple.sites) * f.residual[2]);
@@ -48,13 +48,13 @@ template <uni20::Real Real> class System {
       // A linear string-center seed keeps nearby central and sea roots
       // separated better than independently inverting both bare phases.
       auto angle = [&](Real width, std::size_t label, std::size_t denominator) {
-        return Real{2} *
-               std::atan(std::tanh(width) * std::tan(triple.pi * Real(label) / (Real{2} * Real(denominator))));
+        return Real{2} * uni20::math::atan(uni20::math::tanh(width) *
+                                           uni20::math::tan(triple.pi * Real(label) / (Real{2} * Real(denominator))));
       };
-      std::vector<Real> x{triple.pi * Real(triple.string_label) / Real(triple.sites - 6), Real{0}, Real{0},
+      std::vector<Real> x{triple.pi * Real(triple.string_label) / Real(triple.sites - 6), triple.zero, triple.zero,
                           angle(triple.eta / Real{2}, real_label, triple.sites - 2)};
       auto const f = evaluate(x, nullptr, true);
-      x[1] = std::max(Real{2} * Real(triple.sites) * f.residual[1], Real{2} + std::log(Real{4} / triple.eta));
+      x[1] = std::max(Real{2} * Real(triple.sites) * f.residual[1], Real{2} + uni20::math::log(Real{4} / triple.eta));
       x[2] = Triple::wrap(-Real{2} * Real(triple.sites) * f.residual[2]);
       return x;
     }
@@ -63,7 +63,7 @@ template <uni20::Real Real> class System {
     {
       std::vector<Real> block;
       auto out = triple.evaluate(x.first(3), jac ? &block : nullptr, ideal);
-      Real const scale = Real{1} / (Real{2} * Real(triple.sites)), eta = triple.eta;
+      Real const scale = uni20::scalar_like(triple.zero, 1) / (Real{2} * Real(triple.sites)), eta = triple.eta;
       if (ideal)
       {
         // Initialize centers with the analytically fused phases, and L/phi
@@ -72,7 +72,7 @@ template <uni20::Real Real> class System {
         // initializer. The final stage always uses the full finite equations.
         if (jac)
         {
-          jac->assign(16, Real{0});
+          jac->assign(16, triple.zero);
           for (std::size_t i = 0; i < 3; ++i)
             for (std::size_t j = 0; j < 3; ++j)
               (*jac)[4 * i + j] = block[3 * i + j];
@@ -95,19 +95,20 @@ template <uni20::Real Real> class System {
               (*jac)[15] -= scale * r.angle;
             }
           }
-        out.phase_norm = std::max({std::abs(out.residual[0]), std::abs(out.residual[2]), std::abs(out.residual[3])});
+        out.phase_norm = std::max(
+            {uni20::math::abs(out.residual[0]), uni20::math::abs(out.residual[2]), uni20::math::abs(out.residual[3])});
         out.norm = std::max(out.phase_norm, out.modulus_norm);
         return out;
       }
-      C const z = ideal ? C{} : triple.deviation(x.first(3));
-      C const u0{0, x[0] / Real{2}}, u = C{eta, x[0] / Real{2}} + z, v{0, x[3] / Real{2}};
+      C const z = ideal ? C{triple.zero, triple.zero} : triple.deviation(x.first(3));
+      C const u0{triple.zero, x[0] / Real{2}}, u = C{eta, x[0] / Real{2}} + z, v{triple.zero, x[3] / Real{2}};
       auto const t0 = quantum_group::detail::open_scattering(u0, v, eta);
       auto const tp = quantum_group::detail::open_scattering(u, v, eta);
       auto const r0 = quantum_group::detail::open_scattering(v, u0, eta);
       auto const rp = quantum_group::detail::open_scattering(v, u, eta);
-      auto const rm = quantum_group::detail::open_scattering(v, std::conj(u), eta);
+      auto const rm = quantum_group::detail::open_scattering(v, uni20::conj(u), eta);
       auto fused = [&](Real a, Real b) {
-        Real result{0};
+        Real result = triple.zero;
         for (int sign : {-1, 1})
           for (int width : {1, 2})
             result += quantum_group::detail::string_phase(a + Real(sign) * b, Real(width) * eta).value;
@@ -126,38 +127,41 @@ template <uni20::Real Real> class System {
                                       continuous((r0.value + rp.value + rm.value).imag(), fused(x[3], x[0]))));
       if (jac)
       {
-        jac->assign(16, Real{0});
+        jac->assign(16, triple.zero);
         for (std::size_t i = 0; i < 3; ++i)
           for (std::size_t j = 0; j < 3; ++j)
             (*jac)[4 * i + j] = block[3 * i + j];
         for (std::size_t j = 0; j < 4; ++j)
         {
-          C const dz = ideal ? C{} : j == 1 ? -z : j == 2 ? C{0, 1} * z : C{};
-          C const du0{0, j == 0 ? Real{1} / Real{2} : Real{0}}, du = du0 + dz;
-          C const dv{0, j == 3 ? Real{1} / Real{2} : Real{0}};
+          C const dz = ideal    ? C{triple.zero, triple.zero}
+                       : j == 1 ? -z
+                       : j == 2 ? C{triple.zero, Real{1}} * z
+                                : C{triple.zero, triple.zero};
+          C const du0{triple.zero, j == 0 ? Real{1} / Real{2} : Real{0}}, du = du0 + dz;
+          C const dv{triple.zero, j == 3 ? Real{1} / Real{2} : Real{0}};
           C const dt0 = t0.first * du0 + t0.second * dv, dtp = tp.first * du + tp.second * dv;
           C const dr = r0.first * dv + r0.second * du0 + rp.first * dv + rp.second * du + rm.first * dv +
-                       rm.second * std::conj(du);
+                       rm.second * uni20::conj(du);
           (*jac)[j] -= scale * (dt0 + Real{2} * dtp).imag();
           (*jac)[4 + j] -= scale * dtp.real();
           (*jac)[8 + j] -= scale * dtp.imag();
           (*jac)[12 + j] = (j == 3 ? theta.angle : Real{0}) - scale * dr.imag();
         }
       }
-      out.norm = out.phase_norm = out.modulus_norm = Real{0};
+      out.norm = out.phase_norm = out.modulus_norm = triple.zero;
       for (std::size_t i = 0; i < 4; ++i)
       {
         if (!uni20::isfinite(out.residual[i])) throw std::overflow_error("nonfinite triple-defect residual");
-        out.norm = std::max(out.norm, std::abs(out.residual[i]));
+        out.norm = std::max(out.norm, uni20::math::abs(out.residual[i]));
         auto& norm = i == 1 ? out.modulus_norm : out.phase_norm;
-        norm = std::max(norm, std::abs(out.residual[i]));
+        norm = std::max(norm, uni20::math::abs(out.residual[i]));
       }
       return out;
     }
     Real energy_shift(std::span<Real const> x) const
     {
-      Real const sh = std::sinh(triple.eta);
-      return triple.energy_shift(x.first(3)) - sh * sh / (triple.delta - std::cos(x[3]));
+      Real const sh = uni20::math::sinh(triple.eta);
+      return triple.energy_shift(x.first(3)) - sh * sh / (triple.delta - uni20::math::cos(x[3]));
     }
     Triple triple;
     std::size_t real_label;
@@ -180,6 +184,7 @@ template <uni20::Real Real = double>
 {
   (void)xxz::detail::checked_sites(sites);
   if (sites < 8) throw std::invalid_argument("triple plus defect requires N>=8");
+  (void)xxz::detail::solver_zero(delta, options);
   if (!uni20::isfinite(delta) || delta <= Real{1})
     throw std::invalid_argument("triple plus defect requires finite Delta>1");
   if (real_label == 0 || real_label > sites - 3 || string_label == 0 || string_label > sites - 7)

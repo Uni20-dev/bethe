@@ -20,7 +20,20 @@ bethe-xxx-structure-factor-thermo --momentum-points 129 --points 401 \
 
 Commands assume an installed executable on `PATH`; from its build directory,
 use `./bethe-xxx-structure-factor-thermo`. The common
-[precision and export controls](command-line.md) apply, including optional fp128.
+[precision and export controls](command-line.md) apply, including optional fp128
+and scalar MPFR (`--precision bits-N` or `digits-N`). MPFR does not require
+MPLAPACK for this scalar integral. For example:
+
+```sh
+bethe-xxx-structure-factor-thermo --momentum 1.5 --omega 1.8 --precision bits-256
+```
+
+`--max-quadrature-order` bounds the Gauss–Legendre refinement (a power of two
+from 32 to 2048; default 64 for native formats and 256 for MPFR). The separate
+`--max-evaluations` budget applies to each spectral point. Raising arithmetic
+precision does not remove either limit: unmet tolerances produce
+`numerical_failure`, with no density or error value. The default absolute
+transition-integral tolerance is 4096 times the working-precision epsilon.
 `--threads` uses the Uni20 scheduler for independent spectral points; output order
 and numerical results do not depend on the worker count.
 The [bounded observable grid](parallel-grids.md) groups 16 adjacent points per
@@ -136,14 +149,16 @@ R(x,a)=\frac{2u^2(3-u^2)\cos(ax)-4u}{x(1-u)(1+u)^2}.
 
 Near zero, an equivalent expression using `sin`, `tanh` and `expm1` avoids
 cancellation. Beyond $`X\ge1`$, its absolute tail is bounded by
-$`8e^{-2X}/X`$. Composite native-precision Gauss–Legendre rules use panels
+$`8e^{-2X}/X`$. Composite Gauss–Legendre rules generated at the requested precision use panels
 no wider than half an oscillation. Rule differences, a roundoff allowance and
 the tail bound supply the error estimate. Energies are compared through
 factored differences and the transition rate is assembled logarithmically.
 
-Tests cover independent 65-digit quadrature references, all enabled scalar
-precisions, reflection symmetry, coupling scaling, threshold behavior, failure
-statuses, and the published two-spinon fractions: approximately **72.89%** of
+Tests cover independent quadrature references, all enabled scalar precisions,
+reflection symmetry, coupling scaling, threshold behavior and failure statuses.
+MPFR accuracy grows at 80/160/256/333 bits against separate 105- and 130-decimal-digit
+tanh-sinh evaluations with a different analytic subtraction and panel spacing.
+Tests also check the published two-spinon fractions: approximately **72.89%** of
 the full integrated intensity and **71.30%** of the first frequency moment.
 These are physical partial-sum fractions, not tolerances or fitted scale factors.
 The optional [reference script](../scripts/reference_xxx_thermodynamic_structure_factor.py)
@@ -152,7 +167,10 @@ uses mpmath and a different analytic tail subtraction.
 The C++ entry point is
 `bethe::heisenberg::ThermodynamicTwoSpinonStructureFactor<Real>` in
 [`xxx_thermodynamic_structure_factor.hpp`](../include/bethe/xxx_thermodynamic_structure_factor.hpp).
-It is immutable and can be shared between scheduler jobs. The rapidity-difference
+MPFR callers construct `StructureFactorOptions<uni20::mpreal>` with a finite
+`uni20::Precision`, then supply exchange, momentum and frequency at that same
+precision. The evaluator owns its controls and quadrature rules; it is immutable
+and can be shared between scheduler jobs. The rapidity-difference
 kernel is separate from continuum kinematics.
 
 ## Scope

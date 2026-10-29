@@ -10,12 +10,15 @@ namespace bethe::xxz::quantum_group::detail
 /// Log phases are principal branches; callers choose continuous fused phases.
 template <uni20::Real Real> struct OpenScattering
 {
-    std::complex<Real> value, first, second;
+    uni20::complex<Real> value, first, second;
 };
-template <uni20::Real Real> OpenScattering<Real> open_scattering(std::complex<Real> u, std::complex<Real> v, Real eta)
+template <uni20::Real Real>
+OpenScattering<Real> open_scattering(uni20::complex<Real> u, uni20::complex<Real> v, Real eta)
 {
-  using C = std::complex<Real>;
-  auto term = [](C w) { return std::pair{std::log(std::sinh(w)), std::cosh(w) / std::sinh(w)}; };
+  using C = uni20::complex<Real>;
+  auto term = [](C w) {
+    return std::pair{uni20::math::log(uni20::math::sinh(w)), uni20::math::cosh(w) / uni20::math::sinh(w)};
+  };
   auto const [ap, dap] = term(u - v + eta);
   auto const [am, dam] = term(u - v - eta);
   auto const [bp, dbp] = term(u + v + eta);
