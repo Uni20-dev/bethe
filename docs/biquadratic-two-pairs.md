@@ -52,6 +52,10 @@ It does not give the minimum of the entire four-defect module; other
 string topologies are missing. These are TL insertions, not spin flips,
 and no operator spectral weights or physical SU(2) labels are supplied.
 
+The C++ API also supports explicit MPFR precision, following the
+[shared cluster precision contract](biquadratic-bound-triples.md#explicit-precision-in-the-library).
+This does not yet enable MPFR in the frontend.
+
 ## Coupling two existing pair systems
 
 The reference remains quantum-group XXZ with opposite end fields,
