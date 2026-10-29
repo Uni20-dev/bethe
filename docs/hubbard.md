@@ -52,9 +52,8 @@ Both finite Hubbard frontends accept `--precision bits-N` and `digits-N` with
 This covers both signs of U, symmetry-mapped sectors and analytic free-fermion
 paths within each frontend's existing sector restrictions. Root coordinates,
 physical and auxiliary interaction values, energy offsets, equation residuals
-and exact-zero observables retain the requested precision. The full frontend
-requires the LU provider even when a particular free-fermion request needs no
-matrix solve.
+and exact-zero observables retain the requested precision. Interacting solves use normal Uni20 dispatch, with CPU MPFR LU available
+when MPLAPACK is disabled.
 
 The C++ interface requires explicit finite precision in the interaction and
 solver controls, including U=0. Exact-only, unset or mismatched input values
