@@ -8,8 +8,8 @@ import subprocess
 import sys
 import tempfile
 
-program, mpfr, provider = sys.argv[1:]
-enabled = all(flag.upper() in ("ON", "TRUE", "1") for flag in (mpfr, provider))
+program, mpfr = sys.argv[1:]
+enabled = mpfr.upper() in ("ON", "TRUE", "1")
 env = dict(os.environ, OPENBLAS_NUM_THREADS="1", OMP_NUM_THREADS="1", UNI20_COLOR="never")
 pi = "3.14159265358979323846264338327950288419716939937510582097494459230781640628620899862803482534211706798214808651"
 

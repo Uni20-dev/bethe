@@ -12,7 +12,7 @@ template <typename Real> class NewtonControl : public ::testing::Test {};
 TYPED_TEST_SUITE(NewtonControl, test_support::RealTypes, test_support::PrecisionNames);
 
 #if UNI20_HAS_MPREAL
-TEST(NewtonControlMpfr, OptionalCorrectionUsesConfiguredProvider)
+TEST(NewtonControlMpfr, ExplicitCorrectionUsesNormalDispatch)
 {
   using Real = uni20::mpreal;
   for (int bits : {128, 256})
@@ -20,20 +20,10 @@ TEST(NewtonControlMpfr, OptionalCorrectionUsesConfiguredProvider)
     auto const p = uni20::Precision::bits(bits);
     std::vector<Real> const a{Real(0, p), Real(2, p), Real(1, p), Real(3, p)};
     std::vector<Real> b{Real(4, p), Real(7, p)};
-    // Instantiating an algorithm with an optional correction must work even
-    // when this configuration can evaluate only its analytic/zero-update path.
-    auto correction = [&](bool needed) { return !needed || bethe::detail::newton_step(a, b, p); };
-    EXPECT_TRUE(correction(false));
-    EXPECT_EQ(b, (std::vector<Real>{Real(4, p), Real(7, p)}));
-#if UNI20_HAS_MPLAPACK_MPREAL
-    ASSERT_TRUE(correction(true));
+    ASSERT_TRUE(bethe::detail::newton_step(a, b, p));
     EXPECT_EQ(b, (std::vector<Real>{Real(1, p), Real(2, p)}));
     for (auto const& value : b)
       EXPECT_EQ(uni20::precision_of(value), p);
-#else
-    EXPECT_THROW(correction(true), std::runtime_error);
-    EXPECT_EQ(b, (std::vector<Real>{Real(4, p), Real(7, p)}));
-#endif
   }
 }
 #endif

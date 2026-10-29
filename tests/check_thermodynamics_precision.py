@@ -8,8 +8,8 @@ import subprocess
 import sys
 import tempfile
 
-program, mpfr, mplapack = sys.argv[1:]
-enabled = all(flag.upper() in ("ON", "TRUE", "1") for flag in (mpfr, mplapack))
+program, mpfr = sys.argv[1:]
+enabled = mpfr.upper() in ("ON", "TRUE", "1")
 env = dict(os.environ, OPENBLAS_NUM_THREADS="1", OMP_NUM_THREADS="1", UNI20_COLOR="never")
 
 
@@ -132,9 +132,9 @@ with tempfile.TemporaryDirectory() as directory:
     else:
         invalid += [["--precision", p] for p in ("bits-128", "digits-100")]
     for args in invalid:
-        missing_provider = not enabled and args in (["--precision", "bits-128"], ["--precision", "digits-100"])
+        missing_scalars = not enabled and args in (["--precision", "bits-128"], ["--precision", "digits-100"])
         run(["--c", "4", "--momentum", "0", *args, "--json", str(path), "--force"], 1,
-            error="arbitrary-precision linear solves require" if missing_provider else None)
+            error="arbitrary-precision linear solves require" if missing_scalars else None)
         assert path.read_text() == "sentinel"
 
 print("Thermodynamic precision, physical corrections and exports passed")

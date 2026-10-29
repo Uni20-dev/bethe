@@ -25,7 +25,7 @@ bethe-xxz-obc 16 --delta 3 --roots
 bethe-xxz-obc 33 --delta -0.9 --sz -1/2 --roots
 # In a binary128-enabled build:
 bethe-xxz-obc 64 --delta 0.999999999999999999999999 --precision fp128
-# With MPFR scalars and MPLAPACK MPFR enabled:
+# With MPFR scalars enabled:
 bethe-xxz-obc 16 --delta 3 --precision bits-256 --roots
 ```
 

@@ -6,7 +6,7 @@ The library supports repulsive bosons with Dirichlet walls at x=0 and x=L,
 in the same units as the ring: `H=-sum d_j^2 + 2c sum_(i<j) delta(x_i-x_j)`.
 Both L and c must be finite and positive. Ground states, specified real-root
 states and finite-window excitation scans work in fp64, native long double,
-enabled fp128, and optional arbitrary precision through MPLAPACK MPFR.
+enabled fp128, and optional arbitrary precision through MPFR.
 The executable is `bethe-lieb-liniger-obc`.
 
 ## Start with a calculation
@@ -112,7 +112,7 @@ $`(E-2\pi^2)/c`$ to within $`10^{-45}`$ of 3 and compare with a 512-bit solve.
 Subtract the noninteracting energy at comparable precision: converting the printed
 energy to an ordinary binary64 plotting value would discard the correction.
 
-This requires an [arbitrary-precision build with MPLAPACK MPFR](building.md#enable-arbitrary-precision).
+This requires an [arbitrary-precision build](building.md#enable-arbitrary-precision).
 All finite-size modes support `bits-N` and `digits-N`;
 see the [C++ precision contract](lieb-liniger.md#c-api). Working digits are not
 guaranteed accurate digits, and the equation residual is not an energy-error bound.

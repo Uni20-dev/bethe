@@ -39,7 +39,7 @@ int main()
 {
   try
   {
-#if UNI20_HAS_MPLAPACK_MPREAL
+#if UNI20_HAS_MPREAL
     return sweep(model::Options<uni20::mpreal>(uni20::Precision::bits(160)));
 #else
     return sweep(model::Options<double>{});

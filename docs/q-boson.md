@@ -156,18 +156,16 @@ rejected. Precision belongs to each solve and does not change MPFR defaults.
 For example:
 
 ```cpp
-#if UNI20_HAS_MPREAL && UNI20_HAS_MPLAPACK_MPREAL
+#if UNI20_HAS_MPREAL
 auto p = uni20::Precision::decimal_digits(100);
 bethe::q_boson::SolverOptions<uni20::mpreal> controls(p);
 auto state = bethe::q_boson::ground_state(2, 2, uni20::mpreal("1e-60", p), controls);
 #endif
 ```
 
-The CLI accepts `--precision bits-N` or `digits-N` when Uni20 MPFR scalars and
-MPLAPACK's MPFR LU provider are enabled. Analytic free/vacuum/one-particle/phase library results and zero-update
-diagnostics require only the scalar family; an interacting Newton update
-requires the LU provider. The CLI consistently requires both, including in
-free and phase modes. Working precision controls arithmetic, not the number
+The CLI accepts `--precision bits-N` or `digits-N` when Uni20 MPFR scalars are
+enabled. All existing modes use normal Uni20 dispatch, including CPU LU for
+interacting Newton updates when MPLAPACK is unavailable. Working precision controls arithmetic, not the number
 of guaranteed accurate digits.
 
 The existing excitation scanner accepts an `execution` policy with a scheduler.

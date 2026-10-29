@@ -131,7 +131,7 @@ if (!state.converged) { /* report an incomplete solve */ }
 ```
 
 The frontend supports fp64, long double, optional fp128, and explicit MPFR
-precision with the MPLAPACK MPFR provider:
+precision with Uni20 MPFR scalars:
 
 ```sh
 bethe-tj-pbc 5 --particles 4 --sz 1 --precision bits-256 --roots
@@ -143,8 +143,7 @@ Library calls use `SolverOptions<uni20::mpreal>(Precision::bits(256))` and
 `ground_state<uni20::mpreal>(L, N_up, N_down, options)`. Options and tolerances
 own their working precision; concurrent requests can use different precisions
 without changing MPFR defaults. Analytic free states, no-hole XXX states and
-zero-update doped estimates are also available without MPLAPACK in library
-calls. The frontend requires the provider for its general interacting path.
+interacting doped solves work without MPLAPACK; Uni20 supplies CPU LU.
 
 The doped solver works with the positive halves of reflection-paired roots,
 inserting exact zero roots for odd counts. Newton uses an analytic Jacobian

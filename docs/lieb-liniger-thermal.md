@@ -113,8 +113,7 @@ if (state.converged) {
 ```
 
 Use `long double`, configured binary128, or `uni20::mpreal` for extended
-arithmetic. MPFR equilibrium solves require the configured MPLAPACK MPFR
-provider. Runtime precision is explicit in both the inputs and controls:
+arithmetic. MPFR equilibrium solves use normal Uni20 dispatch, including CPU LU. Runtime precision is explicit in both the inputs and controls:
 
 ```cpp
 auto p = uni20::Precision::bits(128);
@@ -139,8 +138,8 @@ thermal factors and failure diagnostics retain that precision. The solver
 changes neither ambient MPFR precision nor its exponent range. There is no
 narrowing to binary64 inside the solver or its quadrature rules.
 
-The CLI accepts `--precision bits-N` and `digits-N` when the MPFR LU provider
-is configured. More arithmetic bits do not establish quadrature or tail
+The CLI accepts `--precision bits-N` and `digits-N` when Uni20 MPFR scalars
+are configured. More arithmetic bits do not establish quadrature or tail
 convergence: insufficient mesh/cutoff budgets still return a failure. Very
 small observables are rejected if their requested absolute accuracy cannot
 be resolved on the scalar's finite grid; MPFR uses its current minimum

@@ -445,25 +445,21 @@ else()
 endif()
 
 if(BETHE_BUILD_APPS)
-  set(bethe_arbitrary_structure_factor OFF)
-  if(BETHE_HAS_MPREAL AND BETHE_HAS_MPLAPACK_MPREAL)
-    set(bethe_arbitrary_structure_factor ON)
-  endif()
   if(Python3_Interpreter_FOUND)
     add_test(NAME SU3Precision.cli
       COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_su3_precision.py"
-        "$<TARGET_FILE:bethe-su3-pbc>" "${BETHE_HAS_MPREAL}" "${BETHE_HAS_MPLAPACK_MPREAL}")
+        "$<TARGET_FILE:bethe-su3-pbc>" "${BETHE_HAS_MPREAL}")
     add_test(NAME RootSolverPrecision.cli
       COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_root_solver_precision.py"
         "$<TARGET_FILE:bethe-xxx-obc>" "$<TARGET_FILE:bethe-lieb-liniger-pbc>"
-        "$<TARGET_FILE:bethe-lieb-liniger-obc>" "${BETHE_HAS_MPREAL}" "${BETHE_HAS_MPLAPACK_MPREAL}")
+        "$<TARGET_FILE:bethe-lieb-liniger-obc>" "${BETHE_HAS_MPREAL}")
     add_test(NAME GaudinPrecision.cli
       COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_gaudin_precision.py"
         "$<TARGET_FILE:bethe-richardson>" "$<TARGET_FILE:bethe-central-spin>" "${BETHE_HAS_MPREAL}")
     add_test(NAME PrecisionInfo.cli
       COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_precision_info.py"
         "$<TARGET_FILE:bethe-info>" "$<TARGET_FILE:bethe-xxx-pbc>" "$<TARGET_FILE:bethe-xxx-structure-factor>"
-        "${BETHE_HAS_FLOAT128}" "${bethe_arbitrary_structure_factor}" "${BETHE_HAS_MPREAL}"
+        "${BETHE_HAS_FLOAT128}" "${BETHE_HAS_MPLAPACK_MPREAL}" "${BETHE_HAS_MPREAL}"
         "${BETHE_HAS_MPLAPACK_FLOAT128}")
     add_test(NAME XXXPbcPrecision.cli
       COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_xxx_pbc_precision.py"
@@ -508,7 +504,7 @@ if(BETHE_BUILD_APPS)
   if(Python3_Interpreter_FOUND)
     add_test(NAME XXXStructureFactor.cli
       COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_xxx_structure_factor.py"
-        "$<TARGET_FILE:bethe-xxx-structure-factor>" "${BETHE_HAS_FLOAT128}" "${bethe_arbitrary_structure_factor}")
+        "$<TARGET_FILE:bethe-xxx-structure-factor>" "${BETHE_HAS_FLOAT128}" "${BETHE_HAS_MPREAL}")
     add_test(NAME ParallelScan.cli
       COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_parallel_scans.py"
         "$<TARGET_FILE:bethe-xxx-pbc>" "$<TARGET_FILE:bethe-xxx-obc>"
@@ -529,11 +525,11 @@ if(BETHE_BUILD_APPS)
     add_test(NAME Hubbard.precision
       COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_hubbard_precision.py"
         "$<TARGET_FILE:bethe-hubbard-pbc>" "$<TARGET_FILE:bethe-hubbard-obc>"
-        "${BETHE_HAS_MPREAL}" "${BETHE_HAS_MPLAPACK_MPREAL}")
+        "${BETHE_HAS_MPREAL}")
     add_test(NAME XXZ.precision
       COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_xxz_precision.py"
         "$<TARGET_FILE:bethe-xxz-pbc>" "$<TARGET_FILE:bethe-xxz-obc>"
-        "${BETHE_HAS_MPREAL}" "${BETHE_HAS_MPLAPACK_MPREAL}")
+        "${BETHE_HAS_MPREAL}")
   endif()
   foreach(app IN ITEMS bethe-sine-gordon-dispersion bethe-sine-gordon-bethe-yang bethe-sine-gordon-excited)
     add_test(NAME Citations.${app}.cli
@@ -668,23 +664,23 @@ if(BETHE_BUILD_APPS)
         "$<TARGET_FILE:bethe-lieb-liniger-dispersion>" "${BETHE_HAS_FLOAT128}")
     add_test(NAME LiebLinigerThermo.precision
       COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_thermodynamics_precision.py"
-        "$<TARGET_FILE:bethe-lieb-liniger-dispersion>" "${BETHE_HAS_MPREAL}" "${BETHE_HAS_MPLAPACK_MPREAL}")
+        "$<TARGET_FILE:bethe-lieb-liniger-dispersion>" "${BETHE_HAS_MPREAL}")
     add_test(NAME TB.precision
       COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_tb_precision.py"
-        "$<TARGET_FILE:bethe-tb-pbc>" "${BETHE_HAS_MPREAL}" "${BETHE_HAS_MPLAPACK_MPREAL}")
+        "$<TARGET_FILE:bethe-tb-pbc>" "${BETHE_HAS_MPREAL}")
 
     add_test(NAME SUFermions.precision
       COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_su_fermions_precision.py"
-        "$<TARGET_FILE:bethe-sun-fermions-pbc>" "${BETHE_HAS_MPREAL}" "${BETHE_HAS_MPLAPACK_MPREAL}")
+        "$<TARGET_FILE:bethe-sun-fermions-pbc>" "${BETHE_HAS_MPREAL}")
     add_test(NAME LiebLinigerThermal.cli
       COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_lieb_liniger_thermal.py"
         "$<TARGET_FILE:bethe-lieb-liniger-thermal>" "${BETHE_HAS_FLOAT128}")
     add_test(NAME LiebLinigerThermal.precision
       COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_thermal_precision.py"
-        "$<TARGET_FILE:bethe-lieb-liniger-thermal>" "${BETHE_HAS_MPREAL}" "${BETHE_HAS_MPLAPACK_MPREAL}")
+        "$<TARGET_FILE:bethe-lieb-liniger-thermal>" "${BETHE_HAS_MPREAL}")
     add_test(NAME QBoson.mpfr.cli
       COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_q_boson_mpfr.py"
-        "$<TARGET_FILE:bethe-q-boson-pbc>" "${bethe_arbitrary_structure_factor}")
+        "$<TARGET_FILE:bethe-q-boson-pbc>" "${BETHE_HAS_MPREAL}")
     add_test(NAME QBoson.cli
       COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_q_boson.py"
         "$<TARGET_FILE:bethe-q-boson-pbc>" "${BETHE_HAS_FLOAT128}")
@@ -693,7 +689,7 @@ if(BETHE_BUILD_APPS)
         "$<TARGET_FILE:bethe-bose-fermi-pbc>" "${BETHE_HAS_FLOAT128}")
     add_test(NAME BoseFermiMpfr.cli
       COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_bose_fermi_precision.py"
-        "$<TARGET_FILE:bethe-bose-fermi-pbc>" "${BETHE_HAS_MPREAL}" "${BETHE_HAS_MPLAPACK_MPREAL}")
+        "$<TARGET_FILE:bethe-bose-fermi-pbc>" "${BETHE_HAS_MPREAL}")
     add_test(NAME XYZ.cli
       COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_xyz.py"
         "$<TARGET_FILE:bethe-xyz-pbc>" "${BETHE_HAS_FLOAT128}")
@@ -852,7 +848,7 @@ if(BETHE_BUILD_APPS)
   if(Python3_Interpreter_FOUND)
     add_test(NAME GaudinYangMpfr.cli
       COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_gaudin_yang_precision.py"
-        "$<TARGET_FILE:bethe-gaudin-yang-pbc>" "${BETHE_HAS_MPREAL}" "${BETHE_HAS_MPLAPACK_MPREAL}")
+        "$<TARGET_FILE:bethe-gaudin-yang-pbc>" "${BETHE_HAS_MPREAL}")
   endif()
   foreach(app IN ITEMS bethe-xxx-pbc bethe-xxx-obc bethe-xxz-pbc bethe-xxz-obc bethe-hubbard-pbc bethe-hubbard-obc bethe-hubbard-dispersion bethe-lieb-liniger-pbc bethe-lieb-liniger-obc bethe-su3-pbc bethe-gaudin-yang-pbc bethe-tj-pbc bethe-tb-pbc bethe-biquadratic-obc bethe-richardson bethe-central-spin bethe-sun-fermions-pbc bethe-ladder-pbc bethe-haldane-shastry-pbc bethe-sutherland-pbc)
     if(Python3_Interpreter_FOUND)
@@ -871,7 +867,7 @@ if(BETHE_BUILD_APPS)
   if(Python3_Interpreter_FOUND)
     add_test(NAME Ladder.precision
       COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_ladder_precision.py"
-        "$<TARGET_FILE:bethe-ladder-pbc>" "${BETHE_HAS_MPREAL}" "${BETHE_HAS_MPLAPACK_MPREAL}")
+        "$<TARGET_FILE:bethe-ladder-pbc>" "${BETHE_HAS_MPREAL}")
   endif()
   add_test(NAME Ladder.cli
     COMMAND "${CMAKE_COMMAND}" "-DPROGRAM=$<TARGET_FILE:bethe-ladder-pbc>"
@@ -883,7 +879,7 @@ if(BETHE_BUILD_APPS)
       -P "${CMAKE_CURRENT_SOURCE_DIR}/check_gaudin_yang_cli.cmake")
   add_test(NAME TJ.precision
     COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_tj_precision.py"
-      "$<TARGET_FILE:bethe-tj-pbc>" "${BETHE_HAS_MPREAL}" "${BETHE_HAS_MPLAPACK_MPREAL}")
+      "$<TARGET_FILE:bethe-tj-pbc>" "${BETHE_HAS_MPREAL}")
   add_test(NAME TJ.cli
     COMMAND "${CMAKE_COMMAND}" "-DPROGRAM=$<TARGET_FILE:bethe-tj-pbc>"
       "-DFLOAT128=${BETHE_HAS_FLOAT128}"

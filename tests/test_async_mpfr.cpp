@@ -3,9 +3,7 @@
 #include <bethe/heisenberg_excitations.hpp>
 #include <gtest/gtest.h>
 #include <uni20/async/tbb_scheduler.hpp>
-#if UNI20_HAS_MPLAPACK_MPREAL
 #include "two_stage_dsf_reference.hpp"
-#endif
 
 namespace
 {
@@ -71,7 +69,6 @@ TEST(AsyncMpfr, ConcurrentPeriodicAndOpenScansOwnTheirPrecision)
   EXPECT_EQ(mpfr_get_default_prec(), ambient);
 }
 
-#if UNI20_HAS_MPLAPACK_MPREAL
 TEST(AsyncMpfr, FusedSpectraMatchPreparedTwoStageAtConcurrentPrecisions)
 {
   TbbScheduler scheduler(4);
@@ -144,4 +141,3 @@ TEST(AsyncMpfr, FailedReferencesRetainFinitePrecisionZerosAndRejectMixedOptions)
   options.residual_tolerance = options.residual_tolerance.at(Precision::bits(128));
   EXPECT_THROW((void)model::two_spinon_structure_factor_async<R>(8, options, 100, {&scheduler}), std::invalid_argument);
 }
-#endif

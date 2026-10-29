@@ -17,15 +17,13 @@ namespace bethe::detail
 // Square solve for a row-major Newton correction at explicit precision.
 // Failure is recoverable and never changes a process-global error policy.
 // The RHS may be modified on failure; callers retain their current iterate.
-// Missing configured support throws only when a correction is requested, so
-// callers can still instantiate analytic and zero-update paths for that type.
 template <uni20::Real Real> bool newton_step(std::vector<Real> a, std::vector<Real>& b, uni20::Precision precision)
 {
   auto const n = b.size();
   if (n && n > std::numeric_limits<std::size_t>::max() / n) return false;
   if (a.size() != n * n) return false;
   // Reuse the owned coefficient copy as column-major workspace, allowing
-  // LAPACK/MPLAPACK dispatch without another allocation, with Uni20's native
+  // LAPACK/MPLAPACK dispatch without another allocation, with Uni20's
   // CPU fallback where needed. Neither view outlives its vector storage.
   for (std::size_t i = 0; i < n; ++i)
     for (std::size_t j = i + 1; j < n; ++j)
@@ -35,19 +33,10 @@ template <uni20::Real Real> bool newton_step(std::vector<Real> a, std::vector<Re
   using View = uni20::MdspecTensorView<Span, ConstSpan, uni20::HostStorage>;
   View matrix(Span(a.data(), n, n), ConstSpan(a.data(), n, n));
   View rhs(Span(b.data(), n, 1), ConstSpan(b.data(), n, 1));
-  using Selector = decltype(uni20::linalg::select_backend(uni20::linalg::linear_solve_op{}, matrix, rhs));
-  // Probe the normal storage-selected list; do not choose a provider here.
-  if constexpr (uni20::has_runtime_precision_v<Real> &&
-                uni20::linalg::probe_dispatch_kernel_types<
-                    Selector, uni20::linalg::linear_solve_op, Span, Span, uni20::linalg::SolveInfo,
-                    uni20::linalg::SolveOptions<Real> const&, uni20::Precision>() ==
-                    uni20::linalg::KernelTypeAcceptance::no)
-    throw std::runtime_error("Newton correction has no configured linear-solve backend");
-  else
-    return uni20::linalg::solve_inplace_with_info(
-               matrix, rhs, precision,
-               {.relative_pivot_tolerance = Real{64} * uni20::numeric_limits<Real>::epsilon(precision)})
-        .succeeded();
+  return uni20::linalg::solve_inplace_with_info(
+             matrix, rhs, precision,
+             {.relative_pivot_tolerance = Real{64} * uni20::numeric_limits<Real>::epsilon(precision)})
+      .succeeded();
 }
 
 template <uni20::Real Real>

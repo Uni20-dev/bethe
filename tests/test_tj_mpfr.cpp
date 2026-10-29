@@ -97,7 +97,6 @@ TEST(TJMpfr, FreeMomentumAndNoHoleReduction)
   check_precision(near_polarized, p);
 }
 
-#if UNI20_HAS_MPLAPACK_MPREAL
 TEST(TJMpfr, DopedAnalyticEnergyGainsAccuracyBeyondBinary128)
 {
   auto const reference = Precision::bits(768);
@@ -220,5 +219,4 @@ TEST(TJMpfr, OwningMixedPrecisionAsyncGridsPreserveCompleteStates)
   }
   EXPECT_EQ(mpfr_get_default_prec(), ambient);
 }
-#endif
 } // namespace

@@ -148,13 +148,9 @@ bethe-sine-gordon-dispersion --p 0.4 --momentum 0.7 --precision digits-100
 bethe-su3-pbc 24 --precision digits-100
 ```
 
-XXX roots, Richardson pairing, central spin, quantum-group XXZ,
-SU(3)/TB/sine-Gordon dispersions, Potts, Haldane–Shastry and Sutherland need Uni20's
-arbitrary-precision scalar family (GMP, MPFR and MPC), but no MPLAPACK.
-Finite-size, zero-temperature and thermal Lieb–Liniger, SU(3) singlet ground
-states, finite XXZ/Hubbard, Gaudin–Yang/Bose–Fermi, q-boson, finite TB, SU(n)
-fermions, t–J, the integrable ladder and structure factors additionally require the
-MPLAPACK MPFR provider for LU operations. The [capability inventory](app-capabilities.md)
+All currently supported MPFR frontends need Uni20's arbitrary-precision scalar
+family (GMP, MPFR and MPC). MPLAPACK matrix kernels are optional: normal Uni20
+dispatch supplies CPU LU/QR when needed. The [capability inventory](app-capabilities.md)
 records each frontend's precision support, provider requirements and state-family
 restrictions. More arithmetic precision does not expand those state families.
 
@@ -439,8 +435,7 @@ For projected lattice electrons, [`bethe-tj-pbc`](tj.md) fixes t=1, J=2 and
 takes L with optional `--particles N --sz VALUE`. It supports doped sectors
 with odd populations of both spins, plus every no-hole or fully polarized
 sector. Defaults are N=L and the smallest nonnegative Sz compatible with N.
-Explicit `--precision bits-N` or `digits-N` is supported with the MPLAPACK
-MPFR provider, including all three existing branches and root exports.
+Explicit `--precision bits-N` or `digits-N` is supported with Uni20 MPFR scalars, including all three existing branches and root exports.
 
 ### SU(3)/ULS and spin-1 TB chains
 
@@ -507,8 +502,7 @@ Heisenberg ladder. Use `--singlets NS` for one singlet-count sector or
 `--sectors` for all sector minima; triplet populations are minimized too.
 `--roots` prints the selected state's highest-weight representative and
 retains the distinction between it and a physical SU(4) descendant.
-The frontend supports explicit `bits-N`/`digits-N` precision with MPLAPACK
-MPFR, including fixed singlet and magnetization sectors and partial scans.
+The frontend supports explicit `bits-N`/`digits-N` precision with Uni20 MPFR scalars, including fixed singlet and magnetization sectors and partial scans.
 
 ### Sine-Gordon field theory
 

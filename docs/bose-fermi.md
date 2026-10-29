@@ -28,7 +28,7 @@ Literature is printed only with `--references`, not ordinary help.
 
 Alongside fp64, platform-native long double and optional fp128, the frontend
 accepts explicit MPFR precision (`bits-N` or `digits-N`) when
-[MPFR scalars and MPLAPACK MPFR](building.md#enable-arbitrary-precision) are
+[MPFR scalars](building.md#enable-arbitrary-precision) are
 configured. This covers the existing mixed, pure-species, free and vacuum
 paths. More arithmetic bits do not extend the supported shells or guarantee
 convergence within the iteration budget.
@@ -116,11 +116,8 @@ auto state = bethe::bose_fermi::ground_state(
     2, 3, uni20::mpreal("5", p), uni20::mpreal("1", p), options);
 ```
 
-The shared continuum Newton driver needs MPLAPACK MPFR only when it performs
-an update. Library free states, the pure-boson singleton and zero-update
-diagnostics also work with MPFR scalars alone. A required update without its
-provider throws a clear error; the frontend requires MPLAPACK for all MPFR
-requests. No global precision or exponent-range setting is changed.
+The shared continuum Newton driver uses normal Uni20 dispatch for MPFR
+updates, with CPU LU available when MPLAPACK is disabled. No global precision or exponent-range setting is changed.
 
 The pure-boson branch delegates to Lieb–Liniger. Free states store boson zero
 momenta followed by the occupied fermion modes in `momenta`; exact integer

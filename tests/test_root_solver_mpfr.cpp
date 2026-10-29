@@ -78,7 +78,6 @@ TEST_P(RootSolverMpfr, OpenXXXAnalyticEnergySectorsAndEmptyRoots)
   check_state(seed, precision());
 }
 
-#if UNI20_HAS_MPLAPACK_MPREAL
 // Independent scalar bisection of the TWO-body wall equations for the root
 // sum and difference: x+2 atan(x/g)=label*pi. No Newton matrix or model seed.
 Real wall_two_body(Real const& g, int label)
@@ -138,15 +137,12 @@ TEST_P(RootSolverMpfr, LiebLinigerAnalyticAndIndependentTwoBodyReferences)
   }
 }
 
-#endif
-
 TEST_P(RootSolverMpfr, RejectsImplicitPrecisionChanges)
 {
   auto const other = uni20::Precision::bits(GetParam() + 32);
   for (auto const& invalid : {Real{1}, Real(1, other), Real(uni20::uninitialized)})
   {
     auto o = options();
-#if UNI20_HAS_MPLAPACK_MPREAL
     EXPECT_THROW((void)ll::ground_state(2, invalid, value(1), o), std::invalid_argument);
     EXPECT_THROW((void)ll::open::ground_state(2, value(1), invalid, o), std::invalid_argument);
     auto ring = ll::ground_state(2, value(1), value(1), o);
@@ -157,16 +153,13 @@ TEST_P(RootSolverMpfr, RejectsImplicitPrecisionChanges)
     wall.momenta[0] = invalid;
     EXPECT_THROW((void)ll::open::solve_real<Real>(value(1), value(1), wall.quantum_numbers, o, wall.momenta),
                  std::invalid_argument);
-#endif
     auto chain = xxx::ground_state<Real>(4, o);
     chain.rapidities[0] = invalid;
     EXPECT_THROW((void)xxx::solve_real<Real>(4, chain.quantum_numbers, o, chain.rapidities), std::invalid_argument);
     o.residual_tolerance = invalid;
     EXPECT_THROW((void)xxx::ground_state<Real>(4, o), std::invalid_argument);
-#if UNI20_HAS_MPLAPACK_MPREAL
     EXPECT_THROW((void)ll::ground_state(2, value(1), value(1), o), std::invalid_argument);
     EXPECT_THROW((void)ll::open::ground_state(2, value(1), value(1), o), std::invalid_argument);
-#endif
   }
 }
 
@@ -202,17 +195,14 @@ TEST(RootSolverMpfrShared, AlternatingPrecisionsAndThreadedScans)
     bethe::SolverOptions<Real> options(p);
     compare_scan(xxx::real_excitations<Real>(6, uni20::half_int{1}, serial, options),
                  xxx::real_excitations<Real>(6, uni20::half_int{1}, parallel, options), p);
-#if UNI20_HAS_MPLAPACK_MPREAL
     compare_scan(ll::real_excitations(2, Real(2, p), Real(1, p), 1, serial, options),
                  ll::real_excitations(2, Real(2, p), Real(1, p), 1, parallel, options), p);
     compare_scan(ll::open::real_excitations(2, Real(2, p), Real(1, p), 2, serial, options),
                  ll::open::real_excitations(2, Real(2, p), Real(1, p), 2, parallel, options), p);
-#endif
   }
   EXPECT_EQ(mpfr_get_default_prec(), ambient);
 }
 
-#if UNI20_HAS_MPLAPACK_MPREAL
 TEST(RootSolverMpfrShared, WeakWallCouplingNeedsMoreThanBinary128)
 {
   // sqrt(c) is below binary64 root spacing; the O(c) energy shift is below
@@ -268,5 +258,4 @@ TEST(RootSolverMpfrShared, NontrivialStatesImproveWithPrecisionAndRestart)
     }
   }
 }
-#endif
 } // namespace

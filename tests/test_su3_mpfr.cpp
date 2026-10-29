@@ -19,7 +19,6 @@ void check_precision(Real const& value, uni20::Precision p)
   EXPECT_EQ(value.precision(), p);
   EXPECT_TRUE(uni20::isfinite(value));
 }
-#if UNI20_HAS_MPLAPACK_MPREAL
 void check_state(model::State<Real> const& state, uni20::Precision p)
 {
   check_precision(state.energy, p);
@@ -37,7 +36,6 @@ void check_state(model::State<Real> const& state, uni20::Precision p)
     }
   }
 }
-#endif
 
 class SU3Mpfr : public ::testing::TestWithParam<int> {};
 INSTANTIATE_TEST_SUITE_P(WorkingPrecisions, SU3Mpfr, ::testing::Values(128, 256, 333));
@@ -47,8 +45,8 @@ TEST_P(SU3Mpfr, FinitePrecisionFailuresAndInvalidControls)
   auto const p = uni20::Precision::bits(GetParam());
   EXPECT_THROW((void)model::SolverOptions<Real>(uni20::Precision::exact()), std::invalid_argument);
   model::SolverOptions<Real> options(p);
-  // Scalar-only builds can form the equations, but cannot instantiate the
-  // MPFR LU solve. The CLI must reject that unavailable provider explicitly.
+  // Verify explicit-precision equations and zero-budget diagnostics before
+  // exercising actual Newton corrections below.
   model::detail::GroundSystem<Real> const system(9, {6, 3}, p);
   auto const x = system.seed();
   ASSERT_TRUE(system.physical(x));
@@ -60,7 +58,6 @@ TEST_P(SU3Mpfr, FinitePrecisionFailuresAndInvalidControls)
     check_precision(residual, p);
   for (auto const& residual : evaluation.levels)
     check_precision(residual, p);
-#if UNI20_HAS_MPLAPACK_MPREAL
   options.max_iterations = 0;
   auto const seed = model::ground_state<Real>(9, options);
   check_state(seed, p);
@@ -69,7 +66,6 @@ TEST_P(SU3Mpfr, FinitePrecisionFailuresAndInvalidControls)
   EXPECT_EQ(seed.iterations, 0u);
   EXPECT_EQ(seed.momentum, 0);
   EXPECT_EQ(seed.rapidities[1][1], 0);
-#endif
   for (auto const& invalid :
        {Real{1}, Real(1, uni20::Precision::bits(GetParam() + 32)), Real(uni20::uninitialized), Real(0, p), Real(-1, p)})
   {
@@ -78,7 +74,6 @@ TEST_P(SU3Mpfr, FinitePrecisionFailuresAndInvalidControls)
   }
 }
 
-#if UNI20_HAS_MPLAPACK_MPREAL
 TEST_P(SU3Mpfr, AnalyticEnergiesAndNestedRoots)
 {
   auto const p = uni20::Precision::bits(GetParam());
@@ -171,5 +166,4 @@ TEST(SU3MpfrShared, OwningAsyncSweepKeepsIndependentPrecisionsAndFailures)
   }
   EXPECT_EQ(mpfr_get_default_prec(), ambient);
 }
-#endif
 } // namespace
