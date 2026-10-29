@@ -146,7 +146,7 @@ auto preamble(uni20::run_context& context, Arguments const& args, bethe::SolverO
       .field("sites", "Sites", args.sites)
       .field("spin", "Spin", 1)
       .field("tl_loop_weight", "TL loop weight", 3)
-      .field("xxz_delta", "XXZ Delta", Real{1.5})
+      .field("xxz_delta", "XXZ Delta", uni20::scalar_at_precision<Real>(3, options.precision()) / Real{2})
       .field("xxz_reference", "XXZ reference", "spin-half exchange 1; +sqrt(5)/4*(sz_1-sz_N)")
       .precision(args.precision)
       .field("residual_tolerance", "Residual tolerance", options.residual_tolerance);
@@ -157,7 +157,8 @@ auto preamble(uni20::run_context& context, Arguments const& args, bethe::SolverO
   if (args.ferromagnetic)
     report.field("tl_convention", "TL convention", "tl_energy=+sum e_i=E-(N-1); auxiliary XXZ reference is unchanged")
         .field("defect_meaning", "Defect meaning", "M=(N-ell)/2; TL singlet defects, not physical spin flips")
-        .field("spectral_gap", "Exact gap above ground space", model::ferromagnetic::spectral_gap<Real>(args.sites));
+        .field("spectral_gap", "Exact gap above ground space",
+               model::ferromagnetic::spectral_gap<Real>(args.sites, options.precision()));
   return report;
 }
 
