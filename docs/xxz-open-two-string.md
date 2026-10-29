@@ -41,7 +41,7 @@ L&=-\log d.
 ```
 
 The real labels are I_j=j and the two-string label is 1. The positive-deviation
-branch is fixed for this singlet API; more strings are not implemented.
+branch and string topology are fixed for this singlet API.
 The separate bound-pair API allows negative deviations and other string labels.
 The equations below are our regularization of the
 published equations, not a claim that the paper proves its energy ordering.
@@ -92,7 +92,8 @@ the continuous phase convention also covers their crossing of the center.
 ## Algorithm, precision and output
 
 A damped Newton solver uses an analytic Jacobian in the selected native
-fp64, long-double or optional fp128 type. An ideal-string solve initializes
+fp64, long-double or optional fp128 type; the C++ library also supports
+explicit MPFR precision. An ideal-string solve initializes
 the coordinates; acceptance always uses the finite-deviation equations.
 Both stages share the user's `--max-iterations` budget, with no hidden extra
 updates. A zero budget returns the unconverged seed. Residuals are divided
@@ -128,9 +129,32 @@ The lower APIs are `bethe::temperley_lieb::two_string::singlet(N,loop_weight)`
 and `bethe::xxz::quantum_group::two_string::singlet(N,Delta)`, with loop weight
 >2 and Delta>1 respectively. The public biquadratic adapter fixes Delta=3/2.
 
+MPFR library calls require finite precision in both the physical input and
+solver controls. Newton corrections use normal Uni20 dispatch, with CPU
+MPFR support and an enabled MPLAPACK provider preferred when available:
+
+```cpp
+using R = uni20::mpreal;
+auto p = uni20::Precision::bits(160);
+bethe::SolverOptions<R> controls(p);
+auto singlet = bethe::biquadratic::two_string::singlet<R>(32, controls);
+auto pair = bethe::xxz::quantum_group::two_string::bound_pair<R>(256, R(3, p) / 2, 1, controls);
+```
+
+This also covers the existing pair-with-real-roots and biquadratic bound-pair
+mappings. Seeds, derivatives, regularization thresholds, energy sums and failed
+states retain the requested precision. Exact, unset and mixed-precision
+inputs are rejected. Independent requests can use owning Async query grids;
+each ideal initializer and subsequent finite-deviation solve stays sequential.
+The work budget and state family are unchanged. Frontend MPFR enablement
+awaits the remaining complex-state modes.
+
 Tests cover the exact four-site singlet at native precision, analytic
 Jacobians, independent small-chain ED through N=10, original complex Bethe
 equations, longer chains through N=512, logarithmic coordinates below the
 underflow threshold, iteration budgets, failure output and typed exports.
-This does not yet provide arbitrary complex-root states, multiple strings,
-singlet excitation ranks, or odd-chain spinons.
+MPFR checks demonstrate four-site energy accuracy beyond binary128 at
+80/160/256 bits, verify the original multiplicative equations independently,
+and compare complete mixed-precision serial/Async results, including failures.
+This API does not enumerate arbitrary complex-root states, other string
+topologies, singlet excitation ranks, or odd-chain spinons.
