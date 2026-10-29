@@ -112,7 +112,7 @@ TEST(XXXThermodynamicMpfr, InputAndBudgetFailuresAreExplicit)
   auto p = Precision::bits(160);
   model::StructureFactorOptions<R> options(p);
   R const one(1, p);
-  EXPECT_THROW(model::StructureFactorOptions<R>(Precision::exact()), std::invalid_argument);
+  EXPECT_THROW((model::StructureFactorOptions<R>(Precision::exact())), std::invalid_argument);
   EXPECT_THROW((model::ThermodynamicTwoSpinonStructureFactor<R>(R(1), options)), std::invalid_argument);
   model::ThermodynamicTwoSpinonStructureFactor<R> sf(one, options);
   EXPECT_THROW(sf(R(1), one), std::invalid_argument);
