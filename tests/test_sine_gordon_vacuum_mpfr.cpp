@@ -192,8 +192,10 @@ TEST(SineGordonVacuumMpfr, OwningMixedPrecisionQueriesKeepCompleteStates)
   {
     auto p = P::bits(bits);
     model::VacuumOptions<R> c(p);
-    c.tolerance = R("1e-6", p);
-    queries.push_back({R(1, p), R(3, p), R("0.5", p), c});
+    // Exercise nonlinear work while keeping repeated scheduler comparisons
+    // affordable under sanitizers. Tight physics checks are separate long tests.
+    c.tolerance = R("1e-4", p);
+    queries.push_back({R(1, p), R(8, p), R("0.5", p), c});
     c.max_iterations = 0;
     queries.push_back({R(1, p), R(1, p), R(2, p), c});
   }
@@ -237,7 +239,7 @@ TEST(SineGordonVacuumMpfr, OwningMixedPrecisionQueriesKeepCompleteStates)
 }
 } // namespace
 
-TEST(SineGordonVacuumMpfr, IndependentInteractingD3BeyondBinary128)
+TEST(SineGordonVacuumMpfr, IndependentInteractingD3PrecisionGrowth)
 {
   using R = uni20::mpreal;
   using P = uni20::Precision;

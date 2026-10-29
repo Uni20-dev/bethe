@@ -262,8 +262,9 @@ The MPFR tests compare the free Dirac result at 80/160/256/333 bits with
 real and shifted kernel tables at the same precisions. The independent D3
 reference at scaled length 30 uses 384-bit arithmetic; 1536 and 2048 Gauss
 points differ by less than $`6\times10^{-112}`$. Its nonlinear precision-growth
-check is a separate long-running test, so arithmetic and discretization claims
-remain distinguishable. Reference generators are
+check requires absolute error in Y below $`10^{-40}`$ at 160 bits and runs as
+a separate long test. Free-Dirac and closed-transform checks demonstrate
+accuracy growth through 333 bits; arithmetic and discretization remain separate. Reference generators are
 [`reference_sine_gordon_vacuum.py`](../scripts/reference_sine_gordon_vacuum.py)
 and [`reference_sine_gordon_d3.cpp`](../scripts/reference_sine_gordon_d3.cpp).
 Build the latter with target `bethe_sine_gordon_d3_reference` and run

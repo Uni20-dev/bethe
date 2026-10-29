@@ -12,7 +12,7 @@ remain serial when its work is too cheap to benefit from scheduling; independent
 parameter sweeps can still use the generic library grid. Native-only apps below
 do not yet expose MPFR at their frontend, even if some underlying helpers do.
 Names omit the `bethe-` executable prefix. This inventory describes the current
-source tree, including the integrated checkpoints #9–#38. Rebuild an older
+source tree. Rebuild an older
 installation to obtain these capabilities. Linked PRs preserve the original
 precision/provider configurations and independent numerical or serial/concurrent
 validation; their measurements are historical records, not new integration runs.
@@ -41,14 +41,15 @@ validation; their measurements are historical records, not new integration runs.
 | `su3-dispersion` | Serial analytic CLI; owning mixed-precision Async queries ([#20](https://github.com/Uni20-dev/bethe/pull/20)) | Yes, MPFR scalars | Individual formulas remain too cheap to justify per-point scheduling |
 | `haldane-shastry-pbc`, `sutherland-pbc` | Serial analytic CLIs; owning mixed-precision window/parameter scans ([#21](https://github.com/Uni20-dev/bethe/pull/21)) | Yes, MPFR scalars | Preserve exact-integer gap/order handling; cheap formulas stay serial |
 | `tb-dispersion` | Serial analytic CLI; owning mixed-precision Async queries ([#22](https://github.com/Uni20-dev/bethe/pull/22)) | Yes, MPFR scalars | XXZ/XYZ elliptic models still need separate precision audits |
-| `sine-gordon-dispersion` | Serial analytic CLI; owning mixed-precision Async queries ([#23](https://github.com/Uni20-dev/bethe/pull/23)) | Yes, MPFR scalars | Scattering phases and finite-volume equations remain separate precision work |
+| `sine-gordon-dispersion` | Serial analytic CLI; owning mixed-precision Async queries ([#23](https://github.com/Uni20-dev/bethe/pull/23)) | Yes, MPFR scalars | Keep analytic particle kinematics separate from scattering and finite-volume numerical convergence |
 | `xyz-dispersion` | Serial CLI; owning bound branches and shared Async preparation / parameter curves ([#24](https://github.com/Uni20-dev/bethe/pull/24)) | Native only | Explicit-precision elliptic/theta functions |
 | `xxz-dispersion` | Immutable band with cheap queries; bulk preparation remains serial | Explicit scalar MPFR | Scaled theta constants, finite quadrature and analytic limits; no MPLAPACK required |
 | `xxz-qg-obc` | Continuous regular-root scans; owning regular/free-sector queries ([#26](https://github.com/Uni20-dev/bethe/pull/26)) | Yes, MPFR scalars | Preserve critical regular-root/free-endpoint scope; cheap free blocks stay serial |
 | `sine-gordon-bethe-yang` | Bounded independent level scans ([#27](https://github.com/Uni20-dev/bethe/pull/27)) | Explicit MPFR scalars | No MPLAPACK; Fourier, iteration and omitted-wrapping limits remain separate |
 | `biquadratic-obc` | Continuous real-root and owned bound-cluster scans; independent AF sector minima ([#35](https://github.com/Uni20-dev/bethe/pull/35)) | Native only | Model-level explicit precision; selected states and dependent Q-system/singlet paths stay direct |
 | `lee-yang-vacuum`, `lee-yang-excited` | Owning mixed-precision parameter sweeps; optional vacuum/excited overlap | Yes, MPFR scalars | Keep nonlinear, mesh, cutoff and work convergence separate from arithmetic bits |
-| `sine-gordon-vacuum`, `sine-gordon-excited` | Owning parameter sweeps; optional vacuum/excited overlap ([#28](https://github.com/Uni20-dev/bethe/pull/28)) | Native only | Explicit precision through controls/constants/reductions and complex kernels/quadrature; coupled iterations remain sequential |
+| `sine-gordon-vacuum` | Serial single-scale CLI; owning mixed-precision Async parameter sweeps | Explicit MPFR/MPC; no MPLAPACK required | Independent kernel, nonlinear, mesh, cutoff and contour controls; more bits can require larger work budgets |
+| `sine-gordon-excited` | Owning parameter sweeps; optional vacuum/excited overlap ([#28](https://github.com/Uni20-dev/bethe/pull/28)) | Native only | Explicit source, hole-quantization and coupled NLIE precision remains separate work |
 | `kondo-response` | Bounded field scans and owning Async queries ([#29](https://github.com/Uni20-dev/bethe/pull/29)); single-point/default one-worker requests stay direct | Native only | Explicit-precision scaled positive-real Gamma, Euler-series tails and quadrature |
 | `potts-pbc` | Bounded charged-momentum scans and owning mixed-precision levels after one vacuum solve | Yes, MPFR scalars; no MPLAPACK required | Explicit constants, twists, auxiliary roots and complete failure diagnostics; vacuum and charged one-hole family only |
 | `asep-pbc` | Serial CLI; owning mixed-precision shared TASEP seeds and dependent Async rate grids | Explicit MPFR/MPC; CPU/provider real LU | Existing continuation and work budgets; tiny-bias drift remains explicit |
@@ -271,4 +272,7 @@ The same-charge sine-Gordon pair solver and its real phase/complex Fourier kerne
 carry explicit MPFR precision through constants, quadrature, tail bounds and
 failed-state diagnostics. These paths use scalar arithmetic without MPLAPACK.
 The existing bounded level grid also accepts owning requests at different
-precisions. Exact finite-volume NLIE frontends still need their own MPFR audit.
+precisions. The vacuum NLIE also supports explicit MPFR/MPC, including independently checked
+Fourier tables, free-Dirac energies and interacting D3 reference comparisons.
+Its arithmetic precision and work budgets remain independent. The excited
+NLIE frontend's source and hole-quantization precision audit is separate.
