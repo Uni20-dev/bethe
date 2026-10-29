@@ -2,6 +2,7 @@
 // Copyright (C) 2026 Ian McCulloch
 #include "execution-options.hpp"
 #include "result-output.hpp"
+#include "solver-precision.hpp"
 #include <bethe/hubbard_charge_continuum.hpp>
 #include <bethe/hubbard_continuum.hpp>
 #include <bethe/observable_grid.hpp>
@@ -33,6 +34,7 @@ auto program_info()
       "Total momentum P in [-pi,pi], modulo 2*pi. Constituent spinon momenta are in [0,pi].",
       "Unshifted Hamiltonian energies add U*DeltaN/2; the half-filled Fermi reference equals symmetric energies.",
       "Edges bound only the selected family, not all excitations. No spectral weights or finite-ring levels.",
+      "bits-N/digits-N select explicit MPFR precision without requiring MPLAPACK.",
       "Default tolerance 256 epsilon. Energy quadrature errors exclude momentum-inversion errors.",
       "Charge channels use numerical extrema searches, not certified global bounds; native fp128 can be slow.",
       "Failed energies are missing (exit 2). Charge search tolerance applies to E/max(1,U).",
@@ -76,7 +78,7 @@ void add_options(CLI::App& app, Arguments& a)
   cli::count_option(app, "--max-levels", a.levels, "Quadrature refinement levels, <=24")->capture_default_str();
   cli::count_option(app, "--max-iterations", a.iterations, "Momentum inversion updates per constituent")
       ->capture_default_str();
-  cli::precision_option(app, a.precision);
+  cli::precision_option(app, a.precision, cli::ArbitraryPrecision::real);
   cli::threads_option(app, a.threads)->description("Scheduler concurrency limit for independent momenta");
   cli::add_data_output_options(app, a.output,
                                {{.name = "two_spinon",
@@ -144,20 +146,20 @@ char const* name(bethe::detail::ExtremaStatus status)
   }
   return "unknown";
 }
-template <uni20::Real Real> int run(Arguments const& a, int argc, char** argv)
+template <uni20::Real Real> int run(Arguments const& a, model::Options<Real> controls, int argc, char** argv)
 {
   uni20::run_context context(program_info(), {.invocation = std::vector<std::string>(argv, argv + argc)});
-  Real const u = uni20::parse_real<Real>(a.u), pi = Real{4} * std::atan(Real{1});
+  Real const u = cli::parse_solver_real<Real>(a.u, controls), pi = model::detail::pi(u);
+  Real const zero = uni20::scalar_like(u, 0);
   std::optional<Real> momentum;
-  if (a.momentum) momentum = uni20::parse_real<Real>(*a.momentum);
-  model::Options<Real> controls;
-  if (a.tolerance) controls.relative_tolerance = uni20::parse_real<Real>(*a.tolerance);
+  if (a.momentum) momentum = cli::parse_solver_real<Real>(*a.momentum, controls);
+  if (a.tolerance) controls.relative_tolerance = cli::parse_solver_real<Real>(*a.tolerance, controls);
   controls.max_evaluations = a.evaluations;
   controls.max_levels = a.levels;
   controls.max_iterations = a.iterations;
   // Validate before opening any output files, including --force targets.
   model::detail::validate(u, controls, model::Convention::symmetric);
-  if (momentum && (!uni20::isfinite(*momentum) || std::abs(*momentum) > pi))
+  if (momentum && (!uni20::isfinite(*momentum) || uni20::math::abs(*momentum) > pi))
     throw std::invalid_argument("total momentum must be in [-pi,pi]");
   std::size_t const count = momentum ? 1 : a.points;
   uni20::async::TbbScheduler scheduler(a.threads);
@@ -172,11 +174,17 @@ template <uni20::Real Real> int run(Arguments const& a, int argc, char** argv)
                                                            : model::ChargeChannel::holon_antiholon;
     auto const convention = a.convention == "symmetric" || a.reference == "fermi" ? model::Convention::symmetric
                                                                                   : model::Convention::unshifted;
-    model::ChargeContinuumOptions<Real> options;
+    auto options = [&] {
+      if constexpr (uni20::has_runtime_precision_v<Real>)
+        return model::ChargeContinuumOptions<Real>(controls.precision());
+      else
+        return model::ChargeContinuumOptions<Real>{};
+    }();
     options.constituent = controls;
     options.max_quadrature_evaluations = a.total_evaluations;
-    if (a.search_tolerance) options.search.tolerance = uni20::parse_real<Real>(*a.search_tolerance);
-    if (a.position_tolerance) options.search.position_tolerance = uni20::parse_real<Real>(*a.position_tolerance);
+    if (a.search_tolerance) options.search.tolerance = cli::parse_solver_real<Real>(*a.search_tolerance, controls);
+    if (a.position_tolerance)
+      options.search.position_tolerance = cli::parse_solver_real<Real>(*a.position_tolerance, controls);
     options.search.initial_intervals = a.initial_intervals;
     options.search.max_intervals = a.max_intervals;
     options.search.max_evaluations = a.search_evaluations;
@@ -185,8 +193,7 @@ template <uni20::Real Real> int run(Arguments const& a, int argc, char** argv)
     auto validation = options.search;
     validation.max_evaluations = 0;
     (void)bethe::detail::bounded_extrema([](Real) -> std::optional<bethe::detail::ObjectiveSample<Real>> { return {}; },
-                                         channel == model::ChargeChannel::holon_antiholon ? -pi : Real{0}, pi,
-                                         validation);
+                                         channel == model::ChargeChannel::holon_antiholon ? -pi : zero, pi, validation);
     int const delta = a.channel == "spinon-holon" ? -1 : a.channel == "spinon-antiholon" ? 1 : 0;
     auto const spin = delta == 0 ? uni20::half_int{0} : uni20::from_twice(1);
     cli::RunReport report(context, "Hubbard charge-containing continuum");
@@ -198,7 +205,7 @@ template <uni20::Real Real> int run(Arguments const& a, int argc, char** argv)
         .field("convention", "Energy convention", a.convention)
         .field("reference", "Energy reference", a.reference)
         .field("energy_offset", "Offset from symmetric energy",
-               convention == model::Convention::unshifted ? u / Real{2} * Real(delta) : Real{0})
+               convention == model::Convention::unshifted ? u / Real{2} * Real(delta) : zero)
         .field("momentum_convention", "Momentum convention", "one-site radians, total P modulo 2*pi")
         .precision(a.precision)
         .field("points", "Points", count)
@@ -308,6 +315,7 @@ int main(int argc, char** argv)
               throw std::invalid_argument(std::string(option) + " requires a charge-containing channel");
         if (!a.momentum && (a.points < 2 || a.points > 1000000))
           throw std::invalid_argument("require 2<=points<=1000000");
-        return cli::dispatch_precision(a.precision, [&]<typename Real>() { return run<Real>(a, argc, argv); });
+        return cli::dispatch_options_precision<cli::ArbitraryPrecision::real, model::Options>(
+            a.precision, [&](auto options) { return run(a, std::move(options), argc, argv); });
       });
 }
