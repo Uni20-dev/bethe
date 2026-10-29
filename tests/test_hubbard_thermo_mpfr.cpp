@@ -131,7 +131,7 @@ TEST(HubbardThermoMpfr, EndpointsInversionConventionsAndFailuresKeepPrecision)
   controls.relative_tolerance = R(1, Precision::bits(80));
   EXPECT_THROW(model::dispersion(model::Branch::spinon, u, zero, model::Convention::symmetric, controls),
                std::invalid_argument);
-  EXPECT_THROW(model::Options<R>(Precision::exact()), std::invalid_argument);
+  EXPECT_THROW((void)model::Options<R>(Precision::exact()), std::invalid_argument);
 }
 
 TEST(HubbardThermoMpfr, OwningMixedPrecisionQueriesPreserveCompleteResults)
