@@ -2,6 +2,7 @@
 // Copyright (C) 2026 Ian McCulloch
 #include "exclusion-output.hpp"
 #include "program-options.hpp"
+#include "solver-precision.hpp"
 #include <bethe/asep.hpp>
 
 namespace
@@ -57,7 +58,7 @@ void add_options(CLI::App& app, Arguments& a)
       ->capture_default_str();
   cli::count_option(app, "--max-sites", a.max_sites, "Explicit site/work budget")->capture_default_str();
   app.add_flag("--roots", a.roots, "Export scaled reduced-filling roots v; analytic cases have no root rows");
-  cli::precision_option(app, a.precision);
+  cli::precision_option(app, a.precision, cli::ArbitraryPrecision::real_lu);
   cli::add_data_output_options(
       app, a.output,
       {{.name = "relaxation", .description = "Relaxation mode and diagnostics", .primary = true},
@@ -87,19 +88,19 @@ char const* name(model::Status s)
   }
   return "unknown";
 }
-template <uni20::Real Real> int run(Arguments const& a, int argc, char** argv)
+template <uni20::Real Real> int run(Arguments const& a, model::Options<Real> controls, int argc, char** argv)
 {
   uni20::run_context context(program_info(), {.invocation = std::vector<std::string>(argv, argv + argc)});
-  Real const right = a.right ? uni20::parse_real<Real>(*a.right) : Real{1};
-  Real const left = a.left ? uni20::parse_real<Real>(*a.left) : Real{0};
-  model::Options<Real> controls;
+  Real const right = a.right ? cli::parse_solver_real<Real>(*a.right, controls)
+                             : uni20::scalar_at_precision<Real>(1, controls.precision());
+  Real const left = a.left ? cli::parse_solver_real<Real>(*a.left, controls) : uni20::scalar_like(right, 0);
   controls.max_iterations = a.iterations;
   controls.max_continuation_steps = a.steps;
   controls.seed_options.max_iterations = a.seed_newton;
   controls.seed_options.max_seed_iterations = a.seed_iterations;
   controls.seed_options.max_sites = a.max_sites;
-  if (a.tolerance) controls.tolerance = uni20::parse_real<Real>(*a.tolerance);
-  if (a.seed_tolerance) controls.seed_options.tolerance = uni20::parse_real<Real>(*a.seed_tolerance);
+  if (a.tolerance) controls.tolerance = cli::parse_solver_real<Real>(*a.tolerance, controls);
+  if (a.seed_tolerance) controls.seed_options.tolerance = cli::parse_solver_real<Real>(*a.seed_tolerance, controls);
   // Validate even unused analytic-branch controls before opening output files.
   if (!uni20::isfinite(controls.seed_options.tolerance) || !(controls.seed_options.tolerance > Real{0}))
     throw std::invalid_argument("ASEP seed tolerance must be finite and positive");
@@ -117,7 +118,7 @@ template <uni20::Real Real> int run(Arguments const& a, int argc, char** argv)
       .field("left_rate", "Left-hop rate", left)
       .field("generator", "Generator", "dP/dt=M P; right/left hops; columns sum to zero")
       .field("units", "Units", "inverse time; not quantum energies")
-      .field("stationary_eigenvalue", "Stationary eigenvalue", Real{0})
+      .field("stationary_eigenvalue", "Stationary eigenvalue", uni20::scalar_like(right, 0))
       .field("calculation", "Calculation", "leading relaxation pair; representative Im(lambda)>=0")
       .field("root_convention", "Root convention",
              "n=min(N,L-N); x=min(r,s)/max(r,s); delta=(max(r,s)-min(r,s))/max(r,s); "
@@ -172,6 +173,7 @@ int main(int argc, char** argv)
       argc, argv, program_info(), [&](auto& app) { add_options(app, a); },
       [&](auto&) {
         a.output.validate();
-        return cli::dispatch_precision(a.precision, [&]<typename Real>() { return run<Real>(a, argc, argv); });
+        return cli::dispatch_options_precision<cli::ArbitraryPrecision::real_lu, model::Options>(
+            a.precision, [&](auto options) { return run(a, std::move(options), argc, argv); });
       });
 }

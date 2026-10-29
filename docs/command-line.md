@@ -524,3 +524,6 @@ also require MPLAPACK MPFR. See [Hubbard dispersions](hubbard-dispersion.md#expl
 `bethe-tasep-pbc` accepts `bits-N` and `digits-N` with Uni20 MPFR/MPC
 scalars, using normal CPU/provider LU dispatch. Seed and Newton work budgets
 remain independent of arithmetic precision; see [TASEP](tasep.md#explicit-precision).
+
+`bethe-asep-pbc` also accepts explicit MPFR precision for its TASEP seed and
+continuation; see [ASEP controls and shared seeds](asep.md#explicit-precision).

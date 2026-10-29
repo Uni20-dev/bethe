@@ -45,7 +45,7 @@ int run(cli::DataOutputOptions const& options, int argc, char** argv)
                    "bethe-richardson, bethe-central-spin, "
                    "bethe-xxx-structure-factor, bethe-su3-pbc, bethe-xxz-pbc, bethe-xxz-obc, "
                    "bethe-hubbard-pbc, bethe-hubbard-obc, bethe-hubbard-dispersion, bethe-hubbard-continuum, "
-                   "bethe-tasep-pbc, "
+                   "bethe-tasep-pbc, bethe-asep-pbc, "
                    "bethe-gaudin-yang-pbc, bethe-bose-fermi-pbc, "
                    "bethe-q-boson-pbc, bethe-su3-dispersion, "
                    "bethe-haldane-shastry-pbc, bethe-sutherland-pbc, bethe-tb-dispersion, "

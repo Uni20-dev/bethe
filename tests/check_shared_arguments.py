@@ -79,7 +79,7 @@ for program in sys.argv[1:]:
     # results and unavailable providers; they must not claim no frontend support.
     if name not in ("bethe-xxx-pbc", "bethe-xxx-obc", "bethe-xxx-structure-factor", "bethe-richardson",
                     "bethe-central-spin", "bethe-lieb-liniger-pbc", "bethe-lieb-liniger-obc",
-                    "bethe-lieb-liniger-dispersion", "bethe-ladder-pbc", "bethe-tj-pbc", "bethe-lieb-liniger-thermal", "bethe-su3-pbc", "bethe-xxz-pbc", "bethe-xxz-obc", "bethe-hubbard-pbc", "bethe-hubbard-obc", "bethe-gaudin-yang-pbc", "bethe-bose-fermi-pbc", "bethe-su3-dispersion", "bethe-haldane-shastry-pbc", "bethe-sutherland-pbc", "bethe-tb-dispersion", "bethe-sine-gordon-dispersion", "bethe-sine-gordon-bethe-yang", "bethe-lee-yang-vacuum", "bethe-lee-yang-excited", "bethe-potts-pbc", "bethe-q-boson-pbc", "bethe-hubbard-dispersion", "bethe-hubbard-continuum", "bethe-tasep-pbc",
+                    "bethe-lieb-liniger-dispersion", "bethe-ladder-pbc", "bethe-tj-pbc", "bethe-lieb-liniger-thermal", "bethe-su3-pbc", "bethe-xxz-pbc", "bethe-xxz-obc", "bethe-hubbard-pbc", "bethe-hubbard-obc", "bethe-gaudin-yang-pbc", "bethe-bose-fermi-pbc", "bethe-su3-dispersion", "bethe-haldane-shastry-pbc", "bethe-sutherland-pbc", "bethe-tb-dispersion", "bethe-sine-gordon-dispersion", "bethe-sine-gordon-bethe-yang", "bethe-lee-yang-vacuum", "bethe-lee-yang-excited", "bethe-potts-pbc", "bethe-q-boson-pbc", "bethe-hubbard-dispersion", "bethe-hubbard-continuum", "bethe-tasep-pbc", "bethe-asep-pbc",
                     "bethe-xxz-qg-obc", "bethe-tb-pbc", "bethe-sun-fermions-pbc", "bethe-xxz-dispersion"):
         for precision in ("bits-128", "digits-100"):
             rejected = run(program, [*base, "--precision", precision], 1)

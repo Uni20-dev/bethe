@@ -795,6 +795,9 @@ if(BETHE_BUILD_APPS)
     add_test(NAME Citations.bethe-sine-gordon-vacuum.cli
       COMMAND "${CMAKE_COMMAND}" "-DPROGRAM=$<TARGET_FILE:bethe-sine-gordon-vacuum>"
         "-DTOOL=bethe-sine-gordon-vacuum" -P "${CMAKE_CURRENT_SOURCE_DIR}/check_citations_cli.cmake")
+    add_test(NAME ASEP.precision
+      COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_asep_precision.py"
+        "$<TARGET_FILE:bethe-asep-pbc>" "${BETHE_HAS_MPREAL}")
     add_test(NAME ASEP.cli
       COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_asep.py"
         "$<TARGET_FILE:bethe-asep-pbc>" "${BETHE_HAS_FLOAT128}")

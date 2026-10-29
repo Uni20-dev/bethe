@@ -3,7 +3,7 @@
 The [worked bias-scan tutorial](tutorials/asep.md) separates relaxation and
 oscillation while keeping the total hopping rate fixed.
 
-**Status: native-precision relaxation-gap library and `bethe-asep-pbc` frontend implemented.**
+**Status: precision-generic relaxation-gap library and `bethe-asep-pbc` frontend implemented.**
 This extends [TASEP](tasep.md) to nonnegative right and left hopping rates,
 including the symmetric endpoint. It does not enumerate the full spectrum or
 implement open reservoirs.
@@ -24,7 +24,7 @@ if (state.converged && state.gap) {
 }
 ```
 
-The arithmetic is native fp64, long-double or fp128. Reflection and particle–hole
+The arithmetic is fp64, long-double, fp128 or explicit MPFR precision. Reflection and particle–hole
 symmetry reduce the calculation to $`n =\min (N,L -N)`$ and
 $`x =\min (r,s)/\max (r,s)`$. We select the conjugate eigenvalue with nonnegative
 imaginary part, without assigning it a physical momentum in the original sector.
@@ -53,6 +53,8 @@ bethe-asep-pbc --references
 
 L and `--particles` are required. Rates default to right=1, left=0 (TASEP).
 The shared `--precision` choices are fp64, long-double and fp128 when enabled.
+With Uni20 MPFR scalars, `bits-N` and `digits-N` select explicit arbitrary
+precision using normal CPU/provider LU dispatch.
 The `relaxation` schema is shared with TASEP: `has_mode`, `lambda_real`,
 `lambda_imag`, `gap`, `frequency`, `residual`, `iterations`, `seed_iterations`,
 `converged`, `status`. Frequency is angular frequency, not cycles per time.
@@ -190,9 +192,10 @@ scheduler and collection but excludes printing. The existing single-request
 frontend and physical state family are unchanged.
 
 See [measurements and limits](parallel-grids.md#asep-shared-seeds).
-Native binary64, `long double` and configured binary128 are supported.
-MPFR still needs explicit precision through complex arithmetic, seed selection,
-Newton controls, continuation and all failure results.
+The example accepts native binary64, `long double` and configured binary128.
+The library also supports explicit MPFR requests through complex arithmetic,
+seed selection, Newton controls, continuation and all failure results; the
+example's precision selector remains native-only.
 
 ## Validation and next step
 
@@ -202,7 +205,7 @@ spectrum at six hopping ratios, including both endpoints. A separate 90-digit
 ten-configuration reference checks native precision at L=5, N=2, r=1, s=1/2.
 All enabled precisions check original multiplicative equations, analytic
 Jacobian, rate scaling, reflection/particle–hole symmetry, selected rings through
-32 sites, failure budgets, and a bias only eight native epsilons from symmetry.
+32 sites, failure budgets, and a bias only eight working-precision epsilons from symmetry.
 Dense diagonalization is never a production fallback.
 
 Prepared and direct queries compare every state field, including complex roots,
@@ -220,3 +223,38 @@ its options have not silently changed.
 
 Further work includes other relaxation branches and open-reservoir boundaries;
 neither is included in this leading periodic mode calculation.
+
+
+## Explicit precision
+
+```sh
+bethe-asep-pbc 32 --particles 8 --left-rate 0.5 --precision bits-160 --roots
+```
+
+With Uni20 MPFR/MPC enabled, `bits-N` and `digits-N` reach the TASEP seed,
+continuation, cancellation-safe complex logarithms, real-block Newton solve,
+scaled roots and diagnostics. Normal Uni20 CPU/provider dispatch supplies LU.
+The scalar library requires matching finite precision for both rates and the
+continuation/seed controls; it does not change ambient MPFR precision.
+
+```cpp
+using R = uni20::mpreal;
+auto p = uni20::Precision::bits(160);
+bethe::asep::Options<R> options(p);
+bethe::asep::PreparedGap<R> prepared(32, 8, options);
+auto state = prepared.at_rates(R(1, p), R(1, p) / 2);
+```
+
+Prepared queries reuse one immutable unit-rate TASEP seed. Each query owns its
+continuation scratch, so rate grids at different precisions can compose through
+Async without synchronizing precision defaults. Observe the final grid result;
+its completion includes every admitted query. The single-request CLI stays
+serial, and each continuation remains sequential.
+
+Independent ten-state Markov-matrix references test accuracy growth through
+256 bits. Tests also retain the tiny-bias drift as the symmetric point is
+approached, compare real-block Jacobians, and check mixed-precision shared-seed
+Async results field by field against direct solves, including failed seeds
+with successful analytic endpoint queries. More arithmetic bits do not remove
+the existing continuation/seed/Newton work limits or establish completeness
+beyond the selected relaxation branch.
