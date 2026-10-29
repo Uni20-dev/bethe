@@ -32,29 +32,37 @@ if available.upper() not in ('ON', 'TRUE', '1'):
     assert 'UNI20_ENABLE_MPREAL=ON' in run([*base, '--precision', 'bits-128'], 1).stderr
     raise SystemExit(0)
 
+def check_energy_growth(precisions, thresholds, improvement):
+    with localcontext() as context:
+        context.prec = 130
+        reference = Decimal('2.0857356187851404880309779322375079570900382654030915686633279793820126035814552563203616916129861034106042386768200734652')
+        errors = []
+        for bits, threshold in zip(precisions, thresholds):
+            t = table([*base, '--precision', f'bits-{bits}'])
+            row = rows(t)[0]
+            assert row['status'] == 'converged'
+            assert int(t['metadata']['Working precision (bits)']) == bits
+            error = abs(Decimal(row['energy']) - reference)
+            errors.append(error)
+            assert error < Decimal(threshold), row
+        assert errors[1] < errors[0] * Decimal(improvement), errors
+
+
 if long_running:
+    check_energy_growth((128, 256), ('1e-32', '1e-70'), '1e-30')
     with localcontext() as context:
         context.prec = 130
         t = table([*base, '--precision', 'bits-333', '--tolerance', '1e-80', '--max-iterations', '512'])
         assert rows(t)[0]['status'] == 'converged'
         assert abs(Decimal(t['metadata']['Counting tolerance']) / Decimal('1e-80') - 1) < Decimal('1e-95')
-    print('Bethe-Yang 333-bit interacting refinement passed')
+    print('Bethe-Yang 128/256-bit growth and 333-bit interacting refinement passed')
     raise SystemExit(0)
 
+# Keep routine CLI growth beyond binary128; the slower 256-bit comparison
+# retains its original assertions in the separately labelled high-precision test.
+check_energy_growth((128, 160), ('1e-32', '1e-42'), '1e-6')
 with localcontext() as context:
     context.prec = 130
-    reference = Decimal('2.0857356187851404880309779322375079570900382654030915686633279793820126035814552563203616916129861034106042386768200734652')
-    errors = []
-    for bits in (128, 256):
-        t = table([*base, '--precision', f'bits-{bits}'])
-        row = rows(t)[0]
-        assert row['status'] == 'converged'
-        assert int(t['metadata']['Working precision (bits)']) == bits
-        error = abs(Decimal(row['energy']) - reference)
-        errors.append(error)
-        assert error < Decimal('1e-32' if bits == 128 else '1e-70'), row
-    assert errors[1] < errors[0] * Decimal('1e-30')
-
     # Scheduling is checked at a fixed numerical budget, separate from bit growth.
     scan = [*base, '--precision', 'bits-160', '--levels', '3', '--tolerance', '1e-12']
     expected = table(scan)
