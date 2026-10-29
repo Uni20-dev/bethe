@@ -873,7 +873,7 @@ if(BETHE_BUILD_APPS)
     add_test(NAME HubbardThermo.precision
       COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_hubbard_thermo_precision.py"
         "$<TARGET_FILE:bethe-hubbard-dispersion>" "$<TARGET_FILE:bethe-hubbard-continuum>"
-        "${BETHE_HAS_MPREAL}" "${BETHE_HAS_MPLAPACK_MPREAL}")
+        "${BETHE_HAS_MPREAL}")
     add_test(NAME HubbardThermo.cli
       COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_hubbard_thermo_cli.py"
         "$<TARGET_FILE:bethe-hubbard-dispersion>" "${BETHE_HAS_FLOAT128}")

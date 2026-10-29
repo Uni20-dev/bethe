@@ -23,8 +23,8 @@ bethe-hubbard-dispersion --u 4 --precision fp128 --points 33 --format csv
 
 Calculations and output retain the selected `fp64` (default), `long-double`, or
 optional `fp128` precision, or explicit MPFR `bits-N`/`digits-N` precision.
-MPFR half-filled curves require `UNI20_ENABLE_MPREAL=ON`; doped curves also
-require the MPLAPACK MPFR provider. Arithmetic bits do not replace convergence
+MPFR curves require `UNI20_ENABLE_MPREAL=ON`. Doped backgrounds use Uni20's
+normal LU dispatch, with CPU MPFR available and MPLAPACK preferred when enabled. Arithmetic bits do not replace convergence
 of the quadrature, tail cutoff, momentum inversion or doped meshes. Grids are uniform in **dressed physical momentum**,
 not the auxiliary Bethe parameter. `--points` includes both endpoints; charge
 endpoints $`-\pi`$ and $`\pi`$ are the same point in the Brillouin zone. `--momentum`

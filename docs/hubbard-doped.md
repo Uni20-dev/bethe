@@ -187,8 +187,9 @@ to half filling, invalid inputs, work budgets and native-precision CLI parsing.
 The optional reference generator is
 [`scripts/reference_hubbard_doped.py`](../scripts/reference_hubbard_doped.py).
 
-MPFR evaluation uses `--precision bits-N` or `digits-N` with the MPLAPACK MPFR
-provider. The background, Gamma-ratio phase, Euler kernel, quadrature mesh,
+MPFR evaluation uses `--precision bits-N` or `digits-N` with MPFR scalars
+enabled. Background solves use normal Uni20 dispatch: MPLAPACK when available,
+or CPU MPFR LU otherwise. The background, Gamma-ratio phase, Euler kernel, quadrature mesh,
 linear solves and query diagnostics all share the requested precision.
 `DopedOptions<uni20::mpreal>` takes an explicit `uni20::Precision`; supplied
 inputs and custom tolerances must match it. Increasing bits does not converge

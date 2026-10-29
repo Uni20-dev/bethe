@@ -255,7 +255,6 @@ TEST(HubbardThermoMpfr, PhysicalChargeContinuumRetainsExplicitPrecision)
   check_charge_continuum(controls);
 }
 
-#if UNI20_HAS_MPLAPACK_MPREAL
 auto fields(model::DopedPoint<R> const& s)
 {
   return std::tie(s.branch, s.convention, s.reference, s.momentum, s.parameter, s.energy_error, s.momentum_error,
@@ -398,14 +397,6 @@ TEST(HubbardThermoMpfr, DopedFredholmReferencesAndPhysicalPrecisionGrowth)
     EXPECT_EQ(uni20::precision_of(endpoint.parameter), p);
   }
 }
-#else
-TEST(HubbardThermoMpfr, DopedMissingProviderIsAnExplicitConfigurationError)
-{
-  auto const p = Precision::bits(80);
-  model::DopedOptions<R> controls(p);
-  EXPECT_THROW((model::DopedSolver<R>(R(40, p), R(1, p) / 3, controls)), std::runtime_error);
-}
-#endif
 
 TEST(HubbardThermoMpfr, DopedInputAndEarlyBudgetFailuresRetainPrecision)
 {
