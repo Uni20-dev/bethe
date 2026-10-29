@@ -89,7 +89,8 @@ bethe_discover_tests(bethe_generated_state_scan_tests)
 if(BETHE_HAS_MPREAL)
   add_executable(bethe_lee_yang_mpfr_tests test_lee_yang_mpfr.cpp)
   target_link_libraries(bethe_lee_yang_mpfr_tests PRIVATE bethe::bethe TBB::tbb)
-  bethe_discover_tests(bethe_lee_yang_mpfr_tests)
+  bethe_discover_tests(bethe_lee_yang_mpfr_tests
+    LONG_RUNNING_TESTS LeeYangMpfr.IndependentLevelsAt256Bits)
 
   add_executable(bethe_tj_mpfr_tests test_tj_mpfr.cpp)
   target_link_libraries(bethe_tj_mpfr_tests PRIVATE bethe::bethe TBB::tbb)

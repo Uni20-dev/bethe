@@ -57,12 +57,12 @@ char const* const reference[] = {
     "0000000000090210897973829821340583111561152188730833017778526208349825954359778154532008498577111446684736916651"
     "2"};
 
-TEST(LeeYangMpfr, IndependentLevelsGainAccuracyBeyondBinary128)
+void check_independent_levels(std::initializer_list<int> precisions)
 {
   auto const oracle = Precision::bits(768);
   R previous(1, oracle);
   auto const ambient = mpfr_get_default_prec();
-  for (int bits : {80, 160, 256})
+  for (int bits : precisions)
   {
     SCOPED_TRACE(bits);
     auto p = Precision::bits(bits);
@@ -79,6 +79,7 @@ TEST(LeeYangMpfr, IndependentLevelsGainAccuracyBeyondBinary128)
       error = std::max(error, math::abs(values[i].at(oracle) - R(reference[i], oracle)));
     EXPECT_LT(error, 16 * controls.tolerance.at(oracle));
     EXPECT_LT(error, previous * R("1e-12", oracle));
+    if (bits >= 160) EXPECT_LT(error, R("1e-40", oracle));
     if (bits == 256) EXPECT_LT(error, R("1e-65", oracle));
     previous = error;
     EXPECT_LE(vacuum.kernel_products, controls.max_kernel_products);
@@ -88,6 +89,17 @@ TEST(LeeYangMpfr, IndependentLevelsGainAccuracyBeyondBinary128)
     EXPECT_EQ(uni20::precision_of(excited.source_error), p);
   }
   EXPECT_EQ(mpfr_get_default_prec(), ambient);
+}
+
+TEST(LeeYangMpfr, IndependentLevelsGainAccuracyBeyondBinary128)
+{
+  check_independent_levels({80, 160});
+}
+
+TEST(LeeYangMpfr, IndependentLevelsAt256Bits)
+{
+  // The 1024-interval nonlinear refinement is retained in long-running CI.
+  check_independent_levels({160, 256});
 }
 
 TEST(LeeYangMpfr, WorkLimitsAndRejectedInputsDoNotLosePrecision)
