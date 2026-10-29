@@ -2,6 +2,7 @@
 // Copyright (C) 2026 Ian McCulloch
 #include "exclusion-output.hpp"
 #include "program-options.hpp"
+#include "solver-precision.hpp"
 #include <bethe/tasep.hpp>
 
 namespace
@@ -45,7 +46,7 @@ void add_options(CLI::App& app, Arguments& a)
   cli::count_option(app, "--max-seed-iterations", a.seed_iterations, "All-root seed sweeps")->capture_default_str();
   cli::count_option(app, "--max-sites", a.max_sites, "Explicit site/work budget")->capture_default_str();
   app.add_flag("--roots", a.roots, "Export converged reduced-filling fugacity roots Z");
-  cli::precision_option(app, a.precision);
+  cli::precision_option(app, a.precision, cli::ArbitraryPrecision::real_lu);
   cli::add_data_output_options(
       app, a.output,
       {{.name = "relaxation", .description = "Relaxation mode and diagnostics", .primary = true},
@@ -73,15 +74,15 @@ char const* name(model::Status s)
   }
   return "unknown";
 }
-template <uni20::Real Real> int run(Arguments const& a, int argc, char** argv)
+template <uni20::Real Real> int run(Arguments const& a, model::Options<Real> controls, int argc, char** argv)
 {
   uni20::run_context context(program_info(), {.invocation = std::vector<std::string>(argv, argv + argc)});
-  Real const rate = a.rate ? uni20::parse_real<Real>(*a.rate) : Real{1};
-  model::Options<Real> controls;
+  Real const rate = a.rate ? cli::parse_solver_real<Real>(*a.rate, controls)
+                           : uni20::scalar_at_precision<Real>(1, controls.precision());
   controls.max_iterations = a.iterations;
   controls.max_seed_iterations = a.seed_iterations;
   controls.max_sites = a.max_sites;
-  if (a.tolerance) controls.tolerance = uni20::parse_real<Real>(*a.tolerance);
+  if (a.tolerance) controls.tolerance = cli::parse_solver_real<Real>(*a.tolerance, controls);
   // Invalid inputs must not touch output targets, including --force files.
   auto const state = context.measure([&] { return model::relaxation_gap(a.sites, a.particles, rate, controls); });
   using Optional = std::optional<Real>;
@@ -95,7 +96,7 @@ template <uni20::Real Real> int run(Arguments const& a, int argc, char** argv)
       .field("rate", "Right-hop rate", rate)
       .field("generator", "Generator", "dP/dt=M P; right hops only; columns sum to zero")
       .field("units", "Units", "inverse time; not quantum energies")
-      .field("stationary_eigenvalue", "Stationary eigenvalue", Real{0})
+      .field("stationary_eigenvalue", "Stationary eigenvalue", uni20::scalar_like(rate, 0))
       .field("calculation", "Calculation", "leading relaxation pair; representative Im(lambda)>=0")
       .field("root_convention", "Root convention", "Z=2/z-1; particle-hole reduced filling min(N,L-N)")
       .field("has_relaxation_mode", "Has relaxation mode", has_mode)
@@ -138,6 +139,7 @@ int main(int argc, char** argv)
       argc, argv, program_info(), [&](auto& app) { add_options(app, a); },
       [&](auto&) {
         a.output.validate();
-        return cli::dispatch_precision(a.precision, [&]<typename Real>() { return run<Real>(a, argc, argv); });
+        return cli::dispatch_options_precision<cli::ArbitraryPrecision::real_lu, model::Options>(
+            a.precision, [&](auto options) { return run(a, std::move(options), argc, argv); });
       });
 }

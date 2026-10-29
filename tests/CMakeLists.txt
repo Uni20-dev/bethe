@@ -87,6 +87,14 @@ target_link_libraries(bethe_generated_state_scan_tests PRIVATE bethe::bethe TBB:
 bethe_discover_tests(bethe_generated_state_scan_tests)
 
 if(BETHE_HAS_MPREAL)
+  add_executable(bethe_asep_mpfr_tests test_asep_mpfr.cpp)
+  target_link_libraries(bethe_asep_mpfr_tests PRIVATE bethe::bethe TBB::tbb)
+  bethe_discover_tests(bethe_asep_mpfr_tests)
+  add_executable(bethe_tasep_mpfr_tests test_tasep_mpfr.cpp)
+  target_link_libraries(bethe_tasep_mpfr_tests PRIVATE bethe::bethe TBB::tbb)
+  bethe_discover_tests(bethe_tasep_mpfr_tests)
+
+
   add_executable(bethe_open_qsystem_mpfr_tests test_open_qsystem_mpfr.cpp)
   target_link_libraries(bethe_open_qsystem_mpfr_tests PRIVATE bethe::bethe TBB::tbb)
   bethe_discover_tests(bethe_open_qsystem_mpfr_tests)
@@ -399,6 +407,18 @@ add_executable(bethe_sine_gordon_excitation_tests test_sine_gordon_excitations.c
 target_link_libraries(bethe_sine_gordon_excitation_tests PRIVATE bethe::bethe)
 bethe_discover_tests(bethe_sine_gordon_excitation_tests)
 if(BETHE_HAS_MPREAL)
+  add_executable(bethe_sine_gordon_excited_mpfr_tests test_sine_gordon_excited_mpfr.cpp)
+  target_link_libraries(bethe_sine_gordon_excited_mpfr_tests PRIVATE bethe::bethe TBB::tbb)
+  bethe_discover_tests(bethe_sine_gordon_excited_mpfr_tests
+    LONG_RUNNING_TESTS SineGordonExcitedMpfr.InteractingLevelsAndScaling
+      SineGordonExcitedMpfr.FreeDiracExtremeScalesAt333Bits)
+  add_executable(bethe_sine_gordon_vacuum_mpfr_tests test_sine_gordon_vacuum_mpfr.cpp)
+  target_link_libraries(bethe_sine_gordon_vacuum_mpfr_tests PRIVATE bethe::bethe TBB::tbb)
+  bethe_discover_tests(bethe_sine_gordon_vacuum_mpfr_tests
+    LONG_RUNNING_TESTS SineGordonVacuumMpfr.InteractingStatesAndScaling
+      SineGordonVacuumMpfr.IndependentInteractingD3PrecisionGrowth)
+  add_executable(bethe_sine_gordon_d3_reference EXCLUDE_FROM_ALL ../scripts/reference_sine_gordon_d3.cpp)
+  target_link_libraries(bethe_sine_gordon_d3_reference PRIVATE bethe::bethe)
   add_executable(bethe_sine_gordon_particle_mpfr_tests test_sine_gordon_particles_mpfr.cpp)
   target_link_libraries(bethe_sine_gordon_particle_mpfr_tests PRIVATE bethe::bethe TBB::tbb)
   bethe_discover_tests(bethe_sine_gordon_particle_mpfr_tests)
@@ -617,6 +637,10 @@ if(BETHE_BUILD_APPS)
       COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_sine_gordon_pair_grid.py"
         "$<TARGET_FILE:bethe-sine-gordon-bethe-yang>" "${BETHE_HAS_FLOAT128}")
     set_tests_properties(SineGordonPairGrid.cli PROPERTIES TIMEOUT 180)
+    add_test(NAME SineGordonExcited.precision
+      COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_sine_gordon_excited_precision.py"
+        "$<TARGET_FILE:bethe-sine-gordon-excited>" "${BETHE_HAS_MPREAL}")
+    set_tests_properties(SineGordonExcited.precision PROPERTIES TIMEOUT 600)
     add_test(NAME SineGordonExcited.cli
       COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_sine_gordon_excited.py"
         "$<TARGET_FILE:bethe-sine-gordon-excited>" "${BETHE_HAS_FLOAT128}")
@@ -829,12 +853,18 @@ if(BETHE_BUILD_APPS)
     add_test(NAME SineGordon.cli
       COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_sine_gordon.py"
         "$<TARGET_FILE:bethe-sine-gordon-vacuum>" "${BETHE_HAS_FLOAT128}")
+    add_test(NAME SineGordonVacuum.precision
+      COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_sine_gordon_vacuum_precision.py"
+        "$<TARGET_FILE:bethe-sine-gordon-vacuum>" "${BETHE_HAS_MPREAL}")
     add_test(NAME Arguments.bethe-sine-gordon-vacuum.cli
       COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_shared_arguments.py"
         "$<TARGET_FILE:bethe-sine-gordon-vacuum>")
     add_test(NAME Citations.bethe-sine-gordon-vacuum.cli
       COMMAND "${CMAKE_COMMAND}" "-DPROGRAM=$<TARGET_FILE:bethe-sine-gordon-vacuum>"
         "-DTOOL=bethe-sine-gordon-vacuum" -P "${CMAKE_CURRENT_SOURCE_DIR}/check_citations_cli.cmake")
+    add_test(NAME ASEP.precision
+      COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_asep_precision.py"
+        "$<TARGET_FILE:bethe-asep-pbc>" "${BETHE_HAS_MPREAL}")
     add_test(NAME ASEP.cli
       COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_asep.py"
         "$<TARGET_FILE:bethe-asep-pbc>" "${BETHE_HAS_FLOAT128}")
@@ -844,6 +874,9 @@ if(BETHE_BUILD_APPS)
     add_test(NAME Citations.bethe-asep-pbc.cli
       COMMAND "${CMAKE_COMMAND}" "-DPROGRAM=$<TARGET_FILE:bethe-asep-pbc>"
         "-DTOOL=bethe-asep-pbc" -P "${CMAKE_CURRENT_SOURCE_DIR}/check_citations_cli.cmake")
+    add_test(NAME TASEP.precision
+      COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_tasep_precision.py"
+        "$<TARGET_FILE:bethe-tasep-pbc>" "${BETHE_HAS_MPREAL}")
     add_test(NAME TASEP.cli
       COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_tasep.py"
         "$<TARGET_FILE:bethe-tasep-pbc>" "${BETHE_HAS_FLOAT128}")

@@ -15,28 +15,31 @@ auto program_info()
   info.examples = {{"bethe-sine-gordon-vacuum --length 1 --p 2", "Repulsive vacuum, soliton mass one"},
                    {"bethe-sine-gordon-vacuum --mass 2 --length 0.5 --p 0.5 --json vacuum.json",
                     "Attractive vacuum with file export"}};
-  info.notes = {"M is the soliton mass, L the circumference, u=M*L; velocity=hbar=1.",
-                "p=beta^2/(8*pi-beta^2) for kinetic term (1/2)(partial phi)^2; p=1 is free Dirac.",
-                "Bulk-subtracted energy E_C=E0-L*e_bulk; Y=L*E_C; c_eff=-6*Y/pi. No absolute bulk energy.",
-                "Untwisted zero-topological-charge vacuum only; no excited states or Bethe-Yang approximation.",
-                "Tolerance is absolute in Y, default 262144 epsilon. Two contours are independently resolved.",
-                "Failed observables are missing, with exit status 2. fp128 solves can take minutes.",
-                "See docs/sine-gordon.md for numerical controls; --references for literature."};
+  info.notes = {
+      "M is the soliton mass, L the circumference, u=M*L; velocity=hbar=1.",
+      "p=beta^2/(8*pi-beta^2) for kinetic term (1/2)(partial phi)^2; p=1 is free Dirac.",
+      "Bulk-subtracted energy E_C=E0-L*e_bulk; Y=L*E_C; c_eff=-6*Y/pi. No absolute bulk energy.",
+      "Untwisted zero-topological-charge vacuum only; no excited states or Bethe-Yang approximation.",
+      "Tolerance is absolute in Y, default 262144 epsilon. Two contours are independently resolved.",
+      "Failed observables are missing, with exit status 2. High-precision interacting solves can take minutes.",
+      "bits-N/digits-N selects MPFR arithmetic; mesh and Fourier budgets remain independent.",
+      "See docs/sine-gordon.md for numerical controls; --references for literature."};
   return info;
 }
 void add_options(CLI::App& app, Arguments& a)
 {
   cli::sine_gordon::add_options(app, a, "Positive sine-Gordon coupling p",
-                                "Absolute tolerance in Y; default 262144 epsilon");
+                                "Absolute tolerance in Y; default 262144 epsilon", cli::ArbitraryPrecision::real);
   bethe::cli::add_data_output_options(
       app, a.output, {{.name = "vacuum", .description = "Vacuum energy and numerical diagnostics", .primary = true}});
 }
-template <uni20::Real Real> int run(Arguments const& a, int argc, char** argv)
+template <uni20::Real Real> int run(Arguments const& a, model::VacuumOptions<Real> controls, int argc, char** argv)
 {
   uni20::run_context context(program_info(), {.invocation = std::vector<std::string>(argv, argv + argc)});
-  Real const mass = a.mass ? uni20::parse_real<Real>(*a.mass) : Real{1};
-  Real const length = uni20::parse_real<Real>(*a.length), p = uni20::parse_real<Real>(*a.coupling);
-  model::VacuumOptions<Real> controls;
+  Real const mass = a.mass ? cli::parse_solver_real<Real>(*a.mass, controls)
+                           : uni20::scalar_at_precision<Real>(1, controls.precision());
+  Real const length = cli::parse_solver_real<Real>(*a.length, controls),
+             p = cli::parse_solver_real<Real>(*a.coupling, controls);
   cli::sine_gordon::configure<Real>(a, controls);
   // Validate and solve before opening files, including --force targets.
   auto const state = context.measure([&] { return model::vacuum_energy(mass, length, p, controls); });
@@ -80,6 +83,7 @@ int main(int argc, char** argv)
       argc, argv, program_info(), [&](auto& app) { add_options(app, a); },
       [&](auto&) {
         a.output.validate();
-        return cli::dispatch_precision(a.precision, [&]<typename Real>() { return run<Real>(a, argc, argv); });
+        return cli::dispatch_options_precision<cli::ArbitraryPrecision::real, model::VacuumOptions>(
+            a.precision, [&](auto controls) { return run(a, std::move(controls), argc, argv); });
       });
 }

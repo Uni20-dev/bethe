@@ -1,0 +1,30 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+#pragma once
+// Independent real-axis quadrature, 110/140 decimal digits; see reference_sine_gordon_vacuum.py.
+namespace sg_vacuum_reference
+{
+struct Entry
+{
+    char const* u;
+    char const* y;
+};
+inline constexpr Entry free_dirac[] = {
+    {"0.25", "-0."
+             "499157262946589108435460600262878302211333591840195350843000004282950262660604457762129375211398914115458"
+             "86486998336077522675045228864252357"},
+    {"1", "-0."
+          "345604216141025835959052207205513562514745770099859506357585770363179317274270465951877362524222967791275746"
+          "75955953835489007301482480253295"},
+    {"5", "-0."
+          "012844831151184737957992516524497794460503754317177362197074631708737842251966957379178835559523994350043507"
+          "342676655209994270300759296203867"},
+};
+} // namespace sg_vacuum_reference
+
+namespace sg_vacuum_reference
+{
+// Independent real D3 TBA: 384 bits, 1536/2048 Gauss points differ by 5.62e-112.
+inline constexpr char d3_at_30[] = "-4."
+                                   "14006316079410423332996438414877722791628556985474282714074170460846562094119059909"
+                                   "289922623095802436192461231275471e-13";
+} // namespace sg_vacuum_reference
