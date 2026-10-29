@@ -75,8 +75,9 @@ template <uni20::Real Real> class GroundSystem {
   public:
     GroundSystem(std::size_t sites, Real delta, std::span<uni20::half_int const> numbers)
         : sites(sites), order(numbers.size()), numbers(numbers.begin(), numbers.end()),
-          pi(Real{4} * std::atan(Real{1})), t(std::sqrt(((delta - Real{1}) / delta) / (Real{1} + Real{1} / delta))),
-          tau(std::sqrt(((delta - Real{1}) / delta) * (Real{1} + Real{1} / delta)))
+          zero(bethe::detail::precision_zero(delta)), pi(Real{4} * uni20::math::atan(uni20::scalar_like(delta, 1))),
+          t(uni20::math::sqrt(((delta - Real{1}) / delta) / (Real{1} + Real{1} / delta))),
+          tau(uni20::math::sqrt(((delta - Real{1}) / delta) * (Real{1} + Real{1} / delta)))
     {}
     GroundSystem(std::size_t sites, Real delta) : GroundSystem(sites, delta, consecutive(sites / 2)) {}
 
@@ -98,7 +99,7 @@ template <uni20::Real Real> class GroundSystem {
       return true;
     }
 
-    Real alpha(Real x) const { return Real{2} * std::atan2(t * std::sin(x), std::cos(x)); }
+    Real alpha(Real x) const { return Real{2} * uni20::math::atan2(t * uni20::math::sin(x), uni20::math::cos(x)); }
 
     struct Evaluation
     {
@@ -113,23 +114,24 @@ template <uni20::Real Real> class GroundSystem {
       for (std::size_t j = 0; j < order; ++j)
       {
         a[j] = alpha(x[j]);
-        Real const c = std::cos(x[j]), s = std::sin(x[j]);
+        Real const c = uni20::math::cos(x[j]), s = uni20::math::sin(x[j]);
         derivative[j] = t / (c * c + t * t * s * s); // (d alpha/d x)/2
       }
-      Evaluation out{.residual = std::vector<Real>(order)};
+      Evaluation out{.residual = std::vector<Real>(order, zero), .norm = zero};
       for (std::size_t i = 0; i < order; ++i)
       {
-        bethe::detail::CompensatedSum<Real> sum, diagonal;
+        bethe::detail::CompensatedSum<Real> sum(zero), diagonal(zero);
         sum.add(Real{2} * x[i] - pi * Real(numbers[i].twice() / 2) / Real(sites));
         diagonal.add(Real{2});
         for (std::size_t j = 0; j < order; ++j)
           if (i != j)
           {
             Real const minus = (a[i] - a[j]) / Real{2}, plus = (a[i] + a[j]) / Real{2};
-            Real const sm = std::sin(minus), cm = std::cos(minus), sp = std::sin(plus), cp = std::cos(plus);
+            Real const sm = uni20::math::sin(minus), cm = uni20::math::cos(minus), sp = uni20::math::sin(plus),
+                       cp = uni20::math::cos(plus);
             // atan2 retains the reflected-scattering branch when alpha_i+alpha_j>pi.
-            sum.add(-std::atan2(sm, tau * cm) / Real(sites));
-            sum.add(-std::atan2(sp, tau * cp) / Real(sites));
+            sum.add(-uni20::math::atan2(sm, tau * cm) / Real(sites));
+            sum.add(-uni20::math::atan2(sp, tau * cp) / Real(sites));
             if (jacobian)
             {
               Real const km = tau / (sm * sm + tau * tau * cm * cm);
@@ -141,14 +143,14 @@ template <uni20::Real Real> class GroundSystem {
         if (jacobian) (*jacobian)[i * order + i] = diagonal.value();
         out.residual[i] = sum.value();
         if (!uni20::isfinite(out.residual[i])) throw std::runtime_error("nonfinite quantum-group XXZ residual");
-        out.norm = std::max(out.norm, std::abs(out.residual[i]));
+        out.norm = std::max(out.norm, uni20::math::abs(out.residual[i]));
       }
       return out;
     }
 
     std::size_t sites, order;
     QuantumNumbers numbers;
-    Real pi, t, tau;
+    Real zero, pi, t, tau;
 };
 } // namespace detail
 
@@ -163,10 +165,9 @@ template <uni20::Real Real = double>
                                          SolverOptions<Real> const& options = {})
 {
   xxz::detail::checked_sites(sites);
+  Real const zero = xxz::detail::solver_zero(delta, options);
   if (!uni20::isfinite(delta) || delta <= Real{1})
     throw std::invalid_argument("quantum-group XXZ solver requires finite Delta > 1");
-  if (!uni20::isfinite(options.residual_tolerance) || options.residual_tolerance <= Real{0})
-    throw std::invalid_argument("residual tolerance must be finite and positive");
   auto const m = numbers.size();
   if (m > sites / 2) throw std::invalid_argument("quantum-group XXZ real states require M <= N/2");
   for (std::size_t i = 0; i < m; ++i)
@@ -195,15 +196,15 @@ template <uni20::Real Real = double>
     if (state.iterations == options.max_iterations) break;
     for (std::size_t i = 0; i < m; ++i)
       step[i] = -evaluation.residual[i];
-    if (!bethe::detail::newton_step(jacobian, step))
+    if (!bethe::detail::newton_step(jacobian, step, options.precision()))
     {
       state.status = SolveStatus::singular_jacobian;
       break;
     }
     auto trial = x;
-    Real damping = Real{1};
+    Real damping = uni20::scalar_like(zero, 1);
     bool accepted = false;
-    for (int backtrack = 0; backtrack <= uni20::numeric_limits<Real>::digits(); ++backtrack)
+    for (int backtrack = 0; backtrack <= uni20::numeric_limits<Real>::digits(options.precision()); ++backtrack)
     {
       for (std::size_t i = 0; i < m; ++i)
         trial[i] = x[i] + damping * step[i];
@@ -227,13 +228,13 @@ template <uni20::Real Real = double>
     ++state.iterations;
   }
   state.angles = std::move(x);
-  bethe::detail::CompensatedSum<Real> energy, shift;
+  bethe::detail::CompensatedSum<Real> energy(zero), shift(zero);
   energy.add((Real(sites - 1) / Real{4} - Real(m)) * delta);
   for (std::size_t i = 0; i < m; ++i)
   {
     state.rapidities.push_back(system.alpha(state.angles[i]));
-    energy.add(-std::cos(Real{2} * state.angles[i]));
-    Real const c = std::cos(state.angles[i]);
+    energy.add(-uni20::math::cos(Real{2} * state.angles[i]));
+    Real const c = uni20::math::cos(state.angles[i]);
     shift.add(-(delta - Real{1}));
     shift.add(-Real{2} * c * c);
   }

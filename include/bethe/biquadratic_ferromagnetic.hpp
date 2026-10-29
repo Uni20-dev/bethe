@@ -46,22 +46,40 @@ template <uni20::Real Real> struct GroundSpace
     std::optional<std::uint64_t> multiplicity;
 };
 
-template <uni20::Real Real = double> [[nodiscard]] GroundSpace<Real> ground_space(std::size_t sites)
+template <uni20::Real Real = double>
+[[nodiscard]] GroundSpace<Real> ground_space(std::size_t sites, uni20::Precision precision)
 {
   detail::validate_sites(sites);
+  if (precision.is_exact()) throw std::invalid_argument("ferromagnetic energies require finite precision");
   return {.sites = sites,
           .through_lines = sites,
-          .energy = Real(sites - 1),
+          .energy = uni20::scalar_at_precision<Real>(sites - 1, precision),
           .multiplicity = temperley_lieb::spin_chain_multiplicity(3, sites)};
+}
+
+template <uni20::Real Real = double>
+  requires(!uni20::has_runtime_precision_v<Real>)
+[[nodiscard]] GroundSpace<Real> ground_space(std::size_t sites)
+{
+  return ground_space<Real>(sites, uni20::native_precision<Real>());
 }
 
 /// Gap above the ENTIRE degenerate ground space, not between its zero modes.
 /// Koma-Nachtergaele Prop. 2, rescaled by 2*Delta=3 via TL equivalence.
-template <uni20::Real Real = double> [[nodiscard]] Real spectral_gap(std::size_t sites)
+template <uni20::Real Real = double> [[nodiscard]] Real spectral_gap(std::size_t sites, uni20::Precision precision)
 {
   detail::validate_sites(sites);
-  Real const s = std::sin((Real{2} * std::atan(Real{1})) / Real(sites));
+  if (precision.is_exact()) throw std::invalid_argument("ferromagnetic energies require finite precision");
+  Real const one = uni20::scalar_at_precision<Real>(1, precision);
+  Real const s = uni20::math::sin((Real{2} * uni20::math::atan(one)) / Real(sites));
   return Real{1} + Real{4} * s * s; // 3-2*cos(pi/N)
+}
+
+template <uni20::Real Real = double>
+  requires(!uni20::has_runtime_precision_v<Real>)
+[[nodiscard]] Real spectral_gap(std::size_t sites)
+{
+  return spectral_gap<Real>(sites, uni20::native_precision<Real>());
 }
 
 template <uni20::Real Real> struct OneDefectLevel
@@ -74,24 +92,33 @@ template <uni20::Real Real> struct OneDefectLevel
 };
 
 /// Complete ell=N-2 module: j=1,...,N-1, gap=3+2*cos(pi*j/N).
-/// Descending j gives ascending energy. Exact formula, rounded at native precision.
+/// Descending j gives ascending energy. Exact formula, rounded at the requested finite precision.
 /// One TL singlet defect is NOT one physical spin lowering (the latter costs zero).
 template <uni20::Real Real = double>
-[[nodiscard]] OneDefectLevel<Real> one_defect_level(std::size_t sites, std::size_t mode)
+[[nodiscard]] OneDefectLevel<Real> one_defect_level(std::size_t sites, std::size_t mode, uni20::Precision precision)
 {
   detail::validate_sites(sites);
   if (mode == 0 || mode >= sites) throw std::invalid_argument("one-defect mode must satisfy 1<=j<N");
-  Real const pi = Real{4} * std::atan(Real{1});
+  if (precision.is_exact()) throw std::invalid_argument("ferromagnetic energies require finite precision");
+  Real const one = uni20::scalar_at_precision<Real>(1, precision);
+  Real const pi = Real{4} * uni20::math::atan(one);
   // Compute the gap independently of the extensive energy, including near j=N.
-  Real const s = std::sin((pi / Real{2}) * (Real(sites - mode) / Real(sites)));
+  Real const s = uni20::math::sin((pi / Real{2}) * (uni20::scalar_like(one, sites - mode) / Real(sites)));
   Real const gap = Real{1} + Real{4} * s * s;
   return {.sites = sites,
           .through_lines = sites - 2,
           .mode = mode,
-          .wave_number = pi * (Real(mode) / Real(sites)),
+          .wave_number = pi * (uni20::scalar_like(one, mode) / Real(sites)),
           .energy = Real(sites - 1) + gap,
           .gap = gap,
           .multiplicity = temperley_lieb::spin_chain_multiplicity(3, sites - 2)};
+}
+
+template <uni20::Real Real = double>
+  requires(!uni20::has_runtime_precision_v<Real>)
+[[nodiscard]] OneDefectLevel<Real> one_defect_level(std::size_t sites, std::size_t mode)
+{
+  return one_defect_level<Real>(sites, mode, uni20::native_precision<Real>());
 }
 
 /// Selected odd/even-chain Bethe eigenstate; no lowest-state claim.
@@ -125,7 +152,7 @@ RealExcitationScan<Real> real_scan(std::size_t sites, std::size_t through_lines,
   // A window of exactly M labels has only one candidate, even for enormous
   // M. Validate its Newton dimensions before the scanner allocates labels.
   qg::detail::check_matrix_size<Real>(m);
-  Real const delta = Real{3} / Real{2};
+  Real const delta = uni20::scalar_at_precision<Real>(3, solver.precision()) / Real{2};
   auto input = bethe::detail::scan_real_combinations<bethe::RealExcitationScan<qg::RealState<Real>>>(
       slots, m, first, scan, [&](auto const& numbers) { return qg::solve_real<Real>(sites, delta, numbers, solver); },
       [&] { return qg::solve_real<Real>(sites, delta, {}, solver); }, bethe::detail::EnergyOrder::descending,
@@ -133,8 +160,9 @@ RealExcitationScan<Real> real_scan(std::size_t sites, std::size_t through_lines,
   return temperley_lieb::detail::map_real_scan(
       std::move(input),
       [](auto state) {
+        auto const loop = uni20::scalar_like(state.delta, 3);
         return detail::reverse(
-            biquadratic::detail::from_tl(temperley_lieb::detail::from_reference(std::move(state), Real{3})));
+            biquadratic::detail::from_tl(temperley_lieb::detail::from_reference(std::move(state), loop)));
       },
       -Real{2});
 }
