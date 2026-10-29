@@ -185,3 +185,7 @@ under deferred and one/multiple-worker scheduling. The coupled Newton iterations
 and single-request CLI remain serial. Arbitrary precision additionally needs
 explicit-precision complex theta arguments and derivatives, not just theta
 constants at zero argument, as well as controls and Newton arithmetic.
+
+The theta evaluation is shared with Uni20. Explicit MPFR support for the
+[thermodynamic excitation bands](xyz-dispersion.md) does not yet imply MPFR
+support for this finite-chain nonlinear solver.

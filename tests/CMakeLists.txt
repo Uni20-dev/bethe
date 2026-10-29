@@ -647,6 +647,9 @@ if(BETHE_BUILD_APPS)
     add_test(NAME XYZDispersion.cli
       COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_xyz_dispersion.py"
         "$<TARGET_FILE:bethe-xyz-dispersion>" "${BETHE_HAS_FLOAT128}")
+    add_test(NAME XYZDispersion.mpfr_cli
+      COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_xyz_dispersion_mpfr.py"
+        "$<TARGET_FILE:bethe-xyz-dispersion>" "${BETHE_HAS_MPREAL}")
     add_test(NAME Arguments.bethe-xyz-dispersion.cli
       COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_shared_arguments.py"
         "$<TARGET_FILE:bethe-xyz-dispersion>")
