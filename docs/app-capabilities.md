@@ -9,8 +9,8 @@ and [Async ownership](async-execution.md).
 
 The table records implemented paths and the next concrete audit. An app can
 remain serial when its work is too cheap to benefit from scheduling; independent
-parameter sweeps can still use the generic library grid. Native-only apps below
-do not yet expose MPFR at their frontend, even if some underlying helpers do.
+parameter sweeps can still use the generic library grid. All 43 numerical
+frontends below expose explicit MPFR when that scalar family is configured.
 Names omit the `bethe-` executable prefix. This inventory describes the current
 source tree. Rebuild an older
 installation to obtain these capabilities. Linked PRs preserve the original
@@ -40,7 +40,7 @@ validation; their measurements are historical records, not new integration runs.
 | `bose-fermi-pbc` | Individual nested solves; owning mixed-precision requests ([#19](https://github.com/Uni20-dev/bethe/pull/19)) | Yes, MPFR scalars; CPU LU available | Preserve mixed-shell restrictions and scalar-only zero-update diagnostics |
 | `su3-dispersion` | Serial analytic CLI; owning mixed-precision Async queries ([#20](https://github.com/Uni20-dev/bethe/pull/20)) | Yes, MPFR scalars | Individual formulas remain too cheap to justify per-point scheduling |
 | `haldane-shastry-pbc`, `sutherland-pbc` | Serial analytic CLIs; owning mixed-precision window/parameter scans ([#21](https://github.com/Uni20-dev/bethe/pull/21)) | Yes, MPFR scalars | Preserve exact-integer gap/order handling; cheap formulas stay serial |
-| `tb-dispersion` | Serial analytic CLI; owning mixed-precision Async queries ([#22](https://github.com/Uni20-dev/bethe/pull/22)) | Yes, MPFR scalars | XXZ/XYZ elliptic models still need separate precision audits |
+| `tb-dispersion` | Serial analytic CLI; owning mixed-precision Async queries ([#22](https://github.com/Uni20-dev/bethe/pull/22)) | Yes, MPFR scalars | Preserve independent XXZ/XYZ elliptic validation |
 | `sine-gordon-dispersion` | Serial analytic CLI; owning mixed-precision Async queries ([#23](https://github.com/Uni20-dev/bethe/pull/23)) | Yes, MPFR scalars | Keep analytic particle kinematics separate from scattering and finite-volume numerical convergence |
 | `xyz-dispersion` | Serial CLI; owning bound branches and shared Async preparation / parameter curves ([#24](https://github.com/Uni20-dev/bethe/pull/24)) | Explicit MPFR scalars | Shared Uni20 complex theta jets; owning mixed-precision bound readers; no MPLAPACK required |
 | `xxz-dispersion` | Immutable band with cheap queries; bulk preparation remains serial | Explicit scalar MPFR | Scaled theta constants, finite quadrature and analytic limits; no MPLAPACK required |
@@ -54,7 +54,7 @@ validation; their measurements are historical records, not new integration runs.
 | `potts-pbc` | Bounded charged-momentum scans and owning mixed-precision levels after one vacuum solve | Yes, MPFR scalars; no MPLAPACK required | Explicit constants, twists, auxiliary roots and complete failure diagnostics; vacuum and charged one-hole family only |
 | `asep-pbc` | Serial CLI; owning mixed-precision shared TASEP seeds and dependent Async rate grids | Explicit MPFR/MPC; CPU/provider real LU | Existing continuation and work budgets; tiny-bias drift remains explicit |
 | `tasep-pbc` | Serial CLI; owning mixed-precision size/filling requests | Explicit MPFR/MPC; CPU/provider real LU | Existing gap branch and work budgets; no full-spectrum claim |
-| `xyz-pbc` | Serial CLIs; owning size/filling/eta/t sweeps with a compiled example ([#32](https://github.com/Uni20-dev/bethe/pull/32)) | Native only | Explicit complex arithmetic, controls and diagnostics; finite XYZ also needs complex theta arguments/derivatives |
+| `xyz-pbc` | Serial CLI; owning mixed-precision size/eta/t sweeps | Explicit MPFR; CPU/provider LU | Shared complex theta jets, precision-aware roots, Newton controls and failure results |
 
 `bethe-info` reports capabilities and has no numerical parallelism to add.
 The inventory covers 43 numerical frontends; it does not extend any model's
@@ -147,8 +147,9 @@ checkpoint. Bethe's [XXZ dispersion](xxz-dispersion.md) uses these constants.
 XYZ excitation bands now use the shared complex theta values and derivatives in
 [Uni20 #115](https://github.com/Uni20-dev/uni20/pull/115), replacing Bethe's duplicate
 evaluator. Explicit MPFR reaches couplings, spinon/bound bands, continuum edges
-and owning Async readers. The finite XYZ nonlinear solve still needs its own
-precision-aware controls and Newton arithmetic.
+and owning Async readers. The finite XYZ nonlinear solve also carries explicit
+precision through its controls, complex roots and Newton arithmetic, with
+independent spin-Hamiltonian and XY references beyond binary128.
 
 Merged [Uni20 PR #104](https://github.com/Uni20-dev/uni20/pull/104) supplies
 array-valued tanh-sinh quadrature with explicit precision in endpoint distances,

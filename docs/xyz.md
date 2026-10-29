@@ -42,6 +42,7 @@ two-site identities nor the trigonometric limit alone meet that target.
 ```sh
 bethe-xyz-pbc 16 --eta 0.4 --t 0.7 --roots
 bethe-xyz-pbc 32 --eta 0.7 --t 2 --precision long-double
+bethe-xyz-pbc 16 --eta 0.4 --t 0.7 --precision bits-256 --roots
 bethe-xyz-pbc 16 --eta 0.4 --t 0.7 --roots --json xyz.json \
   --csv-table states=xyz.csv --tsv-table roots=roots.tsv
 bethe-xyz-pbc --references
@@ -167,7 +168,7 @@ than interpreting retained diagnostic roots as a solved state.
 
 `energy` is absent on failure. Status distinguishes iteration limit, stalled
 iteration and numerical range/precision failure. Invalid physical inputs throw.
-Default tolerance is 32 native epsilons; zero iterations still allows the
+Default tolerance is 32 epsilons at the selected precision; zero iterations still allows the
 exact two-site solution. Momentum is pi for odd M and zero for even M, from
 the paired-root translation factors. Sz is not a quantum number of this solver.
 
@@ -182,11 +183,20 @@ the [TASEP/XYZ example](async-execution.md#independent-tasep-and-finite-xyz-solv
 demonstrates an eta sweep. All roots, controls, scratch and diagnostics belong to
 their individual solve. Tests compare complete successful and failed states
 under deferred and one/multiple-worker scheduling. The coupled Newton iterations
-and single-request CLI remain serial. Extending this solver to arbitrary
-precision still requires precision-aware controls, complex root storage and
-Newton arithmetic. The shared theta dependency already supports explicit
-MPFR values and derivatives.
+and single-request CLI remain serial. Requests may carry different explicit
+precisions without changing ambient MPFR settings.
 
-The theta evaluation is shared with Uni20. Explicit MPFR support for the
-[thermodynamic excitation bands](xyz-dispersion.md) does not yet imply MPFR
-support for this finite-chain nonlinear solver.
+`--precision bits-N` or `digits-N` selects arbitrary precision when MPFR is
+enabled. Library callers construct `SolverOptions<uni20::mpreal>(precision)`
+and supply `eta` and `t` at that same finite precision. Precision reaches theta
+values and derivatives, root coordinates, Newton matrices, convergence controls,
+energy and failure diagnostics. Linear solves use Uni20's normal CPU/provider
+dispatch; MPLAPACK is optional. JSON fields record their bit precision, and
+CSV/TSV output retains the corresponding decimal digits.
+
+Independent full spin-Hamiltonian and free-fermion XY references verify accuracy
+growth at 80, 160, 256 and 333 bits, including both signs of Jz. Multiplicative
+Bethe equations, Jacobians, two-site energies, exhausted iteration budgets and
+mixed-precision Async sweeps are checked separately. More arithmetic bits do
+not enlarge the regular ground-state family or establish convergence for
+extreme parameters; failed solves still publish no energy.
