@@ -458,7 +458,10 @@ Arguments are model/state, threads, number of points and precision. Model/state
 is `lee-yang-vacuum`, `lee-yang-excited`, `sine-gordon-vacuum` or
 `sine-gordon-excited`; threads zero is a direct serial comparison, while one or
 more uses Async. Native `fp64`, `long-double` and configured `fp128` are
-supported. These solvers do not yet support MPFR.
+supported by this example. The Lee–Yang and sine-Gordon vacuum library APIs
+also support explicit MPFR controls and owning mixed-precision queries through
+`evaluate_observable_grid_async`; the example's precision selector remains
+native-only. The sine-Gordon excited NLIE still needs MPFR integration.
 
 The example uses unit mass, Lee–Yang circumferences `5+5*i/points` at absolute
 Y tolerance `1e-10`, or sine-Gordon `1+3*i/points` at p=2 and tolerance `1e-7`.

@@ -3,6 +3,7 @@
 #pragma once
 #include "program-options.hpp"
 #include "result-output.hpp"
+#include "solver-precision.hpp"
 #include <bethe/sine_gordon_vacuum.hpp>
 
 namespace bethe::cli::sine_gordon
@@ -15,7 +16,8 @@ struct Arguments
     std::string precision = "fp64";
     DataOutputOptions output;
 };
-inline void add_options(CLI::App& app, Arguments& a, std::string coupling_help, std::string tolerance_help)
+inline void add_options(CLI::App& app, Arguments& a, std::string coupling_help, std::string tolerance_help,
+                        ArbitraryPrecision precision = ArbitraryPrecision::none)
 {
   text_option(app, "--mass", a.mass, "Positive soliton mass M; default 1")->type_name("REAL");
   text_option(app, "--length", a.length, "Positive circumference L")->required()->type_name("REAL");
@@ -36,13 +38,13 @@ inline void add_options(CLI::App& app, Arguments& a, std::string coupling_help, 
       ->capture_default_str();
   count_option(app, "--max-fourier-cutoffs", a.fourier_cutoffs, "Fourier cutoff attempts per table")
       ->capture_default_str();
-  precision_option(app, a.precision);
+  precision_option(app, a.precision, precision);
 }
 template <uni20::Real Real> void configure(Arguments const& a, bethe::sine_gordon::VacuumOptions<Real>& controls)
 {
-  if (a.tolerance) controls.tolerance = uni20::parse_real<Real>(*a.tolerance);
-  if (a.contour) controls.contour_shift = uni20::parse_real<Real>(*a.contour);
-  if (a.cutoff) controls.initial_cutoff = uni20::parse_real<Real>(*a.cutoff);
+  if (a.tolerance) controls.tolerance = parse_solver_real<Real>(*a.tolerance, controls);
+  if (a.contour) controls.contour_shift = parse_solver_real<Real>(*a.contour, controls);
+  if (a.cutoff) controls.initial_cutoff = parse_solver_real<Real>(*a.cutoff, controls);
   controls.initial_intervals = a.initial_intervals;
   controls.max_intervals = a.max_intervals;
   controls.max_iterations = a.iterations;

@@ -94,6 +94,7 @@ if(BETHE_HAS_MPREAL)
   target_link_libraries(bethe_tasep_mpfr_tests PRIVATE bethe::bethe TBB::tbb)
   bethe_discover_tests(bethe_tasep_mpfr_tests)
 
+
   add_executable(bethe_open_qsystem_mpfr_tests test_open_qsystem_mpfr.cpp)
   target_link_libraries(bethe_open_qsystem_mpfr_tests PRIVATE bethe::bethe TBB::tbb)
   bethe_discover_tests(bethe_open_qsystem_mpfr_tests)
@@ -400,6 +401,13 @@ add_executable(bethe_sine_gordon_excitation_tests test_sine_gordon_excitations.c
 target_link_libraries(bethe_sine_gordon_excitation_tests PRIVATE bethe::bethe)
 bethe_discover_tests(bethe_sine_gordon_excitation_tests)
 if(BETHE_HAS_MPREAL)
+  add_executable(bethe_sine_gordon_vacuum_mpfr_tests test_sine_gordon_vacuum_mpfr.cpp)
+  target_link_libraries(bethe_sine_gordon_vacuum_mpfr_tests PRIVATE bethe::bethe TBB::tbb)
+  bethe_discover_tests(bethe_sine_gordon_vacuum_mpfr_tests
+    LONG_RUNNING_TESTS SineGordonVacuumMpfr.InteractingStatesAndScaling
+      SineGordonVacuumMpfr.IndependentInteractingD3PrecisionGrowth)
+  add_executable(bethe_sine_gordon_d3_reference EXCLUDE_FROM_ALL ../scripts/reference_sine_gordon_d3.cpp)
+  target_link_libraries(bethe_sine_gordon_d3_reference PRIVATE bethe::bethe)
   add_executable(bethe_sine_gordon_particle_mpfr_tests test_sine_gordon_particles_mpfr.cpp)
   target_link_libraries(bethe_sine_gordon_particle_mpfr_tests PRIVATE bethe::bethe TBB::tbb)
   bethe_discover_tests(bethe_sine_gordon_particle_mpfr_tests)
@@ -827,6 +835,9 @@ if(BETHE_BUILD_APPS)
     add_test(NAME SineGordon.cli
       COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_sine_gordon.py"
         "$<TARGET_FILE:bethe-sine-gordon-vacuum>" "${BETHE_HAS_FLOAT128}")
+    add_test(NAME SineGordonVacuum.precision
+      COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_sine_gordon_vacuum_precision.py"
+        "$<TARGET_FILE:bethe-sine-gordon-vacuum>" "${BETHE_HAS_MPREAL}")
     add_test(NAME Arguments.bethe-sine-gordon-vacuum.cli
       COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_shared_arguments.py"
         "$<TARGET_FILE:bethe-sine-gordon-vacuum>")

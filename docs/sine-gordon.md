@@ -1,6 +1,6 @@
 # Sine-Gordon: bulk-subtracted finite-volume vacuum
 
-**Status: native-precision kernel, vacuum-energy library and `bethe-sine-gordon-vacuum` frontend implemented.** This is a field
+**Status: native and explicit MPFR kernel, vacuum-energy library and `bethe-sine-gordon-vacuum` frontend implemented.** This is a field
 theory calculation, not a classical sine-Gordon PDE evolution or a finite-site
 spin-chain diagonalization.
 
@@ -18,9 +18,37 @@ bethe-sine-gordon-vacuum --length 1 --p 1 --precision fp128 --csv vacuum.csv
 ```
 
 `--length` and `--p` are required; `--mass` defaults to one. All real inputs
-are parsed directly in the chosen precision: fp64 (default), long-double or
-fp128 (with MPLAPACK). The last example is the free Dirac check, not an
-interacting calculation. Interacting fp128 runs can take minutes.
+are parsed directly in the chosen precision: fp64 (default), long-double,
+configured fp128, or `bits-N` / `digits-N` with MPFR/MPC enabled. MPFR vacuum
+solves do not require MPLAPACK. The last example is the free Dirac check;
+interacting high-precision runs can take minutes.
+
+For example, the free Dirac result at 256 bits needs more mesh refinement:
+
+```sh
+bethe-sine-gordon-vacuum --length 1 --p 1 --precision bits-256 --max-intervals 8192
+```
+
+More arithmetic bits do not increase numerical work limits. At tight tolerances,
+raise `--max-kernel-evaluations` as needed (for example, 1000000) as well as the
+rapidity mesh budget. A value meeting one refinement comparison still needs the
+second confirmation; exhausting the budget before that remains an incomplete
+solve. The two contours, kernel tail, mesh, cutoff and nonlinear tests stay
+independent. MPFR scales and all controls must share a finite precision:
+
+```cpp
+using R = uni20::mpreal;
+auto precision = uni20::Precision::bits(160);
+bethe::sine_gordon::VacuumOptions<R> controls(precision);
+controls.max_intervals = 8192;
+controls.kernel.max_evaluations = 1000000;
+auto state = bethe::sine_gordon::vacuum_energy(
+    R(1, precision), R(30, precision), R(2, precision), controls);
+```
+
+Failure results retain their precision and separate diagnostics; they do not
+publish an energy. Exact, unset or mixed-precision inputs are rejected before
+any output file is opened.
 
 The single `vacuum` table reports `casimir_energy` (E_C), `scaling_function`
 (Y), `effective_central_charge`, separate convergence diagnostics and work
@@ -204,6 +232,10 @@ multiplier is computed once per quadrature point for all displacements;
 short phase recurrences reduce repeated trigonometric calls. The standalone
 tanh-sinh kernel provides an independent check of this tabulation. Its Fourier
 tail bound is unchanged. Two successive Fourier-mesh agreements are required.
+Native arithmetic retains the 16-point rule. MPFR raises the Gauss order with
+working precision (between 16 and 128); every node still counts against the
+explicit evaluation budget. This increases quadrature order before panel refinement
+without changing the Fourier cutoff bound or accepting a single agreement.
 
 The unknown is the correction to the analytically known driving term, updated
 with half damping. Vacuum parity `epsilon(-theta)=conj(epsilon(theta))` reduces
@@ -225,8 +257,24 @@ breather wrapping correction at p=1/2. They also distinguish nonlinear,
 kernel, rapidity-mesh and cutoff failures, and verify that failed states have
 no published observables.
 
-Frontend regressions additionally check native parsing/output, mass-length
-scaling, budget forwarding, missing failed observables and shared export contracts.
+The MPFR tests compare the free Dirac result at 80/160/256/333 bits with
+110/140-decimal-digit real-axis integrals. Closed Fourier transforms test both
+real and shifted kernel tables at the same precisions. The independent D3
+reference at scaled length 30 uses 384-bit arithmetic; 1536 and 2048 Gauss
+points differ by less than $`6\times10^{-112}`$. Its nonlinear precision-growth
+check requires absolute error in Y below $`10^{-40}`$ at 160 bits and runs as
+a separate long test. Free-Dirac and closed-transform checks demonstrate
+accuracy growth through 333 bits; arithmetic and discretization remain separate. Reference generators are
+[`reference_sine_gordon_vacuum.py`](../scripts/reference_sine_gordon_vacuum.py)
+and [`reference_sine_gordon_d3.cpp`](../scripts/reference_sine_gordon_d3.cpp).
+Build the latter with target `bethe_sine_gordon_d3_reference` and run
+`./tests/bethe_sine_gordon_d3_reference 2048 384 30` from the build directory.
+
+Owning mixed-precision Async sweeps compare every result and diagnostic against
+direct solves under deferred and one/two-worker scheduling, including failures.
+The single-scale vacuum CLI stays serial. Frontend regressions check complete
+JSON/CSV/TSV precision, parsing, streaming, budget forwarding, missing failed
+observables and protection of existing files on invalid input.
 
 This first target is the untwisted zero-topological-charge vacuum. Excited
 states require additional source terms and branch/quantization bookkeeping;
