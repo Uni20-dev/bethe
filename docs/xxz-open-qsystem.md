@@ -136,7 +136,8 @@ Selected failures preserve their coefficients and available energy estimate;
 missing/pole energies are optional, not plausible-looking zeroes.
 
 The library also accepts explicit MPFR precision, with MPC complex root
-recovery and the configured MPLAPACK MPFR provider for Newton corrections:
+recovery and Uni20's normal LU dispatch for Newton corrections. CPU MPFR
+works without MPLAPACK; an enabled provider is preferred by the dispatch:
 
 ```cpp
 using R = uni20::mpreal;
@@ -153,8 +154,8 @@ multistart search keeps its deterministic seed sequence and attempt budget;
 more arithmetic bits do not establish completeness or replace root
 admissibility checks. Independent solves can use owning Async query grids,
 while Newton iteration, continuation and the multistart search stay sequential.
-This library support does not yet enable MPFR in the biquadratic frontend's
-other complex-state modes.
+The biquadratic frontend exposes this precision through `--precision bits-N`
+and `--precision digits-N`, including its other supported complex-state modes.
 
 The regression suite checks the analytic Jacobian, the complex Wronskian
 identity, the original Bethe equations, branch continuation, native-precision

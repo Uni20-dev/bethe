@@ -51,7 +51,6 @@ with tempfile.TemporaryDirectory() as directory:
         for mode in ("bits-128", "digits-100"):
             result = run([*base, "--precision", mode, "--json", str(protected), "--force"], 1)
             assert "UNI20_ENABLE_MPREAL=ON" in result.stderr
-            assert "UNI20_BACKEND_MPLAPACK=ON" in result.stderr
             assert protected.read_text() == "sentinel"
     else:
         with localcontext() as ctx:
