@@ -32,9 +32,8 @@ auto program_info()
       "quantity and c fixed. Pressure, energy and entropy are per length; grand potential/length is -pressure.",
       "Tolerance defaults to 16384 epsilon; density tolerance to 65536 epsilon. Nonlinear, mesh, cutoff and "
       "density inversion budgets are independent. Weak coupling or low temperature can exceed the mesh budget.",
-      "Failed observables are omitted (JSON null, CSV/TSV empty), with exit status 2. fp128 and bits-N/digits-N "
-      "require "
-      "their configured MPLAPACK providers. "
+      "Failed observables are omitted (JSON null, CSV/TSV empty), with exit status 2. bits-N/digits-N require "
+      "Uni20 MPFR scalar support; MPLAPACK matrix kernels are optional. "
       "Exports stream during computation; --no-retain discards delivered rows. See docs/lieb-liniger-thermal.md. "
       "Use --references for literature."};
   return info;

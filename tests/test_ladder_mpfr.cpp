@@ -79,7 +79,6 @@ TEST(LadderMpfr, TypedProductBranchesZeroBudgetsAndValidation)
   EXPECT_THROW((void)model::ground_state<R>(7, R(6, p), options), std::invalid_argument);
 }
 
-#if UNI20_HAS_MPLAPACK_MPREAL
 TEST(LadderMpfr, DescendantAlgebraicEnergyGainsAccuracyBeyondBinary128)
 {
   auto const reference = Precision::bits(768);
@@ -204,5 +203,4 @@ TEST(LadderMpfr, AsyncPreparedGridsOwnMixedPrecisionContexts)
   }
   EXPECT_EQ(mpfr_get_default_prec(), ambient);
 }
-#endif
 } // namespace

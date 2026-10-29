@@ -8,8 +8,8 @@ import subprocess
 import sys
 import tempfile
 
-program, mpfr, mplapack = sys.argv[1:]
-enabled = all(v.upper() in ('ON', 'TRUE', '1') for v in (mpfr, mplapack))
+program, mpfr = sys.argv[1:]
+enabled = mpfr.upper() in ("ON", "TRUE", "1")
 env = dict(os.environ, OPENBLAS_NUM_THREADS='1', OMP_NUM_THREADS='1', UNI20_COLOR='never')
 pi = Decimal('3.141592653589793238462643383279502884197169399375105820974944592307816406286208998628034825342117067982148086513282306647')
 

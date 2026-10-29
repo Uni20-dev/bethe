@@ -186,13 +186,11 @@ or `UNI20_ENABLE_MPC` options.
 ## Enable arbitrary precision
 
 Arbitrary precision is optional. Uni20 enables its real and complex scalars
-together, requiring GMP, MPFR >= 4.2, and MPC development packages. All modes of
-`bethe-xxx-pbc`, `bethe-xxx-obc`, `bethe-xxz-qg-obc`, `bethe-richardson`,
-`bethe-central-spin`, `bethe-su3-dispersion`, `bethe-tb-dispersion`,
-`bethe-sine-gordon-dispersion`, `bethe-haldane-shastry-pbc` and
-`bethe-sutherland-pbc` work without MPLAPACK. Uni20 supplies CPU QR for
-Richardson and central spin; SU(3)/TB/sine-Gordon dispersions,
-Haldane–Shastry, Sutherland, Potts and quantum-group XXZ use scalar functions only.
+together, requiring GMP, MPFR >= 4.2, and MPC development packages. Every
+currently supported MPFR frontend works with `UNI20_ENABLE_MPREAL=ON` and
+`UNI20_BACKEND_MPLAPACK=OFF`. Uni20 supplies CPU real/complex LU and QR;
+normal dispatch prefers an enabled LAPACK provider. Model-specific arithmetic
+support is listed in the [capability inventory](app-capabilities.md).
 In a separate build directory:
 
 ```sh
@@ -208,15 +206,9 @@ cmake --build . --parallel
 ./bethe-info
 ```
 
-For finite-ring structure factors, finite-size or zero-temperature
-thermodynamic Lieb–Liniger, SU(3), finite XXZ/Hubbard/TB, Gaudin–Yang/Bose–Fermi,
-SU(n) fermions and q-boson, additionally enable MPLAPACK matrix kernels. Unlike QR, Uni20's
-arbitrary-precision square LU solves currently require this provider:
+The same build also supports Newton solves and complex form-factor determinants:
 
 ```sh
-cmake /path/to/bethe -G Ninja -DCMAKE_BUILD_TYPE=Release \
-  -DUNI20_ENABLE_MPREAL=ON -DUNI20_BACKEND_MPLAPACK=ON
-cmake --build . --parallel
 ./bethe-xxx-structure-factor 32 --precision bits-256 --threads 4
 ./bethe-lieb-liniger-obc 2 --length 1 --c 1e-50 --precision digits-100
 ./bethe-hubbard-obc 5 --u -4 --precision bits-256
@@ -227,6 +219,7 @@ cmake --build . --parallel
 ./bethe-info
 ```
 
+For optional MPLAPACK matrix kernels, add `-DUNI20_BACKEND_MPLAPACK=ON`.
 Uni20 can fetch MPLAPACK 3.0+ or use an installed/build-tree package with
 `-DUNI20_USE_SYSTEM_MPLAPACK=ON -Dmplapack_DIR=/path/to/mplapack`.
 That package must include its **MPFR component**; a binary128-only build is
@@ -246,12 +239,11 @@ sine-Gordon particle lines and pair thresholds, and Haldane–Shastry/Sutherland
 finite spectra. Each model's physical domain and state-family restrictions
 still apply; see the [capability inventory](app-capabilities.md).
 
-The XXX real-root, quantum-group XXZ and Gaudin solvers, SU(3)/TB/sine-Gordon
-dispersions and Haldane–Shastry/Sutherland need just `UNI20_ENABLE_MPREAL=ON`.
-Lieb–Liniger, SU(3), finite XXZ/Hubbard/TB, Gaudin–Yang/Bose–Fermi, SU(n) fermions, q-boson and form
-factors additionally need `UNI20_BACKEND_MPLAPACK=ON`.
-Enabling that provider also lets Uni20 dispatch the Lieb–Liniger LU and Gaudin
-QR operations to MPLAPACK.
+CPU and MPLAPACK paths use the same explicit-precision interfaces. Enabling
+MPLAPACK lets Uni20 dispatch supported LU and QR operations to that provider;
+Bethe does not select a backend manually. This CPU coverage does not imply
+that every Uni20 operation has an MPFR fallback: condition estimation, SVD
+and eigensystems retain their provider requirements.
 No ambient precision default determines the calculation's
 working precision. At the provider boundary, Uni20 temporarily sets and restores
 MPLAPACK's thread-local defaults around each synchronous call.

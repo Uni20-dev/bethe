@@ -86,7 +86,6 @@ TEST(SUFermionsMpfr, ExplicitOptionsAndNestedCentralZeros)
     EXPECT_EQ(uni20::precision_of(value), p);
 }
 
-#if UNI20_HAS_MPLAPACK_MPREAL
 TEST(SUFermionsMpfr, TwoBodyJumpConditionGainsAccuracyBeyondBinary128)
 {
   auto const reference_precision = Precision::bits(768);
@@ -237,4 +236,3 @@ TEST(SUFermionsMpfr, OwningMixedPrecisionGridsPreserveCompleteStates)
   }
   EXPECT_EQ(mpfr_get_default_prec(), ambient);
 }
-#endif

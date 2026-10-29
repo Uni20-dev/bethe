@@ -8,8 +8,8 @@ import subprocess
 import sys
 import tempfile
 
-pbc, obc, mpfr, mplapack = sys.argv[1:]
-enabled = all(v.upper() in ("ON", "TRUE", "1") for v in (mpfr, mplapack))
+pbc, obc, mpfr = sys.argv[1:]
+enabled = mpfr.upper() in ("ON", "TRUE", "1")
 env = dict(os.environ, OPENBLAS_NUM_THREADS="1", OMP_NUM_THREADS="1", UNI20_COLOR="never")
 
 

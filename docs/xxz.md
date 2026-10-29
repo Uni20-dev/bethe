@@ -57,7 +57,7 @@ bethe-xxz-pbc 64 --delta -0.9 --roots
 bethe-xxz-pbc 15 --delta 10 --sectors --precision long-double
 # In a binary128-enabled build:
 bethe-xxz-pbc 64 --delta 0.999999999999999999999999 --precision fp128
-# With MPFR scalars and MPLAPACK MPFR enabled:
+# With MPFR scalars enabled:
 bethe-xxz-pbc 16 --delta -0.5 --precision digits-100
 ```
 
@@ -76,13 +76,13 @@ Those scans have their own default sector, distinct from the ground-state defaul
 ## Arbitrary precision and composition
 
 Both finite XXZ frontends accept `--precision bits-N` and `digits-N` in a
-[build with MPFR scalars and MPLAPACK MPFR](building.md#enable-arbitrary-precision).
+[build with MPFR scalars](building.md#enable-arbitrary-precision).
 This covers their existing ground states, sector minima, explicit real-root
 states and excitation scans. Delta, tolerances, roots, energies, momentum and
 diagnostics retain the requested precision, including zero-root states and
 failed iterates. The negative-anisotropy Newton solver and massive open-chain
-boundary-root solver use normal Uni20 LU dispatch. The frontend build requires
-that provider even when a particular nonnegative periodic solve needs no LU.
+boundary-root solver use normal Uni20 LU dispatch, including CPU MPFR LU
+when MPLAPACK is disabled.
 
 The C++ interface requires finite precision in both the physical input and the
 controls. It rejects exact-only, unset or differently rounded input values;

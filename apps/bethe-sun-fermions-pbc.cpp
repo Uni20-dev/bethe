@@ -31,7 +31,7 @@ auto program_info()
                 "Other periodic shell branches, attraction, excitations, open ends and Bose-Fermi mixtures",
                 "are not implemented. See docs/su-fermions.md for conventions and diagnostics.",
                 "Use --references for literature and applicability; see CITATIONS.md."};
-  info.notes.push_back("bits-N/digits-N require the configured MPLAPACK MPFR provider.");
+  info.notes.push_back("bits-N/digits-N require Uni20 MPFR scalar support.");
   return info;
 }
 void add_options(CLI::App& app, Arguments& args)

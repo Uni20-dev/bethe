@@ -29,7 +29,8 @@ auto program_info()
                 "This is not the generic spin-1 Heisenberg chain or the SU(3) ULS point.",
                 "See docs/takhtajan-babujian.md for normalization and numerical conventions.",
                 "Use --references for literature and applicability; see CITATIONS.md."};
-  info.notes.push_back("Complex roots have separate real/imaginary columns. bits-N/digits-N require MPLAPACK MPFR.");
+  info.notes.push_back(
+      "Complex roots have separate real/imaginary columns. bits-N/digits-N require Uni20 MPFR scalar support.");
   return info;
 }
 void add_options(CLI::App& app, Arguments& args)

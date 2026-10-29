@@ -1,4 +1,4 @@
-"""Runtime precision, non-dyadic scans, provider gating and thermal exports."""
+"""Runtime precision, non-dyadic scans, scalar gating and thermal exports."""
 import csv
 from decimal import Decimal, localcontext
 import json
@@ -8,8 +8,8 @@ import subprocess
 import sys
 import tempfile
 
-program, mpfr, mplapack = sys.argv[1:]
-enabled = all(flag.upper() in ("ON", "TRUE", "1") for flag in (mpfr, mplapack))
+program, mpfr = sys.argv[1:]
+enabled = mpfr.upper() in ("ON", "TRUE", "1")
 env = dict(os.environ, OPENBLAS_NUM_THREADS="1", OMP_NUM_THREADS="1", UNI20_COLOR="never")
 base = ["--c", "4", "--temperature", "1", "--mu", "-1"]
 

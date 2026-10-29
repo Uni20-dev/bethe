@@ -7,10 +7,9 @@ import subprocess
 import sys
 import tempfile
 
-xxx, pbc, obc, mpfr, mplapack = sys.argv[1:]
+xxx, pbc, obc, mpfr = sys.argv[1:]
 enabled = mpfr.upper() in ("ON", "TRUE", "1")
-enabled_lu = enabled and mplapack.upper() in ("ON", "TRUE", "1")
-supported = {xxx: enabled, pbc: enabled_lu, obc: enabled_lu}
+supported = {xxx: enabled, pbc: enabled, obc: enabled}
 env = dict(os.environ, OPENBLAS_NUM_THREADS="1", OMP_NUM_THREADS="1", UNI20_COLOR="never")
 pi = Decimal("3.141592653589793238462643383279502884197169399375105820974944592307816406286208998628034825342117067982148086513282306647")
 base = {xxx: ["4"], pbc: ["2", "--length", "1", "--c", str(pi)],
@@ -75,7 +74,7 @@ if enabled:
             ctx.prec = 120
             tol = Decimal(error)
             assert abs(energy(chain)+Decimal("0.75")+Decimal(3).sqrt()/2) < tol
-            if enabled_lu:
+            if enabled:
                 ring = document(pbc, [*base[pbc], *opts])
                 wall = document(obc, ["1", "--length", "3", "--c", "1", *opts])
                 assert abs(energy(ring)-pi*pi/2) < tol
@@ -107,7 +106,7 @@ if enabled:
             check_precision(failed, precision, bits)
             assert not rows(failed["states"])[0]["converged"]
 
-if enabled_lu:
+if enabled:
     with localcontext() as ctx:
         ctx.prec = 120
         # Distinct box roots coalesce in fp64, and their O(c) energy shift
@@ -154,8 +153,6 @@ with tempfile.TemporaryDirectory() as directory:
             invalid += [["--precision", value] for value in ("bits-128", "digits-100")]
         for args in invalid:
             result = run(program, [*base[program], *args, "--json", str(path), "--force"], 1)
-            if enabled and not supported[program] and args in (["--precision", "bits-128"], ["--precision", "digits-100"]):
-                assert "arbitrary-precision linear solves require" in result.stderr
             assert path.read_text() == "sentinel"
 
 print("Open XXX and finite Lieb-Liniger precision contracts passed")

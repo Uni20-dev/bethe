@@ -4,9 +4,7 @@
 #include <bethe/heisenberg_excitations.hpp>
 #include <gtest/gtest.h>
 #include <uni20/async/tbb_scheduler.hpp>
-#if UNI20_HAS_MPREAL && UNI20_HAS_MPLAPACK_MPREAL
 #include <bethe/xxx_structure_factor.hpp>
-#endif
 
 namespace
 {
@@ -154,7 +152,6 @@ TEST(XxxMpfr, RootOnlyConcurrentPrecisionsAndThreadedExcitations)
   }
 }
 
-#if UNI20_HAS_MPREAL && UNI20_HAS_MPLAPACK_MPREAL
 TEST(XxxMpfr, AnalyticSpectralWeightsAndEmptyMomenta)
 {
   for (int bits : {128, 256})
@@ -262,4 +259,3 @@ TEST(XxxMpfr, ConcurrentPrecisionsAndThreadedScanAreDeterministic)
     }
   }
 }
-#endif

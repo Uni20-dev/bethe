@@ -4,7 +4,7 @@
 Lieb's type-I and type-II excitation curves at fixed density. The underlying
 C++ API supports fp64, native long double, enabled fp128, and explicit-precision
 `uni20::mpreal` throughout. Arbitrary precision requires Uni20's MPFR scalar
-family and MPLAPACK LU support; see [building](building.md#enable-arbitrary-precision).
+family and CPU or MPLAPACK LU support; see [building](building.md#enable-arbitrary-precision).
 
 For plots and a worked density-scaling comparison, start with the
 [particle and hole tutorial](tutorials/lieb-liniger.md).
@@ -203,7 +203,7 @@ Use `evaluate_observable_grid_async` for a bounded parameter sweep and wait on
 its final result before using the collected rows. The
 [ground-state sweep example](../examples/async_ground_states.cpp) does this with
 four couplings and at most two active solves. It uses 160-bit `mpreal` when the
-MPFR LU provider is configured, and binary64 otherwise. Numerical failures stay
+MPFR scalar family is configured, and binary64 otherwise. Numerical failures stay
 in the returned `Background` objects; readiness alone does not imply convergence.
 
 For many momenta at one coupling, prepare a `Solver` once through

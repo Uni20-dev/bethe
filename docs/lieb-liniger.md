@@ -9,7 +9,7 @@ ring circumference $`\ell`$, a particle number $`N`$, and a repulsive coupling $
 There is no lattice spacing or site count. The executable
 `bethe-lieb-liniger-pbc` supports the ground state, explicit Bethe labels, and
 finite-window excitation scans, using fp64, long double, optional fp128, or
-arbitrary precision through MPLAPACK MPFR.
+arbitrary precision through MPFR.
 
 ## Start with a calculation
 
@@ -130,7 +130,7 @@ precision also applies to roots, energy sums, gap subtraction, and output.
 With [arbitrary precision enabled](building.md#enable-arbitrary-precision), all
 finite-size PBC/OBC modes accept `bits-N` and `digits-N`, including threaded
 excitation scans. Uni20 dispatches the Newton solves; its arbitrary-precision
-LU currently requires MPLAPACK MPFR (native solvers retain their CPU fallback).
+LU uses MPLAPACK when enabled, with CPU LU available otherwise.
 This does not yet extend
 to the separate thermal frontend. Zero-temperature bulk energies and dispersions
 have their own [explicit-precision support](lieb-liniger-thermo.md#c-api).

@@ -288,8 +288,7 @@ checked. See [the centralized bibliography](../CITATIONS.md#wang-1999).
 
 ## Explicit precision
 
-`bethe-ladder-pbc` accepts `--precision bits-N` or `digits-N` with the configured
-MPLAPACK MPFR provider, in addition to its native scalar formats:
+`bethe-ladder-pbc` accepts `--precision bits-N` or `digits-N` with Uni20 MPFR scalars, in addition to its native scalar formats:
 
 ```sh
 bethe-ladder-pbc 6 --rung 0 --singlets 4 --precision bits-256 --roots
@@ -308,8 +307,8 @@ More arithmetic bits do not enlarge the scanned branch family or guarantee
 Newton convergence. Branch and iteration budgets retain the same whole-scan
 meaning. Partial scans keep candidate states and diagnostics; an analytic
 product ground state can still be certified after an incomplete preparation.
-Product paths and zero-branch scans work without an MPFR LU provider in the
-library; the general frontend requires that provider.
+Both library and frontend use normal Uni20 dispatch, including CPU LU
+when MPLAPACK is disabled.
 
 Independent 768-bit algebraic references check accuracy growth through 256 bits,
 including the six-rung descendant minimum $`-1/2-\sqrt{5}`$ at zero rung

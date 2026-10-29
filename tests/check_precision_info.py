@@ -6,7 +6,7 @@ import subprocess
 import sys
 import tempfile
 
-info, native, structure_factor, fp128, arbitrary, mpfr, mplapack_fp128 = sys.argv[1:]
+info, native, structure_factor, fp128, mplapack_mpfr, mpfr, mplapack_fp128 = sys.argv[1:]
 enabled = lambda value: value.upper() in ("ON", "TRUE", "1")
 env = dict(os.environ, OPENBLAS_NUM_THREADS="1", OMP_NUM_THREADS="1", UNI20_COLOR="never")
 
@@ -40,14 +40,14 @@ metadata = table["metadata"]
 assert (metadata["Uni20 float128 configured"] == "true") == enabled(fp128)
 assert (metadata["MPLAPACK binary128 configured"] == "true") == enabled(mplapack_fp128)
 assert (metadata["Uni20 arbitrary-precision real/complex configured"] == "true") == enabled(mpfr)
-assert (metadata["MPLAPACK MPFR configured"] == "true") == enabled(arbitrary)
+assert (metadata["MPLAPACK MPFR configured"] == "true") == enabled(mplapack_mpfr)
 assert ("bethe-xxx-pbc" in metadata["Arbitrary-precision frontends"]) == enabled(mpfr)
-assert ("bethe-xxx-structure-factor" in metadata["Arbitrary-precision frontends"]) == enabled(arbitrary)
+assert ("bethe-xxx-structure-factor" in metadata["Arbitrary-precision frontends"]) == enabled(mpfr)
 for name in ("bethe-richardson", "bethe-central-spin", "bethe-xxx-obc", "bethe-su3-dispersion", "bethe-haldane-shastry-pbc", "bethe-sutherland-pbc", "bethe-tb-dispersion", "bethe-sine-gordon-dispersion", "bethe-sine-gordon-bethe-yang", "bethe-lee-yang-vacuum", "bethe-lee-yang-excited", "bethe-potts-pbc", "bethe-xxz-qg-obc"):
     assert (name in metadata["Arbitrary-precision frontends"]) == enabled(mpfr)
 for name in ("bethe-lieb-liniger-pbc", "bethe-lieb-liniger-obc", "bethe-lieb-liniger-dispersion", "bethe-lieb-liniger-thermal", "bethe-ladder-pbc", "bethe-tj-pbc",
              "bethe-su3-pbc", "bethe-xxz-pbc", "bethe-xxz-obc", "bethe-hubbard-pbc", "bethe-hubbard-obc", "bethe-gaudin-yang-pbc", "bethe-bose-fermi-pbc", "bethe-q-boson-pbc", "bethe-tb-pbc", "bethe-sun-fermions-pbc"):
-    assert (name in metadata["Arbitrary-precision frontends"]) == enabled(arbitrary)
+    assert (name in metadata["Arbitrary-precision frontends"]) == enabled(mpfr)
 if enabled(fp128):
     assert rows["fp128"]["significand_bits"] == 113
 long_double = rows["long-double"]
@@ -78,12 +78,11 @@ with tempfile.TemporaryDirectory() as directory:
         assert path.read_text() == "sentinel"
     if not enabled(fp128):
         assert "fp128 is unavailable" in run(native, ["4", "--precision", "fp128"], 1).stderr
-    if not enabled(arbitrary):
+    if not enabled(mpfr):
         for value in ("bits-512", "digits-100"):
             result = run(structure_factor, ["4", "--precision", value, "--json", str(path), "--force"], 1)
             assert "arbitrary-precision form factors require" in result.stderr
             assert "UNI20_ENABLE_MPREAL=ON" in result.stderr
-            assert "UNI20_BACKEND_MPLAPACK=ON" in result.stderr
             assert path.read_text() == "sentinel"
 
 print("Precision selection and build information contracts passed")

@@ -39,7 +39,7 @@ auto program_info()
       "The default residual tolerance is 32 epsilon in the selected precision. Failed energies/roots are omitted "
       "(JSON null, CSV/TSV empty), with exit status 2.",
       "See docs/q-boson.md for equations and limits. Use --references for literature. fp128 requires MPLAPACK; "
-      "bits-N/digits-N require its MPFR LU component."};
+      "bits-N/digits-N require Uni20 MPFR scalar support."};
   return info;
 }
 void add_options(CLI::App& app, Arguments& a)
