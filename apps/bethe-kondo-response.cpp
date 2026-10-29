@@ -13,8 +13,8 @@ namespace model = bethe::kondo;
 struct Arguments
 {
     std::optional<std::string> field, end, scale, tolerance;
-    std::optional<std::size_t> terms, lobes;
-    std::size_t evaluations = 200000, levels = 12;
+    std::optional<std::size_t> terms, lobes, evaluations;
+    std::size_t levels = 12;
     std::size_t points = 17;
     int threads = 1;
     std::string precision = "fp64";
@@ -58,7 +58,8 @@ void add_options(CLI::App& app, Arguments& a)
   cli::count_option(app, "--max-lobes", a.lobes,
                     "High-field Fourier lobe budget, <=4096; default 256 native, 1024 MPFR")
       ->capture_default_str();
-  cli::count_option(app, "--max-evaluations", a.evaluations, "Total high-field quadrature evaluations")
+  cli::count_option(app, "--max-evaluations", a.evaluations,
+                    "Total high-field evaluations; default 200000 native, 2000000 MPFR")
       ->capture_default_str();
   cli::count_option(app, "--max-quadrature-levels", a.levels, "Quadrature refinement levels per lobe")
       ->capture_default_str();
@@ -103,7 +104,7 @@ template <uni20::Real Real> int run(Arguments const& a, model::Options<Real> con
   if (a.tolerance) controls.tolerance = cli::parse_solver_real<Real>(*a.tolerance, controls);
   if (a.terms) controls.max_series_terms = *a.terms;
   if (a.lobes) controls.max_lobes = *a.lobes;
-  controls.max_evaluations = a.evaluations;
+  if (a.evaluations) controls.max_evaluations = *a.evaluations;
   controls.max_quadrature_levels = a.levels;
   // Validate before opening files, including --force targets, without a solve.
   model::detail::validate(field, scale, controls);

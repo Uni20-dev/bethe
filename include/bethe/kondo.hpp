@@ -30,7 +30,7 @@ template <> struct Options<uni20::mpreal>
     explicit Options(uni20::Precision p) : tolerance(default_tolerance(p)), precision_(p) {}
     uni20::mpreal tolerance;
     std::size_t max_series_terms = 1024, max_lobes = 1024;
-    std::size_t max_evaluations = 200000, max_quadrature_levels = 12;
+    std::size_t max_evaluations = 2000000, max_quadrature_levels = 12;
     uni20::Precision precision() const { return precision_; }
 
   private:

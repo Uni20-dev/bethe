@@ -31,7 +31,7 @@ auto fields(model::State<R> const& s)
                   s.status);
 }
 
-TEST(KondoMpfr, IndependentSeriesAndIntegralGainAccuracy)
+void reference_accuracy(bool high, std::initializer_list<int> precisions)
 {
   // Independent mpmath nsum and quadosc at 105/130 decimal digits, with
   // direct Gamma rather than production log-Gamma/lobe tanh-sinh quadrature.
@@ -55,8 +55,9 @@ TEST(KondoMpfr, IndependentSeriesAndIntegralGainAccuracy)
   auto ambient = mpfr_get_default_prec();
   for (auto const& ref : refs)
   {
+    if ((std::string_view(ref[0]) == "2") != high) continue;
     R previous(1, oracle);
-    for (int bits : {80, 160, 256, 333})
+    for (int bits : precisions)
     {
       SCOPED_TRACE(ref[0]);
       SCOPED_TRACE(bits);
@@ -78,6 +79,25 @@ TEST(KondoMpfr, IndependentSeriesAndIntegralGainAccuracy)
     }
   }
   EXPECT_EQ(mpfr_get_default_prec(), ambient);
+}
+
+TEST(KondoMpfr, IndependentSeriesGainsAccuracy) { reference_accuracy(false, {80, 160, 256, 333}); }
+TEST(KondoMpfr, IndependentIntegralGainsAccuracy) { reference_accuracy(true, {80, 160}); }
+TEST(KondoMpfr, HighPrecisionIntegralGainsAccuracy) { reference_accuracy(true, {256, 333}); }
+
+TEST(KondoMpfr, IntegralAndSeriesMeetAtCrossover)
+{
+  auto p = Precision::bits(160);
+  R zero(0, p), one(1, p);
+  model::Options<R> options(p);
+  model::State<R> series_work(p), integral_work(p);
+  auto series = model::detail::low(one, options, series_work);
+  ASSERT_TRUE(series);
+  auto integral = model::detail::high(zero, *series, options, integral_work);
+  ASSERT_TRUE(integral) << int(integral_work.status) << " evaluations " << integral_work.evaluations;
+  EXPECT_LE(math::abs(integral->value[0] - series->value[0]), integral->error[0] + series->error[0]);
+  for (auto const& x : integral->value)
+    EXPECT_EQ(uni20::precision_of(x), p);
 }
 
 TEST(KondoMpfr, ScaledGammaHasNoFixedCoefficientAccuracyCeiling)
@@ -149,7 +169,7 @@ TEST(KondoMpfr, InvalidInputsAndBudgetFailuresStayExplicit)
 {
   auto p = Precision::bits(160);
   model::Options<R> options(p);
-  EXPECT_THROW(model::Options<R>(Precision::exact()), std::invalid_argument);
+  EXPECT_THROW((model::Options<R>(Precision::exact())), std::invalid_argument);
   EXPECT_THROW(model::ground_response(R(1), R(1, p), options), std::invalid_argument);
   EXPECT_THROW(model::ground_response(R(1, Precision::bits(80)), R(1, p), options), std::invalid_argument);
   EXPECT_THROW(model::ground_response(R(1, p), R(0, p), options), std::invalid_argument);

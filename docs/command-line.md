@@ -516,3 +516,7 @@ from the [finite-volume vacuum](sine-gordon.md) calculation.
 [exact two-hole NLIE](sine-gordon-excited.md) for P>=1, I=0.5 or 1.5. Its
 `gap` table subtracts a separately converged vacuum; use
 `--csv-table gap=gap.csv` to export that table directly.
+
+`bethe-kondo-response` also accepts `bits-N` and `digits-N` with Uni20 MPFR
+scalars enabled. Its series and quadrature budgets remain separate from the
+arithmetic precision; see [Kondo controls](kondo.md#library-use-and-numerical-contract).
