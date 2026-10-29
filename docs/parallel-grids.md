@@ -661,9 +661,10 @@ including roots and labels, under deferred and one/four-worker scheduling.
 
 The serial vacuum solve, ordered collection and unequal momentum costs limit
 scaling. These are shared-desktop measurements without CPU affinity, not an
-isolated scaling experiment. The change neither enlarges the selected physical
-state family nor adds arbitrary precision. Explicit MPFR requires a separate
-audit of the auxiliary XXZ solver, model constants, twists and diagnostics.
+isolated scaling experiment. This scheduling checkpoint preserved the selected
+physical state family and used fixed-precision arithmetic. Explicit MPFR support
+was added separately; see the [current Potts precision controls](potts.md).
+These timing results do not measure MPFR performance.
 
 ## ASEP shared seeds
 
