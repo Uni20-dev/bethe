@@ -9,11 +9,12 @@ import subprocess
 import sys
 import tempfile
 
-program, available = sys.argv[1:]
+program, available = sys.argv[1:3]
+long_running = sys.argv[3:] == ["--long-running"]
 env = dict(os.environ, OPENBLAS_NUM_THREADS='1', OMP_NUM_THREADS='1', UNI20_COLOR='never')
 
 def run(args, code=0):
-    result = subprocess.run([program, *args], env=env, text=True, capture_output=True, timeout=240)
+    result = subprocess.run([program, *args], env=env, text=True, capture_output=True, timeout=1200 if long_running else 240)
     assert result.returncode == code, (args, result.returncode, result.stdout, result.stderr)
     return result
 
@@ -29,6 +30,15 @@ def rows(t):
 base = ['--p', '2', '--length', '10']
 if available.upper() not in ('ON', 'TRUE', '1'):
     assert 'UNI20_ENABLE_MPREAL=ON' in run([*base, '--precision', 'bits-128'], 1).stderr
+    raise SystemExit(0)
+
+if long_running:
+    with localcontext() as context:
+        context.prec = 130
+        t = table([*base, '--precision', 'bits-333', '--tolerance', '1e-80', '--max-iterations', '512'])
+        assert rows(t)[0]['status'] == 'converged'
+        assert abs(Decimal(t['metadata']['Counting tolerance']) / Decimal('1e-80') - 1) < Decimal('1e-95')
+    print('Bethe-Yang 333-bit interacting refinement passed')
     raise SystemExit(0)
 
 with localcontext() as context:
@@ -74,8 +84,8 @@ with localcontext() as context:
         b = table([*scan, flag, '0', '--threads', '2'], 2)
         assert a['rows'] == b['rows']
         assert all(r['energy'] is None and r['rapidity'] is None and r['status'] == status for r in rows(a))
-    # More bits do not enlarge the bisection budget; request enough iterations.
-    t = table([*base, '--precision', 'bits-333', '--tolerance', '1e-80', '--max-iterations', '512'])
+    # Parsing is independent of expensive interacting refinement (tested separately).
+    t = table(['--p', '1', '--length', '10', '--precision', 'bits-333', '--tolerance', '1e-80'])
     assert rows(t)[0]['status'] == 'converged'
     assert abs(Decimal(t['metadata']['Counting tolerance']) / Decimal('1e-80') - 1) < Decimal('1e-95')
     free = table(['--p', '1', '--length', '10', '--precision', 'bits-160', '--levels', '3', '--threads', '2'])
