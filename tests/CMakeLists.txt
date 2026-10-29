@@ -90,9 +90,18 @@ if(BETHE_HAS_MPREAL)
   add_executable(bethe_open_qsystem_mpfr_tests test_open_qsystem_mpfr.cpp)
   target_link_libraries(bethe_open_qsystem_mpfr_tests PRIVATE bethe::bethe TBB::tbb)
   bethe_discover_tests(bethe_open_qsystem_mpfr_tests)
+
+  add_executable(bethe_xxx_thermodynamic_mpfr_tests test_xxx_thermodynamic_mpfr.cpp)
+  target_link_libraries(bethe_xxx_thermodynamic_mpfr_tests PRIVATE bethe::bethe TBB::tbb)
+  bethe_discover_tests(bethe_xxx_thermodynamic_mpfr_tests)
+
   add_executable(bethe_open_two_string_mpfr_tests test_open_two_string_mpfr.cpp)
   target_link_libraries(bethe_open_two_string_mpfr_tests PRIVATE bethe::bethe TBB::tbb)
   bethe_discover_tests(bethe_open_two_string_mpfr_tests)
+
+  add_executable(bethe_open_clusters_mpfr_tests test_open_clusters_mpfr.cpp)
+  target_link_libraries(bethe_open_clusters_mpfr_tests PRIVATE bethe::bethe TBB::tbb)
+  bethe_discover_tests(bethe_open_clusters_mpfr_tests)
 endif()
 
 if(BETHE_HAS_MPREAL)
@@ -502,6 +511,9 @@ if(BETHE_BUILD_APPS)
     add_test(NAME Arguments.bethe-xxx-structure-factor-thermo.cli
       COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_shared_arguments.py"
         "$<TARGET_FILE:bethe-xxx-structure-factor-thermo>")
+    add_test(NAME XXXThermodynamicDSF.precision
+      COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_xxx_thermodynamic_precision.py"
+        "$<TARGET_FILE:bethe-xxx-structure-factor-thermo>" "${BETHE_HAS_MPREAL}")
     add_test(NAME XXXThermodynamicDSF.cli
       COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_xxx_thermodynamic_structure_factor.py"
         "$<TARGET_FILE:bethe-xxx-structure-factor-thermo>" "${BETHE_HAS_FLOAT128}")

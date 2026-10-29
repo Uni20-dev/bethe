@@ -26,7 +26,8 @@ template <uni20::Real Real> class System {
     // For ordered centers, the other pair contributes an extra 3pi phase
     // to the upper pair's unsquared equation. Its deviation parity flips.
     System(std::size_t n, Real delta, std::array<std::size_t, 2> labels)
-        : sites(n), labels(labels), eta(std::acosh(delta)), pi(Real{4} * std::atan(Real{1})),
+        : sites(n), labels(labels), zero(bethe::detail::precision_zero(delta)), eta(uni20::math::acosh(delta)),
+          pi(Real{4} * uni20::math::atan(uni20::scalar_like(delta, 1))),
           pairs{Pair(n, delta, 2, labels[0], (n - labels[0]) % 2 ? 1 : -1),
                 Pair(n, delta, 2, labels[1], (n - labels[1]) % 2 ? -1 : 1)}
     {}
@@ -36,16 +37,18 @@ template <uni20::Real Real> class System {
     }
     std::vector<Real> coordinate_scales(std::span<Real const> x) const
     {
-      return {std::min(x[0], pi - x[0]), Real{2} * Real(sites), std::min(x[2], pi - x[2]), Real{2} * Real(sites)};
+      return {std::min(x[0], pi - x[0]), uni20::scalar_like(zero, 2) * Real(sites), std::min(x[2], pi - x[2]),
+              uni20::scalar_like(zero, 2) * Real(sites)};
     }
     std::vector<Real> seed() const
     {
-      std::vector<Real> x{pi * Real(labels[0]) / Real(sites - 5), Real{8} + std::abs(std::log(eta)),
-                          pi * Real(labels[1]) / Real(sites - 5), Real{8} + std::abs(std::log(eta))};
+      std::vector<Real> x{pi * Real(labels[0]) / Real(sites - 5), Real{8} + uni20::math::abs(uni20::math::log(eta)),
+                          pi * Real(labels[1]) / Real(sites - 5), Real{8} + uni20::math::abs(uni20::math::log(eta))};
       if (!physical(x)) throw std::overflow_error("two-pair seed is not resolvable at the selected precision");
       auto const f = evaluate(x, nullptr, true);
       for (std::size_t i = 0; i < 2; ++i)
-        x[2 * i + 1] = std::max(x[2 * i + 1] + Real{2} * Real(sites) * f.residual[2 * i + 1], Real{2} - std::log(eta));
+        x[2 * i + 1] = std::max(x[2 * i + 1] + uni20::scalar_like(zero, 2) * Real(sites) * f.residual[2 * i + 1],
+                                Real{2} - uni20::math::log(eta));
       return x;
     }
     struct Evaluation
@@ -55,12 +58,12 @@ template <uni20::Real Real> class System {
     };
     Evaluation evaluate(std::span<Real const> x, std::vector<Real>* jac = nullptr, bool ideal = false) const
     {
-      Real const scale = Real{1} / (Real{2} * Real(sites));
-      if (jac) jac->assign(16, Real{0});
+      Real const scale = uni20::scalar_like(zero, 1) / (uni20::scalar_like(zero, 2) * Real(sites));
+      if (jac) jac->assign(16, zero);
       auto add = [&](std::size_t row, std::size_t col, Real value) {
         if (jac) (*jac)[4 * row + col] += value;
       };
-      Evaluation out{.residual = std::vector<Real>(4)};
+      Evaluation out{.residual = std::vector<Real>(4, zero), .norm = zero, .phase_norm = zero, .modulus_norm = zero};
       for (std::size_t i = 0; i < 2; ++i)
       {
         auto const j = 1 - i, a = 2 * i, l = a + 1, b = 2 * j, k = b + 1;
@@ -72,8 +75,8 @@ template <uni20::Real Real> class System {
           for (std::size_t r = 0; r < 2; ++r)
             for (std::size_t c = 0; c < 2; ++c)
               add(a + r, a + c, block[2 * r + c]);
-        Real const d = ideal ? Real{0} : Real(pairs[i].deviation_sign) * std::exp(-x[l]);
-        Real const e = ideal ? Real{0} : Real(pairs[j].deviation_sign) * std::exp(-x[k]);
+        Real const d = ideal ? zero : Real(pairs[i].deviation_sign) * uni20::math::exp(-x[l]);
+        Real const e = ideal ? zero : Real(pairs[j].deviation_sign) * uni20::math::exp(-x[k]);
         Real const t = (d - e) / Real{2}, s = (d + e) / Real{2};
         for (int sign : {-1, 1})
         {
@@ -82,7 +85,7 @@ template <uni20::Real Real> class System {
           auto D = Pair::phase(beta, s, true);
           // Continuous small-width correction on BOTH sides of beta=0.
           // atan2's complementary phase jumps by 2pi for negative beta.
-          D.value = Real{2} * std::atan(std::tanh(s) / std::tan(beta / Real{2}));
+          D.value = Real{2} * uni20::math::atan(uni20::math::tanh(s) / uni20::math::tan(beta / Real{2}));
           Real const phase = A.value + B.value + C.value + D.value;
           Real const da = A.angle + B.angle + C.angle + D.angle;
           out.residual[a] -= scale * phase;
@@ -106,9 +109,9 @@ template <uni20::Real Real> class System {
       for (std::size_t i = 0; i < 4; ++i)
       {
         if (!uni20::isfinite(out.residual[i])) throw std::overflow_error("nonfinite two-pair residual");
-        out.norm = std::max(out.norm, std::abs(out.residual[i]));
+        out.norm = std::max(out.norm, uni20::math::abs(out.residual[i]));
         auto& norm = i % 2 ? out.modulus_norm : out.phase_norm;
-        norm = std::max(norm, std::abs(out.residual[i]));
+        norm = std::max(norm, uni20::math::abs(out.residual[i]));
       }
       return out;
     }
@@ -118,7 +121,7 @@ template <uni20::Real Real> class System {
     }
     std::size_t sites;
     std::array<std::size_t, 2> labels;
-    Real eta, pi;
+    Real zero, eta, pi;
     std::array<Pair, 2> pairs;
 };
 } // namespace detail
@@ -131,6 +134,7 @@ template <uni20::Real Real = double>
 {
   (void)xxz::detail::checked_sites(sites);
   if (sites < 8) throw std::invalid_argument("two bound pairs require N>=8");
+  (void)xxz::detail::solver_zero(delta, options);
   if (!uni20::isfinite(delta) || delta <= Real{1})
     throw std::invalid_argument("two bound pairs require finite Delta>1");
   if (labels[0] == 0 || labels[0] >= labels[1] || labels[1] > sites - 6)
