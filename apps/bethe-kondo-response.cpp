@@ -2,6 +2,7 @@
 // Copyright (C) 2026 Ian McCulloch
 #include "execution-options.hpp"
 #include "result-output.hpp"
+#include "solver-precision.hpp"
 #include <bethe/kondo.hpp>
 #include <bethe/observable_grid.hpp>
 
@@ -12,7 +13,8 @@ namespace model = bethe::kondo;
 struct Arguments
 {
     std::optional<std::string> field, end, scale, tolerance;
-    std::size_t terms = 256, lobes = 256, evaluations = 200000, levels = 12;
+    std::optional<std::size_t> terms, lobes, evaluations;
+    std::size_t levels = 12;
     std::size_t points = 17;
     int threads = 1;
     std::string precision = "fp64";
@@ -50,13 +52,18 @@ void add_options(CLI::App& app, Arguments& a)
   cli::threads_option(app, a.threads)->description("Scheduler concurrency limit for independent fields (1 = serial)");
   cli::text_option(app, "--scale", a.scale, "Positive universal energy scale T_B")->required()->type_name("REAL");
   cli::text_option(app, "--tolerance", a.tolerance, "Absolute tolerance in M and Delta E/|b|")->type_name("REAL");
-  cli::count_option(app, "--max-series-terms", a.terms, "Low-field series budget, <=4096")->capture_default_str();
-  cli::count_option(app, "--max-lobes", a.lobes, "High-field Fourier lobe budget, <=4096")->capture_default_str();
-  cli::count_option(app, "--max-evaluations", a.evaluations, "Total high-field quadrature evaluations")
+  cli::count_option(app, "--max-series-terms", a.terms,
+                    "Low-field series budget, <=4096; default 256 native, 1024 MPFR")
+      ->capture_default_str();
+  cli::count_option(app, "--max-lobes", a.lobes,
+                    "High-field Fourier lobe budget, <=4096; default 256 native, 1024 MPFR")
+      ->capture_default_str();
+  cli::count_option(app, "--max-evaluations", a.evaluations,
+                    "Total high-field evaluations; default 200000 native, 2000000 MPFR")
       ->capture_default_str();
   cli::count_option(app, "--max-quadrature-levels", a.levels, "Quadrature refinement levels per lobe")
       ->capture_default_str();
-  cli::precision_option(app, a.precision);
+  cli::precision_option(app, a.precision, cli::ArbitraryPrecision::real);
   cli::add_data_output_options(
       app, a.output, {{.name = "response", .description = "Impurity response, one row per field", .primary = true}});
 }
@@ -66,7 +73,7 @@ template <class Real> Real field_at(Real start, Real end, std::size_t i, std::si
 {
   if (i == 0 || start == end) return start;
   if (i == count - 1) return end;
-  Real const fraction = Real(i) / Real(count - 1);
+  Real const fraction = uni20::scalar_like(start, i) / Real(count - 1);
   Real const value = (start < Real{0}) != (end < Real{0}) ? (Real{1} - fraction) * start + fraction * end
                                                           : start + fraction * (end - start);
   return std::clamp(value, std::min(start, end), std::max(start, end));
@@ -88,16 +95,16 @@ char const* name(model::Status status)
   }
   return "unknown";
 }
-template <uni20::Real Real> int run(Arguments const& a, int argc, char** argv)
+template <uni20::Real Real> int run(Arguments const& a, model::Options<Real> controls, int argc, char** argv)
 {
   uni20::run_context context(program_info(), {.invocation = std::vector<std::string>(argv, argv + argc)});
-  Real const field = uni20::parse_real<Real>(*a.field), scale = uni20::parse_real<Real>(*a.scale);
-  Real const end = a.end ? uni20::parse_real<Real>(*a.end) : field;
-  model::Options<Real> controls;
-  if (a.tolerance) controls.tolerance = uni20::parse_real<Real>(*a.tolerance);
-  controls.max_series_terms = a.terms;
-  controls.max_lobes = a.lobes;
-  controls.max_evaluations = a.evaluations;
+  Real const field = cli::parse_solver_real<Real>(*a.field, controls),
+             scale = cli::parse_solver_real<Real>(*a.scale, controls);
+  Real const end = a.end ? cli::parse_solver_real<Real>(*a.end, controls) : field;
+  if (a.tolerance) controls.tolerance = cli::parse_solver_real<Real>(*a.tolerance, controls);
+  if (a.terms) controls.max_series_terms = *a.terms;
+  if (a.lobes) controls.max_lobes = *a.lobes;
+  if (a.evaluations) controls.max_evaluations = *a.evaluations;
   controls.max_quadrature_levels = a.levels;
   // Validate before opening files, including --force targets, without a solve.
   model::detail::validate(field, scale, controls);
@@ -176,6 +183,7 @@ int main(int argc, char** argv)
       [&](auto&) {
         a.output.validate();
         if (a.end && (a.points < 2 || a.points > 1000000)) throw std::invalid_argument("require 2<=points<=1000000");
-        return cli::dispatch_precision(a.precision, [&]<typename Real>() { return run<Real>(a, argc, argv); });
+        return cli::dispatch_options_precision<cli::ArbitraryPrecision::real, model::Options>(
+            a.precision, [&](auto controls) { return run(a, std::move(controls), argc, argv); });
       });
 }

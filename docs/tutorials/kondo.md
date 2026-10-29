@@ -97,7 +97,7 @@ There is no finite-x saturation threshold in this universal curve.
 The crossover x=1 is not a phase boundary. The implementation switches
 between accelerated series and Fourier-integral representations; the latter
 has a conditionally convergent tail at x=1. The
-[numerical guide](../kondo.md#native-numerical-implementation) explains why
+[numerical guide](../kondo.md#numerical-implementation) explains why
 a naive finite-cutoff integral can be misleading there.
 
 ## 4. Check signs, units and numerical errors

@@ -519,6 +519,10 @@ from the [finite-volume vacuum](sine-gordon.md) calculation.
 `gap` table subtracts a separately converged vacuum; use
 `--csv-table gap=gap.csv` to export that table directly.
 
+`bethe-kondo-response` also accepts `bits-N` and `digits-N` with Uni20 MPFR
+scalars enabled. Its series and quadrature budgets remain separate from the
+arithmetic precision; see [Kondo controls](kondo.md#library-use-and-numerical-contract).
+
 Hubbard thermodynamic MPFR uses explicit precision for quadrature and extrema.
 All paths need MPFR scalars; doped dispersion backgrounds use normal Uni20
 CPU/provider LU dispatch. See [Hubbard dispersions](hubbard-dispersion.md#explicit-precision-in-c).
