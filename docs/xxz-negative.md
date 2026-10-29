@@ -1,6 +1,6 @@
 # Negative XXZ anisotropy: ground-root engine and remaining work
 
-[Model catalogue](models.md) | [Periodic XXZ](xxz.md) | [Open XXZ](xxz-open.md)
+[XXZ family](xxz-family.md) · [Supported models](models.md) · [Periodic XXZ](xxz.md) · [Open XXZ](xxz-open.md)
 
 The [free-end ground-state API and frontend](xxz-open.md) now support
 $`-1\lt \Delta \lt 0`$, for either parity of N and every physical Sz sector. The
@@ -8,7 +8,8 @@ $`-1\lt \Delta \lt 0`$, for either parity of N and every physical Sz sector. The
 The `bethe::xxz::detail::negative_ground_roots` engine in
 [xxz_negative.hpp](../include/bethe/xxz_negative.hpp) solves ground-state
 sectors for $`-1\lt \Delta \lt 0`$ on even periodic rings and free-end chains of either
-parity. It works in fp64, long-double, and optional fp128. Negative-Delta odd
+parity. It supports fp64, long-double, optional fp128 and explicit MPFR through
+[the finite XXZ interfaces](xxz.md#arbitrary-precision-and-composition). Negative-Delta odd
 rings are still not public. Their remaining physical-state and lowest-state
 selection work is **deferred until a concrete need arises**; see the
 [restart checklist](#deferred-odd-ring-work-restart-checklist). The internal

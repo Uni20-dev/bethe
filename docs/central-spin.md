@@ -1,6 +1,6 @@
 # Rational Gaudin central spin
 
-[Overview](../README.md) · [Model catalogue](models.md) · [Bibliography](../CITATIONS.md)
+[Overview](../README.md) · [Supported models](models.md) · [Bibliography](../CITATIONS.md)
 
 The [worked tutorial](tutorials/central-spin.md) compares field-dependent sector
 energies and estimates central polarization from energy differences.

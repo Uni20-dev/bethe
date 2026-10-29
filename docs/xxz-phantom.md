@@ -1,6 +1,6 @@
 # Mixed finite and infinite XXZ roots
 
-[Odd-ring continuation](xxz-odd-continuation.md) | [Spin helices](xxz-spin-helix.md) | [Regular-state test](xxz-regularity.md)
+[XXZ family](xxz-family.md) · [Supported models](models.md) · [Odd-ring continuation](xxz-odd-continuation.md) · [Spin helices](xxz-spin-helix.md) · [Regular-state test](xxz-regularity.md)
 
 The internal `reduce_phantom_polynomial` in
 [xxz_phantom.hpp](../include/bethe/xxz_phantom.hpp) removes a specified

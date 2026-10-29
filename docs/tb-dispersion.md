@@ -51,8 +51,10 @@ through the existing [Async observable grid](async-execution.md); capture the
 band and momenta by value and await the final result. These elementary formulas
 are cheap, so the frontend keeps per-point evaluation serial.
 
-The shared sine/elliptic-band helper carries explicit precision too. This does
-not by itself extend the model-level elliptic functions in XXZ or XYZ to MPFR.
+The shared sine/elliptic-band helper carries explicit precision too. The
+[XXZ](xxz-dispersion.md) and [XYZ](xyz-dispersion.md) models have their own
+explicit-MPFR elliptic implementations and validation; support for a shared
+helper alone would not establish those model-level capabilities.
 Tests retain their native massive-band checks and add scalar-only MPFR tests
 for typed endpoints, tiny positive momenta and massive-band extrema. TB
 accuracy grows at 128/256/333 bits against an independent 512-bit dressed-sea

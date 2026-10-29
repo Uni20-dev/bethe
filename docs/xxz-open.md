@@ -1,6 +1,6 @@
 # Open XXZ chains with free ends
 
-[Back to the overview](../README.md)
+[XXZ family](xxz-family.md) · [Supported models](models.md)
 
 The `bethe-xxz-obc` front end combines anisotropy with free ends. It uses
 the same scalar precision and reporting controls as the other programs, but

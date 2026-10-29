@@ -1,6 +1,6 @@
 # Two bound pairs scattering on a free-end chain
 
-[Ferromagnetic overview](biquadratic-ferromagnetic.md) · [One pair plus real roots](biquadratic-pair-defect.md) · [Isolated bound pairs](biquadratic-bound-pairs.md)
+[Biquadratic/TL family](biquadratic-family.md) · [Supported models](models.md) · [Ferromagnetic overview](biquadratic-ferromagnetic.md) · [One pair plus real roots](biquadratic-pair-defect.md) · [Isolated bound pairs](biquadratic-bound-pairs.md)
 
 Four TL singlet insertions can form two bound pairs. This selected-state
 library solver follows that family in **ell=N-8**, for odd/even N>=8.

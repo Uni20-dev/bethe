@@ -1,6 +1,6 @@
 # Thermodynamic XXZ spinons and continua
 
-[Back to the overview](../README.md)
+[XXZ family](xxz-family.md) · [Supported models](models.md)
 
 For a worked example with downloadable data and plots, start with the
 [spinon tutorial](tutorials/xxz-spinons.md).

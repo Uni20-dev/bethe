@@ -1,6 +1,6 @@
 # Finite-root coordinate wavefunctions
 
-[Phantom dressing](xxz-phantom-wave.md) | [Polynomial equations](xxz-polynomial.md) | [Model catalogue](models.md)
+[XXZ family](xxz-family.md) · [Supported models](models.md) · [Phantom dressing](xxz-phantom-wave.md) · [Polynomial equations](xxz-polynomial.md)
 
 `bethe::xxz::detail::CoordinateBetheWave<Real>` in
 [xxz_coordinate_wave.hpp](../include/bethe/xxz_coordinate_wave.hpp) evaluates

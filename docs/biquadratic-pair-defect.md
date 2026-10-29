@@ -1,11 +1,12 @@
 # A bound pair scattering with real defects
 
-[Ferromagnetic overview](biquadratic-ferromagnetic.md) · [Real-root scattering](biquadratic-scattering.md) · [Bound triples](biquadratic-bound-triples.md)
+[Biquadratic/TL family](biquadratic-family.md) · [Supported models](models.md) · [Ferromagnetic overview](biquadratic-ferromagnetic.md) · [Real-root scattering](biquadratic-scattering.md) · [Bound triples](biquadratic-bound-triples.md)
 
 Three TL singlet insertions need not all bind, or all remain separate. A
 two-string plus one real root describes the intermediate **pair-plus-defect**
 branch in ell=N-6. Selected states and CLI family scans support this branch
-on odd/even N>=6, in fp64, native long double and enabled fp128.
+on odd/even N>=6, in fp64, native long double, enabled fp128 and explicit MPFR.
+See [precision controls](biquadratic.md#arbitrary-precision).
 `--excitations` still means the purely real-root family; it does not contain
 these mixed-string levels.
 The same CLI also supports one pair plus several real roots, as described
@@ -99,7 +100,8 @@ The high-label corner $`(N -3,N -5)`$ approaches the separated-cluster threshold
 three-unbound-defect edge 3. It is not the global first excitation, and the
 labels do not imply a universal ordering of finite-size levels. All of these
 counts refer to TL insertions, **not physical spin flips**. Operator spectral
-weights and physical-spin decomposition remain separate questions.
+weights remain separate work. [Physical-spin decomposition](biquadratic-spin-content.md)
+resolves the module multiplicity space; it does not compute operator matrix elements.
 
 ## Same equations, different labels
 
@@ -128,7 +130,7 @@ These are our regularized equations derived from
 [Bajnok et al., Eq. (5.12)](../CITATIONS.md#bajnok-2020), not an ideal-string
 energy formula. L and the separate deviation sign remain authoritative
 when exp(-L) underflows. The existing analytic Jacobian, damped Newton
-driver, iteration budget, native precision and direct energy-shift mapping
+driver, iteration budget, selected arithmetic and direct energy-shift mapping
 are shared with the AF singlet and isolated bound-pair solvers. There are
 three unknowns, so storage and work per Newton step do not grow with N.
 
@@ -238,7 +240,9 @@ pair-plus-three-real-root candidates at N=10 also match ED. These are
 **subsets**, not complete four- or five-defect spectra. A separate
 [two-pair solver and CLI scans](biquadratic-two-pairs.md) cover another four-defect
 family. A selected [triple-plus-one-real-root solver](biquadratic-triple-defect.md)
-covers another; triples with more real roots and larger droplets remain missing.
+covers another, and [bound quartets](biquadratic-bound-quartets.md) supply the
+four-string droplet. Triples with more real roots and droplets of five or more
+defects remain outside these solvers.
 Independent original-equation checks cover r=2,3,4, both deviation signs,
 odd/even chains and all supported precisions. High-label branches approach
 the separated-cluster threshold $`5/3+r`$, checked up to N=100000. This

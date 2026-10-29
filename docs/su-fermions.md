@@ -1,6 +1,6 @@
 # Repulsive SU(n) fermions on a ring
 
-[Overview](../README.md) · [Gaudin–Yang](gaudin-yang.md) · [Model catalogue](models.md)
+[Overview](../README.md) · [Gaudin–Yang](gaudin-yang.md) · [Supported models](models.md)
 
 For a plotted coupling scan and a worked component-to-root mapping, see the
 [SU(n) fermion tutorial](tutorials/su-fermions.md).

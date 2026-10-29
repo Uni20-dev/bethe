@@ -1,6 +1,6 @@
 # Periodic XXX chains: states and conventions
 
-[Back to the overview](../README.md)
+[XXX family](xxx-family.md) · [Supported models](models.md)
 
 This guide connects a numerical result to the periodic spin-1/2 Heisenberg
 model it represents. Start with the Hamiltonian normalization, then follow

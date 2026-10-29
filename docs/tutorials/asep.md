@@ -107,8 +107,9 @@ result is analytic and the roots table has **no rows**. That is an intentional
 representation, not a failed export. Empty/full sectors likewise succeed but
 have no nonstationary mode: their gap and frequency are absent.
 
-The default arithmetic is fp64; native long-double and optional MPLAPACK fp128
-are supported. A converged residual is a numerical diagnostic, not a rigorous
+The default arithmetic is fp64; native long-double, configured fp128 and
+[explicit MPFR/MPC](../asep.md#explicit-precision) are supported. The saved
+examples retain their original arithmetic. A converged residual is a numerical diagnostic, not a rigorous
 error certificate. Failed continuation cannot be accepted at the last reached
 ratio: the frontend exits with failure and leaves physical observables missing.
 

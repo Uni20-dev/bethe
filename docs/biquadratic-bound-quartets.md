@@ -1,6 +1,6 @@
 # Four-defect bound droplets
 
-[Ferromagnetic overview](biquadratic-ferromagnetic.md) · [Triples](biquadratic-bound-triples.md) · [Triple plus defect](biquadratic-triple-defect.md)
+[Biquadratic/TL family](biquadratic-family.md) · [Supported models](models.md) · [Ferromagnetic overview](biquadratic-ferromagnetic.md) · [Triples](biquadratic-bound-triples.md) · [Triple plus defect](biquadratic-triple-defect.md)
 
 Four TL singlet insertions can bind into one droplet, or **quartet**. This
 is the last of the five four-defect string topologies, alongside four real

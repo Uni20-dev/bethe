@@ -1,6 +1,6 @@
 # Periodic XXZ chains
 
-[Back to the overview](../README.md)
+[XXZ family](xxz-family.md) · [Supported models](models.md)
 
 The anisotropy changes the equations and which quantum numbers belong to
 the supported real-root family. This guide starts with ground states, then

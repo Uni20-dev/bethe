@@ -1,6 +1,6 @@
 # Recovering roots without losing the polynomial
 
-[Coordinate wavefunctions](xxz-coordinate-wave.md) | [Mixed phantom roots](xxz-phantom.md) | [Model catalogue](models.md)
+[Coordinate wavefunctions](xxz-coordinate-wave.md) | [Mixed phantom roots](xxz-phantom.md) | [Supported models](models.md)
 
 The internal `bethe::detail::recover_polynomial_roots<Real>` in
 [polynomial_roots.hpp](../include/bethe/polynomial_roots.hpp) connects the

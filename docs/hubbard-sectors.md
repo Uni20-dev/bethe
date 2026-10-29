@@ -1,6 +1,6 @@
 # Periodic Hubbard filling, spin sectors, and attractive U
 
-[Hubbard equations and numerical method](hubbard.md) · [Overview](../README.md)
+[Hubbard family](hubbard-family.md) · [Supported models](models.md) · [Hubbard equations and numerical method](hubbard.md)
 
 Use `--particles N` and `--sz VALUE` to select the physical sector. The two
 spin populations are $`N_{\mathrm{up}} =N /2+S^z`$ and $`N_{\mathrm{down}} =N /2-S^z`$; each must be an integer

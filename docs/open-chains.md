@@ -1,6 +1,6 @@
 # Open XXX chains with free ends
 
-[Back to the overview](../README.md)
+[XXX family](xxx-family.md) · [Supported models](models.md)
 
 Removing the periodic bond changes more than the total energy: translation
 momentum is no longer a quantum number, and the Bethe equations include

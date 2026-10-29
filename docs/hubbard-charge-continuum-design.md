@@ -1,5 +1,7 @@
 # Charge-containing Hubbard continuum library
 
+[Hubbard family](hubbard-family.md) · [Supported models](models.md)
+
 **Implemented design record; status reviewed 30 October 2026.**
 The original native-precision construction below is retained to explain the
 method. Current library and frontend support explicit MPFR as well; see the

@@ -1,6 +1,6 @@
 # Repulsive Lieb–Liniger bosons on a ring
 
-[Overview](../README.md) · [Build guide](building.md) · [Model catalogue](models.md)
+[Overview](../README.md) · [Build guide](building.md) · [Supported models](models.md)
 
 For Dirichlet boundaries, use [bethe-lieb-liniger-obc](lieb-liniger-open.md).
 
@@ -131,9 +131,10 @@ With [arbitrary precision enabled](building.md#enable-arbitrary-precision), all
 finite-size PBC/OBC modes accept `bits-N` and `digits-N`, including threaded
 excitation scans. Uni20 dispatches the Newton solves; its arbitrary-precision
 LU uses MPLAPACK when enabled, with CPU LU available otherwise.
-This does not yet extend
-to the separate thermal frontend. Zero-temperature bulk energies and dispersions
-have their own [explicit-precision support](lieb-liniger-thermo.md#c-api).
+The separate [thermal frontend](lieb-liniger-thermal.md) also supports explicit
+MPFR in both ensembles. Zero-temperature bulk energies and dispersions have
+[their own controls](lieb-liniger-thermo.md#c-api); working bits do not replace
+mesh, rapidity-cutoff or inversion convergence in either calculation.
 
 Finite positive $`\ell`$, $`c`$, and representable nonzero $`g =c \,\ell`$ are required.
 Very large labels, very close roots, or extreme physical units can exceed the

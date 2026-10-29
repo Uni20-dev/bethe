@@ -1,7 +1,6 @@
 # XXX two-spinon structure factor on a finite ring
 
-[Overview](../README.md) · [Plotted tutorial](tutorials/xxx-structure-factor.md) ·
-[XXX conventions](xxx.md)
+[XXX family](xxx-family.md) · [Supported models](models.md) · [Plotted tutorial](tutorials/xxx-structure-factor.md) · [XXX conventions](xxx.md)
 
 For an infinite-chain **spectral density** without broadening, see the separate
 [thermodynamic tool](xxx-structure-factor-thermo.md) and its

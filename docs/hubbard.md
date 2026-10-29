@@ -1,6 +1,6 @@
 # Periodic Hubbard ground states
 
-[Back to the overview](../README.md)
+[Hubbard family](hubbard-family.md) · [Supported models](models.md)
 
 For infinite-chain spinon and charge lines at or below half filling, use the
 separate [thermodynamic dispersion tool](hubbard-dispersion.md), including

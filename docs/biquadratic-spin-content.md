@@ -1,6 +1,6 @@
 # Physical spin content of a TL level
 
-[Model overview](biquadratic.md) · [Ferromagnetic excitations](biquadratic-ferromagnetic.md)
+[Biquadratic/TL family](biquadratic-family.md) · [Supported models](models.md) · [Model overview](biquadratic.md) · [Ferromagnetic excitations](biquadratic-ferromagnetic.md)
 
 A through-line label $`\ell`$ is not a physical spin. Each eigenvector of the
 open TL module carries a whole multiplicity space, which can contain several

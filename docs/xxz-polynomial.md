@@ -1,6 +1,6 @@
 # Polynomial XXZ equations across root collisions
 
-[Negative-anisotropy work](xxz-negative.md) | [Model catalogue](models.md)
+[XXZ family](xxz-family.md) · [Supported models](models.md) · [Negative-anisotropy work](xxz-negative.md)
 
 The internal building block
 `bethe::xxz::detail::PolynomialBetheSystem<Real>` in

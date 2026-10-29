@@ -1,5 +1,7 @@
 # Thermodynamic XXX two-spinon structure factor
 
+[XXX family](xxx-family.md) · [Supported models](models.md)
+
 `bethe-xxx-structure-factor-thermo` evaluates the **spectral density** of the
 infinite spin-1/2 antiferromagnetic XXX chain at zero field and temperature.
 It implements the exact two-spinon contribution, not the full structure factor.

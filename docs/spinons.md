@@ -1,6 +1,6 @@
 # Single-spinon dispersion
 
-[Back to the overview](../README.md)
+[XXX family](xxx-family.md) · [Supported models](models.md)
 
 There are two related but different calculations here: an odd periodic XXX
 chain supplies a finite-size one-spinon branch, while analytic functions give

@@ -1,6 +1,6 @@
 # A targeted complex-root singlet on long open chains
 
-[Biquadratic application](biquadratic.md) · [Q-system search](xxz-open-qsystem.md)
+[XXZ family](xxz-family.md) · [Supported models](models.md) · [Biquadratic application](biquadratic.md) · [Q-system search](xxz-open-qsystem.md)
 
 This page describes the AF singlet branch. The same regularized solver also
 supports [ferromagnetic empty-sea bound pairs](biquadratic-bound-pairs.md),
@@ -146,8 +146,9 @@ mappings. Seeds, derivatives, regularization thresholds, energy sums and failed
 states retain the requested precision. Exact, unset and mixed-precision
 inputs are rejected. Independent requests can use owning Async query grids;
 each ideal initializer and subsequent finite-deviation solve stays sequential.
-The work budget and state family are unchanged. Frontend MPFR enablement
-awaits the remaining complex-state modes.
+The work budget and state family are unchanged. The biquadratic frontend also
+accepts `--precision bits-N` and `digits-N` for `--singlet-excitation` and all
+supported complex-state modes; see [the precision guide](biquadratic.md#arbitrary-precision).
 
 Tests cover the exact four-site singlet at native precision, analytic
 Jacobians, independent small-chain ED through N=10, original complex Bethe

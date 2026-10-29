@@ -1,6 +1,6 @@
 # Excitations of the ferromagnetic biquadratic chain
 
-[Overview](../README.md) · [Biquadratic/TL conventions](biquadratic.md) · [Output and exports](output.md)
+[Biquadratic/TL family](biquadratic-family.md) · [Supported models](models.md) · [Biquadratic/TL conventions](biquadratic.md) · [Output and exports](output.md)
 
 For plots, downloadable examples and an MPS-oriented introduction, see the
 [defect and droplet tutorial](tutorials/biquadratic-ferromagnetic.md).
@@ -16,7 +16,9 @@ H_F=(N-1)+\sum_i e_i,\qquad E_0=N-1,\qquad E-E_0=\sum_i e_i\ge0.
 The ground space is known exactly. The focus here is the positive-energy
 structure above it: the one-defect band, levels in other TL modules, and the
 complex-root states that real-root scans miss. All modes support fp64,
-native long double, and enabled fp128, with the shared screen/JSON/CSV/TSV output.
+native long double, enabled fp128 and explicit MPFR (`bits-N`/`digits-N`), with
+the shared screen/JSON/CSV/TSV output. See the
+[biquadratic precision controls](biquadratic.md#arbitrary-precision).
 
 ## A first exploration
 
