@@ -40,7 +40,7 @@ Constants, complex scattering, small-deviation corrections, Jacobians, Newton
 steps and returned diagnostics retain that precision. Unset, exact or mismatched
 numerical inputs are rejected. More bits do not increase iteration budgets or
 establish a new branch or a complete module. The CLI examples on this page
-still use native formats; frontend MPFR enablement is separate.
+also accept `--precision bits-N` and `--precision digits-N` when MPFR is enabled.
 
 ## Where this branch lies
 

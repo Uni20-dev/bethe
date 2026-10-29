@@ -16,7 +16,7 @@ int run_singlet(Arguments const& args, bethe::SolverOptions<Real> const& options
   computation.finish();
   auto const& r = state.reference;
   bool const complete = r.converged && ground.reference.converged;
-  Real const eta = std::acosh(r.delta), d = std::exp(-r.log_deviation);
+  Real const eta = uni20::math::acosh(r.delta), d = uni20::math::exp(-r.log_deviation);
   std::optional<Real> gap;
   if (complete) gap = Real{2} * (r.energy - ground.reference.energy);
   report.field("calculation", "Calculation", "selected complex-root singlet excitation")
@@ -70,7 +70,8 @@ int run_singlet(Arguments const& args, bethe::SolverOptions<Real> const& options
         "roots", "Reference roots (rounded u; use L for the string deviation)",
         [&](auto& table) {
           for (std::size_t j = 0; j < r.rapidities.size(); ++j)
-            table.append(std::size_t{0}, j, std::string("real sea"), Real{0}, r.rapidities[j] / Real{2});
+            table.append(std::size_t{0}, j, std::string("real sea"), uni20::scalar_like(r.delta, 0),
+                         r.rapidities[j] / Real{2});
           for (std::size_t j = 0; j < 2; ++j)
             table.append(std::size_t{0}, r.rapidities.size() + j, std::string("two-string"), (eta + d) / Real{2},
                          (j ? -r.center : r.center) / Real{2});

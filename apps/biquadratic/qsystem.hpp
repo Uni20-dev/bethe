@@ -27,14 +27,15 @@ inline char const* status(bethe::xxz::quantum_group::qsystem::Status value)
   return "unknown";
 }
 
-template <uni20::Real Real> std::vector<Real> parse_q_seed(std::string_view text)
+template <uni20::Real Real>
+std::vector<Real> parse_q_seed(std::string_view text, bethe::SolverOptions<Real> const& options)
 {
   if (text == "none") return {};
   std::vector<Real> result;
   for (;;)
   {
     auto const comma = text.find(',');
-    result.push_back(uni20::parse_real<Real>(std::string(text.substr(0, comma))));
+    result.push_back(cli::parse_solver_real<Real>(text.substr(0, comma), options));
     if (comma == std::string_view::npos) return result;
     text.remove_prefix(comma + 1);
   }
@@ -53,7 +54,7 @@ int run_qsystem(Arguments const& args, bethe::SolverOptions<Real> const& options
   if (args.q_seed)
   {
     states.push_back(context.measure([&] {
-      auto const seed = parse_q_seed<Real>(*args.q_seed);
+      auto const seed = parse_q_seed<Real>(*args.q_seed, options);
       return args.ferromagnetic ? model::ferromagnetic::qsystem::solve<Real>(args.sites, seed, options)
                                 : model::qsystem::solve<Real>(args.sites, seed, options);
     }));
