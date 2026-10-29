@@ -32,10 +32,32 @@ template <uni20::Real Real> struct Extremum
 template <uni20::Real Real> struct ExtremaOptions
 {
     Real tolerance = Real{65536} * uni20::numeric_limits<Real>::epsilon();
-    Real position_tolerance = std::sqrt(uni20::numeric_limits<Real>::epsilon());
+    Real position_tolerance = uni20::math::sqrt(uni20::numeric_limits<Real>::epsilon());
     std::size_t initial_intervals = 16, max_intervals = 128;
     std::size_t max_evaluations = 20000, max_iterations = 256;
+    uni20::Precision precision() const { return uni20::native_precision<Real>(); }
 };
+#if UNI20_HAS_MPREAL
+template <> struct ExtremaOptions<uni20::mpreal>
+{
+    explicit ExtremaOptions(uni20::Precision p)
+        : tolerance(default_tolerance(p)),
+          position_tolerance(uni20::math::sqrt(uni20::numeric_limits<uni20::mpreal>::epsilon(p))), precision_(p)
+    {}
+    uni20::mpreal tolerance, position_tolerance;
+    std::size_t initial_intervals = 16, max_intervals = 128;
+    std::size_t max_evaluations = 20000, max_iterations = 256;
+    uni20::Precision precision() const { return precision_; }
+
+  private:
+    static uni20::mpreal default_tolerance(uni20::Precision p)
+    {
+      if (p.is_exact()) throw std::invalid_argument("extrema require finite working precision");
+      return 65536 * uni20::numeric_limits<uni20::mpreal>::epsilon(p);
+    }
+    uni20::Precision precision_;
+};
+#endif
 template <uni20::Real Real> struct ExtremaResult
 {
     std::optional<Extremum<Real>> minimum, maximum;
@@ -52,6 +74,9 @@ template <uni20::Real Real> struct ExtremaResult
 template <uni20::Real Real, typename Function>
 ExtremaResult<Real> bounded_extrema(Function const& function, Real lo, Real hi, ExtremaOptions<Real> const& o = {})
 {
+  Real const zero = uni20::scalar_at_precision<Real>(0, o.precision());
+  for (auto const* value : std::array<Real const*, 4>{&lo, &hi, &o.tolerance, &o.position_tolerance})
+    require_same_precision(*value, zero);
   if (!uni20::isfinite(lo) || !uni20::isfinite(hi) || !(lo < hi) || !uni20::isfinite(hi - lo) ||
       !uni20::isfinite(o.tolerance) || !(o.tolerance > Real{0}) || !uni20::isfinite(o.position_tolerance) ||
       !(o.position_tolerance > Real{0}))
@@ -71,7 +96,14 @@ ExtremaResult<Real> bounded_extrema(Function const& function, Real lo, Real hi, 
       }
       ++out.evaluations;
       auto const value = function(x);
-      if (!value || !uni20::isfinite(value->value) || !uni20::isfinite(value->error) || value->error < Real{0})
+      if (!value)
+      {
+        out.status = ExtremaStatus::objective_failure;
+        return {};
+      }
+      require_same_precision(value->value, zero);
+      require_same_precision(value->error, zero);
+      if (!uni20::isfinite(value->value) || !uni20::isfinite(value->error) || value->error < Real{0})
       {
         out.status = ExtremaStatus::objective_failure;
         return {};
@@ -83,8 +115,8 @@ ExtremaResult<Real> bounded_extrema(Function const& function, Real lo, Real hi, 
   auto better = [](Extremum<Real> const& a, Extremum<Real> const& b, bool maximum) {
     return maximum ? a.value > b.value : a.value < b.value;
   };
-  Real const fraction = (std::sqrt(Real{5}) - Real{1}) / Real{2};
-  Real const xtol = o.position_tolerance * std::max({Real{1}, std::abs(lo), std::abs(hi)});
+  Real const fraction = (uni20::math::sqrt(uni20::scalar_like(zero, 5)) - Real{1}) / Real{2};
+  Real const xtol = o.position_tolerance * std::max({Real{1}, uni20::math::abs(lo), uni20::math::abs(hi)});
   if (!uni20::isfinite(xtol)) throw std::invalid_argument("extrema position tolerance overflows");
   auto local = [&](Real left, Real right, bool maximum) -> std::optional<Extremum<Real>> {
     auto l = sample(left), r = sample(right);
@@ -102,8 +134,8 @@ ExtremaResult<Real> bounded_extrema(Function const& function, Real lo, Real hi, 
         out.status = ExtremaStatus::precision_limit;
         return {};
       }
-      Real const spread =
-          std::max(std::abs(a->value - best.value) + a->error, std::abs(b->value - best.value) + b->error);
+      Real const spread = std::max(uni20::math::abs(a->value - best.value) + a->error,
+                                   uni20::math::abs(b->value - best.value) + b->error);
       if (right - left <= xtol && spread <= o.tolerance / Real{8})
       {
         // Value spread at the resolved local bracket, plus objective uncertainty.
@@ -143,7 +175,7 @@ ExtremaResult<Real> bounded_extrema(Function const& function, Real lo, Real hi, 
       if (!a || !b) return {};
     }
   };
-  std::array<Extremum<Real>, 2> previous{};
+  std::array<Extremum<Real>, 2> previous{Extremum<Real>{zero, zero, zero}, Extremum<Real>{zero, zero, zero}};
   unsigned stable = 0;
   for (std::size_t n = o.initial_intervals;;)
   {
@@ -181,7 +213,7 @@ ExtremaResult<Real> bounded_extrema(Function const& function, Real lo, Real hi, 
     bool good = out.meshes > 1;
     for (std::size_t edge = 0; edge < 2; ++edge)
     {
-      current[edge].error += std::abs(current[edge].value - previous[edge].value);
+      current[edge].error += uni20::math::abs(current[edge].value - previous[edge].value);
       good = good && uni20::isfinite(current[edge].error) && current[edge].error <= o.tolerance;
     }
     stable = good ? stable + 1 : 0;

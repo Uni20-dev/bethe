@@ -120,7 +120,7 @@ All frontends support typed tables and file exports; see the
 | `bits-N` | Arbitrary precision with N binary significand bits |
 | `digits-N` | Arbitrary precision sufficient for N decimal digits |
 
-The arbitrary-precision choices currently apply to `bethe-xxx-pbc`, `bethe-xxx-obc`,
+The arbitrary-precision choices currently apply to `bethe-hubbard-dispersion`, `bethe-hubbard-continuum`, `bethe-xxx-pbc`, `bethe-xxx-obc`,
 `bethe-lieb-liniger-pbc`, `bethe-lieb-liniger-obc`, `bethe-q-boson-pbc`, `bethe-xxz-pbc` and
 `bethe-xxz-obc` (all currently supported modes), `bethe-lieb-liniger-dispersion`,
 the finite-ring `bethe-xxx-structure-factor`, `bethe-richardson` and
@@ -520,3 +520,7 @@ from the [finite-volume vacuum](sine-gordon.md) calculation.
 `bethe-kondo-response` also accepts `bits-N` and `digits-N` with Uni20 MPFR
 scalars enabled. Its series and quadrature budgets remain separate from the
 arithmetic precision; see [Kondo controls](kondo.md#library-use-and-numerical-contract).
+
+Hubbard thermodynamic MPFR uses explicit precision for quadrature and extrema.
+All paths need MPFR scalars; doped dispersion backgrounds use normal Uni20
+CPU/provider LU dispatch. See [Hubbard dispersions](hubbard-dispersion.md#explicit-precision-in-c).
