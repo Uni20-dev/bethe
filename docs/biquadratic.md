@@ -289,6 +289,30 @@ loop weight; their energies do not include the physical spin-1 shift. The
 generic TL layer leaves representation multiplicities to its caller.
 The `GroundState`/`OpenGroundState` type aliases retain the original ground API.
 
+The C++ real-root APIs also accept `uni20::mpreal` with explicit controls:
+
+```cpp
+using Real = uni20::mpreal;
+auto precision = uni20::Precision::bits(256);
+bethe::SolverOptions<Real> controls(precision);
+auto state = bethe::biquadratic::ground_state<Real>(16, controls);
+auto selected = bethe::biquadratic::real_excitations<Real>(8, 4, {.count=6}, controls);
+```
+
+Numerical Newton updates require the configured MPLAPACK MPFR provider,
+selected through Uni20's normal dispatch. Scalar-only MPFR builds can evaluate
+zero-update diagnostics and the analytic ferromagnetic helpers; those helpers
+take an explicit `Precision` argument. TL loop weights and reference XXZ Delta
+must carry the same finite precision as the controls. Unset, exact and mixed
+precision inputs are rejected before numerical work. Failed states retain
+their roots, energies and diagnostics at that precision. Existing bounded
+scans and owning Async sweeps preserve it independently for each request.
+
+This library support currently covers real roots and analytic ferromagnetic
+levels. The string and Q-system paths still need their own precision migration;
+the `bethe-biquadratic-obc` frontend therefore continues to advertise only its
+native formats.
+
 ## Validation and future slices
 
 Tests build the physical spin-1 bond matrix and square it independently.

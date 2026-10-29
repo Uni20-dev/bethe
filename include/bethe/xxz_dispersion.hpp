@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Copyright (C) 2026 Ian McCulloch
 #pragma once
-#include <bethe/detail/elliptic_theta.hpp>
 #include <bethe/detail/spinon_band.hpp>
+#include <uni20/core/elliptic_theta.hpp>
 
 namespace bethe::xxz
 {
@@ -24,34 +24,48 @@ template <uni20::Real Real> class SpinonDispersion {
   private:
     static bethe::detail::SpinonBand<Real> make_band(Real delta, Real exchange)
     {
-      bethe::detail::validate_spinon_parameters(Real{0}, exchange);
+      Real const zero = bethe::detail::precision_zero(delta);
+#if UNI20_HAS_MPREAL
+      if constexpr (uni20::has_runtime_precision_v<Real>)
+        if (!exchange.is_exact()) bethe::detail::require_same_precision(exchange, delta);
+#endif
+      exchange = uni20::scalar_like(delta, exchange);
+      bethe::detail::validate_spinon_parameters(zero, exchange);
       if (!uni20::isfinite(delta) || delta <= -Real{1})
         throw std::invalid_argument("XXZ spinons require finite Delta>-1");
-      Real const pi = bethe::detail::pi<Real>();
-      if (delta <= Real{1}) return {spinon_energy(pi / Real{2}, delta, exchange), Real{0}};
+      Real const pi = bethe::detail::spinon_pi(delta);
+      if (delta <= Real{1}) return {spinon_energy(pi / Real{2}, delta, exchange), zero};
 
-      Real const eta = std::acosh(delta), t = eta / pi;
+      Real const eta = uni20::math::acosh(delta), t = eta / pi;
       // q=exp(-eta), K=pi*theta3(q)^2/2, k'=theta4(q)^2/theta3(q)^2.
       // For eta<pi use the modular transform. In particular theta4 ->
       // theta2 at exp(-pi^2/eta): never compute k' by subtracting k^2 from 1.
       bool const dual = t < Real{1};
       Real const theta_t = dual ? Real{1} / t : t;
-      auto const top = bethe::detail::elliptic_theta(3, std::complex<Real>{}, theta_t);
-      auto const bottom = bethe::detail::elliptic_theta(dual ? 2 : 4, std::complex<Real>{}, theta_t);
+      auto const top = uni20::elliptic_theta_constant(3, theta_t);
+      auto const bottom = uni20::elliptic_theta_constant(dual ? 2 : 4, theta_t);
       // Reconstruct sinh(eta) algebraically: sinh(acosh(Delta)) loses
       // O(log(Delta)*epsilon) relative accuracy at very large anisotropy.
-      Real const sh = delta >= Real{2} ? delta * std::sqrt((Real{1} - Real{1} / delta) * (Real{1} + Real{1} / delta))
-                                       : std::sqrt(delta - Real{1}) * std::sqrt(delta + Real{1});
+      Real const sh = delta >= Real{2}
+                          ? delta * uni20::math::sqrt((Real{1} - Real{1} / delta) * (Real{1} + Real{1} / delta))
+                          : uni20::math::sqrt(delta - Real{1}) * uni20::math::sqrt(delta + Real{1});
       Real const factor = dual ? (pi / Real{2}) * (sh / eta) : sh / Real{2};
       Real const scale = exchange * factor;
-      Real const maximum = scale * top.derivative[0].real() * top.derivative[0].real();
-      Real const log_gap = std::log(scale) + Real{2} * (bottom.log_scale + std::log(bottom.derivative[0].real()));
+      Real const maximum = scale * top.scaled_value * top.scaled_value;
+      Real const log_gap =
+          uni20::math::log(scale) + Real{2} * (bottom.log_scale + uni20::math::log(bottom.scaled_value));
       // Reject subnormal masses: they cannot retain the advertised relative
       // precision. An underflow must never masquerade as a gapless result.
-      if (log_gap < std::log(uni20::numeric_limits<Real>::min()))
+      Real const minimum = [&] {
+        if constexpr (uni20::has_runtime_precision_v<Real>)
+          return uni20::math::next_up(zero);
+        else
+          return uni20::numeric_limits<Real>::min();
+      }();
+      if (log_gap < uni20::math::log(minimum))
         throw std::underflow_error("massive XXZ spinon gap is below the normal scalar range; use higher precision");
-      Real const gap = bottom.log_scale == Real{0} ? scale * bottom.derivative[0].real() * bottom.derivative[0].real()
-                                                   : std::exp(log_gap);
+      Real const gap =
+          bottom.log_scale == Real{0} ? scale * bottom.scaled_value * bottom.scaled_value : uni20::math::exp(log_gap);
       if (!uni20::isfinite(maximum) || !uni20::isfinite(gap) || !(gap > Real{0}))
         throw std::overflow_error("XXZ spinon energy exceeds scalar range");
       // At enormous anisotropy the bandwidth is below relative precision.
