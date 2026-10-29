@@ -179,7 +179,7 @@ the existing XXZ solver through N=32. Both signs of Jz and the XY point are
 included, with equation/limit tests in every enabled native precision.
 
 Independent size/eta/t requests compose through the existing owning Async grid;
-the [TASEP/XYZ example](async-execution.md#independent-tasep-and-finite-xyz-solves)
+the [TASEP/XYZ example](async-examples.md#independent-tasep-and-finite-xyz-solves)
 demonstrates an eta sweep. All roots, controls, scratch and diagnostics belong to
 their individual solve. Tests compare complete successful and failed states
 under deferred and one/multiple-worker scheduling. The coupled Newton iterations

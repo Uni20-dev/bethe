@@ -244,309 +244,38 @@ working precision. At the provider boundary, Uni20 temporarily sets and restores
 MPLAPACK's thread-local defaults around each synchronous call.
 See [the explicit-precision C++ interface](xxx-structure-factor.md#arbitrary-precision).
 
-## Run and extend the tests
+## Library users and contributors
 
-CTest runs the GoogleTest numerical cases, CLI checks, and optional Python
-citation-maintenance checks. Tests reuse a parent-provided GoogleTest target,
-prefer an installed GoogleTest 1.12+ package, or fetch v1.17.0. GoogleTest is
-only required when `BETHE_BUILD_TESTS=ON`; library consumers do not inherit it.
+For parent-project CMake setup and a small synchronous calculation, see
+[the C++ library guide](library.md). For source architecture, frontend helpers,
+tests and CI, see [development](development.md) and [testing](testing.md).
 
-Numerical cases are instantiated separately for fp64, native `long double`,
-and optional fp128. Names include the precision, so failures can be isolated.
-From the build directory:
+<a id="run-and-extend-the-tests"></a>
+[Run and extend the tests](testing.md#run-and-extend-the-tests).
 
-```sh
-ctest -N
-ctest -R 'Hubbard.*fp128' --output-on-failure
-./tests/bethe_heisenberg_tests --gtest_filter='*/long_double.NativePrecisionSix'
-```
+<a id="continuous-integration"></a>
+[Continuous integration](testing.md#continuous-integration).
 
-The tests serve different purposes. Small independent exact-diagonalization
-oracles check sectors, quantum numbers, and multiplicities in fp64. Analytic
-energies, root equations, and Jacobians separately check the selected arithmetic
-without narrowing to double. A successful fp64 ED comparison alone does not
-establish fp128 accuracy.
+<a id="embed-the-library"></a>
+[Embed the library](library.md#embed-the-library).
 
-New models should use the precision type list and comparison helpers in
-`tests/test_support.hpp`.
-Uni20's `EXPECT_FLOATING_EQ`/zero-ULP comparisons test exact scalar round trips,
-including native fp80 where available. Solver and analytic checks instead use
-native-precision `EXPECT_REAL_NEAR` (strict absolute error less than the supplied
-tolerance), not GoogleTest's double-based `EXPECT_NEAR`. Keep fatal assertions
-before indexing roots or dereferencing optional gaps. Use parameter traces
-inside scans and keep expensive ED loops grouped into logical cases.
+<a id="source-layout-and-development"></a>
+[Source layout and development](development.md#source-layout-and-development).
 
-CTest gives each test one BLAS/OpenMP thread; it can still run independent
-cases concurrently with `ctest --parallel`.
+<a id="where-code-belongs"></a>
+[Where code belongs](development.md#where-code-belongs).
 
-Expensive end-to-end numerical checks carry the `long-running` label. From a
-build directory, choose routine checks, long checks alone, or the complete suite:
+<a id="linear-solves-and-failure-policy"></a>
+[Linear solves and failure policy](development.md#linear-solves-and-failure-policy).
 
-```sh
-ctest --label-exclude '^long-running$' --output-on-failure
-ctest --label-regex '^long-running$' --output-on-failure
-ctest --output-on-failure
-```
+<a id="shared-iteration-and-continuation"></a>
+[Shared iteration and continuation](development.md#shared-iteration-and-continuation).
 
-The long group includes expensive binary128 and MPFR continuum, thermal and
-precision-convergence checks. The full Hubbard doped Fredholm reference retains
-its 80/160/256-bit accuracy assertions there; an independent 80-bit reference,
-mixed-precision Async checks and failure paths remain in routine validation.
-Long checks normally have a 30-minute timeout; individual cases can declare a
-larger budget. Lieb–Liniger thermodynamic CLI checks run separately for each
-precision and for physical corrections, retaining every original assertion.
-New costly cases should be declared with `LONG_RUNNING_TESTS` alongside their
-target's `bethe_discover_tests` call, using GoogleTest names.
+<a id="frontend-helpers"></a>
+[Frontend helpers](development.md#frontend-helpers).
 
-### Continuous integration
+<a id="citation-maintenance"></a>
+[Citation maintenance](development.md#citation-maintenance).
 
-Pull requests and pushes to `main` run three Linux configurations, defined in
-[`CMakePresets.json`](../CMakePresets.json):
-
-| Preset | Coverage |
-| --- | --- |
-| `ci-native` | GCC 13 Release; fp64 and native `long double`; OpenBLAS; optional scalars disabled |
-| `ci-sanitizers` | Clang 19; AddressSanitizer and UndefinedBehaviorSanitizer; native scalars and MPFR; CPU kernels without BLAS/MPLAPACK |
-| `ci-wide` | GCC 13 Release; binary80, binary128 and MPFR; OpenBLAS and source-built, optimized MPLAPACK |
-
-Each builds **all frontends and test targets** and runs the routine CTest suite,
-including CLI/export checks and the installed-program relocation test.
-Runtime-precision Lieb–Liniger, nested Newton and complex form-factor tests
-run in both `ci-wide` and the MPFR CPU sanitizer configuration, exercising
-MPLAPACK and CPU LU through normal dispatch. These jobs do not claim macOS, Windows or GPU
-coverage. Documentation has its own workflow.
-
-The sanitizer preset sets `UNI20_SANITIZE` as well as the application's compiler
-flags, activating Uni20's oneTBB instrumentation boundary. The compiled oneTBB
-implementation is excluded; Bethe and Uni20 remain instrumented. Leak detection
-stays enabled. The preset enables `BETHE_TEST_UNI20_LSAN_SUPPRESSIONS`, which
-selects `tests/sanitizers/lsan.supp` from the actual Uni20 dependency checkout
-for every CTest case, including CLI subprocesses. This also works with local
-source overrides and custom build directories. The upstream file covers
-intentionally retained `NodeInfo` metadata and known MPFR internal cache frames;
-ordinary owning scalar leaks remain detectable. Bethe keeps no separate copy
-of these rules. See [the dependency sanitizer notes](async-sanitizer-follow-up.md).
-Suppression statistics are quiet so successful commands retain their normal
-stderr behavior; actual sanitizer errors still print and fail the process.
-The preset clears `DEBUGINFOD_URLS` so symbolization uses locally available
-debug information without waiting for remote downloads during CLI checks.
-Remainder operations also use an MPFR integer pool whose private frame needs
-matching debug symbols. The sanitizer CI job prepares these with Uni20's
-`scripts/prepare-sanitizer-symbols.py` before running tests, verifies the loaded
-library's build ID and records `sanitizer-symbols/symbols.json` in its artifacts.
-For local sanitizer runs, follow Uni20's
-[symbol preparation instructions](https://github.com/Uni20-dev/uni20/blob/main/docs/development/testing.md)
-and set `ASAN_SYMBOLIZER_PATH` to the resulting wrapper. Downloads happen only
-during preparation; neither the solvers nor sanitizer reports fetch symbols.
-
-Weekly CI (Monday 02:00 Asia/Taipei) additionally runs `ci-long-running` on the
-wide-precision build. A manual **C++ CI** run includes it by default, controlled
-by the **Include long-running numerical validation** input. Run this group when
-changing the relevant solvers, quadratures or precision machinery; ordinary
-pushes and pull requests do not run it. Results are uploaded separately from
-the routine suite. From a configured and built `ci-wide` tree:
-
-```sh
-ctest --preset ci-long-running
-```
-
-The workflow fetches Bethe's pinned Uni20, limits compilation and concurrent
-tests to two jobs, and gives numerical kernels one BLAS/OpenMP thread.
-Compiler outputs are cached; CMake/build directories are configured afresh.
-JUnit results, capability reports and configure/build/test logs are uploaded
-even on failure. MPLAPACK is built in Release mode without fast-math; the
-first uncached wide-precision build is expected to take longer.
-
-With the named compiler, CMake 3.28+, Ninja, Python and the relevant numerical
-development packages installed, reproduce a configuration from the source root:
-
-```sh
-cmake --preset ci-native
-cmake --build --preset ci-native
-ctest --preset ci-native
-```
-
-Presets default to `build/<preset>` and do not need `ccache` locally. For a
-shared source checkout, keep the build on local storage instead:
-
-```sh
-cmake --preset ci-native -B /path/to/local/bethe-ci-native
-cmake --build /path/to/local/bethe-ci-native --parallel 2
-OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 \
-  ctest --test-dir /path/to/local/bethe-ci-native --parallel 2 \
-    --label-exclude '^long-running$' --output-on-failure
-```
-
-## Embed the library
-
-`BETHE_BUILD_APPS` and `BETHE_BUILD_TESTS` default to `ON` standalone and
-`OFF` when embedded. No Python bindings or installed CMake package are provided
-yet. Use `add_subdirectory`/FetchContent and link `bethe::bethe` in a parent.
-The public numerical target does not link `uni20_cli` or CLI11. If a parent
-already provides Uni20 and enables Bethe's applications, it must create
-`uni20_cli` by enabling `UNI20_BUILD_CLI=ON` **before** adding Uni20.
-An existing standalone cache with `UNI20_BUILD_CLI=OFF` likewise needs
-`-DUNI20_BUILD_CLI=ON` when applications are enabled.
-
-## Source layout and development
-
-Set `BETHE_BUILD_EXAMPLES=ON` to build library composition examples in the
-`examples/` subdirectory. The first example prepares one Lieb–Liniger background
-asynchronously and submits both elementary branches before observing it; see
-[shared backgrounds](async-execution.md#shared-backgrounds). A second example
-evaluates a bounded [ground-state parameter sweep](async-execution.md#ground-state-parameter-sweeps),
-using `mpreal` when Uni20 MPFR scalars are configured. Examples are checked
-in CI and are not installed with the command-line tools.
-The [ASEP example](asep.md#reusing-a-seed-across-rate-queries) compares independent
-rate solves with queries sharing one TASEP seed, using direct or Async execution.
-The [TASEP/XYZ sweep example](async-execution.md#independent-tasep-and-finite-xyz-solves)
-shows independent complex-root solves with owned requests and bounded admission.
-The [nested sweep example](async-execution.md#owning-nested-model-requests) demonstrates
-independent TB sizes, SU(N) couplings and t–J fillings with complete diagnostics.
-The [ladder example](async-execution.md#prepared-ladder-field-and-rung-sweeps) compares
-repeated scans with shared root preparation and dependent field/rung queries.
-
-### Where code belongs
-
-| Location | Responsibility |
-| --- | --- |
-| `include/bethe/` | Scalar-templated numerical API, independent of CLI parsing and formatting |
-| `include/bethe/detail/` | Shared numerical implementation helpers |
-| `apps/` | Command-line frontends, model-specific arguments, formatting and report metadata |
-| `tests/` | Numerical regressions, independent reference checks and frontend tests |
-| `data/citations.json` | Literature metadata used to generate the C++ registry and bibliography |
-
-Formatting stays in `apps/`, separate from the numerical API and any future
-Python bindings. All executables link the private `bethe_cli` helper target;
-numerical headers and data-output unit tests remain parser-independent.
-
-The repository's `.clang-format` is copied from Uni20; use `clang-format -i`
-on changed C++ files to apply the shared style.
-
-### Linear solves and failure policy
-
-We link `uni20_core` for scalar facilities, `uni20_common` for `half_int` and
-presentation facilities, and `uni20_linalg` for square and least-squares solves.
-Frontends additionally use `uni20_cli` for option parsing.
-
-Square Newton and dressing-equation solves use Uni20's recoverable
-`solve_inplace_with_info`, with LAPACK/MPLAPACK for compatible column-major
-workspaces and native CPU fallback where needed. The row-major vector
-adapter in `detail/newton.hpp` rearranges its owned coefficient copy in place
-and exposes non-owning column-major views; the caller's coefficients are
-preserved without an additional matrix allocation.
-
-That adapter retains Bethe's explicit `64 * epsilon<Real>()` relative-pivot
-threshold. Models already using Uni20 matrix workspaces retain the default
-zero threshold and their own residual/condition checks. Neither policy is a
-condition-number guarantee. Singular, rejected-pivot and nonfinite failures
-return to the model's stalled/ill-conditioned or continuation-rejection path;
-failed workspaces never become accepted iterates. Shape errors remain distinct
-from numerical failures. No process-global error policy is changed.
-
-Rectangular Newton corrections and continuation tangents use Uni20's
-`least_squares_with_info` through read-only row-major views in `detail/newton.hpp`.
-Normal dispatch selects LAPACK/MPLAPACK QR or Uni20's CPU Givens implementation;
-native long double remains supported without MPLAPACK. Bethe retains its
-`64 * epsilon` relative-diagonal rejection threshold, which is neither a
-numerical-rank determination nor a condition estimate. No normal equations
-are formed. A failed correction leaves the RHS unchanged; success replaces
-it with the solution. An inconsistent least-squares fit can succeed: physical
-residual checks and continuation acceptance still belong to the model.
-
-The rectangular adapter also accepts an explicit finite `uni20::Precision`
-for runtime-precision scalars. At this low-level boundary Uni20 converts inputs
-at the requested working precision. The Richardson and central-spin model APIs
-are stricter: inputs and tolerance must already have the options' finite
-precision; mixed, exact and unset runtime values require explicit conversion.
-Their sums, predictor/corrector state, backtracking limits and output diagnostics
-retain that precision, including zero-budget and analytic cases. Numerical rank
-via SVD, condition estimates and
-refinement remain coordinated with
-[Uni20's numerical infrastructure plan](https://github.com/Uni20-dev/uni20/blob/717c798c047c9e844535d9b21a09c152b49ea9af/docs/linalg/precision_numerics_plan.md).
-
-### Shared iteration and continuation
-
-`detail/newton_backtracking.hpp` shares trial construction, normalization
-and damping. Models retain their pivot policy,
-admissible domain, residual acceptance and iteration-counter meaning.
-The string solver still requires strict decrease even below tolerance.
-
-`detail/eigenvalue_continuation.hpp` shares the Richardson/central-spin adaptive
-predictor-corrector controller and trust-box correction, including attempted-step
-budgets and rejected-stage handling. Tangents, trust-radius selection, physical
-energy bounds and final diagnostics remain model-specific. The tests exercise
-these contracts in each enabled precision; continuation policy remains in
-Bethe while square factorization and numerical solve diagnostics belong to Uni20.
-
-### Frontend helpers
-
-Use the shared lifecycle and output helpers; keep scientific arguments,
-convergence criteria and missing-value policy in the model frontend.
-Paths below are relative to `apps/`.
-
-| Header | Responsibility |
-| --- | --- |
-| `cli-common.hpp`, `precision.hpp` | Common CLI utilities, checked precision requests and dispatch |
-| `program-options.hpp` | Parse/information/error lifecycle, exact option adapters, Bethe identity and citations |
-| `report-common.hpp`, `excitation-report.hpp` | Shared report rendering |
-| `data-output-options.hpp` | Export flags for typed-table frontends |
-| `run-metadata.hpp` | Uni20 run metadata projected into human overviews and legacy export keys |
-| `result-output.hpp` | A frozen numerical summary shared across batch result tables |
-
-Each frontend declares its own `TableDescriptor` list when registering output
-options. The shared `table-descriptors.hpp` defines only the descriptor type and
-generic validation: it has no executable-name registry or model-specific tables.
-Declarations supply help, parser choices, screen flags, availability notes and
-explicit primary-table eligibility. Result construction supplies the actual
-available tables, which must match those declarations before exports are opened.
-
-Keep display flags separate from production requirements. Use
-`output.needs("--roots", roots)` when deciding whether root data is needed;
-the unchanged `roots` flag controls display, while a named export can request
-the same producer independently. Shared producers may construct sibling tables,
-but only requested destinations receive them. Never manufacture an empty table
-to satisfy an unavailable name. `Output.table_contracts` checks frontend help,
-selection errors and auxiliary-file/screen separation.
-
-The biquadratic frontend has private headers in `apps/biquadratic/`:
-
-- `options.hpp`: option declarations and validation.
-- `report.hpp`: common metadata, spin-content and real-root table writers.
-- `real.hpp`, `analytic.hpp`, `qsystem.hpp`, `singlet.hpp`, `clusters.hpp`:
-  individual calculation families.
-
-These are frontend implementation details, not public numerical APIs.
-
-### Citation maintenance
-
-Literature metadata is centralized in `data/citations.json`. See
-[maintaining citations](citations.md) to regenerate the C++ registry and the
-bibliography in `CITATIONS.md`. Generated files are checked in, so Python is
-needed only for regeneration and optional maintainer tests, not normal builds.
-
-### Documentation equations
-
-Use GitHub's backtick-protected inline math and fenced `math` display blocks.
-In all math, use `\lt` and `\gt` instead of literal angle brackets: these can
-survive Markdown processing but fail in GitHub's browser renderer. Use `\mathrm`
-for named functions such as atan2; GitHub rejects `\operatorname` even though
-MathJax itself supports it. End multiline display rows with `\\{}`: GitHub's Markdown
-renderer adds an unwanted backslash to a bare `\\` at the end of a line.
-The empty group preserves the TeX row break without relying on trailing spaces.
-
-Check the conventions locally, or verify that every expression survives
-GitHub's Markdown processing unchanged (requires authenticated `gh` and network
-access; renders only, without publishing):
-
-```sh
-python3 scripts/check_markdown_math.py
-python3 scripts/check_markdown_math.py --github
-```
-
-This checks the Markdown-to-TeX boundary and known browser restrictions, not
-the full MathJax grammar or mathematical content. The rendering API does not
-run GitHub's browser math component: confirm unfamiliar notation in a browser
-too. Testing raw TeX alone does not catch Markdown escaping or GitHub's restrictions.
-
-Next: [run a calculation and interpret its output](command-line.md).
+<a id="documentation-equations"></a>
+[Documentation equations](development.md#documentation-equations).

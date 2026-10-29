@@ -41,7 +41,7 @@ results are retained; effective concurrency is capped by that window and the
 number of points. Each solve owns its series, quadrature and scratch storage.
 The calling thread emits rows in requested field order, including failures.
 `--no-retain` discards rows after their sinks consume them. CPU timing covers
-the complete grid including ordered row output. See [measurements and limits](parallel-grids.md#kondo-field-response-scans).
+the complete grid including ordered row output. See [measurements and limits](benchmark-state-scans.md#kondo-field-response-scans).
 
 `--tolerance`, `--max-series-terms`, `--max-lobes`, `--max-evaluations` and
 `--max-quadrature-levels` expose the library controls below. An incomplete

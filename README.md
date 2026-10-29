@@ -44,7 +44,7 @@ Python is only needed for the optional plotting and maintenance scripts.
 - **Compare with MPS or iMPS:** start with a
   [plotted tutorial](docs/tutorials/index.md). Each explains energy/momentum
   conventions and the physical contribution being calculated.
-- **Use C++:** [embed `bethe::bethe`](docs/building.md#embed-the-library),
+- **Use C++:** [embed `bethe::bethe`](docs/library.md#embed-the-library),
   use the synchronous APIs in the model guides, then compose independent
   work with [Async](docs/async-execution.md) where useful.
 

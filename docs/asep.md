@@ -191,7 +191,7 @@ grows with the requested point count. Its timing includes preparation,
 scheduler and collection but excludes printing. The existing single-request
 frontend and physical state family are unchanged.
 
-See [measurements and limits](parallel-grids.md#asep-shared-seeds).
+See [measurements and limits](benchmark-preparation.md#asep-shared-seeds).
 The example accepts native binary64, `long double` and configured binary128.
 The library also supports explicit MPFR requests through complex arithmetic,
 seed selection, Newton controls, continuation and all failure results; the

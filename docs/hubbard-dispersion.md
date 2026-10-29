@@ -37,7 +37,7 @@ their serial order: branch order first, then momentum. Selected branches share
 one bounded work window, so a later branch can start before all queries from
 the previous one have finished. This also permits overlap between branches
 with `--momentum` and `--branch all`; a single-branch single-point request has
-no query parallelism. See [parallel observable grids](command-line.md#parallel-observable-grids).
+no query parallelism. See [parallel observable grids](parallel-calculations.md#parallel-observable-grids).
 
 The doped frontend prepares its background once and shares the meshes across
 all queries. Background preparation remains sequential and finishes before

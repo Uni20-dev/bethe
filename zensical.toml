@@ -100,14 +100,22 @@ nav = [
   ] },
   { "Using Bethe" = [
     { "Command line and precision" = "docs/command-line.md" },
+    { "Command examples" = "docs/command-examples.md" },
+    { "Parallel calculations" = "docs/parallel-calculations.md" },
     { "Output and exports" = "docs/output.md" },
     { "App capabilities" = "docs/app-capabilities.md" },
   ] },
   { "C++ library" = [
+    { "Embedding and synchronous calls" = "docs/library.md" },
     { "Async execution" = "docs/async-execution.md" },
-    { "Parallel grids and benchmarks" = "docs/parallel-grids.md" },
+    { "Composition examples" = "docs/async-examples.md" },
+    { "Observable grids" = "docs/parallel-grids.md" },
   ] },
   { "Development" = [
+    { "Source organization and methods" = "docs/development.md" },
+    { "Testing and CI" = "docs/testing.md" },
+    { "Performance measurements" = "docs/benchmarks.md" },
+    { "Validation records" = "docs/validation-records.md" },
     { "Model roadmap" = "docs/model-roadmap.md" },
     { "Citation maintenance" = "docs/citations.md" },
     { "Contributing tutorials" = "docs/tutorials/contributing.md" },

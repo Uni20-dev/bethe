@@ -220,89 +220,6 @@ from ranked levels. See the [table schemas](output.md#named-tables).
 
 ## CPU time and convergence
 
-### Parallel state scans
-
-`--threads N` is a positive integer, defaulting to 1. It sets a Uni20 oneTBB
-scheduler's concurrency limit, not one operating-system thread per state.
-The following tools support it:
-
-- `bethe-xxx-structure-factor`: independent states and form factors.
-- `bethe-xxx-structure-factor-thermo`: independent spectral points.
-- `--excitations` in XXX and XXZ PBC/OBC, Lieb-Liniger PBC/OBC, q-boson PBC,
-  quantum-group XXZ OBC, and biquadratic OBC.
-
-The energy tools reject an explicit `--threads` option outside an excitation
-scan, including `--threads 1`. Quantum-group XXZ supports only its regular-root
-branch, not the Delta=0 endpoint. Biquadratic threading covers real-root scans
-for either sign, including `--ferromagnetic --real-window`; Q-system, analytic
-and bound-cluster modes do not accept this option.
-
-For example, from an installed environment or with the executables on `PATH`:
-
-```sh
-OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 \
-  bethe-lieb-liniger-pbc 8 --length 8 --c 2 \
-  --excitations 10 --padding 2 --threads 4
-```
-
-Each state is solved independently; ordered result collection, failure
-diagnostics and moment sums are deterministic. Worker threads do not write
-tables. Threading does not alter the candidate budget, the family being scanned
-or how many converged states are retained. A larger limit can be slower for
-small families; benchmark representative sizes and precisions. Metadata records
-the requested concurrency limit, not a claim that every worker stayed busy.
-Library users can pass `RealExcitationOptions::execution` to the shared scanner
-without changing Uni20's active global scheduler.
-See the [XXX structure-factor guide](xxx-structure-factor.md#parallel-calculations)
-for examples. Set BLAS/OpenMP thread limits to one to avoid nested threading.
-
-### Parallel observable grids
-
-`bethe-xxx-structure-factor-thermo` uses a bounded grid for independent spectral
-points, collecting rows in momentum-major order. See its
-[streaming and summary conventions](xxx-structure-factor-thermo.md).
-
-`bethe-hubbard-dispersion` (half-filled and doped) and
-`bethe-lieb-liniger-dispersion` also accept `--threads N`, defaulting to 1:
-
-```sh
-OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 \
-  bethe-hubbard-dispersion --u 4 --density 0.5 --points 257 --threads 4
-```
-
-The background is prepared once, then independent momentum points are evaluated
-in a bounded window that admits a new point after each collected result.
-Rows retain their serial branch/momentum order, including
-failed points and their diagnostics. Only the calling thread writes tables;
-`--no-retain` still permits bounded-memory streaming. `--momentum` accepts the
-same option but has only one point per branch. Hubbard places all selected
-branches in one work window, so those queries can still overlap; a single
-selected branch has no single-point parallelism.
-
-`bethe-hubbard-continuum --threads N` evaluates independent total momenta
-through the same bounded grid, for two-spinon and charge-containing edges.
-Each point's quadrature, inversion and extrema search remain sequential;
-rows preserve momentum order, including failures.
-
-`bethe-lieb-liniger-thermal --threads N` uses the same bounded grid for
-temperature scans, at fixed chemical potential or density. Each equilibrium
-solve remains sequential; rows preserve the requested temperature order.
-
-The benefit depends on the cost and number of points: background preparation
-remains serial and short grids may not benefit. CPU timing covers preparation
-and complete grid calls, including row output, since evaluation and collection
-can overlap. Export metadata records this as `CPU timing scope`. Set BLAS/OpenMP
-thread limits to one to avoid nested threading. The library adapter and its
-ownership rules are described in [Parallel observable grids](parallel-grids.md).
-
-`bethe-sine-gordon-bethe-yang` also accepts `--threads N` for its independent
-`--levels` calculations. Root searches and phase quadratures stay sequential
-inside each level. The same bounded window preserves Bethe-number order and
-all failure diagnostics; only the calling thread writes tables. CPU timing
-covers the entire level grid including output. One worker, a single level and
-the analytic free point use direct serial evaluation; see
-[sine-Gordon excitations](sine-gordon-excitations.md).
-
 ### Timing
 
 Output includes energy, momentum (periodic systems only), normalized equation
@@ -378,153 +295,43 @@ See the model guides for the equations. Increasing precision can help resolve
 closely spaced levels, but always inspect the convergence status before
 treating an energy as an eigenvalue.
 
-## Model-specific entry points
+## Parallel calculations
 
-These notes highlight differences from the XXX example, not every available
-program. See the [model catalogue](models.md#current-coverage) and
-[overview](../README.md) for additional models and thermodynamic tools.
+See [parallel CLI calculations](parallel-calculations.md) for state scans,
+observable grids, thread limits and the two-task finite-volume frontend path.
 
-### Spin-1/2 chains
+<a id="parallel-state-scans"></a>
+[Parallel state scans](parallel-calculations.md#parallel-state-scans).
 
-`bethe-xxx-pbc` is the periodic XXX front end. For free-end OBC, use the separate
-`bethe-xxx-obc` program described in the [open-chain guide](open-chains.md).
+<a id="parallel-observable-grids"></a>
+[Parallel observable grids](parallel-calculations.md#parallel-observable-grids).
 
-For anisotropy, use [`bethe-xxz-pbc`](xxz.md) or the free-end
-[`bethe-xxz-obc`](xxz-open.md); both require `--delta`.
-Both support ground states and sector minima for finite $`\Delta \ge 0`$;
-their excitation and specified-real-root modes still require $`0\le \Delta \le 1`$.
-Massive free-end ground states report an explicit boundary-root coordinate
-where needed; see the [boundary-root guide](xxz-open-massive.md).
+<a id="model-specific-entry-points"></a>
+[Model-specific entry points](command-examples.md#model-specific-entry-points).
 
-### Hubbard electrons
+<a id="spin-12-chains"></a>
+[Spin-1/2 chains](command-examples.md#spin-12-chains).
 
-For electrons, [`bethe-hubbard-pbc`](hubbard.md) requires `--u` and supports
-either sign of the interaction on even rings. Select `--particles N` and
-`--sz VALUE`; the defaults remain N=L and Sz=0. See the
-[supported sector families](hubbard-sectors.md) before choosing a doped sector.
+<a id="hubbard-electrons"></a>
+[Hubbard electrons](command-examples.md#hubbard-electrons).
 
-For free ends, [`bethe-hubbard-obc`](hubbard-open.md) supports every physical
-N and Sz, odd or even L, and either sign of U. It defaults to N=L and the
-smallest nonnegative Sz compatible with N (0 or 1/2).
+<a id="continuum-gases"></a>
+[Continuum gases](command-examples.md#continuum-gases).
 
-### Continuum gases
+<a id="supersymmetric-tj-chain"></a>
+[Supersymmetric t–J chain](command-examples.md#supersymmetric-tj-chain).
 
-For continuum bosons, [`bethe-lieb-liniger-pbc`](lieb-liniger.md) takes the
-particle count as its positional argument and requires `--length ELL --c C`.
-Its excitation scans also require a finite `--padding P` window; continuum
-momentum is not reduced to a Brillouin zone.
+<a id="su3uls-and-spin-1-tb-chains"></a>
+[SU(3)/ULS and spin-1 TB chains](command-examples.md#su3uls-and-spin-1-tb-chains).
 
-For spin-1/2 continuum fermions, [`bethe-gaudin-yang-pbc`](gaudin-yang.md)
-takes N and requires `--length ELL --c C`. Select the populations with `--sz`;
-interacting mixed-spin sectors require odd populations of both spins. The
-free and fully polarized limits also support other populations.
+<a id="biquadratic-chains-and-tl-modules"></a>
+[Biquadratic chains and TL modules](command-examples.md#biquadratic-chains-and-tl-modules).
 
-For more than two continuum fermion components,
-[`bethe-sun-fermions-pbc`](su-fermions.md) takes
-`--populations N1,N2,... --length ELL --c C`. Every occupied interacting
-population must be odd; free and single-component limits allow any counts.
-`--roots` displays all nested seas, with the physical-to-nesting component
-mapping retained in the report.
+<a id="pairing-and-central-spin"></a>
+[Pairing and central spin](command-examples.md#pairing-and-central-spin).
 
-### Supersymmetric t–J chain
+<a id="integrable-ladder"></a>
+[Integrable ladder](command-examples.md#integrable-ladder).
 
-For projected lattice electrons, [`bethe-tj-pbc`](tj.md) fixes t=1, J=2 and
-takes L with optional `--particles N --sz VALUE`. It supports doped sectors
-with odd populations of both spins, plus every no-hole or fully polarized
-sector. Defaults are N=L and the smallest nonnegative Sz compatible with N.
-Explicit `--precision bits-N` or `digits-N` is supported with Uni20 MPFR scalars, including all three existing branches and root exports.
-
-### SU(3)/ULS and spin-1 TB chains
-
-For three-state sites, [`bethe-su3-pbc`](su3.md) takes L divisible by three
-and selects the balanced SU(3) singlet ground state of `H=sum P`. It reports
-two nested rapidity families; arbitrary sectors and finite-ring excitations are
-not yet available in that frontend. [`bethe-su3-dispersion`](su3-dispersion.md)
-provides thermodynamic elementary lines and two-/four-soliton continuum bounds,
-with optional three-site-cell folding.
-
-For the spin-1 bilinear–biquadratic TB point,
-[`bethe-tb-pbc`](takhtajan-babujian.md) takes even L>=4 and selects the
-zero-field singlet ground state of `H=sum[S.S-(S.S)^2]`. Its `--roots` report
-retains finite deviations and the real and imaginary parts of each rapidity.
-[`bethe-tb-dispersion`](tb-dispersion.md) instead supplies infinite-chain
-spinon lines and two-/four-spinon bounds, with explicit spin labels and
-optional two-site momentum folding.
-
-### Biquadratic chains and TL modules
-
-For the pure spin-1 biquadratic chain,
-[`bethe-biquadratic-obc`](biquadratic.md) takes even N>=2 and selects the
-free-end singlet ground state of `H=-sum(S.S)^2` by default. `--through-lines`
-selects a TL module, `--sectors` lists module minima, and `--excitations COUNT|all`
-scans the restricted real-root family (default through-lines=2). The output
-includes physical multiplicities, not a decomposition into SU(2) multiplets.
-
-Its `--roots` output belongs to the auxiliary XXZ model with opposite end
-fields, not the physical spin-1 chain. The [Q-system](xxz-open-qsystem.md)
-and [two-string singlet](xxz-open-two-string.md) modes include selected complex roots.
-
-With `--ferromagnetic`, the [excitation tools](biquadratic-ferromagnetic.md)
-also offer an analytic one-defect band and targeted bound pairs/triples.
-Ferro real-root scans accept odd/even N; `--real-window WIDTH` restricts
-`--excitations` to a [high-label scattering window](biquadratic-scattering.md).
-
-For [mixed bound-pair-plus-defect states](biquadratic-pair-defect.md), use
-`--pair-defect I1,...,Ir,J` or `--pair-defects COUNT|all --real-defects R`
-(default R=1). The latter can restrict all label ranges with `--mixed-window WIDTH`.
-Both fix ell=N-2(R+2); these are not full module spectra, and partial scans return exit 2.
-Explicit `--quantum-numbers` also accepts odd N; AF ground/sector and Q-system
-modes retain their even-N restriction.
-
-### Pairing and central spin
-
-For reduced BCS pairing, [`bethe-richardson`](richardson.md) requires
-`--levels E0,E1,... --pairs M --g G`, with optional zero-based `--blocked`
-indices. Levels are single-particle energies; g>=0 is attractive. This is
-not a chain, so no boundary suffix or lattice momentum applies. Use
-`--variables` for regularized eigenvalue variables, not pair rapidities.
-
-For the rational central-spin model, [`bethe-central-spin`](central-spin.md)
-requires `--couplings A1,A2,... --field B --sz SZ`. All spins are 1/2 and Sz
-includes the central spin. Distinct nonzero couplings and the field can
-have either sign; exactly zero field is supported. This nonspatial model
-also has no boundary suffix; `--variables` prints regularized variables.
-
-### Integrable ladder
-
-For Wang's integrable ladder, [`bethe-ladder-pbc`](ladder.md) takes the
-number of rungs L>=2 and requires `--rung JR`. The leg coefficient is 1
-and the four-spin coefficient is fixed at 4; this is not an ordinary
-Heisenberg ladder. Use `--singlets NS` for one singlet-count sector or
-`--sectors` for all sector minima; triplet populations are minimized too.
-`--roots` prints the selected state's highest-weight representative and
-retains the distinction between it and a physical SU(4) descendant.
-The frontend supports explicit `bits-N`/`digits-N` precision with Uni20 MPFR scalars, including fixed singlet and magnetization sectors and partial scans.
-
-### Sine-Gordon field theory
-
-For [sine-Gordon excitations](sine-gordon-excitations.md),
-`bethe-sine-gordon-dispersion --p P` supplies particle lines and pair thresholds;
-`bethe-sine-gordon-bethe-yang --p P --length L` supplies asymptotic same-charge
-pair levels for P>=1. The latter omits wrapping corrections and is distinct
-from the [finite-volume vacuum](sine-gordon.md) calculation.
-
-`bethe-sine-gordon-excited --p P --length L --number 0.5` instead solves the
-[exact two-hole NLIE](sine-gordon-excited.md) for P>=1, I=0.5 or 1.5. Its
-`gap` table subtracts a separately converged vacuum; use
-`--csv-table gap=gap.csv` to export that table directly.
-
-`bethe-kondo-response` also accepts `bits-N` and `digits-N` with Uni20 MPFR
-scalars enabled. Its series and quadrature budgets remain separate from the
-arithmetic precision; see [Kondo controls](kondo.md#library-use-and-numerical-contract).
-
-Hubbard thermodynamic MPFR uses explicit precision for quadrature and extrema.
-All paths need MPFR scalars; doped dispersion backgrounds use normal Uni20
-CPU/provider LU dispatch. See [Hubbard dispersions](hubbard-dispersion.md#explicit-precision-in-c).
-
-`bethe-tasep-pbc` accepts `bits-N` and `digits-N` with Uni20 MPFR/MPC
-scalars, using normal CPU/provider LU dispatch. Seed and Newton work budgets
-remain independent of arithmetic precision; see [TASEP](tasep.md#explicit-precision).
-
-`bethe-asep-pbc` also accepts explicit MPFR precision for its TASEP seed and
-continuation; see [ASEP controls and shared seeds](asep.md#explicit-precision).
+<a id="sine-gordon-field-theory"></a>
+[Sine-Gordon field theory](command-examples.md#sine-gordon-field-theory).

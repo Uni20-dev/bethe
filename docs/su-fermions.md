@@ -220,7 +220,7 @@ CLI dependency, leaving future Python bindings independent of the frontend.
 Independent population/length/coupling requests compose through the owning
 Async grid. Own the population vector in the submitted callable, then form
 the solver's span inside it; a borrowed span alone does not preserve its input.
-The [nested sweep example](async-execution.md#owning-nested-model-requests)
+The [nested sweep example](async-examples.md#owning-nested-model-requests)
 demonstrates a coupling curve. Complete partial results retain their reached
 coupling and must not be interpreted as converged at the requested coupling.
 Each continuation remains sequential, and the single-request CLI stays serial.

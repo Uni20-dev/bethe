@@ -51,7 +51,7 @@ Rows stream on the calling thread in momentum order, with +1 before -1 when
 both charges are requested. Numerical failures and missing-reference statuses
 remain explicit rows. `--no-retain` discards delivered rows. CPU time includes
 the vacuum solve and the complete ordered level grid, including row output.
-See [measurements and limits](parallel-grids.md#potts-momentum-scans).
+See [measurements and limits](benchmark-state-scans.md#potts-momentum-scans).
 
 ## Hamiltonian and physical labels
 
