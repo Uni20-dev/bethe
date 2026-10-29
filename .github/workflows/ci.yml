@@ -96,6 +96,30 @@ jobs:
         id: build
         run: cmake --build --preset "$PRESET" 2>&1 | tee "${RUNNER_TEMP}/build.log"
 
+      # Resolve private MPFR pool frames before tests; reporting stays offline.
+      - name: Prepare matching MPFR sanitizer symbols
+        if: matrix.preset == 'ci-sanitizers'
+        run: |
+          python3 - <<'PY'
+          import os
+          from pathlib import Path
+          import subprocess
+          build = Path('build') / os.environ['PRESET']
+          cache = {}
+          for line in (build / 'CMakeCache.txt').read_text().splitlines():
+              if '=' in line and ':' in line and not line.startswith(('//', '#')):
+                  key, value = line.split('=', 1)
+                  cache[key.split(':', 1)[0]] = value
+          helper = Path(cache['uni20_SOURCE_DIR']) / 'scripts/prepare-sanitizer-symbols.py'
+          wrapper = subprocess.check_output([
+              'python3', str(helper), '--library', cache['UNI20_MPFR_LIBRARY'],
+              '--output-dir', str(build / 'sanitizer-symbols'),
+              '--symbolizer', 'llvm-symbolizer-19', '--server', 'https://debuginfod.ubuntu.com',
+          ], text=True).strip()
+          with open(os.environ['GITHUB_ENV'], 'a') as environment:
+              environment.write('ASAN_SYMBOLIZER_PATH=' + wrapper + '\n')
+          PY
+
       # A numerical/test failure must not discard a successful compilation.
       - name: Save compiler cache before tests
         if: steps.compiler_cache.outputs.cache-hit != 'true'
@@ -143,3 +167,4 @@ jobs:
             build/${{ matrix.preset }}/CMakeCache.txt
             build/${{ matrix.preset }}/CMakeFiles/CMakeConfigureLog.yaml
             build/${{ matrix.preset }}/Testing/Temporary/
+            build/${{ matrix.preset }}/sanitizer-symbols/symbols.json

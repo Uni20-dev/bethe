@@ -169,5 +169,10 @@ options' finite precision; no ambient MPFR precision is changed. Independent
 256 bits. Mixed-precision owning Async tests include successful and failed
 requests, and compare every result field with direct evaluation.
 
+The independent matrix reference can be regenerated with
+[`scripts/reference_tasep_precision.py`](../scripts/reference_tasep_precision.py)
+(requires `mpmath`). It assembles the physical ten-configuration generator and
+diagonalizes it at 100 and 130 decimal digits, without using Bethe roots.
+
 The seed and Newton budgets retain their native defaults. More bits do not
 guarantee convergence within these budgets or a better state-family selection.
