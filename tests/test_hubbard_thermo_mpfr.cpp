@@ -209,15 +209,9 @@ TEST(HubbardThermoMpfr, ExtremaControlsAndBudgetFailuresAreExplicit)
   EXPECT_EQ(uni20::precision_of(failed.energy_offset), p);
 }
 
-TEST(HubbardThermoMpfr, PhysicalChargeContinuumRetainsExplicitPrecision)
+void check_charge_continuum(model::ChargeContinuumOptions<R> const& controls)
 {
-  auto const p = Precision::bits(160);
-  model::ChargeContinuumOptions<R> controls(p);
-  // Keep this global-search check bounded independently of arithmetic bits.
-  // Accuracy growth of the constituent integrals is tested separately above.
-  controls.search.tolerance = R("1e-8", p);
-  controls.search.position_tolerance = R("1e-6", p);
-  controls.constituent.relative_tolerance = R("1e-12", p);
+  auto const p = controls.constituent.precision();
   auto const result = model::charge_continuum(model::ChargeChannel::holon_antiholon, R(4, p), R(0, p),
                                               model::Convention::symmetric, controls);
   ASSERT_TRUE(result.converged) << int(result.search_status) << ", " << int(result.constituent_status);
@@ -234,6 +228,31 @@ TEST(HubbardThermoMpfr, PhysicalChargeContinuumRetainsExplicitPrecision)
     EXPECT_EQ(uni20::precision_of(*v), p);
   EXPECT_LE(result.quadrature_evaluations, controls.max_quadrature_evaluations);
   EXPECT_EQ(result.delta_particles, 0);
+}
+
+TEST(HubbardThermoMpfr, BoundedChargeContinuumRetainsExplicitPrecision)
+{
+  auto const p = Precision::bits(160);
+  model::ChargeContinuumOptions<R> controls(p);
+  // Exercise a complete three-mesh search with bounded routine-CI cost.
+  // Constituent accuracy growth beyond binary128 is tested independently.
+  controls.search.initial_intervals = 4;
+  controls.search.max_intervals = 16;
+  controls.search.tolerance = R("1e-5", p);
+  controls.search.position_tolerance = R("1e-3", p);
+  controls.constituent.relative_tolerance = R("1e-8", p);
+  check_charge_continuum(controls);
+}
+
+TEST(HubbardThermoMpfr, PhysicalChargeContinuumRetainsExplicitPrecision)
+{
+  auto const p = Precision::bits(160);
+  model::ChargeContinuumOptions<R> controls(p);
+  // Keep the tighter full search in long-running validation.
+  controls.search.tolerance = R("1e-8", p);
+  controls.search.position_tolerance = R("1e-6", p);
+  controls.constituent.relative_tolerance = R("1e-12", p);
+  check_charge_continuum(controls);
 }
 
 #if UNI20_HAS_MPLAPACK_MPREAL

@@ -137,7 +137,8 @@ if(BETHE_HAS_MPREAL)
 
   add_executable(bethe_hubbard_thermo_mpfr_tests test_hubbard_thermo_mpfr.cpp)
   target_link_libraries(bethe_hubbard_thermo_mpfr_tests PRIVATE bethe::bethe TBB::tbb)
-  bethe_discover_tests(bethe_hubbard_thermo_mpfr_tests)
+  bethe_discover_tests(bethe_hubbard_thermo_mpfr_tests
+    LONG_RUNNING_TESTS HubbardThermoMpfr.PhysicalChargeContinuumRetainsExplicitPrecision)
 
   add_executable(bethe_potts_mpfr_tests test_potts_mpfr.cpp)
   target_link_libraries(bethe_potts_mpfr_tests PRIVATE bethe::bethe TBB::tbb)
