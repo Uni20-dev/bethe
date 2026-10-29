@@ -9,6 +9,7 @@
 
 namespace bethe::tasep
 {
+namespace math = uni20::math;
 enum class Status
 {
   converged,
@@ -22,56 +23,87 @@ template <uni20::Real Real> struct Options
 {
     Real tolerance = Real{128} * uni20::numeric_limits<Real>::epsilon();
     std::size_t max_iterations = 100, max_seed_iterations = 1000, max_sites = 256;
+    uni20::Precision precision() const { return uni20::native_precision<Real>(); }
 };
+#if UNI20_HAS_MPREAL
+template <> struct Options<uni20::mpreal>
+{
+    explicit Options(uni20::Precision p) : tolerance(default_tolerance(p)), precision_(p) {}
+    uni20::mpreal tolerance;
+    std::size_t max_iterations = 100, max_seed_iterations = 1000, max_sites = 256;
+    uni20::Precision precision() const { return precision_; }
+
+  private:
+    static uni20::mpreal default_tolerance(uni20::Precision p)
+    {
+      if (p.is_exact()) throw std::invalid_argument("TASEP requires finite working precision");
+      return 128 * uni20::numeric_limits<uni20::mpreal>::epsilon(p);
+    }
+    uni20::Precision precision_;
+};
+#endif
 template <uni20::Real Real> struct GapState
 {
+    GapState()
+      requires(!uni20::has_runtime_precision_v<Real>)
+        : GapState(uni20::native_precision<Real>())
+    {}
+    explicit GapState(uni20::Precision p)
+        : rate(uni20::scalar_at_precision<Real>(0, p)),
+          residual_norm(uni20::scalar_like(rate, uni20::numeric_limits<double>::infinity())), log_y(rate, rate)
+    {}
     std::size_t sites = 0, particles = 0, effective_particles = 0, iterations = 0, seed_iterations = 0;
-    Real rate{}, residual_norm = uni20::numeric_limits<Real>::infinity();
-    std::vector<std::complex<Real>> roots; // Z, in the particle-hole-reduced representation
-    std::complex<Real> log_y{};
-    std::optional<std::complex<Real>> eigenvalue;
+    Real rate, residual_norm;
+    std::vector<uni20::complex<Real>> roots; // Z, in the particle-hole-reduced representation
+    uni20::complex<Real> log_y;
+    std::optional<uni20::complex<Real>> eigenvalue;
     std::optional<Real> gap;
     bool converged = false;
     Status status = Status::iteration_limit;
 };
 namespace detail
 {
-template <uni20::Real Real> bool finite(std::complex<Real> z)
+template <uni20::Complex C> bool finite(C const& z) { return uni20::isfinite(z.real()) && uni20::isfinite(z.imag()); }
+template <uni20::Real Real> Real pi(Real const& exemplar)
 {
-  return uni20::isfinite(z.real()) && uni20::isfinite(z.imag());
+  if constexpr (uni20::has_runtime_precision_v<Real>)
+    return Real{4} * math::atan(uni20::scalar_like(exemplar, 1));
+  else
+    return Real{4} * std::atan(Real{1});
 }
 template <uni20::Real Real> Real wrap(Real x)
 {
-  Real const pi = Real{4} * std::atan(Real{1});
-  return std::remainder(x, Real{2} * pi);
+  Real const period = Real{2} * detail::pi(x);
+  return math::remainder(x, period);
 }
 
 // Factored Cassini polynomial: coefficients in the monomial basis become
 // badly conditioned near half filling. Ehrlich-Aberth here evaluates P/Y
 // logarithmically instead, retaining all L roots before selecting a branch.
 template <uni20::Real Real>
-bool seed(std::size_t l, std::size_t n, std::complex<Real> b, std::vector<std::complex<Real>>& z,
+bool seed(std::size_t l, std::size_t n, uni20::complex<Real> b, std::vector<uni20::complex<Real>>& z,
           std::size_t& iterations, Options<Real> const& options)
 {
-  using C = std::complex<Real>;
-  Real const pi = Real{4} * std::atan(Real{1}), tolerance = Real{128} * uni20::numeric_limits<Real>::epsilon();
+  using C = uni20::complex<Real>;
+  Real const zero = bethe::detail::precision_zero(b.real());
+  Real const pi = detail::pi(zero), tolerance = Real{128} * uni20::numeric_limits<Real>::epsilon(options.precision());
   z.resize(l);
   for (std::size_t j = 0; j < l; ++j)
-    z[j] = Real{2} * std::exp(C(0, Real{2} * pi * (Real(j) + Real{1} / Real{3}) / Real(l)));
+    z[j] = Real{2} * math::exp(C(zero, Real{2} * pi * (Real(j) + Real{1} / Real{3}) / Real(l)));
   while (iterations < options.max_seed_iterations)
   {
-    Real change{};
+    Real change = zero;
     for (std::size_t j = 0; j < l; ++j)
     {
-      C const p = Real(n) * std::log(Real{1} - z[j]) + Real(l - n) * std::log(Real{1} + z[j]);
+      C const p = Real(n) * math::log(Real{1} - z[j]) + Real(l - n) * math::log(Real{1} + z[j]);
       C const difference = b - p;
-      C const scale = std::exp(difference.real() > Real{0} ? -difference : difference);
+      C const scale = math::exp(difference.real() > Real{0} ? -difference : difference);
       C const a = difference.real() > Real{0} ? scale - Real{1} : Real{1} - scale;
       C derivative = Real(n) / (z[j] - Real{1}) + Real(l - n) / (z[j] + Real{1});
       // Multiply numerator and denominator by P/Y when |Y/P|>1;
       // exp(log(Y/P)) itself can overflow far from a perfectly finite root.
       if (difference.real() > Real{0}) derivative *= scale;
-      bethe::detail::CompensatedSum<C> repulsion;
+      bethe::detail::CompensatedSum<C> repulsion(C(zero, zero));
       for (std::size_t k = 0; k < l; ++k)
         if (k != j)
         {
@@ -81,7 +113,7 @@ bool seed(std::size_t l, std::size_t n, std::complex<Real> b, std::vector<std::c
       C const step = a / (derivative - a * repulsion.value());
       if (!finite(step)) return false;
       z[j] -= step;
-      change = std::max(change, std::abs(step));
+      change = std::max(change, math::abs(step));
     }
     ++iterations;
     if (change <= tolerance)
@@ -90,10 +122,10 @@ bool seed(std::size_t l, std::size_t n, std::complex<Real> b, std::vector<std::c
       // small residual. At this negative-Y seed all roots are simple.
       for (std::size_t j = 0; j < l; ++j)
       {
-        C const f = Real(n) * std::log(Real{1} - z[j]) + Real(l - n) * std::log(Real{1} + z[j]) - b;
-        if (!finite(f) || std::abs(C(f.real(), wrap(f.imag()))) > tolerance * Real(l)) return false;
+        C const f = Real(n) * math::log(Real{1} - z[j]) + Real(l - n) * math::log(Real{1} + z[j]) - b;
+        if (!finite(f) || math::abs(C(f.real(), wrap(f.imag()))) > tolerance * Real(l)) return false;
         for (std::size_t k = 0; k < j; ++k)
-          if (std::abs(z[j] - z[k]) < std::sqrt(tolerance)) return false;
+          if (math::abs(z[j] - z[k]) < math::sqrt(tolerance)) return false;
       }
       return true;
     }
@@ -104,7 +136,7 @@ bool seed(std::size_t l, std::size_t n, std::complex<Real> b, std::vector<std::c
 template <uni20::Real Real> struct System
 {
     std::size_t l, n;
-    using C = std::complex<Real>;
+    using C = uni20::complex<Real>;
     struct Evaluation
     {
         std::vector<Real> residual, jacobian;
@@ -113,7 +145,9 @@ template <uni20::Real Real> struct System
     Evaluation evaluate(std::span<C const> z, C b, bool jacobian) const
     {
       std::size_t const order = 2 * (n + 1);
-      Evaluation out{std::vector<Real>(order), jacobian ? std::vector<Real>(order * order) : std::vector<Real>{}};
+      Real const zero = bethe::detail::precision_zero(b.real());
+      Evaluation out{std::vector<Real>(order, zero),
+                     jacobian ? std::vector<Real>(order * order, zero) : std::vector<Real>{}, zero};
       auto put = [&](std::size_t row, std::size_t col, C v) {
         if (!jacobian) return;
         out.jacobian[(2 * row) * order + 2 * col] = v.real();
@@ -125,25 +159,25 @@ template <uni20::Real Real> struct System
         f.imag(wrap(f.imag()));
         if (!finite(f))
         {
-          out.norm = uni20::numeric_limits<Real>::infinity();
+          out.norm = uni20::scalar_like(zero, uni20::numeric_limits<double>::infinity());
           return;
         }
         out.residual[2 * row] = f.real();
         out.residual[2 * row + 1] = f.imag();
-        out.norm = std::max(out.norm, std::abs(f) / Real(l));
+        out.norm = std::max(out.norm, math::abs(f) / Real(l));
       };
-      bethe::detail::CompensatedSum<C> sum;
-      sum.add(C(Real(l) * std::log(Real{2}), Real{4} * std::atan(Real{1})) - b);
+      bethe::detail::CompensatedSum<C> sum(C(zero, zero));
+      sum.add(C(Real(l) * math::log(uni20::scalar_like(zero, 2)), detail::pi(zero)) - b);
       for (std::size_t j = 0; j < n; ++j)
       {
-        residual(j, Real(n) * std::log(Real{1} - z[j]) + Real(l - n) * std::log(Real{1} + z[j]) - b);
+        residual(j, Real(n) * math::log(Real{1} - z[j]) + Real(l - n) * math::log(Real{1} + z[j]) - b);
         put(j, j, Real(n) / (z[j] - Real{1}) + Real(l - n) / (z[j] + Real{1}));
-        put(j, n, C(-1));
-        sum.add(std::log((z[j] - Real{1}) / (z[j] + Real{1})));
+        put(j, n, C(uni20::scalar_like(zero, -1), zero));
+        sum.add(math::log((z[j] - Real{1}) / (z[j] + Real{1})));
         put(n, j, Real{2} / (z[j] * z[j] - Real{1}));
       }
       residual(n, sum.value());
-      put(n, n, C(-1));
+      put(n, n, C(uni20::scalar_like(zero, -1), zero));
       return out;
     }
 };
@@ -155,7 +189,10 @@ template <uni20::Real Real> struct System
 template <uni20::Real Real>
 GapState<Real> relaxation_gap(std::size_t l, std::size_t particles, Real rate = Real{1}, Options<Real> options = {})
 {
-  using C = std::complex<Real>;
+  using C = uni20::complex<Real>;
+  Real const zero = uni20::scalar_at_precision<Real>(0, options.precision());
+  bethe::detail::require_same_precision(rate, zero);
+  bethe::detail::require_same_precision(options.tolerance, zero);
   if (l < 2 || particles > l || !uni20::isfinite(rate) || !(rate > Real{0}) || !uni20::isfinite(options.tolerance) ||
       !(options.tolerance > Real{0}))
     throw std::invalid_argument("TASEP requires L>=2, 0<=N<=L, finite positive rate and tolerance");
@@ -165,7 +202,7 @@ GapState<Real> relaxation_gap(std::size_t l, std::size_t particles, Real rate = 
   auto const order = 2 * (n + 1);
   if (order > static_cast<std::size_t>(std::numeric_limits<std::ptrdiff_t>::max()) / sizeof(Real) / order)
     throw std::length_error("TASEP matrix too large");
-  GapState<Real> out;
+  GapState<Real> out(options.precision());
   out.sites = l;
   out.particles = particles;
   out.effective_particles = n;
@@ -174,19 +211,19 @@ GapState<Real> relaxation_gap(std::size_t l, std::size_t particles, Real rate = 
   {
     out.converged = true;
     out.status = Status::stationary_only;
-    out.residual_norm = Real{0};
+    out.residual_norm = zero;
     return out;
   }
-  Real const pi = Real{4} * std::atan(Real{1});
+  Real const pi = detail::pi(zero);
   if (n == 1)
   {
-    Real const angle = Real{2} * pi / Real(l), sine = std::sin(pi / Real(l));
-    C const value(-Real{2} * sine * sine, l == 2 ? Real{0} : std::sin(angle));
+    Real const angle = Real{2} * pi / Real(l), sine = math::sin(pi / Real(l));
+    C const value(-Real{2} * sine * sine, l == 2 ? zero : math::sin(angle));
     out.roots = {Real{1} + Real{2} * value};
-    out.log_y = std::log(Real{1} - out.roots[0]) + Real(l - 1) * std::log(Real{1} + out.roots[0]);
+    out.log_y = math::log(Real{1} - out.roots[0]) + Real(l - 1) * math::log(Real{1} + out.roots[0]);
     out.eigenvalue = rate * value;
     out.gap = -out.eigenvalue->real();
-    out.residual_norm = Real{0};
+    out.residual_norm = zero;
     if (!detail::finite(*out.eigenvalue) || !(*out.gap > Real{0}))
     {
       out.eigenvalue.reset();
@@ -198,8 +235,10 @@ GapState<Real> relaxation_gap(std::size_t l, std::size_t particles, Real rate = 
     out.status = Status::converged;
     return out;
   }
-  Real const rho = Real(n) / Real(l);
-  out.log_y = C(Real(l) * std::log(Real{2}) + Real(n) * std::log(rho) + Real(l - n) * std::log1p(-rho) + Real{3.5}, pi);
+  Real const rho = uni20::scalar_like(rate, n) / Real(l);
+  out.log_y = C(Real(l) * math::log(uni20::scalar_like(zero, 2)) + Real(n) * math::log(rho) +
+                    Real(l - n) * math::log1p(-rho) + Real{3.5},
+                pi);
   std::vector<C> all;
   if (!detail::seed(l, n, out.log_y, all, out.seed_iterations, options))
   {
@@ -210,7 +249,7 @@ GapState<Real> relaxation_gap(std::size_t l, std::size_t particles, Real rate = 
   out.roots.assign(all.begin(), all.begin() + n);
   // Golinelli-Mallick c1: replace Z_N by Z_(N+1), the upper roots
   // straddling the Cassini pinch. Ignore tiny imaginary noise on real roots.
-  Real const threshold = std::sqrt(uni20::numeric_limits<Real>::epsilon());
+  Real const threshold = math::sqrt(uni20::numeric_limits<Real>::epsilon(options.precision()));
   std::size_t remove = n, add = l;
   for (std::size_t j = 0; j < n; ++j)
     if (all[j].imag() > threshold) remove = j;
@@ -250,10 +289,10 @@ GapState<Real> relaxation_gap(std::size_t l, std::size_t particles, Real rate = 
       return out;
     }
     auto trial = out.roots;
-    C b{};
-    Real damping{1};
+    C b(zero, zero);
+    Real damping = uni20::scalar_like(zero, 1);
     bool accepted = false;
-    for (int backtrack = 0; backtrack <= uni20::numeric_limits<Real>::digits(); ++backtrack)
+    for (int backtrack = 0; backtrack <= uni20::numeric_limits<Real>::digits(options.precision()); ++backtrack)
     {
       for (std::size_t j = 0; j < n; ++j)
         trial[j] = out.roots[j] + damping * C(evaluation.residual[2 * j], evaluation.residual[2 * j + 1]);
@@ -274,26 +313,26 @@ GapState<Real> relaxation_gap(std::size_t l, std::size_t particles, Real rate = 
     out.log_y = b;
     ++out.iterations;
   }
-  bethe::detail::CompensatedSum<C> energy;
-  bethe::detail::CompensatedSum<C> translation;
+  bethe::detail::CompensatedSum<C> energy(C(zero, zero));
+  bethe::detail::CompensatedSum<C> translation(C(zero, zero));
   for (C z : out.roots)
   {
     energy.add((z - Real{1}) / Real{2});
-    translation.add(std::log((Real{1} + z) / Real{2}));
+    translation.add(math::log((Real{1} + z) / Real{2}));
   }
   // Distinct regular roots and a first-harmonic translation phase are
   // necessary checks on the selected relaxation branch, not completeness.
-  Real const phase = std::abs(detail::wrap(translation.value().imag()));
+  Real const phase = math::abs(detail::wrap(translation.value().imag()));
   if (!detail::finite(translation.value()) ||
-      std::abs(translation.value().real()) > Real{8} * Real(l) * options.tolerance ||
-      std::abs(phase - Real{2} * pi / Real(l)) > Real{8} * Real(l) * options.tolerance)
+      math::abs(translation.value().real()) > Real{8} * Real(l) * options.tolerance ||
+      math::abs(phase - Real{2} * pi / Real(l)) > Real{8} * Real(l) * options.tolerance)
   {
     out.status = Status::precision_limit;
     return out;
   }
   for (std::size_t j = 0; j < n; ++j)
     for (std::size_t k = 0; k < j; ++k)
-      if (std::abs(out.roots[j] - out.roots[k]) < threshold)
+      if (math::abs(out.roots[j] - out.roots[k]) < threshold)
       {
         out.status = Status::precision_limit;
         return out;
@@ -301,19 +340,19 @@ GapState<Real> relaxation_gap(std::size_t l, std::size_t particles, Real rate = 
   C value = energy.value();
   if (n == l - n)
   {
-    if (std::abs(value.imag()) > Real{8} * Real(l) * options.tolerance)
+    if (math::abs(value.imag()) > Real{8} * Real(l) * options.tolerance)
     {
       out.status = Status::precision_limit;
       return out;
     }
-    value.imag(Real{0}); // The half-filled leading eigenvalue is real.
+    value.imag(zero); // The half-filled leading eigenvalue is real.
   }
   if (value.imag() < Real{0})
   {
-    value = std::conj(value);
-    out.log_y = std::conj(out.log_y);
+    value = math::conj(value);
+    out.log_y = math::conj(out.log_y);
     for (auto& z : out.roots)
-      z = std::conj(z);
+      z = math::conj(z);
   }
   value *= rate;
   if (!detail::finite(value) || !(value.real() < Real{0}))
