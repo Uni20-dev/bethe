@@ -381,7 +381,7 @@ treating an energy as an eigenvalue.
 ## Model-specific entry points
 
 These notes highlight differences from the XXX example, not every available
-program. See the [model catalogue](models.md#candidate-index) and
+program. See the [model catalogue](models.md#current-coverage) and
 [overview](../README.md) for additional models and thermodynamic tools.
 
 ### Spin-1/2 chains

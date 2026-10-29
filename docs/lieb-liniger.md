@@ -203,5 +203,5 @@ implements reflection equations, not a boundary toggle on the ring frontend;
 negative $`c`$ must not be treated as a sign switch in this real-root solver.
 For thermodynamic type-I/type-II curves, use the separate
 [dispersion frontend](lieb-liniger-thermo.md), not a finite label scan.
-See the [catalogue](models.md#lieb-liniger-the-simplest-new-interacting-family)
+See the [catalogue](model-roadmap.md#lieb-liniger-the-simplest-new-interacting-family)
 and [bibliography](../CITATIONS.md) for the next extensions and references.

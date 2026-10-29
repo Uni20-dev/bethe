@@ -1,6 +1,6 @@
 # Periodic SU(3) permutation chain
 
-[Overview](../README.md) · [CLI controls](command-line.md) · [Model catalogue](models.md#su-n-permutation-chains-and-the-spin-1-uls-point)
+[Overview](../README.md) · [CLI controls](command-line.md) · [Model catalogue](model-roadmap.md#su-n-permutation-chains-and-the-spin-1-uls-point)
 
 Each site has three states, called colors. The nearest-neighbor operator P
 exchanges them: $`P \lvert a,b \gt  = \rvert b,a \gt `$. We solve the antiferromagnetic ring
