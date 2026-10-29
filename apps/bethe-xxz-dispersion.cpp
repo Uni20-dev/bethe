@@ -2,6 +2,7 @@
 // Copyright (C) 2026 Ian McCulloch
 #include "program-options.hpp"
 #include "result-output.hpp"
+#include "solver-precision.hpp"
 #include <bethe/xxz_bulk.hpp>
 #include <bethe/xxz_dispersion.hpp>
 
@@ -35,6 +36,7 @@ auto program_info()
       "levels.",
       "Bulk tolerance defaults to 256 epsilon in units J*max(1,abs(Delta)). Numerical failures leave values empty "
       "(JSON null) and exit 2. A massive gap below the normal scalar range is rejected, never reported as zero.",
+      "bits-N/digits-N select explicit MPFR arithmetic without MPLAPACK; quadrature budgets remain independent.",
       "See docs/xxz-dispersion.md for conventions and limits. Use --references for literature and applicability."};
   return info;
 }
@@ -51,7 +53,7 @@ void add_options(CLI::App& app, Arguments& a)
   cli::text_option(app, "--momentum", a.momentum, "One momentum instead of a grid (radians/site)")
       ->type_name("REAL")
       ->excludes(points);
-  cli::precision_option(app, a.precision);
+  cli::precision_option(app, a.precision, cli::ArbitraryPrecision::real);
   cli::text_option(app, "--tolerance", a.tolerance, "Bulk-energy tolerance (default 256 epsilon)")->type_name("REAL");
   cli::count_option(app, "--max-evaluations", a.evaluations, "Bulk integral/series evaluation budget")
       ->capture_default_str();
@@ -75,20 +77,20 @@ char const* name(bethe::xxz::BulkStatus status)
   }
   return "unknown";
 }
-template <uni20::Real Real> int run(Arguments const& a, int argc, char** argv)
+template <uni20::Real Real> int run(Arguments const& a, bethe::xxz::BulkOptions<Real> controls, int argc, char** argv)
 {
   uni20::run_context context(program_info(), {.invocation = std::vector<std::string>(argv, argv + argc)});
-  Real const delta = uni20::parse_real<Real>(a.delta), exchange = uni20::parse_real<Real>(a.exchange);
-  Real const pi = bethe::detail::pi<Real>();
+  Real const delta = cli::parse_solver_real<Real>(a.delta, controls),
+             exchange = cli::parse_solver_real<Real>(a.exchange, controls);
+  Real const pi = bethe::detail::spinon_pi(delta);
   std::optional<Real> momentum;
-  if (a.momentum) momentum = uni20::parse_real<Real>(*a.momentum);
+  if (a.momentum) momentum = cli::parse_solver_real<Real>(*a.momentum, controls);
   if (momentum && (!uni20::isfinite(*momentum) || *momentum < Real{0} ||
                    *momentum > (a.branch == "two-spinon" ? Real{2} * pi : pi)))
     throw std::invalid_argument("momentum outside the selected branch range");
-  bethe::xxz::BulkOptions<Real> controls;
   controls.max_evaluations = a.evaluations;
   controls.max_levels = a.levels;
-  if (a.tolerance) controls.tolerance = uni20::parse_real<Real>(*a.tolerance);
+  if (a.tolerance) controls.tolerance = cli::parse_solver_real<Real>(*a.tolerance, controls);
   auto const bulk = context.measure([&] { return bethe::xxz::bulk_energy_density(delta, exchange, controls); });
   std::optional<bethe::xxz::SpinonDispersion<Real>> band;
   std::string band_status = "converged", failure;
@@ -157,7 +159,9 @@ template <uni20::Real Real> int run(Arguments const& a, int argc, char** argv)
       std::size_t const count = momentum ? 1 : a.points;
       for (std::size_t i = 0; i < count; ++i)
       {
-        Real const p = momentum ? *momentum : i == count - 1 ? end : end * (Real(i) / Real(count - 1));
+        Real const p = momentum         ? *momentum
+                       : i == count - 1 ? end
+                                        : end * (uni20::scalar_like(end, i) / Real(count - 1));
         Optional energy, lower, upper;
         std::string status = band_status;
         if (band)
@@ -187,7 +191,7 @@ template <uni20::Real Real> int run(Arguments const& a, int argc, char** argv)
             complete = false;
           }
         }
-        Real const cell = Real{2} * (p < pi ? p : p < Real{2} * pi ? p - pi : Real{0});
+        Real const cell = Real{2} * (p < pi ? p : p < Real{2} * pi ? p - pi : uni20::scalar_like(p, 0));
         table.append(branch, p, p / pi, cell, energy, lower, upper, status);
       }
     }
@@ -225,6 +229,7 @@ int main(int argc, char** argv)
           throw std::invalid_argument("require 2<=points<=1000000");
         if (a.folded && a.branch == "spinon")
           throw std::invalid_argument("--folded changes only the two-spinon continuum");
-        return cli::dispatch_precision(a.precision, [&]<typename Real>() { return run<Real>(a, argc, argv); });
+        return cli::dispatch_options_precision<cli::ArbitraryPrecision::real, bethe::xxz::BulkOptions>(
+            a.precision, [&](auto controls) { return run(a, std::move(controls), argc, argv); });
       });
 }

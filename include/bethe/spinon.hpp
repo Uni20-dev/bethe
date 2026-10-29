@@ -80,6 +80,7 @@ template <uni20::Real Real> [[nodiscard]] Real spinon_energy(Real k, Real delta,
   using std::acos;
   using std::sin;
   bethe::detail::validate_spinon_parameters(k, exchange);
+  bethe::detail::require_same_precision(delta, k);
   if (!uni20::isfinite(delta) || delta <= -Real{1} || delta > Real{1})
     throw std::invalid_argument("gapless XXZ dispersion requires -1 < Delta <= 1");
   if (delta == Real{1}) return heisenberg::spinon_energy(k, exchange);
