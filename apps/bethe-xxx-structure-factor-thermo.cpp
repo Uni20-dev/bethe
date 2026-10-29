@@ -2,6 +2,7 @@
 // Copyright (C) 2026 Ian McCulloch
 #include "execution-options.hpp"
 #include "result-output.hpp"
+#include "solver-precision.hpp"
 #include <bethe/observable_grid.hpp>
 #include <bethe/xxx_thermodynamic_structure_factor.hpp>
 
@@ -14,6 +15,7 @@ struct Arguments
     std::string exchange = "1", channel = "zz", precision = "fp64", omega_min = "0";
     std::optional<std::string> momentum, omega, omega_max, tolerance;
     std::size_t points = 201, momentum_points = 65, evaluations = 200000;
+    std::optional<std::size_t> max_order;
     int threads = 1;
     cli::DataOutputOptions output;
 };
@@ -56,7 +58,8 @@ void add_options(CLI::App& app, Arguments& a)
   cli::text_option(app, "--tolerance", a.tolerance, "Absolute I(rho) error target (default 4096 epsilon)");
   cli::count_option(app, "--max-evaluations", a.evaluations, "Kernel evaluation budget per point")
       ->capture_default_str();
-  cli::precision_option(app, a.precision);
+  cli::count_option(app, "--max-quadrature-order", a.max_order, "Power of two, 32..2048; default 64 native, 256 MPFR");
+  cli::precision_option(app, a.precision, cli::ArbitraryPrecision::real);
   cli::threads_option(app, a.threads)->description("Scheduler concurrency limit for independent spectral points");
   cli::add_data_output_options(
       app, a.output,
@@ -78,37 +81,43 @@ char const* status(model::SpectralDensityStatus s)
   }
   return "unknown";
 }
-template <uni20::Real Real> int run(Arguments const& a, int argc, char** argv)
+template <uni20::Real Real>
+int run(Arguments const& a, model::StructureFactorOptions<Real> options, int argc, char** argv)
 {
   uni20::run_context context(program_info(), {.invocation = std::vector<std::string>(argv, argv + argc)});
-  Real const pi = bethe::detail::pi<Real>(), exchange = uni20::parse_real<Real>(a.exchange);
-  model::StructureFactorOptions<Real> options;
+  Real const zero = uni20::scalar_at_precision<Real>(0, options.precision());
+  Real const one = uni20::scalar_like(zero, 1);
+  Real const pi = Real{4} * uni20::math::atan(one), exchange = cli::parse_solver_real<Real>(a.exchange, options);
   options.max_evaluations = a.evaluations;
-  if (a.tolerance) options.tolerance = uni20::parse_real<Real>(*a.tolerance);
+  if (a.tolerance) options.tolerance = cli::parse_solver_real<Real>(*a.tolerance, options);
+  if (a.max_order) options.max_order = *a.max_order;
   model::ThermodynamicTwoSpinonStructureFactor<Real> const sf(exchange, options);
-  auto grid = [](std::optional<std::string> const& one, Real lo, Real hi, std::size_t n) {
-    if (one) return std::vector<Real>{uni20::parse_real<Real>(*one)};
+  auto grid = [&](std::optional<std::string> const& one, Real lo, Real hi, std::size_t n) {
+    if (one) return std::vector<Real>{cli::parse_solver_real<Real>(*one, options)};
     if (!uni20::isfinite(lo) || !uni20::isfinite(hi) || !(hi > lo) || n < 2 || n > 1000000)
       throw std::invalid_argument("invalid grid: finite increasing endpoints and 2..1000000 points required");
     std::vector<Real> values(n);
     for (std::size_t i = 0; i < n; ++i)
-      values[i] = (Real{1} - Real(i) / Real(n - 1)) * lo + Real(i) / Real(n - 1) * hi;
+    {
+      Real const fraction = uni20::scalar_like(lo, i) / Real(n - 1);
+      values[i] = (Real{1} - fraction) * lo + fraction * hi;
+    }
     return values;
   };
-  auto const q = grid(a.momentum, Real{0}, Real{2} * pi, a.momentum_points);
-  auto const w = grid(a.omega, uni20::parse_real<Real>(a.omega_min),
-                      a.omega_max ? uni20::parse_real<Real>(*a.omega_max) : pi * exchange, a.points);
+  auto const q = grid(a.momentum, zero, Real{2} * pi, a.momentum_points);
+  auto const w = grid(a.omega, cli::parse_solver_real<Real>(a.omega_min, options),
+                      a.omega_max ? cli::parse_solver_real<Real>(*a.omega_max, options) : pi * exchange, a.points);
   for (Real p : q)
     (void)sf.boundaries(p);
   for (Real f : w)
     if (!uni20::isfinite(f)) throw std::invalid_argument("frequency must be finite");
   if (q.size() > 1000000 / w.size()) throw std::length_error("spectral grid exceeds 1000000 points");
   std::size_t const count = q.size() * w.size();
-  Real const scale = a.channel == "zz" ? Real{1} : Real{2};
+  Real const scale = a.channel == "zz" ? one : Real{2} * one;
   uni20::async::TbbScheduler scheduler(a.threads);
   // Group cheap native samples; binary128 quadrature needs individual tasks
   // because adjacent points can have very different evaluation costs.
-  constexpr std::size_t block_size = uni20::numeric_limits<Real>::digits() > 64 ? 1 : 16;
+  std::size_t const block_size = uni20::numeric_limits<Real>::digits(options.precision()) > 64 ? 1 : 16;
   bethe::ExecutionOptions const execution{
       .scheduler = &scheduler, .max_in_flight = std::max(std::size_t{128 / block_size}, std::size_t(a.threads) * 2)};
   std::size_t failures = 0, thresholds = 0;
@@ -121,6 +130,7 @@ template <uni20::Real Real> int run(Arguments const& a, int argc, char** argv)
       .precision(a.precision)
       .field("tolerance", "Kernel tolerance", options.tolerance)
       .field("max_evaluations", "Max kernel evaluations per point", options.max_evaluations)
+      .field("max_quadrature_order", "Maximum Gauss-Legendre order", options.max_order)
       .field("threads", "Scheduler concurrency limit", a.threads)
       .field("max_in_flight", "Maximum points in flight", execution.max_in_flight * block_size)
       .field("block_size", "Points per task", block_size)
@@ -219,6 +229,7 @@ int main(int argc, char** argv)
       argc, argv, program_info(), [&](auto& app) { add_options(app, a); },
       [&](auto&) {
         a.output.validate();
-        return cli::dispatch_precision(a.precision, [&]<typename Real>() { return run<Real>(a, argc, argv); });
+        return cli::dispatch_options_precision<cli::ArbitraryPrecision::real, model::StructureFactorOptions>(
+            a.precision, [&](auto options) { return run(a, std::move(options), argc, argv); });
       });
 }
