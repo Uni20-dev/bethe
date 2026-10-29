@@ -185,6 +185,10 @@ or `UNI20_ENABLE_MPC` options.
 
 ## Enable arbitrary precision
 
+Hubbard half-filled dispersions and continuum edges support scalar-only MPFR;
+doped Hubbard dispersions additionally need MPLAPACK MPFR for their Fredholm
+linear systems.
+
 Arbitrary precision is optional. Uni20 enables its real and complex scalars
 together, requiring GMP, MPFR >= 4.2, and MPC development packages. Every
 currently supported MPFR frontend works with `UNI20_ENABLE_MPREAL=ON` and
