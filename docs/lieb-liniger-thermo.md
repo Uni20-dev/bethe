@@ -33,7 +33,7 @@ or `--p-max`. Negative-momentum curves follow by parity; this interface uses p>=
 
 `--threads N` evaluates independent momenta concurrently after preparing the
 background once (default 1). See
-[parallel observable grids](command-line.md#parallel-observable-grids) for
+[parallel observable grids](parallel-calculations.md#parallel-observable-grids) for
 timing, ordering and thread-budget conventions.
 
 The `dispersion` table includes `p`, `p_over_pi_n`, `energy`, the particle/hole

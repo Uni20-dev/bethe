@@ -182,7 +182,7 @@ binary64 with residual about 0.159, far above tolerance. The same request in
 50-update limit there. Increasing arithmetic precision alone has not resolved
 this example. Its returned energy is an unconverged estimate and must not be
 used as a physical result. The large filling-curve checks in
-[parallel-grid measurements](parallel-grids.md#nested-model-parameter-sweeps)
+[parallel-grid measurements](benchmark-state-scans.md#nested-model-parameter-sweeps)
 record these numerical failures separately from the concurrency checks.
 
 Tests cover native-precision analytic energies (including E=-4 for one
@@ -199,7 +199,7 @@ own equations and labels. Neither shifted centered labels nor copying
 Hubbard's finite-ring selection is a validated extension.
 
 Supported size/population requests compose through the owning Async grid;
-the [nested sweep example](async-execution.md#owning-nested-model-requests)
+the [nested sweep example](async-examples.md#owning-nested-model-requests)
 demonstrates balanced odd-population filling curves. Each solve owns its roots
 and scratch, and failed final iterates retain all diagnostics. The single-request
 CLI and each Newton sequence stay serial. Explicit MPFR remains a separate audit

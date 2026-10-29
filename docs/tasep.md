@@ -141,7 +141,7 @@ The [ASEP library/frontend](asep.md) uses this TASEP seed with its own bidirecti
 equations and branch continuation.
 
 Independent sizes and fillings compose through the existing owning Async grid;
-the [TASEP/XYZ example](async-execution.md#independent-tasep-and-finite-xyz-solves)
+the [TASEP/XYZ example](async-examples.md#independent-tasep-and-finite-xyz-solves)
 demonstrates a filling curve with bounded admission and complete diagnostics.
 Each Cassini seed and Newton solve remains sequential. A positive rate change
 only scales the final eigenvalue and gap, so a rate-only curve should reuse one

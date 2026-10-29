@@ -1,6 +1,11 @@
 # Async dependency sanitizer findings
 
-Bethe pins Uni20 `04163b9b84bb71830b2305a2a346d526ecb946ab`, including the
+**Historical investigation, 26–27 October 2026; resolved upstream.**
+For the current sanitizer configuration, symbol preparation and suppression
+policy, use [testing and CI](testing.md#continuous-integration). The counts and
+revisions below describe the original checkpoints.
+
+The integration checkpoint used Uni20 `04163b9b84bb71830b2305a2a346d526ecb946ab`, including the
 sanitizer boundaries in [Uni20 PR #97](https://github.com/Uni20-dev/uni20/pull/97)
 and [PR #99](https://github.com/Uni20-dev/uni20/pull/99),
 and notification-based waits in [Uni20 PR #98](https://github.com/Uni20-dev/uni20/pull/98),

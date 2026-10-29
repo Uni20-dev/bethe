@@ -174,7 +174,7 @@ three-strings, singular solutions and their quantum-number branches need
 explicit treatment; changing I_j in this ground-only solver is insufficient.
 
 Independent even sizes compose through the existing owning Async grid; the
-[nested sweep example](async-execution.md#owning-nested-model-requests) retains
+[nested sweep example](async-examples.md#owning-nested-model-requests) retains
 complete centers, deviations, conjugate roots and failure diagnostics. Coupled
 Newton updates and the single-request CLI remain serial. MPFR needs explicit
 controls, constants and Newton precision plus a finite-deviation/root-range

@@ -1,6 +1,12 @@
-# Goal: exact excitation benchmarks for MPS and iMPS
+# Completed plan: excitation benchmarks for MPS and iMPS
 
-Develop native-precision Bethe-ansatz reference data for momentum-resolved MPS
+**Completed implementation sequence; status reviewed 30 October 2026.**
+This record preserves the original native-precision milestones. Current tools
+also support explicit MPFR; use the [supported-model index](models.md),
+[tutorials](tutorials/index.md) and [capability inventory](app-capabilities.md)
+for current usage. Remaining proposals belong in the [model roadmap](model-roadmap.md).
+
+The original goal was to develop native-precision Bethe-ansatz reference data for momentum-resolved MPS
 excitation calculations, prioritizing short-range lattice Hamiltonians and
 thermodynamic dispersions. Priority order:
 

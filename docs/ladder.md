@@ -333,7 +333,7 @@ Each query uses the same sector selection, tie handling and compensated energy
 shifts as a direct scan. Copies of the prepared object share immutable storage;
 query results own their selected roots. Concurrent const queries have independent
 cursors and scratch. Preparation is available through the existing
-[Async background/grid API](async-execution.md#prepared-ladder-field-and-rung-sweeps),
+[Async background/grid API](async-examples.md#prepared-ladder-field-and-rung-sweeps),
 so clients can submit consumers before observing preparation. The ordinary
 single-request frontend remains serial.
 

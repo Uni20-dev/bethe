@@ -168,7 +168,7 @@ couplings can amplify energy error; use higher precision and compare
 results when a problem is ill-conditioned.
 
 Rectangular corrections and tangents share the Richardson solver's
-[recoverable Uni20 QR path](building.md#linear-solves-and-failure-policy).
+[recoverable Uni20 QR path](development.md#linear-solves-and-failure-policy).
 The model still owns the physical residual and continuation acceptance;
 a successful least-squares fit alone does not establish convergence.
 
@@ -208,7 +208,7 @@ matrix elements remain separate future work.
 
 ## Independent parameter sweeps
 
-Use the shared [Async observable grid](async-execution.md#independent-richardson-and-central-spin-solves)
+Use the shared [Async observable grid](async-examples.md#independent-richardson-and-central-spin-solves)
 for independent couplings, fields or sectors. Capture input vectors and solver
 options by value so each evaluation's borrowed spans remain valid, and wait on
 the final grid result. Continuation within one solve stays sequential. The

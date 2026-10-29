@@ -206,7 +206,7 @@ degeneracies. They are separate capabilities, not flags on this first solver.
 
 ## Independent parameter sweeps
 
-Use the shared [Async observable grid](async-execution.md#independent-richardson-and-central-spin-solves)
+Use the shared [Async observable grid](async-examples.md#independent-richardson-and-central-spin-solves)
 for independent couplings, fields or sectors. Capture input vectors and solver
 options by value so each evaluation's borrowed spans remain valid, and wait on
 the final grid result. Continuation within one solve stays sequential. The

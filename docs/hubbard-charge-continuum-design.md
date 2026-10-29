@@ -1,6 +1,10 @@
 # Charge-containing Hubbard continuum library
 
-**Status: native charge-continuum library and CLI implemented.** The existing
+**Implemented design record; status reviewed 30 October 2026.**
+The original native-precision construction below is retained to explain the
+method. Current library and frontend support explicit MPFR as well; see the
+[continuum guide](hubbard-continuum.md) for maintained controls and precision.
+The existing
 [continuum tool](hubbard-continuum.md) selects these families with `--channel`.
 
 ## Channels and energy reference

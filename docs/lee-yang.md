@@ -94,7 +94,7 @@ forms the gap and writes the tables after both solves finish, including when
 one returns numerical failure. CPU timing covers the complete pair, including
 scheduler setup and waiting. Speedup is limited by the more expensive state.
 For independent circumference sweeps of either state, see the
-[finite-volume Async example](async-execution.md#finite-volume-integral-equations).
+[finite-volume Async example](async-examples.md#finite-volume-integral-equations).
 
 Three tables are always present:
 

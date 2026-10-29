@@ -212,7 +212,7 @@ Several curves may share that preparation, or a parameter sweep can prepare
 one branch and evaluate a whole curve within each independent task. The latter
 amortizes scheduling costs after the expensive theta evaluations are removed
 from individual queries. The single-parameter CLI stays serial. See the
-[reuse and sweep measurements](parallel-grids.md#xyz-prepared-bound-branches).
+[reuse and sweep measurements](benchmark-preparation.md#xyz-prepared-bound-branches).
 Native/long-double/binary128 and explicit MPFR use the same owning API. For
 MPFR, construct `eta` and `t` at the same finite precision; the optional exchange
 may be exact (including the default one), or have that same precision. Momentum
