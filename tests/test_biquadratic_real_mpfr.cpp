@@ -39,7 +39,7 @@ auto fields(model::State<R> const& s)
                   r.energy_shift);
 }
 
-TEST(BiquadraticRealMpfr, AnalyticModesAndZeroBudgetKeepPrecisionWithoutAProvider)
+TEST(BiquadraticRealMpfr, AnalyticModesAndZeroBudgetKeepPrecisionWithExplicitPrecision)
 {
   auto const ambient = mpfr_get_default_prec();
   for (int bits : {80, 160, 256})
