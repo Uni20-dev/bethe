@@ -315,9 +315,9 @@ Pull requests and pushes to `main` run three Linux configurations, defined in
 
 Each builds **all frontends and test targets** and runs the routine CTest suite,
 including CLI/export checks and the installed-program relocation test.
-Runtime-precision Lieb–Liniger and form-factor coverage belongs to
-`ci-wide`; the scalar-only sanitizer configuration also checks that unavailable
-provider requests fail clearly. These jobs do not claim macOS, Windows or GPU
+Runtime-precision Lieb–Liniger, nested Newton and complex form-factor tests
+run in both `ci-wide` and the MPFR CPU sanitizer configuration, exercising
+MPLAPACK and CPU LU through normal dispatch. These jobs do not claim macOS, Windows or GPU
 coverage. Documentation has its own workflow.
 
 The sanitizer preset sets `UNI20_SANITIZE` as well as the application's compiler
@@ -391,7 +391,7 @@ Set `BETHE_BUILD_EXAMPLES=ON` to build library composition examples in the
 asynchronously and submits both elementary branches before observing it; see
 [shared backgrounds](async-execution.md#shared-backgrounds). A second example
 evaluates a bounded [ground-state parameter sweep](async-execution.md#ground-state-parameter-sweeps),
-using `mpreal` when its LU provider is configured. Examples are checked
+using `mpreal` when Uni20 MPFR scalars are configured. Examples are checked
 in CI and are not installed with the command-line tools.
 The [ASEP example](asep.md#reusing-a-seed-across-rate-queries) compares independent
 rate solves with queries sharing one TASEP seed, using direct or Async execution.

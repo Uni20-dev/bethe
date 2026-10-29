@@ -8,14 +8,23 @@ import subprocess
 import sys
 import tempfile
 
-program, mpfr = sys.argv[1:]
+program, mpfr = sys.argv[1:3]
+long_running = sys.argv[3:] == ["--long-running"]
+# Routine runs exercise precision, scans and export contracts at a modest
+# spatial tolerance. The long-running variant retains the original tighter
+# numerical controls, including both canonical round trips.
+equilibrium_tolerance = "1e-20" if long_running else "1e-12"
+canonical_tolerance = "1e-18" if long_running else "1e-10"
+density_tolerance = "1e-16" if long_running else "1e-8"
+density_error_bound = Decimal("1e-17" if long_running else "1e-9")
+scan_tolerance = "1e-14" if long_running else "1e-12"
 enabled = mpfr.upper() in ("ON", "TRUE", "1")
 env = dict(os.environ, OPENBLAS_NUM_THREADS="1", OMP_NUM_THREADS="1", UNI20_COLOR="never")
 base = ["--c", "4", "--temperature", "1", "--mu", "-1"]
 
 
 def run(args, status=0):
-    p = subprocess.run([program, *args], text=True, capture_output=True, env=env, timeout=180)
+    p = subprocess.run([program, *args], text=True, capture_output=True, env=env, timeout=1200 if long_running else 180)
     assert p.returncode == status, (args, p.returncode, p.stdout, p.stderr)
     return p.stdout
 
@@ -44,7 +53,7 @@ def precision(t, bits):
 
 if enabled:
     for spelling, bits in (("bits-128", 128), ("bits-256", 256)):
-        args = [*base, "--precision", spelling, "--tolerance", "1e-20"]
+        args = [*base, "--precision", spelling, "--tolerance", equilibrium_tolerance]
         state = table(args)
         precision(state, bits)
         assert rows(state)[0]["status"] == "converged"
@@ -55,9 +64,9 @@ if enabled:
             assert r["status"] == status
             assert all(r[key] is None for key in ("pressure", "density", "energy_per_length", "entropy_per_length"))
         canonical = table(["--c", "4", "--temperature", "1", "--density", "0.1", "--precision", spelling,
-                           "--tolerance", "1e-18", "--density-tolerance", "1e-16"])
+                           "--tolerance", canonical_tolerance, "--density-tolerance", density_tolerance])
         precision(canonical, bits)
-        assert abs(Decimal(rows(canonical)[0]["density"]) - Decimal("0.1")) < Decimal("1e-17")
+        assert abs(Decimal(rows(canonical)[0]["density"]) - Decimal("0.1")) < density_error_bound
         failed = table(["--c", "4", "--temperature", "1", "--density", "0.1", "--precision", spelling,
                         "--max-evaluations", "0"], 2)
         precision(failed, bits)
@@ -67,7 +76,7 @@ if enabled:
         ctx.prec = 100
         for count in (4, 6):
             scan = table([*base, "--temperature-end", "2", "--points", str(count),
-                          "--precision", "bits-256", "--tolerance", "1e-14", "--no-retain"])
+                          "--precision", "bits-256", "--tolerance", scan_tolerance, "--no-retain"])
             precision(scan, 256)
             for i, row in enumerate(rows(scan)):
                 assert row["status"] == "converged"
@@ -76,8 +85,10 @@ if enabled:
         # Parse controls after dispatch, preserving a change below binary128.
         c = "4.0000000000000000000000000000000000000000000000000000001"
         tolerance = "1.0000000000000000000000000000000000000000000000001e-20"
-        t = table(["--c", c, "--temperature", "1", "--mu", "-1", "--tolerance", tolerance,
-                   "--precision", "digits-100"])
+        parsing = ["--c", c, "--temperature", "1", "--mu", "-1", "--tolerance", tolerance,
+                   "--precision", "digits-100"]
+        # Zero budget isolates literal parsing from expensive refinement.
+        t = table(parsing if long_running else [*parsing, "--max-cutoffs", "0"], 0 if long_running else 2)
         precision(t, 333)
         assert abs(Decimal(t["metadata"]["c"])-Decimal(c)) < Decimal("1e-95")
         assert abs(Decimal(t["metadata"]["Requested inner tolerance"])/Decimal(tolerance)-1) < Decimal("1e-95")
@@ -100,7 +111,7 @@ if enabled:
             assert serial["rows"] == parallel["rows"]
 
     with tempfile.TemporaryDirectory() as folder:
-        args = [*base, "--precision", "bits-160", "--tolerance", "1e-20"]
+        args = [*base, "--precision", "bits-160", "--tolerance", equilibrium_tolerance]
         expected = rows(table(args))
         for suffix, delimiter in (("csv", ","), ("tsv", "\t")):
             path = Path(folder) / f"thermal.{suffix}"

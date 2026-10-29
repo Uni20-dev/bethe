@@ -168,7 +168,9 @@ if(BETHE_HAS_MPREAL)
 
   add_executable(bethe_thermal_mpfr_tests test_thermal_mpfr.cpp)
   target_link_libraries(bethe_thermal_mpfr_tests PRIVATE bethe::bethe TBB::tbb)
-  bethe_discover_tests(bethe_thermal_mpfr_tests)
+  bethe_discover_tests(bethe_thermal_mpfr_tests
+    LONG_RUNNING_TESTS ThermalMpfr.TonksFugacitySeriesShowsAccuracyBeyondBinary128
+                       ThermalMpfr.InteractingScalingAndCanonicalRoundTrip)
 
   add_executable(bethe_tb_mpfr_tests test_tb_mpfr.cpp)
   target_link_libraries(bethe_tb_mpfr_tests PRIVATE bethe::bethe TBB::tbb)
@@ -707,6 +709,12 @@ if(BETHE_BUILD_APPS)
     add_test(NAME LiebLinigerThermal.precision
       COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_thermal_precision.py"
         "$<TARGET_FILE:bethe-lieb-liniger-thermal>" "${BETHE_HAS_MPREAL}")
+    if(BETHE_HAS_MPREAL)
+      add_test(NAME LiebLinigerThermal.high_precision
+        COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_thermal_precision.py"
+          "$<TARGET_FILE:bethe-lieb-liniger-thermal>" "${BETHE_HAS_MPREAL}" --long-running)
+      set_tests_properties(LiebLinigerThermal.high_precision PROPERTIES LABELS "long-running" TIMEOUT 3600)
+    endif()
     add_test(NAME QBoson.mpfr.cli
       COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_q_boson_mpfr.py"
         "$<TARGET_FILE:bethe-q-boson-pbc>" "${BETHE_HAS_MPREAL}")
