@@ -17,7 +17,8 @@ template <uni20::Real Real> struct State
 template <uni20::Real Real = double>
 [[nodiscard]] State<Real> singlet(std::size_t sites, SolverOptions<Real> const& options = {})
 {
-  auto tl = temperley_lieb::two_string::singlet<Real>(sites, Real{3}, options);
+  auto tl = temperley_lieb::two_string::singlet<Real>(sites, uni20::scalar_at_precision<Real>(3, options.precision()),
+                                                      options);
   return {.energy = tl.energy - Real(sites - 1), .tl_energy = tl.energy, .reference = std::move(tl.reference)};
 }
 } // namespace bethe::biquadratic::two_string
