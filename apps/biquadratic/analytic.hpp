@@ -5,10 +5,11 @@
 
 namespace bethe::apps::biquadratic
 {
-template <uni20::Real Real> int run_ferro_analytic(Arguments const& args, cli::RunReport report)
+template <uni20::Real Real>
+int run_ferro_analytic(Arguments const& args, bethe::SolverOptions<Real> const& options, cli::RunReport report)
 {
   auto computation = report.context().computation();
-  auto const ground = model::ferromagnetic::ground_space<Real>(args.sites);
+  auto const ground = model::ferromagnetic::ground_space<Real>(args.sites, options.precision());
   std::vector<model::ferromagnetic::OneDefectLevel<Real>> levels;
   if (args.one_defect)
   {
@@ -16,10 +17,10 @@ template <uni20::Real Real> int run_ferro_analytic(Arguments const& args, cli::R
       throw std::length_error("one-defect band exceeds max_candidates; raise --max-candidates");
     levels.reserve(args.sites - 1);
     for (std::size_t j = args.sites - 1; j > 0; --j)
-      levels.push_back(model::ferromagnetic::one_defect_level<Real>(args.sites, j));
+      levels.push_back(model::ferromagnetic::one_defect_level<Real>(args.sites, j, options.precision()));
   }
   else if (args.through_lines && *args.through_lines == args.sites - 2)
-    levels.push_back(model::ferromagnetic::one_defect_level<Real>(args.sites, args.sites - 1));
+    levels.push_back(model::ferromagnetic::one_defect_level<Real>(args.sites, args.sites - 1, options.precision()));
   computation.finish();
   report
       .field("calculation", "Calculation",
@@ -43,7 +44,8 @@ template <uni20::Real Real> int run_ferro_analytic(Arguments const& args, cli::R
       [&](auto& table) {
         if (levels.empty())
           table.append(std::size_t{0}, ground.through_lines, std::size_t{0}, ground.multiplicity,
-                       std::optional<std::size_t>{}, std::optional<Real>{}, ground.energy, Real{0});
+                       std::optional<std::size_t>{}, std::optional<Real>{}, ground.energy,
+                       uni20::scalar_like(ground.energy, 0));
         for (std::size_t i = 0; i < levels.size(); ++i)
         {
           auto const& level = levels[i];
