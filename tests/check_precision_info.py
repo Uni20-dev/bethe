@@ -37,17 +37,18 @@ assert rows["fp64"]["available"] and rows["fp64"]["significand_bits"] == 53
 assert rows["fp128"]["available"] == enabled(fp128)
 assert rows["bits-N"]["available"] == rows["digits-N"]["available"] == enabled(mpfr)
 metadata = table["metadata"]
+frontends = {name.strip() for name in metadata["Arbitrary-precision frontends"].split(",")}
 assert (metadata["Uni20 float128 configured"] == "true") == enabled(fp128)
 assert (metadata["MPLAPACK binary128 configured"] == "true") == enabled(mplapack_fp128)
 assert (metadata["Uni20 arbitrary-precision real/complex configured"] == "true") == enabled(mpfr)
 assert (metadata["MPLAPACK MPFR configured"] == "true") == enabled(mplapack_mpfr)
-assert ("bethe-xxx-pbc" in metadata["Arbitrary-precision frontends"]) == enabled(mpfr)
-assert ("bethe-xxx-structure-factor" in metadata["Arbitrary-precision frontends"]) == enabled(mpfr)
-for name in ("bethe-biquadratic-obc", "bethe-richardson", "bethe-central-spin", "bethe-xxx-obc", "bethe-su3-dispersion", "bethe-haldane-shastry-pbc", "bethe-sutherland-pbc", "bethe-tb-dispersion", "bethe-sine-gordon-dispersion", "bethe-sine-gordon-bethe-yang", "bethe-lee-yang-vacuum", "bethe-lee-yang-excited", "bethe-potts-pbc", "bethe-xxz-qg-obc", "bethe-xxz-dispersion"):
-    assert (name in metadata["Arbitrary-precision frontends"]) == enabled(mpfr)
+assert ("bethe-xxx-pbc" in frontends) == enabled(mpfr)
+assert ("bethe-xxx-structure-factor" in frontends) == enabled(mpfr)
+for name in ("bethe-xxx-structure-factor-thermo", "bethe-hubbard-dispersion", "bethe-hubbard-continuum", "bethe-richardson", "bethe-central-spin", "bethe-xxx-obc", "bethe-su3-dispersion", "bethe-haldane-shastry-pbc", "bethe-sutherland-pbc", "bethe-tb-dispersion", "bethe-sine-gordon-dispersion", "bethe-sine-gordon-bethe-yang", "bethe-lee-yang-vacuum", "bethe-lee-yang-excited", "bethe-potts-pbc", "bethe-xxz-qg-obc", "bethe-xxz-dispersion", "bethe-biquadratic-obc"):
+    assert (name in frontends) == enabled(mpfr)
 for name in ("bethe-lieb-liniger-pbc", "bethe-lieb-liniger-obc", "bethe-lieb-liniger-dispersion", "bethe-lieb-liniger-thermal", "bethe-ladder-pbc", "bethe-tj-pbc",
              "bethe-su3-pbc", "bethe-xxz-pbc", "bethe-xxz-obc", "bethe-hubbard-pbc", "bethe-hubbard-obc", "bethe-gaudin-yang-pbc", "bethe-bose-fermi-pbc", "bethe-q-boson-pbc", "bethe-tb-pbc", "bethe-sun-fermions-pbc"):
-    assert (name in metadata["Arbitrary-precision frontends"]) == enabled(mpfr)
+    assert (name in frontends) == enabled(mpfr)
 if enabled(fp128):
     assert rows["fp128"]["significand_bits"] == 113
 long_double = rows["long-double"]

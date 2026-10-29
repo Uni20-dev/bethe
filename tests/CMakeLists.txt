@@ -87,6 +87,14 @@ target_link_libraries(bethe_generated_state_scan_tests PRIVATE bethe::bethe TBB:
 bethe_discover_tests(bethe_generated_state_scan_tests)
 
 if(BETHE_HAS_MPREAL)
+  add_executable(bethe_open_qsystem_mpfr_tests test_open_qsystem_mpfr.cpp)
+  target_link_libraries(bethe_open_qsystem_mpfr_tests PRIVATE bethe::bethe TBB::tbb)
+  bethe_discover_tests(bethe_open_qsystem_mpfr_tests)
+
+  add_executable(bethe_xxx_thermodynamic_mpfr_tests test_xxx_thermodynamic_mpfr.cpp)
+  target_link_libraries(bethe_xxx_thermodynamic_mpfr_tests PRIVATE bethe::bethe TBB::tbb)
+  bethe_discover_tests(bethe_xxx_thermodynamic_mpfr_tests)
+
   add_executable(bethe_open_two_string_mpfr_tests test_open_two_string_mpfr.cpp)
   target_link_libraries(bethe_open_two_string_mpfr_tests PRIVATE bethe::bethe TBB::tbb)
   bethe_discover_tests(bethe_open_two_string_mpfr_tests)
@@ -162,6 +170,12 @@ if(BETHE_HAS_MPREAL)
   target_link_libraries(bethe_thermodynamics_mpfr_tests PRIVATE bethe::bethe TBB::tbb)
   bethe_discover_tests(bethe_thermodynamics_mpfr_tests)
 
+  add_executable(bethe_hubbard_thermo_mpfr_tests test_hubbard_thermo_mpfr.cpp)
+  target_link_libraries(bethe_hubbard_thermo_mpfr_tests PRIVATE bethe::bethe TBB::tbb)
+  bethe_discover_tests(bethe_hubbard_thermo_mpfr_tests
+    LONG_RUNNING_TESTS HubbardThermoMpfr.PhysicalChargeContinuumRetainsExplicitPrecision
+                       HubbardThermoMpfr.DopedFredholmReferencesAndPhysicalPrecisionGrowth)
+
   add_executable(bethe_potts_mpfr_tests test_potts_mpfr.cpp)
   target_link_libraries(bethe_potts_mpfr_tests PRIVATE bethe::bethe TBB::tbb)
   bethe_discover_tests(bethe_potts_mpfr_tests)
@@ -180,6 +194,10 @@ if(BETHE_HAS_MPREAL)
   target_link_libraries(bethe_su_fermions_mpfr_tests PRIVATE bethe::bethe TBB::tbb)
   bethe_discover_tests(bethe_su_fermions_mpfr_tests)
 endif()
+
+add_executable(bethe_hubbard_kernel_tests test_hubbard_kernel.cpp)
+target_link_libraries(bethe_hubbard_kernel_tests PRIVATE bethe::bethe TBB::tbb)
+bethe_discover_tests(bethe_hubbard_kernel_tests)
 
 add_executable(bethe_parallel_scan_tests test_parallel_scan.cpp)
 target_link_libraries(bethe_parallel_scan_tests PRIVATE bethe::bethe TBB::tbb)
@@ -497,6 +515,9 @@ if(BETHE_BUILD_APPS)
     add_test(NAME Arguments.bethe-xxx-structure-factor-thermo.cli
       COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_shared_arguments.py"
         "$<TARGET_FILE:bethe-xxx-structure-factor-thermo>")
+    add_test(NAME XXXThermodynamicDSF.precision
+      COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_xxx_thermodynamic_precision.py"
+        "$<TARGET_FILE:bethe-xxx-structure-factor-thermo>" "${BETHE_HAS_MPREAL}")
     add_test(NAME XXXThermodynamicDSF.cli
       COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_xxx_thermodynamic_structure_factor.py"
         "$<TARGET_FILE:bethe-xxx-structure-factor-thermo>" "${BETHE_HAS_FLOAT128}")
@@ -695,7 +716,16 @@ if(BETHE_BUILD_APPS)
         "$<TARGET_FILE:bethe-lieb-liniger-dispersion>" "${BETHE_HAS_FLOAT128}")
     add_test(NAME LiebLinigerThermo.precision
       COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_thermodynamics_precision.py"
-        "$<TARGET_FILE:bethe-lieb-liniger-dispersion>" "${BETHE_HAS_MPREAL}")
+        "$<TARGET_FILE:bethe-lieb-liniger-dispersion>" "${BETHE_HAS_MPREAL}" --case physical)
+    if(BETHE_HAS_MPREAL)
+      # Each precision gets its own bounded CTest invocation. Keep all numerical
+      # and export assertions when CPU MPFR solves run under sanitizers.
+      foreach(bits IN ITEMS 128 256 333)
+        add_test(NAME LiebLinigerThermo.precision.bits${bits}
+          COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_thermodynamics_precision.py"
+            "$<TARGET_FILE:bethe-lieb-liniger-dispersion>" "${BETHE_HAS_MPREAL}" --case ${bits})
+      endforeach()
+    endif()
     add_test(NAME TB.precision
       COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_tb_precision.py"
         "$<TARGET_FILE:bethe-tb-pbc>" "${BETHE_HAS_MPREAL}")
@@ -872,6 +902,10 @@ if(BETHE_BUILD_APPS)
     add_test(NAME HaldaneShastry.cli
       COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_haldane_shastry_cli.py"
         "$<TARGET_FILE:bethe-haldane-shastry-pbc>" "${BETHE_HAS_FLOAT128}")
+    add_test(NAME HubbardThermo.precision
+      COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_hubbard_thermo_precision.py"
+        "$<TARGET_FILE:bethe-hubbard-dispersion>" "$<TARGET_FILE:bethe-hubbard-continuum>"
+        "${BETHE_HAS_MPREAL}")
     add_test(NAME HubbardThermo.cli
       COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_hubbard_thermo_cli.py"
         "$<TARGET_FILE:bethe-hubbard-dispersion>" "${BETHE_HAS_FLOAT128}")

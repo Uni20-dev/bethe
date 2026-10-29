@@ -54,6 +54,8 @@ contribution to the zz or raising-channel sum rules.
 For an infinite-chain spectral density, use
 [`bethe-xxx-structure-factor-thermo`](xxx-structure-factor-thermo.md), with
 `--momentum Q` for a frequency cut or `--momentum-points N` for a heat-map grid.
+It supports scalar MPFR with `--precision bits-N`; quadrature order and
+evaluation budgets are independent of the selected arithmetic precision.
 
 XXZ uses the same common precision and output controls, but different mode
 combinations: `--excitations` selects a family at fixed `--sz`, not `--spin`.
@@ -120,7 +122,7 @@ All frontends support typed tables and file exports; see the
 | `bits-N` | Arbitrary precision with N binary significand bits |
 | `digits-N` | Arbitrary precision sufficient for N decimal digits |
 
-The arbitrary-precision choices currently apply to `bethe-xxx-pbc`, `bethe-xxx-obc`,
+The arbitrary-precision choices currently apply to `bethe-hubbard-dispersion`, `bethe-hubbard-continuum`, `bethe-xxx-pbc`, `bethe-xxx-obc`,
 `bethe-lieb-liniger-pbc`, `bethe-lieb-liniger-obc`, `bethe-q-boson-pbc`, `bethe-xxz-pbc` and
 `bethe-xxz-obc` (all currently supported modes), `bethe-lieb-liniger-dispersion`,
 the finite-ring `bethe-xxx-structure-factor`, `bethe-richardson` and
@@ -516,3 +518,7 @@ from the [finite-volume vacuum](sine-gordon.md) calculation.
 [exact two-hole NLIE](sine-gordon-excited.md) for P>=1, I=0.5 or 1.5. Its
 `gap` table subtracts a separately converged vacuum; use
 `--csv-table gap=gap.csv` to export that table directly.
+
+Hubbard thermodynamic MPFR uses explicit precision for quadrature and extrema.
+All paths need MPFR scalars; doped dispersion backgrounds use normal Uni20
+CPU/provider LU dispatch. See [Hubbard dispersions](hubbard-dispersion.md#explicit-precision-in-c).
