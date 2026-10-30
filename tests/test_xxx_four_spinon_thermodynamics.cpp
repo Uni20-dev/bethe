@@ -34,6 +34,39 @@ TEST(FourSpinonThermodynamics, SpectralSupportAndNodeBudgetAreExplicit)
   EXPECT_THROW(model.spectrum(pi, 2.L, 0, 16.L), std::invalid_argument);
 }
 
+TEST(FourSpinonThermodynamics, HigherOrderSpectrumGeometryAndRefinementEntry)
+{
+  if (!wider_long_double) GTEST_SKIP();
+  Native model(native_policy(), 1.L);
+  long double const pi = 4 * std::atan(1.L);
+  // These interior points failed during geometry construction with the old
+  // radial map. Check both refinement orders and domains without evaluating
+  // the expensive physical density at every node.
+  for (auto const& [q, omega] :
+       std::array<std::pair<long double, long double>, 3>{{{.5L, 3.117081L}, {pi, 4.4428825L}, {pi, 4.220739L}}})
+    for (std::size_t order : {64u, 128u})
+      for (long double cutoff : {16.L, 20.L})
+      {
+        SCOPED_TRACE(::testing::Message() << q << ", " << omega << ", " << order << ", " << cutoff);
+        auto query = model.spectrum(q, omega, order, cutoff, 1000000);
+        EXPECT_GT(query.size(), 0u);
+      }
+
+  // Exercise the refinement controller's first high-order geometry as well.
+  // Cancellation deliberately stops before density work or the later controls;
+  // their geometries are checked directly above, not claimed as integrated.
+  std::stop_source stop;
+  stop.request_stop();
+  auto result =
+      model.refined_spectrum(.5L, 3.117081L, 64, 128, 16.L, 20.L, 1000000).evaluate({nullptr, 8, 2, stop.get_token()});
+  ASSERT_TRUE(result.controls[0]);
+  EXPECT_GT(result.controls[0]->total_nodes, 0u);
+  EXPECT_EQ(result.controls[0]->density_attempts, 0u);
+  EXPECT_EQ(result.status, FourSpinonIntegralStatus::cancelled);
+  EXPECT_FALSE(result.estimates);
+  EXPECT_FALSE(result.controls[1]);
+}
+
 TEST(FourSpinonThermodynamics, FixedMomentsAndSpectraApplyExchangeInternally)
 {
   if (!wider_long_double) GTEST_SKIP();
