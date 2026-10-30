@@ -82,6 +82,10 @@ add_executable(bethe_cli_precision_tests test_cli_precision.cpp)
 target_link_libraries(bethe_cli_precision_tests PRIVATE bethe_cli_output)
 bethe_discover_tests(bethe_cli_precision_tests)
 
+add_executable(bethe_xxx_spinon_density_tests test_xxx_spinon_density.cpp)
+target_link_libraries(bethe_xxx_spinon_density_tests PRIVATE bethe::bethe TBB::tbb)
+bethe_discover_tests(bethe_xxx_spinon_density_tests)
+
 add_executable(bethe_generated_state_scan_tests test_generated_state_scan.cpp)
 target_link_libraries(bethe_generated_state_scan_tests PRIVATE bethe::bethe TBB::tbb)
 bethe_discover_tests(bethe_generated_state_scan_tests)
