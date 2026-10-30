@@ -114,6 +114,113 @@ template <uni20::Real R> class FourSpinonPatch {
       return {rapidities(log_radius, first, second), omega, -uni20::math::log(jacobian)};
     }
 
+    struct AngularSupport
+    {
+        R right_radius, angle;
+    };
+
+    // Above the r=0 upper energy, the radial interval can be quadratic in
+    // its distance to a fraction-support endpoint. Its two ends may round to
+    // the same radius. The hard-pair half-separation is a regular coordinate:
+    // r dr dtheta delta(E-omega) = r/E_r dtheta.
+    AngularSupport angular_support(R const& omega) const
+    {
+      check(omega);
+      R const maximum = radius();
+      auto const initial = bounds(zero_), last = bounds(maximum);
+      if (!(omega > initial.upper_energy && omega < last.upper_energy))
+        throw std::runtime_error("angular spectrum needs positive interior support");
+      R left = zero_, right = maximum;
+      auto const digits = uni20::numeric_limits<R>::digits(one_);
+      for (decltype(digits + 1) i = 0; i < digits + 8; ++i)
+      {
+        R const mid = (left + right) / R{2};
+        if (mid == left || mid == right) break;
+        if (bounds(mid).lower_energy < omega)
+          left = mid;
+        else
+          right = mid;
+      }
+      R const endpoint = (left + right) / R{2};
+      auto const bd = bounds(endpoint);
+      R const angle = bd.hard_sum / R{2} - bd.hard_lower;
+      if (!(angle > zero_)) throw std::runtime_error("angular support lost precision");
+      return {endpoint, angle};
+    }
+
+    Point spectral_angle_point(R const& omega, AngularSupport const& support, R const& unit) const
+    {
+      check(omega);
+      check(unit);
+      if (!(zero_ < unit && unit < one_)) throw std::invalid_argument("angular coordinate must be open");
+      R const endpoint = support.right_radius, theta = support.angle * unit;
+      R const slope = mixed_ ? R(one_ - R{2} * fraction_) : -one_;
+      R const half = bounds(endpoint).hard_sum / R{2};
+      R const cosine = uni20::math::cos(theta);
+      // Compare to the energy-conserving boundary itself. Trigonometric
+      // differences retain displacements far below an ulp of the radius or
+      // total energy; subtraction of two full energies would lose them.
+      R const cosine_difference = R{2} * uni20::math::sin((theta + support.angle) / R{2}) *
+                                  uni20::math::sin(support.angle * (one_ - unit) / R{2});
+      auto difference = [&](R const& distance) {
+        R const middle = endpoint - distance / R{2};
+        R const soft =
+            -uni20::math::cos(middle * fraction_) * uni20::math::sin(distance * fraction_ / R{2}) -
+            uni20::math::cos(middle * (one_ - fraction_)) * uni20::math::sin(distance * (one_ - fraction_) / R{2});
+        R const hard = -R{2} * uni20::math::cos(half - slope * distance / R{4}) *
+                           uni20::math::sin(slope * distance / R{4}) * cosine +
+                       uni20::math::sin(half) * cosine_difference;
+        return pi_ * (soft + hard);
+      };
+      auto derivative = [&](R const& distance) {
+        R const r = endpoint - distance;
+        return pi_ / R{2} *
+               (fraction_ * uni20::math::cos(r * fraction_) +
+                (one_ - fraction_) * uni20::math::cos(r * (one_ - fraction_)) +
+                slope * uni20::math::cos(half - slope * distance / R{2}) * cosine);
+      };
+      R left = zero_, right = endpoint;
+      R distance = difference(zero_) / derivative(zero_);
+      if (!(zero_ < distance && distance < right)) distance = right / R{2};
+      auto const digits = uni20::numeric_limits<R>::digits(one_);
+      bool resolved = false;
+      for (decltype(digits + 1) i = 0; i < 4 * digits + 64; ++i)
+      {
+        R const value = difference(distance);
+        if (value == zero_)
+        {
+          resolved = true;
+          break;
+        }
+        if (value > zero_)
+          left = distance;
+        else
+          right = distance;
+        R const grad = derivative(distance);
+        R next = distance + value / grad;
+        if (next == distance)
+        {
+          resolved = true;
+          break;
+        }
+        if (!uni20::isfinite(next) || !(left < next && next < right)) next = (left + right) / R{2};
+        if (next == left || next == right)
+        {
+          resolved = true;
+          break;
+        }
+        distance = next;
+      }
+      if (!resolved) throw std::runtime_error("angular energy root did not resolve");
+      R const r = endpoint - distance, grad = derivative(distance);
+      R const hard_half = half - slope * distance / R{2};
+      R const first = hard_half - theta, second = hard_half + theta;
+      if (!(r > zero_ && grad > zero_ && first > bounds(r).hard_lower))
+        throw std::runtime_error("angular energy root lost ordering or Jacobian precision");
+      R const log_r = uni20::math::log(r);
+      return {rapidities(log_r, first, second), omega, log_r - uni20::math::log(grad)};
+    }
+
     Point moment_point(R const& log_radius, R const& unit) const
     {
       check(unit);
@@ -168,8 +275,8 @@ template <uni20::Real R> class FourSpinonPatch {
 };
 
 /// Finite log-radius cutoff t: r/r_max >= exp(-t) on patches reaching r=0.
-/// Positive radial supports are integrated in full, with a log/sine-squared
-/// map. No omitted-tail estimate or convergence verdict is implied.
+/// Positive radial supports use the hard-pair angle over the complete allowed
+/// interval. No omitted-tail estimate or convergence verdict is implied.
 template <uni20::Real R> class FourSpinonGeometry {
   public:
     struct Node
@@ -194,6 +301,16 @@ template <uni20::Real R> class FourSpinonGeometry {
       return patches(
           momentum,
           [&](auto const& patch, R const& log_v_weight, bool reflected) {
+            if (omega > patch.bounds(zero_).upper_energy)
+            {
+              auto const support = patch.angular_support(omega);
+              for (std::size_t i = 0; i < rule_.x.size(); ++i)
+              {
+                auto const point = patch.spectral_angle_point(omega, support, (one_ + rule_.x[i]) / R{2});
+                emit(point, log_v_weight + uni20::math::log(support.angle * rule_.w[i] / R{2}), reflected, sample);
+              }
+              return rule_.x.size();
+            }
             auto const support = patch.support(omega);
             if (!support) return std::size_t{0};
             return radial(support->first, support->second, [&](R const& log_r, R const& log_r_weight) {
@@ -320,7 +437,11 @@ template <uni20::Real R> class FourSpinonGeometry {
           for (std::size_t panel = 1; panel < cuts.size(); ++panel)
             for (std::size_t i = 0; i < rule_.x.size(); ++i)
             {
-              auto const [unit, weight] = sine_node(i);
+              bool const clipped = omega && (interval.first > zero_ || interval.second < (mixed ? one_ : one_ / R{2}));
+              // A support endpoint is not a soft endpoint. Ordinary Gauss nodes
+              // avoid artificial order^-4 clustering into a vanishing patch.
+              auto const [unit, weight] =
+                  clipped ? std::pair<R, R>{(one_ + rule_.x[i]) / R{2}, rule_.w[i] / R{2}} : sine_node(i);
               R const width = cuts[panel] - cuts[panel - 1];
               R const fraction = cuts[panel - 1] + width * unit;
               FourSpinonPatch<R> const patch(total, fraction, mixed);
