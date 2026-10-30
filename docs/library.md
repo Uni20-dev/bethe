@@ -80,6 +80,8 @@ one scheduler; each request owns its controls.
 
 ## Compose larger calculations
 
+- [Thermodynamic spinon densities](xxx-spinon-density.md): physical W2/W4/W6
+  weights, rapidity conventions and numerical diagnostics.
 - [Async execution](async-execution.md): state scans, bounded grids, shared
   preparation, lifetime, cancellation and completion contracts.
 - [Observable grids](parallel-grids.md): a caller-thread collection example
