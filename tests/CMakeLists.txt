@@ -102,6 +102,14 @@ add_executable(bethe_xxx_spinon_density_recovery_tests test_xxx_spinon_density_r
 target_link_libraries(bethe_xxx_spinon_density_recovery_tests PRIVATE bethe::bethe)
 bethe_discover_tests(bethe_xxx_spinon_density_recovery_tests)
 
+add_executable(bethe_xxx_spinon_global_proposal_tests test_xxx_spinon_global_proposal.cpp)
+target_link_libraries(bethe_xxx_spinon_global_proposal_tests PRIVATE bethe::bethe TBB::tbb)
+bethe_discover_tests(bethe_xxx_spinon_global_proposal_tests)
+
+add_executable(bethe_xxx_six_spinon_moments_tests test_xxx_six_spinon_moments.cpp)
+target_link_libraries(bethe_xxx_six_spinon_moments_tests PRIVATE bethe::bethe TBB::tbb)
+bethe_discover_tests(bethe_xxx_six_spinon_moments_tests)
+
 add_executable(bethe_monte_carlo_tests test_monte_carlo.cpp)
 target_link_libraries(bethe_monte_carlo_tests PRIVATE bethe::bethe TBB::tbb)
 bethe_discover_tests(bethe_monte_carlo_tests)

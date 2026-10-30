@@ -6,7 +6,7 @@
 #include <bethe/detail/xxx_spinon_surface.hpp>
 #include <bethe/monte_carlo.hpp>
 #include <bethe/observable_grid.hpp>
-#include <bethe/xxx_spinon_density_recovery.hpp>
+#include <bethe/xxx_spinon_observation.hpp>
 
 namespace bethe::heisenberg
 {
@@ -21,35 +21,6 @@ enum class SixSpinonSpectrumStatus
   no_support_sampled,
   numerical_failure,
   cancelled
-};
-
-enum class SpinonObservationFailure
-{
-  none,
-  geometry,
-  density,
-  exponent_range,
-  cancelled
-};
-
-struct SpinonSampleMetadata
-{
-    std::size_t supported_roots = 0, density_attempts = 0;
-    SpinonObservationFailure failure = SpinonObservationFailure::none;
-    std::optional<SpinonRecoveryStatus> density_status;
-    std::optional<SpinonDensityFailure> density_failure;
-    SpinonSampleMetadata& operator+=(SpinonSampleMetadata const& other)
-    {
-      supported_roots += other.supported_roots;
-      density_attempts += other.density_attempts;
-      if (other.failure != SpinonObservationFailure::none)
-      {
-        failure = other.failure;
-        density_status = other.density_status;
-        density_failure = other.density_failure;
-      }
-      return *this;
-    }
 };
 
 template <uni20::Real R> struct SpinonSpectrumObservation
@@ -192,44 +163,19 @@ template <uni20::Real Geometry, uni20::Real Low, uni20::Real High = Low> class T
                 result.reason = error.what();
                 return result;
               }
-              auto recovered = k.recovery.recover(
-                  [&](auto const& context) {
-                    std::vector<decltype(context.parse("0"))> converted;
-                    for (auto const& b : beta)
-                      converted.push_back(context.import(b));
-                    return converted;
-                  },
-                  stop);
-              result.density_attempts += recovered.attempts.size();
-              if (!recovered.accepted())
+              std::array<G, 1> const weights{log_jacobian};
+              auto weighted = weighted_spinon_observation<G>(beta, weights, k.recovery, stop);
+              result.density_attempts += weighted.metadata.density_attempts;
+              if (!weighted.values)
               {
-                result.failure = recovered.status == SpinonRecoveryStatus::cancelled
-                                     ? SpinonObservationFailure::cancelled
-                                     : SpinonObservationFailure::density;
-                result.density_status = recovered.status;
-                result.reason = recovered.reason;
-                if (!recovered.attempts.empty())
-                {
-                  result.density_failure = recovered.attempts.back().failure;
-                  result.reason += ": " + recovered.attempts.back().reason;
-                }
+                result.failure = weighted.metadata.failure;
+                result.density_status = weighted.metadata.density_status;
+                result.density_failure = weighted.metadata.density_failure;
+                result.reason = std::move(weighted.reason);
                 return result;
               }
-              auto const& density = *recovered.estimate;
-              std::array<High, 3> factors{density.value, density.contour_tail_error, *recovered.arithmetic_screen};
-              for (std::size_t field = 0; field < factors.size(); ++field)
-              {
-                G const value = uni20::scalar_like(k.one, factors[field]);
-                if (value == k.zero && field == 1) continue; // an exact zero tail is allowed
-                G const weighted = uni20::math::exp(uni20::math::log(value) + log_jacobian);
-                if (!uni20::isfinite(weighted) || weighted <= k.zero)
-                {
-                  result.failure = SpinonObservationFailure::exponent_range;
-                  result.reason = "weighted density or diagnostic is unrepresentable";
-                  return result;
-                }
-                sums[field].add(weighted);
-              }
+              for (std::size_t field = 0; field < 3; ++field)
+                sums[field].add((*weighted.values)[field]);
             }
           }
           std::array<G, 3> values{sums[0].value(), sums[1].value(), sums[2].value()};
@@ -351,7 +297,7 @@ template <uni20::Real Geometry, uni20::Real Low, uni20::Real High = Low> class T
           Replicate result;
           result.id = row.id;
           result.completed_samples = row.completed_samples;
-          result.supported_roots = row.metadata.supported_roots;
+          result.supported_roots = row.metadata.supported_configurations;
           result.density_attempts = row.metadata.density_attempts;
           result.failure = row.cancelled ? SpinonObservationFailure::cancelled : row.metadata.failure;
           if (!row.means && !row.cancelled && result.failure == SpinonObservationFailure::none)
@@ -429,7 +375,7 @@ template <uni20::Real Geometry, uni20::Real Low, uni20::Real High = Low> class T
           auto const& sample = co_await work;
           auto& r = run->result;
           r.completed_samples = sample.completed_samples;
-          r.supported_roots = sample.metadata.supported_roots;
+          r.supported_roots = sample.metadata.supported_configurations;
           r.density_attempts = sample.metadata.density_attempts;
           for (std::size_t i = 0; i < sample.replicates.size(); ++i)
             if (sample.replicates[i]) r.replicates[i] = physical_record(*sample.replicates[i]);
