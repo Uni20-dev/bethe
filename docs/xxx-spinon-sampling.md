@@ -33,6 +33,26 @@ Random-number generation, independent replicates and sample sharing across
 frequencies belong to the caller. A spectral estimator must preserve those
 replicate identities when reporting uncertainties and covariances.
 
+## Energy and momentum constraints
+
+`SpinonEnergySurface<Real>` in `bethe/detail/xxx_spinon_surface.hpp` accepts
+the spinon count (2, 4 or 6), cutoff, momentum in [0,2 pi), momentum-section
+index and positive frequency. Its `solve` method takes n-2 free rapidities and
+returns both labelled solutions for the remaining pair. The section fixes
+the total spinon momentum to k+2 pi s; sum every admissible section.
+
+The map's `log_coarea_jacobian` is the inverse velocity difference per root,
+before proposal or free-rapidity Jacobians. Use either that unbalanced chart
+measure with the complete proposal PDF or the balanced measure below, not
+their product. The map has no physical form-factor normalization.
+
+Resolved support exclusions return `inside=false`. Ambiguous boundaries,
+unresolved cutoffs and numerical collisions of the solved roots require higher
+precision or a separate limiting calculation. In particular, resolving the
+momentum cutoff for R=1040 needs much more arithmetic precision than evaluating
+the proposal's logarithmic PDF. The tests exercise this geometry at 1800 and
+2048 bits; successful low-precision proposal evaluation is not a geometry check.
+
 ## Balanced coarea charts
 
 For each possible solved pair (i,j), let q_ij be the complete proposal density
@@ -74,3 +94,8 @@ literal 720-label orbit measure. It also checks invalid inputs, inverse CDFs,
 deep-soft configurations and explicit precision growth beyond binary128.
 The optional `tests/reference_xxx_spinon_proposal.py` regenerates the small
 fixtures with mpmath using direct positive formulas and a bisection inverse.
+
+`test_xxx_spinon_surface.cpp` independently checks the inverse map against
+forward kinematics and velocity differences at prescribed rapidities, including
+all three six-spinon momentum sections. Its optional reference generator uses
+720 decimal digits, sufficient to retain the deep-soft inputs tested here.
