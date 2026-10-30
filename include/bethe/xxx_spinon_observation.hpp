@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Copyright (C) 2026 Ian McCulloch
 #pragma once
+#include <bethe/detail/spinon_weighted_value.hpp>
 #include <bethe/monte_carlo.hpp>
 #include <bethe/xxx_spinon_density_recovery.hpp>
 
@@ -85,22 +86,22 @@ weighted_spinon_observation(std::span<G const> beta, std::span<G const> log_weig
   auto const& density = *recovered.estimate;
   std::array<High, 3> factors{density.value, density.contour_tail_error, *recovered.arithmetic_screen};
   std::vector<G> values(3 * log_weights.size(), zero);
-  for (std::size_t field = 0; field < 3; ++field)
+  try
   {
-    G const factor = uni20::scalar_like(one, factors[field]);
-    if (factor == zero && field == 1) continue;
-    G const log_factor = uni20::math::log(factor);
-    for (std::size_t i = 0; i < log_weights.size(); ++i)
+    for (std::size_t field = 0; field < 3; ++field)
     {
-      G value = uni20::math::exp(log_factor + log_weights[i]);
-      if (!uni20::isfinite(value) || value <= zero)
-      {
-        result.metadata.failure = SpinonObservationFailure::exponent_range;
-        result.reason = "weighted spinon density/diagnostic exceeds exponent range";
-        return result;
-      }
-      values[field * log_weights.size() + i] = std::move(value);
+      G const factor = uni20::scalar_like(one, factors[field]);
+      if (field == 0 && factor <= zero)
+        throw SpinonDensityError(SpinonDensityFailure::exponent_range, "checked physical density lost positivity");
+      for (std::size_t i = 0; i < log_weights.size(); ++i)
+        values[field * log_weights.size() + i] = detail::spinon_weighted_value(factor, log_weights[i]);
     }
+  }
+  catch (SpinonDensityError const& error)
+  {
+    result.metadata.failure = SpinonObservationFailure::exponent_range;
+    result.reason = error.what();
+    return result;
   }
   result.values = std::move(values);
   return result;
