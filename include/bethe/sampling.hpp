@@ -3,6 +3,7 @@
 #pragma once
 
 #include <array>
+#include <bethe/detail/spinon_numerics.hpp>
 #include <bethe/solver.hpp>
 #include <cstdint>
 #include <limits>
@@ -166,7 +167,7 @@ template <uni20::Real R> class ReplicateStatistics {
       std::vector<R> shifts, means;
       for (std::size_t j = 0; j < dimension_; ++j)
       {
-        bethe::detail::CompensatedSum<R> sum(zero_);
+        bethe::detail::SpinonSum<R> sum(zero_);
         for (auto const& row : rows_)
           sum.add((*row.values)[j] - anchor[j]);
         shifts.push_back(sum.value() / count);
@@ -182,7 +183,7 @@ template <uni20::Real R> class ReplicateStatistics {
         for (std::size_t j = 0; j < dimension_; ++j)
           for (std::size_t k = 0; k <= j; ++k)
           {
-            bethe::detail::CompensatedSum<R> sum(zero_);
+            bethe::detail::SpinonSum<R> sum(zero_);
             for (auto const& row : rows_)
             {
               R const a = ((*row.values)[j] - anchor[j]) - shifts[j];
