@@ -33,6 +33,24 @@ Random-number generation, independent replicates and sample sharing across
 frequencies belong to the caller. A spectral estimator must preserve those
 replicate identities when reporting uncertainties and covariances.
 
+`SpinonSampleStream<Dimension>` keys an ordinary Monte Carlo stream by master
+seed, replicate id and a declared uniform bit count. It uses standardized
+`seed_seq` and `mt19937_64` engines. A draw retains its binary integer words;
+`SpinonUniforms::at_precision` constructs the exact midpoint `(integer+1/2)/2^b`
+at the requested precision. At least b+1 significand bits are required. A retry
+reuses those words and never redraws or silently lowers the grid resolution.
+This stream is not the historical campaign's scrambled quasi-Monte Carlo rule.
+
+`SpinonReplicateStatistics<Real>` collects complete, equal-size replicate
+means. It reduces them in replicate-id order and supplies the full covariance
+of the mean, preserving correlations between frequencies or moment orders.
+One replicate supplies no sampling-error estimate. Missing or failed replicates
+leave the result incomplete/failed with no successful mean over the survivors.
+Genuine support zeros count as observations; numerical failures do not.
+Underflow of a nonzero variance is an explicit numerical failure, not a zero
+sampling error. These statistical diagnostics do not include cutoff or numerical
+integration bias, and the uniform-grid resolution is a separate input choice.
+
 ## Energy and momentum constraints
 
 `SpinonEnergySurface<Real>` in `bethe/detail/xxx_spinon_surface.hpp` accepts

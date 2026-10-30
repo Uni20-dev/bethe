@@ -86,6 +86,10 @@ add_executable(bethe_xxx_spinon_surface_tests test_xxx_spinon_surface.cpp)
 target_link_libraries(bethe_xxx_spinon_surface_tests PRIVATE bethe::bethe)
 bethe_discover_tests(bethe_xxx_spinon_surface_tests)
 
+add_executable(bethe_spinon_sampling_statistics_tests test_spinon_sampling_statistics.cpp)
+target_link_libraries(bethe_spinon_sampling_statistics_tests PRIVATE bethe::bethe)
+bethe_discover_tests(bethe_spinon_sampling_statistics_tests)
+
 add_executable(bethe_cli_precision_tests test_cli_precision.cpp)
 target_link_libraries(bethe_cli_precision_tests PRIVATE bethe_cli_output)
 bethe_discover_tests(bethe_cli_precision_tests)
