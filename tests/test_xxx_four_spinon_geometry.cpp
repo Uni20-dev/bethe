@@ -177,6 +177,73 @@ TEST(FourSpinonMeasure, NarrowUpperEdgeSupportIsNotMissedByFractionNodes)
   EXPECT_TRUE(std::isfinite(weight));
 }
 
+TEST(FourSpinonMeasure, HigherOrdersResolvePositiveSpectralSupport)
+{
+  double const pi = 4 * std::atan(1.);
+  for (auto const& point : std::array{std::pair{.5, 3.117081}, std::pair{pi, 4.4428825}, std::pair{pi, 4.220739}})
+    for (std::size_t order : {16u, 48u, 128u, 256u})
+    {
+      SCOPED_TRACE(::testing::Message() << "k=" << point.first << " omega=" << point.second << " order=" << order);
+      Geometry<double> geometry(order, 16.);
+      double measure = 0;
+      std::size_t nodes = 0;
+      EXPECT_NO_THROW(nodes = geometry.spectrum(point.first, point.second, [&](auto const& node) {
+        EXPECT_TRUE(uni20::isfinite(node.log_measure));
+        double energy = 0;
+        for (double beta : node.beta)
+          energy += pi / (2 * std::cosh(beta));
+        EXPECT_NEAR(energy, point.second, 3e-13);
+        measure += std::exp(node.log_measure);
+      }));
+      EXPECT_GT(nodes, 0u);
+      EXPECT_GT(measure, 0.);
+      EXPECT_TRUE(std::isfinite(measure));
+    }
+}
+
+TEST(FourSpinonMeasure, AngularAndRadialCoareaMeasuresAgree)
+{
+  using R = long double;
+  R const pi = R{4} * math::atan(R{1});
+  auto const rule = bethe::detail::gauss_legendre<R>(64);
+  for (bool mixed : {false, true})
+  {
+    Patch<R> patch(R{7} * pi / R{4}, R{3} / R{8}, mixed);
+    R const omega = (patch.bounds(R{0}).upper_energy + patch.bounds(patch.radius()).upper_energy) / R{2};
+    auto const radial = patch.support(omega);
+    ASSERT_TRUE(radial);
+    ASSERT_GT(radial->first, R{0});
+    auto const angular = patch.angular_support(omega);
+    std::array<R, 2> radial_sum{}, angular_sum{};
+    auto accumulate = [](auto const& point, R weight, auto& sum) {
+      R observable{0};
+      for (R beta : point.beta)
+      {
+        R const momentum = R{2} * math::atan(math::exp(beta));
+        observable += momentum * momentum;
+      }
+      sum[0] += weight;
+      sum[1] += weight * observable;
+    };
+    for (std::size_t i = 0; i < rule.x.size(); ++i)
+    {
+      // Independent coarea coordinates: eliminate the hard pair at fixed r,
+      // or eliminate r at fixed hard-pair angle. Their Jacobians differ.
+      R const angle = pi * (R{1} + rule.x[i]) / R{4};
+      R const sine = math::sin(angle), width = radial->second - radial->first;
+      R const r = radial->first + width * sine * sine;
+      auto const old_point = patch.spectral_point(math::log(r), omega);
+      accumulate(old_point,
+                 r * width * math::sin(R{2} * angle) * pi / R{4} * rule.w[i] * math::exp(old_point.log_jacobian),
+                 radial_sum);
+      auto const point = patch.spectral_angle_point(omega, angular, (R{1} + rule.x[i]) / R{2});
+      accumulate(point, angular.angle * rule.w[i] / R{2} * math::exp(point.log_jacobian), angular_sum);
+    }
+    for (std::size_t j = 0; j < radial_sum.size(); ++j)
+      EXPECT_REAL_NEAR(angular_sum[j], radial_sum[j], R{2e-10L} * math::abs(radial_sum[j]));
+  }
+}
+
 TEST(FourSpinonMeasure, NarrowMixedPatchSupportIncludesItsInteriorMaximum)
 {
   long double const pi = 4 * std::atan(1.L);
@@ -232,6 +299,32 @@ TEST(FourSpinonControls, InvalidInputsFailBeforeSampling)
 }
 
 #if UNI20_HAS_MPREAL
+TEST(FourSpinonGeometryMpfr, NativeAngularMeasureMatchesWideArithmetic)
+{
+  using R = uni20::mpreal;
+  auto const precision = uni20::Precision::bits(160);
+  double const pi = 4 * std::atan(1.);
+  for (auto const& point : std::array{std::pair{.5, 3.117081}, std::pair{pi, 4.4428825}})
+    for (std::size_t order : {16u, 48u})
+    {
+      SCOPED_TRACE(::testing::Message() << "k=" << point.first << " omega=" << point.second << " order=" << order);
+      Geometry<double> native(order, 16.);
+      Geometry<R> wide(order, R(16, precision));
+      R sum(0, precision);
+      double native_sum = 0;
+      auto const native_count = native.spectrum(point.first, point.second,
+                                                [&](auto const& node) { native_sum += math::exp(node.log_measure); });
+      auto const wide_count = wide.spectrum(R(point.first, precision), R(point.second, precision),
+                                            [&](auto const& node) { sum += math::exp(node.log_measure); });
+      EXPECT_EQ(native_count, wide_count);
+      EXPECT_GT(sum, R(0, precision));
+      // At the extremely narrow edge, input/constant rounding is amplified
+      // by the inverse distance to the edge. Compare identical finite rules,
+      // not an asserted continuum quadrature accuracy.
+      EXPECT_REAL_NEAR(R(native_sum, precision), sum, R(2e-8, precision) * sum);
+    }
+}
+
 TEST(FourSpinonGeometryMpfr, ExplicitPrecisionBeyondBinary128)
 {
   using R = uni20::mpreal;
