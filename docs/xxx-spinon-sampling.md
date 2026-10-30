@@ -128,3 +128,8 @@ fixtures with mpmath using direct positive formulas and a bisection inverse.
 forward kinematics and velocity differences at prescribed rapidities, including
 all three six-spinon momentum sections. Its optional reference generator uses
 720 decimal digits, sufficient to retain the deep-soft inputs tested here.
+
+The [six-spinon spectral-point interface](xxx-six-spinon-structure-factor.md)
+combines these pieces with W6, bounded recovery and Uni20 Async execution. It
+retains complete replicate records and separates sampling errors from the
+numerical density diagnostics and omitted rapidity tails.
