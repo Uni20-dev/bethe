@@ -165,6 +165,52 @@ TEST(FourSpinonMeasure, PhysicalDensityReconstructsIndependentSlice)
   EXPECT_LT(tail.value() + arithmetic.value(), R{1e-7L});
 }
 
+TEST(FourSpinonMeasure, NarrowUpperEdgeSupportIsNotMissedByFractionNodes)
+{
+  double const pi = 4 * std::atan(1.);
+  Geometry<double> geometry(8, 16.);
+  double weight = 0;
+  auto const count =
+      geometry.spectrum(pi, 4.4428825, [&](auto const& point) { weight += std::exp(point.log_measure); });
+  EXPECT_GT(count, 0u);
+  EXPECT_GT(weight, 0.);
+  EXPECT_TRUE(std::isfinite(weight));
+}
+
+TEST(FourSpinonMeasure, NarrowMixedPatchSupportIncludesItsInteriorMaximum)
+{
+  long double const pi = 4 * std::atan(1.L);
+  Geometry<long double> geometry(8, 16.);
+  for (long double a : {pi / 2, 3 * pi / 4})
+  {
+    // At the mixed-patch radius the momenta are (a*v,b,b,pi-b),
+    // b=a*(1-v). Their energy has a stationary maximum at this v.
+    long double const peak = std::atan2(1 - 3 * std::cos(a), 3 * std::sin(a)) / a;
+    long double const maximum = pi / 2 * (std::sin(a * peak) + 3 * std::sin(a * (1 - peak)));
+    long double const omega = maximum - 1e-3L;
+    long double weight = 0;
+    std::size_t mixed_count = 0;
+    geometry.spectrum(pi - a, omega, [&](auto const& point) {
+      // Only the reflected section reaches these energies. Reflect back to
+      // its ordered Q=pi+a patch and identify its two closest endpoint distances.
+      std::array<long double, 4> p;
+      for (int j = 0; j < 4; ++j)
+        p[j] = 2 * std::atan(std::exp(-point.beta[3 - j]));
+      if (pi - p[3] < p[1])
+      {
+        long double const v = p[0] / (p[0] + pi - p[3]);
+        EXPECT_NEAR(v, peak, .03);
+        EXPECT_NEAR(pi / 2 * (std::sin(p[0]) + std::sin(p[1]) + std::sin(p[2]) + std::sin(p[3])), omega, 1e-15);
+        weight += std::exp(point.log_measure);
+        ++mixed_count;
+      }
+    });
+    EXPECT_GT(mixed_count, 0u);
+    EXPECT_GT(weight, 0.);
+    EXPECT_TRUE(std::isfinite(weight));
+  }
+}
+
 TEST(FourSpinonControls, InvalidInputsFailBeforeSampling)
 {
   EXPECT_THROW((Geometry<double>(0, 16)), std::invalid_argument);
@@ -179,6 +225,10 @@ TEST(FourSpinonControls, InvalidInputsFailBeforeSampling)
   EXPECT_THROW(geometry.moments(0., [](auto const&) {}), std::invalid_argument);
   EXPECT_THROW(geometry.spectrum(1., -1., [](auto const&) {}), std::invalid_argument);
   EXPECT_EQ(geometry.spectrum(1., 20., [](auto const&) { ADD_FAILURE(); }), 0u);
+  double const pi = 4 * std::atan(1.);
+  double const upper = 2 * pi * std::sin(pi / 4);
+  EXPECT_THROW(geometry.spectrum(pi, upper, [](auto const&) { ADD_FAILURE(); }), std::runtime_error);
+  EXPECT_EQ(geometry.spectrum(pi, upper + 1e-8, [](auto const&) { ADD_FAILURE(); }), 0u);
 }
 
 #if UNI20_HAS_MPREAL
@@ -199,6 +249,14 @@ TEST(FourSpinonGeometryMpfr, ExplicitPrecisionBeyondBinary128)
                                     EXPECT_EQ(beta.precision(), p);
                                 }),
               0u);
+    R const pi = R{2} * q;
+    R const upper = R{2} * pi * math::sin(pi / R{4});
+    // The allowed fraction interval is far narrower than binary64 can resolve.
+    R const omega = upper - uni20::parse_real<R>("1e-30", p);
+    R weight(0, p);
+    EXPECT_GT(geometry.spectrum(pi, omega, [&](auto const& point) { weight += math::exp(point.log_measure); }), 0u);
+    EXPECT_GT(weight, R(0, p));
+    EXPECT_TRUE(uni20::isfinite(weight));
     EXPECT_THROW(geometry.moments(q.at(uni20::Precision::bits(bits + 16)), [](auto const&) {}), std::invalid_argument);
   }
   EXPECT_THROW((Geometry<R>(4, R{16})), std::invalid_argument);

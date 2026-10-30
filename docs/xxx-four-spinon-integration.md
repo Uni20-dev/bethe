@@ -22,11 +22,24 @@ ends. The remaining ordered pair is `h,H-h`:
 \qquad (a,h,H-h,\pi-b),\quad H=Q-\pi+r(1-2v).
 ```
 
-Ordering gives an interval for `h` and an upper bound on `r`. At fixed `v`,
-both endpoint energies increase with `r`. The code inverts these bounds before
-quadrature, so it integrates the occupied radial interval directly. A narrow
-allowed region cannot disappear because a sampler found only zero padding.
-Unresolved support boundaries throw instead of becoming outside-support zeros.
+Ordering gives an interval for `h` and an upper bound on `r`. Support must be
+located in **both** remaining coordinates before quadrature. Close to an upper
+edge, the allowed fraction `v` can be so narrow that even exact radial bounds
+would leave every full-interval fraction node outside support.
+
+First evaluate the maximum energy at the radial endpoint as a function of `v`.
+For the same-end patch it increases towards `v=1/2`. The opposite-end patch has
+a single maximum. Writing `A=Q-pi`, its interior stationary point obeys
+`cos(A*v)=3*cos(A*(1-v))`; when this point lies outside the interval, the maximum
+is at `v=0`. Bisection on each side of the maximum gives the allowed fraction
+interval, which is then split at changes of the radial bound's formula.
+
+At each fraction node, both radial endpoint energies increase with `r`.
+Inverting these bounds gives the occupied radial interval directly. The
+quadrature therefore never relies on finding support by sampling zero padding.
+Unresolved support boundaries throw instead of becoming outside-support zeros;
+points separated from the upper edge by more than the roundoff margin can be
+classified as outside support.
 
 At `J=1`, let `e_s` be the energy of the endpoint momenta. Eliminating the hard
 pair gives the ordered-root spectral measure
@@ -108,5 +121,8 @@ runtime controls are rejected. The prepared rule is immutable and shareable.
   volumes, checking the factor of 24 and both momentum sections together.
 - The 512-point example agrees with an independently parameterized radial
   quadrature using the separate hypergeometric four-spinon formula.
+- Near-edge support tests cover the same-end fraction endpoint and the
+  opposite-end interior maximum. MPFR resolves a frequency only `1e-30` below
+  the upper edge; an edge unresolved at the working precision fails explicitly.
 - Soft-distance tests retain rapidities at `log(r)=-20000`; invalid controls
   and unresolved boundaries fail explicitly.

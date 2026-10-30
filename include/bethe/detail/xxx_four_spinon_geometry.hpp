@@ -191,15 +191,18 @@ template <uni20::Real R> class FourSpinonGeometry {
     {
       bethe::detail::require_same_precision(omega, one_);
       if (!uni20::isfinite(omega) || omega <= zero_) throw std::invalid_argument("require finite positive frequency");
-      return patches(momentum, [&](auto const& patch, R const& log_v_weight, bool reflected) {
-        auto const support = patch.support(omega);
-        if (!support) return std::size_t{0};
-        return radial(support->first, support->second, [&](R const& log_r, R const& log_r_weight) {
-          auto const point = patch.spectral_point(log_r, omega);
-          emit(point, log_v_weight + log_r_weight, reflected, sample);
-          return std::size_t{1};
-        });
-      });
+      return patches(
+          momentum,
+          [&](auto const& patch, R const& log_v_weight, bool reflected) {
+            auto const support = patch.support(omega);
+            if (!support) return std::size_t{0};
+            return radial(support->first, support->second, [&](R const& log_r, R const& log_r_weight) {
+              auto const point = patch.spectral_point(log_r, omega);
+              emit(point, log_v_weight + log_r_weight, reflected, sample);
+              return std::size_t{1};
+            });
+          },
+          omega);
     }
 
     template <class F> std::size_t moments(R const& momentum, F&& sample) const
@@ -232,7 +235,57 @@ template <uni20::Real R> class FourSpinonGeometry {
       R const sine = uni20::math::sin(angle / R{2});
       return {sine * sine, pi_ / R{4} * uni20::math::sin(angle) * rule_.w[i]};
     }
-    template <class F> std::size_t patches(R momentum, F&& sample) const
+    R maximum_patch_energy(R const& total, R const& v, bool mixed) const
+    {
+      // Also defined at the fraction endpoints, where constructing a density
+      // point would be invalid. These are limits of the geometric bounds.
+      R const d = one_ - R{2} * v, m = std::max(v, R(one_ - v));
+      R const r = mixed
+                      ? std::min((total - pi_) / (R{2} * m - d), (R{3} * pi_ - total) / (R{2} * m + d))
+                      : (d == zero_ ? R(total / R{2}) : std::min(total / (R{3} - R{2} * v), (R{2} * pi_ - total) / d));
+      R const hard_sum = mixed ? total - pi_ + r * d : total - r;
+      return pi_ / R{2} * (uni20::math::sin(r * v) + uni20::math::sin(r * (one_ - v))) +
+             pi_ * uni20::math::sin(hard_sum / R{2});
+    }
+    std::optional<std::pair<R, R>> fraction_support(R const& total, bool mixed, R const& omega) const
+    {
+      R const end = mixed ? one_ : one_ / R{2};
+      R peak = end;
+      if (mixed)
+      {
+        // Below v=1/2 the stationary point is cos(A*v)=3*cos(A*(1-v)),
+        // A=Q-pi. The alternate radius branch is increasing up to this
+        // branch, and the whole v>1/2 branch is decreasing. Thus the maximum
+        // is unique (possibly at v=0); its two sides are safe to bisect.
+        R const a = total - pi_;
+        peak =
+            std::max(zero_, R(uni20::math::atan2(one_ - R{3} * uni20::math::cos(a), R{3} * uni20::math::sin(a)) / a));
+      }
+      R const maximum = maximum_patch_energy(total, peak, mixed);
+      R const margin = R{64} * uni20::numeric_limits<R>::epsilon(one_) * maximum;
+      if (omega > maximum + margin) return {};
+      if (omega >= maximum - margin)
+        throw std::runtime_error("fraction support edge requires more precision or a limiting calculation");
+      auto inverse = [&](R left, R right, bool increasing) {
+        auto const digits = uni20::numeric_limits<R>::digits(one_);
+        for (decltype(digits + 1) i = 0; i < digits + 8; ++i)
+        {
+          R const mid = (left + right) / R{2};
+          if (mid == left || mid == right) break;
+          R const energy = maximum_patch_energy(total, mid, mixed);
+          if (increasing ? energy < omega : energy > omega)
+            left = mid;
+          else
+            right = mid;
+        }
+        return R((left + right) / R{2});
+      };
+      R const left = omega > maximum_patch_energy(total, zero_, mixed) ? inverse(zero_, peak, true) : zero_;
+      R const right = omega > maximum_patch_energy(total, end, mixed) ? inverse(peak, end, false) : end;
+      if (!(left < right)) throw std::runtime_error("fraction support interval lost precision");
+      return std::pair{left, right};
+    }
+    template <class F> std::size_t patches(R momentum, F&& sample, std::optional<R> omega = {}) const
     {
       bethe::detail::require_same_precision(momentum, one_);
       if (!uni20::isfinite(momentum) || !(zero_ < momentum && momentum < R{2} * pi_))
@@ -245,12 +298,24 @@ template <uni20::Real R> class FourSpinonGeometry {
       for (int section = 0; section < 2; ++section)
       {
         R const total = section ? R{2} * pi_ - momentum : momentum;
+        if (!(zero_ < total && total < R{2} * pi_))
+          throw std::runtime_error("momentum section requires more precision");
         for (bool mixed : {false, true})
         {
           if (mixed && total <= pi_) continue;
+          std::pair<R, R> interval{zero_, mixed ? one_ : one_ / R{2}};
+          if (omega)
+          {
+            auto const allowed = fraction_support(total, mixed, *omega);
+            if (!allowed) continue;
+            interval = *allowed;
+          }
           std::vector<R> cuts{zero_, one_ / R{2}};
           if (mixed) cuts.push_back(one_);
           if (total > R{3} * pi_ / R{2}) cuts.push_back((R{2} * total - R{3} * pi_) / (R{2} * (total - pi_)));
+          std::erase_if(cuts, [&](R const& v) { return v <= interval.first || v >= interval.second; });
+          cuts.push_back(interval.first);
+          cuts.push_back(interval.second);
           std::sort(cuts.begin(), cuts.end());
           for (std::size_t panel = 1; panel < cuts.size(); ++panel)
             for (std::size_t i = 0; i < rule_.x.size(); ++i)
