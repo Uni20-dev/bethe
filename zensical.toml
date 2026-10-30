@@ -107,6 +107,7 @@ nav = [
   ] },
   { "C++ library" = [
     { "Embedding and synchronous calls" = "docs/library.md" },
+    { "XXX spinon densities" = "docs/xxx-spinon-density.md" },
     { "Async execution" = "docs/async-execution.md" },
     { "Composition examples" = "docs/async-examples.md" },
     { "Observable grids" = "docs/parallel-grids.md" },
