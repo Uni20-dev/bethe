@@ -52,4 +52,20 @@ template <class T> class SpinonSum {
   private:
     T value_, correction_;
 };
+
+// Neumaier's branch condition is scalar. A complex norm cannot establish
+// which summand is larger in each component, so retain two real accumulators.
+template <uni20::Complex T> class SpinonSum<T> {
+  public:
+    explicit SpinonSum(T const& initial) : real_(initial.real()), imag_(initial.imag()) {}
+    void add(T const& x)
+    {
+      real_.add(x.real());
+      imag_.add(x.imag());
+    }
+    T value() const { return T(real_.value(), imag_.value()); }
+
+  private:
+    SpinonSum<uni20::make_real_t<T>> real_, imag_;
+};
 } // namespace bethe::detail

@@ -327,6 +327,15 @@ template <uni20::Real R> class XXXSpinonDensity {
           pair_errors.add(rate.truncation_bound + rate.roundoff_indicator);
         }
       R log_scale = coefficient + pairs.value(), scale = exp(log_scale), value = scale * norm;
+      // The error model below assumes relative rounding. Native subnormals
+      // do not satisfy that model, even when exp and the product stay nonzero.
+      // MPFR has no gradual-underflow/subnormal regime; its range failures
+      // follow the explicit exception/zero checks instead.
+      if constexpr (!uni20::has_runtime_precision_v<R>)
+        if (scale < uni20::numeric_limits<R>::min() || norm < uni20::numeric_limits<R>::min() ||
+            value < uni20::numeric_limits<R>::min())
+          throw SpinonDensityError(SpinonDensityFailure::exponent_range,
+                                   "subnormal density assembly requires a wider exponent range");
       R log_scale_error = pair_errors.value() + R(n == 2 ? 0 : n == 4 ? 8 : 24) * log_b_error_;
       R arithmetic = scale * norm_round + (R{64} * eps_ * (one_ + R(n * (n - 1) / 2) + abs(log_scale)) +
                                            log_scale_error * exp(log_scale_error)) *
