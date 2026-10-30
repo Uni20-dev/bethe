@@ -19,7 +19,7 @@ or two soft pairs. A pair uses its centre B and separation d with unit Jacobian:
 
 ```math
 \beta_i=B+d/2,\qquad \beta_j=B-d/2,\qquad
-|B|<R,\quad |d|<2(R-|B|).
+|B|\lt R,\quad |d|\lt 2(R-|B|).
 ```
 
 Both variables have normalized truncated Cauchy distributions. One-pair draws
@@ -88,7 +88,7 @@ allows replacing the original chart's inverse intensity by the inverse mean
 of all fifteen intensities:
 
 ```math
-J_{\rm balanced}=\frac{15}{\sum_{i<j}h_{ij}}.
+J_{\rm balanced}=\frac{15}{\sum_{i\lt j}h_{ij}}.
 ```
 
 `balanced_log_jacobian` returns its logarithm per labelled solution. The caller
@@ -103,6 +103,11 @@ constraint is resolved at the same precision. Unresolved draws fail explicitly;
 callers must recover them or report an incomplete estimate rather than discard
 them. A vanishing individual chart is permitted; an entirely degenerate chart
 orbit requires a separate limiting calculation.
+
+[Bounded density recovery](xxx-spinon-density-recovery.md) checks the physical
+weight at independently strengthened arithmetic and contour settings. The
+integrator must preserve the same generated point throughout recovery and
+keep its diagnostic failures distinct from geometric support zeros.
 
 ## Validation
 
