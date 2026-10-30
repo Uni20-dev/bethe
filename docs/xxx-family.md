@@ -36,3 +36,6 @@ An open chain has standing waves rather than a lattice momentum. For a periodic
 chain, the physical momentum and any unit-cell folding must be matched to the
 comparison calculation. Every model result still needs its convergence status
 and numerical work limits; choosing MPFR does not enlarge the physical family.
+
+For thermodynamic four- and six-spinon spectra, see
+[selected sectors, explicit proposals and diagnostics](xxx-spinon-sectors.md).

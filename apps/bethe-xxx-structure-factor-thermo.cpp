@@ -3,6 +3,7 @@
 #include "execution-options.hpp"
 #include "result-output.hpp"
 #include "solver-precision.hpp"
+#include "spinon-thermo.hpp"
 #include <bethe/observable_grid.hpp>
 #include <bethe/xxx_thermodynamic_structure_factor.hpp>
 
@@ -18,10 +19,12 @@ struct Arguments
     std::optional<std::size_t> max_order;
     int threads = 1;
     cli::DataOutputOptions output;
+    cli::spinon::Controls spinons;
 };
 auto program_info()
 {
-  auto info = cli::program_info("bethe-xxx-structure-factor-thermo", "Infinite-chain XXX two-spinon spectral density.",
+  auto info = cli::program_info("bethe-xxx-structure-factor-thermo",
+                                "Infinite-chain XXX spinon spectral densities (2 by default).",
                                 bethe::citations::Tool::xxx_structure_factor_thermo);
   info.examples = {
       {"bethe-xxx-structure-factor-thermo --momentum 1.5 --points 501", "Unbroadened frequency cut"},
@@ -29,7 +32,9 @@ auto program_info()
        "Momentum-frequency grid for a heat map"}};
   info.notes = {
       "Infinite spin-1/2 XXX chain, H=J sum S_j.S_(j+1), J>0, zero field and temperature.",
-      "Exact two-spinon contribution only, NOT the full DSF. No broadening or sum-rule rescaling.",
+      "Default sector 2; --sectors 2,4,6 requests a partial DSF. No broadening or sum-rule rescaling.",
+      "Sectors 4/6 have explicit finite cutoffs; their errors exclude omitted tails. Use --diagnostics.",
+      "For 4/6 prefer --precision bits-192 or wider; retained precision is the density guard/geometry precision.",
       "Density is S(q,w) itself, not S/(2*pi) and not a finite-ring line weight; raising (S-+) = 2*zz.",
       "Momenta in [0,2*pi], radians/site. Grid includes endpoints; do not count the periodic seam twice.",
       "At the divergent lower threshold density/error are absent with status lower_threshold (not failure).",
@@ -61,10 +66,19 @@ void add_options(CLI::App& app, Arguments& a)
   cli::count_option(app, "--max-quadrature-order", a.max_order, "Power of two, 32..2048; default 64 native, 256 MPFR");
   cli::precision_option(app, a.precision, cli::ArbitraryPrecision::real);
   cli::threads_option(app, a.threads)->description("Scheduler concurrency limit for independent spectral points");
+  cli::spinon::add_options(app, a.spinons);
   cli::add_data_output_options(
       app, a.output,
       {{.name = "spectrum", .description = "Unbroadened two-spinon density and numerical status", .primary = true},
-       {.name = "continuum", .description = "Two-spinon lower/upper edges at each sampled q"}});
+       {.name = "continuum", .description = "Kinematic lower/upper edges at each sampled q"},
+       {.name = "diagnostics",
+        .description = "Separate numerical diagnostics",
+        .availability = "sectors include 4 or 6",
+        .screen_option = "--diagnostics"},
+       {.name = "replicates",
+        .description = "Six-spinon replicate records",
+        .availability = "sector 6 selected",
+        .screen_option = "--replicate-output"}});
 }
 char const* status(model::SpectralDensityStatus s)
 {
@@ -141,10 +155,10 @@ int run(Arguments const& a, model::StructureFactorOptions<Real> options, int arg
   using cli::column;
   data::data_table_options const table_options{.retain = a.output.retain ? data::retention::all : data::retention::none,
                                                .metadata = report.metadata()};
-  auto spectrum =
-      data::make_data_table("Unbroadened spectral density", table_options, column<Real>("q"), column<Real>("omega"),
-                            column<Optional>("density"), column<Optional>("estimated_error"),
-                            column<std::size_t>("evaluations"), column<std::string>("status"));
+  auto spectrum = data::make_data_table("Unbroadened spectral density", table_options, column<Real>("q"),
+                                        column<Real>("omega"), column<std::string>("sector"),
+                                        column<Optional>("density"), column<Optional>("estimated_error"),
+                                        column<std::size_t>("evaluations"), column<std::string>("status"));
   cli::DataOutput output(a.output, {"spectrum", "continuum"});
   try
   {
@@ -177,7 +191,7 @@ int run(Arguments const& a, model::StructureFactorOptions<Real> options, int arg
               auto const& value = values[j];
               failures += !value.converged();
               thresholds += value.status == model::SpectralDensityStatus::lower_threshold;
-              spectrum.append(q[i / w.size()], w[i % w.size()],
+              spectrum.append(q[i / w.size()], w[i % w.size()], std::string("2"),
                               value.value ? Optional(scale * *value.value) : Optional{},
                               value.error ? Optional(scale * *value.error) : Optional{}, value.evaluations,
                               std::string(status(value.status)));
@@ -229,7 +243,17 @@ int main(int argc, char** argv)
       argc, argv, program_info(), [&](auto& app) { add_options(app, a); },
       [&](auto&) {
         a.output.validate();
+        auto selected = cli::spinon::sectors(a.spinons.sectors);
+        if (a.spinons.replicates && std::ranges::find(selected, 6) == selected.end())
+          throw std::invalid_argument("--replicate-output requires sector 6");
+        if (a.spinons.diagnostics && selected == std::vector<int>{2})
+          throw std::invalid_argument("--diagnostics requires sector 4 or 6; two-spinon errors are in spectrum");
+        if (a.spinons.diagnostics) a.output.screen_options.push_back("--diagnostics");
+        if (a.spinons.replicates) a.output.screen_options.push_back("--replicate-output");
         return cli::dispatch_options_precision<cli::ArbitraryPrecision::real, model::StructureFactorOptions>(
-            a.precision, [&](auto options) { return run(a, std::move(options), argc, argv); });
+            a.precision, [&](auto options) {
+              if (selected == std::vector<int>{2}) return run(a, std::move(options), argc, argv);
+              return cli::spinon::run_spectrum(a, std::move(options), program_info(), argc, argv);
+            });
       });
 }

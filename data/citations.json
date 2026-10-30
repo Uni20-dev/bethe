@@ -1229,7 +1229,7 @@
       "id": "xxx_structure_factor_thermo",
       "executable": "bethe-xxx-structure-factor-thermo",
       "references": [
-        {"id": "caux-hagemans-2006", "context": "Exact thermodynamic two-spinon Szz, Eqs. (9)-(12); the four-spinon contribution is not yet implemented."},
+        {"id": "caux-hagemans-2006", "context": "Thermodynamic sector decomposition, exact two-spinon Szz (Eqs. (9)-(12)), and four-spinon continuum kinematics. Physical higher-sector density normalization is validated independently."},
         {"id": "karbach-muller-bougourzi-1996", "context": "Threshold behavior and two-spinon intensity/first-moment sum rules; no broadening or renormalization to full intensity."}
       ]
     },

@@ -1340,6 +1340,6 @@ J. Stat. Mech. 2006, P12013 (2006).
 
 Relevant tool modes:
 
-- `bethe-xxx-structure-factor-thermo`: Exact thermodynamic two-spinon Szz, Eqs. (9)-(12); the four-spinon contribution is not yet implemented.
+- `bethe-xxx-structure-factor-thermo`: Thermodynamic sector decomposition, exact two-spinon Szz (Eqs. (9)-(12)), and four-spinon continuum kinematics. Physical higher-sector density normalization is validated independently.
 
 <!-- END GENERATED BIBLIOGRAPHY -->

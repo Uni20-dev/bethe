@@ -580,7 +580,7 @@ inline constexpr std::array<Use, 4> uses_xxx_pbc{{
   {&references[12], "Highest-weight and string-classification background; strings and infinite-root descendants are not implemented."},
 }};
 inline constexpr std::array<Use, 2> uses_xxx_structure_factor_thermo{{
-  {&references[99], "Exact thermodynamic two-spinon Szz, Eqs. (9)-(12); the four-spinon contribution is not yet implemented."},
+  {&references[99], "Thermodynamic sector decomposition, exact two-spinon Szz (Eqs. (9)-(12)), and four-spinon continuum kinematics. Physical higher-sector density normalization is validated independently."},
   {&references[98], "Threshold behavior and two-spinon intensity/first-moment sum rules; no broadening or renormalization to full intensity."},
 }};
 inline constexpr std::array<Use, 4> uses_xxx_structure_factor{{
