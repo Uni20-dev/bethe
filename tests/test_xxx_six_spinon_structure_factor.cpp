@@ -150,7 +150,7 @@ TEST(SixSpinonSpectrumMpfr, IndependentPhysicalObservationsCoverAllSections)
   {
     SCOPED_TRACE(row.section);
     SCOPED_TRACE(row.omega);
-    sampling::SpinonUniforms<5>::Words words;
+    bethe::UniformSample<5>::Words words;
     words[0] = {32}; // background component: selector (32+1/2)/256
     for (std::size_t j = 0; j < 4; ++j)
       words[j + 1] = {row.words[j]};
@@ -181,7 +181,7 @@ TEST(SixSpinonSpectrumMpfr, NoSupportedDrawIsNotAZeroSpectrum)
 TEST(SixSpinonSpectrumMpfr, GeometryPrecisionIsDistinctFromDensityRecovery)
 {
   auto const& row = six_spinon_spectrum_reference::points[std::size(six_spinon_spectrum_reference::points) - 1];
-  sampling::SpinonUniforms<5>::Words words;
+  bethe::UniformSample<5>::Words words;
   words[0] = {32};
   for (std::size_t j = 0; j < 4; ++j)
     words[j + 1] = {row.words[j]};
