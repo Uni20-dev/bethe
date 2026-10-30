@@ -607,7 +607,13 @@ if(BETHE_BUILD_APPS)
   add_test(NAME Citations.bethe-xxx-structure-factor-thermo.cli
     COMMAND "${CMAKE_COMMAND}" "-DPROGRAM=$<TARGET_FILE:bethe-xxx-structure-factor-thermo>"
       "-DTOOL=bethe-xxx-structure-factor-thermo" -P "${CMAKE_CURRENT_SOURCE_DIR}/check_citations_cli.cmake")
+  add_test(NAME Citations.bethe-xxx-moments-thermo.cli
+    COMMAND "${CMAKE_COMMAND}" "-DPROGRAM=$<TARGET_FILE:bethe-xxx-moments-thermo>"
+      "-DTOOL=bethe-xxx-moments-thermo" -P "${CMAKE_CURRENT_SOURCE_DIR}/check_citations_cli.cmake")
   if(Python3_Interpreter_FOUND)
+    add_test(NAME XXXSpinonMoments.cli
+      COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_xxx_spinon_moments.py"
+        "$<TARGET_FILE:bethe-xxx-moments-thermo>" "${BETHE_HAS_MPREAL}")
     add_test(NAME Arguments.bethe-xxx-structure-factor-thermo.cli
       COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_shared_arguments.py"
         "$<TARGET_FILE:bethe-xxx-structure-factor-thermo>")

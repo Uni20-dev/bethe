@@ -42,7 +42,7 @@ inline std::vector<int> sectors(std::string_view text)
   std::ranges::sort(result);
   return result;
 }
-inline void add_options(CLI::App& app, Controls& c)
+inline void add_options(CLI::App& app, Controls& c, bool moments = false)
 {
   option(app, "--sectors", c.sectors, "Comma-separated spinon sectors from 2,4,6; partial response")
       ->capture_default_str();
@@ -53,8 +53,11 @@ inline void add_options(CLI::App& app, Controls& c)
   auto* fine = count_option(app, "--four-refine-order", c.fine_order, "Fine order for four order/cutoff controls");
   auto* extended =
       text_option(app, "--four-extended-cutoff", c.extended_cutoff, "Extended log-radius cutoff for refinement");
-  fine->needs(extended);
-  extended->needs(fine);
+  if (!moments)
+  {
+    fine->needs(extended);
+    extended->needs(fine);
+  }
   option(app, "--six-cutoff", c.six_cutoff, "Six-spinon absolute rapidity cutoff |beta|<R")->capture_default_str();
   option(app, "--six-soft-fraction", c.six_soft, "Soft component fraction of the native rapidity marginal")
       ->capture_default_str();
@@ -123,6 +126,19 @@ template <uni20::Real R> struct Point
     std::vector<Row<R>> rows;
     std::optional<model::SixSpinonSpectrumEstimate<R>> six;
 };
+template <uni20::Real R>
+auto joint_proposal(Controls const& controls, R const& one, model::StructureFactorOptions<R> const& options)
+{
+  using Proposal = model::detail::SpinonJointProposal<R>;
+  using Kind = model::detail::SpinonProposalKind;
+  auto parse = [&](std::string const& text) { return parse_solver_real<R>(text, options); };
+  return Proposal(
+      parse(controls.six_cutoff), parse(controls.six_soft),
+      {{Kind::background, parse(controls.background_weight), one, one},
+       {Kind::one_pair, parse(controls.one_pair_weight), parse(controls.one_pair_scale), parse(controls.one_pair_gap)},
+       {Kind::two_pairs, parse(controls.two_pairs_weight), parse(controls.two_pairs_scale),
+        parse(controls.two_pairs_gap)}});
+}
 template <uni20::Real R> struct Plan
 {
     using Four = model::ThermodynamicFourSpinon<R, DensityLow<R>, R>;
@@ -157,16 +173,7 @@ template <uni20::Real R> struct Plan
       }
       if (has(6))
       {
-        using Proposal = typename Six::Proposal;
-        using Kind = model::detail::SpinonProposalKind;
-        auto parse = [&](std::string const& text) { return parse_solver_real<R>(text, options); };
-        Proposal proposal(six_cutoff, parse(controls.six_soft),
-                          {{Kind::background, parse(controls.background_weight), one, one},
-                           {Kind::one_pair, parse(controls.one_pair_weight), parse(controls.one_pair_scale),
-                            parse(controls.one_pair_gap)},
-                           {Kind::two_pairs, parse(controls.two_pairs_weight), parse(controls.two_pairs_scale),
-                            parse(controls.two_pairs_gap)}});
-        six.emplace(std::move(proposal), policy, exchange);
+        six.emplace(joint_proposal(controls, one, options), policy, exchange);
         bethe::detail::validate_monte_carlo(controls.sampling, 3, one);
         if (controls.sampling.samples_per_replicate >
             std::numeric_limits<std::size_t>::max() / controls.sampling.replicates / 6 / (2 * policy.stages.size()))

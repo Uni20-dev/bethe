@@ -7,7 +7,8 @@ Use `--sectors` to select distinct entries from `2,4,6`. Four spinons use
 support-adapted deterministic quadrature; six use explicit importance sampling.
 The output contains the requested contributions and, for more than one sector,
 a row named `sum:2+4`, `sum:2+4+6`, or the corresponding selected sum.
-No normalization correction is required.
+No normalization correction is required. For direct frequency integrals, use
+[the separate moments frontend](xxx-spinon-moments.md).
 
 ## Start with a small point
 

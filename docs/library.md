@@ -82,6 +82,8 @@ one scheduler; each request owns its controls.
 
 - [Thermodynamic spinon densities](xxx-spinon-density.md): physical W2/W4/W6
   weights, rapidity conventions and numerical diagnostics.
+- [Direct spinon moments](xxx-spinon-moments.md): fixed-momentum and global
+  observables, physical reference denominators and separate error controls.
 - [Async execution](async-execution.md): state scans, bounded grids, shared
   preparation, lifetime, cancellation and completion contracts.
 - [Observable grids](parallel-grids.md): a caller-thread collection example
