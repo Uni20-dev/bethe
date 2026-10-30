@@ -84,6 +84,8 @@ template <uni20::Real R> class SpinonJointProposal {
     }
 
     R const& cutoff() const { return cutoff_; }
+    R const& soft_fraction() const { return soft_; }
+    std::span<Component const> components() const { return components_; }
 
     R native_log_density(R const& beta) const
     {
