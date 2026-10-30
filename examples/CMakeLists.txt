@@ -33,3 +33,7 @@ set_target_properties(bethe-async-nested-sweeps-example PROPERTIES CXX_EXTENSION
 add_executable(bethe-async-ladder-example async_ladder.cpp)
 target_link_libraries(bethe-async-ladder-example PRIVATE bethe::bethe TBB::tbb)
 set_target_properties(bethe-async-ladder-example PROPERTIES CXX_EXTENSIONS OFF)
+
+add_executable(bethe-four-spinon-moments-example xxx_four_spinon_moments.cpp)
+target_link_libraries(bethe-four-spinon-moments-example PRIVATE bethe::bethe TBB::tbb)
+set_target_properties(bethe-four-spinon-moments-example PROPERTIES CXX_EXTENSIONS OFF)
