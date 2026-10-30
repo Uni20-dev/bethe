@@ -151,7 +151,9 @@ and moment measures. Physical
 integration tests check serial/concurrent agreement, covariance, exchange
 scaling, owned lifetimes and explicit failure/cancellation. The optional
 `tests/reference_xxx_six_spinon_moments.py` regenerates the physical reference.
-Use `--fixed` for the fixed-k reference.
+Use `--fixed` for the fixed-k reference. The compact
+[sampling record](validation/six-spinon-moments-20261031.json) retains the
+following pilot settings, replicate summaries, timings and comparisons.
 
 An accurate density does not ensure an accurate integral. Production work must
 vary sample budgets, independent streams, proposal parameters, uniform-grid
@@ -170,3 +172,43 @@ used 48.73 seconds wall time and 97.03 seconds CPU time on two workers. The tiny
 sampled density diagnostics do not reduce those sampling errors or quantify
 the omitted rapidity region. These are execution measurements, not estimates
 of the unrestricted sector fractions.
+
+### Compare proposals on new samples
+
+At k=pi/2 and R=8, a 512-draw calibration suggested emphasizing the two-pair
+component. A separate comparison froze both proposals, then used 16 new
+replicates of 256 draws each (seed 42, replicate IDs 100--115). The same identities
+were used between proposals, so their difference has a paired sampling error.
+The calibration used IDs 0--7 and was not reused as validation data.
+
+The joint-mixture weights for background, one pair and two pairs were
+(0.5, 0.25, 0.25) and (0.1, 0.2, 0.7). Both used native soft fraction 0.5,
+one-pair scale/gap 4/0.5 and two-pair scale/gap 8/1, with the precision and
+density policy above. These are explicit physical proposal choices, not
+adaptation performed by the Monte Carlo engine.
+
+| Proposal | m0(k) | m1(k) | CPU seconds |
+|---|---:|---:|---:|
+| Original mixture | 0.0001106 +/- 0.0000253 | 0.0002509 +/- 0.0000545 | 1577 |
+| More two-pair sampling | 0.0000982 +/- 0.0000128 | 0.0002223 +/- 0.0000245 | 1488 |
+
+Each calculation used two workers on an Intel Core i7-12700KF; the two processes
+ran concurrently. Timings describe this pilot, not a portable performance target.
+
+Errors are between-replicate sampling standard errors. The two means agree
+within 0.51 and 0.54 paired standard errors. The second proposal's observed
+variance times CPU cost is 0.24 and 0.19 of the original for m0 and m1.
+Its largest individual draws nevertheless account for 6.8% and 5.3% of the
+corresponding sums, compared with 18.8% and 17.7% for the original proposal.
+The comparison supports this proposal for further finite-R pilots; it does
+not establish a universally efficient mixture or exclude unseen rare regions.
+No library default is changed by this measurement.
+
+The earlier 512-draw calculations at pi/4, pi/2 and 3pi/4 also compared the
+independently measured first-moment fractions. All pairwise differences are
+less than 0.51 paired standard errors, but individual fractional uncertainties
+are 33--36%. There is no resolved momentum dependence in this small sample,
+and no numerical verification of the unrestricted momentum law. A finite
+absolute-rapidity box can itself violate that law. The record also includes
+a separate 1024-draw global integral; it is not reconstructed from these three
+momenta or from a spectral grid.
