@@ -204,6 +204,25 @@ TEST(SpinonRecoveryMpfr, RoundedCollisionReconstructsOriginalInputs)
   EXPECT_FALSE(recovered.attempts.front().checked);
 }
 
+TEST(SpinonRecoveryMpfr, EarlierPassingControlSurvivesAStageFailure)
+{
+  MpDriver recovery(mp_policy());
+  int calls = 0;
+  auto result = recovery.recover([&](auto const& context) {
+    ++calls;
+    if (calls == 3) throw SpinonDensityError(SpinonDensityFailure::tail_domain, "injected contour failure");
+    return std::vector{context.parse("-2"), context.parse(calls < 3 ? "1" : "2")};
+  });
+  ASSERT_EQ(result.attempts.size(), 4u);
+  ASSERT_TRUE(result.attempts[0].checked);
+  EXPECT_TRUE(result.attempts[0].checked->accepted());
+  EXPECT_EQ(result.attempts[1].failure, SpinonDensityFailure::tail_domain);
+  EXPECT_EQ(result.status, SpinonRecoveryStatus::inconsistent_controls);
+  ASSERT_EQ(result.conflicting_attempts.size(), 1u);
+  EXPECT_EQ(result.conflicting_attempts[0], 0u);
+  EXPECT_FALSE(result.estimate);
+}
+
 TEST(SpinonRecoveryMpfr, TailFailureAdvancesOnlyDeclaredBudgets)
 {
   auto p = mp_policy();

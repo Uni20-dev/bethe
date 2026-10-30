@@ -41,6 +41,12 @@ at the requested precision. At least b+1 significand bits are required. A retry
 reuses those words and never redraws or silently lowers the grid resolution.
 This stream is not the historical campaign's scrambled quasi-Monte Carlo rule.
 
+The background inverse CDF uses stable lower-tail probabilities. Its stopping
+criterion accounts for both CDF roundoff and the probability change associated
+with one representable rapidity step. A small uniform coordinate does not imply
+that an arbitrarily small relative CDF residual is attainable at fixed precision.
+Open-support and convergence failures remain explicit; no input is redrawn.
+
 `SpinonReplicateStatistics<Real>` collects complete, equal-size replicate
 means. It reduces them in replicate-id order and supplies the full covariance
 of the mean, preserving correlations between frequencies or moment orders.

@@ -2,6 +2,7 @@
 // Copyright (C) 2026 Ian McCulloch
 #include "test_support.hpp"
 #include "xxx_spinon_proposal_references.hpp"
+#include <bethe/detail/spinon_sampling_statistics.hpp>
 #include <bethe/detail/xxx_spinon_proposal.hpp>
 
 namespace
@@ -132,6 +133,44 @@ TEST(SpinonProposalControls, RejectsInvalidParameters)
 }
 
 #if UNI20_HAS_MPREAL
+TEST(SpinonProposalMpfr, FreshMidpointsReachRepresentableQuantiles)
+{
+  using R = uni20::mpreal;
+  for (int bits : {128, 256, 384})
+  {
+    SCOPED_TRACE(bits);
+    R const one(1, uni20::Precision::bits(bits));
+    Proposal<R> proposal(8 * one, one / 2, {{Kind::background, one, one, one}});
+    bethe::heisenberg::detail::SpinonSampleStream<5> stream(42, 1, 52);
+    for (int sample = 0; sample < 8; ++sample)
+    {
+      SCOPED_TRACE(sample);
+      auto u = stream.next().at_precision(one);
+      for (int coordinate = 1; coordinate < 5; ++coordinate)
+      {
+        SCOPED_TRACE(coordinate);
+        SCOPED_TRACE(uni20::format_scalar(u[coordinate]));
+        R beta;
+        ASSERT_NO_THROW(beta = proposal.native_inverse(u[coordinate]));
+        // Re-evaluate the CDF independently at a much higher precision. The
+        // attainable residual includes the representable beta spacing times
+        // the PDF, not just a relative error on a small uniform coordinate.
+        auto hp = uni20::Precision::bits(768);
+        R const b(beta, hp), input(u[coordinate], hp), h(1, hp), pi = 4 * math::atan(h);
+        R const lower = 2 * math::atan(math::exp(-8 * h));
+        R const norm = 2 * math::atan(4 * h);
+        R const cdf =
+            (2 * math::atan(math::exp(b)) - lower) / (2 * (pi - 2 * lower)) + (h / 2 + math::atan(b / 2) / norm) / 2;
+        R const pdf = h / (2 * (pi - 2 * lower) * math::cosh(b)) + h / ((4 * h + b * b) * norm);
+        R const bound = 256 * R(uni20::numeric_limits<R>::epsilon(one), hp) *
+                        (std::min(input, h - input) + pdf * std::max(h, math::abs(b)));
+        EXPECT_LE(math::abs(cdf - input), bound);
+        EXPECT_LT(math::abs(beta), 8 * one);
+      }
+    }
+  }
+}
+
 TEST(SpinonProposalMpfr, ExplicitPrecisionAndReferenceGrowth)
 {
   using R = uni20::mpreal;

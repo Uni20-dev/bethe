@@ -96,10 +96,15 @@ template <uni20::Real R> class SpinonJointProposal {
     R native_cdf(R const& beta) const
     {
       check_beta(beta);
-      R const distance = R{2} * uni20::math::atan(uni20::math::exp(-uni20::math::abs(beta)));
-      R const lower_half = (distance - lower_) / width_;
-      R const flat = beta <= zero_ ? lower_half : one_ - lower_half;
-      return (one_ - soft_) * flat + soft_ * (one_ / R{2} + uni20::math::atan(beta / R{2}) / soft_norm_);
+      R const depth = uni20::math::abs(beta);
+      // Evaluate both lower-tail probabilities without subtracting close
+      // angles or 1/2. The Cauchy difference uses atan2 and scaled arguments
+      // so cutoff*depth cannot overflow. Reflection is applied only once.
+      R const difference = uni20::math::exp(-depth) * (-uni20::math::expm1(depth - cutoff_));
+      R const flat = R{2} * uni20::math::atan(difference / (one_ + uni20::math::exp(-depth - cutoff_))) / width_;
+      R const cauchy = uni20::math::atan2((cutoff_ - depth) / cutoff_, R{2} / cutoff_ + depth / R{2}) / soft_norm_;
+      R const lower = (one_ - soft_) * flat + soft_ * cauchy;
+      return beta <= zero_ ? lower : one_ - lower;
     }
 
     R native_inverse(R const& uniform) const
@@ -116,12 +121,17 @@ template <uni20::Real R> class SpinonJointProposal {
       for (int iteration = 0; iteration < 2 * bits + 32; ++iteration)
       {
         R const residual = native_cdf(x) - u;
-        if (uni20::math::abs(residual) <= R{32} * eps_ * u) return reflected ? -x : x;
+        R const density = uni20::math::exp(native_log_density(x));
+        // A representable beta step moves the CDF by PDF*ulp(beta). A solely
+        // relative residual in u can be smaller than that attainable change,
+        // even with a stable CDF and an ordinary open midpoint input.
+        R const tolerance = R{32} * eps_ * (u + density * std::max(one_, uni20::math::abs(x)));
+        if (uni20::math::abs(residual) <= tolerance) return reflected ? -x : x;
         if (residual < zero_)
           lo = x;
         else
           hi = x;
-        R const newton = x - residual / uni20::math::exp(native_log_density(x));
+        R const newton = x - residual / density;
         R const trial = iteration % 4 != 3 && lo < newton && newton < hi ? newton : (lo + hi) / R{2};
         if (!(lo < trial && trial < hi)) throw std::runtime_error("proposal inverse exhausted precision");
         x = trial;
