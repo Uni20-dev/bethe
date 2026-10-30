@@ -212,3 +212,33 @@ and no numerical verification of the unrestricted momentum law. A finite
 absolute-rapidity box can itself violate that law. The record also includes
 a separate 1024-draw global integral; it is not reconstructed from these three
 momenta or from a spectral grid.
+
+### Separate cutoff sensitivity from sampling error
+
+For nested rapidity boxes, one outer-box observation can estimate several
+cutoffs without repeating the density evaluation. Retain the complete outer
+proposal density and multiply each weighted moment by the indicator
+`max(abs(beta)) < R`. Do not replace that density by the proposal for the
+smaller box: the draw still came from the outer proposal. Accumulating all
+cutoffs together supplies the covariance needed for their differences.
+
+A second pi/2 pilot used the pair-heavy proposal with outer cutoff 16 and
+16 replicates of 128 draws (seed 43, IDs 200--215). Geometry remained at 384 bits
+with the same recovery policy. All 2048 draws completed; 1009 supported
+configurations required 2018 density-control attempts. Two workers used 394.65
+seconds wall and 769.92 seconds CPU time. The nested-indicator method was first
+checked against analytic momentum-box volumes at cutoffs 1, 2 and 3.
+
+| Rapidity cutoff R | m0(pi/2) | m1(pi/2) |
+|---:|---:|---:|
+| 8 | 0.0001268 +/- 0.0000305 | 0.0002929 +/- 0.0000658 |
+| 12 | 0.0008053 +/- 0.0001769 | 0.0016588 +/- 0.0003488 |
+| 16 | 0.0014413 +/- 0.0002964 | 0.0028627 +/- 0.0005519 |
+
+The R=8 estimates agree with the independent proposal comparison above. The
+first-moment increases from 8 to 12 and from 12 to 16 are 0.001366 +/- 0.000353
+and 0.001204 +/- 0.000449, using their paired covariance. These finite-domain
+increments show why the R=8 execution examples cannot estimate the full
+response. They do not establish convergence at R=16 or determine its remaining
+tail. The largest draws still contribute about 12--16% of these sums, so further
+sampling and proposal checks are needed alongside a larger-cutoff comparison.
