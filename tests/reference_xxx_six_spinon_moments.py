@@ -37,5 +37,49 @@ def observation(words=(4, 32, 80, 112, 180, 220, 240), dps=85):
                  'tail1':measure*energy*density.contour_tail_error}.items()}
 
 
+def fixed_observation(words=(2, 32, 80, 112, 180, 220), dps=85):
+    """Independent positive-PDF assembly on a fixed momentum surface."""
+    with mp.workdps(dps):
+        u = [(mp.mpf(w) + mp.mpf('.5')) / 256 for w in words]
+        position = 30*u[0]
+        chart = int(position)
+        assert position-chart < mp.mpf('.5')  # background draw, full-mixture weight
+        eliminated, native_label = divmod(chart, 5)
+        if native_label >= eliminated:
+            native_label += 1
+        beta = [None]*6
+        beta[native_label] = inverse(u[5], mp.mpf(8), mp.mpf('.5'))
+        free = iter(inverse(x, mp.mpf(8), mp.mpf('.5')) for x in u[1:5])
+        for i in range(6):
+            if i not in (eliminated, native_label): beta[i] = next(free)
+        free_momentum = mp.fsum(2*mp.atan(mp.exp(b)) for b in beta if b is not None)
+        lo = 2*mp.atan(mp.exp(-8))
+        roots = [(s, mp.pi/2+2*mp.pi*s-free_momentum) for s in range(3)]
+        roots = [(s, p) for s, p in roots if lo < p < mp.pi-lo]
+        assert len(roots) == 1
+        section, p = roots[0]
+        beta[eliminated] = mp.log(mp.tan(p/2))
+        h = []
+        for i in range(6):
+            for j in range(6):
+                if i == j: continue
+                other = [beta[a] for a in range(6) if a not in (i, j)]
+                h.append(proposal_pdf(other)*native(beta[j], mp.mpf(8), mp.mpf('.5'))
+                         *mp.fprod(mp.cosh(beta[a]) for a in range(6) if a != i))
+        measure = 30/mp.fsum(h)/(2*mp.pi)
+        energy = mp.pi/2*mp.fsum(mp.sech(b) for b in beta)
+        density = density_at_precision(beta, 128, 24)
+        result = {name: mp.nstr(value,75) for name,value in
+                  {'m0': measure*density.value, 'm1': measure*energy*density.value,
+                   'tail0': measure*density.contour_tail_error,
+                   'tail1': measure*energy*density.contour_tail_error}.items()}
+        result['section'] = section
+        return result
+
+
 if __name__ == '__main__':
-    print(observation())
+    import argparse
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--fixed', action='store_true', help='fixed k=pi/2 rather than global fixture')
+    args = parser.parse_args()
+    print(fixed_observation() if args.fixed else observation(), flush=True)

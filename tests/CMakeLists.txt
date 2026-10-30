@@ -114,6 +114,10 @@ add_executable(bethe_xxx_six_spinon_moments_tests test_xxx_six_spinon_moments.cp
 target_link_libraries(bethe_xxx_six_spinon_moments_tests PRIVATE bethe::bethe TBB::tbb)
 bethe_discover_tests(bethe_xxx_six_spinon_moments_tests)
 
+add_executable(bethe_xxx_six_spinon_fixed_moments_tests test_xxx_six_spinon_fixed_moments.cpp)
+target_link_libraries(bethe_xxx_six_spinon_fixed_moments_tests PRIVATE bethe::bethe TBB::tbb)
+bethe_discover_tests(bethe_xxx_six_spinon_fixed_moments_tests)
+
 add_executable(bethe_monte_carlo_tests test_monte_carlo.cpp)
 target_link_libraries(bethe_monte_carlo_tests PRIVATE bethe::bethe TBB::tbb)
 bethe_discover_tests(bethe_monte_carlo_tests)

@@ -1,4 +1,4 @@
-# Direct six-spinon global moments
+# Direct six-spinon moments
 
 `bethe/xxx_six_spinon_moments.hpp` calculates the longitudinal six-spinon
 intensity and first moment directly, without integrating a displayed frequency
@@ -8,9 +8,9 @@ W6, bounded recovery and soft-pair proposal as the
 shared [Monte Carlo engine](monte-carlo.md) to accumulate both moments and their
 covariance from each configuration.
 
-This checkpoint supplies global moments. Direct fixed-momentum moments and the
-installed moments front end remain integration work. The present calculation
-uses a finite absolute-rapidity cutoff, not a claim of unrestricted convergence.
+Both fixed-momentum and global moments are available. The installed moments
+front end remains integration work. The calculation uses a finite
+absolute-rapidity cutoff, not a claim of unrestricted convergence.
 
 ## Measure and importance proposal
 
@@ -52,9 +52,9 @@ useful alternative; its five-gap importance proposal requires separate validatio
 
 ### Fixed-momentum geometry
 
-`detail/xxx_spinon_moment_proposal.hpp` supplies the next direct-moment
-geometry. Its physical moment consumer is still pending. It chooses uniformly
-among thirty labelled charts: eliminate momentum i, draw a distinct rapidity j
+`detail/xxx_spinon_moment_proposal.hpp` supplies the direct fixed-momentum
+geometry used by `fixed_moments(k)`. It chooses uniformly among thirty labelled
+charts: eliminate momentum i, draw a distinct rapidity j
 from g, and draw the other four from q4. It solves the momentum constraint in
 every section and retains the solution only inside the same absolute cutoff
 box. A draw with resolved empty support contributes zero and is not redrawn.
@@ -70,7 +70,7 @@ q_4(\boldsymbol\beta_{\ne i,j})g(\beta_j)
 
 Its reciprocal mixture weight is 30 divided by the sum of all thirty
 intensities. Eliminating a momentum has unit Jacobian; the cosh factors convert
-the five free proposal densities to momentum densities. The intended moment
+the five free proposal densities to momentum densities. The moment
 observation is this weight times W6 and the sampled energy to power r, divided
 by 2*pi. No further factorial or normalization adjustment is needed. Chart
 selection is actually sampled, so the measure also applies to nonsymmetric
@@ -90,6 +90,24 @@ Construct the model with a `SpinonJointProposal<Geometry>`, a
 `global(options, execution)` waits using the same scheduler. A retained
 `UniformSample<7>` can also be passed to `global_observation` for exact replay.
 The scheduler remains borrowed until completion.
+
+For fixed momentum, use `model.fixed_moments(k).evaluate_async(options, execution)`
+or the synchronous `evaluate` wrapper. The query owns the model state through
+completion. `observation(UniformSample<6>, stop)` replays one exact sample.
+The result has the same six integral columns and covariance, with m0(k) and
+m1(k) replacing I0 and I1. It records the requested momentum and an optional
+`first_moment_denominator` and `first_moment_fraction`. The denominator is the
+full-response first moment, `(2J/3)(log(2)-1/4)(1-cos(k))`; the numerator is
+integrated from the sampled energy and is not forced to follow that law.
+
+`SixSpinonMomentStatus` distinguishes an estimate, an exact physical zero,
+no sampled support, numerical failure and cancellation. At k=0 or 2*pi both
+moments are exactly zero without sampling; their first-moment fraction is
+undefined. At k=pi, `unrestricted_static_divergence` warns that the finite-R
+zeroth moment is not a converged static structure factor. No exact zeroth-moment
+denominator is invented at other momenta. A complete sample stream that finds
+no support has no aggregate estimate; its zero observations remain in the
+replicate records for diagnosis.
 
 The result records J, R, proposal parameters and recovery settings. Its
 `integral` contains the complete numerical-engine result, with columns:
@@ -128,10 +146,12 @@ a nonsymmetric labelled observable. Deep-soft log weights are tested at R=1040
 with 160/256-bit MPFR; that geometric test is not a physical R=1040 integration.
 
 An independent 85-decimal-digit Python construction checks a complete physical
-I0/I1 observation, including all mixture terms and moment measures. Physical
+I0/I1 observation and a fixed-k m0/m1 observation, including all mixture terms
+and moment measures. Physical
 integration tests check serial/concurrent agreement, covariance, exchange
 scaling, owned lifetimes and explicit failure/cancellation. The optional
 `tests/reference_xxx_six_spinon_moments.py` regenerates the physical reference.
+Use `--fixed` for the fixed-k reference.
 
 An accurate density does not ensure an accurate integral. Production work must
 vary sample budgets, independent streams, proposal parameters, uniform-grid
