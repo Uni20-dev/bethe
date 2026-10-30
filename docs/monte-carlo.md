@@ -84,6 +84,12 @@ The engine uses the existing Neumaier accumulator for observations and ordered
 replicate reduction for reproducibility. There is no conversion to binary64 for
 an integral, variance or diagnostic. Wall time uses native seconds.
 
+Replicate means use a compensated raw sum so that subtracting a large anchor
+cannot erase a small signed result before accumulation. Covariance retains
+centered deviations to resolve fluctuations about large common offsets. When
+the raw sum overflows, a finite centered mean supplies the result; unresolved
+arithmetic still fails explicitly.
+
 ## Assessing a proposal
 
 Results retain every available replicate record, its completed sample count,
