@@ -84,6 +84,12 @@ The engine uses the existing Neumaier accumulator for observations and ordered
 replicate reduction for reproducibility. There is no conversion to binary64 for
 an integral, variance or diagnostic. Wall time uses native seconds.
 
+Replicate means use a compensated raw sum so that subtracting a large anchor
+cannot erase a small signed result before accumulation. Covariance retains
+centered deviations to resolve fluctuations about large common offsets. When
+the raw sum overflows, a finite centered mean supplies the result; unresolved
+arithmetic still fails explicitly.
+
 ## Assessing a proposal
 
 Results retain every available replicate record, its completed sample count,
@@ -103,3 +109,8 @@ The engine does not certify omitted tails, proposal-grid resolution, contour
 convergence or geometry precision. Nor does it supply a quadrature error estimate:
 deterministic integration uses its own refinement comparisons even when sharing
 the same scheduling and physical kernels.
+
+The [six-spinon slice example](../examples/six_spinon_slice.cpp) demonstrates this
+separation with physical kernels: three model observations share each exact
+sample identity, and the engine accumulates their full covariance. The model
+still supplies every proposal, chart weight and numerical recovery decision.

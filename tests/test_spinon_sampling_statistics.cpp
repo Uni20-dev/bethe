@@ -64,6 +64,59 @@ template <class R> void covariance(R const& one)
   EXPECT_REAL_NEAR((*shifted.covariance)[0], R{4} * one / R{3}, R{8} * eps);
 }
 
+template <class R> void cancelling_mean(R const& one)
+{
+  R const zero = one - one;
+  R const large = math::ldexp(one, int(uni20::numeric_limits<R>::digits(one)) + 2);
+  sampling::ReplicateStatistics<R> stats(4, 1, 1, one);
+  std::array<R, 4> rows{zero, one, large, -large};
+  for (std::size_t i = 0; i < rows.size(); ++i)
+    stats.accept(i, 1, {rows[i]});
+  auto const result = stats.summary();
+  ASSERT_TRUE(result.mean);
+  // The small positive contribution precedes the large cancelling pair.
+  // Kahan reduction loses it; the exact mean is representable at every precision.
+  EXPECT_EQ((*result.mean)[0], one / R{4});
+}
+
+template <class R> void cancelling_covariance(R const& one)
+{
+  R const zero = one - one;
+  R const large = math::ldexp(one, int(uni20::numeric_limits<R>::digits(one)) + 2);
+  std::array<std::array<R, 2>, 7> rows{
+      {{zero, zero}, {large, large}, {-large, -large}, {one, one}, {-one, -one}, {large, -large}, {-large, large}}};
+  sampling::ReplicateStatistics<R> stats(rows.size(), 1, 2, one);
+  for (std::size_t i = 0; i < rows.size(); ++i)
+    stats.accept(i, 1, {rows[i][0], rows[i][1]});
+  auto const result = stats.summary();
+  ASSERT_TRUE(result.mean && result.covariance);
+  EXPECT_EQ((*result.mean)[0], zero);
+  EXPECT_EQ((*result.mean)[1], zero);
+  // Means cancel exactly even with Kahan. Cross-products sum to 2, despite
+  // their large positive/negative terms: Cov(mean_x,mean_y)=2/(7*6).
+  EXPECT_EQ((*result.covariance)[1], one / R{21});
+  EXPECT_EQ((*result.covariance)[2], one / R{21});
+}
+
+template <class R> void nonzero_anchor(R const& one)
+{
+  R const large = math::ldexp(one, int(uni20::numeric_limits<R>::digits(one)) + 2);
+  std::array<R, 3> rows{-large, one, large};
+  do
+  {
+    sampling::ReplicateStatistics<R> stats(3, 1, 1, one);
+    for (std::size_t i = 0; i < rows.size(); ++i)
+      stats.accept(i, 1, {rows[i]});
+    auto const result = stats.summary();
+    ASSERT_TRUE(result.mean);
+    EXPECT_EQ((*result.mean)[0], one / R{3});
+  }
+  while (std::next_permutation(rows.begin(), rows.end()));
+}
+
+TYPED_TEST(SpinonSampling, NonzeroAnchorDoesNotEraseSignedMean) { nonzero_anchor(TypeParam{1}); }
+TYPED_TEST(SpinonSampling, SignedCancellationRetainsSmallMean) { cancelling_mean(TypeParam{1}); }
+TYPED_TEST(SpinonSampling, SignedCancellationRetainsCrossCovariance) { cancelling_covariance(TypeParam{1}); }
 TYPED_TEST(SpinonSampling, ExactOpenGridEndpoints) { endpoints(TypeParam{1}); }
 TYPED_TEST(SpinonSampling, OrderedCovarianceOfTheMean) { covariance(TypeParam{1}); }
 TYPED_TEST(SpinonSampling, FailedOrMissingReplicatesCannotProduceSuccessfulMean)
@@ -130,7 +183,34 @@ TEST(SpinonSamplingStatistics, UnderflowDoesNotReportZeroSamplingError)
   EXPECT_THROW(stats.summary(), std::runtime_error);
 }
 
+TEST(SpinonSamplingStatistics, CommonOffsetSurvivesRawSumOverflow)
+{
+  double const common = std::numeric_limits<double>::max() / 2;
+  sampling::ReplicateStatistics<double> stats(4, 1, 1, 1.);
+  for (std::size_t i = 0; i < 4; ++i)
+    stats.accept(i, 1, {common});
+  auto const result = stats.summary();
+  ASSERT_TRUE(result.mean && result.covariance);
+  EXPECT_EQ((*result.mean)[0], common);
+  EXPECT_EQ((*result.covariance)[0], 0.);
+}
+
 #if UNI20_HAS_MPREAL
+TEST(SpinonSamplingMpfr, NonzeroAnchorDoesNotEraseSignedMean)
+{
+  for (unsigned bits : {160u, 333u})
+    nonzero_anchor(uni20::mpreal(1, uni20::Precision::bits(bits)));
+}
+TEST(SpinonSamplingMpfr, SignedCancellationRetainsSmallMean)
+{
+  for (unsigned bits : {160u, 333u})
+    cancelling_mean(uni20::mpreal(1, uni20::Precision::bits(bits)));
+}
+TEST(SpinonSamplingMpfr, SignedCancellationRetainsCrossCovariance)
+{
+  for (unsigned bits : {160u, 333u})
+    cancelling_covariance(uni20::mpreal(1, uni20::Precision::bits(bits)));
+}
 TEST(SpinonSamplingMpfr, IdenticalRationalInputAtBothPrecisions)
 {
   using R = uni20::mpreal;

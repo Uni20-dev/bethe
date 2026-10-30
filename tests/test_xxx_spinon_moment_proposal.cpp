@@ -89,10 +89,11 @@ TEST(SpinonMomentProposal, FullLabelledMixtureAndConservation)
 TEST(SpinonMomentProposal, PeriodicBoxSplineVolumeAndLabelledMomentum)
 {
   // Independent analytic convolution of six uniform-momentum intervals.
-  // The proposal is nearly uniform in momentum but still a complete mixture.
+  // Check both a sharp near-uniform control and overlapping soft-pair channels.
   double const pi = std::numbers::pi, cutoff = 3., k = pi / 2;
   d::SpinonJointProposal<double> joint(cutoff, 1e-6, {{Kind::background, 1., 1., 1.}});
-  d::SpinonFixedMomentumProposal p(joint, k);
+  d::SpinonJointProposal<double> mixed(
+      cutoff, .5, {{Kind::background, .25, 1., 1.}, {Kind::one_pair, .25, 4., .5}, {Kind::two_pairs, .5, 8., 1.}});
   double const lo = 2 * std::atan(std::exp(-cutoff)), width = pi - 2 * lo;
   std::array<double, 2> exact{};
   constexpr std::array<int, 7> choose{1, 6, 15, 20, 15, 6, 1};
@@ -109,22 +110,27 @@ TEST(SpinonMomentProposal, PeriodicBoxSplineVolumeAndLabelledMomentum)
     exact[0] += volume;
     exact[1] += volume * total / 6; // each labelled p has the same conditional mean
   }
-  auto observe = [p](bethe::UniformSample<6> const& identity, std::stop_token) {
-    auto const point = p.draw(identity.at_precision(1.));
-    std::vector<double> values(2, 0.);
-    if (point.inside)
-    {
-      values[0] = std::exp(point.log_momentum_measure);
-      values[1] = values[0] * 2 * std::atan(std::exp(point.beta[0]));
-    }
-    return bethe::MonteCarloObservation<double>{values};
-  };
-  auto result = bethe::monte_carlo_async<6>({16, 512, 120}, 2, 1., observe).get_wait();
-  ASSERT_EQ(result.status, bethe::MonteCarloStatus::complete);
-  ASSERT_TRUE(result.mean && result.covariance);
-  for (int i = 0; i < 2; ++i)
-    EXPECT_LT(std::abs((*result.mean)[i] - exact[i]),
-              6 * std::sqrt((*result.covariance)[2 * i + i]) + 1e-10 * exact[i]);
+  for (auto const& proposal : {joint, mixed})
+  {
+    SCOPED_TRACE(proposal.components().size());
+    d::SpinonFixedMomentumProposal p(proposal, k);
+    auto observe = [p](bethe::UniformSample<6> const& identity, std::stop_token) {
+      auto const point = p.draw(identity.at_precision(1.));
+      std::vector<double> values(2, 0.);
+      if (point.inside)
+      {
+        values[0] = std::exp(point.log_momentum_measure);
+        values[1] = values[0] * 2 * std::atan(std::exp(point.beta[0]));
+      }
+      return bethe::MonteCarloObservation<double>{values};
+    };
+    auto result = bethe::monte_carlo_async<6>({16, 512, 120}, 2, 1., observe).get_wait();
+    ASSERT_EQ(result.status, bethe::MonteCarloStatus::complete);
+    ASSERT_TRUE(result.mean && result.covariance);
+    for (int i = 0; i < 2; ++i)
+      EXPECT_LT(std::abs((*result.mean)[i] - exact[i]),
+                6 * std::sqrt((*result.covariance)[2 * i + i]) + 1e-10 * exact[i]);
+  }
 }
 
 #if UNI20_HAS_MPREAL

@@ -137,5 +137,32 @@ machine it used 43.23 seconds wall time and 78.12 seconds CPU time on two
 workers. These numbers document cost and the separation of numerical checks
 from sampling accuracy; they are not a reference thermodynamic spectrum.
 
-[Direct global moments](xxx-six-spinon-moments.md) use the same absolute-rapidity
+[Direct fixed-momentum/global moments](xxx-six-spinon-moments.md) use the same absolute-rapidity
 cutoff and physical density, independently of a spectral display grid.
+
+## A small slice with covariance
+
+The [slice example](../examples/six_spinon_slice.cpp) evaluates three frequencies
+at k=pi/2 using the same sample identities. It composes the physical
+`Point::observation` calls with the generic Monte Carlo engine. The model owns
+the importance distributions and full mixture weights; the engine sees a vector
+of weighted values and diagnostics.
+
+With MPFR enabled and `BETHE_BUILD_EXAMPLES=ON`, run from the build directory:
+
+```sh
+cmake --build . --target bethe-six-spinon-slice-example
+./examples/bethe-six-spinon-slice-example
+```
+
+This uses two workers, 384-bit geometry, R=8, and eight replicates of 64 draws.
+It prints spectral values, separate sampling/contour/arithmetic diagnostics,
+support counts and the covariance of the three spectral means. Missing support
+is labelled explicitly. A failed observation prevents a survivor estimate for
+the slice. The retained replicate records also allow correlated linear
+combinations of frequencies to be analyzed without assuming independent errors.
+
+The short grid demonstrates the library interface and covariance handling. It
+does not resolve the entire continuum or supply a spectral quadrature for the
+moments; use the direct moment calculation for that task. Increasing precision
+does not compensate for a small sampling budget or an insufficient cutoff.

@@ -151,7 +151,9 @@ and moment measures. Physical
 integration tests check serial/concurrent agreement, covariance, exchange
 scaling, owned lifetimes and explicit failure/cancellation. The optional
 `tests/reference_xxx_six_spinon_moments.py` regenerates the physical reference.
-Use `--fixed` for the fixed-k reference.
+Use `--fixed` for the fixed-k reference. The compact
+[sampling record](validation/six-spinon-moments-20261031.json) retains the
+following pilot settings, replicate summaries, timings and comparisons.
 
 An accurate density does not ensure an accurate integral. Production work must
 vary sample budgets, independent streams, proposal parameters, uniform-grid
@@ -170,3 +172,73 @@ used 48.73 seconds wall time and 97.03 seconds CPU time on two workers. The tiny
 sampled density diagnostics do not reduce those sampling errors or quantify
 the omitted rapidity region. These are execution measurements, not estimates
 of the unrestricted sector fractions.
+
+### Compare proposals on new samples
+
+At k=pi/2 and R=8, a 512-draw calibration suggested emphasizing the two-pair
+component. A separate comparison froze both proposals, then used 16 new
+replicates of 256 draws each (seed 42, replicate IDs 100--115). The same identities
+were used between proposals, so their difference has a paired sampling error.
+The calibration used IDs 0--7 and was not reused as validation data.
+
+The joint-mixture weights for background, one pair and two pairs were
+(0.5, 0.25, 0.25) and (0.1, 0.2, 0.7). Both used native soft fraction 0.5,
+one-pair scale/gap 4/0.5 and two-pair scale/gap 8/1, with the precision and
+density policy above. These are explicit physical proposal choices, not
+adaptation performed by the Monte Carlo engine.
+
+| Proposal | m0(k) | m1(k) | CPU seconds |
+|---|---:|---:|---:|
+| Original mixture | 0.0001106 +/- 0.0000253 | 0.0002509 +/- 0.0000545 | 1577 |
+| More two-pair sampling | 0.0000982 +/- 0.0000128 | 0.0002223 +/- 0.0000245 | 1488 |
+
+Each calculation used two workers on an Intel Core i7-12700KF; the two processes
+ran concurrently. Timings describe this pilot, not a portable performance target.
+
+Errors are between-replicate sampling standard errors. The two means agree
+within 0.51 and 0.54 paired standard errors. The second proposal's observed
+variance times CPU cost is 0.24 and 0.19 of the original for m0 and m1.
+Its largest individual draws nevertheless account for 6.8% and 5.3% of the
+corresponding sums, compared with 18.8% and 17.7% for the original proposal.
+The comparison supports this proposal for further finite-R pilots; it does
+not establish a universally efficient mixture or exclude unseen rare regions.
+No library default is changed by this measurement.
+
+The earlier 512-draw calculations at pi/4, pi/2 and 3pi/4 also compared the
+independently measured first-moment fractions. All pairwise differences are
+less than 0.51 paired standard errors, but individual fractional uncertainties
+are 33--36%. There is no resolved momentum dependence in this small sample,
+and no numerical verification of the unrestricted momentum law. A finite
+absolute-rapidity box can itself violate that law. The record also includes
+a separate 1024-draw global integral; it is not reconstructed from these three
+momenta or from a spectral grid.
+
+### Separate cutoff sensitivity from sampling error
+
+For nested rapidity boxes, one outer-box observation can estimate several
+cutoffs without repeating the density evaluation. Retain the complete outer
+proposal density and multiply each weighted moment by the indicator
+`max(abs(beta)) < R`. Do not replace that density by the proposal for the
+smaller box: the draw still came from the outer proposal. Accumulating all
+cutoffs together supplies the covariance needed for their differences.
+
+A second pi/2 pilot used the pair-heavy proposal with outer cutoff 16 and
+16 replicates of 128 draws (seed 43, IDs 200--215). Geometry remained at 384 bits
+with the same recovery policy. All 2048 draws completed; 1009 supported
+configurations required 2018 density-control attempts. Two workers used 394.65
+seconds wall and 769.92 seconds CPU time. The nested-indicator method was first
+checked against analytic momentum-box volumes at cutoffs 1, 2 and 3.
+
+| Rapidity cutoff R | m0(pi/2) | m1(pi/2) |
+|---:|---:|---:|
+| 8 | 0.0001268 +/- 0.0000305 | 0.0002929 +/- 0.0000658 |
+| 12 | 0.0008053 +/- 0.0001769 | 0.0016588 +/- 0.0003488 |
+| 16 | 0.0014413 +/- 0.0002964 | 0.0028627 +/- 0.0005519 |
+
+The R=8 estimates agree with the independent proposal comparison above. The
+first-moment increases from 8 to 12 and from 12 to 16 are 0.001366 +/- 0.000353
+and 0.001204 +/- 0.000449, using their paired covariance. These finite-domain
+increments show why the R=8 execution examples cannot estimate the full
+response. They do not establish convergence at R=16 or determine its remaining
+tail. The largest draws still contribute about 12--16% of these sums, so further
+sampling and proposal checks are needed alongside a larger-cutoff comparison.
