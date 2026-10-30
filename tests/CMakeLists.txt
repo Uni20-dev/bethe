@@ -78,6 +78,10 @@ function(bethe_discover_tests target)
   )
 endfunction()
 
+add_executable(bethe_xxx_spinon_proposal_tests test_xxx_spinon_proposal.cpp)
+target_link_libraries(bethe_xxx_spinon_proposal_tests PRIVATE bethe::bethe)
+bethe_discover_tests(bethe_xxx_spinon_proposal_tests)
+
 add_executable(bethe_cli_precision_tests test_cli_precision.cpp)
 target_link_libraries(bethe_cli_precision_tests PRIVATE bethe_cli_output)
 bethe_discover_tests(bethe_cli_precision_tests)
