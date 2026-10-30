@@ -112,6 +112,60 @@ MPFR controls require explicit finite precision. Gauss nodes, support inversion,
 rapidities and measures stay at that precision; mixed, unset or exact-only
 runtime controls are rejected. The prepared rule is immutable and shareable.
 
+## Direct global moments
+
+`bethe/detail/xxx_four_spinon_common_shift.hpp` provides a second geometry for
+global moments. Order the rapidities and use their three successive gaps plus
+a common shift. The longitudinal density obeys
+
+```math
+W_4(\boldsymbol\beta)\prod_j\mathrm{sech}\,\beta_j
+=F(a,b,c)\sin^2(P/2),\qquad P=\sum_j2\arctan e^{\beta_j}.
+```
+
+`FourSpinonCommonShift` constructs a representative with `P=pi`, preserving
+the three gaps. At that point the sine factor is one, so the physical density
+and the returned rapidity Jacobian give `F` without division by a small sine.
+The common shift can then be integrated independently of the expensive kernel:
+
+```math
+A_0(a,b,c)=\int_{-\infty}^{\infty}d\eta\,\sin^2(P/2),\qquad
+A_1=\int_{-\infty}^{\infty}d\eta\,E\sin^2(P/2)=\pi^2.
+```
+
+Here `J=1`. The first-moment identity follows from `dP/deta=2E/pi` and the increase of
+`P` from zero to `4*pi`. The zeroth integral uses a regrouped partial-fraction
+expression that avoids subtracting terms growing with the middle gap. When
+its arithmetic indicator is too large, positive quadrature supplies the value.
+That fallback reports its order difference, arithmetic indicator and an
+explicit bound on its omitted exponential shift tails separately. None of
+these estimates bounds the omitted **gap** region.
+
+`FourSpinonGapGeometry(order, cutoffs, max_nodes)` emits three-dimensional gap
+nodes. It uses geometrically increasing panels with open Gauss nodes, a checked
+node budget, and explicit precision. Indexed `node(i)` access permits bounded
+parallel evaluation without storing the full tensor grid. Each node contains
+the representative
+rapidities, `log_measure` with the ordered factor 24 and rapidity Jacobian,
+`zeroth_shift`, and `first_shift`. The observable supplies both `1/(2*pi)`
+measures. Equivalently, the physical global moments are
+
+```math
+I_{0,4}=\frac{6}{\pi^2}\int da\,db\,dc\,F A_0,\qquad
+I_{1,4}=6\int da\,db\,dc\,F.
+```
+
+Each finite cutoff restricts one gap, while the common shift has already been
+integrated over the whole real line. This domain differs from both an absolute
+rapidity box and the fixed-momentum geometry's log-radius cutoff. A result
+must retain its actual domain and assess its gap tails separately.
+
+The helper verifies physical common-shift invariance pointwise. Independent
+positive shift integration checks the analytical zeroth factor and the first
+integral `pi^2`; a separable test density checks the ordered and observable
+measures together. Coincident-gap limits are supported by the shift integral;
+they do not remove the density evaluator's separate coincidence restrictions.
+
 ## Independent checks
 
 - Forward momentum and energy reconstruction, ordering and hard-pair velocities
