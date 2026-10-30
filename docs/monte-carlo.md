@@ -103,3 +103,8 @@ The engine does not certify omitted tails, proposal-grid resolution, contour
 convergence or geometry precision. Nor does it supply a quadrature error estimate:
 deterministic integration uses its own refinement comparisons even when sharing
 the same scheduling and physical kernels.
+
+The [six-spinon slice example](../examples/six_spinon_slice.cpp) demonstrates this
+separation with physical kernels: three model observations share each exact
+sample identity, and the engine accumulates their full covariance. The model
+still supplies every proposal, chart weight and numerical recovery decision.
