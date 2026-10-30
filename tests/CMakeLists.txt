@@ -649,7 +649,8 @@ if(BETHE_BUILD_APPS)
         --cmake "${CMAKE_COMMAND}" --build-dir "${PROJECT_BINARY_DIR}"
         --config "$<CONFIG>" --bindir "${CMAKE_INSTALL_BINDIR}"
         --docdir "${CMAKE_INSTALL_DOCDIR}" --suffix "${CMAKE_EXECUTABLE_SUFFIX}"
-        --fp128 "${BETHE_HAS_FLOAT128}" --runtime-files ${bethe_runtime_files} --apps ${bethe_installed_apps})
+        --fp128 "${BETHE_HAS_FLOAT128}" --mpreal "${BETHE_HAS_MPREAL}"
+        --runtime-files ${bethe_runtime_files} --apps ${bethe_installed_apps})
     set_tests_properties(Install.runtime PROPERTIES RUN_SERIAL TRUE TIMEOUT 180)
   endif()
   if(Python3_Interpreter_FOUND)
