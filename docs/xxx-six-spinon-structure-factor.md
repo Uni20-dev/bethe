@@ -136,3 +136,6 @@ contour and arithmetic diagnostics were 5.7e-37 and 2.6e-36. On the development
 machine it used 43.23 seconds wall time and 78.12 seconds CPU time on two
 workers. These numbers document cost and the separation of numerical checks
 from sampling accuracy; they are not a reference thermodynamic spectrum.
+
+[Direct global moments](xxx-six-spinon-moments.md) use the same absolute-rapidity
+cutoff and physical density, independently of a spectral display grid.
