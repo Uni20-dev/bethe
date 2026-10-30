@@ -167,13 +167,23 @@ template <uni20::Real R> class ReplicateStatistics {
       std::vector<R> shifts, means;
       for (std::size_t j = 0; j < dimension_; ++j)
       {
-        bethe::detail::SpinonSum<R> sum(zero_);
+        bethe::detail::SpinonSum<R> sum(zero_), raw(zero_);
         for (auto const& row : rows_)
+        {
+          raw.add((*row.values)[j]);
           sum.add((*row.values)[j] - anchor[j]);
+        }
         shifts.push_back(sum.value() / count);
+        if (!uni20::isfinite(shifts.back())) throw std::runtime_error("replicate mean shift exceeded exponent range");
         if (sum.value() != zero_ && shifts.back() == zero_)
           throw std::runtime_error("replicate mean shift underflowed");
-        means.push_back(anchor[j] + shifts.back());
+        // Centering helps covariance for large common offsets, but x-anchor
+        // can round away a small signed mean before summation. Keep the raw
+        // mean separately; use the centered form if the raw sum overflows.
+        R const total = raw.value();
+        means.push_back(uni20::isfinite(total) ? R(total / count) : R(anchor[j] + shifts.back()));
+        if (uni20::isfinite(total) && total != zero_ && means.back() == zero_)
+          throw std::runtime_error("replicate mean underflowed");
         if (!uni20::isfinite(means.back())) throw std::runtime_error("replicate mean exceeded exponent range");
       }
       if (rows_.size() > 1)
