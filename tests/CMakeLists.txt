@@ -78,6 +78,18 @@ function(bethe_discover_tests target)
   )
 endfunction()
 
+add_executable(bethe_xxx_spinon_proposal_tests test_xxx_spinon_proposal.cpp)
+target_link_libraries(bethe_xxx_spinon_proposal_tests PRIVATE bethe::bethe)
+bethe_discover_tests(bethe_xxx_spinon_proposal_tests)
+
+add_executable(bethe_xxx_spinon_surface_tests test_xxx_spinon_surface.cpp)
+target_link_libraries(bethe_xxx_spinon_surface_tests PRIVATE bethe::bethe)
+bethe_discover_tests(bethe_xxx_spinon_surface_tests)
+
+add_executable(bethe_spinon_sampling_statistics_tests test_spinon_sampling_statistics.cpp)
+target_link_libraries(bethe_spinon_sampling_statistics_tests PRIVATE bethe::bethe)
+bethe_discover_tests(bethe_spinon_sampling_statistics_tests)
+
 add_executable(bethe_cli_precision_tests test_cli_precision.cpp)
 target_link_libraries(bethe_cli_precision_tests PRIVATE bethe_cli_output)
 bethe_discover_tests(bethe_cli_precision_tests)
@@ -85,6 +97,10 @@ bethe_discover_tests(bethe_cli_precision_tests)
 add_executable(bethe_xxx_spinon_density_tests test_xxx_spinon_density.cpp)
 target_link_libraries(bethe_xxx_spinon_density_tests PRIVATE bethe::bethe TBB::tbb)
 bethe_discover_tests(bethe_xxx_spinon_density_tests)
+
+add_executable(bethe_xxx_spinon_density_recovery_tests test_xxx_spinon_density_recovery.cpp)
+target_link_libraries(bethe_xxx_spinon_density_recovery_tests PRIVATE bethe::bethe)
+bethe_discover_tests(bethe_xxx_spinon_density_recovery_tests)
 
 add_executable(bethe_generated_state_scan_tests test_generated_state_scan.cpp)
 target_link_libraries(bethe_generated_state_scan_tests PRIVATE bethe::bethe TBB::tbb)
