@@ -97,8 +97,10 @@ rapidity cutoff, sampling, or momentum/frequency integration.
 `SpinonDensityError` carries a `SpinonDensityFailure` reason. Unresolved
 collisions, a contour tail outside its supported majorant domain, nonfinite
 arithmetic and exponent-range failures are not reported as physical zeros.
-Exactly coincident rapidities need a separate limiting calculation. The initial
-implementation evaluates separated finite points; it does not automatically
+Native subnormal scale factors, contour norms and weights are rejected because
+the relative-roundoff model no longer applies there; use a wider exponent range
+or MPFR. Exactly coincident rapidities need a separate limiting calculation.
+The initial implementation evaluates separated finite points; it does not automatically
 recover them by changing precision or discard failed samples. A higher-level
 integrator must retain explicit failure or perform bounded recovery.
 
@@ -109,7 +111,8 @@ evaluations use Uni20's reusable complex log-Gamma context. Residues share
 rational recurrences across polarization components; the six-spinon double
 contour separates into four single-contour moments per label. A controlled
 rational-ratio tail supplements the finite residue sum. Neumaier summation
-retains compensation when a later term is larger than the accumulated sum.
+retains compensation when a later term is larger than the accumulated sum,
+with independent accumulators for the real and imaginary components.
 
 The absolute coefficients include the state-counting factorial at the density
 layer. Independent validation uses:

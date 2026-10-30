@@ -155,6 +155,44 @@ TYPED_TEST(SpinonDensity, TailAgainstHurwitzZetaAndWorkspaceReuse)
     }
 }
 
+template <class R> void compensated_components(R const& one)
+{
+  using C = uni20::complex<R>;
+  R const zero = one - one;
+  // Each component loses its unit in ordinary addition. The dominant
+  // component changes between terms, so a complex magnitude comparison
+  // cannot select the real Neumaier branch for both components.
+  R const large = R{8} * one / uni20::numeric_limits<R>::epsilon(one);
+  for (int sign : {-1, 1})
+  {
+    bethe::detail::SpinonSum<C> sum(C(zero, zero));
+    sum.add(C(large, R(sign) * one));
+    sum.add(C(one, R(sign) * large));
+    sum.add(C(-large, -R(sign) * large));
+    EXPECT_EQ(sum.value().real(), one);
+    EXPECT_EQ(sum.value().imag(), R(sign) * one);
+  }
+}
+
+TYPED_TEST(SpinonDensity, CompensatesComplexComponentsIndependently) { compensated_components(TypeParam{1}); }
+
+TYPED_TEST(SpinonDensity, RejectsSubnormalWeightsWithRelativeErrorModel)
+{
+  using R = TypeParam;
+  XXXSpinonDensity<R> f;
+  std::array<R, 2> beta{R{0}, uni20::math::sqrt(uni20::numeric_limits<R>::min()) / R{100}};
+  try
+  {
+    auto result = f.evaluate(beta);
+    ADD_FAILURE() << "accepted subnormal density " << uni20::format_scalar(result.value)
+                  << " with arithmetic indicator " << uni20::format_scalar(result.arithmetic_indicator);
+  }
+  catch (SpinonDensityError const& error)
+  {
+    EXPECT_EQ(error.failure(), bethe::heisenberg::SpinonDensityFailure::exponent_range);
+  }
+}
+
 TEST(SpinonDensityFailures, FailuresHaveReasonsAndNeverBecomeZero)
 {
   using bethe::heisenberg::SpinonDensityFailure;
@@ -179,6 +217,8 @@ TEST(SpinonDensityFailures, FailuresHaveReasonsAndNeverBecomeZero)
   EXPECT_EQ(reason({32, 12}), SpinonDensityFailure::rounded_collision);
   beta = {-1000., -800., 1., 2.};
   EXPECT_NE(reason({32, 12}), SpinonDensityFailure::none);
+  beta = {0., 1e-160}; // nonzero binary64 weight, but a zero relative-error indicator before the fix
+  EXPECT_EQ(reason({32, 12}), SpinonDensityFailure::exponent_range);
   EXPECT_THROW(f.evaluate(beta, {std::numeric_limits<int>::max(), 12}), std::invalid_argument);
 }
 
@@ -189,6 +229,13 @@ TEST(SpinonDensityMpfr, BeyondBinary128WithoutAmbientPrecision)
   using uni20::math::abs;
   auto p160 = uni20::Precision::bits(160), p256 = uni20::Precision::bits(256);
   XXXSpinonDensity<R> low(p160), high(p256);
+  compensated_components(low.parse("1"));
+  compensated_components(high.parse("1"));
+  std::array<R, 2> tiny_beta{high.parse("0"), high.parse("1e-160")};
+  auto tiny = high.evaluate(tiny_beta);
+  EXPECT_GT(tiny.value, high.parse("0"));
+  EXPECT_GT(tiny.arithmetic_indicator, high.parse("0"));
+  EXPECT_LT(tiny.arithmetic_indicator / tiny.value, high.parse("1e-65"));
   finite_approximation(low);
   finite_approximation(high);
   auto a = low.evaluate(bulk(low)), b = high.evaluate(bulk(high));

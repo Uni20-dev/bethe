@@ -150,18 +150,12 @@ def main():
     parser.add_argument('--beta', nargs='+', default=['-2.1', '-1.3', '-.4', '.3', '1.2', '2'])
     parser.add_argument('--terms', type=int, nargs='+', default=[128, 256, 512])
     parser.add_argument('--dps', type=int, default=60)
-    parser.add_argument('--epsilon', nargs='*', default=[], help='also check original finite-q amplitudes')
     args = parser.parse_args()
     if args.dps < 25:
         parser.error('require dps>=25')
     mp.mp.dps = args.dps
     try:
         beta = validate(args.beta, min(args.terms))
-        epsilon = list(map(mp.mpf, args.epsilon))
-        if any(not mp.isfinite(e) or e <= 0 for e in epsilon):
-            raise ValueError('epsilon must be finite and positive')
-        if epsilon and len(beta) != 6:
-            raise ValueError('--epsilon currently audits six spinons only')
     except (ValueError, TypeError) as error:
         parser.error(str(error))
     print('RESEARCH: finite contour sums; no DSF integral, certified tails or finite-N extrapolation', flush=True)
@@ -174,16 +168,6 @@ def main():
         print('XXX terms', terms, 'D', mp.nstr(density, 30),
               'relative cutoff change', 'n/a' if previous is None else mp.nstr(abs(density/previous-1), 8), flush=True)
         previous = density
-    if epsilon:
-        from reference_xxz_six_spinon_vertex import SixVertex
-        for e in epsilon:
-            vertex = SixVertex(e)
-            for vacuum in (0, 1):
-                for terms in args.terms:
-                    amplitudes = vertex.amplitudes(beta, vacuum, terms)
-                    density = e**6*mp.fprod(mp.cosh(b) for b in beta)*mp.fsum(abs(a)**2 for a in amplitudes.values())
-                    print('XXZ epsilon', mp.nstr(e, 10), 'vacuum', vacuum, 'terms', terms,
-                          'D', mp.nstr(density, 30), 'ratio to last XXX cutoff', mp.nstr(density/previous, 18), flush=True)
 
 
 if __name__ == '__main__':
