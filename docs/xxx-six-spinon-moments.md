@@ -50,6 +50,38 @@ spectrum. A gap cutoff with an analytically integrated common shift is a
 different domain and needs its own comparison. The common-shift reduction is a
 useful alternative; its five-gap importance proposal requires separate validation.
 
+### Fixed-momentum geometry
+
+`detail/xxx_spinon_moment_proposal.hpp` supplies the next direct-moment
+geometry. Its physical moment consumer is still pending. It chooses uniformly
+among thirty labelled charts: eliminate momentum i, draw a distinct rapidity j
+from g, and draw the other four from q4. It solves the momentum constraint in
+every section and retains the solution only inside the same absolute cutoff
+box. A draw with resolved empty support contributes zero and is not redrawn.
+Numerically ambiguous support fails explicitly.
+
+The chart intensity against the constrained labelled momentum measure is
+
+```math
+h_{i,j}(\boldsymbol\beta)=
+q_4(\boldsymbol\beta_{\ne i,j})g(\beta_j)
+\prod_{a\ne i}\cosh\beta_a,\qquad i\ne j.
+```
+
+Its reciprocal mixture weight is 30 divided by the sum of all thirty
+intensities. Eliminating a momentum has unit Jacobian; the cosh factors convert
+the five free proposal densities to momentum densities. The intended moment
+observation is this weight times W6 and the sampled energy to power r, divided
+by 2*pi. No further factorial or normalization adjustment is needed. Chart
+selection is actually sampled, so the measure also applies to nonsymmetric
+labelled observables.
+
+Geometry checks cover the full mixture and label orbit, all chart choices,
+momentum conservation, analytic periodic box-spline volume and labelled-momentum
+integrals. R=1040 conservation is checked at 1800 and 2048 bits; insufficient
+384-bit geometry is rejected. These establish the geometric measure, not the
+efficiency of this proposal for physical W6 or a converged moment estimate.
+
 ## Interface and result
 
 Construct the model with a `SpinonJointProposal<Geometry>`, a
