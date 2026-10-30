@@ -10,6 +10,8 @@ dimensions. Both use the ordered momentum patches in
 This is an internal integration building block, not a new command-line spectrum
 or a convergence controller. It supplies coordinates and measures to a callback;
 the physical weight comes from `XXXSpinonDensity`. Kernel failures propagate.
+Callbacks may already have run when a failure occurs; discard that partial
+accumulation rather than treating it as a completed integral.
 
 ## Integrate the allowed region
 
@@ -35,8 +37,8 @@ is at `v=0`. Bisection on each side of the maximum gives the allowed fraction
 interval, which is then split at changes of the radial bound's formula.
 
 At each fraction node, both radial endpoint energies increase with `r`.
-Inverting these bounds gives the occupied radial interval directly. The
-quadrature therefore never relies on finding support by sampling zero padding.
+Inverting these bounds locates the occupied region directly. The quadrature
+therefore never relies on finding support by sampling zero padding.
 Unresolved support boundaries throw instead of becoming outside-support zeros;
 points separated from the upper edge by more than the roundoff margin can be
 classified as outside support.
@@ -66,10 +68,37 @@ in `t`. A finite configured cutoff `T` omits `t>T`. This is a **log-radius
 cutoff**, not a uniform rapidity cutoff; geometry supplies no omitted-tail
 estimate.
 
-A positive lower radius instead uses a sine-squared map of `log(r)` over the
-complete allowed interval. This resolves decades near a moving soft boundary
-without adding a cutoff there. Direct moments also split where the hard-pair
-interval changes formula.
+A positive lower radius needs a different coordinate. Close to the boundary of
+the allowed fraction interval, the two radial endpoints approach each other
+quadratically and can round to the same number. Clustering radial nodes at
+those endpoints makes this worse as the quadrature order increases. Increasing
+the order alone is therefore not a reliable refinement strategy for that map.
+
+Instead use the half-separation of the remaining pair,
+`theta=(p_4-p_3)/2` for the same-end patch, and its analogous pair for the
+opposite-end patch. The energy and ordered measure become
+
+```math
+E(r,\theta)=\frac{\pi}{2}[\sin(rv)+\sin(r(1-v))]
+             +\pi\sin(H/2)\cos\theta,
+\qquad
+d\mu=\frac{r}{E_r}\,d\theta\,dv.
+```
+
+Here `E_r` is the radial derivative at fixed angle. It is positive in the
+interior of the ordered patch. Invert the lower energy bound to find the
+largest allowed radius and its hard-pair angle. For each interior angle,
+solve for the distance from that radius using safeguarded Newton iteration.
+Trigonometric product identities evaluate the energy difference directly,
+retaining distances smaller than an ulp of the full energy or radius. This
+avoids subtracting either nearly equal radial endpoints or nearly equal
+energies. The angular measure also removes the hard-pair square-root
+singularity without dropping any support.
+
+Use ordinary Gauss nodes in this angle and in fraction intervals clipped by
+energy support. Unclipped fractions retain the endpoint-resolving map. The
+complete positive-radius region is included without an additional cutoff.
+Direct moments also split where the hard-pair interval changes formula.
 
 The code retains `log(a)` and `log(b)` when a soft distance cannot be
 exponentiated. The correction to `log(tan(a/2)) = log(a)-log(2)` is omitted
@@ -117,6 +146,8 @@ runtime controls are rejected. The prepared rule is immutable and shareable.
 - Forward momentum and energy reconstruction, ordering and hard-pair velocities
   for both patch types, including MPFR beyond binary128.
 - Integrating the energy delta recovers the original hard-pair interval.
+- Angular and radial coarea integrals agree independently for constant and
+  momentum-dependent weights in both patch types.
 - Constant and energy-weighted kernels reproduce independent box-spline section
   volumes, checking the factor of 24 and both momentum sections together.
 - The 512-point example agrees with an independently parameterized radial
@@ -124,5 +155,8 @@ runtime controls are rejected. The prepared rule is immutable and shareable.
 - Near-edge support tests cover the same-end fraction endpoint and the
   opposite-end interior maximum. MPFR resolves a frequency only `1e-30` below
   the upper edge; an edge unresolved at the working precision fails explicitly.
+- Previously failing positive-support points remain resolved through order
+  256. The native angular measure agrees with an independent 160-bit evaluation
+  of the same finite rules; this checks arithmetic, not quadrature convergence.
 - Soft-distance tests retain rapidities at `log(r)=-20000`; invalid controls
   and unresolved boundaries fail explicitly.
