@@ -633,6 +633,9 @@ if(BETHE_BUILD_APPS)
       COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_xxx_spinon_density_precision.py"
         "$<TARGET_FILE:bethe-xxx-structure-factor-thermo>"
         "$<TARGET_FILE:bethe-xxx-moments-thermo>" "${BETHE_HAS_MPREAL}")
+    # These fixtures launch two-worker solves; account for both when scheduling
+    # them alongside other CLI tests on the two-CPU CI runners.
+    set_tests_properties(XXXSpinonMoments.cli XXXSpinonDensityPrecision.cli PROPERTIES PROCESSORS 2)
     add_test(NAME XXXThermodynamicDSF.cli
       COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_xxx_thermodynamic_structure_factor.py"
         "$<TARGET_FILE:bethe-xxx-structure-factor-thermo>" "${BETHE_HAS_FLOAT128}")
