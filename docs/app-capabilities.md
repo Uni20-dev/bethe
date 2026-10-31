@@ -9,7 +9,7 @@ and [Async ownership](async-execution.md).
 
 The table records implemented execution paths and numerical limits. An app can
 remain serial when its work is too cheap to benefit from scheduling; independent
-parameter sweeps can still use the generic library grid. All 43 numerical
+parameter sweeps can still use the generic library grid. All 44 numerical
 frontends below expose explicit MPFR when that scalar family is configured.
 Names omit the `bethe-` executable prefix. This inventory describes the current
 source tree. Rebuild an older
@@ -23,7 +23,8 @@ validation; their measurements are historical records, not new integration runs.
 | `xxx-structure-factor` | Async preparation, fused root/form-factor runners, ordered reduction | Yes, MPFR scalars; CPU LU available | Two-spinon family; failed references and factors remain explicit |
 | `lieb-liniger-pbc`, `lieb-liniger-obc` | Shared continuous real-root scanner; owning Async scans ([#17](https://github.com/Uni20-dev/bethe/pull/17)) | Yes, MPFR scalars; CPU LU available | Finite label windows; independent requests can use different precisions |
 | `richardson`, `central-spin` | Individual solver calls; owning grid-sweep example and full-state composition checks ([#17](https://github.com/Uni20-dev/bethe/pull/17)) | Yes, MPFR scalars | Continuation within each solve remains sequential |
-| `xxx-structure-factor-thermo` | Bounded ordered grid, direct table collection | Yes, scalar MPFR | Independent tail-subtracted references through 333 bits; increase quadrature budgets separately |
+| `xxx-structure-factor-thermo` | Bounded ordered two-spinon grid; shared Async sector, node and replicate work | Yes, scalar MPFR | Two spinons by default; selected 2/4/6 partial sums with separate quadrature, sampling, contour, arithmetic and cutoff diagnostics |
+| `xxx-moments-thermo` | Shared Async sector queries; bounded node and replicate work | Yes, scalar MPFR | Direct fixed-momentum/global M0/M1; physical channel/exchange conversion and optional six-spinon covariance; finite domains require refinement |
 | `lieb-liniger-dispersion` | Prepared solver and bounded grids; shared Async backgrounds | Yes, MPFR scalars; CPU LU available ([#9](https://github.com/Uni20-dev/bethe/pull/9)) | Arithmetic precision does not replace mesh, cutoff or inversion convergence |
 | `lieb-liniger-thermal` | Bounded independent CLI temperature solves; owning mixed-precision library grids | MPFR scalars, grand-canonical and fixed-density equilibrium | Mesh, rapidity cutoff and density inversion budgets remain independent of arithmetic precision |
 | `hubbard-dispersion` | Shared Async preparation and one branch-spanning query window ([#14](https://github.com/Uni20-dev/bethe/pull/14)) | Yes, MPFR scalars; doped backgrounds use CPU/provider LU | Explicit quadrature, stable gamma-ratio phase and shared immutable kernel |
@@ -57,7 +58,7 @@ validation; their measurements are historical records, not new integration runs.
 | `xyz-pbc` | Serial CLI; owning mixed-precision size/eta/t sweeps | Explicit MPFR; CPU/provider LU | Shared complex theta jets, precision-aware roots, Newton controls and failure results |
 
 `bethe-info` reports capabilities and has no numerical parallelism to add.
-The inventory covers 43 numerical frontends; it does not extend any model's
+The inventory covers 44 numerical frontends; it does not extend any model's
 physical state family. Generic scalar functions and numerical primitives belong
 in Uni20; model equations and physical normalization remain in Bethe.
 
