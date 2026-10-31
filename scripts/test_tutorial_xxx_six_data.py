@@ -6,7 +6,7 @@ import json
 import unittest
 
 from test_tutorial_xxx_six_spinon import fixture
-from xxx_six_spinon_tutorial_data import compact_slice, read_compact_slice
+from xxx_six_spinon_tutorial_data import compact_slice, match_requested_frequency, read_compact_slice
 
 
 class CompactSixSlice(unittest.TestCase):
@@ -96,6 +96,47 @@ class CompactSixSlice(unittest.TestCase):
         packed['runs'][1]['metadata']['Bethe revision'] = 'd' * 40
         with self.assertRaisesRegex(ValueError, 'Mixed source revisions'):
             read_compact_slice(packed, momentum='1.5')
+
+    def test_declared_decimal_node_preserves_rounded_export_coordinate(self):
+        # Actual binary80 and binary128 serializations of decimal 1.8.
+        for bits, actual in [(64, '1.79999999999999999996'),
+                             (113, '1.80000000000000000000000000000000004')]:
+            with self.subTest(bits=bits):
+                data = fixture()
+                for table in data['tables'].values():
+                    table['metadata']['Geometry and output bits'] = str(bits)
+                    for row in table['rows']:
+                        row[1] = actual
+                packed = self.packed(data, frequencies=['1.8'])
+                point = read_compact_slice(packed, momentum='1.5')['points'][0]
+                self.assertEqual(point['omega'], '1.8')
+                self.assertEqual(point['computed_omega'], actual)
+                self.assertEqual(point['replicate_records'][0]['omega'], actual)
+                self.assertEqual(packed['runs'][0]['spectrum'][0]['omega'], actual)
+
+    def test_rounding_match_cannot_interpolate_or_collapse_grid(self):
+        self.assertEqual(match_requested_frequency('1.79999999999999999996', ['1.8'], 64), Decimal('1.8'))
+        for actual, requested, bits, message in [
+                ('1.81', ['1.8'], 64, 'Undeclared'),
+                ('1.8', ['1.8', '1.800000000000000001'], 64, 'Ambiguous'),
+                ('1.8', ['1.8', '1.80'], 64, 'Duplicate'),
+                ('1e-100', ['0'], 64, 'Undeclared'),
+                ('1e-100', ['2e-100'], 64, 'Undeclared')]:
+            with self.subTest(actual=actual, requested=requested), self.assertRaisesRegex(ValueError, message):
+                match_requested_frequency(actual, requested, bits)
+        data = self.packed()
+        data['frequencies'] = ['2', '2.000000000000000000000000000000000000000000000000000000001']
+        with self.assertRaisesRegex(ValueError, 'Ambiguous'):
+            read_compact_slice(data, momentum='1.5')
+        first, second = fixture(), fixture()
+        for document, actual in [(first, '1.79999999999999999996'), (second, '1.8')]:
+            for table in document['tables'].values():
+                table['metadata']['Geometry and output bits'] = '64'
+                for row in table['rows']:
+                    row[1] = actual
+        with self.assertRaisesRegex(ValueError, 'Duplicate frequency'):
+            compact_slice([json.dumps(d).encode() for d in (first, second)], momentum='1.5',
+                          rapidity_cutoff='64', frequencies=['1.8'])
 
 
 if __name__ == '__main__':

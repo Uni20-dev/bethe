@@ -8,6 +8,7 @@ claim that an archive is available or has been verified by this reader.
 """
 import argparse
 from copy import deepcopy
+from decimal import Decimal, localcontext
 import hashlib
 import json
 from pathlib import Path
@@ -33,6 +34,29 @@ def source_hash(value):
     return value
 
 
+def match_requested_frequency(value, requested, bits):
+    """Identify one declared input node within its recorded rounding allowance.
+
+    Allow eight relative machine epsilons for grid arithmetic and serialization.
+    Return a Decimal key. No interpolation, nearest-neighbour fallback or unit
+    absolute floor: ambiguous grids and genuinely different frequencies fail.
+    """
+    if isinstance(bits, bool) or not isinstance(bits, int) or bits < 24:
+        raise ValueError('Invalid frequency precision')
+    candidates = [decimal(node) for node in requested]
+    if len(set(candidates)) != len(candidates):
+        raise ValueError('Duplicate requested frequency')
+    actual = decimal(value)
+    with localcontext() as context:
+        context.prec = max(50, bits // 3 + 25)
+        allowance = Decimal(2) ** (4 - bits)
+        matches = [node for node in candidates
+                   if abs(actual - node) <= allowance * max(abs(actual), abs(node))]
+    if len(matches) != 1:
+        raise ValueError('Ambiguous requested frequency' if matches else 'Undeclared frequency')
+    return matches[0]
+
+
 def restored_export(run):
     """Reconstruct only the table envelope, leaving numerical checks shared."""
     tables = {}
@@ -51,8 +75,9 @@ def read_compact_slice(document, *, momentum, exchange='1'):
     """Return checked points in the complete, declared frequency order.
 
     Different sampling/precision controls at different frequencies are retained
-    per run. A slice has one physical convention, cutoff and source revision.
-    Missing values must be explicit unavailable records, never survivor means.
+    per run. Returned omega is the declared input; computed_omega preserves its
+    rounded export coordinate. A slice has one convention, cutoff and source
+    revision. Missing values are explicit records, never survivor means.
     """
     if document.get('schema') != SCHEMA or document.get('density_convention') != CONVENTION:
         raise ValueError('Unknown compact schema or physical convention')
@@ -67,6 +92,7 @@ def read_compact_slice(document, *, momentum, exchange='1'):
     if (not frequencies or any(value < 0 for value in frequencies)
             or any(a >= b for a, b in zip(frequencies, frequencies[1:]))):
         raise ValueError('Frequency grid must be nonnegative and strictly increasing')
+    requested_text = dict(zip(frequencies, document['frequencies']))
     by_frequency = {}
     revisions = None
     for index, run in enumerate(document['runs']):
@@ -80,13 +106,17 @@ def read_compact_slice(document, *, momentum, exchange='1'):
         revisions = current
         checked = sampling_points(restored_export(run), momentum=momentum, exchange=exchange)
         for point in checked['points']:
-            omega = scalar_string(point['omega'])
+            computed_omega = point['omega']
+            omega = match_requested_frequency(computed_omega, frequencies, int(meta['Geometry and output bits']))
             if omega in by_frequency:
                 raise ValueError('Duplicate frequency; combining runs requires a separate analysis')
-            by_frequency[omega] = dict(point, run_index=index, raw_sha256=raw_hash,
+            by_frequency[omega] = dict(point, omega=requested_text[omega], computed_omega=computed_omega,
+                                       run_index=index, raw_sha256=raw_hash,
                                        metadata=meta, summary=run['summary'])
     for record in document['unavailable']:
         omega = scalar_string(record['omega'])
+        if omega not in requested_text:
+            raise ValueError('Undeclared unavailable frequency')
         if omega in by_frequency:
             raise ValueError('Duplicate available/unavailable frequency')
         if (record['status'] not in ('failed', 'unavailable')
@@ -94,7 +124,8 @@ def read_compact_slice(document, *, momentum, exchange='1'):
             raise ValueError('Unavailable points need an explicit status and reason')
         if record['raw_sha256'] is not None:
             source_hash(record['raw_sha256'])
-        by_frequency[omega] = dict(record, s6=None, sampling_se=None,
+        by_frequency[omega] = dict(record, omega=requested_text[omega], computed_omega=None,
+                                   s6=None, sampling_se=None,
                                    replicate_records=[], run_index=None)
     if set(by_frequency) != set(frequencies):
         raise ValueError('Missing or undeclared frequency in compact slice')
