@@ -50,6 +50,13 @@ Neither partial sum includes eight and higher sectors. A sector's fraction of
 the integrated sum rule is not its fraction at each frequency, so multiplying
 the two-spinon curve by a global weight ratio does not generate these sums.
 
+The comparison uses a shared logarithmic density scale so the weaker individual
+sectors remain visible, including above the two-spinon upper edge. A physical
+zero cannot appear on that scale: the two-spinon line stops at its last positive
+sample. The compact data retain the zeros and distinguish them from failed or
+unavailable values. Lines joining samples are visual guides, not interpolated
+data for further calculations.
+
 ## Establish the controls before drawing a curve
 
 Start at a few interior frequencies on both sides of the two-spinon upper

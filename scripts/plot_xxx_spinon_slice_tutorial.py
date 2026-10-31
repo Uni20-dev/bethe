@@ -158,36 +158,38 @@ def plot(data, output=FIGURE):
     validate(data)
     plt.rcParams.update({'svg.hashsalt': 'bethe-spinon-slice', 'font.size': 11,
                          'axes.spines.top': False, 'axes.spines.right': False})
-    fig, axes = plt.subplots(1, 2, figsize=(11, 4.3), layout='constrained')
+    fig, axes = plt.subplots(1, 2, figsize=(11, 4.3), sharey=True, layout='constrained')
     x = [float(p['omega']) for p in data['points']]
     values = lambda key: [float(p[key]) if p[key] is not None else float('nan') for p in data['points']]
-    axes[0].plot(x, values('s2'), 'o-', markersize=3, color='#0072B2', label='2 spinons')
-    axes[0].plot(x, values('s4'), 's-', markersize=3, color='#D55E00', label='4 spinons')
-    axes[0].errorbar(x, values('s6'), yerr=values('s6_sampling_se'), fmt='^-', markersize=3,
+    # Physical zeros are absent on a logarithmic axis. Do not replace them
+    # with an invented positive floor or connect through them. Missing values
+    # remain gaps as well; their distinct statuses stay in the compact record.
+    positive = lambda key: [v if v > 0 else float('nan') for v in values(key)]
+    axes[0].plot(x, positive('s2'), 'o-', markersize=3, color='#0072B2', label='2 spinons')
+    axes[0].plot(x, positive('s4'), 's-', markersize=3, color='#D55E00', label='4 spinons')
+    axes[0].errorbar(x, positive('s6'), yerr=values('s6_sampling_se'), fmt='^-', markersize=3,
                      color='#009E73', label='6 spinons; sampling SE')
     for key, label, color in [('s2_plus_s4', '2+4', '#D55E00'),
                                ('s2_plus_s4_plus_s6', '2+4+6', '#009E73')]:
-        # Physical zeros are absent on a logarithmic axis. Do not replace them
-        # with an invented positive floor or connect through them.
-        y = [v if v > 0 else float('nan') for v in values(key)]
+        y = positive(key)
         if key == 's2_plus_s4_plus_s6':
             axes[1].errorbar(x, y, yerr=values('s6_sampling_se'), fmt='o-', markersize=3,
                              color=color, capsize=2, elinewidth=.7,
                              label=label + '; sampling SE')
         else:
             axes[1].plot(x, y, 'o-', markersize=3, color=color, label=label)
-    axes[1].set_yscale('log')
+    axes[0].set_yscale('log')
     q = float(data['momentum'])
     lower, upper = math.pi / 2 * abs(math.sin(q)), math.pi * abs(math.sin(q / 2))
     for axis in axes:
         axis.axvline(lower, color='#777777', linestyle=':', linewidth=1)
         axis.axvline(upper, color='#777777', linestyle='--', linewidth=1)
         axis.set_xlabel(r'$\omega/J$')
-        axis.set_ylabel(r'$J S^{zz}(q,\omega)$')
         axis.grid(alpha=.2)
         axis.legend(frameon=False)
+    axes[0].set_ylabel(r'$J S^{zz}(q,\omega)$')
     axes[0].set_title('Individual sectors')
-    axes[1].set_title('Partial sums; logarithmic scale')
+    axes[1].set_title('Partial sums')
     fig.suptitle(f'q / π = {q / math.pi:.6g}; finite-domain estimates; sampling errors only', fontsize=11)
     save_svg(fig, output)
     plt.close(fig)
