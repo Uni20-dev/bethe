@@ -18,6 +18,7 @@ struct Controls
     std::string one_pair_scale = "4", one_pair_gap = "0.5", two_pairs_scale = "8", two_pairs_gap = "1";
     std::size_t order = 8, nodes = 100000, terms = 64, tail_order = 16, detail_rows = 100000;
     std::optional<std::size_t> fine_order;
+    std::optional<std::size_t> density_guard_bits;
     std::optional<std::string> extended_cutoff;
     bethe::MonteCarloOptions sampling{8, 32, 0, 0, 52};
     double recovery_seconds = 60;
@@ -81,6 +82,8 @@ inline void add_options(CLI::App& app, Controls& c, bool moments = false)
       ->capture_default_str();
   option(app, "--density-absolute-tolerance", c.absolute_tolerance, "W4/W6 recovery absolute tolerance")
       ->capture_default_str();
+  count_option(app, "--density-guard-bits", c.density_guard_bits,
+               "MPFR W4/W6 guard precision, 25..geometry bits; default follows --precision");
   count_option(app, "--density-terms", c.terms, "First contour residue budget; guard uses 16 more")
       ->capture_default_str();
   count_option(app, "--density-tail-order", c.tail_order, "First contour tail order; guard uses 4 more")
@@ -98,12 +101,25 @@ using DensityLow = std::conditional_t<uni20::has_runtime_precision_v<R>, R,
                                       std::conditional_t<std::is_same_v<R, double>, float, double>>;
 template <uni20::Real R> model::SpinonRecoveryPolicy recovery(Controls const& c, R const& one)
 {
-  int const guard = uni20::numeric_limits<R>::digits(one);
+  int const geometry = uni20::numeric_limits<R>::digits(one);
+  int guard = geometry;
   int low;
   if constexpr (uni20::has_runtime_precision_v<R>)
+  {
+    if (c.density_guard_bits)
+    {
+      if (*c.density_guard_bits <= 24 || *c.density_guard_bits > std::size_t(geometry))
+        throw std::invalid_argument("--density-guard-bits must be in 25..geometry bits");
+      guard = int(*c.density_guard_bits);
+    }
     low = std::max(24, guard - 64);
+  }
   else
+  {
+    if (c.density_guard_bits)
+      throw std::invalid_argument("--density-guard-bits requires --precision bits-N");
     low = uni20::numeric_limits<DensityLow<R>>::digits(DensityLow<R>{1});
+  }
   if (guard <= low)
     throw std::invalid_argument("selected precision has no distinct lower density comparison; choose a wider format");
   if (c.terms > std::size_t(std::numeric_limits<int>::max() - 22) ||
