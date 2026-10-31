@@ -75,8 +75,10 @@ a minimum of 24, so a 192-bit density guard gives a 128/192-bit pair.
 
 The arithmetic diagnostic plus the estimated contour remainder must fit within
 $`\mathrm{atol}+\mathrm{rtol}\,|W_{\mathrm{high}}|`$.
-The program also repeats this check with a larger contour budget and checks
-agreement between the passing results. Agreement is a numerical stability
+The program repeats both precision evaluations with a larger contour budget,
+so a successful check uses four density evaluations in total. Both budgets
+must pass, and their higher-precision results must agree; the result from the
+larger budget is retained. Agreement is a numerical stability
 check, not a rigorous error bound. Disagreement can originate in the lower
 precision even when the higher result is accurate: it means the requested
 check has not passed, not that the higher format is necessarily inadequate.
@@ -92,7 +94,7 @@ took 0.38 CPU seconds. The same domains, streams and numerical controls gave:
 | --- | ---: | --- | ---: |
 | `fp64` | 24 / 53 | Recovery failed | 0.04 |
 | `long-double` | 53 / 64 | Complete | 0.38 |
-| `fp128` | 53 / 113 | Complete | 6.92 |
+| `fp128` | 64 / 113 | Complete | 7.32 |
 | `bits-96` | 32 / 96 | Recovery failed | 6.41 |
 | `bits-128` | 64 / 128 | Complete | 43.59 |
 | `bits-192` | 128 / 192 | Complete | 55.73 |
@@ -107,13 +109,22 @@ arithmetic differences do not measure the accuracy of the physical spectrum:
 the observed sampling errors remain 66–76%, and cutoff 8 omits substantial
 soft weight.
 
+The binary128 row uses the later
+[intermediate-native comparison](../validation/six-spinon-native-comparison-20261031.json):
+it checks against 64-bit-significand `long double`, where available, instead
+of the earlier 53-bit comparison. Its three densities agree with the retained
+MPFR192 calculation within $`7.3\times10^{-31}`$ relative, with matching sample
+identities and work counts. The other rows retain the original measurements.
+The [precision guide](../numerical-accuracy.md#why-evaluate-a-density-at-two-precisions)
+explains selection on platforms with different `long double` formats.
+
 The two failing settings illustrate why the guard precision alone is not
 enough. Recovery compares two arithmetic precisions. Binary64 uses a binary32
 comparison, which fails arithmetic checks and encounters a subnormal-density
 failure in one replicate. MPFR at 96 bits uses a 32-bit comparison and also
 fails arithmetic checks. Neither failed query is replaced by an estimate over
 its surviving replicates. Native extended80 is the cheapest checked setting
-for this particular query; `bits-128` is a measured MPFR alternative. Check
+for this particular query; binary128 is the next format to try before MPFR. Check
 `bethe-info` for the actual native format on your platform, and repeat the
 precision comparison when changing the domain, grid or sample streams.
 
@@ -134,15 +145,30 @@ the final two rows separately test `--density-relative-tolerance 1e-3`:
 | Arithmetic | Relative tolerance | Complete three-point query | CPU seconds |
 | --- | ---: | --- | ---: |
 | `long-double` | `1e-5` | Arithmetic screen fails | 0.31 |
+| `fp128`, native 64/113-bit pair | `1e-5` | Complete | 6.34 |
 | `bits-128` | `1e-5` | Complete | 37.81 |
 | `bits-192` | `1e-5` | Complete | 48.54 |
 | `long-double` | `1e-3` | Complete | 0.31 |
 | `fp64` | `1e-3` | Arithmetic and exponent-range failures | 0.03 |
 
+The native 64/113-bit pair repairs this comparison without changing the
+tolerance, domain or sample stream. Its three means agree with MPFR192 within
+$`1.5\times10^{-30}`$ relative. It also passes seed 35, the other failure in
+the original scan. Across these two seeds and the default seed 42, the
+replicate means and largest observations agree with MPFR192 within
+$`4.9\times10^{-30}`$ relative; all stream identities and work counts match.
+The [native follow-up record](../validation/six-spinon-native-comparison-20261031.json)
+retains both sides of these comparisons, including replicate summaries and
+source identities. Check it without running the solver:
+
+```sh
+python3 scripts/check_xxx_six_spinon_native_precision.py
+```
+
 Increasing MPFR precision from 128 to 192 bits changes the three means by
 at most $`4.4\times10^{-37}`$ relative, with matching replicate identities
-and work counts. This repairs the failure without changing the tolerance,
-domain or sample stream. A failed paired-precision check does not by itself
+and work counts. Both MPFR runs also complete at the original tolerance,
+domain and sample stream. A failed paired-precision check does not by itself
 show that the higher-precision value was inaccurate: it shows that the
 requested agreement with its lower-precision comparison was not established.
 
