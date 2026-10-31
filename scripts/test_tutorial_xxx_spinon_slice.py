@@ -230,6 +230,36 @@ class SpinonSlice(unittest.TestCase):
                         self.assertIn('unavailable', six_container.get_label())
                         self.assertNotIn('sampling', six_container.get_label())
 
+    def test_zero_sectors_and_missing_six_retain_requested_frequency_range(self):
+        for has_available_point in (False, True):
+            with self.subTest(has_available_point=has_available_point):
+                data = compact_fixture()
+                zero = deepcopy(data['four_runs'][0])
+                for row in zero['spectrum']:
+                    row['omega'], row['density'] = '7', '0'
+                    if row['sector'] in ('2', '4'):
+                        row['status'] = 'physical_zero'
+                data['four_runs'] = ([data['four_runs'][0]] if has_available_point else []) + [zero]
+                if not has_available_point:
+                    data['six_slice']['runs'] = []
+                data['six_slice']['frequencies'] = ['2', '7'] if has_available_point else ['7']
+                data['six_slice']['unavailable'] = [{'omega': '7', 'status': 'unavailable',
+                    'reason': 'not computed', 'raw_sha256': None}]
+                four = [tutorial.checked_four_run(r, momentum='1.5', exchange='1')
+                        for r in data['four_runs']]
+                six = read_compact_slice(data['six_slice'], momentum='1.5')['points']
+                data['points'] = tutorial.join_points(four, six)
+                with patch.object(tutorial, 'save_svg') as save:
+                    tutorial.plot(data)
+                figure = save.call_args.args[0]
+                for axis in figure.axes:
+                    lower, upper = axis.get_xlim()
+                    self.assertLess(lower, 7)
+                    self.assertGreater(upper, 7)
+                    self.assertLessEqual(lower, math.pi / 2 * abs(math.sin(1.5)))
+                    self.assertTrue(math.isnan(axis.containers[0].lines[0].get_ydata()[-1]))
+                self.assertIsNone(data['points'][-1]['s2_plus_s4_plus_s6'])
+
     def test_regeneration_commands_use_installed_program_and_local_outputs(self):
         four, _ = checked_inputs()
         four['metadata']['Command'] += ' --json /archive/machine/run.json'

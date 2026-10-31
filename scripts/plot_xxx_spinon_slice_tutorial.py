@@ -186,11 +186,16 @@ def plot(data, output=FIGURE):
             axes[1].plot(x, y, 'o-', markersize=3, color=color, label=label)
     axes[0].set_yscale('log')
     lower, upper = math.pi / 2 * abs(math.sin(q)), math.pi * abs(math.sin(q / 2))
+    # Logarithmic curves omit zeros and unavailable values. Their requested
+    # coordinates must still be visible alongside the two-spinon edge guides.
+    left, right = min(x + [lower, upper]), max(x + [lower, upper])
+    margin = .05 * (right - left)
     for axis in axes:
         axis.axvline(lower, color='#777777', linestyle=':', linewidth=1,
                      label='2-spinon lower edge')
         axis.axvline(upper, color='#777777', linestyle='--', linewidth=1,
                      label='2-spinon upper edge')
+        axis.set_xlim(left - margin, right + margin)
         axis.set_xlabel(r'$\omega/J$')
         axis.grid(alpha=.2)
         axis.legend(frameon=False)
