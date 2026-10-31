@@ -246,6 +246,8 @@ int main(int argc, char** argv)
       [&](auto&) {
         a.output.validate();
         auto selected = cli::spinon::sectors(a.spinons.sectors);
+        if (a.spinons.density_guard_bits && selected == std::vector<int>{2})
+          throw std::invalid_argument("--density-guard-bits requires sector 4 or 6");
         if (a.spinons.replicates && std::ranges::find(selected, 6) == selected.end())
           throw std::invalid_argument("--replicate-output requires sector 6");
         if (a.spinons.diagnostics && selected == std::vector<int>{2})

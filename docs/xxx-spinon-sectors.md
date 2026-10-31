@@ -88,12 +88,22 @@ does not choose or adapt the physical importance distribution.
 
 ## Precision and density recovery
 
-`--precision` controls retained geometry, output and the higher density check.
+By default, `--precision` controls retained geometry, output and the higher density check.
 The lower comparison uses binary32 for binary64, binary64 for binary80 or
 binary128, and 64 fewer bits for MPFR, with a minimum of 24. Both precisions
 and their contour controls are recorded. Low native precision can fail the
 recovery screen, especially for six spinons; choose wider precision in that
 case. Raising precision does not replace order, sampling or cutoff studies.
+
+For MPFR, `--density-guard-bits B` lets the W4/W6 density use a smaller guard
+precision while retaining the geometry and output precision. It requires sector
+4 or 6 and $`25\le B\le N`$ for `--precision bits-N`; native formats reject this
+override. The lower comparison uses `max(24, B-64)` bits. Both arithmetic checks
+and both contour budgets still have to pass. For example, a deeply extended
+soft domain may need 768-bit geometry while its density passes at 192/256 bits:
+use `--precision bits-768 --density-guard-bits 256`. Validate this separation
+against a higher density precision on the same complete query before using it
+for a larger calculation. The two-spinon kernel has its own `--tolerance`.
 
 The density controller checks two increasing contour budgets at two distinct
 precisions. The defaults are 64/80 residue terms and tail orders 16/20, with
