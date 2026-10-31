@@ -124,6 +124,18 @@ and sampling errors. The printed seed42 example remains valid; its arithmetic
 recommendation does not automatically transfer to another stream or sample
 count. No passing seed is substituted for a failed one.
 
+The [native binary128 follow-up](six-spinon-native-comparison-20261031.json)
+repeats the exact three-frequency queries for seeds 42, 2 and 35 with the
+64/113-bit pair and unchanged `rtol=1e-5`, `atol=0`. All three complete, costing
+7.32, 6.34 and 7.02 CPU seconds respectively on the same i7-12700KF. Independent
+reconstruction of all six native/reference exports verifies every compact
+field, stream/work identity and replicate statistic. Means, sampling SE and
+replicate means/maxima differ from MPFR192 by less than 4.9e-30 relative.
+The corresponding checker is `scripts/check_xxx_six_spinon_native_precision.py`.
+This supplies a measured native retry before MPFR for the two observed failures;
+it does not extend the seed scan to forty binary128 queries or establish
+sampling/domain convergence. Original failed native80 records remain intact.
+
 A separate [geometry comparison](six-spinon-geometry-precision-20261031.json)
 holds the density pair at 192/256 bits and probes R1040. Geometry at 256,
 512 and 1024 bits is rejected before export: the soft endpoint rounds onto

@@ -138,6 +138,16 @@ workers. The compact record also retains elapsed time. The very small samples
 and rapidity cutoff limit the physical estimates far more than their arithmetic;
 these are execution examples, not precision spectral or sum-rule calculations.
 
+The [small three-frequency tutorial](tutorials/xxx-six-spinon.md#changing-the-seed-can-change-the-precision-requirement)
+provides a concrete retry example. Seeds 2 and 35 fail its native 80-bit
+screen at the original tolerance. The complete queries succeed with the
+64/113-bit binary128 pair; comparisons with MPFR192 preserve their streams,
+work counts and replicate statistics. Together with the default seed 42,
+all retained statistics agree within $`4.9\times10^{-30}`$ relative. Their
+[compact record](validation/six-spinon-native-comparison-20261031.json)
+supports a stronger precision pair without changing the tolerance or seeking
+an easier seed. It does not certify other streams or a larger domain.
+
 The same follow-up repeats all eight four-spinon refinement points in binary128
 with the stronger native 64/113-bit pair. Every point passes the unchanged
 $`10^{-8}`$ relative density screen and agrees with the independently retained

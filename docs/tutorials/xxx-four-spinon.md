@@ -290,6 +290,7 @@ within $`2.7\times10^{-16}`$ relative. The
 retains controls, source revisions, timings and failed formats; the replicate
 exports allowed independent reconstruction of the means and sampling errors.
 Binary64 fails both arithmetic and exponent-range checks on this stream;
+the updated binary128 64/113-bit pair completes in 7.32 CPU seconds, while
 the successful MPFR128 alternative costs about 44 CPU seconds. These results
 justify the native setting for this small example, not for a new seed or a
 larger soft domain. See
@@ -297,11 +298,22 @@ larger soft domain. See
 
 Changing the seed can expose a failed density screen even at this small cutoff.
 An independent scan of seeds 1–40 retained every outcome: seeds 2 and 35 fail
-at the printed $`10^{-5}`$ tolerance. For the first failing seed, 2, repeating
-the **whole query** at MPFR128 and MPFR192 with unchanged tolerance completes;
-the three means agree within $`4.4\times10^{-37}`$ relative. This is a useful
-small precision exercise: replace `--seed 42` with `--seed 2`, retain the native
-failure, then try `--precision bits-128` and `--precision bits-192`.
+in native 80-bit arithmetic at the printed $`10^{-5}`$ tolerance. Repeating
+both **whole queries** in binary128 with the 64/113-bit pair completes without
+changing the tolerance, domain or streams. Across seeds 42, 2 and 35, the means,
+sampling errors, replicate means and maxima agree with MPFR192 within
+$`4.9\times10^{-30}`$ relative. The
+[native follow-up](../validation/six-spinon-native-comparison-20261031.json)
+retains complete replicate summaries and source identities; each query took
+6.3–7.4 CPU seconds. These checks do not establish success for every seed or
+larger sample count.
+
+For a small precision exercise, replace `--seed 42` with `--seed 2`, retain the
+native 80-bit failure, then try `--precision fp128` where available. The
+effective comparison pair is reported in the output. MPFR128 and MPFR192 also
+complete the same query at the original tolerance, with the three means
+agreeing within $`4.4\times10^{-37}`$ relative. Use those optional wider
+replays to check arithmetic separately from sampling and the omitted domain.
 
 Native arithmetic with a $`10^{-3}`$ density tolerance also completes seed 2;
 its means agree with the strict MPFR192 reference within $`3.3\times10^{-16}`$.
