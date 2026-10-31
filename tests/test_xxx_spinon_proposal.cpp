@@ -2,8 +2,8 @@
 // Copyright (C) 2026 Ian McCulloch
 #include "test_support.hpp"
 #include "xxx_spinon_proposal_references.hpp"
-#include <bethe/detail/spinon_sampling_statistics.hpp>
 #include <bethe/detail/xxx_spinon_proposal.hpp>
+#include <bethe/sampling.hpp>
 
 namespace
 {
@@ -141,7 +141,7 @@ TEST(SpinonProposalMpfr, FreshMidpointsReachRepresentableQuantiles)
     SCOPED_TRACE(bits);
     R const one(1, uni20::Precision::bits(bits));
     Proposal<R> proposal(8 * one, one / 2, {{Kind::background, one, one, one}});
-    bethe::heisenberg::detail::SpinonSampleStream<5> stream(42, 1, 52);
+    bethe::MonteCarloStream<5> stream(42, 1, 52);
     for (int sample = 0; sample < 8; ++sample)
     {
       SCOPED_TRACE(sample);

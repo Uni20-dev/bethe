@@ -33,10 +33,10 @@ Random-number generation, independent replicates and sample sharing across
 frequencies belong to the caller. A spectral estimator must preserve those
 replicate identities when reporting uncertainties and covariances.
 
-`SpinonSampleStream<Dimension>` keys an ordinary Monte Carlo stream by master
+`bethe::MonteCarloStream<Dimension>` in `bethe/sampling.hpp` keys an ordinary Monte Carlo stream by master
 seed, replicate id and a declared uniform bit count. It uses standardized
 `seed_seq` and `mt19937_64` engines. A draw retains its binary integer words;
-`SpinonUniforms::at_precision` constructs the exact midpoint `(integer+1/2)/2^b`
+`UniformSample::at_precision` constructs the exact midpoint `(integer+1/2)/2^b`
 at the requested precision. At least b+1 significand bits are required. A retry
 reuses those words and never redraws or silently lowers the grid resolution.
 This stream is not the historical campaign's scrambled quasi-Monte Carlo rule.
@@ -47,7 +47,7 @@ with one representable rapidity step. A small uniform coordinate does not imply
 that an arbitrarily small relative CDF residual is attainable at fixed precision.
 Open-support and convergence failures remain explicit; no input is redrawn.
 
-`SpinonReplicateStatistics<Real>` collects complete, equal-size replicate
+`bethe::ReplicateStatistics<Real>` collects complete, equal-size replicate
 means. It reduces them in replicate-id order and supplies the full covariance
 of the mean, preserving correlations between frequencies or moment orders.
 One replicate supplies no sampling-error estimate. Missing or failed replicates
@@ -133,3 +133,7 @@ The [six-spinon spectral-point interface](xxx-six-spinon-structure-factor.md)
 combines these pieces with W6, bounded recovery and Uni20 Async execution. It
 retains complete replicate records and separates sampling errors from the
 numerical density diagnostics and omitted rapidity tails.
+
+The shared [Monte Carlo controller](monte-carlo.md) executes these physical
+strategies and retains covariance and work records. Proposal design, complete
+mixture probabilities and balanced chart factors remain in this model layer.
