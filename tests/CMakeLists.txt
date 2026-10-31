@@ -113,6 +113,9 @@ bethe_discover_tests(bethe_xxx_four_spinon_common_shift_tests)
 add_executable(bethe_xxx_four_spinon_thermodynamics_tests test_xxx_four_spinon_thermodynamics.cpp)
 target_link_libraries(bethe_xxx_four_spinon_thermodynamics_tests PRIVATE bethe::bethe TBB::tbb)
 bethe_discover_tests(bethe_xxx_four_spinon_thermodynamics_tests)
+# Apply per-case resource limits after PRE_TEST discovery has registered them.
+set_property(DIRECTORY APPEND PROPERTY TEST_INCLUDE_FILES
+  "${CMAKE_CURRENT_SOURCE_DIR}/xxx_four_spinon_test_properties.cmake")
 
 add_executable(bethe_quadrature_accumulation_tests test_quadrature_accumulation.cpp)
 target_link_libraries(bethe_quadrature_accumulation_tests PRIVATE bethe::bethe TBB::tbb)
