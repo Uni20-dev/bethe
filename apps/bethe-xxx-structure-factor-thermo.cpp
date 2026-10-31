@@ -51,7 +51,7 @@ void add_options(CLI::App& app, Arguments& a)
   auto* nw =
       cli::count_option(app, "--points", a.points, "Uniform frequency samples, 2..1000000")->capture_default_str();
   auto* lo = cli::option(app, "--omega-min", a.omega_min, "Frequency grid lower endpoint")->capture_default_str();
-  auto* hi = cli::text_option(app, "--omega-max", a.omega_max, "Frequency grid upper endpoint (default pi*J)");
+  auto* hi = cli::text_option(app, "--omega-max", a.omega_max, "Frequency grid upper endpoint (default: largest selected sector / 2 * pi * J)");
   cli::text_option(app, "--omega", a.omega, "Single frequency instead of a grid")
       ->excludes(nw)
       ->excludes(lo)
@@ -65,11 +65,11 @@ void add_options(CLI::App& app, Arguments& a)
       ->capture_default_str();
   cli::count_option(app, "--max-quadrature-order", a.max_order, "Power of two, 32..2048; default 64 native, 256 MPFR");
   cli::precision_option(app, a.precision, cli::ArbitraryPrecision::real);
-  cli::threads_option(app, a.threads)->description("Scheduler concurrency limit for independent spectral points");
+  cli::threads_option(app, a.threads)->description("Shared scheduler concurrency limit");
   cli::spinon::add_options(app, a.spinons);
   cli::add_data_output_options(
       app, a.output,
-      {{.name = "spectrum", .description = "Unbroadened two-spinon density and numerical status", .primary = true},
+      {{.name = "spectrum", .description = "Selected-sector densities, their partial sum and numerical status", .primary = true},
        {.name = "continuum", .description = "Kinematic lower/upper edges at each sampled q"},
        {.name = "diagnostics",
         .description = "Separate numerical diagnostics",

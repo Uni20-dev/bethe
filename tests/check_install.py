@@ -80,7 +80,9 @@ def check_spinon_calculations(args, prefix, work, env):
     assert len(replicas) == 3 and all(row['failed_sample'] is None for row in replicas), replicas
 
     for scope, options in [('fixed', momentum), ('global', ['--global'])]:
-        doc = calculate(moments, [*six, *options, '--replicates', '2', '--samples', '4', '--covariance'],
+        exports = (['--no-retain', '--csv-table', 'replicates=six-fixed-replicates.csv',
+                    '--tsv-table', 'covariance=six-fixed-covariance.tsv'] if scope == 'fixed' else [])
+        doc = calculate(moments, [*six, *options, '--replicates', '2', '--samples', '4', '--covariance', *exports],
                         f'six-{scope}-moments.json')
         rows = table_rows(doc, 'moments')
         assert {(row['sector'], int(row['moment'])) for row in rows} == {('6', 0), ('6', 1)}, rows
@@ -92,6 +94,19 @@ def check_spinon_calculations(args, prefix, work, env):
         assert len(covariance) == 4, covariance
         assert all(positive_finite(row['covariance']) for row in covariance
                    if row['moment_i'] == row['moment_j']), covariance
+        if scope == 'fixed':
+            # Streaming sidecars must preserve the MPFR values exported in JSON.
+            for filename, delimiter, expected, keys in (
+                ('six-fixed-replicates.csv', ',', replicas, ('replicate', 'm0', 'm1')),
+                ('six-fixed-covariance.tsv', '\t', covariance, ('moment_i', 'moment_j', 'covariance')),
+            ):
+                text = (work / filename).read_text()
+                assert '# Outcome: success' in text
+                actual = list(csv.DictReader(io.StringIO('\n'.join(
+                    line for line in text.splitlines() if not line.startswith('#'))), delimiter=delimiter))
+                assert len(actual) == len(expected), actual
+                for a, b in zip(actual, expected):
+                    assert all(Decimal(a[key]) == Decimal(str(b[key])) for key in keys), (a, b)
 
 
 @contextmanager
