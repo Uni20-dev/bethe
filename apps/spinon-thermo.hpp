@@ -407,7 +407,12 @@ int run_spectrum(Arguments const& a, model::StructureFactorOptions<R> options, I
   for (auto const& x : q)
     (void)plan->two.boundaries(x);
   for (auto const& x : w)
+  {
     if (!uni20::isfinite(x)) throw std::invalid_argument("frequency must be finite");
+    R const normalized = x / exchange;
+    if (!uni20::isfinite(normalized) || (x != zero && normalized == zero))
+      throw std::overflow_error("frequency exceeds normalized exponent range");
+  }
   if (q.size() > 1000000 / w.size()) throw std::length_error("spectral grid exceeds 1000000 points");
   std::size_t const count = q.size() * w.size();
   if (plan->six && a.spinons.sampling.replicates > std::numeric_limits<std::uint64_t>::max() / count)

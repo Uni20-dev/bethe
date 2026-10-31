@@ -78,7 +78,9 @@ with tempfile.TemporaryDirectory() as tmp:
     for bad in [['--sectors','4,4'],['--sectors','8'],['--sectors','2,'],['--four-order','1'],
                 ['--four-cutoff','nan'],['--four-refine-order','1','--four-extended-cutoff','3'],
                 ['--four-refine-order','4'],['--table','replicates'],['--table','failed'],
-                ['--density-seconds','0'],['--density-terms','1']]:
+                ['--density-seconds','0'],['--density-terms','1'],
+                ['--exchange','1e-4900','--omega','1e4900'],
+                ['--exchange','1e4900','--omega','1e-4900']]:
         invoke([*changed(base,bad),'--json',path,'--force'],1)
         assert path.read_bytes()==original
     diagnostics=Path(tmp)/'diagnostics.csv'

@@ -47,6 +47,31 @@ def sums(doc, sectors):
             c.prec = 130
             close(r[(label,moment)]["value"], sum(number(r[(str(n),moment)]["value"]) for n in sectors))
 
+# Refinement must reject bad coordinates and deferred controls before --force
+# can open either whole-document or named-table exports. Select only sector 4:
+# another sector's eager validation must not conceal a deferred-query bug.
+with tempfile.TemporaryDirectory() as tmp:
+    protected = Path(tmp)/"protected.json"
+    table = Path(tmp)/"protected.csv"
+    absent = Path(tmp)/"not-created.tsv"
+    base = ["--sectors", "4", "--precision", "long-double", "--four-order", "2", "--four-refine-order", "3"]
+    fixed_controls = ["--four-cutoff", "2", "--four-extended-cutoff", "3"]
+    global_controls = ["--global", "--four-gap-cutoffs", "1,1,1", "--four-extended-gap-cutoffs", "2,2,2"]
+    bad_requests = [["--momentum", q, *fixed_controls] for q in ("-1", "7", "nan", "inf")]
+    bad_requests += [["--momentum", "1", *fixed_controls, "--four-max-nodes", "0"],
+                     [*global_controls, "--four-max-nodes", "0"],
+                     [*global_controls, "--four-max-nodes", "20"],
+                     ["--global", "--four-gap-cutoffs", "1,1,1", "--four-extended-gap-cutoffs", "8193,2,2"],
+                     ["--global", "--four-gap-cutoffs", "1,1,1", "--four-extended-gap-cutoffs", "3000,3000,3000"]]
+    for bad in bad_requests:
+        protected.write_bytes(b"preserve prior JSON\n")
+        table.write_bytes(b"preserve prior CSV\n")
+        invoke([*base, *bad, "--json", protected, "--csv-table", f"moments={table}",
+                "--tsv-table", f"diagnostics={absent}", "--force"], 1)
+        assert protected.read_bytes() == b"preserve prior JSON\n", bad
+        assert table.read_bytes() == b"preserve prior CSV\n", bad
+        assert not absent.exists(), bad
+
 g = document(["--global", "--diagnostics"])
 r = indexed(g)
 assert set(r) == {("2",0), ("2",1)}
