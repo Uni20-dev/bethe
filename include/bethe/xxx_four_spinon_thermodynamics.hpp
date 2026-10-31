@@ -325,7 +325,9 @@ template <uni20::Real Geometry, uni20::Real Low, uni20::Real High = Low> class T
     RefinedQuery<1> refined_spectrum(G momentum, G omega, std::size_t coarse_order, std::size_t fine_order, G cutoff,
                                      G extended_cutoff, std::size_t max_nodes = 100000) const
     {
-      check_refinement(coarse_order, fine_order, cutoff, extended_cutoff);
+      check_refinement(coarse_order, fine_order, cutoff, extended_cutoff, max_nodes);
+      check_momentum(momentum);
+      (void)normalized_frequency(omega);
       return RefinedQuery<1>([model = *this, momentum, omega, coarse_order, fine_order, cutoff, extended_cutoff,
                               max_nodes](std::size_t i) {
         return model.spectrum(momentum, omega, i % 2 ? fine_order : coarse_order, i >= 2 ? extended_cutoff : cutoff,
@@ -336,7 +338,8 @@ template <uni20::Real Geometry, uni20::Real Low, uni20::Real High = Low> class T
     RefinedQuery<2> refined_fixed_moments(G momentum, std::size_t coarse_order, std::size_t fine_order, G cutoff,
                                           G extended_cutoff, std::size_t max_nodes = 100000) const
     {
-      check_refinement(coarse_order, fine_order, cutoff, extended_cutoff);
+      check_refinement(coarse_order, fine_order, cutoff, extended_cutoff, max_nodes);
+      check_momentum(momentum);
       return RefinedQuery<2>(
           [model = *this, momentum, coarse_order, fine_order, cutoff, extended_cutoff, max_nodes](std::size_t i) {
             return model.fixed_moments(momentum, i % 2 ? fine_order : coarse_order, i >= 2 ? extended_cutoff : cutoff,
@@ -348,7 +351,9 @@ template <uni20::Real Geometry, uni20::Real Low, uni20::Real High = Low> class T
                                            std::array<G, 3> extended_cutoffs, std::size_t max_nodes = 100000) const
     {
       for (int axis = 0; axis < 3; ++axis)
-        check_refinement(coarse_order, fine_order, cutoffs[axis], extended_cutoffs[axis]);
+        check_refinement(coarse_order, fine_order, cutoffs[axis], extended_cutoffs[axis], max_nodes);
+      // The finest order and widest domain dominate all four gap-node budgets.
+      detail::FourSpinonGapGeometry<G>::validate_parameters(fine_order, extended_cutoffs, max_nodes);
       return RefinedQuery<2>([model = *this, coarse_order, fine_order, cutoffs, extended_cutoffs,
                               max_nodes](std::size_t i) {
         return model.global_moments(i % 2 ? fine_order : coarse_order, i >= 2 ? extended_cutoffs : cutoffs, max_nodes);
@@ -358,10 +363,9 @@ template <uni20::Real Geometry, uni20::Real Low, uni20::Real High = Low> class T
     Query<1> spectrum(G momentum, G omega, std::size_t order, G log_radius_cutoff, std::size_t max_nodes = 100000) const
     {
       auto const& k = *kernel_;
-      validate(momentum);
-      validate(omega);
+      check_momentum(momentum);
+      G const normalized = normalized_frequency(omega);
       validate(log_radius_cutoff);
-      if (momentum < k.zero || momentum > G{2} * k.pi) throw std::invalid_argument("require momentum in [0,2*pi]");
       detail::FourSpinonGeometry<G> geometry(order, log_radius_cutoff);
       if (!max_nodes) throw std::invalid_argument("require a positive node budget");
       Query<1> query(kernel_, FourSpinonObservable::spectrum, order, max_nodes);
@@ -372,9 +376,6 @@ template <uni20::Real Geometry, uni20::Real Low, uni20::Real High = Low> class T
       G const q = std::min(momentum, G{2} * k.pi - momentum);
       G const lower = q == k.pi ? k.zero : k.pi / G{2} * uni20::math::sin(q);
       G const upper = G{2} * k.pi * uni20::math::cos(q / G{4});
-      G const normalized = omega / k.exchange;
-      if (!uni20::isfinite(normalized) || (omega != k.zero && normalized == k.zero))
-        throw std::overflow_error("frequency exceeds normalized exponent range");
       if (q == k.zero || normalized < lower || normalized > upper)
       {
         r.status = FourSpinonIntegralStatus::physical_zero;
@@ -417,9 +418,8 @@ template <uni20::Real Geometry, uni20::Real Low, uni20::Real High = Low> class T
     Query<2> fixed_moments(G momentum, std::size_t order, G log_radius_cutoff, std::size_t max_nodes = 100000) const
     {
       auto const& k = *kernel_;
-      validate(momentum);
+      check_momentum(momentum);
       validate(log_radius_cutoff);
-      if (momentum < k.zero || momentum > G{2} * k.pi) throw std::invalid_argument("require momentum in [0,2*pi]");
       detail::FourSpinonGeometry<G> geometry(order, log_radius_cutoff);
       if (!max_nodes) throw std::invalid_argument("require a positive node budget");
       Query<2> query(kernel_, FourSpinonObservable::fixed_moments, order, max_nodes);
@@ -494,10 +494,26 @@ template <uni20::Real Geometry, uni20::Real Low, uni20::Real High = Low> class T
       return detail::spinon_weighted_value(G{2} * k.one / G{3} * (uni20::math::log(G{2} * k.one) - k.one / G{4}),
                                            uni20::math::log(k.exchange));
     }
-    void check_refinement(std::size_t coarse, std::size_t fine, G const& cutoff, G const& extended) const
+    void check_momentum(G const& momentum) const
+    {
+      validate(momentum);
+      if (momentum < kernel_->zero || momentum > G{2} * kernel_->pi)
+        throw std::invalid_argument("require momentum in [0,2*pi]");
+    }
+    G normalized_frequency(G const& omega) const
+    {
+      validate(omega);
+      G const normalized = omega / kernel_->exchange;
+      if (!uni20::isfinite(normalized) || (omega != kernel_->zero && normalized == kernel_->zero))
+        throw std::overflow_error("frequency exceeds normalized exponent range");
+      return normalized;
+    }
+    void check_refinement(std::size_t coarse, std::size_t fine, G const& cutoff, G const& extended,
+                          std::size_t max_nodes) const
     {
       validate(cutoff);
       validate(extended);
+      if (!max_nodes) throw std::invalid_argument("require a positive node budget");
       if (coarse < 2 || fine <= coarse || fine > 256 || cutoff <= kernel_->zero || extended <= cutoff)
         throw std::invalid_argument("require increasing quadrature orders 2..256 and increasing positive cutoffs");
     }

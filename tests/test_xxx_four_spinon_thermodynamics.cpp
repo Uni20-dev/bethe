@@ -67,6 +67,37 @@ TEST(FourSpinonThermodynamics, HigherOrderSpectrumGeometryAndRefinementEntry)
   EXPECT_FALSE(result.controls[1]);
 }
 
+TEST(FourSpinonThermodynamics, RefinedQueriesRejectInvalidInputsBeforeEvaluation)
+{
+  if (!wider_long_double) GTEST_SKIP();
+  Native model(native_policy(), 1.L);
+  for (long double q :
+       {-1.L, 7.L, std::numeric_limits<long double>::infinity(), std::numeric_limits<long double>::quiet_NaN()})
+  {
+    EXPECT_THROW(model.refined_fixed_moments(q, 2, 3, 2.L, 3.L), std::invalid_argument);
+    EXPECT_THROW(model.refined_spectrum(q, 2.L, 2, 3, 2.L, 3.L), std::invalid_argument);
+  }
+  for (long double omega :
+       {std::numeric_limits<long double>::infinity(), std::numeric_limits<long double>::quiet_NaN()})
+    EXPECT_THROW(model.refined_spectrum(1.L, omega, 2, 3, 2.L, 3.L), std::invalid_argument);
+  EXPECT_THROW(model.refined_fixed_moments(1.L, 2, 3, 2.L, 3.L, 0), std::invalid_argument);
+  EXPECT_THROW(model.refined_spectrum(1.L, 2.L, 2, 3, 2.L, 3.L, 0), std::invalid_argument);
+  EXPECT_THROW(model.refined_global_moments(2, 3, {1.L, 1.L, 1.L}, {2.L, 2.L, 2.L}, 0), std::invalid_argument);
+  // The coarse rule fits, but the fine rule would otherwise fail after it ran.
+  EXPECT_THROW(model.refined_global_moments(2, 3, {1.L, 1.L, 1.L}, {2.L, 2.L, 2.L}, 20), std::invalid_argument);
+  EXPECT_THROW(model.refined_global_moments(2, 3, {1.L, 1.L, 1.L}, {8193.L, 2.L, 2.L}), std::invalid_argument);
+  EXPECT_THROW(model.refined_global_moments(2, 3, {1.L, 1.L, 1.L}, {3000.L, 3000.L, 3000.L}), std::invalid_argument);
+  Native tiny(native_policy(), std::numeric_limits<long double>::min());
+  Native huge(native_policy(), std::numeric_limits<long double>::max());
+  EXPECT_THROW(tiny.refined_spectrum(1.L, std::numeric_limits<long double>::max(), 2, 3, 2.L, 3.L),
+               std::overflow_error);
+  EXPECT_THROW(huge.refined_spectrum(1.L, std::numeric_limits<long double>::min(), 2, 3, 2.L, 3.L),
+               std::overflow_error);
+  // Zero momentum and negative frequency retain their physical-zero meaning.
+  EXPECT_NO_THROW(model.refined_fixed_moments(0.L, 2, 3, 2.L, 3.L));
+  EXPECT_NO_THROW(model.refined_spectrum(1.L, -1.L, 2, 3, 2.L, 3.L));
+}
+
 TEST(FourSpinonThermodynamics, FixedMomentsAndSpectraApplyExchangeInternally)
 {
   if (!wider_long_double) GTEST_SKIP();
@@ -189,8 +220,7 @@ TEST(FourSpinonThermodynamics, RefinementKeepsOrderAndCutoffChangesSeparate)
     EXPECT_EQ((*result.quadrature_difference)[i], std::abs(value(3) - value(2)));
     EXPECT_EQ((*result.cutoff_change)[i], value(3) - value(1));
   }
-  EXPECT_THROW(model.refined_global_moments(2, 3, {1.L, 1.L, 1.L}, {2.L, 2.L, 2.L}, 1).evaluate(),
-               std::invalid_argument);
+  EXPECT_THROW(model.refined_global_moments(2, 3, {1.L, 1.L, 1.L}, {2.L, 2.L, 2.L}, 1), std::invalid_argument);
   auto bad = native_policy();
   bad.relative_tolerance = "1e-40";
   bad.absolute_tolerance = "0";
@@ -202,6 +232,21 @@ TEST(FourSpinonThermodynamics, RefinementKeepsOrderAndCutoffChangesSeparate)
 }
 
 #if UNI20_HAS_MPREAL
+TEST(FourSpinonThermodynamicsMpfr, RefinedQueriesCheckCoordinatePrecisionImmediately)
+{
+  using R = uni20::mpreal;
+  auto const p = uni20::Precision::bits(192);
+  R const one(1, p), other(1, uni20::Precision::bits(160));
+  SpinonRecoveryPolicy policy{"1e-6", "1e-30", {{128, 192, {{{64, 16}, {80, 20}}}}}, 60};
+  ThermodynamicFourSpinon<R, R> model(policy, one);
+  EXPECT_THROW(model.refined_fixed_moments(other, 2, 3, one, 2 * one), std::invalid_argument);
+  EXPECT_THROW(model.refined_spectrum(other, one, 2, 3, one, 2 * one), std::invalid_argument);
+  EXPECT_THROW(model.refined_spectrum(one, other, 2, 3, one, 2 * one), std::invalid_argument);
+  EXPECT_THROW(model.refined_fixed_moments(one, 2, 3, other, 2 * one), std::invalid_argument);
+  EXPECT_THROW(model.refined_global_moments(2, 3, {one, one, one}, {2 * one, 2 * one, 2 * other}),
+               std::invalid_argument);
+}
+
 TEST(FourSpinonThermodynamicsMpfr, GlobalMomentsRetainGeometryPrecisionAndIndependentMeasures)
 {
   using R = uni20::mpreal;

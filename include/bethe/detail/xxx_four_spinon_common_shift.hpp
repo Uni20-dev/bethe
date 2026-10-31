@@ -184,27 +184,9 @@ template <uni20::Real R> class FourSpinonGapGeometry {
         : cutoffs_(std::move(cutoffs)), zero_(bethe::detail::precision_zero(cutoffs_[0])), one_(zero_ + R{1}),
           shift_(one_)
     {
-      if (order < 2 || order > 256 || max_nodes == 0)
-        throw std::invalid_argument("require gap order 2..256 and positive node budget");
-      R span = zero_;
-      std::array<std::vector<R>, 3> cuts;
-      count_ = 1;
-      for (int axis = 0; axis < 3; ++axis)
-      {
-        R const& cutoff = cutoffs_[axis];
-        bethe::detail::require_same_precision(cutoff, one_);
-        if (!uni20::isfinite(cutoff) || cutoff <= zero_ || cutoff > R{8192})
-          throw std::invalid_argument("require positive finite gap cutoffs with total span at most 8192");
-        span += cutoff;
-        cuts[axis].push_back(zero_);
-        for (R end = R{2} * one_; end < cutoff; end *= R{2})
-          cuts[axis].push_back(end);
-        cuts[axis].push_back(cutoff);
-        std::size_t const n = order * (cuts[axis].size() - 1);
-        if (n > max_nodes / count_) throw std::invalid_argument("gap quadrature exceeds node budget");
-        count_ *= n;
-      }
-      if (span > R{8192}) throw std::invalid_argument("common-shift span exceeds budget 8192");
+      auto parameters = checked_parameters(order, cutoffs_, max_nodes);
+      count_ = parameters.count;
+      auto const& cuts = parameters.cuts;
       auto const rule = bethe::detail::gauss_legendre<R>(order, uni20::precision_of(one_));
       for (int axis = 0; axis < 3; ++axis)
         for (std::size_t panel = 1; panel < cuts[axis].size(); ++panel)
@@ -219,6 +201,12 @@ template <uni20::Real R> class FourSpinonGapGeometry {
             nodes_[axis].push_back({gap, uni20::math::log(weight)});
           }
         }
+    }
+
+    // Validate a deferred query without constructing quadrature nodes or evaluating shifts.
+    static void validate_parameters(std::size_t order, std::array<R, 3> const& cutoffs, std::size_t max_nodes)
+    {
+      (void)checked_parameters(order, cutoffs, max_nodes);
     }
 
     std::size_t size() const { return count_; }
@@ -245,6 +233,36 @@ template <uni20::Real R> class FourSpinonGapGeometry {
     }
 
   private:
+    struct Parameters
+    {
+        std::size_t count = 1;
+        std::array<std::vector<R>, 3> cuts;
+    };
+    static Parameters checked_parameters(std::size_t order, std::array<R, 3> const& cutoffs, std::size_t max_nodes)
+    {
+      R const zero = bethe::detail::precision_zero(cutoffs[0]), one = zero + R{1};
+      if (order < 2 || order > 256 || max_nodes == 0)
+        throw std::invalid_argument("require gap order 2..256 and positive node budget");
+      R span = zero;
+      Parameters result;
+      for (int axis = 0; axis < 3; ++axis)
+      {
+        R const& cutoff = cutoffs[axis];
+        bethe::detail::require_same_precision(cutoff, one);
+        if (!uni20::isfinite(cutoff) || cutoff <= zero || cutoff > R{8192})
+          throw std::invalid_argument("require positive finite gap cutoffs with total span at most 8192");
+        span += cutoff;
+        result.cuts[axis].push_back(zero);
+        for (R end = R{2} * one; end < cutoff; end *= R{2})
+          result.cuts[axis].push_back(end);
+        result.cuts[axis].push_back(cutoff);
+        std::size_t const n = order * (result.cuts[axis].size() - 1);
+        if (n > max_nodes / result.count) throw std::invalid_argument("gap quadrature exceeds node budget");
+        result.count *= n;
+      }
+      if (span > R{8192}) throw std::invalid_argument("common-shift span exceeds budget 8192");
+      return result;
+    }
     struct GapNode
     {
         R value, log_weight;

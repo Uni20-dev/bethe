@@ -128,6 +128,13 @@ Compare matched domains explicitly or study both cutoff limits separately.
 
 ## Failures and validation
 
+Query construction validates coordinates, precision and refinement controls
+before any work is submitted. Refined global moments also check the finest
+order on the widest gap domain against the node and span budgets. This
+validation does not build the full quadrature grid; geometry remains lazy.
+Command-line callers can therefore reject invalid refined requests before
+opening their output files.
+
 Resolved exclusions outside the continuum, and the zero-momentum inelastic
 response, return `physical_zero`. Thresholds are identified separately and have
 no finite point estimate. Unresolved geometry, collisions, exhausted density
