@@ -13,9 +13,9 @@ sixteen-frequency grid as the six-spinon recipe. We use $`q=\pi/2`$, $`J=1`$
 and longitudinal normalization throughout. No normalization multiplier is
 applied when the sectors are combined.
 
-**Production is still in progress.** The recipe records the requested grid
-and controls; it does not claim that the full data set is complete or that the
-omitted integration domains have been bounded. The frequency range
+**All sixteen two/four queries are complete; six-spinon production is still
+in progress.** The recipe records the requested grid and controls. Completing
+these queries does not bound the omitted integration domains. The frequency range
 $`1.6\le\omega/J\le4`$ samples both sides of the two-spinon upper edge. It
 omits the outer four- and six-spinon upper edges and is not a moment grid.
 
@@ -92,6 +92,25 @@ The new directory prevents overwriting a previous run. A failed query stops
 the loop and leaves its output and logs for inspection. Keep it, investigate
 the failure, and rerun the complete query in another directory. Do not drop
 the frequency or replace a failed sector by zero.
+
+## Recorded production cost
+
+The [production record](../validation/four-spinon-slice-production-20261031.json)
+retains each frequency's command, raw-export hash, executable hash, CPU model,
+worker count and timings. The sixteen selected two/four queries used
+52,478.8 CPU seconds, or about 14.6 CPU hours. This excludes the calibration
+studies and all six-spinon work. Thirteen queries ran on an Intel Core
+i7-12700KF and three on a Xeon Gold 6254; their differing queries and controls
+do not constitute a hardware benchmark.
+
+The measurements used four workers except at $`\omega/J=2.3,3,4`$, where
+two were used. The recipe above uses four consistently. CPU time sums work
+across threads; wall time measures how long a query takes. The record separates
+application CPU and elapsed time from the external driver's wall time. Its
+wall-time totals sum individual queries, some of which overlapped, so they
+are not the elapsed duration of the campaign. The source revisions and
+executable hashes identify the original calculations; later code improvements
+do not alter these historical measurements.
 
 ## Calculate six spinons and combine the results
 
