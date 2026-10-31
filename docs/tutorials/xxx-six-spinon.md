@@ -362,6 +362,16 @@ still matters even after the numerical failures are repaired. This is a
 finite-$`R=1040`$ result, not a five-percent bound on the unrestricted response.
 The remaining frequencies still need their own complete-query checks.
 
+The earlier independent 2048-draw pilot at the same momentum, frequency and
+cutoff gave $`0.05246\pm0.00646`$. Its difference from the production estimate
+is 2.41 times the two reported standard errors combined in quadrature.
+The runs use different seeds, sample counts, density precisions and contour
+budgets, so this is not a paired precision or cutoff test. Both results are
+retained separately. Their separation illustrates why independent sampling
+checks matter: an SE is inferred from the observed replicate scatter; it does
+not bound the effect of rare configurations they may have missed.
+This comparison alone establishes neither a numerical bias nor convergence.
+
 ## When the geometry needs higher precision
 
 Extending the rapidity domain can demand much more precision even with a loose
