@@ -75,12 +75,8 @@ weighted_spinon_observation(std::span<G const> beta, std::span<G const> log_weig
     result.metadata.failure =
         result.cancelled ? SpinonObservationFailure::cancelled : SpinonObservationFailure::density;
     result.metadata.density_status = recovered.status;
+    result.metadata.density_failure = recovered.density_failure;
     result.reason = recovered.reason;
-    if (!recovered.attempts.empty())
-    {
-      result.metadata.density_failure = recovered.attempts.back().failure;
-      result.reason += ": " + recovered.attempts.back().reason;
-    }
     return result;
   }
   auto const& density = *recovered.estimate;

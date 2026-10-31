@@ -60,6 +60,10 @@ template <uni20::Real R> struct SpinonRecoveryResult
     std::vector<std::size_t> conflicting_attempts;
     std::optional<SpinonDensityEstimate<R>> estimate;
     std::optional<R> arithmetic_screen;
+    // The last genuinely failed control, only when the declared stages are
+    // exhausted. Cancellation, time limits and inconsistent controls have
+    // their own terminal reason rather than an earlier attempt's failure.
+    std::optional<SpinonDensityFailure> density_failure;
     std::string reason;
     double wall_seconds = 0;
     bool accepted() const { return status == SpinonRecoveryStatus::accepted; }
@@ -298,6 +302,15 @@ template <uni20::Real Low, uni20::Real High = Low> class XXXSpinonDensityRecover
           if (assess(result, contexts.high)) return result;
         }
         result.reason = "all declared recovery stages exhausted";
+        // Both contour controls must pass. A passing final attempt does not
+        // replace the failure of an earlier required control.
+        for (auto attempt = result.attempts.rbegin(); attempt != result.attempts.rend(); ++attempt)
+          if (attempt->failure != SpinonDensityFailure::none)
+          {
+            result.density_failure = attempt->failure;
+            result.reason += ": " + attempt->reason;
+            break;
+          }
       }
       catch (Interrupted const& interrupted)
       {

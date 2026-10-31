@@ -232,6 +232,22 @@ TEST(FourSpinonThermodynamics, RefinementKeepsOrderAndCutoffChangesSeparate)
 }
 
 #if UNI20_HAS_MPREAL
+TEST(FourSpinonThermodynamicsMpfr, FailedFirstControlIsReportedWhenFinalControlPasses)
+{
+  using R = uni20::mpreal;
+  auto const p = uni20::Precision::bits(128);
+  SpinonRecoveryPolicy policy{"1e-8", "0", {{64, 128, {{{2, 1}, {18, 5}}}}}, 60};
+  ThermodynamicFourSpinon<R, R> model(policy, R(1, p));
+  auto result = model.spectrum(R("1.5", p), R("1.8", p), 2, R(4, p)).evaluate();
+  EXPECT_EQ(result.status, FourSpinonIntegralStatus::numerical_failure);
+  EXPECT_EQ(result.recovery_failure, SpinonRecoveryStatus::exhausted);
+  EXPECT_FALSE(result.estimates);
+  EXPECT_TRUE(result.failed_node);
+  EXPECT_NE(result.reason.find("exhausted"), std::string::npos);
+  EXPECT_NE(result.reason.find("tail"), std::string::npos);
+  EXPECT_EQ(result.reason.find("screens passed"), std::string::npos);
+}
+
 TEST(FourSpinonThermodynamicsMpfr, RefinedQueriesCheckCoordinatePrecisionImmediately)
 {
   using R = uni20::mpreal;
