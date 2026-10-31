@@ -115,7 +115,9 @@ All frontends support typed tables and file exports; see the
 
 ## Select arithmetic precision
 
-`--precision` selects the arithmetic, independently of output formatting:
+`--precision` selects the arithmetic, independently of output formatting.
+Use the [numerical accuracy guide](numerical-accuracy.md) to choose a practical
+setting and separate arithmetic checks from quadrature, sampling and tails:
 
 | Value | Working arithmetic |
 | --- | --- |
@@ -130,7 +132,8 @@ All numerical frontends accept `bits-N` and `digits-N` in an
 [MPFR-enabled build](building.md#enable-arbitrary-precision). Their physical
 state families and numerical work limits are unchanged; consult the
 [app capability inventory](app-capabilities.md) and the individual model guide.
-For example:
+These examples demonstrate the syntax and supported frontends, rather than
+recommended precision for ordinary runs:
 
 ```sh
 bethe-xxx-pbc 32 --precision digits-100

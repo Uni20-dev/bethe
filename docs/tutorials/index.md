@@ -27,6 +27,10 @@ explicit executable path. Multi-tool scripts take an executable directory via
 need not be named `bin`. Without these options, scripts read the checked-in data.
 Regeneration replaces the repository's example data, not files in your calculation directory.
 
+For arithmetic and convergence choices, use the [numerical accuracy guide](../numerical-accuracy.md).
+It distinguishes working precision, stopping criteria and the errors that
+remain after a solver reports success.
+
 ## Suggested starting paths
 
 - **First Bethe calculation:** [four-site XXX](../getting-started.md), then
