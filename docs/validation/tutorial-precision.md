@@ -39,13 +39,13 @@ explicitly 1e-12 in every format. One worker is used throughout.
 
 | Arithmetic | Density comparison / guard bits | Result | Query CPU seconds |
 | --- | ---: | --- | ---: |
-| Binary64 | 24 / 53 | Arithmetic screen fails; no S4 or sum | 0.0026 to failure |
-| x86 long double | 53 / 64 | Complete | 0.337 |
-| Binary128 | 53 / 113 | Complete | 6.69 |
-| MPFR, 128 bits | 64 / 128 | Complete | 48.2 |
-| MPFR, 192 bits | 128 / 192 | Complete | 64.0 |
+| Binary64 | 24 / 53 | Arithmetic screen fails; no S4 or sum | 0.0069 to failure |
+| x86 long double | 53 / 64 | Complete | 0.329 |
+| Binary128 | 64 / 113 | Complete | 6.86 |
+| MPFR, 128 bits | 64 / 128 | Complete | 51.0 |
+| MPFR, 192 bits | 128 / 192 | Complete | 65.1 |
 
-Hardware: Intel Core i7-12700KF, GCC 13.3 Release, source `b573fb4`, Uni20
+Hardware: Intel Core i7-12700KF, GCC 13.3 Release, source `0b496a0`, Uni20
 `1cb2474`. Timings include the query and ordered output on a shared host; they
 are not portable performance guarantees. Failure time is not the cost of a
 complete binary64 calculation. The native 64-bit-significand S4 differs from
@@ -61,29 +61,43 @@ binary64 completes none at any of those tolerances. All 324 native outcomes
 are retained. Five additional checks compare binary128/MPFR at three difficult
 points: the complete MPFR128 references agree with accepted native values to
 within 1.3e-16 relative, and MPFR192 confirms one reference. This is wider-value
-evidence for those three points only. Binary128's 53-bit lower comparison still
-fails the selected difficult point.
+evidence for those three points only. The recorded binary128 failure uses the
+previous 53-bit lower comparison; this neighbourhood audit predates the
+intermediate native comparison.
 
 The starting command now uses `1e-6`, with a margin below the integration
 changes it demonstrates; its actual two-sector rerun is checked separately.
 The strict five-format and refinement comparisons retain `1e-8`. Changing the
-momentum/frequency can still require MPFR. The full native neighbourhood takes
+momentum/frequency can still require a stronger precision pair. The full native neighbourhood takes
 17.5 CPU seconds and the five reference checks 81.8; these select only sector4,
 so they are not directly comparable with the two-sector costs above.
 
-The native full-grid check is separate: orders 2/4 pass at T8 and T12, but
+The original 53/64-bit full-grid check is separate: orders 2/4 pass at T8 and T12, but
 orders 8/16 fail the arithmetic screen at both cutoffs. Thus the cheap starting
 command is not an adequate uniform setting for the refinement figure. The
 [refinement comparison](four-spinon-refinement-precision-20261031.json) also
-records binary128 failing at order 8 on both cutoffs: its lower comparison
-remains at 53 bits. MPFR128 raises that lower comparison to 64 bits and passes
+records binary128 failing at order 8 on both cutoffs with a 53-bit lower
+comparison. MPFR128 raises that comparison to 64 bits and passes
 all eight points, agreeing with the original MPFR192 S4 values to within
-3.4e-38 relative. The tutorial figure/reproducer now uses this measured
-128-bit grid (41 CPU minutes total; the original used 54). Sources and two-spinon
-kernel tolerance differ between those grids, so this is a comparison of the
-unchanged S4 calculation and measured costs, not an identical two-sector
-benchmark. No failed point is replaced by a successful prefix or a looser
-acceptance threshold.
+3.4e-38 relative. That MPFR128 grid cost 41 CPU minutes; the original MPFR192
+grid cost 54. Sources and two-spinon kernel tolerance differ between those grids,
+so this compares the unchanged S4 calculation and measured costs, not identical
+two-sector benchmarks.
+
+The [native follow-up](spinon-native-precision-20261031.json) uses the stronger
+64/113-bit binary128 pair, with the same strict density tolerances and contour
+controls. All eight quadratures now pass and agree with MPFR192 within 6.3e-31
+relative. They cost 348 CPU seconds, or 5.80 CPU minutes. **The tutorial figure
+and reproducer now use these binary128 data.** Earlier failed cases and MPFR
+reference values remain in their original audit. No failed node is replaced by
+a successful prefix or a looser acceptance threshold.
+
+The follow-up also validates the exact small six-sector API spectrum and moment
+commands in six formats. Native 80-bit agrees with MPFR384 to better than 4e-16
+relative across values, replicate means/maxima, sampling errors and covariance;
+binary128 agrees within 3e-30. Both binary64 failures are retained. These small
+API examples now recommend native 80-bit on platforms providing that format.
+Their tiny samples and finite cutoff still limit the physical estimates.
 
 ## Six-spinon starting point and difficult geometry
 

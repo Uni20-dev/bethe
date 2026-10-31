@@ -1,19 +1,20 @@
 {
   "schema": "bethe.four-spinon-precision.v1",
   "cpu": "12th Gen Intel(R) Core(TM) i7-12700KF",
+  "native_comparison_policy": "intermediate-native",
   "cases": [
     {
       "precision": "fp64",
       "exit_code": 2,
       "metadata": {
         "Arithmetic format": "binary64",
-        "Bethe revision": "b573fb4bba7d7fee9df6853fb29bc7cb051898da",
+        "Bethe revision": "0b496a020694b0c15398c5bae8738d73114e23d4",
         "Bethe version": "0.1.0",
         "Build type": "Release",
         "CPU timing scope": "spectral grid including geometry and ordered output",
         "Channel": "zz",
         "Compiler": "GNU 13.3.0",
-        "Date": "2026-10-31T08:33:14Z",
+        "Date": "2026-10-31T12:47:11Z",
         "Density absolute tolerance": "1e-30",
         "Density comparison bits": "24",
         "Density convention": "S(q,w); moments use dw/(2*pi); raising=2*zz",
@@ -79,11 +80,11 @@
         "fp64"
       ],
       "summary": {
-        "CPU time": "0.002347 s",
-        "Elapsed seconds": "0.00321048400000734091009",
+        "CPU time": "0.006236 s",
+        "Elapsed seconds": "0.00677767199999834701885",
         "Failed points": "1",
         "Outcome": "partial",
-        "Run CPU seconds": "0.00263300000000000000007",
+        "Run CPU seconds": "0.00685500000000000000002",
         "Status": "incomplete",
         "Threshold points": "0"
       },
@@ -144,20 +145,20 @@
           "reason": "all declared recovery stages exhausted: arithmetic screen failed"
         }
       ],
-      "raw_sha256": "eed300eb5024e385d552966e429c5ba7f0d2c5d41349a7d26f14a4e756c8ce38"
+      "raw_sha256": "54ebdea13bd8fe5f77277208e0b1573c9b1b727f03b3f5e35b26087079f6117e"
     },
     {
       "precision": "long-double",
       "exit_code": 0,
       "metadata": {
         "Arithmetic format": "extended80",
-        "Bethe revision": "b573fb4bba7d7fee9df6853fb29bc7cb051898da",
+        "Bethe revision": "0b496a020694b0c15398c5bae8738d73114e23d4",
         "Bethe version": "0.1.0",
         "Build type": "Release",
         "CPU timing scope": "spectral grid including geometry and ordered output",
         "Channel": "zz",
         "Compiler": "GNU 13.3.0",
-        "Date": "2026-10-31T08:33:14Z",
+        "Date": "2026-10-31T12:47:11Z",
         "Density absolute tolerance": "1e-30",
         "Density comparison bits": "53",
         "Density convention": "S(q,w); moments use dw/(2*pi); raising=2*zz",
@@ -223,11 +224,11 @@
         "long-double"
       ],
       "summary": {
-        "CPU time": "0.336583 s",
-        "Elapsed seconds": "0.336834645999999793275",
+        "CPU time": "0.328374 s",
+        "Elapsed seconds": "0.328751167999996596336",
         "Failed points": "0",
         "Outcome": "success",
-        "Run CPU seconds": "0.33687599999999999999",
+        "Run CPU seconds": "0.328706999999999999998",
         "Status": "finite_domain_estimate",
         "Threshold points": "0"
       },
@@ -288,22 +289,22 @@
           "reason": "finite-domain quadrature estimate; order and cutoff refinement are separate checks"
         }
       ],
-      "raw_sha256": "4e7ed3f67859e46aee4704dd5687fe3ff37fa3b5f3c6407bb83a58fa0b8ad1b5"
+      "raw_sha256": "f99fde805061d12309e71b7d54e63aae06de708a724490e5e64c37a19fdabbe1"
     },
     {
       "precision": "fp128",
       "exit_code": 0,
       "metadata": {
         "Arithmetic format": "binary128",
-        "Bethe revision": "b573fb4bba7d7fee9df6853fb29bc7cb051898da",
+        "Bethe revision": "0b496a020694b0c15398c5bae8738d73114e23d4",
         "Bethe version": "0.1.0",
         "Build type": "Release",
         "CPU timing scope": "spectral grid including geometry and ordered output",
         "Channel": "zz",
         "Compiler": "GNU 13.3.0",
-        "Date": "2026-10-31T08:33:15Z",
+        "Date": "2026-10-31T12:47:11Z",
         "Density absolute tolerance": "1e-30",
-        "Density comparison bits": "53",
+        "Density comparison bits": "64",
         "Density convention": "S(q,w); moments use dw/(2*pi); raising=2*zz",
         "Density guard bits": "113",
         "Density relative tolerance": "1e-8",
@@ -367,11 +368,11 @@
         "fp128"
       ],
       "summary": {
-        "CPU time": "6.693809 s",
-        "Elapsed seconds": "6.69531599900000173875",
+        "CPU time": "6.854973 s",
+        "Elapsed seconds": "6.85572180500000172287",
         "Failed points": "0",
         "Outcome": "success",
-        "Run CPU seconds": "6.69405799999999999959",
+        "Run CPU seconds": "6.85538499999999999994",
         "Status": "finite_domain_estimate",
         "Threshold points": "0"
       },
@@ -426,26 +427,26 @@
           "quadrature_difference": null,
           "cutoff_change": null,
           "contour_diagnostic": "2.5300905572387746218683867160231814e-36",
-          "arithmetic_diagnostic": "4.79401915630747821102468032985810263e-11",
+          "arithmetic_diagnostic": "3.86684157461476617517179718145233394e-14",
           "sampling_error": null,
           "evaluations": "576",
           "reason": "finite-domain quadrature estimate; order and cutoff refinement are separate checks"
         }
       ],
-      "raw_sha256": "b256a588bb2f246c8278815919bc9babe34a663b0dc5a3d88fd00593d39af668"
+      "raw_sha256": "60863f2fadaf4e966dfb79957114924a2f6d8677e3033d49623a33d2edd7527e"
     },
     {
       "precision": "bits-128",
       "exit_code": 0,
       "metadata": {
         "Arithmetic format": "arbitrary binary",
-        "Bethe revision": "b573fb4bba7d7fee9df6853fb29bc7cb051898da",
+        "Bethe revision": "0b496a020694b0c15398c5bae8738d73114e23d4",
         "Bethe version": "0.1.0",
         "Build type": "Release",
         "CPU timing scope": "spectral grid including geometry and ordered output",
         "Channel": "zz",
         "Compiler": "GNU 13.3.0",
-        "Date": "2026-10-31T08:33:22Z",
+        "Date": "2026-10-31T12:47:18Z",
         "Density absolute tolerance": "1e-30",
         "Density comparison bits": "64",
         "Density convention": "S(q,w); moments use dw/(2*pi); raising=2*zz",
@@ -511,11 +512,11 @@
         "bits-128"
       ],
       "summary": {
-        "CPU time": "48.198728 s",
-        "Elapsed seconds": "48.220930272999993349",
+        "CPU time": "51.024876 s",
+        "Elapsed seconds": "51.0382006750000130069",
         "Failed points": "0",
         "Outcome": "success",
-        "Run CPU seconds": "48.1989350000000000007",
+        "Run CPU seconds": "51.0250699999999999985",
         "Status": "finite_domain_estimate",
         "Threshold points": "0"
       },
@@ -576,20 +577,20 @@
           "reason": "finite-domain quadrature estimate; order and cutoff refinement are separate checks"
         }
       ],
-      "raw_sha256": "6bd39fd7fe9ad00f9bb4e82114e8e2e5a899d044a87d9099a890d94e281f4735"
+      "raw_sha256": "56161386fb468e3d06df933b13f2cf2a9a440860b20b45b7a8035d8b8b697b13"
     },
     {
       "precision": "bits-192",
       "exit_code": 0,
       "metadata": {
         "Arithmetic format": "arbitrary binary",
-        "Bethe revision": "b573fb4bba7d7fee9df6853fb29bc7cb051898da",
+        "Bethe revision": "0b496a020694b0c15398c5bae8738d73114e23d4",
         "Bethe version": "0.1.0",
         "Build type": "Release",
         "CPU timing scope": "spectral grid including geometry and ordered output",
         "Channel": "zz",
         "Compiler": "GNU 13.3.0",
-        "Date": "2026-10-31T08:34:10Z",
+        "Date": "2026-10-31T12:48:10Z",
         "Density absolute tolerance": "1e-30",
         "Density comparison bits": "128",
         "Density convention": "S(q,w); moments use dw/(2*pi); raising=2*zz",
@@ -655,11 +656,11 @@
         "bits-192"
       ],
       "summary": {
-        "CPU time": "64.035784 s",
-        "Elapsed seconds": "64.0385674260000001823",
+        "CPU time": "65.125312 s",
+        "Elapsed seconds": "65.1530012469999917357",
         "Failed points": "0",
         "Outcome": "success",
-        "Run CPU seconds": "64.0359850000000000031",
+        "Run CPU seconds": "65.1255909999999999943",
         "Status": "finite_domain_estimate",
         "Threshold points": "0"
       },
@@ -720,7 +721,7 @@
           "reason": "finite-domain quadrature estimate; order and cutoff refinement are separate checks"
         }
       ],
-      "raw_sha256": "7b33f2cd37d569d7a01a07d133be7b70da39d12d04aa11a2a983ef858702dd2b"
+      "raw_sha256": "4173b21b39a42f6b1f1e5d5ad94329aeec87795cf71f151445894c45b863ff20"
     }
   ]
 }

@@ -91,6 +91,13 @@ def validate(data):
     identities = [(c['precision'], c['relative_tolerance'], c['q'], c['omega']) for c in cases]
     if identities != NATIVE + REFERENCES:
         raise ValueError('Incomplete, duplicate or reordered audit cases')
+    policy = data.get('native_comparison_policy', 'binary64-fallback')
+    if policy not in ('binary64-fallback', 'intermediate-native'):
+        raise ValueError('Unknown native comparison policy')
+    native_widths = {c['bits'] for c in cases if c['precision'] == 'long-double'}
+    if len(native_widths) != 1:
+        raise ValueError('Mixed native arithmetic formats')
+    native_bits, = native_widths
     for c in cases:
         fmt, bits = c['precision'], c['bits']
         for field in ('computed_q', 'computed_omega', 'density', 'contour_diagnostic', 'arithmetic_diagnostic'):
@@ -100,6 +107,8 @@ def validate(data):
         if bits != expected.get(fmt, bits) or bits < 53:
             raise ValueError('Wrong effective precision')
         low = max(24, bits-64) if fmt.startswith('bits-') else (24 if bits == 53 else 53)
+        if policy == 'intermediate-native' and fmt == 'fp128' and 53 < native_bits < 113:
+            low = native_bits
         if c['comparison_bits'] != low or c['guard_bits'] != bits:
             raise ValueError('Changed density comparison')
         epsilon = Decimal(2) ** (8-bits)
@@ -187,8 +196,14 @@ def main():
             sources.append(source)
         if any(s != sources[0] for s in sources):
             raise ValueError('Mixed binaries, sources or timing hardware')
+        # Preserve the policy of imported historical exports. Fresh native
+        # binary128 uses the available intermediate format; validation still
+        # checks that its recorded width matches the native cases in this run.
+        fp128 = next(c for c in cases if c['precision'] == 'fp128')
+        policy = 'binary64-fallback' if fp128['comparison_bits'] == 53 else 'intermediate-native'
         data = validate(dict(schema='bethe.four-spinon-neighbourhood.v1', controls=CONTROLS,
-            source=sources[0], scope='Native screen coverage; wide value checks at three contrasting points only. Finite order4/T8 domain, not a physical accuracy bound.', cases=cases))
+            source=sources[0], native_comparison_policy=policy,
+            scope='Native screen coverage; wide value checks at three contrasting points only. Finite order4/T8 domain, not a physical accuracy bound.', cases=cases))
         a.data.write_text(json.dumps(data, indent=2)+'\n')
     else:
         data = validate(json.loads(a.data.read_text()))

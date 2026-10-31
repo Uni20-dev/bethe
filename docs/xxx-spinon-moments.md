@@ -101,7 +101,7 @@ both moment observations, and their covariance is retained. For example:
 ```sh
 bethe-xxx-moments-thermo \
   --momentum 1.57079632679489661923132169163975 --sectors 6 \
-  --precision bits-384 --six-cutoff 8 --replicates 2 --samples 4 \
+  --precision long-double --six-cutoff 8 --replicates 2 --samples 4 \
   --seed 42 --threads 2 --diagnostics --replicate-output --covariance
 ```
 
@@ -110,6 +110,14 @@ inspect influential observations and change proposal weights at fixed domain.
 Separately extend the rapidity cutoff: a small replicate error does not bound
 the missing tail. Changes in arithmetic precision and contour budgets provide
 further checks, distinct from both sampling and domain truncation.
+
+For these exact eight draws, native 80-bit arithmetic agrees with the 384-bit
+MPFR reference to better than $`4\times10^{-16}`$ relative in the moments,
+replicate values and maxima, sampling errors and covariance. Binary64 fails
+the arithmetic screen. The [precision audit](numerical-accuracy.md#validated-small-api-examples)
+retains both failures and successes, effective widths and measured costs.
+Check the actual `long-double` format on your platform and repeat the checks
+when changing the seed or numerical controls.
 
 With MPFR, the shared `--density-guard-bits` option can reduce W4/W6 density
 cost while preserving a higher geometry/output precision. Its bounds, lower

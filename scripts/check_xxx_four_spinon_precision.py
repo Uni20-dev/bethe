@@ -87,6 +87,10 @@ def validate(data):
     if [c['precision'] for c in data['cases']] != list(FORMATS):
         raise ValueError('Missing, duplicate or reordered precision case')
     sources = set()
+    policy = data.get('native_comparison_policy', 'binary64-fallback')
+    if policy not in ('binary64-fallback', 'intermediate-native'):
+        raise ValueError('Unknown native comparison policy')
+    native_bits = int(data['cases'][1]['metadata']['Geometry and output bits'])
     for case in data['cases']:
         meta, summary = case['metadata'], case['summary']
         if case['command'] != ['bethe-xxx-structure-factor-thermo', *ARGUMENTS, '--precision', case['precision']]:
@@ -100,6 +104,8 @@ def validate(data):
         if bits != expected_bits.get(case['precision'], bits) or bits < 53:
             raise ValueError('Incorrect arithmetic format')
         low = max(24, bits-64) if case['precision'].startswith('bits-') else (24 if bits == 53 else 53)
+        if policy == 'intermediate-native' and case['precision'] == 'fp128' and 53 < native_bits < 113:
+            low = native_bits
         if int(meta['Density comparison bits']) != low or int(meta['Density guard bits']) != bits:
             raise ValueError('Density comparison was changed')
         epsilon = Decimal(2) ** (8-bits)
@@ -185,7 +191,14 @@ def main():
         cpu = args.cpu
         if not cpu and Path('/proc/cpuinfo').exists():
             cpu = next(s.split(':', 1)[1].strip() for s in Path('/proc/cpuinfo').read_text().splitlines() if s.startswith('model name'))
-        data = validate({'schema': 'bethe.four-spinon-precision.v1', 'cpu': cpu or platform.processor(), 'cases': cases})
+        # Historical exports explicitly keep their old pair; fresh binaries use
+        # the actual intermediate native format where one exists.
+        policy = 'intermediate-native'
+        if (int(cases[1]['metadata']['Geometry and output bits']) > 53
+                and cases[2]['metadata']['Density comparison bits'] == '53'):
+            policy = 'binary64-fallback'
+        data = validate({'schema': 'bethe.four-spinon-precision.v1', 'cpu': cpu or platform.processor(),
+                         'native_comparison_policy': policy, 'cases': cases})
         args.data.write_text(json.dumps(data, indent=2)+'\n')
     else:
         data = validate(json.loads(args.data.read_text()))

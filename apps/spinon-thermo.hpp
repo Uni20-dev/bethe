@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Copyright (C) 2026 Ian McCulloch
 #pragma once
+#include "execution-options.hpp"
 #include "result-output.hpp"
 #include "solver-precision.hpp"
 #include <bethe/xxx_four_spinon_thermodynamics.hpp>
@@ -96,9 +97,21 @@ inline void add_options(CLI::App& app, Controls& c, bool moments = false)
   app.add_flag("--replicate-output", c.replicates, "Show six-spinon replicate records on screen");
 }
 
-template <class R>
-using DensityLow = std::conditional_t<uni20::has_runtime_precision_v<R>, R,
-                                      std::conditional_t<std::is_same_v<R, double>, float, double>>;
+template <class R> consteval auto density_low_type()
+{
+  if constexpr (uni20::has_runtime_precision_v<R>)
+    return std::type_identity<R>{};
+  else if constexpr (uni20::numeric_limits<R>::digits() <= uni20::numeric_limits<double>::digits())
+    return std::type_identity<float>{};
+  else if constexpr (uni20::numeric_limits<long double>::digits() > uni20::numeric_limits<double>::digits() &&
+                     uni20::numeric_limits<long double>::digits() < uni20::numeric_limits<R>::digits())
+    // Prefer an intermediate native format. Equal-width long double is not
+    // an independent precision check (including platforms where it is binary128).
+    return std::type_identity<long double>{};
+  else
+    return std::type_identity<double>{};
+}
+template <class R> using DensityLow = typename decltype(density_low_type<R>())::type;
 template <uni20::Real R> model::SpinonRecoveryPolicy recovery(Controls const& c, R const& one)
 {
   int const geometry = uni20::numeric_limits<R>::digits(one);
