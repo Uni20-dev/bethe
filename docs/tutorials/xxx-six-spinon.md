@@ -122,6 +122,37 @@ python3 scripts/plot_xxx_six_spinon_tutorial.py \
 A small difference does not bound the weight beyond the larger cutoff. Both
 estimates can omit the same soft region.
 
+## Keep the plotted data independently checkable
+
+The compact `bethe-six-spinon-slice-v1` format retains the full requested
+frequency grid and stores numerical metadata once per run, together with
+spectrum, diagnostic and replicate rows. It includes each raw export's SHA256,
+source revisions, cutoff, proposal controls and timing summary. Local command
+paths are omitted. Raw observations and archives are not needed to redraw a
+figure, and are not included in the compact file.
+
+For the single-point example above:
+
+```sh
+python3 scripts/xxx_six_spinon_tutorial_data.py \
+  --raw point.json --momentum "$q" --cutoff 256 \
+  --frequency 2 --output six-compact.json
+```
+
+Repeat `--raw` for separate runs and `--frequency` for every requested node,
+in increasing order. The packer rejects duplicate frequencies and missing
+nodes. An unavailable node needs an explicit record with `omega`, a `failed`
+or `unavailable` status, a reason, and `raw_sha256` (or `null` if no export
+exists); supply that list using `--unavailable records.json`.
+
+Both tutorial plotters can use
+`read_compact_slice(document, momentum=q, exchange='1')` from the same module.
+It recomputes the estimates through the sampling validator and returns ordered
+points with their original controls. Unavailable points have `s6: null` and
+`sampling_se: null`; they must appear as gaps, not zeroes or connecting lines.
+These checks preserve the evidence for an estimate; they do not certify its
+sampling or cutoff convergence.
+
 The [six-spinon library interface](../xxx-six-spinon-structure-factor.md)
 provides independent geometry and recovery precision when needed. To obtain
 zeroth and first moments, use the [direct moment calculation](../xxx-spinon-moments.md)
