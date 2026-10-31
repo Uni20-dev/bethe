@@ -23,16 +23,15 @@ MOMENTUM = '1.570796326794896619231321691639751442098584699687552910487472296153
 SCHEMA = 'bethe.xxx-spinon-slice.v1'
 
 
-def join_points(four_runs, six_runs):
-    """Join read_spectrum/sampling_points results without interpolating a grid.
+def join_points(four_runs, six_points):
+    """Join checked sector records on exact frequencies, retaining explicit gaps.
 
-    Each run has already passed its sector-specific reader. Different precision
-    and integration domains are allowed and retained; q, J and source revisions
-    must agree. Four-spinon's T and six-spinon's R are deliberately not equated.
+    Six records come from read_compact_slice; their metadata, replicate checks
+    and declared missing nodes are owned by that reader. T and R are not equated.
     """
-    if not four_runs or not six_runs:
+    if not four_runs or not six_points:
         raise ValueError('Both checked two/four and six inputs are required')
-    sources = four_runs + six_runs
+    sources = four_runs + [p for p in six_points if p['s6'] is not None]
     meta = sources[0]['metadata']
     identity = ('Bethe revision', 'Uni20 revision', 'Density convention', 'Channel', 'Exchange J')
     if any(run['metadata'][key] != meta[key] for run in sources for key in identity):
@@ -48,12 +47,11 @@ def join_points(four_runs, six_runs):
             if omega in four:
                 raise ValueError('Duplicate two/four frequency')
             four[omega] = (rows, run_index)
-    for run_index, run in enumerate(six_runs, len(four_runs)):
-        for point in run['points']:
-            omega = decimal(point['omega'])
-            if omega in six:
-                raise ValueError('Duplicate six-spinon frequency')
-            six[omega] = (point, run_index)
+    for point in six_points:
+        omega = decimal(point['omega'])
+        if omega in six:
+            raise ValueError('Duplicate six-spinon frequency')
+        six[omega] = point
     if four.keys() != six.keys():
         raise ValueError('Sector frequency grids differ; interpolation would change the comparison')
     bits = max(int(run['metadata']['Geometry and output bits']) for run in sources)
@@ -62,19 +60,25 @@ def join_points(four_runs, six_runs):
         context.prec = max(80, bits // 3 + 50)
         for omega in sorted(four):
             rows, fi = four[omega]
-            sampled, si = six[omega]
-            q = rows['2']['q']
-            for replica in sampled['replicate_records']:
-                common_bits = min(int(sources[i]['metadata']['Geometry and output bits']) for i in (fi, si))
-                if not close(q, replica['q'], common_bits):
+            sampled = six[omega]
+            s2, s4 = [decimal(rows[sector]['density']) for sector in ('2', '4')]
+            point = {'omega': str(omega), 's2': str(s2), 's4': str(s4), 's2_plus_s4': str(s2 + s4),
+                     'four_run': fi, 'six_run': sampled['run_index'], 's6_status': sampled['status']}
+            if sampled['s6'] is None:
+                point.update(s6=None, s6_sampling_se=None, s2_plus_s4_plus_s6=None,
+                             reason=sampled['reason'])
+            else:
+                common_bits = min(int(sources[fi]['metadata']['Geometry and output bits']),
+                                  int(sampled['metadata']['Geometry and output bits']))
+                if any(not close(rows['2']['q'], replica['q'], common_bits)
+                       for replica in sampled['replicate_records']):
                     raise ValueError('Sector momenta differ')
-            s2, s4, s6 = [decimal(value) for value in (rows['2']['density'], rows['4']['density'], sampled['s6'])]
-            points.append({'omega': str(omega), 's2': str(s2), 's4': str(s4), 's6': str(s6),
-                           's2_plus_s4': str(s2 + s4), 's2_plus_s4_plus_s6': str(s2 + s4 + s6),
-                           's6_sampling_se': sampled['sampling_se'],
-                           'largest_draw_fraction': sampled['largest_draw_fraction'],
-                           'largest_replicate_fraction': sampled['largest_replicate_fraction'],
-                           'four_run': fi, 'six_run': si})
+                s6 = decimal(sampled['s6'])
+                point.update(s6=str(s6), s2_plus_s4_plus_s6=str(s2 + s4 + s6),
+                             s6_sampling_se=sampled['sampling_se'],
+                             largest_draw_fraction=sampled['largest_draw_fraction'],
+                             largest_replicate_fraction=sampled['largest_replicate_fraction'])
+            points.append(point)
     return points
 
 
@@ -93,78 +97,52 @@ def provenance(run, raw):
             'raw_sha256': hashlib.sha256(raw).hexdigest()}
 
 
-def collect(four_paths, six_paths, *, momentum=MOMENTUM):
-    # Owned by the six-spinon tutorial: do not duplicate its statistical checks.
-    from plot_xxx_six_spinon_tutorial import sampling_points
-    four, six, records = [], [], []
-    for paths, destination, reader in ((four_paths, four, read_spectrum),
-                                        (six_paths, six, sampling_points)):
-        for path in paths:
-            raw = path.read_bytes()
-            result = reader(json.loads(raw), momentum=momentum, exchange='1')
-            destination.append(result)
-            record = provenance(result, raw)
-            if reader is sampling_points:
-                # These are small replicate aggregates, not individual draws.
-                record['sampling_points'] = result['points']
-            else:
-                record['spectrum'] = result['spectrum']
-                record['diagnostics'] = result.get('diagnostics', [])
-            records.append(record)
+def collect(four_paths, six_document, *, momentum=MOMENTUM):
+    from xxx_six_spinon_tutorial_data import read_compact_slice
+    six = read_compact_slice(six_document, momentum=momentum, exchange='1')
+    four, records = [], []
+    for path in four_paths:
+        raw = path.read_bytes()
+        result = read_spectrum(json.loads(raw), momentum=momentum, exchange='1',
+                               expected_metadata={'Selected spinon sectors': '2,4'})
+        four.append(result)
+        records.append({**provenance(result, raw), 'spectrum': result['spectrum'],
+                        'diagnostics': result.get('diagnostics', [])})
     data = {'schema': SCHEMA, 'momentum': momentum, 'exchange': '1', 'channel': 'zz',
-            'density_convention': CONVENTION, 'source_runs': records,
+            'density_convention': CONVENTION, 'four_runs': records, 'six_slice': six_document,
             'scope': 'Finite-domain partial spectra; sampling SE excludes cutoff and numerical bias',
-            'points': join_points(four, six)}
+            'points': join_points(four, six['points'])}
     return validate(data)
 
 
+def checked_four_run(run, *, momentum, exchange):
+    """Restore the small table envelope and reuse the common export checks."""
+    if not re.fullmatch('[0-9a-f]{64}', run['raw_sha256']):
+        raise ValueError('Missing raw-export identity')
+    tables = {}
+    for name in ('spectrum', 'diagnostics'):
+        rows = run[name]
+        names = list(rows[0]) if rows else []
+        if any(set(row) != set(names) for row in rows):
+            raise ValueError('Inconsistent compact table columns')
+        tables[name] = {'metadata': run['metadata'], 'summary': run['summary'],
+                        'columns': [{'id': key} for key in names],
+                        'rows': [[row[key] for key in names] for row in rows]}
+    return read_spectrum({'tables': tables}, momentum=momentum, exchange=exchange,
+                         expected_metadata={'Selected spinon sectors': '2,4'})
+
+
 def validate(data):
+    from xxx_six_spinon_tutorial_data import read_compact_slice
     if (data['schema'] != SCHEMA or data['channel'] != 'zz' or decimal(data['exchange']) != 1
             or data['density_convention'] != CONVENTION):
         raise ValueError('Wrong slice schema or physical convention')
-    decimal(data['momentum'])
-    four, six = [], []
-    reached_six = False
-    for run in data['source_runs']:
-        if not re.fullmatch('[0-9a-f]{64}', run['raw_sha256']):
-            raise ValueError('Missing raw-export identity')
-        if run['metadata']['Channel'] != data['channel'] or run['metadata']['Density convention'] != CONVENTION:
-            raise ValueError('Inconsistent source convention')
-        meta = run['metadata']
-        bits = int(meta['Geometry and output bits'])
-        if bits < 24 or not close(meta['Exchange J'], data['exchange'], bits):
-            raise ValueError('Inconsistent exchange or precision')
-        if any(not re.fullmatch('[0-9a-f]{40}', meta[key]) for key in ('Bethe revision', 'Uni20 revision')):
-            raise ValueError('Unidentifiable source revision')
-        if run['summary']['Outcome'] != 'success' or run['summary']['Failed points'] != '0':
-            raise ValueError('Incomplete source calculation')
-        # Rebuild from retained checked records so edits to the plotted sums or
-        # individual weights cannot silently disconnect them from their source.
-        if 'sampling_points' in run:
-            reached_six = True
-            if meta['Selected spinon sectors'] != '6':
-                raise ValueError('Expected a standalone six-spinon calculation')
-            for point in run['sampling_points']:
-                if not point['replicate_records']:
-                    raise ValueError('Missing six-spinon replicate records')
-                if any(not close(row['q'], data['momentum'], bits) for row in point['replicate_records']):
-                    raise ValueError('Source momentum differs from declared slice')
-            six.append({**run, 'points': run['sampling_points']})
-        else:
-            if reached_six:
-                raise ValueError('Source ordering must be two/four runs followed by six runs')
-            if any(not close(row['q'], data['momentum'], bits) for row in run['spectrum']):
-                raise ValueError('Source momentum differs from declared slice')
-            four.append(run)
-    expected = join_points(four, six)
+    four = [checked_four_run(run, momentum=data['momentum'], exchange=data['exchange'])
+            for run in data['four_runs']]
+    six = read_compact_slice(data['six_slice'], momentum=data['momentum'], exchange=data['exchange'])
+    expected = join_points(four, six['points'])
     if data['points'] != expected:
         raise ValueError('Plotted values differ from retained sector records')
-    if not expected:
-        raise ValueError('Empty spectral slice')
-    for point in expected:
-        for key in ('s2', 's4', 's6', 's6_sampling_se'):
-            if decimal(point[key]) < 0:
-                raise ValueError('Negative spectral weight or sampling error')
     return data
 
 
@@ -178,7 +156,7 @@ def plot(data, output=FIGURE):
                          'axes.spines.top': False, 'axes.spines.right': False})
     fig, axes = plt.subplots(1, 2, figsize=(11, 4.3), layout='constrained')
     x = [float(p['omega']) for p in data['points']]
-    values = lambda key: [float(p[key]) for p in data['points']]
+    values = lambda key: [float(p[key]) if p[key] is not None else float('nan') for p in data['points']]
     axes[0].plot(x, values('s2'), 'o-', markersize=3, color='#0072B2', label='2 spinons')
     axes[0].plot(x, values('s4'), 's-', markersize=3, color='#D55E00', label='4 spinons')
     axes[0].errorbar(x, values('s6'), yerr=values('s6_sampling_se'), fmt='^-', markersize=3,
@@ -208,16 +186,16 @@ def plot(data, output=FIGURE):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--four-json', nargs='+', type=Path, help='Complete two/four spectral exports')
-    parser.add_argument('--six-json', nargs='+', type=Path, help='Complete six spectral exports with replicates')
+    parser.add_argument('--six-data', type=Path, help='Validated compact six-spinon slice')
     parser.add_argument('--data', type=Path, default=DATA)
     parser.add_argument('--figure', type=Path, default=FIGURE)
     parser.add_argument('--momentum', default=MOMENTUM)
     parser.add_argument('--check', action='store_true', help='Check data without plotting')
     args = parser.parse_args()
-    if bool(args.four_json) != bool(args.six_json):
-        parser.error('Import both --four-json and --six-json together')
+    if bool(args.four_json) != bool(args.six_data):
+        parser.error('Import both --four-json and --six-data together')
     if args.four_json:
-        data = collect(args.four_json, args.six_json, momentum=args.momentum)
+        data = collect(args.four_json, json.loads(args.six_data.read_text()), momentum=args.momentum)
         with args.data.open('x') as output:
             json.dump(data, output, indent=2)
             output.write('\n')
