@@ -231,7 +231,11 @@ def spectrum_figure(document, *, momentum, exchange='1'):
         axes[1].set_yscale('log')
         axes[1].set_title('Logarithmic density; no broadening')
         if not any(v > 0 for v in y):
+            # An empty log panel still needs positive view limits for rendering.
+            # Hide both tick sets; these limits do not represent a density estimate.
+            axes[1].set_ylim(1, 10)
             axes[1].set_yticks([])
+            axes[1].set_yticks([], minor=True)
         missing = sum(point['s6'] is None for point in data['points'])
         title = f'q / π = {q / math.pi:.6g}; finite rapidity domain R = {data["rapidity_cutoff"]}'
         if missing < len(x):
