@@ -91,6 +91,23 @@ class SixSpinonSampling(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, 'mean/SE'):
             sampling_points(data, momentum='1.5')
 
+    def test_rounded_nearly_equal_means_keep_the_reported_se(self):
+        # Independent binary192 calculation, then 60-digit serialization.
+        data = fixture()
+        rows = data['tables']['replicates']['rows']
+        rows[0][7] = '0.999999999999999999999999999999999999999900000000000000000061'
+        rows[1][7] = '1.00000000000000000000000000000000000000009999999999999999994'
+        rows[0][6] = rows[1][6] = '2'
+        data['tables']['spectrum']['rows'][0][3] = '1'
+        reported = '9.99999999999999999388923489708045191601382620841293119989933e-41'
+        data['tables']['diagnostics']['rows'][0][3] = reported
+        point = sampling_points(data, momentum='1.5')['points'][0]
+        self.assertLess(abs(Decimal(point['sampling_se']) - Decimal(reported)),
+                        Decimal(point['sampling_se_reconstruction_allowance']))
+        data['tables']['diagnostics']['rows'][0][3] = '-1e-100'
+        with self.assertRaisesRegex(ValueError, 'mean/SE'):
+            sampling_points(data, momentum='1.5')
+
     def test_paired_cutoff_error_retains_anticorrelation(self):
         lower, upper = fixture(), fixture()
         for table in upper['tables'].values():

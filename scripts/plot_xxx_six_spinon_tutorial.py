@@ -87,7 +87,14 @@ def sampling_points(document, *, momentum, exchange='1', expected_metadata=None)
             mean = sum(means) / count
             error = (sum((value - mean) ** 2 for value in means) / (count * (count - 1))).sqrt()
             check = checks[0]
-            if not same_scalar(mean, spectrum['density'], bits) or not same_scalar(error, check['sampling_error'], bits):
+            reported_error = decimal(check['sampling_error'])
+            # Serialization rounds the means at their own scale. If they are
+            # nearly equal, that roundoff can be much larger than eps * SE.
+            # Keep the actual data scale, with no absolute unit floor: faint
+            # spectra still cannot lose a nonzero SE under this allowance.
+            error_roundoff = Decimal(2) ** (8 - bits) * max(*means, error, abs(reported_error))
+            if (reported_error < 0 or not same_scalar(mean, spectrum['density'], bits)
+                    or abs(error - reported_error) > error_roundoff):
                 raise ValueError('Exported mean/SE differs from independent replicate calculation')
             attempts = sum(integer(row['density_attempts']) for row in groups)
             if attempts != integer(spectrum['evaluations']) or attempts != integer(check['evaluations']):
@@ -97,6 +104,7 @@ def sampling_points(document, *, momentum, exchange='1', expected_metadata=None)
                     raise ValueError('Negative numerical diagnostic')
             points.append({
                 'omega': spectrum['omega'], 's6': str(mean), 'sampling_se': str(error),
+                'sampling_se_reconstruction_allowance': str(error_roundoff),
                 'relative_sampling_se': str(error / mean) if mean else None,
                 'largest_draw_fraction': str(max(maxima) / (samples * sum(means))) if mean else None,
                 'largest_replicate_fraction': str(max(means) / sum(means)) if mean else None,
