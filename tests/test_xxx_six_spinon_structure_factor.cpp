@@ -92,7 +92,7 @@ TEST(SixSpinonSpectrumMpfr, FreshReplicatesSerialAsyncAndExchangeScaling)
   EXPECT_EQ(serial.completed_samples, 24u);
   EXPECT_GT(serial.supported_roots, 0u);
   uni20::async::TbbScheduler scheduler(2);
-  auto pending = point.evaluate_async(options, {.scheduler = &scheduler, .max_in_flight = 2});
+  auto pending = point.evaluate_async(options, {.scheduler = &scheduler, .batch_size = 1, .max_in_flight = 2});
   auto concurrent = pending.get_wait(scheduler);
   ASSERT_EQ(concurrent.status, SixSpinonSpectrumStatus::estimated) << concurrent.reason;
   EXPECT_EQ(concurrent.value, serial.value);
@@ -105,7 +105,7 @@ TEST(SixSpinonSpectrumMpfr, FreshReplicatesSerialAsyncAndExchangeScaling)
   // The temporary point/evaluator can die before the owning Async completes.
   auto scaled_pending = Spectrum(proposal(one), mp_policy(), 3 * one)
                             .at(pi / 2, 6 * one)
-                            .evaluate_async(options, {.scheduler = &scheduler, .max_in_flight = 2});
+                            .evaluate_async(options, {.scheduler = &scheduler, .batch_size = 1, .max_in_flight = 2});
   auto triple = scaled_pending.get_wait(scheduler);
   ASSERT_EQ(triple.status, SixSpinonSpectrumStatus::estimated) << triple.reason;
   R const tolerance("1e-100", one.precision());

@@ -159,7 +159,7 @@ TEST(MonteCarloMpfr, KeepsPrecisionAndVectorRelations)
 }
 #endif
 
-TEST(MonteCarlo, HeldReplicateDrainsBeforeExceptionalCompletion)
+TEST(MonteCarlo, HeldBlockDrainsBeforeExceptionalCompletion)
 {
   struct State
   {
@@ -171,7 +171,7 @@ TEST(MonteCarlo, HeldReplicateDrainsBeforeExceptionalCompletion)
   auto state = std::make_shared<State>();
   uni20::async::TbbScheduler scheduler(3);
   auto pending = bethe::monte_carlo_async<1>(
-      {2, 1, 7}, 1, 1.,
+      {1, 8, 7}, 1, 1.,
       [state](auto const&, std::stop_token) -> bethe::MonteCarloObservation<double> {
         std::unique_lock lock(state->mutex);
         if (state->entered++ == 0)
@@ -186,7 +186,7 @@ TEST(MonteCarlo, HeldReplicateDrainsBeforeExceptionalCompletion)
         state->cv.notify_all();
         throw std::logic_error("deliberate concurrent failure");
       },
-      {.scheduler = &scheduler, .max_in_flight = 2});
+      {.scheduler = &scheduler, .batch_size = 1, .max_in_flight = 2});
   {
     std::unique_lock lock(state->mutex);
     EXPECT_TRUE(state->cv.wait_for(lock, std::chrono::seconds(10), [&] { return state->held && state->thrown; }));
@@ -218,4 +218,177 @@ TEST(MonteCarlo, CancellationWithValueIsTerminalOnSingleWorker)
     ASSERT_TRUE(row);
     EXPECT_EQ(row->failed_sample, 0u);
   }
+}
+
+TEST(MonteCarlo, SingleReplicateUsesMultipleWorkers)
+{
+  struct State
+  {
+      std::mutex mutex;
+      std::condition_variable cv;
+      unsigned calls = 0;
+      bool overlap = false;
+  };
+  auto state = std::make_shared<State>();
+  uni20::async::TbbScheduler scheduler(3);
+  auto pending = bethe::monte_carlo_async<1>({1, 8, 23}, 1, 1.,
+                                             [state](auto const&, std::stop_token) {
+                                               std::unique_lock lock(state->mutex);
+                                               if (++state->calls == 1)
+                                                 state->overlap = state->cv.wait_for(lock, std::chrono::seconds(2),
+                                                                                     [&] { return state->calls >= 2; });
+                                               else
+                                                 state->cv.notify_all();
+                                               return bethe::MonteCarloObservation<double>{std::vector{1.}};
+                                             },
+                                             {.scheduler = &scheduler, .batch_size = 2, .max_in_flight = 4});
+  auto result = pending.get_wait(scheduler);
+  EXPECT_TRUE(state->overlap);
+  EXPECT_EQ(result.status, bethe::MonteCarloStatus::complete);
+  EXPECT_EQ(result.completed_samples, 8u);
+  ASSERT_TRUE(result.mean);
+  EXPECT_EQ(result.mean->front(), 1.);
+}
+
+namespace
+{
+template <class R> void check_sample_blocks(R one)
+{
+  bethe::MonteCarloOptions const options{3, 37, 9182, 5, 52};
+  auto observe = mixture_integrand(one);
+  std::vector<bethe::MonteCarloReplicate<R, Counters>> serial;
+  for (std::size_t i = 0; i < options.replicates; ++i)
+    serial.push_back(bethe::monte_carlo_replicate<2>(options, i, 3, one, observe));
+  uni20::async::TbbScheduler scheduler(3);
+  for (std::size_t grain : {1, 4, 16, 128})
+  {
+    SCOPED_TRACE(grain);
+    auto result = bethe::monte_carlo_async<2>(options, 3, one, observe,
+                                              {.scheduler = &scheduler, .batch_size = grain, .max_in_flight = 5})
+                      .get_wait(scheduler);
+    ASSERT_EQ(result.status, bethe::MonteCarloStatus::complete);
+    EXPECT_EQ(result.completed_samples, options.replicates * options.samples_per_replicate);
+    for (std::size_t i = 0; i < serial.size(); ++i)
+    {
+      ASSERT_TRUE(result.replicates[i]);
+      auto const& actual = *result.replicates[i];
+      EXPECT_EQ(actual.id, serial[i].id);
+      EXPECT_EQ(actual.means, serial[i].means);
+      EXPECT_EQ(actual.maximum_absolute_observation, serial[i].maximum_absolute_observation);
+      EXPECT_EQ(actual.metadata.uniform, serial[i].metadata.uniform);
+      EXPECT_EQ(actual.metadata.linear, serial[i].metadata.linear);
+    }
+  }
+}
+} // namespace
+
+TEST(MonteCarlo, SampleBlocksPreserveSerialDrawsAndArithmetic)
+{
+  check_sample_blocks(1.);
+  check_sample_blocks(1.L);
+}
+
+#if UNI20_HAS_MPREAL
+TEST(MonteCarloMpfr, SampleBlocksPreserveExplicitPrecision)
+{
+  check_sample_blocks(uni20::mpreal(1, uni20::Precision::bits(160)));
+}
+#endif
+
+TEST(MonteCarlo, StreamDiscardPreservesWideUniformIdentities)
+{
+  for (unsigned bits : {1u, 52u, 64u, 65u, 129u})
+    for (std::size_t count : {0, 1, 7, 64, 513})
+    {
+      bethe::MonteCarloStream<3> serial(81, 19, bits), blocked(81, 19, bits);
+      for (std::size_t i = 0; i < count; ++i)
+        (void)serial.next();
+      blocked.discard(count);
+      for (int i = 0; i < 4; ++i)
+        EXPECT_EQ(serial.next().words(), blocked.next().words());
+    }
+}
+
+TEST(MonteCarlo, BlockFailuresRetainTheFirstLogicalFailure)
+{
+  auto observe = [](auto const& identity, std::stop_token) {
+    auto const x = identity.at_precision(1.)[0];
+    return x < .7 ? bethe::MonteCarloObservation<double>{std::vector{x}}
+                  : bethe::MonteCarloObservation<double>{{}, {}, false, "deliberate failure"};
+  };
+  bethe::MonteCarloOptions options{3, 31, 101};
+  uni20::async::TbbScheduler scheduler(3);
+  for (std::size_t grain : {1, 3, 8})
+  {
+    auto result = bethe::monte_carlo_async<1>(options, 1, 1., observe,
+                                              {.scheduler = &scheduler, .batch_size = grain, .max_in_flight = 5})
+                      .get_wait(scheduler);
+    EXPECT_EQ(result.status, bethe::MonteCarloStatus::numerical_failure);
+    EXPECT_FALSE(result.mean);
+    for (std::size_t i = 0; i < options.replicates; ++i)
+    {
+      auto serial = bethe::monte_carlo_replicate<1>(options, i, 1, 1., observe);
+      ASSERT_TRUE(result.replicates[i]);
+      EXPECT_EQ(result.replicates[i]->failed_sample, serial.failed_sample);
+      EXPECT_EQ(result.replicates[i]->completed_samples, serial.completed_samples);
+      EXPECT_EQ(result.replicates[i]->maximum_absolute_observation, serial.maximum_absolute_observation);
+    }
+  }
+}
+
+TEST(MonteCarlo, BlockCancellationRetainsCompletedObservations)
+{
+  auto stop = std::make_shared<std::stop_source>();
+  auto calls = std::make_shared<std::atomic<unsigned>>(0);
+  uni20::async::TbbScheduler scheduler(3);
+  auto result = bethe::monte_carlo_async<1>(
+                    {2, 32, 19}, 1, 1.,
+                    [stop, calls](auto const&, std::stop_token) {
+                      ++*calls;
+                      stop->request_stop();
+                      return bethe::MonteCarloObservation<double>{std::vector{1.}};
+                    },
+                    {.scheduler = &scheduler, .batch_size = 2, .max_in_flight = 3, .stop = stop->get_token()})
+                    .get_wait(scheduler);
+  EXPECT_EQ(result.status, bethe::MonteCarloStatus::cancelled);
+  EXPECT_FALSE(result.mean);
+  EXPECT_GT(calls->load(), 0u);
+  EXPECT_EQ(result.completed_samples, calls->load());
+  EXPECT_LE(result.completed_samples, 3u);
+}
+
+TEST(MonteCarlo, ObservationStorageIsBoundedByAdmittedBlocks)
+{
+  struct Counts
+  {
+      std::atomic<int> live{0}, peak{0};
+  } counts;
+  struct Payload
+  {
+      Counts& counts;
+      explicit Payload(Counts& c) : counts(c)
+      {
+        int n = ++counts.live, old = counts.peak.load();
+        while (old < n && !counts.peak.compare_exchange_weak(old, n))
+        {}
+      }
+      ~Payload() { --counts.live; }
+  };
+  struct Metadata
+  {
+      std::shared_ptr<Payload> payload;
+      Metadata& operator+=(Metadata const&) { return *this; }
+  };
+  uni20::async::TbbScheduler scheduler(3);
+  auto pending = bethe::monte_carlo_async<1>({4, 257, 19}, 1, 1.,
+                                             [&](auto const&, std::stop_token) {
+                                               return bethe::MonteCarloObservation<double, Metadata>{
+                                                   std::vector{1.}, {std::make_shared<Payload>(counts)}};
+                                             },
+                                             {.scheduler = &scheduler, .batch_size = 7, .max_in_flight = 5});
+  auto result = pending.get_wait(scheduler);
+  EXPECT_EQ(result.status, bethe::MonteCarloStatus::complete);
+  EXPECT_EQ(result.completed_samples, 4u * 257);
+  EXPECT_LE(counts.peak, 35);
+  EXPECT_EQ(counts.live, 0);
 }

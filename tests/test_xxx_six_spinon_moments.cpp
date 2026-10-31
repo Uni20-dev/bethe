@@ -84,13 +84,13 @@ TEST(SixSpinonMomentsMpfr, JointMomentsExchangeScalingAndOwnedAsync)
   EXPECT_GT((*a.integral.mean)[1], 0);
   EXPECT_GT((*a.integral.covariance)[1], 0);
   uni20::async::TbbScheduler scheduler(2);
-  auto pending =
-      Moments(proposal(one), policy(), one).global_async(options, {.scheduler = &scheduler, .max_in_flight = 2});
+  auto pending = Moments(proposal(one), policy(), one)
+                     .global_async(options, {.scheduler = &scheduler, .batch_size = 1, .max_in_flight = 2});
   auto b = pending.get_wait(scheduler);
   EXPECT_EQ(a.integral.mean, b.integral.mean);
   EXPECT_EQ(a.integral.covariance, b.integral.covariance);
-  auto scaled =
-      Moments(proposal(one), policy(), 3 * one).global(options, {.scheduler = &scheduler, .max_in_flight = 2});
+  auto scaled = Moments(proposal(one), policy(), 3 * one)
+                    .global(options, {.scheduler = &scheduler, .batch_size = 1, .max_in_flight = 2});
   ASSERT_TRUE(scaled.integral.mean && scaled.integral.covariance && scaled.fraction) << scaled.integral.reason;
   R tol("1e-100", one.precision());
   EXPECT_EQ((*scaled.integral.mean)[0], (*a.integral.mean)[0]);

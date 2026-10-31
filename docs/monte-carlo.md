@@ -72,8 +72,26 @@ redraws a difficult observation. Increasing the uniform-bit count changes the
 input grid and is a separate control from increasing arithmetic precision.
 
 `monte_carlo_replicate<D>` evaluates one replicate. `monte_carlo_async<D>` owns
-the integrand and schedules a bounded number of replicates using Bethe's shared
-observable-grid scheduler. Callers may use `.get_wait(scheduler)` or await the
+the integrand and splits each replicate into sample blocks using Bethe's shared
+observable-grid scheduler. `ExecutionOptions::batch_size` bounds observations
+per task; `max_in_flight` bounds active and completed-but-uncollected blocks.
+Even a single replicate can use several workers. The random-stream state is
+prepared at admission, and observations are accumulated in sample order, so
+changing either execution setting preserves sample identities and arithmetic.
+The statistical unit remains the full replicate, never a scheduling block.
+
+Smaller blocks reduce the idle tail when replicate costs differ; larger blocks
+amortize scheduling and stream-state copying for cheap integrands. The library
+default is 128 observations per task. The six-spinon spectrum and moments apps
+use 16, adjustable with `--samples-per-task`; this setting appears in exported
+metadata. Their admission window holds twice the requested worker count.
+For expensive, highly variable observations, try smaller blocks, down to one.
+Ordered collection can still apply backpressure behind a slow block, and a
+single observation is not subdivided by this engine. There is no whole-batch
+join. Buffered observations scale with `batch_size * max_in_flight`, rather than
+the total requested sample count.
+
+Callers may use `.get_wait(scheduler)` or await the
 result in another coroutine. The borrowed scheduler must outlive completion,
 including work whose handle was dropped. Cancellation drains admitted work;
 dropping a handle does not request cancellation. Callables must support
@@ -102,7 +120,10 @@ proposals, and vary cutoffs separately from arithmetic controls.
 Complete equal-size replicates supply a mean and, with at least two replicates,
 its covariance estimate. Failed or missing replicates cannot form a mean over
 survivors. Nonfinite contributions or unrepresentable means/variances fail
-explicitly. An integrand may return a genuine support zero; the physical adapter
+explicitly. A numerical failure retains the valid prefix of its replicate;
+observations speculatively evaluated later do not enter its sums or metadata.
+Cancellation retains available completed work but never returns a successful
+estimate. An integrand may return a genuine support zero; the physical adapter
 must distinguish a known zero from a pilot that happened to miss support.
 
 The engine does not certify omitted tails, proposal-grid resolution, contour

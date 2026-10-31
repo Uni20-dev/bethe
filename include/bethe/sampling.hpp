@@ -58,7 +58,8 @@ template <std::size_t Dimension> class UniformSample {
     Words words_;
 };
 
-/// One task-local stream per replicate. Its identity is (master seed,
+/// A replicate stream, copied into task-local states at block boundaries.
+/// Its identity is (master seed,
 /// replicate id, uniform bits); completion order never changes the draws.
 /// Uses the standardized mt19937_64/seed_seq engines, not implementation-defined
 /// uniform_real_distribution. This is ordinary Monte Carlo, not scrambled QMC.
@@ -86,6 +87,19 @@ template <std::size_t Dimension> class MonteCarloStream {
         if (first < 64) coordinate.front() &= (std::uint64_t{1} << first) - 1;
       }
       return {bits_, std::move(words)};
+    }
+
+    /// Advance by complete sample identities without allocating their words.
+    /// Used by serial admission to snapshot disjoint blocks of the same stream.
+    void discard(std::size_t samples)
+    {
+      std::size_t const words = (std::size_t(bits_) + 63) / 64;
+      if (Dimension > std::numeric_limits<unsigned long long>::max() / words)
+        throw std::length_error("uniform sample exceeds stream discard range");
+      auto const per_sample = static_cast<unsigned long long>(Dimension) * words;
+      if (per_sample && samples > std::numeric_limits<unsigned long long>::max() / per_sample)
+        throw std::length_error("sample block exceeds stream discard range");
+      engine_.discard(static_cast<unsigned long long>(samples) * per_sample);
     }
 
   private:
