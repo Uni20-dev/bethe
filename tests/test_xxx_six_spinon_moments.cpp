@@ -4,6 +4,26 @@
 #include <bethe/xxx_six_spinon_moments.hpp>
 #include <uni20/async/tbb_scheduler.hpp>
 
+TEST(SpinonWeightedObservation, NativeSubnormalWeightFailsExplicitly)
+{
+  using namespace bethe::heisenberg;
+  if (std::numeric_limits<long double>::digits <= std::numeric_limits<double>::digits) GTEST_SKIP();
+  XXXSpinonDensityRecovery<double, long double> recovery(
+      {"1e-4", "1e-24", {{53, std::numeric_limits<long double>::digits, {{{64, 16}, {80, 20}}}}}, 60});
+  std::array<long double, 2> beta{-.7L, .3L};
+  std::array<long double, 1> normal{0.L};
+  auto control = weighted_spinon_observation<long double>(beta, normal, recovery);
+  ASSERT_TRUE(control.values) << control.reason;
+  // Place the nonzero physical value below the smallest normal number while
+  // still above underflow to zero. Relative precision has already been lost.
+  std::array<long double, 1> tiny{std::log(std::numeric_limits<long double>::min()) - std::log((*control.values)[0]) -
+                                  2.L};
+  auto result = weighted_spinon_observation<long double>(beta, tiny, recovery);
+  EXPECT_FALSE(result.values);
+  EXPECT_EQ(result.metadata.failure, SpinonObservationFailure::exponent_range);
+  EXPECT_NE(result.reason.find("subnormal"), std::string::npos);
+}
+
 #if UNI20_HAS_MPREAL
 namespace
 {

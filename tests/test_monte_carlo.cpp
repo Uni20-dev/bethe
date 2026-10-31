@@ -3,6 +3,8 @@
 #include "test_support.hpp"
 #include <atomic>
 #include <bethe/monte_carlo.hpp>
+#include <condition_variable>
+#include <mutex>
 #include <uni20/async/tbb_scheduler.hpp>
 
 namespace
@@ -156,3 +158,64 @@ TEST(MonteCarloMpfr, KeepsPrecisionAndVectorRelations)
   }
 }
 #endif
+
+TEST(MonteCarlo, HeldReplicateDrainsBeforeExceptionalCompletion)
+{
+  struct State
+  {
+      std::mutex mutex;
+      std::condition_variable cv;
+      unsigned entered = 0;
+      bool held = false, thrown = false, release = false;
+  };
+  auto state = std::make_shared<State>();
+  uni20::async::TbbScheduler scheduler(3);
+  auto pending = bethe::monte_carlo_async<1>(
+      {2, 1, 7}, 1, 1.,
+      [state](auto const&, std::stop_token) -> bethe::MonteCarloObservation<double> {
+        std::unique_lock lock(state->mutex);
+        if (state->entered++ == 0)
+        {
+          state->held = true;
+          state->cv.notify_all();
+          if (!state->cv.wait_for(lock, std::chrono::seconds(10), [&] { return state->release; }))
+            throw std::runtime_error("held replicate timeout");
+          return {std::vector{1.}};
+        }
+        state->thrown = true;
+        state->cv.notify_all();
+        throw std::logic_error("deliberate concurrent failure");
+      },
+      {.scheduler = &scheduler, .max_in_flight = 2});
+  {
+    std::unique_lock lock(state->mutex);
+    EXPECT_TRUE(state->cv.wait_for(lock, std::chrono::seconds(10), [&] { return state->held && state->thrown; }));
+    auto reader = pending.read();
+    EXPECT_FALSE(reader.await_ready());
+    state->release = true;
+    state->cv.notify_all();
+  }
+  EXPECT_THROW(pending.get_wait(scheduler), std::logic_error);
+}
+TEST(MonteCarlo, CancellationWithValueIsTerminalOnSingleWorker)
+{
+  uni20::async::TbbScheduler scheduler(1);
+  auto pending = bethe::monte_carlo_async<1>({2, 1, 7}, 1, 1.,
+                                             [](auto const&, std::stop_token) {
+                                               bethe::MonteCarloObservation<double> r{std::vector{1.}};
+                                               r.cancelled = true;
+                                               r.reason = "cancelled after evaluation";
+                                               return r;
+                                             },
+                                             {.scheduler = &scheduler, .max_in_flight = 2});
+  auto result = pending.get_wait(scheduler);
+  EXPECT_EQ(result.status, bethe::MonteCarloStatus::cancelled);
+  EXPECT_FALSE(result.mean);
+  EXPECT_FALSE(result.covariance);
+  EXPECT_EQ(result.completed_samples, 0u);
+  for (auto const& row : result.replicates)
+  {
+    ASSERT_TRUE(row);
+    EXPECT_EQ(row->failed_sample, 0u);
+  }
+}

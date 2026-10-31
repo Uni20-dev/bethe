@@ -1,4 +1,4 @@
-# Direct six-spinon global moments
+# Direct six-spinon moments
 
 `bethe/xxx_six_spinon_moments.hpp` calculates the longitudinal six-spinon
 intensity and first moment directly, without integrating a displayed frequency
@@ -8,9 +8,9 @@ W6, bounded recovery and soft-pair proposal as the
 shared [Monte Carlo engine](monte-carlo.md) to accumulate both moments and their
 covariance from each configuration.
 
-This checkpoint supplies global moments. Direct fixed-momentum moments and the
-installed moments front end remain integration work. The present calculation
-uses a finite absolute-rapidity cutoff, not a claim of unrestricted convergence.
+Both fixed-momentum and global moments are available. The installed moments
+front end remains integration work. The calculation uses a finite
+absolute-rapidity cutoff, not a claim of unrestricted convergence.
 
 ## Measure and importance proposal
 
@@ -50,6 +50,38 @@ spectrum. A gap cutoff with an analytically integrated common shift is a
 different domain and needs its own comparison. The common-shift reduction is a
 useful alternative; its five-gap importance proposal requires separate validation.
 
+### Fixed-momentum geometry
+
+`detail/xxx_spinon_moment_proposal.hpp` supplies the direct fixed-momentum
+geometry used by `fixed_moments(k)`. It chooses uniformly among thirty labelled
+charts: eliminate momentum i, draw a distinct rapidity j
+from g, and draw the other four from q4. It solves the momentum constraint in
+every section and retains the solution only inside the same absolute cutoff
+box. A draw with resolved empty support contributes zero and is not redrawn.
+Numerically ambiguous support fails explicitly.
+
+The chart intensity against the constrained labelled momentum measure is
+
+```math
+h_{i,j}(\boldsymbol\beta)=
+q_4(\boldsymbol\beta_{\ne i,j})g(\beta_j)
+\prod_{a\ne i}\cosh\beta_a,\qquad i\ne j.
+```
+
+Its reciprocal mixture weight is 30 divided by the sum of all thirty
+intensities. Eliminating a momentum has unit Jacobian; the cosh factors convert
+the five free proposal densities to momentum densities. The moment
+observation is this weight times W6 and the sampled energy to power r, divided
+by 2*pi. No further factorial or normalization adjustment is needed. Chart
+selection is actually sampled, so the measure also applies to nonsymmetric
+labelled observables.
+
+Geometry checks cover the full mixture and label orbit, all chart choices,
+momentum conservation, analytic periodic box-spline volume and labelled-momentum
+integrals. R=1040 conservation is checked at 1800 and 2048 bits; insufficient
+384-bit geometry is rejected. These establish the geometric measure, not the
+efficiency of this proposal for physical W6 or a converged moment estimate.
+
 ## Interface and result
 
 Construct the model with a `SpinonJointProposal<Geometry>`, a
@@ -58,6 +90,24 @@ Construct the model with a `SpinonJointProposal<Geometry>`, a
 `global(options, execution)` waits using the same scheduler. A retained
 `UniformSample<7>` can also be passed to `global_observation` for exact replay.
 The scheduler remains borrowed until completion.
+
+For fixed momentum, use `model.fixed_moments(k).evaluate_async(options, execution)`
+or the synchronous `evaluate` wrapper. The query owns the model state through
+completion. `observation(UniformSample<6>, stop)` replays one exact sample.
+The result has the same six integral columns and covariance, with m0(k) and
+m1(k) replacing I0 and I1. It records the requested momentum and an optional
+`first_moment_denominator` and `first_moment_fraction`. The denominator is the
+full-response first moment, `(2J/3)(log(2)-1/4)(1-cos(k))`; the numerator is
+integrated from the sampled energy and is not forced to follow that law.
+
+`SixSpinonMomentStatus` distinguishes an estimate, an exact physical zero,
+no sampled support, numerical failure and cancellation. At k=0 or 2*pi both
+moments are exactly zero without sampling; their first-moment fraction is
+undefined. At k=pi, `unrestricted_static_divergence` warns that the finite-R
+zeroth moment is not a converged static structure factor. No exact zeroth-moment
+denominator is invented at other momenta. A complete sample stream that finds
+no support has no aggregate estimate; its zero observations remain in the
+replicate records for diagnosis.
 
 The result records J, R, proposal parameters and recovery settings. Its
 `integral` contains the complete numerical-engine result, with columns:
@@ -96,10 +146,14 @@ a nonsymmetric labelled observable. Deep-soft log weights are tested at R=1040
 with 160/256-bit MPFR; that geometric test is not a physical R=1040 integration.
 
 An independent 85-decimal-digit Python construction checks a complete physical
-I0/I1 observation, including all mixture terms and moment measures. Physical
+I0/I1 observation and a fixed-k m0/m1 observation, including all mixture terms
+and moment measures. Physical
 integration tests check serial/concurrent agreement, covariance, exchange
 scaling, owned lifetimes and explicit failure/cancellation. The optional
 `tests/reference_xxx_six_spinon_moments.py` regenerates the physical reference.
+Use `--fixed` for the fixed-k reference. The compact
+[sampling record](validation/six-spinon-moments-20261031.json) retains the
+following pilot settings, replicate summaries, timings and comparisons.
 
 An accurate density does not ensure an accurate integral. Production work must
 vary sample budgets, independent streams, proposal parameters, uniform-grid
@@ -118,3 +172,73 @@ used 48.73 seconds wall time and 97.03 seconds CPU time on two workers. The tiny
 sampled density diagnostics do not reduce those sampling errors or quantify
 the omitted rapidity region. These are execution measurements, not estimates
 of the unrestricted sector fractions.
+
+### Compare proposals on new samples
+
+At k=pi/2 and R=8, a 512-draw calibration suggested emphasizing the two-pair
+component. A separate comparison froze both proposals, then used 16 new
+replicates of 256 draws each (seed 42, replicate IDs 100--115). The same identities
+were used between proposals, so their difference has a paired sampling error.
+The calibration used IDs 0--7 and was not reused as validation data.
+
+The joint-mixture weights for background, one pair and two pairs were
+(0.5, 0.25, 0.25) and (0.1, 0.2, 0.7). Both used native soft fraction 0.5,
+one-pair scale/gap 4/0.5 and two-pair scale/gap 8/1, with the precision and
+density policy above. These are explicit physical proposal choices, not
+adaptation performed by the Monte Carlo engine.
+
+| Proposal | m0(k) | m1(k) | CPU seconds |
+|---|---:|---:|---:|
+| Original mixture | 0.0001106 +/- 0.0000253 | 0.0002509 +/- 0.0000545 | 1577 |
+| More two-pair sampling | 0.0000982 +/- 0.0000128 | 0.0002223 +/- 0.0000245 | 1488 |
+
+Each calculation used two workers on an Intel Core i7-12700KF; the two processes
+ran concurrently. Timings describe this pilot, not a portable performance target.
+
+Errors are between-replicate sampling standard errors. The two means agree
+within 0.51 and 0.54 paired standard errors. The second proposal's observed
+variance times CPU cost is 0.24 and 0.19 of the original for m0 and m1.
+Its largest individual draws nevertheless account for 6.8% and 5.3% of the
+corresponding sums, compared with 18.8% and 17.7% for the original proposal.
+The comparison supports this proposal for further finite-R pilots; it does
+not establish a universally efficient mixture or exclude unseen rare regions.
+No library default is changed by this measurement.
+
+The earlier 512-draw calculations at pi/4, pi/2 and 3pi/4 also compared the
+independently measured first-moment fractions. All pairwise differences are
+less than 0.51 paired standard errors, but individual fractional uncertainties
+are 33--36%. There is no resolved momentum dependence in this small sample,
+and no numerical verification of the unrestricted momentum law. A finite
+absolute-rapidity box can itself violate that law. The record also includes
+a separate 1024-draw global integral; it is not reconstructed from these three
+momenta or from a spectral grid.
+
+### Separate cutoff sensitivity from sampling error
+
+For nested rapidity boxes, one outer-box observation can estimate several
+cutoffs without repeating the density evaluation. Retain the complete outer
+proposal density and multiply each weighted moment by the indicator
+`max(abs(beta)) < R`. Do not replace that density by the proposal for the
+smaller box: the draw still came from the outer proposal. Accumulating all
+cutoffs together supplies the covariance needed for their differences.
+
+A second pi/2 pilot used the pair-heavy proposal with outer cutoff 16 and
+16 replicates of 128 draws (seed 43, IDs 200--215). Geometry remained at 384 bits
+with the same recovery policy. All 2048 draws completed; 1009 supported
+configurations required 2018 density-control attempts. Two workers used 394.65
+seconds wall and 769.92 seconds CPU time. The nested-indicator method was first
+checked against analytic momentum-box volumes at cutoffs 1, 2 and 3.
+
+| Rapidity cutoff R | m0(pi/2) | m1(pi/2) |
+|---:|---:|---:|
+| 8 | 0.0001268 +/- 0.0000305 | 0.0002929 +/- 0.0000658 |
+| 12 | 0.0008053 +/- 0.0001769 | 0.0016588 +/- 0.0003488 |
+| 16 | 0.0014413 +/- 0.0002964 | 0.0028627 +/- 0.0005519 |
+
+The R=8 estimates agree with the independent proposal comparison above. The
+first-moment increases from 8 to 12 and from 12 to 16 are 0.001366 +/- 0.000353
+and 0.001204 +/- 0.000449, using their paired covariance. These finite-domain
+increments show why the R=8 execution examples cannot estimate the full
+response. They do not establish convergence at R=16 or determine its remaining
+tail. The largest draws still contribute about 12--16% of these sums, so further
+sampling and proposal checks are needed alongside a larger-cutoff comparison.
