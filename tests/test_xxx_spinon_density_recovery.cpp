@@ -62,6 +62,8 @@ TEST(SpinonRecovery, NativeAcceptanceAndExplicitExhaustion)
   EXPECT_FALSE(failed.estimate);
   EXPECT_FALSE(failed.arithmetic_screen);
   EXPECT_EQ(failed.attempts.back().failure, SpinonDensityFailure::arithmetic_precision);
+  EXPECT_EQ(failed.density_failure, SpinonDensityFailure::arithmetic_precision);
+  EXPECT_NE(failed.reason.find("arithmetic screen failed"), std::string::npos);
   std::vector<std::string> tiny{"0", "1e-400"};
   auto unrepresentable = recovery(tiny);
   EXPECT_EQ(unrepresentable.status, SpinonRecoveryStatus::exhausted);
@@ -119,10 +121,14 @@ TEST(SpinonRecovery, InvalidInputCancellationAndBudgetAreNotEstimates)
   EXPECT_EQ(cancelled.status, SpinonRecoveryStatus::cancelled);
   EXPECT_TRUE(cancelled.attempts.empty());
   EXPECT_FALSE(cancelled.estimate);
+  EXPECT_FALSE(cancelled.density_failure);
+  EXPECT_EQ(cancelled.reason, "recovery cancelled");
   p.max_wall_seconds = 1e-300;
   auto timed = XXXSpinonDensityRecovery<double, long double>(p)(two);
   EXPECT_EQ(timed.status, SpinonRecoveryStatus::time_limit);
   EXPECT_FALSE(timed.estimate);
+  EXPECT_FALSE(timed.density_failure);
+  EXPECT_EQ(timed.reason, "recovery wall budget exhausted");
   EXPECT_THROW(recovery.recover([](auto const& c) -> std::vector<decltype(c.parse("0"))> {
     throw std::logic_error("a programming error is not a numerical retry");
   }),
@@ -143,6 +149,8 @@ TEST(SpinonRecovery, ContradictoryPassingControlsAreTerminal)
     return std::vector{context.parse("-2"), context.parse(first ? "1" : "2")};
   });
   EXPECT_EQ(result.status, SpinonRecoveryStatus::inconsistent_controls);
+  EXPECT_FALSE(result.density_failure);
+  EXPECT_EQ(result.reason, "individually passing controls disagree");
   ASSERT_EQ(result.conflicting_attempts.size(), 1u);
   EXPECT_EQ(result.conflicting_attempts[0], 0u);
   EXPECT_FALSE(result.estimate);
@@ -182,6 +190,7 @@ TEST(SpinonRecoveryMpfr, BulkAndNearCollisionRequireDifferentStages)
   EXPECT_EQ(ordinary.estimate->value.precision(), uni20::Precision::bits(190));
   auto recovered = recovery(collision);
   ASSERT_TRUE(recovered.accepted()) << recovered.reason;
+  EXPECT_FALSE(recovered.density_failure);
   EXPECT_EQ(recovered.attempts.size(), 4u);
   EXPECT_NE(recovered.attempts.front().failure, SpinonDensityFailure::none);
   EXPECT_EQ(recovered.estimate->value.precision(), uni20::Precision::bits(270));
@@ -219,6 +228,8 @@ TEST(SpinonRecoveryMpfr, EarlierPassingControlSurvivesAStageFailure)
   EXPECT_TRUE(result.attempts[0].checked->accepted());
   EXPECT_EQ(result.attempts[1].failure, SpinonDensityFailure::tail_domain);
   EXPECT_EQ(result.status, SpinonRecoveryStatus::inconsistent_controls);
+  EXPECT_FALSE(result.density_failure);
+  EXPECT_EQ(result.reason, "individually passing controls disagree");
   ASSERT_EQ(result.conflicting_attempts.size(), 1u);
   EXPECT_EQ(result.conflicting_attempts[0], 0u);
   EXPECT_FALSE(result.estimate);
@@ -250,6 +261,9 @@ TEST(SpinonRecoveryMpfr, ObservationReportsFailedControlWhenFinalControlPasses)
   ASSERT_NE(checked.attempts.front().failure, SpinonDensityFailure::none);
   ASSERT_TRUE(checked.attempts.back().checked);
   ASSERT_TRUE(checked.attempts.back().checked->accepted());
+  EXPECT_EQ(checked.density_failure, checked.attempts.front().failure);
+  EXPECT_NE(checked.reason.find(checked.attempts.front().reason), std::string::npos);
+  EXPECT_EQ(checked.reason.find("screens passed"), std::string::npos);
 
   using R = uni20::mpreal;
   auto precision = uni20::Precision::bits(190);
