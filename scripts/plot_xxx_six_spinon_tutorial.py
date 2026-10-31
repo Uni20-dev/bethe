@@ -220,9 +220,9 @@ def spectrum_figure(document, *, momentum, exchange='1'):
             axis.set_xlabel(r'$\omega/J$')
             axis.set_ylabel(r'$J S^{zz}_6(q,\omega)$')
             # Autoscaling ignores NaN endpoints; retain the entire requested grid.
-            if len(x) > 1:
-                margin = .025 * (x[-1] - x[0])
-                axis.set_xlim(x[0] - margin, x[-1] + margin)
+            span = x[-1] - x[0] if len(x) > 1 else abs(x[0])
+            margin = .025 * span or .025
+            axis.set_xlim(x[0] - margin, x[-1] + margin)
             axis.grid(alpha=.2)
             if axis.get_legend_handles_labels()[0]:
                 axis.legend(frameon=False, fontsize=9)

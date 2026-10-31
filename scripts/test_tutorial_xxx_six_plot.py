@@ -97,6 +97,21 @@ class SixPlot(unittest.TestCase):
                 rendered = [p.with_name(p.stem + suffix + '.svg').read_bytes() for p in outputs]
                 self.assertEqual(rendered[0], rendered[1])
 
+    def test_single_missing_frequency_retains_scaled_coordinate(self):
+        raw = fixture()
+        for table in raw['tables'].values():
+            table['metadata']['Exchange J'] = '2'
+        data = packed(raw)
+        data['runs'] = []
+        data['unavailable'] = [{'omega': '2', 'status': 'unavailable',
+                                'reason': 'not computed', 'raw_sha256': None}]
+        fig = spectrum_figure(data, momentum='1.5', exchange='2')
+        for axis in fig.axes:
+            lower, upper = axis.get_xlim()
+            self.assertLess(lower, 1)
+            self.assertGreater(upper, 1)
+            self.assertAlmostEqual((lower + upper) / 2, 1)
+
     def test_invalid_se_is_rejected_before_rendering(self):
         data = packed()
         data['runs'][0]['diagnostics'][0]['sampling_error'] = '0'
