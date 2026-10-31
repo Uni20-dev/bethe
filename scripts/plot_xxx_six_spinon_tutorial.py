@@ -247,7 +247,9 @@ def plot_compact(document, *, momentum, exchange='1', figure):
     fig = spectrum_figure(document, momentum=momentum, exchange=exchange)
     import matplotlib.pyplot as plt
     try:
-        save_svg(fig, figure)
+        # SVG marker/clip IDs are generated at save time, after construction.
+        with plt.rc_context({'svg.hashsalt': 'bethe-six-spinon-slice'}):
+            save_svg(fig, figure)
     finally:
         plt.close(fig)
 

@@ -85,6 +85,18 @@ class SixPlot(unittest.TestCase):
             self.assertTrue(output.with_name('missing-dark.svg').exists())
             self.assertIn('No available estimates', output.read_text())
 
+    def test_svg_exports_ignore_ambient_id_salt(self):
+        data = packed()
+        with tempfile.TemporaryDirectory() as directory:
+            outputs = [Path(directory) / name for name in ('first.svg', 'second.svg')]
+            for salt, output in zip(('caller-one', 'caller-two'), outputs):
+                with plt.rc_context({'svg.hashsalt': salt}):
+                    plot_compact(data, momentum='1.5', figure=output)
+                    self.assertEqual(plt.rcParams['svg.hashsalt'], salt)
+            for suffix in ('', '-dark'):
+                rendered = [p.with_name(p.stem + suffix + '.svg').read_bytes() for p in outputs]
+                self.assertEqual(rendered[0], rendered[1])
+
     def test_invalid_se_is_rejected_before_rendering(self):
         data = packed()
         data['runs'][0]['diagnostics'][0]['sampling_error'] = '0'
