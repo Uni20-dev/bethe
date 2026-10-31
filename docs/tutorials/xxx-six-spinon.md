@@ -82,6 +82,50 @@ for this particular query; `bits-128` is a measured MPFR alternative. Check
 `bethe-info` for the actual native format on your platform, and repeat the
 precision comparison when changing the domain, grid or sample streams.
 
+### Changing the seed can change the precision requirement
+
+More samples explore more configurations, including ones with stronger
+cancellation. With the same three frequencies, cutoff and 32 samples per
+replicate, 38 of the 40 seeds from 1 through 40 complete in extended80 at
+relative tolerance `1e-5`. Seeds 2 and 35 fail an arithmetic screen. This
+small, fixed scan illustrates the limitation; it is not a failure probability
+for other calculations. The [seed comparison record](../validation/six-spinon-seed-precision-20261031.json)
+retains all 40 outcomes, including failures.
+
+Seed 2 provides a reproducible example. Keep the command above unchanged
+apart from `--seed 2`, `--precision`, and a distinct output filename:
+
+| Arithmetic | Relative tolerance | Complete three-point query | CPU seconds |
+| --- | ---: | --- | ---: |
+| `long-double` | `1e-5` | Arithmetic screen fails | 0.31 |
+| `bits-128` | `1e-5` | Complete | 37.81 |
+| `bits-192` | `1e-5` | Complete | 48.54 |
+| `long-double` | `1e-3` | Complete | 0.31 |
+| `fp64` | `1e-3` | Arithmetic and exponent-range failures | 0.03 |
+
+Increasing MPFR precision from 128 to 192 bits changes the three means by
+at most $`4.4\times10^{-37}`$ relative, with matching replicate identities
+and work counts. This repairs the failure without changing the tolerance,
+domain or sample stream. A failed paired-precision check does not by itself
+show that the higher-precision value was inaccurate: it shows that the
+requested agreement with its lower-precision comparison was not established.
+
+The `1e-3` native run is a separate tolerance experiment. Its means agree with
+the unchanged, strict 192-bit reference within $`3.3\times10^{-16}`$ relative;
+the largest relative change among replicate means and maxima is
+$`7.1\times10^{-15}`$. Such a tolerance can be economical for this coarse
+demonstration after checking it against a stricter reference. These results
+do not certify it for a larger sample, domain or resolved spectrum. Binary64
+also encounters an exponent-range limit, which loosening the tolerance does
+not repair.
+
+When your query fails, preserve that result and rerun the **same** frequencies,
+seed and sample count at higher precision. Compare successful wider runs
+before increasing the sampling budget. Do not search for a passing seed or
+average only successful replicates. Choose an inner tolerance for the accuracy
+you need, then validate it against a stricter calculation; a passing screen
+alone does not establish the error of the spectral integral.
+
 ## Extend the soft domain
 
 An MPFR-enabled [build or installation](../building.md) supports the explicit
