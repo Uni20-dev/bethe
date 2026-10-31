@@ -20,14 +20,17 @@ density $`S^{zz}(q,\omega)`$; frequency integrals use $`d\omega/(2\pi)`$.
 
 ## Calculate both contributions
 
-With an MPFR-enabled [build or installation](../building.md), run:
+For the modest starting point, native `long double` is sufficient on the tested
+x86 system (64 significand bits), and much faster than MPFR. Check `bethe-info`
+on your platform; `long-double` is a platform format, not a fixed bit count.
+With a [build or installation](../building.md), run:
 
 ```sh
 bethe-xxx-structure-factor-thermo --sectors 2,4 \
-  --momentum 1.5 --omega 1.8 --precision bits-192 \
+  --momentum 1.5 --omega 1.8 --precision long-double \
   --four-order 4 --four-cutoff 8 \
   --density-relative-tolerance 1e-8 --density-absolute-tolerance 1e-30 \
-  --threads 2 --csv point.csv --csv-table diagnostics=point-checks.csv
+  --tolerance 1e-12 --threads 2 --csv point.csv --csv-table diagnostics=point-checks.csv
 ```
 
 From a build directory, prefix the program with `./`. The three output rows
@@ -69,8 +72,11 @@ from 8 to 12 changes the four-spinon density by about 0.02647; changing the
 order from 8 to 16 at cutoff 12 changes it by about 0.00011. A small order
 change alone would therefore give a misleading accuracy impression here.
 
-The frontend can make the four comparisons in one command. Add to the first
-calculation:
+The frontend can make four comparisons in one command. Finer orders introduce
+more difficult nodes: on the tested platform, orders 8 and 16 fail the native
+53/64-bit density screen at both cutoffs. Keep those failures; do not use an
+incomplete prefix. For the validated reference study, replace `--precision
+long-double` with `--precision bits-192` and add:
 
 ```sh
 --four-refine-order 8 --four-extended-cutoff 12
@@ -84,32 +90,60 @@ columns as well as the density and its status.
 
 ## Arithmetic accuracy is a different check
 
-The measured runs use 192-bit geometry/output arithmetic, with density
-comparisons at 128 and 192 bits. The two contour controls use 64/80 terms and
-tail orders 16/20. These choices and the acceptance tolerances are retained in
-the exported metadata.
+A fixed-control comparison of the starting point gives:
 
-At the initial order-4/cutoff-8 point, integrated contour and arithmetic
-screening diagnostics are below $`10^{-34}`$. They are far smaller than the
-order and cutoff changes. Tightening the density tolerance cannot resolve
-weight that lies outside the domain or between insufficient quadrature nodes.
-A larger production calculation should also repeat the complete geometry at
-higher precision, independently of these density-only checks.
+| Arithmetic | Density comparison / guard bits | Result | CPU seconds |
+| --- | ---: | --- | ---: |
+| Binary64 | 24 / 53 | Arithmetic screen fails | 0.0026 to failure |
+| x86 long double | 53 / 64 | Complete | 0.337 |
+| Binary128 | 53 / 113 | Complete | 6.69 |
+| MPFR, 128 bits | 64 / 128 | Complete | 48.2 |
+| MPFR, 192 bits | 128 / 192 | Complete | 64.0 |
 
-The absolute density tolerance matters near a zero of the density, where a
-relative-only check may be ill-conditioned. Failed nodes remain explicit
-failures: no incomplete prefix is used to form a successful contribution.
-If a requested sector fails, its sum row is `incomplete` rather than a sum
-of the surviving sectors.
+The complete native result agrees with MPFR192 to about $`1.14\times10^{-16}`$
+relative; MPFR128 and MPFR192 agree to about $`2.42\times10^{-38}`$. That
+is much more arithmetic agreement than this demonstration needs. It does not
+resolve the large omitted soft contribution. The native arithmetic screening
+diagnostic is about $`4.8\times10^{-11}`$ here, also well below the observed
+order/domain changes. Agreement between wider runs is a separate check.
+
+Every row uses the same quadrature, domain, 64/80 contour terms, 16/20 tail
+orders, density tolerances and explicit two-spinon tolerance of $`10^{-12}`$.
+One worker is used for this comparison. The [compact record](data/xxx-four-spinon-precision.json)
+retains the failed binary64 contribution and its missing partial sum, as well
+as successful values, diagnostics, controls, source revisions and costs.
+Check or regenerate all five formats with:
+
+```sh
+python3 scripts/check_xxx_four_spinon_precision.py --check
+# Requires a build with binary128 and MPFR; retains expected failures:
+python3 scripts/check_xxx_four_spinon_precision.py \
+  --solver bethe-xxx-structure-factor-thermo --raw-dir precision-exports
+```
+
+The failed native higher-order checks do not prove the 64-bit-significand
+answer would be wrong: its 53-bit comparison may be limiting. They do mean
+that this pair cannot certify every node under the requested policy. Increasing
+the precision pair and repeating the complete calculation tests that issue;
+loosening the guard solely to obtain success does not.
+
+The density screen is $`\mathrm{atol}+\mathrm{rtol}|W|`$. Here its relative
+term dominates above $`|W|=10^{-22}`$; `1e-30` is a near-zero absolute floor,
+not a demand for thirty-digit relative accuracy. The [accuracy guide](../numerical-accuracy.md)
+explains the scale and the separate solver, contour, quadrature, sampling and
+tail checks. For a small example of actual information loss and a stable
+reformulation, see [the one-magnon precision tutorial](xxx-precision.md).
 
 ## Cost and practical scope
 
-The first point used 33 seconds wall time and 66 CPU seconds with two workers
-on an Intel Core i7-12700KF. The right-hand panel shows measured CPU cost for
-the complete queries, including the inexpensive two-spinon reference. These
-measurements come from a shared host, with at most two simultaneous two-worker
-queries; they are not portable timing promises. The largest point, order 16
-and cutoff 12, used about 11.4 minutes wall time and 22.8 CPU minutes.
+The ordinary native point takes about 0.34 CPU seconds on the measured Intel
+Core i7-12700KF. The reference figure above retains the original 192-bit
+MPFR grid, including its measured CPU costs. That grid's order-4/cutoff-8 point
+used 33 seconds wall and 66 CPU seconds with two workers; its largest point,
+order 16 and cutoff 12, used about 11.4 minutes wall and 22.8 CPU minutes.
+Those expensive runs are optional references, not the cost of the starting
+command. Measurements come from a shared host and are not portable timing
+promises.
 
 Doubling order increases the number of nodes in both integration directions.
 Start with a few representative points and separate the order and domain
