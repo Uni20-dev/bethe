@@ -92,8 +92,9 @@ small, fixed scan illustrates the limitation; it is not a failure probability
 for other calculations. The [seed comparison record](../validation/six-spinon-seed-precision-20261031.json)
 retains all 40 outcomes, including failures.
 
-Seed 2 provides a reproducible example. Keep the command above unchanged
-apart from `--seed 2`, `--precision`, and a distinct output filename:
+Seed 2 provides a reproducible example. Use `--seed 2` and distinct output
+filenames. First vary only `--precision`, keeping relative tolerance `1e-5`;
+the final two rows separately test `--density-relative-tolerance 1e-3`:
 
 | Arithmetic | Relative tolerance | Complete three-point query | CPU seconds |
 | --- | ---: | --- | ---: |
