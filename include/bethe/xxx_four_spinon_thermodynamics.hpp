@@ -175,7 +175,6 @@ template <uni20::Real Geometry, uni20::Real Low, uni20::Real High = Low> class T
               observation.metadata = recovered.status;
               observation.cancelled = recovered.status == SpinonRecoveryStatus::cancelled;
               observation.reason = recovered.reason;
-              if (!recovered.attempts.empty()) observation.reason += ": " + recovered.attempts.back().reason;
               return observation;
             }
             auto const& d = *recovered.estimate;
