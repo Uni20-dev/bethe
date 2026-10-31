@@ -343,6 +343,11 @@ upper boundaries are marked when they fall within the requested frequency
 range. A single-point file is useful for checking the renderer, but a physical
 line shape requires a resolved frequency grid.
 
+The optional [large-domain reproduction recipe](xxx-six-spinon-reproduction.md)
+records the installed-program commands and predetermined streams for a
+sixteen-frequency slice. Its numerical production is still in progress; the
+recipe is not a claim of completed or converged data.
+
 The [six-spinon library interface](../xxx-six-spinon-structure-factor.md)
 provides independent geometry and recovery precision when needed. To obtain
 zeroth and first moments, use the [direct moment calculation](../xxx-spinon-moments.md)
