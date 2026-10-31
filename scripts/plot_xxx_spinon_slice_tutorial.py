@@ -171,15 +171,17 @@ def plot(data, output=FIGURE):
     positive = lambda key: [v if v > 0 else float('nan') for v in values(key)]
     axes[0].plot(x, positive('s2'), 'o-', markersize=3, color='#0072B2', label='2 spinons')
     axes[0].plot(x, positive('s4'), 's-', markersize=3, color='#D55E00', label='4 spinons')
+    missing = sum(p['s6'] is None for p in data['points'])
+    sampling_label = '; unavailable' if missing == len(x) else '; sampling SE'
     axes[0].errorbar(x, positive('s6'), yerr=values('s6_sampling_se'), fmt='^-', markersize=3,
-                     color='#009E73', label='6 spinons; sampling SE')
+                     color='#009E73', label='6 spinons' + sampling_label)
     for key, label, color in [('s2_plus_s4', '2+4', '#D55E00'),
                                ('s2_plus_s4_plus_s6', '2+4+6', '#009E73')]:
         y = positive(key)
         if key == 's2_plus_s4_plus_s6':
             axes[1].errorbar(x, y, yerr=values('s6_sampling_se'), fmt='o-', markersize=3,
                              color=color, capsize=2, elinewidth=.7,
-                             label=label + '; sampling SE')
+                             label=label + sampling_label)
         else:
             axes[1].plot(x, y, 'o-', markersize=3, color=color, label=label)
     axes[0].set_yscale('log')
@@ -193,7 +195,12 @@ def plot(data, output=FIGURE):
     axes[0].set_ylabel(r'$J S^{zz}(q,\omega)$')
     axes[0].set_title('Individual sectors')
     axes[1].set_title('Partial sums')
-    fig.suptitle(f'q / π = {q / math.pi:.6g}; finite-domain estimates; sampling errors only', fontsize=11)
+    title = f'q / π = {q / math.pi:.6g}; finite-domain estimates'
+    if missing < len(x):
+        title += '; sampling errors only'
+    if missing:
+        title += f'\nSix-spinon results unavailable at {missing}/{len(x)} requested frequencies'
+    fig.suptitle(title, fontsize=11)
     save_svg(fig, output)
     plt.close(fig)
 

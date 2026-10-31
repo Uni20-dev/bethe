@@ -57,6 +57,9 @@ sample. The compact data retain the zeros and distinguish them from failed or
 unavailable values. Lines joining samples are visual guides, not interpolated
 data for further calculations. Nonzero values outside the plotting format's
 range are rejected explicitly rather than being displayed as zero.
+If six-spinon results are missing, the figure states how many requested
+frequencies are unavailable. Both six-inclusive curves retain those gaps;
+an entirely unavailable sector is labelled as such in the legend.
 
 ## Establish the controls before drawing a curve
 

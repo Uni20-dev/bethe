@@ -3,6 +3,7 @@ from copy import deepcopy
 from decimal import Decimal, localcontext
 import unittest
 import json
+import math
 from unittest.mock import patch
 
 import plot_xxx_spinon_slice_tutorial as tutorial
@@ -193,6 +194,41 @@ class SpinonSlice(unittest.TestCase):
         self.assertIsNone(point['s2_plus_s4_plus_s6'])
         self.assertEqual(Decimal(point['s2_plus_s4']), Decimal('0.625'))
         self.assertEqual(point['s6_status'], 'failed')
+
+    def test_plot_identifies_unavailable_six_results_without_zeroing_them(self):
+        for partly_available in (False, True):
+            with self.subTest(partly_available=partly_available):
+                data = compact_fixture()
+                missing_omega = '2.1' if partly_available else '2'
+                if partly_available:
+                    extra_four = deepcopy(data['four_runs'][0])
+                    for table in ('spectrum', 'diagnostics'):
+                        for row in extra_four[table]:
+                            row['omega'] = missing_omega
+                    data['four_runs'].append(extra_four)
+                data['six_slice'] = compact_slice(
+                    [json.dumps(six_fixture()).encode()] if partly_available else [],
+                    momentum='1.5', frequencies=['2', '2.1'] if partly_available else ['2'],
+                    rapidity_cutoff='64', unavailable=[{
+                        'omega': missing_omega, 'status': 'failed',
+                        'reason': 'density recovery exhausted', 'raw_sha256': 'c' * 64}])
+                four = [tutorial.checked_four_run(r, momentum='1.5', exchange='1') for r in data['four_runs']]
+                six = read_compact_slice(data['six_slice'], momentum='1.5')['points']
+                data['points'] = tutorial.join_points(four, six)
+                with patch.object(tutorial, 'save_svg') as save:
+                    tutorial.plot(data)
+                figure = save.call_args.args[0]
+                self.assertIn(f'unavailable at 1/{2 if partly_available else 1}', figure._suptitle.get_text())
+                for axis in figure.axes:
+                    six_container, = axis.containers
+                    plotted = six_container.lines[0].get_ydata()
+                    self.assertTrue(math.isnan(plotted[-1]))
+                    if partly_available:
+                        self.assertGreater(plotted[0], 0)
+                        self.assertIn('sampling SE', six_container.get_label())
+                    else:
+                        self.assertIn('unavailable', six_container.get_label())
+                        self.assertNotIn('sampling', six_container.get_label())
 
     def test_regeneration_commands_use_installed_program_and_local_outputs(self):
         four, _ = checked_inputs()
