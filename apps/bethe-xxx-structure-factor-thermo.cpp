@@ -51,7 +51,8 @@ void add_options(CLI::App& app, Arguments& a)
   auto* nw =
       cli::count_option(app, "--points", a.points, "Uniform frequency samples, 2..1000000")->capture_default_str();
   auto* lo = cli::option(app, "--omega-min", a.omega_min, "Frequency grid lower endpoint")->capture_default_str();
-  auto* hi = cli::text_option(app, "--omega-max", a.omega_max, "Frequency grid upper endpoint (default: largest selected sector / 2 * pi * J)");
+  auto* hi = cli::text_option(app, "--omega-max", a.omega_max,
+                              "Frequency grid upper endpoint (default: largest selected sector / 2 * pi * J)");
   cli::text_option(app, "--omega", a.omega, "Single frequency instead of a grid")
       ->excludes(nw)
       ->excludes(lo)
@@ -67,18 +68,19 @@ void add_options(CLI::App& app, Arguments& a)
   cli::precision_option(app, a.precision, cli::ArbitraryPrecision::real);
   cli::threads_option(app, a.threads)->description("Shared scheduler concurrency limit");
   cli::spinon::add_options(app, a.spinons);
-  cli::add_data_output_options(
-      app, a.output,
-      {{.name = "spectrum", .description = "Selected-sector densities, their partial sum and numerical status", .primary = true},
-       {.name = "continuum", .description = "Kinematic lower/upper edges at each sampled q"},
-       {.name = "diagnostics",
-        .description = "Separate numerical diagnostics",
-        .availability = "sectors include 4 or 6",
-        .screen_option = "--diagnostics"},
-       {.name = "replicates",
-        .description = "Six-spinon replicate records",
-        .availability = "sector 6 selected",
-        .screen_option = "--replicate-output"}});
+  cli::add_data_output_options(app, a.output,
+                               {{.name = "spectrum",
+                                 .description = "Selected-sector densities, their partial sum and numerical status",
+                                 .primary = true},
+                                {.name = "continuum", .description = "Kinematic lower/upper edges at each sampled q"},
+                                {.name = "diagnostics",
+                                 .description = "Separate numerical diagnostics",
+                                 .availability = "sectors include 4 or 6",
+                                 .screen_option = "--diagnostics"},
+                                {.name = "replicates",
+                                 .description = "Six-spinon replicate records",
+                                 .availability = "sector 6 selected",
+                                 .screen_option = "--replicate-output"}});
 }
 char const* status(model::SpectralDensityStatus s)
 {
