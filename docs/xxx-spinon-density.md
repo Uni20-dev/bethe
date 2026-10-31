@@ -6,6 +6,8 @@
 weights of two, four or six spinons in the zero-field, zero-temperature XXX
 chain. These are the ingredients for thermodynamic spectra and direct moments.
 They are not spectra by themselves: the conservation laws still need integration.
+The [four-spinon geometry](xxx-four-spinon-integration.md) provides ordered
+spectral and direct-moment nodes with explicit measures and cutoffs.
 
 ## Physical convention
 
