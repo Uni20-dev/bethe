@@ -87,6 +87,55 @@ alongside the requested input. It rejects missing, colliding or ambiguous
 nodes; this matching does not interpolate or move spectral weights between
 distinct requested frequencies.
 
+## Measured four-spinon controls
+
+The [calibration record](../validation/four-spinon-slice-calibration-20261031.json)
+keeps the complete queries, effective controls, raw-export hashes and observed
+changes used to choose the display calculation. Below the two-spinon upper
+edge, extending the soft domain matters much more than increasing arithmetic
+precision. At $`\omega/J=2`$, fixed order 4 gives
+$`S^{zz}_4=0.137056`$ at log-radius cutoff 12 and $`0.183538`$ at cutoff 768.
+The latter is about 34% larger. Tiny density diagnostics at the smaller cutoff
+cannot reveal those omitted configurations.
+
+Refining the larger-domain calculations gives:
+
+| $`\omega/J`$ | Latest $`J S^{zz}_4`$ | Fixed-domain order comparison | Relative change |
+| ---: | ---: | --- | ---: |
+| 1.6 | 0.942545 | 4 to 8, cutoff 768 | +0.3145% |
+| 2.0 | 0.184090 | 4 to 8, cutoff 768 | +0.3013% |
+| 2.23 | 0.0378453 | 16 to 32, cutoff 24 | +0.01952% |
+| 3.0 | 0.00278670 | 32 to 64, cutoff 24 | +0.4951% |
+| 4.0 | 0.000121906 | 32 to 64, cutoff 24 | +0.4214% |
+
+Domain comparisons remain separate. At order 8, extending cutoff 384 to 768
+raises the results at $`\omega/J=1.7`$ and $`2`$ by 0.6973% and 0.5509%.
+Near the lower edge, the corresponding order-4 change at $`1.6`$ is 0.8251%.
+Just above the upper edge, at $`2.23`$, cutoffs 24 and 48 give identical
+exported values in the order-4 check. This last comparison is a coarse-order
+domain check; it is not a claim about every quadrature order or frequency.
+None of these observed differences bounds the remaining tail or total error.
+
+The same above-edge frequency separates density controls from outer integration.
+At fixed order 16 and cutoff 24, increasing geometry from 192 to 256 bits and
+density comparisons from 128/192 to 192/256 bits changes the result by
+$`1.54\times10^{-57}`$ relative. With the wider arithmetic held fixed, increasing
+residue budgets from 64/80 to 96/112 and tail orders from 16/20 to 24/28 changes
+it by $`6.43\times10^{-38}`$. These checks explain why outer quadrature and
+domain refinement, rather than more density digits, control this comparison.
+
+Deep soft domains do need wide **geometry**: nearly coincident coordinates
+must remain distinguishable before the density is evaluated. The density can
+use fewer bits independently. At $`\omega/J=2`$, cutoff 768 and order 4,
+1536-bit geometry with 192/256-bit density comparisons reproduces the
+1472/1536-bit density reference to $`7.90\times10^{-76}`$ relative, while
+reducing measured CPU cost by a factor of 4.37. This is evidence for separating
+those controls at that query, not a reason to lower the geometry precision.
+
+The [optional reproduction recipe](xxx-spinon-slice-reproduction.md) records
+the full display grid and controls. The much smaller
+[four-spinon example](xxx-four-spinon.md) is a quicker way to learn the commands.
+
 ## Compare with time-evolution calculations
 
 Match the Hamiltonian, operator normalization and Fourier conventions first.
