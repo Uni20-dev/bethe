@@ -110,16 +110,76 @@ def sampling_points(document, *, momentum, exchange='1', expected_metadata=None)
             'scope': 'Finite-domain estimates; sampling SE excludes rapidity-tail and numerical bias'}
 
 
+def paired_cutoffs(lower, upper):
+    """Compare checked analyses with identical streams and numerical controls.
+
+    Each argument comes from sampling_points. The proposal's normalized PDF
+    changes with its cutoff, so individual differences can have either sign.
+    Keep their covariance; do not clamp negative draws or infer an omitted-tail
+    bound from a small paired error.
+    """
+    lm, um = lower['metadata'], upper['metadata']
+    cutoff = 'Six-spinon absolute rapidity cutoff'
+    required = ('Bethe revision', 'Uni20 revision', 'Program', 'Channel',
+                'Density convention', 'Exchange J', 'Selected spinon sectors',
+                'Geometry and output bits', 'Samples per replicate',
+                'Six-spinon seed', 'Six-spinon uniform grid bits',
+                'Six-spinon replicates', 'Six-spinon stream identities')
+    prefixes = ('Six-spinon ', 'Density ', 'First density ', 'Second density ')
+    keys = set(required) | {key for key in lm.keys() | um.keys() if key.startswith(prefixes)}
+    keys.discard(cutoff)
+    if any(key not in lm or key not in um or lm[key] != um[key] for key in keys):
+        raise ValueError('Cutoff comparison requires common streams, precision, proposal and controls')
+    r0, r1 = decimal(lm[cutoff]), decimal(um[cutoff])
+    if not 0 < r0 < r1:
+        raise ValueError('Require increasing positive rapidity cutoffs')
+    if len(lower['points']) != len(upper['points']):
+        raise ValueError('Cutoff comparison has different frequency grids')
+    pairs = []
+    with localcontext() as context:
+        context.prec = max(80, integer(lm['Geometry and output bits']) // 3 + 50)
+        for a, b in zip(lower['points'], upper['points']):
+            if decimal(a['omega']) != decimal(b['omega']):
+                raise ValueError('Cutoff comparison has different frequency grids')
+            ar, br = a['replicate_records'], b['replicate_records']
+            if [x['replicate'] for x in ar] != [x['replicate'] for x in br]:
+                raise ValueError('Cutoff comparison has different replicate identities')
+            if any(x['q'] != y['q'] for x, y in zip(ar, br)):
+                raise ValueError('Cutoff comparison has different momenta')
+            x, y = [decimal(row['density']) for row in ar], [decimal(row['density']) for row in br]
+            n = len(x)
+            mx, my = sum(x) / n, sum(y) / n
+            differences = [v - u for u, v in zip(x, y)]
+            change = sum(differences) / n
+            variance = sum((d - change) ** 2 for d in differences) / (n * (n - 1))
+            covariance = sum((u - mx) * (v - my) for u, v in zip(x, y)) / (n * (n - 1))
+            vx = sum((u - mx) ** 2 for u in x) / (n * (n - 1))
+            vy = sum((v - my) ** 2 for v in y) / (n * (n - 1))
+            pairs.append({'omega': a['omega'], 'change': str(change), 'paired_sampling_se': str(variance.sqrt()),
+                          'covariance_of_means': str(covariance),
+                          'replicate_correlation': str(covariance / (vx * vy).sqrt()) if vx and vy else None,
+                          'fraction_of_upper_estimate': str(change / my) if my else None,
+                          'replicate_differences': [str(d) for d in differences]})
+    return {'lower_cutoff': str(r0), 'upper_cutoff': str(r1), 'points': pairs,
+            'scope': 'Paired finite-domain difference; neither an extrapolation nor a bound on the omitted tail'}
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--raw', type=Path, required=True, help='Complete selected-sector JSON export')
     parser.add_argument('--momentum', required=True, help='Exact input momentum as a decimal string')
     parser.add_argument('--exchange', default='1')
+    parser.add_argument('--compare-raw', type=Path, help='Larger-cutoff export with the same streams and controls')
     parser.add_argument('--output', type=Path, required=True, help='New analysis JSON; never overwrite')
     args = parser.parse_args()
     raw = args.raw.read_bytes()
     result = sampling_points(json.loads(raw), momentum=args.momentum, exchange=args.exchange)
     result['raw_sha256'] = hashlib.sha256(raw).hexdigest()
+    if args.compare_raw:
+        other = args.compare_raw.read_bytes()
+        checked = sampling_points(json.loads(other), momentum=args.momentum, exchange=args.exchange)
+        result['cutoff_comparison'] = paired_cutoffs(result, checked)
+        result['comparison_raw_sha256'] = hashlib.sha256(other).hexdigest()
     with args.output.open('x') as output:
         json.dump(result, output, indent=2)
         output.write('\n')

@@ -110,6 +110,18 @@ than assuming independent errors for the difference. Keep a failed calculation
 as a failed record. A numerical failure or missed sampled support is not a
 physical zero.
 
+For two exports differing only in cutoff, the script checks their controls and
+computes the paired difference and its standard error:
+
+```sh
+python3 scripts/plot_xxx_six_spinon_tutorial.py \
+  --raw lower-cutoff.json --compare-raw higher-cutoff.json \
+  --momentum "$q" --output cutoff-check.json
+```
+
+A small difference does not bound the weight beyond the larger cutoff. Both
+estimates can omit the same soft region.
+
 The [six-spinon library interface](../xxx-six-spinon-structure-factor.md)
 provides independent geometry and recovery precision when needed. To obtain
 zeroth and first moments, use the [direct moment calculation](../xxx-spinon-moments.md)

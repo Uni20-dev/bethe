@@ -3,7 +3,7 @@ from copy import deepcopy
 from decimal import Decimal, localcontext
 import unittest
 
-from plot_xxx_six_spinon_tutorial import sampling_points
+from plot_xxx_six_spinon_tutorial import paired_cutoffs, sampling_points
 from spinon_tutorial_exports import CONVENTION
 
 
@@ -13,6 +13,8 @@ def fixture():
             'Exchange J': '1', 'Selected spinon sectors': '6', 'Spectral points': '1',
             'Bethe revision': 'a' * 40, 'Uni20 revision': 'b' * 40,
             'Six-spinon replicates': '2', 'Samples per replicate': '4',
+            'Six-spinon seed': '42', 'Six-spinon uniform grid bits': '52',
+            'Six-spinon absolute rapidity cutoff': '64',
             'Six-spinon stream identities': 'first_replicate=grid_index*replicates; distinct streams at each point'}
     summary = {'Outcome': 'success', 'Failed points': '0'}
     def table(columns, rows):
@@ -88,6 +90,32 @@ class SixSpinonSampling(unittest.TestCase):
         data['tables']['diagnostics']['rows'][0][3] = '0'
         with self.assertRaisesRegex(ValueError, 'mean/SE'):
             sampling_points(data, momentum='1.5')
+
+    def test_paired_cutoff_error_retains_anticorrelation(self):
+        lower, upper = fixture(), fixture()
+        for table in upper['tables'].values():
+            table['metadata']['Six-spinon absolute rapidity cutoff'] = '256'
+        rows = upper['tables']['replicates']['rows']
+        rows[0][6:8], rows[1][6:8] = ['6', '3'], ['2', '1']
+        a, b = [sampling_points(d, momentum='1.5') for d in (lower, upper)]
+        point = paired_cutoffs(a, b)['points'][0]
+        self.assertEqual(Decimal(point['change']), 0)
+        self.assertEqual(Decimal(point['paired_sampling_se']), 2)
+        self.assertEqual(Decimal(point['replicate_correlation']), -1)
+        self.assertEqual([Decimal(x) for x in point['replicate_differences']], [2, -2])
+
+    def test_pairing_rejects_changed_seed_controls_or_grid(self):
+        a = sampling_points(fixture(), momentum='1.5')
+        for kind in ('seed', 'precision', 'grid', 'cutoff'):
+            with self.subTest(kind=kind):
+                b = deepcopy(a)
+                b['metadata']['Six-spinon absolute rapidity cutoff'] = '256'
+                if kind == 'seed': b['metadata']['Six-spinon seed'] = '43'
+                elif kind == 'precision': b['metadata']['Geometry and output bits'] = '256'
+                elif kind == 'grid': b['points'][0]['omega'] = '2.1'
+                else: b['metadata']['Six-spinon absolute rapidity cutoff'] = '32'
+                with self.assertRaises(ValueError):
+                    paired_cutoffs(a, b)
 
 
 if __name__ == '__main__':
