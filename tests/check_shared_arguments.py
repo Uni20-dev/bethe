@@ -7,6 +7,7 @@ import sys
 env = dict(os.environ, UNI20_COLOR="never", COLUMNS="4096")
 base_arguments = {
     "bethe-xxx-structure-factor-thermo": ["--momentum", "1.5", "--omega", "1.8"],
+    "bethe-xxx-moments-thermo": ["--global"],
     "bethe-xxz-dispersion": ["--delta", "2", "--points", "3"],
     "bethe-xyz-dispersion": ["--eta", "0.75", "--t", "1", "--points", "3"],
     "bethe-potts-pbc": ["4", "--momentum-index", "0"],
@@ -77,7 +78,7 @@ for program in sys.argv[1:]:
     assert "fp80" in help_text and "bethe-info" in help_text
     # Opted-in frontends have dedicated precision tests covering both numerical
     # results and unavailable providers; they must not claim no frontend support.
-    if name not in ("bethe-xxx-pbc", "bethe-xxx-obc", "bethe-xxx-structure-factor", "bethe-richardson",
+    if name not in ("bethe-xxx-pbc", "bethe-xxx-obc", "bethe-xxx-structure-factor", "bethe-xxx-moments-thermo", "bethe-richardson",
                     "bethe-central-spin", "bethe-lieb-liniger-pbc", "bethe-lieb-liniger-obc",
                     "bethe-lieb-liniger-dispersion", "bethe-ladder-pbc", "bethe-tj-pbc", "bethe-lieb-liniger-thermal", "bethe-su3-pbc", "bethe-xxz-pbc", "bethe-xxz-obc", "bethe-hubbard-pbc", "bethe-hubbard-obc", "bethe-gaudin-yang-pbc", "bethe-bose-fermi-pbc", "bethe-su3-dispersion", "bethe-haldane-shastry-pbc", "bethe-sutherland-pbc", "bethe-tb-dispersion", "bethe-sine-gordon-dispersion", "bethe-sine-gordon-bethe-yang", "bethe-sine-gordon-vacuum", "bethe-sine-gordon-excited", "bethe-lee-yang-vacuum", "bethe-lee-yang-excited", "bethe-potts-pbc", "bethe-q-boson-pbc", "bethe-hubbard-dispersion", "bethe-hubbard-continuum", "bethe-xxx-structure-factor-thermo", "bethe-xxz-qg-obc", "bethe-tb-pbc", "bethe-sun-fermions-pbc", "bethe-xxz-dispersion", "bethe-tasep-pbc", "bethe-asep-pbc", "bethe-biquadratic-obc", "bethe-kondo-response", "bethe-xyz-dispersion", "bethe-xyz-pbc"):
         for precision in ("bits-128", "digits-100"):

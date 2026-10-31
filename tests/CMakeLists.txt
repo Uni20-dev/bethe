@@ -614,6 +614,9 @@ if(BETHE_BUILD_APPS)
     add_test(NAME XXXSpinonMoments.cli
       COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_xxx_spinon_moments.py"
         "$<TARGET_FILE:bethe-xxx-moments-thermo>" "${BETHE_HAS_MPREAL}")
+    add_test(NAME Arguments.bethe-xxx-moments-thermo.cli
+      COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_shared_arguments.py"
+        "$<TARGET_FILE:bethe-xxx-moments-thermo>")
     add_test(NAME Arguments.bethe-xxx-structure-factor-thermo.cli
       COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_shared_arguments.py"
         "$<TARGET_FILE:bethe-xxx-structure-factor-thermo>")
