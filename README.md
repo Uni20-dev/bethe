@@ -57,6 +57,8 @@ Python is only needed for the optional plotting and maintenance scripts.
   and the choice of energy zero.
 - [XXX spectral weights](docs/tutorials/xxx-structure-factor.md): finite-ring
   two-spinon intensities, sum rules and broadening.
+- [Four-spinon thermodynamic intensity](docs/tutorials/xxx-four-spinon.md):
+  physical sector sums, separate order/cutoff checks and measured cost.
 - [Why high precision matters](docs/tutorials/xxx-precision.md): small energy
   scales, stable formulas and arbitrary precision.
 

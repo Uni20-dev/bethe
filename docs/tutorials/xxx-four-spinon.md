@@ -1,5 +1,9 @@
 # Resolving the four-spinon contribution
 
+<!-- BEGIN GENERATED PAGE LINK -->
+[Read this page on the documentation site](https://uni20-dev.github.io/bethe/docs/tutorials/xxx-four-spinon/)
+<!-- END GENERATED PAGE LINK -->
+
 [Two-spinon thermodynamic spectrum](xxx-structure-factor-thermo.md) ·
 [Selected-sector options](../xxx-spinon-sectors.md)
 
