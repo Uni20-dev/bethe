@@ -52,6 +52,43 @@ These extra digits identify the calculation, not its accuracy as an
 unrestricted four-spinon response. The refinement study below shows much
 larger integration changes than the arithmetic diagnostics.
 
+### Why does the calculation use two precisions?
+
+The four-spinon integrand contains special functions and contour sums whose
+terms can nearly cancel. The selected floating-point format tells us how many
+digits we start with, but not how many survive that cancellation. The program
+therefore **recomputes each form-factor density at two precisions** and checks
+their agreement before using it in the quadrature.
+
+You select one format with `--precision`; the program chooses the lower
+comparison automatically. For the command above on the tested x86 system,
+it evaluates the same spinon configuration in `double` (53 significand bits)
+and `long double` (64 significand bits). Each calculation starts from the same
+geometry coordinates, converted separately into its arithmetic format. The
+lower result is a fresh evaluation, not a rounded copy of the higher one.
+The higher precision is called the **guard precision** in the diagnostics.
+
+Increasing precision checks sensitivity to roundoff. Increasing the number of
+contour terms checks a different source of error: truncating the form-factor
+representation. The default controls combine both comparisons:
+
+| Contour controls | Lower-precision evaluation | Higher-precision evaluation |
+| --- | --- | --- |
+| 64 residue terms, tail order 16 | `double`, 53 bits | `long double`, 64 bits |
+| 80 residue terms, tail order 20 | `double`, 53 bits | `long double`, 64 bits |
+
+Both rows must pass the arithmetic and contour checks, and their
+higher-precision results must agree within the estimated allowances. The
+program keeps the **higher-precision result from the larger contour budget**;
+the four values are not averaged. This happens at each quadrature node, rather
+than by integrating the whole spectrum twice. The six-spinon calculation uses
+the same check at its sampled configurations.
+
+These are numerical stability checks, not rigorous error bounds. In
+particular, they do not measure the outer quadrature error or the weight
+excluded by the soft cutoff. A failed precision comparison can also be caused
+by the lower calculation even when the higher result is accurate.
+
 When changing the point or integration controls, inspect the exit status and
 diagnostics again. If the arithmetic screen fails, retain the failure and repeat
 the whole query with `--precision fp128` where available. With intermediate
@@ -113,18 +150,14 @@ columns as well as the density and its status.
 
 ## Arithmetic accuracy is a different check
 
-For each set of rapidities, the controller evaluates the density independently
-at two precisions, with identical contour controls. It converts the retained
-geometry coordinates into each arithmetic context, then keeps the higher-
-precision result. The lower calculation checks cancellation and roundoff; the
-two values are not averaged. Their difference, the kernels' arithmetic
-indicators and the prefactor change enter the arithmetic screen. That screen
-plus the contour remainder must meet the density tolerance. Both increasing
-contour budgets must pass and agree as well.
-
-This is a stability screen, not a rigorous error bound. It does not check the
-outer quadrature or missing soft region. A failed pair may reflect error in
-its lower member, even if its higher value is accurate. The
+For each precision pair, the difference between the density values,
+the kernels' roundoff indicators and the change in the scalar prefactor form
+the arithmetic diagnostic. This diagnostic plus the estimated contour
+remainder must fit within
+$`\mathrm{atol}+\mathrm{rtol}\,|W_{\mathrm{high}}|`$,
+where $`W_{\mathrm{high}}`$ is the higher-precision form-factor density at that
+configuration. The tolerance applies to this inner calculation, not directly
+to the final spectrum. The
 [precision guide](../numerical-accuracy.md#why-evaluate-a-density-at-two-precisions)
 lists the actual native pairs, portable selection and separate MPFR geometry
 and density controls.
