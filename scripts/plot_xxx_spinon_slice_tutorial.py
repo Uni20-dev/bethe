@@ -24,11 +24,12 @@ SCHEMA = 'bethe.xxx-spinon-slice.v1'
 
 
 def join_points(four_runs, six_points):
-    """Join checked sector records on exact frequencies, retaining explicit gaps.
+    """Join checked sectors on the declared input grid, retaining explicit gaps.
 
     Six records come from read_compact_slice; their metadata, replicate checks
     and declared missing nodes are owned by that reader. T and R are not equated.
     """
+    from xxx_six_spinon_tutorial_data import match_requested_frequency
     if not four_runs or not six_points:
         raise ValueError('Both checked two/four and six inputs are required')
     sources = four_runs + [p for p in six_points if p['s6'] is not None]
@@ -37,21 +38,22 @@ def join_points(four_runs, six_points):
     if any(run['metadata'][key] != meta[key] for run in sources for key in identity):
         raise ValueError('Cannot combine different source revisions or physical conventions')
     four, six = {}, {}
+    for point in six_points:
+        omega = decimal(point['omega'])
+        if omega in six:
+            raise ValueError('Duplicate six-spinon frequency')
+        six[omega] = point
     for run_index, run in enumerate(four_runs):
         if run['metadata']['Selected spinon sectors'] != '2,4':
             raise ValueError('Expected the checked two/four sector pair')
         grouped = {}
         for row in run['spectrum']:
             grouped.setdefault(decimal(row['omega']), {})[row['sector']] = row
-        for omega, rows in grouped.items():
+        for computed, rows in grouped.items():
+            omega = match_requested_frequency(computed, six, int(run['metadata']['Geometry and output bits']))
             if omega in four:
                 raise ValueError('Duplicate two/four frequency')
             four[omega] = (rows, run_index)
-    for point in six_points:
-        omega = decimal(point['omega'])
-        if omega in six:
-            raise ValueError('Duplicate six-spinon frequency')
-        six[omega] = point
     if four.keys() != six.keys():
         raise ValueError('Sector frequency grids differ; interpolation would change the comparison')
     bits = max(int(run['metadata']['Geometry and output bits']) for run in sources)
@@ -62,7 +64,9 @@ def join_points(four_runs, six_points):
             rows, fi = four[omega]
             sampled = six[omega]
             s2, s4 = [decimal(rows[sector]['density']) for sector in ('2', '4')]
-            point = {'omega': str(omega), 's2': str(s2), 's4': str(s4), 's2_plus_s4': str(s2 + s4),
+            point = {'omega': sampled['omega'], 'four_computed_omega': str(rows['2']['omega']),
+                     'six_computed_omega': sampled['computed_omega'],
+                     's2': str(s2), 's4': str(s4), 's2_plus_s4': str(s2 + s4),
                      'four_run': fi, 'six_run': sampled['run_index'], 's6_status': sampled['status']}
             if sampled['s6'] is None:
                 point.update(s6=None, s6_sampling_se=None, s2_plus_s4_plus_s6=None,

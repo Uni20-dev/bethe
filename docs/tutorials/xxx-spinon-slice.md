@@ -76,6 +76,14 @@ Do not interpolate across a failed point or replace it with zero. A successful
 finite-domain result still needs the convergence checks above before it is
 interpreted as an unrestricted physical response.
 
+Use the same declared frequency grid for all sectors. Different arithmetic
+formats can serialize an input such as `1.8` to slightly different binary
+approximations. The data reader matches each computed coordinate uniquely
+within its recorded rounding allowance, preserving both computed values
+alongside the requested input. It rejects missing, colliding or ambiguous
+nodes; this matching does not interpolate or move spectral weights between
+distinct requested frequencies.
+
 ## Compare with time-evolution calculations
 
 Match the Hamiltonian, operator normalization and Fourier conventions first.

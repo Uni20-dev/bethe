@@ -46,6 +46,36 @@ class SpinonSlice(unittest.TestCase):
         self.assertEqual(point['s6_sampling_se'], '0.0125')
         self.assertEqual((point['four_run'], point['six_run']), (0, 0))
 
+    def test_declared_decimal_grid_matches_distinct_arithmetic_formats(self):
+        four, six = checked_inputs()
+        computed_four = '1.799999999999999999999999999999999999998'
+        computed_six = '1.79999999999999999996'
+        four['metadata']['Geometry and output bits'] = '128'
+        for row in four['spectrum']:
+            row['omega'] = computed_four
+        six['metadata']['Geometry and output bits'] = '64'
+        six['omega'], six['computed_omega'] = '1.8', computed_six
+        for row in six['replicate_records']:
+            row['omega'] = computed_six
+        point, = tutorial.join_points([four], [six])
+        self.assertEqual(point['omega'], '1.8')
+        self.assertEqual(point['four_computed_omega'], computed_four)
+        self.assertEqual(point['six_computed_omega'], computed_six)
+        self.assertEqual(Decimal(point['s2_plus_s4_plus_s6']), Decimal('0.6875'))
+
+    def test_two_computed_points_cannot_collapse_onto_one_requested_point(self):
+        four, six = checked_inputs()
+        four['metadata']['Geometry and output bits'] = '64'
+        four['metadata']['Spectral points'] = '2'
+        original = deepcopy(four['spectrum'])
+        four['spectrum'] = []
+        for omega in ('1.79999999999999999996', '1.80000000000000000007'):
+            for row in original:
+                four['spectrum'].append(dict(row, omega=omega))
+        six['omega'] = '1.8'
+        with self.assertRaisesRegex(ValueError, 'Duplicate two/four frequency'):
+            tutorial.join_points([four], [six])
+
     def test_missing_or_duplicate_frequencies_are_rejected(self):
         for kind in ('four_duplicate', 'six_duplicate', 'grid'):
             with self.subTest(kind=kind):
