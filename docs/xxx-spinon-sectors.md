@@ -24,10 +24,12 @@ size independently, add two controls:
 
 ```sh
 bethe-xxx-structure-factor-thermo --sectors 2,4 \
-  --momentum 1.5 --omega 1.8 --precision bits-192 \
+  --momentum 1.5 --omega 1.8 --precision fp128 \
   --four-order 4 --four-cutoff 8 \
   --four-refine-order 8 --four-extended-cutoff 12 \
-  --threads 4 --csv spectrum.csv --csv-table diagnostics=checks.csv
+  --density-relative-tolerance 1e-8 --density-absolute-tolerance 1e-30 \
+  --tolerance 1e-12 \
+  --threads 2 --csv spectrum.csv --csv-table diagnostics=checks.csv
 ```
 
 This evaluates coarse/fine orders on both domains. The displayed four-spinon
@@ -35,6 +37,12 @@ value uses the fine order and extended domain. The order difference and signed
 cutoff change are separate fields, not a total error bar or an automatic tail
 correction. `--four-max-nodes` limits each geometry control; exceeding it leaves
 an explicit failed contribution.
+
+The four component quadratures pass with the native 64/113-bit density pair
+on the tested x86 system, and agree with a wider MPFR reference. See the
+[measured native precision check](numerical-accuracy.md#validated-small-api-examples).
+On a platform without an intermediate native format, inspect the actual pair
+and use MPFR if the complete query cannot pass.
 
 The four-spinon cutoff is a **log-radius cutoff** in the
 [support-adapted integration coordinates](xxx-four-spinon-integration.md).
@@ -50,7 +58,7 @@ A small fresh execution check is:
 ```sh
 bethe-xxx-structure-factor-thermo --sectors 6 \
   --momentum 1.57079632679489661923132169163975 --omega 2 \
-  --precision bits-384 --six-cutoff 8 --replicates 3 --samples 8 \
+  --precision long-double --six-cutoff 8 --replicates 3 --samples 8 \
   --seed 42 --threads 2 --diagnostics --replicate-output
 ```
 
@@ -59,6 +67,13 @@ spectrum. Inspect support counts, replicate scatter and influential samples,
 then increase independent work and vary the proposal and cutoff. A pilot that
 misses support returns `no_support_sampled`, with no density, rather than zero.
 A failed replicate prevents an estimate over the survivors.
+
+For this exact point, seed and controls, 80-bit `long double` agrees with the
+384-bit MPFR reference in the estimates, replicate means, maxima and sampling
+error to better than $`4\times10^{-16}`$ relative. This validates the arithmetic
+of the example, not its sampling accuracy or omitted tail. Other seeds or
+domains can require wider arithmetic; follow the
+[precision procedure](numerical-accuracy.md#why-evaluate-a-density-at-two-precisions).
 
 The physical mixture remains explicit:
 
@@ -89,11 +104,13 @@ does not choose or adapt the physical importance distribution.
 ## Precision and density recovery
 
 By default, `--precision` controls retained geometry, output and the higher density check.
-The lower comparison uses binary32 for binary64, binary64 for binary80 or
-binary128, and 64 fewer bits for MPFR, with a minimum of 24. Both precisions
-and their contour controls are recorded. Low native precision can fail the
-recovery screen, especially for six spinons; choose wider precision in that
-case. Raising precision does not replace order, sampling or cutoff studies.
+The lower comparison uses binary32 for binary64 and binary64 for binary80.
+Binary128 uses native `long double` when its actual significand width lies
+strictly between binary64 and binary128; otherwise it uses binary64. MPFR uses
+64 fewer bits, with a minimum of 24. Both precisions and their contour controls
+are recorded. The [accuracy guide](numerical-accuracy.md#why-evaluate-a-density-at-two-precisions)
+explains why a failed pair need not imply an inaccurate higher-precision value.
+Raising precision does not replace order, sampling or cutoff studies.
 
 For MPFR, `--density-guard-bits B` lets the W4/W6 density use a smaller guard
 precision while retaining the geometry and output precision. It requires sector

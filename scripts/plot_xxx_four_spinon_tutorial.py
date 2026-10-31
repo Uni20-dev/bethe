@@ -201,7 +201,7 @@ def plot(data):
     axes[0].set(ylabel=r'$S^{zz}_4(q,\omega)$', title=r'Four spinons at $q=1.5$, $\omega=1.8J$')
     axes[1].set_yscale('log')
     workers = data['cases'][0]['threads']
-    axes[1].set(ylabel='CPU seconds', title=f'Measured cost; {workers} workers per query')
+    axes[1].set(ylabel='CPU seconds', title=f'MPFR128 cost; {workers} workers per query')
     save_svg(fig, FIGURE)
     plt.close(fig)
 

@@ -54,15 +54,16 @@ larger integration changes than the arithmetic diagnostics.
 
 When changing the point or integration controls, inspect the exit status and
 diagnostics again. If the arithmetic screen fails, retain the failure and repeat
-the whole query with `--precision bits-128`, which strengthens both members of
-the density comparison. Binary128 alone may not help: its lower comparison
-still uses 53 bits. A failed screen does not supply an approximate spectral
+the whole query with `--precision fp128` where available. With intermediate
+native `long double`, this strengthens the density pair from 53/64 to 64/113
+bits. If the complete query still fails, try MPFR with `--precision bits-128`
+and then more bits as needed. A failed screen does not supply an approximate spectral
 value or a usable partial sum.
 
 The starting command uses a $`10^{-6}`$ relative density screen, comfortably
 below the order/domain changes demonstrated here. Wider-reference checks at
 contrasting points support that choice; they do not certify a whole spectral
-curve. Even at this tolerance, some ordinary points need MPFR. See the
+curve. Even at this tolerance, some ordinary points need a stronger pair. See the
 [neighbourhood study](#changing-the-point-can-change-the-precision-requirement)
 before extending the command to a grid.
 
@@ -74,6 +75,9 @@ before extending the command to a grid.
 Each curve holds the soft cutoff fixed and increases the Gauss order per
 panel. Comparing points vertically at the same order changes the integration
 domain instead. The two-spinon baseline is unchanged throughout this study.
+The plotted costs are the recorded **MPFR128 refinement study**, using two
+workers per query; they are separate from the native starting example and the
+faster binary128 follow-up below.
 
 `--four-cutoff T` is a **log-radius cutoff** in the support-adapted four-spinon
 coordinates. Increasing it includes configurations closer to a soft endpoint.
@@ -93,7 +97,7 @@ more difficult nodes: at the refinement study's stricter $`10^{-8}`$ relative
 tolerance, orders 8 and 16 fail the native 53/64-bit density screen at both
 cutoffs. Keep those failures; do not use an
 incomplete prefix. For the validated refinement study, replace `--precision
-long-double` with `--precision bits-128` and replace the starting command's
+long-double` with `--precision fp128` and replace the starting command's
 `--density-relative-tolerance 1e-6` with `--density-relative-tolerance 1e-8`.
 Then add these two refinement options:
 
@@ -109,16 +113,32 @@ columns as well as the density and its status.
 
 ## Arithmetic accuracy is a different check
 
+For each set of rapidities, the controller evaluates the density independently
+at two precisions, with identical contour controls. It converts the retained
+geometry coordinates into each arithmetic context, then keeps the higher-
+precision result. The lower calculation checks cancellation and roundoff; the
+two values are not averaged. Their difference, the kernels' arithmetic
+indicators and the prefactor change enter the arithmetic screen. That screen
+plus the contour remainder must meet the density tolerance. Both increasing
+contour budgets must pass and agree as well.
+
+This is a stability screen, not a rigorous error bound. It does not check the
+outer quadrature or missing soft region. A failed pair may reflect error in
+its lower member, even if its higher value is accurate. The
+[precision guide](../numerical-accuracy.md#why-evaluate-a-density-at-two-precisions)
+lists the actual native pairs, portable selection and separate MPFR geometry
+and density controls.
+
 A fixed-control comparison of the starting point, using the stricter
 $`10^{-8}`$ relative density screen, gives:
 
 | Arithmetic | Density comparison / guard bits | Result | CPU seconds |
 | --- | ---: | --- | ---: |
-| Binary64 | 24 / 53 | Arithmetic screen fails | 0.0026 to failure |
-| x86 long double | 53 / 64 | Complete | 0.337 |
-| Binary128 | 53 / 113 | Complete | 6.69 |
-| MPFR, 128 bits | 64 / 128 | Complete | 48.2 |
-| MPFR, 192 bits | 128 / 192 | Complete | 64.0 |
+| Binary64 | 24 / 53 | Arithmetic screen fails | 0.0069 to failure |
+| x86 long double | 53 / 64 | Complete | 0.329 |
+| Binary128 | 64 / 113 | Complete | 6.86 |
+| MPFR, 128 bits | 64 / 128 | Complete | 51.0 |
+| MPFR, 192 bits | 128 / 192 | Complete | 65.1 |
 
 The complete native result agrees with MPFR192 to about $`1.14\times10^{-16}`$
 relative; MPFR128 and MPFR192 agree to about $`2.42\times10^{-38}`$. That
@@ -185,14 +205,21 @@ python3 scripts/check_xxx_four_spinon_neighbourhood.py \
   --solver bethe-xxx-structure-factor-thermo --raw-dir neighbourhood-exports
 ```
 
-For the complete eight-point refinement grid, MPFR128 passes every node and
-agrees with the original MPFR192 S4 estimates to within
-$`3.4\times10^{-38}`$ relative. Binary128 still fails at order 8 on both
-domains: its lower comparison remains at 53 bits, whereas MPFR128 raises that
-comparison to 64 bits. The
-[refinement precision record](../validation/four-spinon-refinement-precision-20261031.json)
-retains all native failures and the original 192-bit reference. The new figure
-and its reproducer use the validated 128-bit setting.
+With the intermediate native comparison, binary128 completes all eight
+order/cutoff points and agrees with the MPFR192 S4 references within
+$`6.3\times10^{-31}`$ relative. The complete binary128 grid costs about
+**5.80 CPU minutes**, compared with **41.0 CPU minutes** for the plotted MPFR128
+study on the same shared Intel Core i7-12700KF, with two workers per query.
+This is why binary128 is the next arithmetic choice after native 80-bit.
+
+The [new native record](../validation/spinon-native-precision-20261031.json)
+retains all eight complete quadratures. The
+[earlier refinement record](../validation/four-spinon-refinement-precision-20261031.json)
+retains the failed 53/113-bit binary128 comparisons and the MPFR128/192
+references. Those failures were a limitation of the old lower comparison;
+they were not evidence that the binary128 value was inaccurate. Both records
+keep the same strict tolerances and contour controls. Neither determines the
+remaining soft-tail contribution.
 
 The density screen is $`\mathrm{atol}+\mathrm{rtol}|W|`$. Its relative
 term dominates above $`|W|=10^{-22}`$ in the strict $`10^{-8}`$ comparison,
@@ -205,8 +232,8 @@ reformulation, see [the one-magnon precision tutorial](xxx-precision.md).
 
 ## Cost and practical scope
 
-The ordinary native point takes about 0.34 CPU seconds on the measured Intel
-Core i7-12700KF. The 128-bit refinement grid above takes about 41 CPU minutes
+The strict native precision-check point takes about 0.33 CPU seconds on the measured Intel
+Core i7-12700KF. The MPFR128 refinement grid above takes about 41 CPU minutes
 in total with two workers. Its order-4/cutoff-8 point uses about 24 seconds wall
 and 48 CPU seconds; the largest point, order 16 and cutoff 12, uses about
 8.7 minutes wall and 17.4 CPU minutes. The original 192-bit grid took about

@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Copyright (C) 2026 Ian McCulloch
 #pragma once
+#include "execution-options.hpp"
 #include "result-output.hpp"
 #include "solver-precision.hpp"
 #include <bethe/xxx_four_spinon_thermodynamics.hpp>
@@ -100,7 +101,7 @@ template <class R> consteval auto density_low_type()
 {
   if constexpr (uni20::has_runtime_precision_v<R>)
     return std::type_identity<R>{};
-  else if constexpr (std::is_same_v<R, double>)
+  else if constexpr (uni20::numeric_limits<R>::digits() <= uni20::numeric_limits<double>::digits())
     return std::type_identity<float>{};
   else if constexpr (uni20::numeric_limits<long double>::digits() > uni20::numeric_limits<double>::digits() &&
                      uni20::numeric_limits<long double>::digits() < uni20::numeric_limits<R>::digits())

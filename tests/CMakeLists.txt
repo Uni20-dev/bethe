@@ -95,7 +95,7 @@ target_link_libraries(bethe_cli_precision_tests PRIVATE bethe_cli_output)
 bethe_discover_tests(bethe_cli_precision_tests)
 if(BETHE_BUILD_APPS)
   add_executable(bethe_spinon_cli_precision_tests test_spinon_cli_precision.cpp)
-  target_link_libraries(bethe_spinon_cli_precision_tests PRIVATE bethe_cli)
+  target_link_libraries(bethe_spinon_cli_precision_tests PRIVATE bethe_cli TBB::tbb)
   bethe_discover_tests(bethe_spinon_cli_precision_tests)
 endif()
 
@@ -637,7 +637,7 @@ if(BETHE_BUILD_APPS)
     add_test(NAME XXXSpinonDensityPrecision.cli
       COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_xxx_spinon_density_precision.py"
         "$<TARGET_FILE:bethe-xxx-structure-factor-thermo>"
-        "$<TARGET_FILE:bethe-xxx-moments-thermo>" "${BETHE_HAS_MPREAL}")
+        "$<TARGET_FILE:bethe-xxx-moments-thermo>" "${BETHE_HAS_MPREAL}" "${BETHE_HAS_FLOAT128}")
     # These fixtures launch two-worker solves; account for both when scheduling
     # them alongside other CLI tests on the two-CPU CI runners.
     set_tests_properties(XXXSpinonMoments.cli XXXSpinonDensityPrecision.cli PROPERTIES PROCESSORS 2)
