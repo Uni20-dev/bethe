@@ -88,6 +88,9 @@ if(BETHE_BUILD_APPS)
   add_executable(bethe-xxx-structure-factor-thermo apps/bethe-xxx-structure-factor-thermo.cpp)
   target_link_libraries(bethe-xxx-structure-factor-thermo PRIVATE bethe_cli)
   set_target_properties(bethe-xxx-structure-factor-thermo PROPERTIES CXX_EXTENSIONS OFF)
+  add_executable(bethe-xxx-moments-thermo apps/bethe-xxx-moments-thermo.cpp)
+  target_link_libraries(bethe-xxx-moments-thermo PRIVATE bethe_cli)
+  set_target_properties(bethe-xxx-moments-thermo PROPERTIES CXX_EXTENSIONS OFF)
   target_link_libraries(bethe-xxx-structure-factor PRIVATE bethe_cli)
   set_target_properties(bethe-xxx-structure-factor PROPERTIES CXX_EXTENSIONS OFF)
   add_executable(bethe-tb-dispersion apps/bethe-tb-dispersion.cpp)
@@ -157,7 +160,7 @@ if(BETHE_BUILD_APPS)
 
   set(bethe_parallel_apps
     bethe-lee-yang-excited bethe-sine-gordon-excited
-    bethe-xxx-structure-factor-thermo bethe-xxx-structure-factor
+    bethe-xxx-structure-factor-thermo bethe-xxx-structure-factor bethe-xxx-moments-thermo
     bethe-xxx-pbc bethe-xxx-obc bethe-xxz-pbc bethe-xxz-obc
     bethe-lieb-liniger-pbc bethe-lieb-liniger-obc bethe-q-boson-pbc
     bethe-xxz-qg-obc bethe-biquadratic-obc

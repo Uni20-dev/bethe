@@ -14,7 +14,8 @@ comparing energies or intensities.
 | Selected periodic real-root excitations | `bethe-xxx-pbc --excitations` | [Excitation families and enumeration](excitations.md) |
 | Odd-ring one-spinon branch or thermodynamic spinon kinematics | `bethe-xxx-pbc --spinons`; library formulas | [Single spinons](spinons.md) |
 | Finite-ring two-spinon Lehmann spectrum | `bethe-xxx-structure-factor` | [Weights, momentum and sum rules](xxx-structure-factor.md) |
-| Infinite-chain two-spinon spectral density | `bethe-xxx-structure-factor-thermo` | [Thermodynamic intensity](xxx-structure-factor-thermo.md) |
+| Infinite-chain selected spinon spectral densities | `bethe-xxx-structure-factor-thermo` | [Two-spinons](xxx-structure-factor-thermo.md), [selected sectors](xxx-spinon-sectors.md) |
+| Direct fixed-momentum and global spinon moments | `bethe-xxx-moments-thermo` | [Moment definitions, controls and exports](xxx-spinon-moments.md) |
 
 ## Choose a benchmark
 
@@ -22,11 +23,15 @@ Start with [finite chains](tutorials/xxx.md) to understand quantum numbers,
 open versus periodic boundaries and the selected excitation family. For
 precision-sensitive gaps, use [the precision tutorial](tutorials/xxx-precision.md).
 
+The [four-spinon tutorial](tutorials/xxx-four-spinon.md) adds a physically
+normalized contribution and measures quadrature/cutoff refinement and cost.
+
 For a dynamical comparison, distinguish the [finite-ring spectral lines](tutorials/xxx-structure-factor.md)
 from the [unbroadened thermodynamic density](tutorials/xxx-structure-factor-thermo.md).
-The public structure-factor tools compute the two-spinon contribution, not the
-full dynamical structure factor. Broadening discrete lines is a plotting choice;
-it does not supply the missing state families.
+The finite-ring tool computes the supported two-spinon family. The thermodynamic
+tool defaults to two spinons and can include four and six; these remain partial
+responses. Broadening discrete lines is a plotting choice; it does not supply
+the missing state families.
 
 ## Interpret the labels
 
@@ -36,3 +41,6 @@ An open chain has standing waves rather than a lattice momentum. For a periodic
 chain, the physical momentum and any unit-cell folding must be matched to the
 comparison calculation. Every model result still needs its convergence status
 and numerical work limits; choosing MPFR does not enlarge the physical family.
+
+For thermodynamic four- and six-spinon spectra, see
+[selected sectors, explicit proposals and diagnostics](xxx-spinon-sectors.md).

@@ -1330,6 +1330,19 @@ arXiv:cond-mat/9606068v2 (1996).
 Relevant tool modes:
 
 - `bethe-xxx-structure-factor-thermo`: Threshold behavior and two-spinon intensity/first-moment sum rules; no broadening or renormalization to full intensity.
+- `bethe-xxx-moments-thermo`: Two-spinon intensity and first-moment sum rules; full-response denominators are references, not fitted normalizations.
+
+### abada-bougourzi-si-lakhal-1997
+
+A. Abada, A. H. Bougourzi, and B. Si-Lakhal. *Exact four-spinon dynamical correlation function of the Heisenberg model*.
+Nucl. Phys. B 497, 733-753 (1997).
+
+[DOI](<https://doi.org/10.1016/S0550-3213(97)00285-X>), [arXiv](<https://arxiv.org/abs/hep-th/9702028>).
+
+Relevant tool modes:
+
+- `bethe-xxx-structure-factor-thermo`: General n-spinon contour representation and its isotropic limit, used by the four- and six-spinon density evaluators. Physical normalization is checked independently, not adjusted by the user.
+- `bethe-xxx-moments-thermo`: General n-spinon contour representation and its isotropic limit, used by the four- and six-spinon density evaluators. Physical normalization is checked independently, not adjusted by the user.
 
 ### caux-hagemans-2006
 
@@ -1340,6 +1353,7 @@ J. Stat. Mech. 2006, P12013 (2006).
 
 Relevant tool modes:
 
-- `bethe-xxx-structure-factor-thermo`: Exact thermodynamic two-spinon Szz, Eqs. (9)-(12); the four-spinon contribution is not yet implemented.
+- `bethe-xxx-structure-factor-thermo`: Thermodynamic sector decomposition, exact two-spinon Szz (Eqs. (9)-(12)), and four-spinon continuum kinematics. Physical higher-sector density normalization is validated independently.
+- `bethe-xxx-moments-thermo`: Thermodynamic spinon decomposition and the two-spinon transition rate, Eqs. (9)-(12). Higher-sector normalization and moment measures are independently validated.
 
 <!-- END GENERATED BIBLIOGRAPHY -->

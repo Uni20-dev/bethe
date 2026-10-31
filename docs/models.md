@@ -21,7 +21,7 @@ an enabled build; inspect `bethe-info` for the formats actually configured.
 
 | Family | Programs | Supported calculation and reference | Plotted tutorial |
 | --- | --- | --- | --- |
-| XXX | `xxx-pbc`, `xxx-obc`, `xxx-structure-factor`, `xxx-structure-factor-thermo` | [Family guide](xxx-family.md): ground/sector minima, selected real-root excitations, finite-ring and thermodynamic two-spinon intensities | [Finite chains](tutorials/xxx.md), [spectral weights](tutorials/xxx-structure-factor.md), [thermodynamic intensity](tutorials/xxx-structure-factor-thermo.md) |
+| XXX | `xxx-pbc`, `xxx-obc`, `xxx-structure-factor`, `xxx-structure-factor-thermo`, `xxx-moments-thermo` | [Family guide](xxx-family.md): ground/sector minima, selected real-root excitations, finite-ring two-spinon intensities, selected thermodynamic spectra and direct moments | [Finite chains](tutorials/xxx.md), [spectral weights](tutorials/xxx-structure-factor.md), [thermodynamic intensity](tutorials/xxx-structure-factor-thermo.md) |
 | XXZ | `xxz-pbc`, `xxz-obc`, `xxz-dispersion` | [Family guide](xxz-family.md): anisotropic finite-chain states and zero-field gapless/massive spinons and continuum edges | [Spinons and continua](tutorials/xxz-spinons.md) |
 | Quantum-group XXZ | `xxz-qg-obc` | [Non-Hermitian open chain](xxz-nonhermitian.md): regular real-root families; complete free-point fixed-Sz spectra and Jordan-block sizes | [Non-Hermitian spectra](tutorials/xxz-nonhermitian.md) |
 | XYZ | `xyz-pbc`, `xyz-dispersion` | [Even-ring ground branch](xyz.md); [thermodynamic spinons, bound branches and two-spinon envelopes](xyz-dispersion.md) | [Bound branches](tutorials/xyz.md) |

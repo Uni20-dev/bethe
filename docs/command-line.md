@@ -56,6 +56,10 @@ For an infinite-chain spectral density, use
 `--momentum Q` for a frequency cut or `--momentum-points N` for a heat-map grid.
 It supports scalar MPFR with `--precision bits-N`; quadrature order and
 evaluation budgets are independent of the selected arithmetic precision.
+It defaults to two spinons; [selected-sector controls](xxx-spinon-sectors.md)
+add four and six with separate quadrature, sampling and cutoff diagnostics.
+For frequency moments, use [`bethe-xxx-moments-thermo`](xxx-spinon-moments.md)
+with either `--momentum Q` or `--global` to integrate the moment measure directly.
 
 XXZ uses the same common precision and output controls, but different mode
 combinations: `--excitations` selects a family at fixed `--sz`, not `--spin`.

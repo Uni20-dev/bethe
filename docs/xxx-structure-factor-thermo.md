@@ -4,7 +4,10 @@
 
 `bethe-xxx-structure-factor-thermo` evaluates the **spectral density** of the
 infinite spin-1/2 antiferromagnetic XXX chain at zero field and temperature.
-It implements the exact two-spinon contribution, not the full structure factor.
+The default is the exact two-spinon contribution. Explicit `--sectors 2,4,6`
+adds finite-domain four- and six-spinon estimates; see
+[selected sectors and numerical controls](xxx-spinon-sectors.md). Any selection
+is a partial response, not the full structure factor.
 Unlike the [finite-ring tool](xxx-structure-factor.md), there are no Bethe roots
 to solve, intermediate states to enumerate, or delta functions to broaden.
 
@@ -68,14 +71,16 @@ ordered row output. Continuum-table output is outside that interval.
 Single-point options exclude their corresponding grid options. Grids are limited
 to one million total points. Inputs are validated before opening output files.
 
-The frontend declares two tables:
+For the default two-spinon calculation the frontend produces two tables:
 
-- **`spectrum`** (primary): `q`, `omega`, `density`, `estimated_error`,
+- **`spectrum`** (primary): `q`, `omega`, `sector`, `density`, `estimated_error`,
   `evaluations`, `status`.
 - **`continuum`**: `q`, `lower`, `upper` at each momentum.
 
 For example, `--csv-table continuum=edges.csv` exports the named auxiliary table.
-An unknown table name is an error. See [output and exports](output.md).
+An unknown or unavailable table name is an error. Higher-sector calculations
+also support the explicitly requested `diagnostics` and `replicates` tables;
+see [selected sectors](xxx-spinon-sectors.md). See [output and exports](output.md).
 
 ## Conventions and exact expression
 

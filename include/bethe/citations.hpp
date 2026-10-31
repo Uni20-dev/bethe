@@ -379,11 +379,15 @@ inline constexpr std::array<Link, 1> links_98{{
   {"arXiv", "https://arxiv.org/abs/cond-mat/9606068"},
 }};
 inline constexpr std::array<Link, 2> links_99{{
+  {"DOI", "https://doi.org/10.1016/S0550-3213(97)00285-X"},
+  {"arXiv", "https://arxiv.org/abs/hep-th/9702028"},
+}};
+inline constexpr std::array<Link, 2> links_100{{
   {"arXiv", "https://arxiv.org/abs/cond-mat/0611319"},
   {"Eq. (31) correction", "https://scipost.org/commentary/10.1088/1742-5468/2006/12/P12013/"},
 }};
 
-inline constexpr std::array<Reference, 100> references{{
+inline constexpr std::array<Reference, 101> references{{
   {"barber-batchelor-1989", "Michael N. Barber and Murray T. Batchelor", "Spectrum of the biquadratic spin-1 antiferromagnetic chain", "Phys. Rev. B 40, 4621-4626", 1989, links_0},
   {"albertini-2000", "Giuseppe Albertini", "Is the purely biquadratic spin 1 chain always massive?", "arXiv:cond-mat/0012439", 2000, links_1},
   {"aufgebauer-klumper-2010", "Britta Aufgebauer and Andreas Klümper", "Quantum spin chains of Temperley-Lieb type: periodic boundary conditions, spectral multiplicities and finite temperature", "J. Stat. Mech. 2010, P05018", 2010, links_2},
@@ -483,7 +487,8 @@ inline constexpr std::array<Reference, 100> references{{
   {"kitanine-maillet-terras-1999", "N. Kitanine, J. M. Maillet, and V. Terras", "Form factors of the XXZ Heisenberg spin-1/2 finite chain", "Nucl. Phys. B 554, 647-678", 1999, links_96},
   {"caux-hagemans-maillet-2005", "Jean-Sebastien Caux, Rob Hagemans, and Jean-Michel Maillet", "Computation of dynamical correlation functions of Heisenberg chains: the gapless anisotropic regime", "J. Stat. Mech. 2005, P09003", 2005, links_97},
   {"karbach-muller-bougourzi-1996", "Michael Karbach, Gerhard Müller, and A. Hamid Bougourzi", "Two-spinon dynamic structure factor of the one-dimensional S=1/2 Heisenberg antiferromagnet", "arXiv:cond-mat/9606068v2", 1996, links_98},
-  {"caux-hagemans-2006", "Jean-Sébastien Caux and Rob Hagemans", "The 4-spinon dynamical structure factor of the Heisenberg chain", "J. Stat. Mech. 2006, P12013", 2006, links_99},
+  {"abada-bougourzi-si-lakhal-1997", "A. Abada, A. H. Bougourzi, and B. Si-Lakhal", "Exact four-spinon dynamical correlation function of the Heisenberg model", "Nucl. Phys. B 497, 733-753", 1997, links_99},
+  {"caux-hagemans-2006", "Jean-Sébastien Caux and Rob Hagemans", "The 4-spinon dynamical structure factor of the Heisenberg chain", "J. Stat. Mech. 2006, P12013", 2006, links_100},
 }};
 
 inline constexpr std::array<Use, 2> uses_lee_yang_excited{{
@@ -579,9 +584,15 @@ inline constexpr std::array<Use, 4> uses_xxx_pbc{{
   {&references[9], "Thermodynamic XXX spinon dispersion and the bulk reference for --spinons."},
   {&references[12], "Highest-weight and string-classification background; strings and infinite-root descendants are not implemented."},
 }};
-inline constexpr std::array<Use, 2> uses_xxx_structure_factor_thermo{{
-  {&references[99], "Exact thermodynamic two-spinon Szz, Eqs. (9)-(12); the four-spinon contribution is not yet implemented."},
+inline constexpr std::array<Use, 3> uses_xxx_structure_factor_thermo{{
+  {&references[99], "General n-spinon contour representation and its isotropic limit, used by the four- and six-spinon density evaluators. Physical normalization is checked independently, not adjusted by the user."},
+  {&references[100], "Thermodynamic sector decomposition, exact two-spinon Szz (Eqs. (9)-(12)), and four-spinon continuum kinematics. Physical higher-sector density normalization is validated independently."},
   {&references[98], "Threshold behavior and two-spinon intensity/first-moment sum rules; no broadening or renormalization to full intensity."},
+}};
+inline constexpr std::array<Use, 3> uses_xxx_moments_thermo{{
+  {&references[99], "General n-spinon contour representation and its isotropic limit, used by the four- and six-spinon density evaluators. Physical normalization is checked independently, not adjusted by the user."},
+  {&references[100], "Thermodynamic spinon decomposition and the two-spinon transition rate, Eqs. (9)-(12). Higher-sector normalization and moment measures are independently validated."},
+  {&references[98], "Two-spinon intensity and first-moment sum rules; full-response denominators are references, not fitted normalizations."},
 }};
 inline constexpr std::array<Use, 4> uses_xxx_structure_factor{{
   {&references[7], "Periodic XXX states and real-root two-spinon triplet window; our z=2*lambda_ABA."},
@@ -685,7 +696,7 @@ inline constexpr std::array<Use, 3> uses_gaudin_yang_pbc{{
   {&references[60], "Hamiltonian and periodic fermion equations (1), (2), (7), (8), (25); even N, odd minority population as in Sec. 5. Weak and strong limits (12), (15)-(16) provide checks. Hard walls, attraction and excitations are not implemented."},
 }};
 
-enum class Tool { lee_yang_excited, lee_yang_vacuum, xxz_qg_obc, hubbard_continuum, kondo_response, sine_gordon_dispersion, sine_gordon_bethe_yang, sine_gordon_excited, sine_gordon_vacuum, asep_pbc, tasep_pbc, potts_pbc, xyz_dispersion, xyz_pbc, bose_fermi_pbc, q_boson_pbc, lieb_liniger_thermal, lieb_liniger_dispersion, biquadratic_obc, xxx_pbc, xxx_structure_factor_thermo, xxx_structure_factor, xxx_obc, xxz_pbc, xxz_dispersion, xxz_obc, hubbard_dispersion, hubbard_pbc, hubbard_obc, lieb_liniger_pbc, lieb_liniger_obc, su3_dispersion, su3_pbc, tj_pbc, tb_dispersion, tb_pbc, richardson, central_spin, sun_fermions_pbc, ladder_pbc, haldane_shastry_pbc, sutherland_pbc, gaudin_yang_pbc };
+enum class Tool { lee_yang_excited, lee_yang_vacuum, xxz_qg_obc, hubbard_continuum, kondo_response, sine_gordon_dispersion, sine_gordon_bethe_yang, sine_gordon_excited, sine_gordon_vacuum, asep_pbc, tasep_pbc, potts_pbc, xyz_dispersion, xyz_pbc, bose_fermi_pbc, q_boson_pbc, lieb_liniger_thermal, lieb_liniger_dispersion, biquadratic_obc, xxx_pbc, xxx_structure_factor_thermo, xxx_moments_thermo, xxx_structure_factor, xxx_obc, xxz_pbc, xxz_dispersion, xxz_obc, hubbard_dispersion, hubbard_pbc, hubbard_obc, lieb_liniger_pbc, lieb_liniger_obc, su3_dispersion, su3_pbc, tj_pbc, tb_dispersion, tb_pbc, richardson, central_spin, sun_fermions_pbc, ladder_pbc, haldane_shastry_pbc, sutherland_pbc, gaudin_yang_pbc };
 
 [[nodiscard]] constexpr std::span<Use const> for_tool(Tool tool)
 {
@@ -712,6 +723,7 @@ enum class Tool { lee_yang_excited, lee_yang_vacuum, xxz_qg_obc, hubbard_continu
     case Tool::biquadratic_obc: return uses_biquadratic_obc;
     case Tool::xxx_pbc: return uses_xxx_pbc;
     case Tool::xxx_structure_factor_thermo: return uses_xxx_structure_factor_thermo;
+    case Tool::xxx_moments_thermo: return uses_xxx_moments_thermo;
     case Tool::xxx_structure_factor: return uses_xxx_structure_factor;
     case Tool::xxx_obc: return uses_xxx_obc;
     case Tool::xxz_pbc: return uses_xxz_pbc;

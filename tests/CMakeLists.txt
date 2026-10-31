@@ -102,6 +102,10 @@ add_executable(bethe_xxx_four_spinon_geometry_tests test_xxx_four_spinon_geometr
 target_link_libraries(bethe_xxx_four_spinon_geometry_tests PRIVATE bethe::bethe)
 bethe_discover_tests(bethe_xxx_four_spinon_geometry_tests)
 
+add_executable(bethe_xxx_two_spinon_moments_tests test_xxx_two_spinon_moments.cpp)
+target_link_libraries(bethe_xxx_two_spinon_moments_tests PRIVATE bethe::bethe TBB::tbb)
+bethe_discover_tests(bethe_xxx_two_spinon_moments_tests)
+
 add_executable(bethe_xxx_four_spinon_common_shift_tests test_xxx_four_spinon_common_shift.cpp)
 target_link_libraries(bethe_xxx_four_spinon_common_shift_tests PRIVATE bethe::bethe)
 bethe_discover_tests(bethe_xxx_four_spinon_common_shift_tests)
@@ -606,12 +610,24 @@ if(BETHE_BUILD_APPS)
   add_test(NAME Citations.bethe-xxx-structure-factor-thermo.cli
     COMMAND "${CMAKE_COMMAND}" "-DPROGRAM=$<TARGET_FILE:bethe-xxx-structure-factor-thermo>"
       "-DTOOL=bethe-xxx-structure-factor-thermo" -P "${CMAKE_CURRENT_SOURCE_DIR}/check_citations_cli.cmake")
+  add_test(NAME Citations.bethe-xxx-moments-thermo.cli
+    COMMAND "${CMAKE_COMMAND}" "-DPROGRAM=$<TARGET_FILE:bethe-xxx-moments-thermo>"
+      "-DTOOL=bethe-xxx-moments-thermo" -P "${CMAKE_CURRENT_SOURCE_DIR}/check_citations_cli.cmake")
   if(Python3_Interpreter_FOUND)
+    add_test(NAME XXXSpinonMoments.cli
+      COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_xxx_spinon_moments.py"
+        "$<TARGET_FILE:bethe-xxx-moments-thermo>" "${BETHE_HAS_MPREAL}")
+    add_test(NAME Arguments.bethe-xxx-moments-thermo.cli
+      COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_shared_arguments.py"
+        "$<TARGET_FILE:bethe-xxx-moments-thermo>")
     add_test(NAME Arguments.bethe-xxx-structure-factor-thermo.cli
       COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_shared_arguments.py"
         "$<TARGET_FILE:bethe-xxx-structure-factor-thermo>")
     add_test(NAME XXXThermodynamicDSF.precision
       COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_xxx_thermodynamic_precision.py"
+        "$<TARGET_FILE:bethe-xxx-structure-factor-thermo>" "${BETHE_HAS_MPREAL}")
+    add_test(NAME XXXSpinonSectors.cli
+      COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_xxx_spinon_sectors.py"
         "$<TARGET_FILE:bethe-xxx-structure-factor-thermo>" "${BETHE_HAS_MPREAL}")
     add_test(NAME XXXThermodynamicDSF.cli
       COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_xxx_thermodynamic_structure_factor.py"
@@ -639,7 +655,8 @@ if(BETHE_BUILD_APPS)
         --cmake "${CMAKE_COMMAND}" --build-dir "${PROJECT_BINARY_DIR}"
         --config "$<CONFIG>" --bindir "${CMAKE_INSTALL_BINDIR}"
         --docdir "${CMAKE_INSTALL_DOCDIR}" --suffix "${CMAKE_EXECUTABLE_SUFFIX}"
-        --fp128 "${BETHE_HAS_FLOAT128}" --runtime-files ${bethe_runtime_files} --apps ${bethe_installed_apps})
+        --fp128 "${BETHE_HAS_FLOAT128}" --mpreal "${BETHE_HAS_MPREAL}"
+        --runtime-files ${bethe_runtime_files} --apps ${bethe_installed_apps})
     set_tests_properties(Install.runtime PROPERTIES RUN_SERIAL TRUE TIMEOUT 180)
   endif()
   if(Python3_Interpreter_FOUND)

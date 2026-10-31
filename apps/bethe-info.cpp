@@ -44,6 +44,7 @@ int run(cli::DataOutputOptions const& options, int argc, char** argv)
                    "bethe-lieb-liniger-dispersion, bethe-lieb-liniger-thermal, bethe-ladder-pbc, bethe-tj-pbc, "
                    "bethe-richardson, bethe-central-spin, "
                    "bethe-biquadratic-obc, bethe-xxx-structure-factor, bethe-xxx-structure-factor-thermo, "
+                   "bethe-xxx-moments-thermo, "
                    "bethe-su3-pbc, bethe-xxz-pbc, "
                    "bethe-xxz-obc, "
                    "bethe-hubbard-pbc, bethe-hubbard-obc, bethe-hubbard-dispersion, bethe-hubbard-continuum, "

@@ -99,3 +99,6 @@ python3 scripts/plot_xxx_thermodynamic_structure_factor_tutorial.py \
 The script checks numerical statuses, provenance, continuum support, grid
 ordering and momentum-reflection symmetry before drawing the plot.
 Literature is available with `--references` and in [CITATIONS.md](../../CITATIONS.md).
+
+Continue with the [four-spinon refinement tutorial](xxx-four-spinon.md) to add
+the next sector and separate quadrature accuracy from soft-cutoff dependence.

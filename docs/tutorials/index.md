@@ -35,7 +35,8 @@ Regeneration replaces the repository's example data, not files in your calculati
   [Hubbard spin/charge lines](hubbard-half-filled.md), then the relevant
   model guide for normalization and supported families.
 - **Spectral intensity:** [finite XXX two-spinon weights](xxx-structure-factor.md)
-  and [the thermodynamic density](xxx-structure-factor-thermo.md).
+  and [the thermodynamic density](xxx-structure-factor-thermo.md), then
+  [four-spinon refinement](xxx-four-spinon.md).
 
 ## Available tutorials
 
@@ -45,6 +46,7 @@ Regeneration replaces the repository's example data, not files in your calculati
 - [XXX precision](xxx-precision.md): resolving small energy scales, stable formulas and arbitrary precision.
 - [XXX spectral weights](xxx-structure-factor.md): two-spinon intensities, sum rules and plotting broadening.
 - [Thermodynamic XXX intensity](xxx-structure-factor-thermo.md): exact two-spinon spectral density without broadening.
+- [Four-spinon refinement](xxx-four-spinon.md): separate order/cutoff checks, measured cost and a small six-spinon sampling example.
 - [XXZ spinons and continua](xxz-spinons.md): gapless/gapped bands and two-site folding.
 - [XYZ](xyz.md): gapped spinons, bound branches and discrete parity copies.
 - [SU(3)/ULS](su3-uls.md): representations, two-/four-soliton thresholds and three-site folding.

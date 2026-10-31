@@ -3,7 +3,9 @@
 import argparse
 from contextlib import contextmanager
 import csv
+from decimal import Decimal
 import io
+import json
 import os
 from pathlib import Path
 import shutil
@@ -25,6 +27,86 @@ def check_files(prefix, args):
     actual = {p.relative_to(prefix) for p in prefix.rglob('*') if p.is_file()}
     if actual != expected:
         raise AssertionError(f'Missing: {expected-actual}; unexpected installed files: {actual-expected}')
+
+
+def table_rows(document, name):
+    table = document['tables'][name]
+    columns = [column['id'] for column in table['columns']]
+    return [dict(zip(columns, [cell['value'] if isinstance(cell, dict) else cell for cell in row]))
+            for row in table['rows']]
+
+
+def positive_finite(value):
+    return value is not None and Decimal(str(value)).is_finite() and Decimal(str(value)) > 0
+
+
+def check_spinon_calculations(args, prefix, work, env):
+    # These small rules exercise the relocated runtime and structured exports.
+    # They do not establish sampling, quadrature or rapidity-tail convergence.
+    def calculate(app, options, filename):
+        executable = str(prefix / args.bindir / (app + args.suffix))
+        run([executable, *options, '--threads', '2', '--quiet', '--json', filename], cwd=work, env=env)
+        return json.loads((work / filename).read_text())
+
+    moments = 'bethe-xxx-moments-thermo'
+    spectrum = 'bethe-xxx-structure-factor-thermo'
+    doc = calculate(moments, ['--global', '--diagnostics'], 'two-moments.json')
+    rows = table_rows(doc, 'moments')
+    assert {(row['sector'], int(row['moment'])) for row in rows} == {('2', 0), ('2', 1)}, rows
+    assert all(row['status'] == 'estimated' and positive_finite(row['value']) for row in rows), rows
+    assert all(0 < Decimal(str(row['fraction'])) < 1 for row in rows), rows
+
+    doc = calculate(moments, ['--momentum', '1.5', '--sectors', '4', '--precision', 'long-double',
+                             '--four-order', '2', '--four-cutoff', '2', '--diagnostics',
+                             '--density-relative-tolerance', '1e-4',
+                             '--density-absolute-tolerance', '1e-24'], 'four-moments.json')
+    rows = table_rows(doc, 'moments')
+    assert {(row['sector'], int(row['moment'])) for row in rows} == {('4', 0), ('4', 1)}, rows
+    assert all(row['status'] == 'estimated' and positive_finite(row['value']) for row in rows), rows
+    assert all(row['sampling_error'] is None for row in table_rows(doc, 'diagnostics'))
+
+    if args.mpreal.upper() not in ('ON', 'TRUE', '1'):
+        return
+    six = ['--sectors', '6', '--precision', 'bits-384', '--six-cutoff', '8', '--seed', '42',
+           '--density-relative-tolerance', '1e-5', '--diagnostics', '--replicate-output']
+    momentum = ['--momentum', '1.57079632679489661923132169163975']
+    doc = calculate(spectrum, [*six, *momentum, '--omega', '2', '--replicates', '3', '--samples', '8'],
+                    'six-spectrum.json')
+    rows = table_rows(doc, 'spectrum')
+    assert len(rows) == 1 and rows[0]['sector'] == '6', rows
+    assert rows[0]['status'] == 'estimated' and positive_finite(rows[0]['density']), rows
+    assert positive_finite(table_rows(doc, 'diagnostics')[0]['sampling_error'])
+    replicas = table_rows(doc, 'replicates')
+    assert len(replicas) == 3 and all(row['failed_sample'] is None for row in replicas), replicas
+
+    for scope, options in [('fixed', momentum), ('global', ['--global'])]:
+        exports = (['--no-retain', '--csv-table', 'replicates=six-fixed-replicates.csv',
+                    '--tsv-table', 'covariance=six-fixed-covariance.tsv'] if scope == 'fixed' else [])
+        doc = calculate(moments, [*six, *options, '--replicates', '2', '--samples', '4', '--covariance', *exports],
+                        f'six-{scope}-moments.json')
+        rows = table_rows(doc, 'moments')
+        assert {(row['sector'], int(row['moment'])) for row in rows} == {('6', 0), ('6', 1)}, rows
+        assert all(row['status'] == 'estimated' and positive_finite(row['value']) for row in rows), rows
+        assert all(positive_finite(row['sampling_error']) for row in table_rows(doc, 'diagnostics'))
+        replicas = table_rows(doc, 'replicates')
+        assert len(replicas) == 2 and all(row['failed_sample'] is None for row in replicas), replicas
+        covariance = table_rows(doc, 'covariance')
+        assert len(covariance) == 4, covariance
+        assert all(positive_finite(row['covariance']) for row in covariance
+                   if row['moment_i'] == row['moment_j']), covariance
+        if scope == 'fixed':
+            # Streaming sidecars must preserve the MPFR values exported in JSON.
+            for filename, delimiter, expected, keys in (
+                ('six-fixed-replicates.csv', ',', replicas, ('replicate', 'm0', 'm1')),
+                ('six-fixed-covariance.tsv', '\t', covariance, ('moment_i', 'moment_j', 'covariance')),
+            ):
+                text = (work / filename).read_text()
+                assert '# Outcome: success' in text
+                actual = list(csv.DictReader(io.StringIO('\n'.join(
+                    line for line in text.splitlines() if not line.startswith('#'))), delimiter=delimiter))
+                assert len(actual) == len(expected), actual
+                for a, b in zip(actual, expected):
+                    assert all(Decimal(a[key]) == Decimal(str(b[key])) for key in keys), (a, b)
 
 
 @contextmanager
@@ -52,6 +134,7 @@ def main():
     parser.add_argument('--docdir', required=True)
     parser.add_argument('--suffix', default='')
     parser.add_argument('--fp128', default='OFF')
+    parser.add_argument('--mpreal', default='OFF')
     parser.add_argument('--runtime-files', nargs='*', default=[])
     parser.add_argument('--apps', nargs='+', required=True)
     args = parser.parse_args()
@@ -121,6 +204,7 @@ def main():
             assert '# Outcome: success' in text, output
             rows = list(csv.DictReader(io.StringIO('\n'.join(line for line in text.splitlines() if not line.startswith('#')))))
             assert rows and all(row['status'] == 'converged' for row in rows), rows
+        check_spinon_calculations(args, relocated, work, env)
         # The named component must have the same payload as the full install.
         component = root / 'component prefix'
         run(command + ['--prefix', str(component), '--component', 'BetheRuntime'], env=env)
