@@ -121,7 +121,8 @@ Complete equal-size replicates supply a mean and, with at least two replicates,
 its covariance estimate. Failed or missing replicates cannot form a mean over
 survivors. Nonfinite contributions or unrepresentable means/variances fail
 explicitly. A numerical failure retains the valid prefix of its replicate;
-observations speculatively evaluated later do not enter its sums or metadata.
+newly admitted blocks of that replicate skip observation work. Already-admitted
+blocks drain, but their later observations do not enter its sums or metadata.
 Cancellation retains available completed work but never returns a successful
 estimate. An integrand may return a genuine support zero; the physical adapter
 must distinguish a known zero from a pilot that happened to miss support.

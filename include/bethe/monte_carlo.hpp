@@ -205,7 +205,7 @@ template <std::size_t D, uni20::Real R, class Observe> struct MonteCarloRun
     struct Block
     {
         std::size_t index, replicate, first, count;
-        bool entered = false, cancelled = false;
+        bool entered = false, cancelled = false, skip = false;
         std::vector<Observation> observations;
     };
     struct Input
@@ -241,10 +241,14 @@ template <std::size_t D, uni20::Real R, class Observe> struct MonteCarloRun
       auto const count = std::min(grain, options.samples_per_replicate - first);
       if (first == 0) stream.emplace(options.seed, options.first_replicate + replicate, options.uniform_bits);
       auto block = std::make_shared<Block>(Block{index, replicate, first, count});
+      // Preparation and collection share the coordinator. Once a failure is
+      // known, only already-admitted blocks may do speculative observation work.
+      auto const& accumulator = accumulators[replicate];
+      block->skip = accumulator && accumulator->row.failed_sample.has_value();
       auto& slot = pending[index % pending.size()];
       if (slot) throw std::logic_error("Monte Carlo block credit was not released");
       Input input{block, *stream};
-      stream->discard(count);
+      if (!block->skip) stream->discard(count);
       slot = std::move(block);
       return input;
     }
@@ -253,6 +257,7 @@ template <std::size_t D, uni20::Real R, class Observe> struct MonteCarloRun
     {
       auto& block = *input.block;
       block.entered = true;
+      if (block.skip) return std::move(input.block);
       block.observations.reserve(block.count);
       for (std::size_t i = 0; i < block.count; ++i)
       {

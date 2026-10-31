@@ -392,3 +392,48 @@ TEST(MonteCarlo, ObservationStorageIsBoundedByAdmittedBlocks)
   EXPECT_LE(counts.peak, 35);
   EXPECT_EQ(counts.live, 0);
 }
+
+TEST(MonteCarlo, TerminalReplicatesDoNotStartNewObservationBlocks)
+{
+  bethe::MonteCarloOptions options{3, 65, 71, 9, 52};
+  // Make every identity in the first replicate fail, while the other two
+  // replicates remain healthy. Verify work performed, not merely the sums.
+  std::vector<std::uint64_t> failing;
+  bethe::MonteCarloStream<1> stream(options.seed, options.first_replicate, options.uniform_bits);
+  for (std::size_t i = 0; i < options.samples_per_replicate; ++i)
+    failing.push_back(stream.next().words()[0][0]);
+  uni20::async::TbbScheduler scheduler(3);
+  for (std::size_t window : {1, 3})
+  {
+    SCOPED_TRACE(window);
+    std::atomic<std::size_t> failed_calls = 0, healthy_calls = 0;
+    auto result = bethe::monte_carlo_async<1>(options, 1, 1.,
+                                              [&](auto const& identity, std::stop_token) {
+                                                if (std::ranges::find(failing, identity.words()[0][0]) != failing.end())
+                                                {
+                                                  ++failed_calls;
+                                                  return bethe::MonteCarloObservation<double>{
+                                                      {}, {}, false, "terminal replicate"};
+                                                }
+                                                ++healthy_calls;
+                                                return bethe::MonteCarloObservation<double>{std::vector{1.}};
+                                              },
+                                              {.scheduler = &scheduler, .batch_size = 4, .max_in_flight = window})
+                      .get_wait(scheduler);
+    EXPECT_EQ(result.status, bethe::MonteCarloStatus::numerical_failure);
+    EXPECT_FALSE(result.mean);
+    EXPECT_GE(failed_calls, 1u);
+    EXPECT_LE(failed_calls, window); // At most the already-admitted window can run.
+    EXPECT_EQ(healthy_calls, 2 * options.samples_per_replicate);
+    ASSERT_TRUE(result.replicates[0]);
+    EXPECT_EQ(result.replicates[0]->failed_sample, 0u);
+    EXPECT_EQ(result.replicates[0]->completed_samples, 0u);
+    for (std::size_t i = 1; i < options.replicates; ++i)
+    {
+      ASSERT_TRUE(result.replicates[i]);
+      EXPECT_EQ(result.replicates[i]->completed_samples, options.samples_per_replicate);
+      ASSERT_TRUE(result.replicates[i]->means);
+      EXPECT_EQ(result.replicates[i]->means->front(), 1.);
+    }
+  }
+}

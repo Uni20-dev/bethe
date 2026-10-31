@@ -686,5 +686,20 @@
     "observable_grid.hpp": "628f814fdf4ab2a7c4efe94e207f0f61cc3b28a8643f46e5bf0b45cb9e2dbd84",
     "sampling.hpp": "4f434f72979d9945cb6ff08ff548a709e341d1ac18a1ff0c8dfa379531e54abf",
     "execution.hpp": "30ada51e7d1b778d43e7f80f968d0355bc3686296b91385975db9d8d4b7673d8"
+  },
+  "candidate_revision": "bbfdd612841d0cdf0165d25f8f29d587dd7d1bc2",
+  "terminal_replicate_followup": {
+    "review": "https://github.com/Uni20-dev/bethe/pull/90#discussion_r4433409339",
+    "scope": "Newly admitted blocks skip observation work after collection records a terminal replicate. Already-admitted blocks drain; other replicates continue. Original performance measurements above remain measurements of bbfdd61.",
+    "regression": "TerminalReplicatesDoNotStartNewObservationBlocks",
+    "baseline": "bbfdd61 fails: 17 integrand calls for the failed replicate with window=1 and window=3.",
+    "fixed": "One call with window=1; no more calls than the admitted window with window=3; both healthy replicates complete all 65 samples.",
+    "tests": "All 15 Monte Carlo tests pass, including ASan/UBSan with leak detection; independent baseline/candidate oracle still matches exactly for fp64/long-double/MPFR160 and grains 1/4/16/128.",
+    "header_sha256": "d59d849a7548503a96bfe635f0cd23de743bf9e21e6712555a896ad1657f585b",
+    "logs": {
+      "terminal-block-baseline.log": "68a5c20a379708b6224144f7c4a213006543951288c3b3d28480e20be3f4767c",
+      "monte-carlo-terminal-fix.log": "0aa8e4e5edc30ab9fda40ffebdbff33a6667b99f2a325efdfc2347df6d284d07",
+      "monte-carlo-terminal-fix-san.log": "7d691346eb9d35de42d365294084d168a09e47824fd9f1cee5c845ae2cddd29b"
+    }
   }
 }
