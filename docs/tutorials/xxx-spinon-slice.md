@@ -5,6 +5,7 @@
 <!-- END GENERATED PAGE LINK -->
 
 [Four-spinon refinement](xxx-four-spinon.md) ·
+[Six-spinon sampling](xxx-six-spinon.md) ·
 [Selected-sector calculations](../xxx-spinon-sectors.md) ·
 [Direct moments](../xxx-spinon-moments.md)
 

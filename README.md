@@ -59,6 +59,9 @@ Python is only needed for the optional plotting and maintenance scripts.
   two-spinon intensities, sum rules and broadening.
 - [Four-spinon thermodynamic intensity](docs/tutorials/xxx-four-spinon.md):
   physical sector sums, separate order/cutoff checks and measured cost.
+- [Six-spinon sampling](docs/tutorials/xxx-six-spinon.md) and the
+  [2/4/6 comparison](docs/tutorials/xxx-spinon-slice.md): higher-sector spectra
+  with separate sampling, precision and soft-domain checks.
 - [Why high precision matters](docs/tutorials/xxx-precision.md): small energy
   scales, stable formulas and arbitrary precision.
 
