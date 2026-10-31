@@ -73,6 +73,10 @@ int main()
 }
 ```
 
+The shared [Monte Carlo controller](monte-carlo.md) handles streams, replicate
+accumulation and bounded execution; the six-spinon adapter retains the physical
+proposal, geometry, density recovery and support semantics.
+
 The same `Point` offers synchronous `evaluate`, individual `replicate` calls,
 and `observation` with an exact binary midpoint identity. Numerical state is
 owned until completion; an originating temporary evaluator may be destroyed.
@@ -84,7 +88,8 @@ retains its terminal records. No process-wide scheduler or precision is changed.
 
 Each result records k, omega, J, R, proposal parameters, seed, replicate ids,
 uniform precision, recovery policy, completed samples, supported roots, density
-attempts and wall time. All complete replicate means are retained. This permits
+attempts and wall time. All complete replicate means and per-component maximum absolute observations
+are retained. This permits
 later covariance analysis when frequencies share the same replicate streams.
 
 The uncertainty fields have distinct meanings:
