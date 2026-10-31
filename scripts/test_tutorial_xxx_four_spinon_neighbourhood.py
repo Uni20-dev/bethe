@@ -32,6 +32,30 @@ class FourSpinonNeighbourhood(unittest.TestCase):
                 with self.assertRaises(ValueError):
                     study.validate(bad)
 
+    def test_new_native_pair_requires_an_explicit_policy(self):
+        fp128 = next(c for c in self.data['cases'] if c['precision'] == 'fp128')
+        fp128['comparison_bits'] = 64
+        with self.assertRaisesRegex(ValueError, 'comparison'):
+            study.validate(self.data)
+        self.data['native_comparison_policy'] = 'intermediate-native'
+        self.assertIs(study.validate(self.data), self.data)
+
+    def test_policy_cannot_relabel_historical_or_mixed_native_widths(self):
+        self.data['native_comparison_policy'] = 'intermediate-native'
+        with self.assertRaisesRegex(ValueError, 'comparison'):
+            study.validate(self.data)
+        fp128 = next(c for c in self.data['cases'] if c['precision'] == 'fp128')
+        fp128['comparison_bits'] = 64
+        native = next(c for c in self.data['cases'] if c['precision'] == 'long-double')
+        native['bits'] = 113
+        with self.assertRaisesRegex(ValueError, 'Mixed native'):
+            study.validate(self.data)
+
+    def test_unknown_native_policy_is_rejected(self):
+        self.data['native_comparison_policy'] = 'unchecked'
+        with self.assertRaisesRegex(ValueError, 'Unknown native'):
+            study.validate(self.data)
+
     def test_success_is_checked_against_matching_reference(self):
         bad = deepcopy(self.data)
         row = next(c for c in bad['cases'] if c['precision'] == 'long-double'
