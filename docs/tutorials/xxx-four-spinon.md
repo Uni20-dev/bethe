@@ -20,16 +20,18 @@ density $`S^{zz}(q,\omega)`$; frequency integrals use $`d\omega/(2\pi)`$.
 
 ## Calculate both contributions
 
-For the modest starting point, native `long double` is sufficient on the tested
-x86 system (64 significand bits), and much faster than MPFR. Check `bethe-info`
-on your platform; `long-double` is a platform format, not a fixed bit count.
+For this exact starting point and these controls, native `long double` passes
+on the tested x86 system (64 significand bits), and is much faster than MPFR.
+This is not a recommendation for every momentum or frequency: nearby points
+can fail the same arithmetic screen. Check `bethe-info` on your platform;
+`long-double` is a platform format, not a fixed bit count.
 With a [build or installation](../building.md), run:
 
 ```sh
 bethe-xxx-structure-factor-thermo --sectors 2,4 \
   --momentum 1.5 --omega 1.8 --precision long-double \
   --four-order 4 --four-cutoff 8 \
-  --density-relative-tolerance 1e-8 --density-absolute-tolerance 1e-30 \
+  --density-relative-tolerance 1e-6 --density-absolute-tolerance 1e-30 \
   --tolerance 1e-12 --threads 2 --csv point.csv --csv-table diagnostics=point-checks.csv
 ```
 
@@ -49,6 +51,20 @@ This deliberately modest rule gives approximately
 These extra digits identify the calculation, not its accuracy as an
 unrestricted four-spinon response. The refinement study below shows much
 larger integration changes than the arithmetic diagnostics.
+
+When changing the point or integration controls, inspect the exit status and
+diagnostics again. If the arithmetic screen fails, retain the failure and repeat
+the whole query with `--precision bits-128`, which strengthens both members of
+the density comparison. Binary128 alone may not help: its lower comparison
+still uses 53 bits. A failed screen does not supply an approximate spectral
+value or a usable partial sum.
+
+The starting command uses a $`10^{-6}`$ relative density screen, comfortably
+below the order/domain changes demonstrated here. Wider-reference checks at
+contrasting points support that choice; they do not certify a whole spectral
+curve. Even at this tolerance, some ordinary points need MPFR. See the
+[neighbourhood study](#changing-the-point-can-change-the-precision-requirement)
+before extending the command to a grid.
 
 ## Change order and soft cutoff separately
 
@@ -73,13 +89,14 @@ order from 8 to 16 at cutoff 12 changes it by about 0.00011. A small order
 change alone would therefore give a misleading accuracy impression here.
 
 The frontend can make four comparisons in one command. Finer orders introduce
-more difficult nodes: on the tested platform, orders 8 and 16 fail the native
-53/64-bit density screen at both cutoffs. Keep those failures; do not use an
+more difficult nodes: at the refinement study's stricter $`10^{-8}`$ relative
+tolerance, orders 8 and 16 fail the native 53/64-bit density screen at both
+cutoffs. Keep those failures; do not use an
 incomplete prefix. For the validated refinement study, replace `--precision
 long-double` with `--precision bits-128` and add:
 
 ```sh
---four-refine-order 8 --four-extended-cutoff 12
+--density-relative-tolerance 1e-8 --four-refine-order 8 --four-extended-cutoff 12
 ```
 
 It evaluates coarse/fine orders on both domains. The displayed four-spinon
@@ -90,7 +107,8 @@ columns as well as the density and its status.
 
 ## Arithmetic accuracy is a different check
 
-A fixed-control comparison of the starting point gives:
+A fixed-control comparison of the starting point, using the stricter
+$`10^{-8}`$ relative density screen, gives:
 
 | Arithmetic | Density comparison / guard bits | Result | CPU seconds |
 | --- | ---: | --- | ---: |
@@ -127,6 +145,44 @@ that this pair cannot certify every node under the requested policy. Increasing
 the precision pair and repeating the complete calculation tests that issue;
 loosening the guard solely to obtain success does not.
 
+### Changing the point can change the precision requirement
+
+An independent follow-up tests 54 points: six momenta from 0.6 to 3 radians
+and nine frequencies from $`1J`$ to $`4.5J`$, all at order 4 and cutoff 8.
+Five lie outside support. Among the remaining 49:
+
+| Arithmetic | `rtol=1e-8` | `rtol=1e-6` | `rtol=1e-4` |
+| --- | ---: | ---: | ---: |
+| Binary64, 24/53-bit pair | 0 complete | 0 complete | 0 complete |
+| x86 long double, 53/64-bit pair | 26 complete | 47 complete | 49 complete |
+
+The two native failures remaining at $`10^{-6}`$ are
+$`(q,\omega/J)=(2.5,1.8)`$ and $`(1.5,4.5)`$. MPFR128 completes both at the
+stricter $`10^{-8}`$ tolerance, as well as $`(1.5,3)`$, where native arithmetic
+passes at $`10^{-6}`$ but fails at $`10^{-8}`$. The successful native values at
+these three points differ from their MPFR128 references by less than
+$`1.3\times10^{-16}`$ relative. MPFR192 independently confirms the first
+reference. Binary128 still fails there because its lower comparison is 53 bits.
+
+These results distinguish screen coverage from measured value accuracy. The
+native grid costs 17.5 CPU seconds; five wider-reference checks cost 81.8 CPU
+seconds on the same i7-12700KF. These timings select **only sector 4**; do not
+compare them directly with the two-sector timings above. Wider values were
+checked at three contrasting points, not all 49. Passing all points at
+$`10^{-4}`$ is therefore not a blanket accuracy recommendation. Choose a
+tolerance from the observable's error budget, compare against stricter wider
+references, and keep that choice separate from order and domain checks.
+
+The [compact record](../validation/four-spinon-neighbourhood-precision-20261031.json)
+retains all 329 outcomes, effective precision, diagnostics, costs and raw hashes.
+Check it or repeat the study, including expected numerical failures, with:
+
+```sh
+python3 scripts/check_xxx_four_spinon_neighbourhood.py --check
+python3 scripts/check_xxx_four_spinon_neighbourhood.py \
+  --solver bethe-xxx-structure-factor-thermo --raw-dir neighbourhood-exports
+```
+
 For the complete eight-point refinement grid, MPFR128 passes every node and
 agrees with the original MPFR192 S4 estimates to within
 $`3.4\times10^{-38}`$ relative. Binary128 still fails at order 8 on both
@@ -136,8 +192,10 @@ comparison to 64 bits. The
 retains all native failures and the original 192-bit reference. The new figure
 and its reproducer use the validated 128-bit setting.
 
-The density screen is $`\mathrm{atol}+\mathrm{rtol}|W|`$. Here its relative
-term dominates above $`|W|=10^{-22}`$; `1e-30` is a near-zero absolute floor,
+The density screen is $`\mathrm{atol}+\mathrm{rtol}|W|`$. Its relative
+term dominates above $`|W|=10^{-22}`$ in the strict $`10^{-8}`$ comparison,
+or $`10^{-24}`$ in the starting command's $`10^{-6}`$ comparison.
+The `1e-30` absolute tolerance is a near-zero floor,
 not a demand for thirty-digit relative accuracy. The [accuracy guide](../numerical-accuracy.md)
 explains the scale and the separate solver, contour, quadrature, sampling and
 tail checks. For a small example of actual information loss and a stable

@@ -55,12 +55,18 @@ the lower comparison may be the limiting calculation. Keep the failure, inspect
 its reason, and repeat with a genuinely stronger pair rather than discarding
 the difficult nodes or weakening the screen to obtain success.
 
+A different tolerance can be justified by the accuracy actually needed. Keep
+the quadrature/domain fixed, compare accepted values against stricter wider
+references at representative difficult points, and retain the failed cases.
+Changing the tolerance until every point passes supplies no such validation.
+
 ## A fast ordinary example and a demanding one
 
 The [four-spinon tutorial](tutorials/xxx-four-spinon.md) measures precision at
 fixed momentum, frequency, domain, quadrature and contour controls. Its modest
 order-4/T8 example succeeds in x86 `long double` and agrees with MPFR at 128 and
-192 bits far beyond the accuracy needed for that demonstration. Finer orders
+192 bits far beyond the accuracy needed for that demonstration. This validates
+that point and those controls. Other momenta/frequencies and finer orders
 encounter nodes that the same native precision pair cannot certify. The
 tutorial retains those failures and distinguishes the cheap starting command
 from the more demanding refinement study. The platform matters: check the

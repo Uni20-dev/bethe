@@ -53,6 +53,24 @@ the MPFR192 value by about 1.14e-16 relative; MPFR128 and MPFR192 differ by
 about 2.42e-38. These comparisons describe the **same truncated quadrature**,
 not the unrestricted physical response.
 
+The [neighbourhood audit](four-spinon-neighbourhood-precision-20261031.json)
+extends this check to 54 points at the same order and cutoff. It independently
+reproduces the review finding: excluding five physical zeros, long double
+completes 26/49 points at `1e-8`, 47/49 at `1e-6`, and 49/49 at `1e-4`;
+binary64 completes none at any of those tolerances. All 324 native outcomes
+are retained. Five additional checks compare binary128/MPFR at three difficult
+points: the complete MPFR128 references agree with accepted native values to
+within 1.3e-16 relative, and MPFR192 confirms one reference. This is wider-value
+evidence for those three points only. Binary128's 53-bit lower comparison still
+fails the selected difficult point.
+
+The starting command now uses `1e-6`, with a margin below the integration
+changes it demonstrates; its actual two-sector rerun is checked separately.
+The strict five-format and refinement comparisons retain `1e-8`. Changing the
+momentum/frequency can still require MPFR. The full native neighbourhood takes
+17.5 CPU seconds and the five reference checks 81.8; these select only sector4,
+so they are not directly comparable with the two-sector costs above.
+
 The native full-grid check is separate: orders 2/4 pass at T8 and T12, but
 orders 8/16 fail the arithmetic screen at both cutoffs. Thus the cheap starting
 command is not an adequate uniform setting for the refinement figure. The
