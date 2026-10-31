@@ -187,8 +187,10 @@ def plot(data, output=FIGURE):
     axes[0].set_yscale('log')
     lower, upper = math.pi / 2 * abs(math.sin(q)), math.pi * abs(math.sin(q / 2))
     for axis in axes:
-        axis.axvline(lower, color='#777777', linestyle=':', linewidth=1)
-        axis.axvline(upper, color='#777777', linestyle='--', linewidth=1)
+        axis.axvline(lower, color='#777777', linestyle=':', linewidth=1,
+                     label='2-spinon lower edge')
+        axis.axvline(upper, color='#777777', linestyle='--', linewidth=1,
+                     label='2-spinon upper edge')
         axis.set_xlabel(r'$\omega/J$')
         axis.grid(alpha=.2)
         axis.legend(frameon=False)
