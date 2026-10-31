@@ -591,6 +591,8 @@ int main(int argc, char** argv)
       [&](auto&) {
         if (a.global == bool(a.momentum)) throw std::invalid_argument("choose exactly one of --global and --momentum");
         auto selected = spinon::sectors(a.controls.sectors);
+        if (a.controls.density_guard_bits && selected == std::vector<int>{2})
+          throw std::invalid_argument("--density-guard-bits requires sector 4 or 6");
         bool const six = std::ranges::find(selected, 6) != selected.end();
         if ((a.controls.replicates || a.covariance) && !six)
           throw std::invalid_argument("replicates/covariance require sector 6");
