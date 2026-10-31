@@ -79,6 +79,11 @@ Equal numbers in those options do not describe equal domains. The reported
 sum combines the requested finite-domain estimates; it contains no automatic
 rapidity-tail correction.
 
+The same `--four-cutoff` also need not select identical domains in a spectrum
+and a fixed-momentum moment: the spectral radius bound depends on frequency.
+See the [domain comparison](xxx-four-spinon-thermodynamics.md#keep-numerical-checks-separate) before
+using frequency-integrated spectral data to check a direct moment.
+
 ## Refine quadrature and sampling separately
 
 For four-spinons, `--four-refine-order` requests four controls: coarse and fine

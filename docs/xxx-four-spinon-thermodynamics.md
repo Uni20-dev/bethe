@@ -118,6 +118,14 @@ The log-radius and gap cutoffs describe different domains. In particular, the
 analytical common-shift reduction already integrates the whole shift direction.
 Comparing spectra with global moments requires accounting for this distinction.
 
+Even spectra and fixed-momentum moments do not have identical finite domains
+at the same log-radius cutoff. In a spectral patch reaching zero radius,
+`r_min = r_max(omega) * exp(-T)` uses its energy-dependent upper support.
+Direct moments use the full patch radius instead, and a positive-radius
+spectral patch is integrated without this soft cutoff. Therefore frequency
+integration of a finite-T spectrum need not equal the direct finite-T moment.
+Compare matched domains explicitly or study both cutoff limits separately.
+
 ## Failures and validation
 
 Resolved exclusions outside the continuum, and the zero-momentum inelastic
