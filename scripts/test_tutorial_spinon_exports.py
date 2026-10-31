@@ -61,6 +61,16 @@ class SpinonExports(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, 'provenance'):
             read_spectrum(data, momentum='1.5')
 
+    def test_faint_partial_sum_cannot_lose_the_higher_sector(self):
+        data = fixture()
+        rows = data['tables']['spectrum']['rows']
+        rows[0][3:] = ['0', 'physical_zero']
+        rows[1][3] = rows[2][3] = '1e-100'
+        read_spectrum(data, momentum='1.5')
+        rows[2][3] = '0'
+        with self.assertRaisesRegex(ValueError, 'Partial sum'):
+            read_spectrum(data, momentum='1.5')
+
     def test_typed_precision_must_match(self):
         data = fixture()
         data['tables']['spectrum']['rows'][0][0] = {'value': '1.5', 'precision': 256}
