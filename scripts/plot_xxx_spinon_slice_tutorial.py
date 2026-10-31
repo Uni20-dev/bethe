@@ -170,7 +170,12 @@ def plot(data, output=FIGURE):
         # Physical zeros are absent on a logarithmic axis. Do not replace them
         # with an invented positive floor or connect through them.
         y = [v if v > 0 else float('nan') for v in values(key)]
-        axes[1].plot(x, y, 'o-', markersize=3, color=color, label=label)
+        if key == 's2_plus_s4_plus_s6':
+            axes[1].errorbar(x, y, yerr=values('s6_sampling_se'), fmt='o-', markersize=3,
+                             color=color, capsize=2, elinewidth=.7,
+                             label=label + '; sampling SE')
+        else:
+            axes[1].plot(x, y, 'o-', markersize=3, color=color, label=label)
     axes[1].set_yscale('log')
     q = float(data['momentum'])
     lower, upper = math.pi / 2 * abs(math.sin(q)), math.pi * abs(math.sin(q / 2))
@@ -183,6 +188,7 @@ def plot(data, output=FIGURE):
         axis.legend(frameon=False)
     axes[0].set_title('Individual sectors')
     axes[1].set_title('Partial sums; logarithmic scale')
+    fig.suptitle(f'q / π = {q / math.pi:.6g}; finite-domain estimates; sampling errors only', fontsize=11)
     save_svg(fig, output)
     plt.close(fig)
 

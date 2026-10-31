@@ -69,7 +69,10 @@ The four-spinon cutoff is a log-radius cutoff; the six-spinon cutoff bounds
 absolute rapidities. Equal cutoff numbers describe different integration
 domains. The final comparison needs a separate domain study for each sector.
 Sampling error bars should retain their statistical meaning; a cutoff change
-is a separate numerical comparison, not another sampling variance.
+is a separate numerical comparison, not another sampling variance. The
+$`S^{zz}_{2+4+6}`$ curve carries the same sampling standard error as $`S^{zz}_6`$;
+the deterministic two- and four-spinon contributions do not add sampling
+variance. Their numerical and domain uncertainties remain separate.
 
 Failed requested sectors remain absent, and their partial sum is incomplete.
 Do not interpolate across a failed point or replace it with zero. A successful
