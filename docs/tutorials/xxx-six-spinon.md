@@ -238,7 +238,11 @@ python3 scripts/xxx_six_spinon_tutorial_data.py \
 ```
 
 Repeat `--raw` for separate runs and `--frequency` for every requested node,
-in increasing order. The packer rejects duplicate frequencies and missing
+in increasing order. Decimal input frequencies are matched uniquely within the
+export's recorded arithmetic-roundoff allowance. The reader returns the input
+as `omega` and retains the rounded export coordinate as `computed_omega`; the
+stored source rows remain unchanged. There is no interpolation, and ambiguous
+matches are errors. The packer rejects duplicate frequencies and missing
 nodes. An unavailable node needs an explicit record with `omega`, a `failed`
 or `unavailable` status, a reason, and `raw_sha256` (or `null` if no export
 exists); supply that list using `--unavailable records.json`.
