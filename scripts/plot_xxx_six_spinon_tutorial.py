@@ -12,7 +12,7 @@ import hashlib
 import json
 from pathlib import Path
 
-from spinon_tutorial_exports import decimal, read_spectrum
+from spinon_tutorial_exports import decimal, plotting_float, read_spectrum
 
 
 def integer(value, *, positive=False):
@@ -185,22 +185,15 @@ def spectrum_figure(document, *, momentum, exchange='1'):
     matplotlib.use('Agg')
     import matplotlib.pyplot as plt
 
-    def plotted(value):
-        number = decimal(value)
-        result = float(number)
-        if not math.isfinite(result) or (number != 0 and result == 0):
-            raise ValueError('Value cannot be represented at plotting precision')
-        return result
-
     with localcontext() as context:
         context.prec = 50  # Unit conversion before the final binary64 plotting conversion.
         j = decimal(exchange)
-        x = [plotted(decimal(point['omega']) / j) for point in data['points']]
-        y = [plotted(j * decimal(point['s6'])) if point['s6'] is not None else math.nan
+        x = [plotting_float(decimal(point['omega']) / j) for point in data['points']]
+        y = [plotting_float(j * decimal(point['s6'])) if point['s6'] is not None else math.nan
              for point in data['points']]
-        errors = [plotted(j * decimal(point['sampling_se'])) if point['sampling_se'] is not None else math.nan
+        errors = [plotting_float(j * decimal(point['sampling_se'])) if point['sampling_se'] is not None else math.nan
                   for point in data['points']]
-    q = plotted(momentum)
+    q = plotting_float(momentum)
     if not 0 <= q <= 2 * math.pi:
         raise ValueError('Slice momentum must be in [0, 2*pi]')
     with plt.rc_context({'svg.hashsalt': 'bethe-six-spinon-slice', 'font.size': 11,

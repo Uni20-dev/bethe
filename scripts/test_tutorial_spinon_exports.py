@@ -2,7 +2,7 @@
 from copy import deepcopy
 import unittest
 
-from spinon_tutorial_exports import CONVENTION, read_spectrum
+from spinon_tutorial_exports import CONVENTION, plotting_float, read_spectrum
 
 
 def fixture():
@@ -19,6 +19,15 @@ def fixture():
 
 
 class SpinonExports(unittest.TestCase):
+    def test_plot_conversion_preserves_zeros_and_rejects_lost_range(self):
+        self.assertEqual(plotting_float('0'), 0)
+        self.assertEqual(plotting_float('-0'), 0)
+        self.assertGreater(plotting_float('1e-310'), 0)
+        self.assertEqual(plotting_float('1.25'), 1.25)
+        for value in ('1e-1000', '-1e-1000', '1e1000', '-1e1000', 'NaN', 'Infinity'):
+            with self.subTest(value=value), self.assertRaises(ValueError):
+                plotting_float(value)
+
     def test_decimal_strings_are_retained(self):
         result = read_spectrum(fixture(), momentum='1.5')
         self.assertEqual(result['spectrum'][1]['density'], '0.125')

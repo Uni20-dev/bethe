@@ -55,7 +55,8 @@ sectors remain visible, including above the two-spinon upper edge. A physical
 zero cannot appear on that scale: the two-spinon line stops at its last positive
 sample. The compact data retain the zeros and distinguish them from failed or
 unavailable values. Lines joining samples are visual guides, not interpolated
-data for further calculations.
+data for further calculations. Nonzero values outside the plotting format's
+range are rejected explicitly rather than being displayed as zero.
 
 ## Establish the controls before drawing a curve
 

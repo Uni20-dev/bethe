@@ -13,7 +13,7 @@ from pathlib import Path
 import re
 import shlex
 
-from spinon_tutorial_exports import CONVENTION, close, decimal, read_spectrum
+from spinon_tutorial_exports import CONVENTION, close, decimal, plotting_float, read_spectrum
 from tutorial_common import save_svg
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -151,16 +151,20 @@ def validate(data):
 
 
 def plot(data, output=FIGURE):
+    validate(data)
+    x = [plotting_float(p['omega']) for p in data['points']]
+    columns = {key: [plotting_float(p[key]) if p[key] is not None else float('nan')
+                     for p in data['points']]
+               for key in ('s2', 's4', 's6', 's6_sampling_se', 's2_plus_s4', 's2_plus_s4_plus_s6')}
+    q = plotting_float(data['momentum'])
     import matplotlib
     matplotlib.use('Agg')
     import matplotlib.pyplot as plt
     import math
-    validate(data)
     plt.rcParams.update({'svg.hashsalt': 'bethe-spinon-slice', 'font.size': 11,
                          'axes.spines.top': False, 'axes.spines.right': False})
     fig, axes = plt.subplots(1, 2, figsize=(11, 4.3), sharey=True, layout='constrained')
-    x = [float(p['omega']) for p in data['points']]
-    values = lambda key: [float(p[key]) if p[key] is not None else float('nan') for p in data['points']]
+    values = columns.__getitem__
     # Physical zeros are absent on a logarithmic axis. Do not replace them
     # with an invented positive floor or connect through them. Missing values
     # remain gaps as well; their distinct statuses stay in the compact record.
@@ -179,7 +183,6 @@ def plot(data, output=FIGURE):
         else:
             axes[1].plot(x, y, 'o-', markersize=3, color=color, label=label)
     axes[0].set_yscale('log')
-    q = float(data['momentum'])
     lower, upper = math.pi / 2 * abs(math.sin(q)), math.pi * abs(math.sin(q / 2))
     for axis in axes:
         axis.axvline(lower, color='#777777', linestyle=':', linewidth=1)

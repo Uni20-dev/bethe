@@ -1,8 +1,9 @@
 """Do not interpolate, rescale, or mismatch the sectors in a comparison plot."""
 from copy import deepcopy
-from decimal import Decimal
+from decimal import Decimal, localcontext
 import unittest
 import json
+from unittest.mock import patch
 
 import plot_xxx_spinon_slice_tutorial as tutorial
 from spinon_tutorial_exports import CONVENTION, read_spectrum
@@ -38,6 +39,59 @@ def compact_fixture():
 
 
 class SpinonSlice(unittest.TestCase):
+    def assert_plot_range_rejection(self, data):
+        four = [tutorial.checked_four_run(run, momentum=data['momentum'], exchange='1')
+                for run in data['four_runs']]
+        six = read_compact_slice(data['six_slice'], momentum=data['momentum'])
+        data['points'] = tutorial.join_points(four, six['points'])
+        self.assertIs(tutorial.validate(data), data)
+        with patch.object(tutorial, 'save_svg') as save:
+            with self.assertRaisesRegex(ValueError, 'plotting precision'):
+                tutorial.plot(data)
+            save.assert_not_called()
+
+    def test_valid_compact_density_outside_plotting_range_is_not_hidden(self):
+        for factor in ('1e-1000', '1e1000'):
+            with self.subTest(factor=factor), localcontext() as context:
+                context.prec = 100
+                data = compact_fixture()
+                for run in data['six_slice']['runs']:
+                    for row in run['replicates']:
+                        for key in ('maximum_absolute_density', 'density'):
+                            row[key] = str(Decimal(row[key]) * Decimal(factor))
+                    for row in run['spectrum']:
+                        row['density'] = str(Decimal(row['density']) * Decimal(factor))
+                    for row in run['diagnostics']:
+                        row['sampling_error'] = str(Decimal(row['sampling_error']) * Decimal(factor))
+                self.assert_plot_range_rejection(data)
+
+    def test_valid_tiny_sampling_error_is_not_rounded_to_zero_for_plotting(self):
+        data = compact_fixture()
+        run = data['six_slice']['runs'][0]
+        run['metadata']['Geometry and output bits'] = '4096'
+        with localcontext() as context:
+            context.prec = 1400
+            for row, sign in zip(run['replicates'], (-1, 1)):
+                row['density'] = str(Decimal('0.0625') + sign * Decimal('1e-400'))
+                row['maximum_absolute_density'] = '0.125'
+        run['diagnostics'][0]['sampling_error'] = '1e-400'
+        self.assert_plot_range_rejection(data)
+
+    def test_valid_compact_coordinates_must_fit_plotting_range(self):
+        for coordinate in ('omega', 'q'):
+            for value in ('1e-1000', '1e1000'):
+                with self.subTest(coordinate=coordinate, value=value):
+                    data = compact_fixture()
+                    for run in data['four_runs'] + data['six_slice']['runs']:
+                        for table in ('spectrum', 'diagnostics', 'replicates'):
+                            for row in run.get(table, []):
+                                row[coordinate] = value
+                    if coordinate == 'q':
+                        data['momentum'] = data['six_slice']['momentum'] = value
+                    else:
+                        data['six_slice']['frequencies'] = [value]
+                    self.assert_plot_range_rejection(data)
+
     def test_sums_physical_weights_at_identical_decimal_frequencies(self):
         four, six = checked_inputs()
         point, = tutorial.join_points([four], [six])

@@ -4,6 +4,7 @@ These checks establish the export's convention, identity and completion, not
 convergence of its quadrature, sampling distribution or finite domain.
 """
 from decimal import Decimal, InvalidOperation, localcontext
+import math
 import re
 
 CONVENTION = 'S(q,w); moments use dw/(2*pi); raising=2*zz'
@@ -18,6 +19,15 @@ def decimal(value):
         raise ValueError('Invalid numerical value') from error
     if not result.is_finite():
         raise ValueError('Nonfinite numerical value')
+    return result
+
+
+def plotting_float(value):
+    """Convert only after unit changes, without turning a nonzero value into zero."""
+    number = decimal(value)
+    result = float(number)
+    if not math.isfinite(result) or (number != 0 and result == 0):
+        raise ValueError('Value cannot be represented at plotting precision')
     return result
 
 
