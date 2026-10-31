@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
-"""Inspect complete six-spinon slice exports and their sampling diagnostics.
+"""Inspect six-spinon sampling diagnostics or plot a checked compact slice.
 
 The error recomputed here is the standard error of independent replicate means.
 It does not include the omitted rapidity domain or prove that rare configurations
-have been adequately sampled. Plotting the resolved tutorial data is separate
-from the initial proposal and cutoff calibration.
+have been adequately sampled. A figure preserves unavailable nodes as gaps;
+neither rendering nor validation establishes cutoff convergence.
 """
 import argparse
 from decimal import Decimal, localcontext
@@ -172,14 +172,106 @@ def paired_cutoffs(lower, upper):
             'scope': 'Paired finite-domain difference; neither an extrapolation nor a bound on the omitted tail'}
 
 
+def spectrum_figure(document, *, momentum, exchange='1'):
+    """Build linear/log views of the unbroadened density, preserving missing nodes.
+
+    Validate through the shared compact reader before converting to plotting
+    precision. Keep validation-only use free of plotting dependencies.
+    """
+    from xxx_six_spinon_tutorial_data import read_compact_slice
+    data = read_compact_slice(document, momentum=momentum, exchange=exchange)
+    import math
+    import matplotlib
+    matplotlib.use('Agg')
+    import matplotlib.pyplot as plt
+
+    def plotted(value):
+        number = decimal(value)
+        result = float(number)
+        if not math.isfinite(result) or (number != 0 and result == 0):
+            raise ValueError('Value cannot be represented at plotting precision')
+        return result
+
+    with localcontext() as context:
+        context.prec = 50  # Unit conversion before the final binary64 plotting conversion.
+        j = decimal(exchange)
+        x = [plotted(decimal(point['omega']) / j) for point in data['points']]
+        y = [plotted(j * decimal(point['s6'])) if point['s6'] is not None else math.nan
+             for point in data['points']]
+        errors = [plotted(j * decimal(point['sampling_se'])) if point['sampling_se'] is not None else math.nan
+                  for point in data['points']]
+    q = plotted(momentum)
+    if not 0 <= q <= 2 * math.pi:
+        raise ValueError('Slice momentum must be in [0, 2*pi]')
+    with plt.rc_context({'svg.hashsalt': 'bethe-six-spinon-slice', 'font.size': 11,
+                         'axes.spines.top': False, 'axes.spines.right': False}):
+        fig, axes = plt.subplots(1, 2, figsize=(10.5, 4.2), layout='constrained')
+        folded = min(q, 2 * math.pi - q)
+        edges = [(math.pi * abs(math.sin(q / 2)), r'$\omega_{2,u}$', '--'),
+                 (2 * math.pi * math.cos(folded / 4), r'$\omega_{4,u}$', ':'),
+                 (3 * math.pi * math.cos((math.pi - folded) / 6), r'$\omega_{6,u}$', '-.')]
+        for index, axis in enumerate(axes):
+            values = [v if index == 0 or v > 0 else math.nan for v in y]
+            if any(math.isfinite(v) for v in values):
+                artist = axis.errorbar(x, values, yerr=errors, fmt='o-', markersize=3,
+                                      linewidth=1, elinewidth=.7, capsize=2,
+                                      color='#009E73', label='6 spinons; sampling SE')
+                artist.lines[0].set_gid('six-spinon-spectrum')
+            else:
+                axis.plot(x, values, 'o-', color='#009E73', gid='six-spinon-spectrum')
+                axis.text(.5, .5, 'No positive estimates' if index else 'No available estimates',
+                          transform=axis.transAxes, ha='center')
+            for edge, label, style in edges:
+                if min(x) <= edge <= max(x):
+                    axis.axvline(edge, color='#777777', linestyle=style, linewidth=.8, label=label)
+            axis.set_xlabel(r'$\omega/J$')
+            axis.set_ylabel(r'$J S^{zz}_6(q,\omega)$')
+            axis.grid(alpha=.2)
+            if axis.get_legend_handles_labels()[0]:
+                axis.legend(frameon=False, fontsize=9)
+        axes[0].set_ylim(bottom=0)
+        axes[0].set_title('Six-spinon response')
+        axes[1].set_yscale('log')
+        axes[1].set_title('Logarithmic density; no broadening')
+        if not any(v > 0 for v in y):
+            axes[1].set_yticks([])
+        fig.suptitle(f'q / π = {q / math.pi:.6g}; finite rapidity domain R = '
+                     f'{data["rapidity_cutoff"]}; sampling errors only', fontsize=11)
+        return fig
+
+
+def plot_compact(document, *, momentum, exchange='1', figure):
+    from tutorial_common import save_svg
+    fig = spectrum_figure(document, momentum=momentum, exchange=exchange)
+    import matplotlib.pyplot as plt
+    try:
+        save_svg(fig, figure)
+    finally:
+        plt.close(fig)
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('--raw', type=Path, required=True, help='Complete selected-sector JSON export')
+    source = parser.add_mutually_exclusive_group(required=True)
+    source.add_argument('--raw', type=Path, help='Complete selected-sector JSON export')
+    source.add_argument('--compact', type=Path, help='Checked compact six-spinon slice for plotting')
     parser.add_argument('--momentum', required=True, help='Exact input momentum as a decimal string')
     parser.add_argument('--exchange', default='1')
     parser.add_argument('--compare-raw', type=Path, help='Larger-cutoff export with the same streams and controls')
-    parser.add_argument('--output', type=Path, required=True, help='New analysis JSON; never overwrite')
+    parser.add_argument('--output', type=Path, help='New analysis JSON for --raw; never overwrite')
+    parser.add_argument('--figure', type=Path, help='Light SVG destination for --compact; also writes -dark.svg')
     args = parser.parse_args()
+    if args.compact:
+        if args.figure is None or args.output is not None or args.compare_raw is not None:
+            parser.error('--compact requires --figure and does not accept --output or --compare-raw')
+        if args.figure.suffix.lower() != '.svg':
+            parser.error('--figure must be an SVG filename')
+        plot_compact(json.loads(args.compact.read_text()), momentum=args.momentum,
+                     exchange=args.exchange, figure=args.figure)
+        print(f'Wrote {args.figure} and its dark companion; unavailable nodes remain gaps')
+        return
+    if args.output is None or args.figure is not None:
+        parser.error('--raw requires --output and does not accept --figure')
     raw = args.raw.read_bytes()
     result = sampling_points(json.loads(raw), momentum=args.momentum, exchange=args.exchange)
     result['raw_sha256'] = hashlib.sha256(raw).hexdigest()
