@@ -111,6 +111,13 @@ Separately extend the rapidity cutoff: a small replicate error does not bound
 the missing tail. Changes in arithmetic precision and contour budgets provide
 further checks, distinct from both sampling and domain truncation.
 
+With MPFR, the shared `--density-guard-bits` option can reduce W4/W6 density
+cost while preserving a higher geometry/output precision. Its bounds, lower
+comparison precision and validation procedure are described in the
+[spectrum precision controls](xxx-spinon-sectors.md#precision-and-density-recovery).
+It applies to both fixed-momentum and global moments; the recovery checks and
+finite-domain interpretation are unchanged.
+
 ## Tables and failures
 
 The frontend declares four exportable tables:

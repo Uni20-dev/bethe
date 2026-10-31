@@ -120,7 +120,11 @@ with tempfile.TemporaryDirectory() as tmp:
     assert "shift_tail_bound" in csv.read_text()
 
 if mpfr.upper() in ("ON","TRUE","1"):
-    args=["--momentum","1.57079632679489661923132169163975","--sectors","2,4,6","--precision","bits-384",
+    # This fixture checks 3e-13 normalization/covariance identities, not precision
+    # convergence. 192-bit geometry retains these observations; an explicit
+    # kernel tolerance avoids requesting 4096*epsilon accuracy for sector 2.
+    mpfr_controls=["--precision","bits-192","--tolerance","1e-20"]
+    args=["--momentum","1.57079632679489661923132169163975","--sectors","2,4,6",*mpfr_controls,
           "--two-order","4","--two-gap-cutoff","4","--four-order","2","--four-cutoff","2",
           "--replicates","2","--samples","4","--seed","42","--density-relative-tolerance","1e-5",
           "--density-absolute-tolerance","1e-30",
@@ -135,7 +139,7 @@ if mpfr.upper() in ("ON","TRUE","1"):
     for a,b in zip(covariance,rows(raised,"covariance")): close(b["covariance"],4*number(a["covariance"]))
     for a,b in zip(rows(doc,"replicates"),rows(raised,"replicates")):
         close(b["m0"],2*number(a["m0"]));close(b["m1"],2*number(a["m1"]))
-    glob=document(["--global","--sectors","2,4,6","--precision","bits-384","--two-order","4","--two-gap-cutoff","4",
+    glob=document(["--global","--sectors","2,4,6",*mpfr_controls,"--two-order","4","--two-gap-cutoff","4",
                    "--four-order","2","--four-gap-cutoffs","1,1,1","--replicates","2","--samples","4","--seed","42",
                    "--density-relative-tolerance","1e-5","--density-absolute-tolerance","1e-30",
                    "--threads","2","--covariance"])
