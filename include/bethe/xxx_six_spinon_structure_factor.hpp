@@ -2,20 +2,15 @@
 // Copyright (C) 2026 Ian McCulloch
 #pragma once
 
-#include <bethe/detail/spinon_sampling_statistics.hpp>
 #include <bethe/detail/xxx_spinon_proposal.hpp>
 #include <bethe/detail/xxx_spinon_surface.hpp>
+#include <bethe/monte_carlo.hpp>
 #include <bethe/observable_grid.hpp>
-#include <bethe/xxx_spinon_density_recovery.hpp>
+#include <bethe/xxx_spinon_observation.hpp>
 
 namespace bethe::heisenberg
 {
-struct SpinonSamplingOptions
-{
-    std::size_t replicates = 8, samples_per_replicate = 256;
-    std::uint64_t seed = 0, first_replicate = 0;
-    unsigned uniform_bits = 52;
-};
+using SpinonSamplingOptions = bethe::MonteCarloOptions;
 
 enum class SixSpinonSpectrumStatus
 {
@@ -25,15 +20,6 @@ enum class SixSpinonSpectrumStatus
   lower_threshold,
   no_support_sampled,
   numerical_failure,
-  cancelled
-};
-
-enum class SpinonObservationFailure
-{
-  none,
-  geometry,
-  density,
-  exponent_range,
   cancelled
 };
 
@@ -54,6 +40,7 @@ template <uni20::Real R> struct SpinonSpectrumReplicate
     std::uint64_t id = 0;
     std::size_t completed_samples = 0, supported_roots = 0, density_attempts = 0;
     std::optional<std::array<R, 3>> means;
+    std::optional<std::array<R, 3>> maximum_absolute_observation;
     std::optional<std::size_t> failed_sample;
     SpinonObservationFailure failure = SpinonObservationFailure::none;
     std::optional<SpinonRecoveryStatus> density_status;
@@ -113,7 +100,7 @@ template <uni20::Real Geometry, uni20::Real Low, uni20::Real High = Low> class T
 
     class Point {
       public:
-        Observation observation(detail::SpinonUniforms<5> const& identity, std::stop_token stop = {}) const
+        Observation observation(bethe::UniformSample<5> const& identity, std::stop_token stop = {}) const
         {
           Observation result;
           auto const& k = *kernel_;
@@ -176,44 +163,19 @@ template <uni20::Real Geometry, uni20::Real Low, uni20::Real High = Low> class T
                 result.reason = error.what();
                 return result;
               }
-              auto recovered = k.recovery.recover(
-                  [&](auto const& context) {
-                    std::vector<decltype(context.parse("0"))> converted;
-                    for (auto const& b : beta)
-                      converted.push_back(context.import(b));
-                    return converted;
-                  },
-                  stop);
-              result.density_attempts += recovered.attempts.size();
-              if (!recovered.accepted())
+              std::array<G, 1> const weights{log_jacobian};
+              auto weighted = weighted_spinon_observation<G>(beta, weights, k.recovery, stop);
+              result.density_attempts += weighted.metadata.density_attempts;
+              if (!weighted.values)
               {
-                result.failure = recovered.status == SpinonRecoveryStatus::cancelled
-                                     ? SpinonObservationFailure::cancelled
-                                     : SpinonObservationFailure::density;
-                result.density_status = recovered.status;
-                result.reason = recovered.reason;
-                if (!recovered.attempts.empty())
-                {
-                  result.density_failure = recovered.attempts.back().failure;
-                  result.reason += ": " + recovered.attempts.back().reason;
-                }
+                result.failure = weighted.metadata.failure;
+                result.density_status = weighted.metadata.density_status;
+                result.density_failure = weighted.metadata.density_failure;
+                result.reason = std::move(weighted.reason);
                 return result;
               }
-              auto const& density = *recovered.estimate;
-              std::array<High, 3> factors{density.value, density.contour_tail_error, *recovered.arithmetic_screen};
-              for (std::size_t field = 0; field < factors.size(); ++field)
-              {
-                G const value = uni20::scalar_like(k.one, factors[field]);
-                if (value == k.zero && field == 1) continue; // an exact zero tail is allowed
-                G const weighted = uni20::math::exp(uni20::math::log(value) + log_jacobian);
-                if (!uni20::isfinite(weighted) || weighted <= k.zero)
-                {
-                  result.failure = SpinonObservationFailure::exponent_range;
-                  result.reason = "weighted density or diagnostic is unrepresentable";
-                  return result;
-                }
-                sums[field].add(weighted);
-              }
+              for (std::size_t field = 0; field < 3; ++field)
+                sums[field].add((*weighted.values)[field]);
             }
           }
           std::array<G, 3> values{sums[0].value(), sums[1].value(), sums[2].value()};
@@ -231,47 +193,11 @@ template <uni20::Real Geometry, uni20::Real Low, uni20::Real High = Low> class T
         Replicate replicate(SpinonSamplingOptions const& options, std::size_t index, std::stop_token stop = {}) const
         {
           validate(options);
-          if (index >= options.replicates) throw std::out_of_range("replicate outside requested work");
-          auto const& k = *kernel_;
-          Replicate result;
-          result.id = options.first_replicate + index;
-          detail::SpinonSampleStream<5> stream(options.seed, result.id, options.uniform_bits);
-          std::array<bethe::detail::SpinonSum<G>, 3> sums{bethe::detail::SpinonSum<G>(k.zero),
-                                                          bethe::detail::SpinonSum<G>(k.zero),
-                                                          bethe::detail::SpinonSum<G>(k.zero)};
-          for (std::size_t i = 0; i < options.samples_per_replicate; ++i)
-          {
-            auto value = observation(stream.next(), stop);
-            result.supported_roots += value.supported_roots;
-            result.density_attempts += value.density_attempts;
-            if (!value.values)
-            {
-              result.failed_sample = i;
-              result.failure = value.failure;
-              result.density_status = value.density_status;
-              result.density_failure = value.density_failure;
-              result.reason = value.reason;
-              return result;
-            }
-            for (std::size_t field = 0; field < sums.size(); ++field)
-              sums[field].add((*value.values)[field]);
-            ++result.completed_samples;
-          }
-          G const count = uni20::scalar_like(k.one, options.samples_per_replicate);
-          std::array<G, 3> means;
-          for (std::size_t field = 0; field < means.size(); ++field)
-          {
-            G const total = sums[field].value();
-            means[field] = total / count;
-            if (!uni20::isfinite(means[field]) || (total != k.zero && means[field] == k.zero))
-            {
-              result.failure = SpinonObservationFailure::exponent_range;
-              result.reason = "replicate mean exceeded exponent range";
-              return result;
-            }
-          }
-          result.means = std::move(means);
-          return result;
+          auto row = bethe::monte_carlo_replicate<5>(
+              options, index, 3, kernel_->one,
+              [point = *this](auto const& identity, std::stop_token token) { return point.sample(identity, token); },
+              stop);
+          return physical_record(row);
         }
 
         /// Owns numerical state and callables until all admitted replicates drain.
@@ -283,20 +209,21 @@ template <uni20::Real Geometry, uni20::Real Low, uni20::Real High = Low> class T
           validate(options);
           auto& scheduler = execution.continuous_scheduler();
           auto run = std::make_shared<Run>(*this, options);
-          std::size_t count = boundary_ ? 0 : options.replicates;
-          auto work = bethe::evaluate_observable_grid_async(
-              count,
-              [point = *this, options, run, stop = execution.stop](std::size_t i) {
-                // Workers own distinct preallocated slots. Retain terminal
-                // records even if cancellation prevents ordered collection;
-                // finish reads them only after all admitted work has drained.
-                run->result.replicates[i] = point.replicate(options, i, stop);
-                return i;
-              },
-              [](std::size_t, std::size_t) {}, execution);
           uni20::async::Async<Result> output;
-          auto task = finish(work.read(), std::move(run), output.write());
-          bethe::detail::schedule_owned(scheduler, std::move(task));
+          if (boundary_)
+          {
+            auto task = finish_boundary(std::move(run), execution.stop, output.write());
+            bethe::detail::schedule_owned(scheduler, std::move(task));
+          }
+          else
+          {
+            auto work = bethe::monte_carlo_async<5>(
+                options, 3, kernel_->one,
+                [point = *this](auto const& identity, std::stop_token token) { return point.sample(identity, token); },
+                execution);
+            auto task = finish(work.read(), std::move(run), output.write());
+            bethe::detail::schedule_owned(scheduler, std::move(task));
+          }
           return output;
         }
 
@@ -349,6 +276,44 @@ template <uni20::Real Geometry, uni20::Real Low, uni20::Real High = Low> class T
           }
         }
 
+        using SamplingResult = bethe::MonteCarloEstimate<G, SpinonSampleMetadata>;
+        using SamplingRow = bethe::MonteCarloReplicate<G, SpinonSampleMetadata>;
+
+        bethe::MonteCarloObservation<G, SpinonSampleMetadata> sample(bethe::UniformSample<5> const& identity,
+                                                                     std::stop_token stop) const
+        {
+          auto value = observation(identity, stop);
+          bethe::MonteCarloObservation<G, SpinonSampleMetadata> result;
+          if (value.values) result.values.emplace(value.values->begin(), value.values->end());
+          result.metadata = {value.supported_roots, value.density_attempts, value.failure, value.density_status,
+                             value.density_failure};
+          result.cancelled = value.failure == SpinonObservationFailure::cancelled;
+          result.reason = std::move(value.reason);
+          return result;
+        }
+
+        static Replicate physical_record(SamplingRow const& row)
+        {
+          Replicate result;
+          result.id = row.id;
+          result.completed_samples = row.completed_samples;
+          result.supported_roots = row.metadata.supported_configurations;
+          result.density_attempts = row.metadata.density_attempts;
+          result.failure = row.cancelled ? SpinonObservationFailure::cancelled : row.metadata.failure;
+          if (!row.means && !row.cancelled && result.failure == SpinonObservationFailure::none)
+            result.failure = SpinonObservationFailure::exponent_range;
+          result.density_status = row.metadata.density_status;
+          result.density_failure = row.metadata.density_failure;
+          result.failed_sample = row.failed_sample;
+          result.reason = row.reason;
+          if (!row.maximum_absolute_observation.empty())
+            result.maximum_absolute_observation =
+                std::array{row.maximum_absolute_observation[0], row.maximum_absolute_observation[1],
+                           row.maximum_absolute_observation[2]};
+          if (row.means) result.means = std::array{(*row.means)[0], (*row.means)[1], (*row.means)[2]};
+          return result;
+        }
+
         void validate(SpinonSamplingOptions const& options) const
         {
           if (!options.replicates || !options.samples_per_replicate || !options.uniform_bits ||
@@ -382,76 +347,61 @@ template <uni20::Real Geometry, uni20::Real Low, uni20::Real High = Low> class T
             }
         };
 
-        static uni20::async::AsyncTask finish(uni20::async::ReadBuffer<std::size_t> work, std::shared_ptr<Run> run,
-                                              uni20::async::WriteBuffer<Result> output)
+        static uni20::async::AsyncTask finish_boundary(std::shared_ptr<Run> run, std::stop_token stop,
+                                                       uni20::async::WriteBuffer<Result> output)
         {
           auto destination = co_await output;
-          bool cancelled = false;
-          try
-          {
-            (void)co_await work;
-          }
-          catch (bethe::ExecutionCancelled const&)
-          {
-            cancelled = true;
-          }
           auto& r = run->result;
-          auto const& k = *run->kernel;
-          if (run->boundary && !cancelled)
+          if (stop.stop_requested())
+          {
+            r.status = SixSpinonSpectrumStatus::cancelled;
+            r.reason = "cancelled before boundary evaluation";
+          }
+          else
           {
             r.status = *run->boundary;
             r.reason = "unrestricted continuum boundary";
             if (r.status != SixSpinonSpectrumStatus::lower_threshold)
-              r.value = r.sampling_error = r.contour_diagnostic = r.arithmetic_diagnostic = k.zero;
+              r.value = r.sampling_error = r.contour_diagnostic = r.arithmetic_diagnostic = run->kernel->zero;
+          }
+          r.wall_seconds = std::chrono::duration<double>(std::chrono::steady_clock::now() - run->start).count();
+          destination = std::move(r);
+        }
+
+        static uni20::async::AsyncTask finish(uni20::async::ReadBuffer<SamplingResult> work, std::shared_ptr<Run> run,
+                                              uni20::async::WriteBuffer<Result> output)
+        {
+          auto destination = co_await output;
+          auto const& sample = co_await work;
+          auto& r = run->result;
+          r.completed_samples = sample.completed_samples;
+          r.supported_roots = sample.metadata.supported_configurations;
+          r.density_attempts = sample.metadata.density_attempts;
+          for (std::size_t i = 0; i < sample.replicates.size(); ++i)
+            if (sample.replicates[i]) r.replicates[i] = physical_record(*sample.replicates[i]);
+          if (sample.status == bethe::MonteCarloStatus::cancelled)
+          {
+            r.status = SixSpinonSpectrumStatus::cancelled;
+            r.reason = sample.reason;
+          }
+          else if (sample.status != bethe::MonteCarloStatus::complete)
+          {
+            r.status = SixSpinonSpectrumStatus::numerical_failure;
+            r.reason = sample.reason;
+          }
+          else if (!r.supported_roots)
+          {
+            r.status = SixSpinonSpectrumStatus::no_support_sampled;
+            r.reason = "no supported configuration was sampled; this is not a physical zero";
           }
           else
           {
-            detail::SpinonReplicateStatistics<G> statistics(r.sampling.replicates, r.sampling.samples_per_replicate, 3,
-                                                            k.one);
-            for (std::size_t i = 0; i < r.replicates.size(); ++i)
-              if (auto const& row = r.replicates[i])
-              {
-                r.completed_samples += row->completed_samples;
-                r.supported_roots += row->supported_roots;
-                r.density_attempts += row->density_attempts;
-                if (row->means)
-                  statistics.accept(i, row->completed_samples, {row->means->begin(), row->means->end()});
-                else
-                  statistics.reject(i, row->reason);
-              }
-            std::optional<detail::SpinonReplicateSummary<G>> summary;
-            try
-            {
-              summary = statistics.summary();
-            }
-            catch (std::runtime_error const& error)
-            {
-              r.reason = error.what(); // e.g. an unrepresentable nonzero variance
-            }
-            if (cancelled)
-            {
-              r.status = SixSpinonSpectrumStatus::cancelled;
-              r.reason = "cancelled after draining admitted work";
-            }
-            else if (!summary || !summary->mean)
-            {
-              r.status = SixSpinonSpectrumStatus::numerical_failure;
-              if (summary) r.reason = "incomplete or failed replicate; no survivor-only estimate";
-            }
-            else if (!r.supported_roots)
-            {
-              r.status = SixSpinonSpectrumStatus::no_support_sampled;
-              r.reason = "no supported configuration was sampled; this is not a physical zero";
-            }
-            else
-            {
-              r.status = SixSpinonSpectrumStatus::estimated;
-              r.value = (*summary->mean)[0];
-              r.contour_diagnostic = (*summary->mean)[1];
-              r.arithmetic_diagnostic = (*summary->mean)[2];
-              if (summary->covariance) r.sampling_error = uni20::math::sqrt((*summary->covariance)[0]);
-              r.reason = "finite-cutoff Monte Carlo estimate; numerical diagnostics exclude sampling and cutoff errors";
-            }
+            r.status = SixSpinonSpectrumStatus::estimated;
+            r.value = (*sample.mean)[0];
+            r.contour_diagnostic = (*sample.mean)[1];
+            r.arithmetic_diagnostic = (*sample.mean)[2];
+            if (sample.covariance) r.sampling_error = uni20::math::sqrt((*sample.covariance)[0]);
+            r.reason = "finite-cutoff Monte Carlo estimate; numerical diagnostics exclude sampling and cutoff errors";
           }
           r.wall_seconds = std::chrono::duration<double>(std::chrono::steady_clock::now() - run->start).count();
           destination = std::move(r);

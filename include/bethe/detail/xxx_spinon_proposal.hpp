@@ -40,6 +40,14 @@ template <uni20::Real R> class SpinonJointProposal {
         std::size_t component, pairing;
     };
 
+    struct GlobalSample
+    {
+        std::array<R, 6> beta;
+        R log_momentum_measure; // prod(sech beta) / complete six-variable proposal PDF
+        R log_energy;           // sum pi/(2*cosh beta), at J=1
+        std::size_t component, pairing, native_pair;
+    };
+
     SpinonJointProposal(R cutoff, R soft_fraction, std::vector<Component> components)
         : cutoff_(std::move(cutoff)), soft_(std::move(soft_fraction)), components_(std::move(components)),
           one_(uni20::scalar_like(cutoff_, 1)), zero_(uni20::scalar_like(cutoff_, 0))
@@ -281,6 +289,70 @@ template <uni20::Real R> class SpinonJointProposal {
     {
       auto const intensities = chart_log_intensities(beta);
       return uni20::math::log(R{15} * one_) - log_sum(intensities);
+    }
+
+    /// Direct global integration: choose uniformly one of 15 native pairs;
+    /// the other four labels use the complete joint proposal. This actually
+    /// samples the averaged PDF, so it also integrates nonsymmetric test
+    /// functions. No conservation delta, factorial or 2*pi moment measure.
+    GlobalSample draw_global(std::array<R, 7> const& u) const
+    {
+      for (auto const& x : u)
+        check_uniform(x);
+      R const position = R{15} * u[0];
+      std::size_t selected = 0;
+      while (selected + 1 < 15 && position >= R(selected + 1))
+        ++selected;
+      R const residual = position - R(selected);
+      if (!(zero_ < residual && residual < one_))
+        throw std::runtime_error("global proposal selector lost open subinterval resolution");
+      auto const free = draw({residual, u[1], u[2], u[3], u[4]});
+      std::array<R, 6> beta;
+      std::size_t index = 0;
+      for (int i = 0; i < 6; ++i)
+        for (int j = i + 1; j < 6; ++j, ++index)
+          if (index == selected)
+          {
+            beta[i] = native_inverse(u[5]);
+            beta[j] = native_inverse(u[6]);
+            std::size_t next = 0;
+            for (int k = 0; k < 6; ++k)
+              if (k != i && k != j) beta[k] = free.beta[next++];
+          }
+      std::array<R, 6> log_sines;
+      for (int i = 0; i < 6; ++i)
+        log_sines[i] = -log_cosh(beta[i]);
+      R const energy = uni20::math::log(pi_ / R{2}) + log_sum(log_sines);
+      return {beta, global_log_momentum_measure(beta), energy, free.component, free.pairing, selected};
+    }
+
+    std::array<R, 15> global_chart_log_densities(std::array<R, 6> const& beta) const
+    {
+      std::array<R, 6> native;
+      for (int i = 0; i < 6; ++i)
+        native[i] = native_log_density(beta[i]);
+      std::array<R, 15> result;
+      std::size_t index = 0;
+      for (int i = 0; i < 6; ++i)
+        for (int j = i + 1; j < 6; ++j)
+        {
+          std::array<R, 4> free;
+          std::size_t next = 0;
+          for (int k = 0; k < 6; ++k)
+            if (k != i && k != j) free[next++] = beta[k];
+          result[index++] = log_density(free) + native[i] + native[j];
+        }
+      return result;
+    }
+
+    R global_log_momentum_measure(std::array<R, 6> const& beta) const
+    {
+      auto const channels = global_chart_log_densities(beta);
+      R result = uni20::math::log(R{15} * one_) - log_sum(channels);
+      for (auto const& b : beta)
+        result -= log_cosh(b);
+      if (!uni20::isfinite(result)) throw std::runtime_error("global proposal measure exhausted exponent range");
+      return result;
     }
 
   private:

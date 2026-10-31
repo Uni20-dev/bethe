@@ -37,3 +37,11 @@ set_target_properties(bethe-async-ladder-example PROPERTIES CXX_EXTENSIONS OFF)
 add_executable(bethe-four-spinon-moments-example xxx_four_spinon_moments.cpp)
 target_link_libraries(bethe-four-spinon-moments-example PRIVATE bethe::bethe TBB::tbb)
 set_target_properties(bethe-four-spinon-moments-example PROPERTIES CXX_EXTENSIONS OFF)
+
+get_directory_property(bethe_examples_have_mpreal
+  DIRECTORY "${bethe_uni20_core_source}" DEFINITION UNI20_HAS_MPREAL)
+if(bethe_examples_have_mpreal)
+  add_executable(bethe-six-spinon-slice-example six_spinon_slice.cpp)
+  target_link_libraries(bethe-six-spinon-slice-example PRIVATE bethe::bethe TBB::tbb)
+  set_target_properties(bethe-six-spinon-slice-example PROPERTIES CXX_EXTENSIONS OFF)
+endif()

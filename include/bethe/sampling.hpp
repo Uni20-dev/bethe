@@ -3,6 +3,7 @@
 #pragma once
 
 #include <array>
+#include <bethe/detail/spinon_numerics.hpp>
 #include <bethe/solver.hpp>
 #include <cstdint>
 #include <limits>
@@ -11,15 +12,15 @@
 #include <string>
 #include <vector>
 
-namespace bethe::heisenberg::detail
+namespace bethe
 {
 /// Exact midpoint uniforms on a declared binary grid. Retain this identity
 /// when retrying geometry at a higher precision: a retry must not redraw.
-template <std::size_t Dimension> class SpinonUniforms {
+template <std::size_t Dimension> class UniformSample {
   public:
     using Words = std::array<std::vector<std::uint64_t>, Dimension>;
 
-    SpinonUniforms(unsigned bits, Words words) : bits_(bits), words_(std::move(words))
+    UniformSample(unsigned bits, Words words) : bits_(bits), words_(std::move(words))
     {
       if (!bits_ || bits_ >= unsigned(std::numeric_limits<int>::max()))
         throw std::invalid_argument("invalid uniform bit count");
@@ -61,9 +62,9 @@ template <std::size_t Dimension> class SpinonUniforms {
 /// replicate id, uniform bits); completion order never changes the draws.
 /// Uses the standardized mt19937_64/seed_seq engines, not implementation-defined
 /// uniform_real_distribution. This is ordinary Monte Carlo, not scrambled QMC.
-template <std::size_t Dimension> class SpinonSampleStream {
+template <std::size_t Dimension> class MonteCarloStream {
   public:
-    SpinonSampleStream(std::uint64_t seed, std::uint64_t replicate, unsigned bits) : bits_(bits)
+    MonteCarloStream(std::uint64_t seed, std::uint64_t replicate, unsigned bits) : bits_(bits)
     {
       if (!bits_ || bits_ >= unsigned(std::numeric_limits<int>::max()))
         throw std::invalid_argument("invalid uniform bit count");
@@ -72,9 +73,9 @@ template <std::size_t Dimension> class SpinonSampleStream {
       engine_.seed(sequence);
     }
 
-    SpinonUniforms<Dimension> next()
+    UniformSample<Dimension> next()
     {
-      typename SpinonUniforms<Dimension>::Words words;
+      typename UniformSample<Dimension>::Words words;
       std::size_t const count = (std::size_t(bits_) + 63) / 64;
       unsigned const first = (bits_ - 1) % 64 + 1;
       for (auto& coordinate : words)
@@ -92,16 +93,16 @@ template <std::size_t Dimension> class SpinonSampleStream {
     std::mt19937_64 engine_;
 };
 
-enum class SpinonReplicateStatus
+enum class ReplicateStatus
 {
   incomplete,
   failed,
   complete
 };
 
-template <uni20::Real R> struct SpinonReplicateSummary
+template <uni20::Real R> struct ReplicateSummary
 {
-    SpinonReplicateStatus status;
+    ReplicateStatus status;
     std::size_t received, failed;
     std::optional<std::vector<R>> mean;
     // Row-major covariance OF THE MEAN across complete, equally weighted
@@ -113,9 +114,9 @@ template <uni20::Real R> struct SpinonReplicateSummary
 /// A collector for complete equal-size replicate means. Missing/failed
 /// replicates never become zeros or a successful mean over the survivors.
 /// Writes belong to the collector thread; workers return their own results.
-template <uni20::Real R> class SpinonReplicateStatistics {
+template <uni20::Real R> class ReplicateStatistics {
   public:
-    SpinonReplicateStatistics(std::size_t replicates, std::size_t samples, std::size_t dimension, R const& exemplar)
+    ReplicateStatistics(std::size_t replicates, std::size_t samples, std::size_t dimension, R const& exemplar)
         : samples_(samples), dimension_(dimension), zero_(uni20::scalar_like(exemplar, 0)), rows_(replicates)
     {
       if (!replicates || !samples || !dimension || dimension > std::numeric_limits<std::size_t>::max() / dimension)
@@ -144,9 +145,9 @@ template <uni20::Real R> class SpinonReplicateStatistics {
       row.failure = std::move(reason);
     }
 
-    SpinonReplicateSummary<R> summary() const
+    ReplicateSummary<R> summary() const
     {
-      SpinonReplicateSummary<R> result{SpinonReplicateStatus::incomplete, 0, 0, {}, {}, {}};
+      ReplicateSummary<R> result{ReplicateStatus::incomplete, 0, 0, {}, {}, {}};
       for (std::size_t i = 0; i < rows_.size(); ++i)
       {
         auto const& row = rows_[i];
@@ -157,7 +158,7 @@ template <uni20::Real R> class SpinonReplicateStatistics {
           result.failures.push_back("replicate " + std::to_string(i) + ": " + row.failure);
         }
       }
-      if (result.failed) result.status = SpinonReplicateStatus::failed;
+      if (result.failed) result.status = ReplicateStatus::failed;
       if (result.received != rows_.size() || result.failed) return result;
 
       // Reduce in logical id order even when work finished out of order.
@@ -166,13 +167,23 @@ template <uni20::Real R> class SpinonReplicateStatistics {
       std::vector<R> shifts, means;
       for (std::size_t j = 0; j < dimension_; ++j)
       {
-        bethe::detail::CompensatedSum<R> sum(zero_);
+        bethe::detail::SpinonSum<R> sum(zero_), raw(zero_);
         for (auto const& row : rows_)
+        {
+          raw.add((*row.values)[j]);
           sum.add((*row.values)[j] - anchor[j]);
+        }
         shifts.push_back(sum.value() / count);
+        if (!uni20::isfinite(shifts.back())) throw std::runtime_error("replicate mean shift exceeded exponent range");
         if (sum.value() != zero_ && shifts.back() == zero_)
           throw std::runtime_error("replicate mean shift underflowed");
-        means.push_back(anchor[j] + shifts.back());
+        // Centering helps covariance for large common offsets, but x-anchor
+        // can round away a small signed mean before summation. Keep the raw
+        // mean separately; use the centered form if the raw sum overflows.
+        R const total = raw.value();
+        means.push_back(uni20::isfinite(total) ? R(total / count) : R(anchor[j] + shifts.back()));
+        if (uni20::isfinite(total) && total != zero_ && means.back() == zero_)
+          throw std::runtime_error("replicate mean underflowed");
         if (!uni20::isfinite(means.back())) throw std::runtime_error("replicate mean exceeded exponent range");
       }
       if (rows_.size() > 1)
@@ -182,7 +193,7 @@ template <uni20::Real R> class SpinonReplicateStatistics {
         for (std::size_t j = 0; j < dimension_; ++j)
           for (std::size_t k = 0; k <= j; ++k)
           {
-            bethe::detail::CompensatedSum<R> sum(zero_);
+            bethe::detail::SpinonSum<R> sum(zero_);
             for (auto const& row : rows_)
             {
               R const a = ((*row.values)[j] - anchor[j]) - shifts[j];
@@ -200,7 +211,7 @@ template <uni20::Real R> class SpinonReplicateStatistics {
         result.covariance = std::move(covariance);
       }
       result.mean = std::move(means);
-      result.status = SpinonReplicateStatus::complete;
+      result.status = ReplicateStatus::complete;
       return result;
     }
 
@@ -220,4 +231,4 @@ template <uni20::Real R> class SpinonReplicateStatistics {
     R zero_;
     std::vector<Row> rows_;
 };
-} // namespace bethe::heisenberg::detail
+} // namespace bethe
