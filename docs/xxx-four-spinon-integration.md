@@ -2,6 +2,9 @@
 
 [Spinon densities](xxx-spinon-density.md) · [C++ library](library.md)
 
+For physical results and refinement, use the
+[four-spinon observable interface](xxx-four-spinon-thermodynamics.md).
+
 A four-spinon spectrum requires two-dimensional integration after imposing
 momentum and energy conservation. Direct fixed-momentum moments require three
 dimensions. Both use the ordered momentum patches in
