@@ -8,9 +8,9 @@ W6, bounded recovery and soft-pair proposal as the
 shared [Monte Carlo engine](monte-carlo.md) to accumulate both moments and their
 covariance from each configuration.
 
-Both fixed-momentum and global moments are available. The installed moments
-front end remains integration work. The calculation uses a finite
-absolute-rapidity cutoff, not a claim of unrestricted convergence.
+Both fixed-momentum and global moments are available through the installed
+[bethe-xxx-moments-thermo](xxx-spinon-moments.md) app. The calculation uses a
+finite absolute-rapidity cutoff, not a claim of unrestricted convergence.
 
 ## Measure and importance proposal
 
