@@ -84,7 +84,8 @@ A separate [geometry comparison](six-spinon-geometry-precision-20261031.json)
 holds the density pair at 192/256 bits and probes R1040. Geometry at 256,
 512 and 1024 bits is rejected before export: the soft endpoint rounds onto
 pi. The same 64-draw stream succeeds at 1536 and 2048 bits, with matching
-support/work identities and relative weighted-value changes below 1e-450.
+support/work identities and relative changes in replicate means and maxima
+below 1e-450. Individual observation values were not retained in this probe.
 This demonstrates a genuine precision requirement of the current coordinate
 representation, without asserting that the physical estimate has that accuracy.
 Only 64 draws were used; this is a geometry and arithmetic probe, not a
