@@ -75,9 +75,9 @@ before extending the command to a grid.
 Each curve holds the soft cutoff fixed and increases the Gauss order per
 panel. Comparing points vertically at the same order changes the integration
 domain instead. The two-spinon baseline is unchanged throughout this study.
-The plotted costs are the recorded **MPFR128 refinement study**, using two
-workers per query; they are separate from the native starting example and the
-faster binary128 follow-up below.
+The plotted costs use **binary128 with a native 64/113-bit density pair** and
+two workers per query. They are separate from the cheaper native 80-bit
+starting example and the wider MPFR reference calculations below.
 
 `--four-cutoff T` is a **log-radius cutoff** in the support-adapted four-spinon
 coordinates. Increasing it includes configurations closer to a soft endpoint.
@@ -184,7 +184,8 @@ stricter $`10^{-8}`$ tolerance, as well as $`(1.5,3)`$, where native arithmetic
 passes at $`10^{-6}`$ but fails at $`10^{-8}`$. The successful native values at
 these three points differ from their MPFR128 references by less than
 $`1.3\times10^{-16}`$ relative. MPFR192 independently confirms the first
-reference. Binary128 still fails there because its lower comparison is 53 bits.
+reference. The recorded binary128 failure used the earlier 53-bit lower
+comparison; this neighbourhood study predates the stronger native pair.
 
 These results distinguish screen coverage from measured value accuracy. The
 native grid costs 17.5 CPU seconds; five wider-reference checks cost 81.8 CPU
@@ -208,8 +209,8 @@ python3 scripts/check_xxx_four_spinon_neighbourhood.py \
 With the intermediate native comparison, binary128 completes all eight
 order/cutoff points and agrees with the MPFR192 S4 references within
 $`6.3\times10^{-31}`$ relative. The complete binary128 grid costs about
-**5.80 CPU minutes**, compared with **41.0 CPU minutes** for the plotted MPFR128
-study on the same shared Intel Core i7-12700KF, with two workers per query.
+**5.80 CPU minutes**, compared with **41.0 CPU minutes** for the earlier MPFR128
+reference study on the same shared Intel Core i7-12700KF, with two workers per query.
 This is why binary128 is the next arithmetic choice after native 80-bit.
 
 The [new native record](../validation/spinon-native-precision-20261031.json)
@@ -233,10 +234,10 @@ reformulation, see [the one-magnon precision tutorial](xxx-precision.md).
 ## Cost and practical scope
 
 The strict native precision-check point takes about 0.33 CPU seconds on the measured Intel
-Core i7-12700KF. The MPFR128 refinement grid above takes about 41 CPU minutes
-in total with two workers. Its order-4/cutoff-8 point uses about 24 seconds wall
-and 48 CPU seconds; the largest point, order 16 and cutoff 12, uses about
-8.7 minutes wall and 17.4 CPU minutes. The original 192-bit grid took about
+Core i7-12700KF. The binary128 refinement grid above takes about 5.80 CPU minutes
+in total with two workers. Its order-4/cutoff-8 point uses about 3.6 seconds wall
+and 7.0 CPU seconds; the largest point, order 16 and cutoff 12, uses about
+75 seconds wall and 150 CPU seconds. The original MPFR192 grid took about
 54 CPU minutes and remains an optional arithmetic reference. These shared-host
 measurements describe the recorded runs, not portable performance guarantees.
 

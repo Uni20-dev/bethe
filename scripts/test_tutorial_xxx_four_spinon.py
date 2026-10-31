@@ -57,7 +57,7 @@ class FourSpinonTutorial(unittest.TestCase):
 
     def test_import_checks_tolerance_beyond_default_decimal_precision(self):
         record = json.loads((tutorial.ROOT / 'docs/tutorials/data/xxx-four-spinon-precision.json').read_text())
-        case = next(row for row in record['cases'] if row['precision'] == 'bits-128')
+        case = next(row for row in record['cases'] if row['precision'] == 'fp128')
         document = {'tables': {}}
         for name in ('spectrum', 'diagnostics'):
             names = list(case[name][0])
@@ -72,7 +72,7 @@ class FourSpinonTutorial(unittest.TestCase):
         for table in document['tables'].values():
             table['metadata']['Two-spinon transition-integral tolerance'] = changed
         # A 28-digit Decimal division rounds this change away, but it is much
-        # larger than the 128-bit format's permitted metadata-rounding error.
+        # larger than binary128's permitted metadata-rounding error.
         with self.assertRaisesRegex(ValueError, 'Two-spinon tolerance changed'):
             tutorial.read_case(document, 4, 8)
 
@@ -108,12 +108,18 @@ class FourSpinonTutorial(unittest.TestCase):
                     difference = abs(Decimal(row['s4']) / Decimal(reference['s4']) - 1)
                     self.assertLess(difference, Decimal('1e-14'))
                     if row['precision'] == 'bits-128':
-                        self.assertEqual(row['s4'], grid[key]['s4'])
-                        self.assertEqual(row['raw_sha256'], grid[key]['raw_sha256'])
+                        self.assertLess(abs(Decimal(row['s4']) / Decimal(grid[key]['s4']) - 1), Decimal('1e-28'))
                         self.assertEqual(row['density_attempts'], reference['density_attempts'])
                         self.assertLess(difference, Decimal('1e-35'))
                         differences.append(difference)
             self.assertLess(abs(max(differences) / Decimal(study['maximum_s4_relative_difference_128_vs_192']) - 1), Decimal('1e-60'))
+        native = json.loads((tutorial.ROOT / 'docs/validation/spinon-native-precision-20261031.json').read_text())
+        for case in native['cases'][12:]:
+            meta = case['metadata']
+            key = int(meta['Four-spinon order']), int(meta['Four-spinon log-radius cutoff'])
+            self.assertEqual(grid[key]['raw_sha256'], case['raw_sha256'])
+            self.assertEqual(grid[key]['s4'], case['tables']['spectrum'][1]['density'])
+            self.assertEqual(grid[key]['comparison_bits'], int(meta['Density comparison bits']))
 
 
 if __name__ == '__main__':

@@ -15,9 +15,9 @@ DATA = ROOT / 'docs/tutorials/data/xxx-four-spinon-convergence.json'
 FIGURE = ROOT / 'docs/tutorials/figures/xxx-four-spinon-convergence.svg'
 ORDERS, CUTOFFS = (2, 4, 8, 16), (8, 12)
 CONTROL = {'momentum': '1.5', 'omega': '1.8', 'exchange': '1', 'channel': 'zz',
-           'precision': 'bits-128', 'relative_tolerance': '1e-8', 'absolute_tolerance': '1e-30',
+           'precision': 'fp128', 'relative_tolerance': '1e-8', 'absolute_tolerance': '1e-30',
            'two_kernel_tolerance': '1e-12'}
-BITS = 128
+BITS = 113
 ROUNDING_ALLOWANCE = Decimal(2) ** (8 - BITS)
 
 
@@ -64,7 +64,7 @@ def read_case(document, order, cutoff):
                 'Exchange J': '1', 'Channel': 'zz', 'Selected spinon sectors': '2,4',
                 'Spectral points': '1', 'Four-spinon order': str(order),
                 'Four-spinon log-radius cutoff': str(cutoff), 'Geometry and output bits': str(BITS),
-                'Density comparison bits': str(BITS-64), 'Density guard bits': str(BITS),
+                'Density guard bits': str(BITS),
                 'Density relative tolerance': '1e-8', 'Density absolute tolerance': '1e-30',
                 'First density residue budget': '64', 'Second density residue budget': '80',
                 'First density tail order': '16', 'Second density tail order': '20',
@@ -94,6 +94,7 @@ def read_case(document, order, cutoff):
               'density_attempts': int(values[1]['evaluations']),
               'wall_seconds': summary['Elapsed seconds'], 'cpu_seconds': summary['Run CPU seconds'],
               'threads': int(meta['Scheduler concurrency limit']),
+              'comparison_bits': int(meta['Density comparison bits']),
               'source_commit': meta['Bethe revision'], 'uni20_commit': meta['Uni20 revision'],
               'compiler': meta['Compiler'], 'platform': meta['Platform']}
     validate_case(result)
@@ -111,6 +112,8 @@ def validate_case(case):
             raise ValueError('Negative numerical diagnostic')
     if case['density_attempts'] <= 0 or case['threads'] <= 0:
         raise ValueError('Missing numerical work')
+    if not 53 <= case['comparison_bits'] < BITS:
+        raise ValueError('Require a distinct lower native comparison')
     for key in ('source_commit', 'uni20_commit'):
         value = case[key]
         if len(value) != 40 or any(c not in '0123456789abcdef' for c in value):
@@ -126,7 +129,7 @@ def validate(data):
         raise ValueError('Incomplete or duplicate order/cutoff grid')
     for row in data['cases']:
         validate_case(row)
-    for key in ('source_commit', 'uni20_commit', 'compiler', 'platform', 'threads'):
+    for key in ('source_commit', 'uni20_commit', 'compiler', 'platform', 'threads', 'comparison_bits'):
         if len({row[key] for row in data['cases']}) != 1:
             raise ValueError(f'Mixed {key} in the refinement study')
     if not data['cpu']:
@@ -140,7 +143,7 @@ def validate(data):
 
 
 def filename(order, cutoff):
-    return f'q1p5-w1p8-order{order}-cutoff{cutoff}-bits{BITS}.json'
+    return f'q1p5-w1p8-order{order}-cutoff{cutoff}-fp128.json'
 
 
 def machine_name():
@@ -201,14 +204,14 @@ def plot(data):
     axes[0].set(ylabel=r'$S^{zz}_4(q,\omega)$', title=r'Four spinons at $q=1.5$, $\omega=1.8J$')
     axes[1].set_yscale('log')
     workers = data['cases'][0]['threads']
-    axes[1].set(ylabel='CPU seconds', title=f'MPFR128 cost; {workers} workers per query')
+    axes[1].set(ylabel='CPU seconds', title=f'Binary128 cost; {workers} workers per query')
     save_svg(fig, FIGURE)
     plt.close(fig)
 
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('--solver', type=solver_executable, help='Regenerate all eight points; can take tens of minutes')
+    parser.add_argument('--solver', type=solver_executable, help='Regenerate all eight points; needs binary128 support')
     parser.add_argument('--raw-dir', type=Path, help='Read existing JSON exports, or retain them when regenerating')
     parser.add_argument('--data', type=Path, default=DATA)
     parser.add_argument('--threads', type=int, default=2)
