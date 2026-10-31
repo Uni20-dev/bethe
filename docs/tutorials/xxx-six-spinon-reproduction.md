@@ -18,7 +18,11 @@ come from [exact replays and additional boundary tests](../validation/six-spinon
 with unchanged frequencies, sample counts, seeds and tolerances.
 
 **Production is still in progress.** This recipe records the requested grid
-and controls; it is not a completed-data or convergence claim. The grid spans
+and controls. The revised $`\omega=2J`$ query is complete, with a 5.94% sampling
+standard error; the other fifteen frequencies remain outstanding. The
+[first-query record](../validation/six-spinon-first-production-20261031.json)
+retains its complete replicate summaries and controls. This is not a
+completed-grid or convergence claim. The grid spans
 $`1.6\le\omega/J\le4`$, including both sides of the two-spinon upper edge.
 It does not reach the four- or six-spinon outer upper edges, and it is not a
 grid for evaluating global moments.
@@ -31,9 +35,11 @@ that name with `./bethe-xxx-structure-factor-thermo`.
 
 This is a costly calculation, unlike the small example in the tutorial.
 The first large query used 25.7 CPU hours and 104 minutes of wall time with
-sixteen workers on a Xeon Gold 6254, then failed its contour checks. The revised
-controls cost roughly 1.5 times as much in the bounded replays; their complete
-query cost has not yet been measured. Budget several hours per frequency with
+sixteen workers on a Xeon Gold 6254, then failed its contour checks. Its
+successful replacement used 38.0 CPU hours and 143 minutes of wall time with
+24 workers on the same machine. These are whole-query costs, including
+preparation and output. The solver schedules whole replicates, so worker
+utilization can fall near the end of a query. Budget several hours per frequency with
 24 workers, and substantially longer with fewer workers. This is a planning
 estimate, not a completed-grid timing. The recipe defaults to four workers. Set `threads`
 to match the CPUs available to your job, and choose `out` on a filesystem with

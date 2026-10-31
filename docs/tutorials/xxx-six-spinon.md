@@ -351,9 +351,16 @@ both failed configurations and all four constructed cases pass. Their largest
 relative contour diagnostic is below $`8.6\times10^{-11}`$, compared with the
 unchanged $`10^{-6}`$ target. Separate increases in arithmetic precision and
 residue count preserve the checked densities. These are the controls in the
-[large-domain reproduction recipe](xxx-six-spinon-reproduction.md); the
-replacement whole-query calculation is still in progress. Passing these
-selected configurations does not replace checking every production observation.
+[large-domain reproduction recipe](xxx-six-spinon-reproduction.md).
+
+The [replacement whole query](../validation/six-spinon-first-production-20261031.json)
+now completes all 32 replicates and 24,576 draws at $`\omega=2J`$, with the
+original seed 7405. Its estimate is $`S^{zz}_6=0.03604\pm0.00214`$, where the
+uncertainty is one sampling standard error (5.94%). The largest individual
+draw contributes 4.17% of the estimate, so inspecting influential observations
+still matters even after the numerical failures are repaired. This is a
+finite-$`R=1040`$ result, not a five-percent bound on the unrestricted response.
+The remaining frequencies still need their own complete-query checks.
 
 ## When the geometry needs higher precision
 
