@@ -93,10 +93,12 @@ more difficult nodes: at the refinement study's stricter $`10^{-8}`$ relative
 tolerance, orders 8 and 16 fail the native 53/64-bit density screen at both
 cutoffs. Keep those failures; do not use an
 incomplete prefix. For the validated refinement study, replace `--precision
-long-double` with `--precision bits-128` and add:
+long-double` with `--precision bits-128` and replace the starting command's
+`--density-relative-tolerance 1e-6` with `--density-relative-tolerance 1e-8`.
+Then add these two refinement options:
 
 ```sh
---density-relative-tolerance 1e-8 --four-refine-order 8 --four-extended-cutoff 12
+--four-refine-order 8 --four-extended-cutoff 12
 ```
 
 It evaluates coarse/fine orders on both domains. The displayed four-spinon
