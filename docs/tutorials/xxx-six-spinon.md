@@ -35,7 +35,54 @@ useful only if all required regions retain support and the complete proposal
 probability is used. The [geometry guide](../xxx-spinon-sampling.md) describes
 the measure and balancing between different choices of the solved pair.
 
-## Calculate an interior point
+## Start with an inexpensive calculation
+
+This small calculation checks the workflow before extending the rapidity domain
+or requesting a resolved spectrum:
+
+```sh
+bethe-xxx-structure-factor-thermo --sectors 6 \
+  --momentum 1.57079632679489661923132169163975 \
+  --omega-min 1.8 --omega-max 2.2 --points 3 \
+  --precision long-double --six-cutoff 8 --replicates 4 --samples 32 \
+  --seed 42 --threads 2 --density-relative-tolerance 1e-5 \
+  --density-absolute-tolerance 0 --density-terms 64 --density-tail-order 16 \
+  --diagnostics --replicate-output --json small-slice.json
+```
+
+On an x86 machine with native extended80 `long double`, this complete query
+took 0.38 CPU seconds. The same domains, streams and numerical controls gave:
+
+| Arithmetic | Density comparison / guard bits | Outcome | CPU seconds |
+| --- | ---: | --- | ---: |
+| `fp64` | 24 / 53 | Recovery failed | 0.04 |
+| `long-double` | 53 / 64 | Complete | 0.38 |
+| `fp128` | 53 / 113 | Complete | 6.92 |
+| `bits-96` | 32 / 96 | Recovery failed | 6.41 |
+| `bits-128` | 64 / 128 | Complete | 43.59 |
+| `bits-192` | 128 / 192 | Complete | 55.73 |
+| `bits-384` | 320 / 384 | Complete | 101.14 |
+
+All successful runs retain the same replicate identities and work counts. The
+largest relative change in the densities from extended80 to 384-bit MPFR is
+$`2.7\times10^{-16}`$. The [comparison record](../validation/six-spinon-precision-20261031.json)
+contains the commands, effective precision, diagnostics, sampling errors,
+hardware and timings, including an additional 256-bit check. These tiny
+arithmetic differences do not measure the accuracy of the physical spectrum:
+the observed sampling errors remain 66–76%, and cutoff 8 omits substantial
+soft weight.
+
+The two failing settings illustrate why the guard precision alone is not
+enough. Recovery compares two arithmetic precisions. Binary64 uses a binary32
+comparison, which fails arithmetic checks and encounters a subnormal-density
+failure in one replicate. MPFR at 96 bits uses a 32-bit comparison and also
+fails arithmetic checks. Neither failed query is replaced by an estimate over
+its surviving replicates. Native extended80 is the cheapest checked setting
+for this particular query; `bits-128` is a measured MPFR alternative. Check
+`bethe-info` for the actual native format on your platform, and repeat the
+precision comparison when changing the domain, grid or sample streams.
+
+## Extend the soft domain
 
 An MPFR-enabled [build or installation](../building.md) supports the explicit
 precision used here. This decimal input denotes a point extremely close to
@@ -45,7 +92,7 @@ $`q=\pi/2`$; its exact string is retained for comparing runs.
 q=1.5707963267948966192313216916397514420985846996875529104874722961539082031431045
 bethe-xxx-structure-factor-thermo --sectors 6 \
   --momentum "$q" --omega 2 --exchange 1 --channel zz \
-  --precision bits-512 --six-cutoff 256 \
+  --precision bits-512 --density-guard-bits 256 --six-cutoff 256 \
   --replicates 16 --samples 128 --seed 7304 --threads 4 \
   --density-terms 256 --density-tail-order 24 \
   --density-relative-tolerance 1e-6 --density-absolute-tolerance 0 \
@@ -57,6 +104,16 @@ per replicate, so this requests 2,048 draws. These settings define a finite
 integration domain and numerical checks; they do not promise a particular
 relative sampling error. The point is a starting calculation to inspect before
 running a frequency grid.
+
+Here geometry and output retain 512 bits, while the density comparison uses
+192/256 bits. Replaying all 2,048 draws against the original 448/512-bit density
+checks preserves every replicate's work counts and changes the mean by less
+than $`2\times10^{-75}`$ relative. In these runs, CPU cost fell from 1,850 to
+1,150 seconds (about five minutes wall time with four workers). The
+[comparison record](../validation/six-spinon-density-precision-20261031.json)
+retains the actual point and its replicate summaries. Its sampling error is
+still 15.4%; lowering arithmetic cost does not improve that error or recover
+the omitted rapidity tail.
 
 The `spectrum` table contains the density. The `diagnostics` table separates
 sampling error from contour and arithmetic diagnostics. The `replicates` table
@@ -100,7 +157,15 @@ Four controls answer different questions:
 | More independent draws/replicates | Sampling scatter and sensitivity to rare large weights |
 | Larger `--six-cutoff` | Weight outside the current rapidity domain |
 | More residue terms and higher tail order | Evaluation of the auxiliary contour sums |
-| Higher `--precision` | Resolution of the energy surface and arithmetic in the density |
+| Higher `--precision` | Energy-surface arithmetic; also density if no guard override is set |
+| Higher `--density-guard-bits` at fixed geometry | Density arithmetic alone, with MPFR |
+
+The density check uses $`\mathrm{atol}+\mathrm{rtol}\,|W_6|`$. The relative
+term sets the scale for nonzero matrix elements; the absolute term supplies a
+floor near zero. For example, an absolute tolerance of $`10^{-30}`$ would not
+request thirty-digit accuracy everywhere. These examples use a zero absolute
+floor and explicit relative tolerances. Passing this inner check does not
+bound sampling, integration or omitted-domain error.
 
 The rapidity cutoff $`R`$ restricts all six rapidities to $`|\beta_j|\le R`$,
 where $`p_j=2\arctan(e^{\beta_j})`$. Large $`|\beta_j|`$ means a spinon near
@@ -125,6 +190,35 @@ python3 scripts/plot_xxx_six_spinon_tutorial.py \
 
 A small difference does not bound the weight beyond the larger cutoff. Both
 estimates can omit the same soft region.
+
+## When the geometry needs higher precision
+
+Extending the rapidity domain can demand much more precision even with a loose
+sampling target. In a separate fixed-stream check at $`R=1040`$, we held the
+density comparison at 192/256 bits and varied only the geometry precision.
+At 256, 512 and 1024 bits the program rejected the surface with
+`surface cutoff unresolved; increase geometry precision`. At 1536 and 2048
+bits, all 64 draws completed with matching supported-root counts and agreeing
+replicate estimates. The [geometry comparison record](../validation/six-spinon-geometry-precision-20261031.json)
+retains these controls, outcomes and costs.
+
+Very soft momenta approach zero or $`\pi`$ exponentially in the rapidity.
+The current surface representation needs enough bits to distinguish its domain
+boundaries: $`\pi-2\arctan(e^{-R})`$ must remain distinguishable from $`\pi`$.
+This alone requires roughly $`R/\ln 2`$ bits, before allowing for accuracy in
+the subsequent calculation. Raising density precision cannot repair an unresolved surface:
+rebuild the geometry with higher `--precision`. With MPFR,
+`--density-guard-bits 256` keeps the density checks at 192/256 bits while the
+geometry precision increases. That separation substantially reduces cost.
+The 64-draw check establishes feasibility and arithmetic agreement only; it
+does not resolve the spectrum or its omitted soft tail.
+
+For a new calculation, hold the domain, contour budgets and sample identities
+fixed while comparing precisions. Then vary the non-arithmetic controls
+separately. A contour-tail failure calls for a contour study; a large sampling
+error calls for more independent samples and examination of influential weights.
+Keep failed configurations visible, and retain the diagnostic that identifies
+what needs improvement.
 
 ## Keep the plotted data independently checkable
 
