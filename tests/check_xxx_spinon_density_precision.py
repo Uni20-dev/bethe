@@ -7,7 +7,7 @@ import subprocess
 import sys
 import tempfile
 
-spectrum, moments, mpfr = sys.argv[1:]
+spectrum, moments, mpfr, fp128 = sys.argv[1:]
 env = dict(os.environ, OPENBLAS_NUM_THREADS='1', OMP_NUM_THREADS='1', UNI20_COLOR='never')
 
 
@@ -85,6 +85,25 @@ for program, point, table in ((spectrum, ['--momentum', '1.5', '--omega', '1.8']
             assert output.read_text() == 'preserve JSON\n'
             assert named.read_text() == 'preserve CSV\n'
             assert not absent.exists()
+
+if fp128.upper() in ('ON', 'TRUE', '1'):
+    native = json.loads(invoke(spectrum, ['--momentum', '1.5', '--omega', '1.8',
+                                         '--precision', 'long-double', '--format', 'json']))
+    native_bits = int(native['tables']['spectrum']['metadata']['Working precision (bits)'])
+    if 53 < native_bits < 113:
+        # The old 53/113 pair rejects this complete quadrature. The intermediate
+        # native pair must pass without relaxing either contour or arithmetic checks.
+        document = json.loads(invoke(spectrum, ['--sectors', '4', '--momentum', '1.5', '--omega', '1.8',
+            '--precision', 'fp128', '--four-order', '8', '--four-cutoff', '8', '--threads', '2',
+            '--density-relative-tolerance', '1e-8', '--density-absolute-tolerance', '1e-30',
+            '--density-terms', '64', '--density-tail-order', '16', '--format', 'json']))
+        meta = document['tables']['spectrum']['metadata']
+        assert meta['Density comparison bits'] == str(native_bits)
+        assert meta['Density guard bits'] == '113'
+        point, = rows(document, 'spectrum')
+        assert point['status'] == 'estimated' and point['evaluations'] == '2304'
+        # Independently retained MPFR192 quadrature, identical physical controls.
+        close(point['density'], '0.18753256731755974112333306196814292064896682968245603409552')
 
 if mpfr.upper() in ('ON', 'TRUE', '1'):
     common = ['--precision', 'bits-384', '--threads', '2', '--density-relative-tolerance', '1e-5',
