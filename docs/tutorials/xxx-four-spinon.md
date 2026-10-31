@@ -177,24 +177,44 @@ Five lie outside support. Among the remaining 49:
 | --- | ---: | ---: | ---: |
 | Binary64, 24/53-bit pair | 0 complete | 0 complete | 0 complete |
 | x86 long double, 53/64-bit pair | 26 complete | 47 complete | 49 complete |
+| Binary128, 64/113-bit pair | 48 complete | 49 complete | Not measured |
 
-The two native failures remaining at $`10^{-6}`$ are
+The two long-double failures remaining at $`10^{-6}`$ are
 $`(q,\omega/J)=(2.5,1.8)`$ and $`(1.5,4.5)`$. MPFR128 completes both at the
 stricter $`10^{-8}`$ tolerance, as well as $`(1.5,3)`$, where native arithmetic
-passes at $`10^{-6}`$ but fails at $`10^{-8}`$. The successful native values at
+passes at $`10^{-6}`$ but fails at $`10^{-8}`$. The successful long-double values at
 these three points differ from their MPFR128 references by less than
 $`1.3\times10^{-16}`$ relative. MPFR192 independently confirms the first
 reference. The recorded binary128 failure used the earlier 53-bit lower
-comparison; this neighbourhood study predates the stronger native pair.
+comparison; the original audit predates the stronger native pair.
+
+The binary128 row comes from a later
+[98-query follow-up](../validation/four-spinon-native-neighbourhood-20261031.json)
+using the intermediate native comparison. At $`10^{-8}`$, the only remaining
+failure is $`(q,\omega/J)=(1.5,4.5)`$; at $`10^{-6}`$ all 49 supported points
+complete. Every completed S4 estimate agrees with its matched MPFR128 reference
+within $`1.3\times10^{-30}`$ relative. Thus binary128 is a useful retry before
+MPFR, but the strict screen still does not pass everywhere on this grid.
+The original failed point is retained. Both comparisons concern the same
+finite quadrature and do not establish its physical accuracy.
 
 These results distinguish screen coverage from measured value accuracy. The
-native grid costs 17.5 CPU seconds; five wider-reference checks cost 81.8 CPU
+original binary64/long-double grid costs 17.5 CPU seconds; five wider-reference checks cost 81.8 CPU
 seconds on the same i7-12700KF. These timings select **only sector 4**; do not
 compare them directly with the two-sector timings above. Wider values were
-checked at three contrasting points, not all 49. Passing all points at
+checked at three contrasting points for long double; the later binary128
+study checks every completed value. Its costs are recorded separately on a
+Xeon Gold 6254 with two workers per query. Passing all long-double points at
 $`10^{-4}`$ is therefore not a blanket accuracy recommendation. Choose a
 tolerance from the observable's error budget, compare against stricter wider
 references, and keep that choice separate from order and domain checks.
+
+Check the retained binary128 coverage and value comparisons without running
+the solver:
+
+```sh
+python3 scripts/check_xxx_four_spinon_native_neighbourhood.py
+```
 
 The [compact record](../validation/four-spinon-neighbourhood-precision-20261031.json)
 retains all 329 outcomes, effective precision, diagnostics, costs and raw hashes.
