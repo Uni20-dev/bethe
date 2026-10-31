@@ -41,12 +41,12 @@ def table_rows(table, bits):
     return result
 
 
-def close(actual, expected, bits):
+def close(actual, expected, bits, *, scale_floor='1'):
     # Decimal arithmetic must not silently fall back to its 28-digit default.
     with localcontext() as context:
         context.prec = max(50, bits // 3 + 25)
         a, b = decimal(actual), decimal(expected)
-        return abs(a - b) <= Decimal(2) ** (8 - bits) * max(Decimal(1), abs(a), abs(b))
+        return abs(a - b) <= Decimal(2) ** (8 - bits) * max(Decimal(scale_floor), abs(a), abs(b))
 
 
 def read_spectrum(document, *, momentum, exchange='1', expected_metadata=None):
@@ -111,7 +111,7 @@ def read_spectrum(document, *, momentum, exchange='1', expected_metadata=None):
                 raise ValueError('Missing contribution')
             if len(sectors) > 1:
                 total = sum(decimal(point[s]['density']) for s in sectors)
-                if not close(point[expected_rows[-1]]['density'], total, bits):
+                if not close(point[expected_rows[-1]]['density'], total, bits, scale_floor='0'):
                     raise ValueError('Partial sum differs from physical sector sum')
     for name in ('diagnostics', 'replicates'):
         for row in result.get(name, []):
