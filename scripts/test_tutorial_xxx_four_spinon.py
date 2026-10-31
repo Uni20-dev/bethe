@@ -55,6 +55,27 @@ class FourSpinonTutorial(unittest.TestCase):
                 with self.assertRaises(ValueError):
                     tutorial.validate(bad)
 
+    def test_import_checks_tolerance_beyond_default_decimal_precision(self):
+        record = json.loads((tutorial.ROOT / 'docs/tutorials/data/xxx-four-spinon-precision.json').read_text())
+        case = next(row for row in record['cases'] if row['precision'] == 'bits-128')
+        document = {'tables': {}}
+        for name in ('spectrum', 'diagnostics'):
+            names = list(case[name][0])
+            document['tables'][name] = {
+                'metadata': deepcopy(case['metadata']), 'summary': case['summary'],
+                'columns': [{'id': name} for name in names],
+                'rows': [[row[name] for name in names] for row in case[name]]}
+        tutorial.read_case(document, 4, 8)
+        with localcontext() as context:
+            context.prec = 100
+            changed = str(Decimal('1e-12') * (1 + Decimal('1e-30')))
+        for table in document['tables'].values():
+            table['metadata']['Two-spinon transition-integral tolerance'] = changed
+        # A 28-digit Decimal division rounds this change away, but it is much
+        # larger than the 128-bit format's permitted metadata-rounding error.
+        with self.assertRaisesRegex(ValueError, 'Two-spinon tolerance changed'):
+            tutorial.read_case(document, 4, 8)
+
     def test_refinement_precision_evidence_and_failures(self):
         path = tutorial.ROOT / 'docs/validation/four-spinon-refinement-precision-20261031.json'
         study = json.loads(path.read_text())

@@ -71,8 +71,10 @@ def read_case(document, order, cutoff):
                 'Density convention': 'S(q,w); moments use dw/(2*pi); raising=2*zz'}
     if any(meta.get(k) != v for k, v in expected.items()):
         raise ValueError('Unexpected model, normalization or numerical controls')
-    if abs(number(meta['Two-spinon transition-integral tolerance']) / Decimal(CONTROL['two_kernel_tolerance']) - 1) > ROUNDING_ALLOWANCE:
-        raise ValueError('Two-spinon tolerance changed')
+    with localcontext() as context:
+        context.prec = 100
+        if abs(number(meta['Two-spinon transition-integral tolerance']) / Decimal(CONTROL['two_kernel_tolerance']) - 1) > ROUNDING_ALLOWANCE:
+            raise ValueError('Two-spinon tolerance changed')
     if meta != diagnostics['metadata'] or summary != diagnostics['summary']:
         raise ValueError('Mismatched table provenance')
     if summary.get('Outcome') != 'success' or summary.get('Failed points') != '0':
