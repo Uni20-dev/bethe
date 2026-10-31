@@ -76,10 +76,17 @@ weighted_spinon_observation(std::span<G const> beta, std::span<G const> log_weig
         result.cancelled ? SpinonObservationFailure::cancelled : SpinonObservationFailure::density;
     result.metadata.density_status = recovered.status;
     result.reason = recovered.reason;
-    if (!recovered.attempts.empty())
+    if (recovered.status == SpinonRecoveryStatus::exhausted)
     {
-      result.metadata.density_failure = recovered.attempts.back().failure;
-      result.reason += ": " + recovered.attempts.back().reason;
+      // Both contour controls must pass. The last attempt can succeed even
+      // though an earlier required control exhausted the recovery policy.
+      for (auto attempt = recovered.attempts.rbegin(); attempt != recovered.attempts.rend(); ++attempt)
+        if (attempt->failure != SpinonDensityFailure::none)
+        {
+          result.metadata.density_failure = attempt->failure;
+          result.reason += ": " + attempt->reason;
+          break;
+        }
     }
     return result;
   }

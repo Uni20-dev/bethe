@@ -2,6 +2,7 @@
 // Copyright (C) 2026 Ian McCulloch
 #include "test_support.hpp"
 #include <bethe/xxx_spinon_density_recovery.hpp>
+#include <bethe/xxx_spinon_observation.hpp>
 
 using namespace bethe::heisenberg;
 
@@ -236,6 +237,33 @@ TEST(SpinonRecoveryMpfr, TailFailureAdvancesOnlyDeclaredBudgets)
   auto failed = MpDriver(p)(bulk);
   EXPECT_EQ(failed.status, SpinonRecoveryStatus::exhausted);
   EXPECT_FALSE(failed.estimate);
+}
+
+TEST(SpinonRecoveryMpfr, ObservationReportsFailedControlWhenFinalControlPasses)
+{
+  auto p = mp_policy();
+  p.stages = {{120, 190, {{{2, 1}, {64, 20}}}}};
+  MpDriver recovery(p);
+  auto checked = recovery(bulk);
+  ASSERT_EQ(checked.status, SpinonRecoveryStatus::exhausted);
+  ASSERT_EQ(checked.attempts.size(), 2u);
+  ASSERT_NE(checked.attempts.front().failure, SpinonDensityFailure::none);
+  ASSERT_TRUE(checked.attempts.back().checked);
+  ASSERT_TRUE(checked.attempts.back().checked->accepted());
+
+  using R = uni20::mpreal;
+  auto precision = uni20::Precision::bits(190);
+  std::vector<R> beta;
+  for (auto const& x : bulk)
+    beta.emplace_back(x, precision);
+  std::array<R, 1> log_weights{R(0, precision)};
+  auto observation = weighted_spinon_observation<R>(beta, log_weights, recovery);
+  EXPECT_FALSE(observation.values);
+  EXPECT_EQ(observation.metadata.failure, SpinonObservationFailure::density);
+  EXPECT_EQ(observation.metadata.density_status, SpinonRecoveryStatus::exhausted);
+  EXPECT_EQ(observation.metadata.density_failure, checked.attempts.front().failure);
+  EXPECT_NE(observation.reason.find(checked.attempts.front().reason), std::string::npos);
+  EXPECT_EQ(observation.reason.find("screens passed"), std::string::npos);
 }
 
 TEST(SpinonRecoveryMpfr, IndependentFourSpinonNormalizationAndPrecisionGrowth)
