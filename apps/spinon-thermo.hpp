@@ -424,6 +424,13 @@ int run_spectrum(Arguments const& a, model::StructureFactorOptions<R> options, I
   if (per_point && count > a.spinons.detail_rows / per_point)
     throw std::invalid_argument(
         "requested diagnostic/replicate tables exceed --detail-row-limit; split the grid or raise the limit");
+  // Use the actual query constructor for all geometry validation before opening
+  // destinations, including later grid points. No density work is done here;
+  // discard each prepared point immediately to keep preparation memory bounded.
+  if (plan->six)
+    for (auto const& momentum : q)
+      for (auto const& frequency : w)
+        (void)plan->six->at(momentum, frequency);
   std::vector<std::tuple<R, R, Row<R>>> diagnostic_rows;
   std::vector<std::tuple<R, R, model::SpinonSpectrumReplicate<R>>> replicate_rows;
   uni20::async::TbbScheduler scheduler(a.threads);
