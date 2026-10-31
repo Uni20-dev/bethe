@@ -169,10 +169,8 @@ An independent, broader binary128 scan completes all three frequencies for
 40 of 40 seeds at 32 samples per replicate, and 20 of 20 seeds at 128 samples.
 The [scan record](../validation/six-spinon-native-seed-scan-20261031.json)
 retains every outcome and the reconstructed sampling diagnostics. Mean CPU
-costs were 12.3 and 48.0 seconds per query on a Xeon Gold 6254, respectively;
-these timings are from a different machine than the tables above. The raw
-exports lack an embedded Bethe revision; the archived source was independently
-matched to the recorded commit, and that qualification is retained. This scan
+costs were 12.3 and 48.8 seconds per query on a Xeon Gold 6254, respectively;
+these timings are from a different machine than the tables above. This scan
 checks completion under the same density controls, not wider-precision
 agreement for every seed or convergence of the sampled spectrum.
 
