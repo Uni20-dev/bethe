@@ -76,6 +76,19 @@ be recalculated. For that special one-root problem, the exact sine formula
 avoids both difficulties. This is why a stable reformulation should be
 considered alongside additional working precision.
 
+The six-spinon [deep-domain probe](validation/six-spinon-geometry-precision-20261031.json)
+shows another reason for extra precision: representing an endpoint. The current
+geometry constructs $`p_{\min}=2\arctan(e^{-R})`$ and
+$`p_{\max}=\pi-p_{\min}`$. Keeping the second endpoint distinct from pi requires
+roughly $`R/\ln 2`$ significand bits, before further accuracy margins. At
+$`R=1040`$, 1024 bits fail this check while 1536 and 2048 bits produce matching
+weighted observations with the same 192/256-bit density pair. The final
+observable does not need hundreds of accurate digits; its current coordinates
+need enough bits to retain a very small soft distance. A reformulation that
+stores that distance separately could avoid this subtraction, but would also
+need checked momentum sums, support decisions and solved roots. Removing the
+endpoint guard would not make the lower-precision calculation reliable.
+
 ## A reproducible decision procedure
 
 1. Fix the state or integration domain, all non-arithmetic controls and, for

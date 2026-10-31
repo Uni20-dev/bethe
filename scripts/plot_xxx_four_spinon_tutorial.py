@@ -2,6 +2,7 @@
 """Reproduce a checked order/cutoff study of one physical four-spinon point."""
 import argparse
 from decimal import Decimal, localcontext
+import hashlib
 import json
 from pathlib import Path
 import platform
@@ -14,7 +15,10 @@ DATA = ROOT / 'docs/tutorials/data/xxx-four-spinon-convergence.json'
 FIGURE = ROOT / 'docs/tutorials/figures/xxx-four-spinon-convergence.svg'
 ORDERS, CUTOFFS = (2, 4, 8, 16), (8, 12)
 CONTROL = {'momentum': '1.5', 'omega': '1.8', 'exchange': '1', 'channel': 'zz',
-           'precision': 'bits-192', 'relative_tolerance': '1e-8', 'absolute_tolerance': '1e-30'}
+           'precision': 'bits-128', 'relative_tolerance': '1e-8', 'absolute_tolerance': '1e-30',
+           'two_kernel_tolerance': '1e-12'}
+BITS = 128
+ROUNDING_ALLOWANCE = Decimal(2) ** (8 - BITS)
 
 
 def command(solver, order, cutoff, threads):
@@ -24,6 +28,8 @@ def command(solver, order, cutoff, threads):
             '--four-order', str(order), '--four-cutoff', str(cutoff),
             '--density-relative-tolerance', CONTROL['relative_tolerance'],
             '--density-absolute-tolerance', CONTROL['absolute_tolerance'],
+            '--density-terms', '64', '--density-tail-order', '16',
+            '--tolerance', CONTROL['two_kernel_tolerance'],
             '--threads', str(threads), '--diagnostics', '--format', 'json']
 
 
@@ -43,7 +49,7 @@ def rows(table):
         values = []
         for cell in row:
             if isinstance(cell, dict):
-                if cell.get('precision') != 192:
+                if cell.get('precision') != BITS:
                     raise ValueError('Unexpected output precision')
                 cell = cell['value']
             values.append(cell)
@@ -54,17 +60,19 @@ def rows(table):
 def read_case(document, order, cutoff):
     spectrum, diagnostics = (document['tables'][name] for name in ('spectrum', 'diagnostics'))
     meta, summary = spectrum['metadata'], spectrum['summary']
-    expected = {'Program': 'bethe-xxx-structure-factor-thermo', 'Precision': 'bits-192',
+    expected = {'Program': 'bethe-xxx-structure-factor-thermo', 'Precision': CONTROL['precision'],
                 'Exchange J': '1', 'Channel': 'zz', 'Selected spinon sectors': '2,4',
                 'Spectral points': '1', 'Four-spinon order': str(order),
-                'Four-spinon log-radius cutoff': str(cutoff), 'Geometry and output bits': '192',
-                'Density comparison bits': '128', 'Density guard bits': '192',
+                'Four-spinon log-radius cutoff': str(cutoff), 'Geometry and output bits': str(BITS),
+                'Density comparison bits': str(BITS-64), 'Density guard bits': str(BITS),
                 'Density relative tolerance': '1e-8', 'Density absolute tolerance': '1e-30',
                 'First density residue budget': '64', 'Second density residue budget': '80',
                 'First density tail order': '16', 'Second density tail order': '20',
                 'Density convention': 'S(q,w); moments use dw/(2*pi); raising=2*zz'}
     if any(meta.get(k) != v for k, v in expected.items()):
         raise ValueError('Unexpected model, normalization or numerical controls')
+    if abs(number(meta['Two-spinon transition-integral tolerance']) / Decimal(CONTROL['two_kernel_tolerance']) - 1) > ROUNDING_ALLOWANCE:
+        raise ValueError('Two-spinon tolerance changed')
     if meta != diagnostics['metadata'] or summary != diagnostics['summary']:
         raise ValueError('Mismatched table provenance')
     if summary.get('Outcome') != 'success' or summary.get('Failed points') != '0':
@@ -75,7 +83,7 @@ def read_case(document, order, cutoff):
     if [r['status'] for r in values] != ['converged', 'estimated', 'partial_sum']:
         raise ValueError('Failed or incorrectly labelled contribution')
     for row in values + checks:
-        if abs(number(row['q']) - Decimal('1.5')) > Decimal('1e-50') or abs(number(row['omega']) - Decimal('1.8')) > Decimal('1e-50'):
+        if abs(number(row['q']) - Decimal('1.5')) > ROUNDING_ALLOWANCE or abs(number(row['omega']) - Decimal('1.8')) > ROUNDING_ALLOWANCE:
             raise ValueError('Wrong spectral point')
     result = {'order': order, 'cutoff': cutoff, 's2': values[0]['density'], 's4': values[1]['density'],
               'sum': values[2]['density'], 'two_kernel_error': checks[0]['two_kernel_error'],
@@ -95,7 +103,7 @@ def validate_case(case):
         context.prec = 100
         if any(number(case[key]) <= 0 for key in ('s2', 's4', 'sum', 'cpu_seconds', 'wall_seconds')):
             raise ValueError('Expected positive interior response and measured cost')
-        if abs(number(case['sum']) - number(case['s2']) - number(case['s4'])) > Decimal('1e-50'):
+        if abs(number(case['sum']) - number(case['s2']) - number(case['s4'])) > ROUNDING_ALLOWANCE:
             raise ValueError('Partial sum differs from physical sector sum')
         if any(number(case[key]) < 0 for key in ('two_kernel_error', 'contour_diagnostic', 'arithmetic_diagnostic')):
             raise ValueError('Negative numerical diagnostic')
@@ -124,13 +132,13 @@ def validate(data):
     reference = number(data['cases'][0]['s2'])
     if abs(reference - Decimal('0.87313045511634')) > Decimal('1e-13'):
         raise ValueError('Two-spinon reference normalization changed')
-    if any(abs(number(row['s2']) - reference) > Decimal('1e-50') for row in data['cases']):
+    if any(abs(number(row['s2']) - reference) > ROUNDING_ALLOWANCE for row in data['cases']):
         raise ValueError('Two-spinon baseline changed during four-spinon refinement')
     return data
 
 
 def filename(order, cutoff):
-    return f'q1p5-w1p8-order{order}-cutoff{cutoff}-bits192.json'
+    return f'q1p5-w1p8-order{order}-cutoff{cutoff}-bits{BITS}.json'
 
 
 def machine_name():
@@ -158,9 +166,12 @@ def collect(solver, raw, threads, machine):
                 result.check_returncode()
                 document = json.loads(result.stdout)
                 case = read_case(document, order, cutoff)
+                case['raw_sha256'] = hashlib.sha256(result.stdout.encode()).hexdigest()
             else:
-                document = json.loads(path.read_text())
+                raw_text = path.read_text()
+                document = json.loads(raw_text)
                 case = read_case(document, order, cutoff)
+                case['raw_sha256'] = hashlib.sha256(raw_text.encode()).hexdigest()
             cases.append(case)
     return validate({'schema': 'bethe.four-spinon-convergence.v1', 'controls': CONTROL,
                      'cpu': machine, 'timing_scope': 'One two-sector spectral query including geometry and output; shared host.',

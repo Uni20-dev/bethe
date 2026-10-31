@@ -101,6 +101,7 @@ nav = [
   ] },
   { "Using Bethe" = [
     { "Command line and precision" = "docs/command-line.md" },
+    { "Numerical accuracy" = "docs/numerical-accuracy.md" },
     { "Command examples" = "docs/command-examples.md" },
     { "Parallel calculations" = "docs/parallel-calculations.md" },
     { "Output and exports" = "docs/output.md" },

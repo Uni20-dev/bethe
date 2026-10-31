@@ -75,8 +75,8 @@ change alone would therefore give a misleading accuracy impression here.
 The frontend can make four comparisons in one command. Finer orders introduce
 more difficult nodes: on the tested platform, orders 8 and 16 fail the native
 53/64-bit density screen at both cutoffs. Keep those failures; do not use an
-incomplete prefix. For the validated reference study, replace `--precision
-long-double` with `--precision bits-192` and add:
+incomplete prefix. For the validated refinement study, replace `--precision
+long-double` with `--precision bits-128` and add:
 
 ```sh
 --four-refine-order 8 --four-extended-cutoff 12
@@ -127,6 +127,15 @@ that this pair cannot certify every node under the requested policy. Increasing
 the precision pair and repeating the complete calculation tests that issue;
 loosening the guard solely to obtain success does not.
 
+For the complete eight-point refinement grid, MPFR128 passes every node and
+agrees with the original MPFR192 S4 estimates to within
+$`3.4\times10^{-38}`$ relative. Binary128 still fails at order 8 on both
+domains: its lower comparison remains at 53 bits, whereas MPFR128 raises that
+comparison to 64 bits. The
+[refinement precision record](../validation/four-spinon-refinement-precision-20261031.json)
+retains all native failures and the original 192-bit reference. The new figure
+and its reproducer use the validated 128-bit setting.
+
 The density screen is $`\mathrm{atol}+\mathrm{rtol}|W|`$. Here its relative
 term dominates above $`|W|=10^{-22}`$; `1e-30` is a near-zero absolute floor,
 not a demand for thirty-digit relative accuracy. The [accuracy guide](../numerical-accuracy.md)
@@ -137,13 +146,12 @@ reformulation, see [the one-magnon precision tutorial](xxx-precision.md).
 ## Cost and practical scope
 
 The ordinary native point takes about 0.34 CPU seconds on the measured Intel
-Core i7-12700KF. The reference figure above retains the original 192-bit
-MPFR grid, including its measured CPU costs. That grid's order-4/cutoff-8 point
-used 33 seconds wall and 66 CPU seconds with two workers; its largest point,
-order 16 and cutoff 12, used about 11.4 minutes wall and 22.8 CPU minutes.
-Those expensive runs are optional references, not the cost of the starting
-command. Measurements come from a shared host and are not portable timing
-promises.
+Core i7-12700KF. The 128-bit refinement grid above takes about 41 CPU minutes
+in total with two workers. Its order-4/cutoff-8 point uses about 24 seconds wall
+and 48 CPU seconds; the largest point, order 16 and cutoff 12, uses about
+8.7 minutes wall and 17.4 CPU minutes. The original 192-bit grid took about
+54 CPU minutes and remains an optional arithmetic reference. These shared-host
+measurements describe the recorded runs, not portable performance guarantees.
 
 Doubling order increases the number of nodes in both integration directions.
 Start with a few representative points and separate the order and domain
@@ -166,7 +174,7 @@ momentum from the four-spinon study above:
 bethe-xxx-structure-factor-thermo --sectors 6 \
   --momentum 1.57079632679489661923132169163975 \
   --omega-min 1.8 --omega-max 2.2 --points 3 \
-  --precision bits-384 --six-cutoff 8 --replicates 4 --samples 32 \
+  --precision long-double --six-cutoff 8 --replicates 4 --samples 32 \
   --seed 42 --threads 2 --density-relative-tolerance 1e-5 \
   --diagnostics --replicate-output --quiet --json slice.json
 ```
@@ -187,10 +195,16 @@ sampling variation, while a larger cutoff addresses a different omission.
 The two cutoff types must not be equated: `--six-cutoff` bounds absolute
 rapidities, whereas `--four-cutoff` bounds the soft log-radius coordinate.
 
-The run used 62 seconds wall time and 101 CPU seconds on the same CPU model,
-with two workers. Its [compact record](../validation/six-spinon-cli-20261031.json)
-contains controls, source revisions and timings; the replicate exports allowed
-an independent recomputation of the means and sampling errors. See
+The native run used 0.31 seconds wall time and 0.38 CPU seconds on the same
+CPU model, with two workers. Its means agree with the 384-bit reference to
+within $`2.7\times10^{-16}`$ relative. The
+[eight-format comparison](../validation/six-spinon-precision-20261031.json)
+retains controls, source revisions, timings and failed formats; the replicate
+exports allowed independent reconstruction of the means and sampling errors.
+Binary64 fails both arithmetic and exponent-range checks on this stream;
+the successful MPFR128 alternative costs about 44 CPU seconds. These results
+justify the native setting for this small example, not for a new seed or a
+larger soft domain. See
 [six-spinon sampling](../xxx-six-spinon-structure-factor.md) before extending it.
 To include lower sectors at these **same** spectral points, use `--sectors 2,4,6`
 and refine their numerical controls separately. No normalization step is needed.

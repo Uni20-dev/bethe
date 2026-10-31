@@ -53,18 +53,48 @@ the MPFR192 value by about 1.14e-16 relative; MPFR128 and MPFR192 differ by
 about 2.42e-38. These comparisons describe the **same truncated quadrature**,
 not the unrestricted physical response.
 
-The native full-grid check is separate: orders2/4 pass at T8 and T12, but
-orders8/16 fail the arithmetic screen at both cutoffs. Thus the cheap starting
+The native full-grid check is separate: orders 2/4 pass at T8 and T12, but
+orders 8/16 fail the arithmetic screen at both cutoffs. Thus the cheap starting
 command is not an adequate uniform setting for the refinement figure. The
-existing MPFR192 reference grid remains available while the lower-cost MPFR
-refinement checks are evaluated. No failed point is replaced by a successful
-prefix or a looser acceptance threshold.
+[refinement comparison](four-spinon-refinement-precision-20261031.json) also
+records binary128 failing at order 8 on both cutoffs: its lower comparison
+remains at 53 bits. MPFR128 raises that lower comparison to 64 bits and passes
+all eight points, agreeing with the original MPFR192 S4 values to within
+3.4e-38 relative. The tutorial figure/reproducer now uses this measured
+128-bit grid (41 CPU minutes total; the original used 54). Sources and two-spinon
+kernel tolerance differ between those grids, so this is a comparison of the
+unchanged S4 calculation and measured costs, not an identical two-sector
+benchmark. No failed point is replaced by a successful prefix or a looser
+acceptance threshold.
+
+## Six-spinon starting point and difficult geometry
+
+The [eight-format comparison](six-spinon-precision-20261031.json) fixes the
+three-frequency R8 example, including all 384 draws and replicate identities.
+Native x86 long double succeeds in 0.31 seconds wall / 0.38 CPU seconds and
+agrees with the 384-bit reference means to within 2.7e-16 relative. MPFR128
+also succeeds, costing 43.6 CPU seconds; MPFR384 costs 101.1. Binary64 fails
+arithmetic screens and an exponent-range check. MPFR96 fails its 32/96-bit
+arithmetic pair. The record preserves these failures rather than publishing
+partial estimates. Independent reconstruction checks successful means,
+sampling errors and work counts. The large sampling errors and omitted R8
+domain remain; precision agreement does not remove them.
+
+A separate [geometry comparison](six-spinon-geometry-precision-20261031.json)
+holds the density pair at 192/256 bits and probes R1040. Geometry at 256,
+512 and 1024 bits is rejected before export: the soft endpoint rounds onto
+pi. The same 64-draw stream succeeds at 1536 and 2048 bits, with matching
+support/work identities and relative weighted-value changes below 1e-450.
+This demonstrates a genuine precision requirement of the current coordinate
+representation, without asserting that the physical estimate has that accuracy.
+Only 64 draws were used; this is a geometry and arithmetic probe, not a
+converged spectral calculation.
 
 ## Scope still being checked
 
-The six-spinon owner is validating the identical three-frequency small-demo
-streams across native and MPFR formats. Its finite R8 demonstration and the
-large-domain resolved slice are different calculations and need separate
-recommendations. Higher-order four-spinon MPFR comparisons are also in progress.
+The small examples and large-domain resolved slice need separate
+recommendations. The resolved-slice pilots are still checking their larger
+domains, quadrature and sampling requirements. This inventory does not replace
+model-specific accuracy tests for every parameter in the library.
 The [precision guide](../numerical-accuracy.md) gives the decision procedure and
 explains the relative/absolute screen and demonstrated higher-precision case.
