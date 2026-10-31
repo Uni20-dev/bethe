@@ -11,8 +11,11 @@ bound for every model or every plotted point.
   This covers the ordinary finite-chain, gas, impurity, field-theory and
   dispersion examples. Their existing checks inspect successful statuses,
   model identities and the relevant analytical or numerical consistency tests.
-- The two-spinon thermodynamic heat map also uses binary64. Its introductory
-  single-point command did not need a different arithmetic recommendation.
+- The two-spinon thermodynamic heat map and introductory point command both
+  use binary64. The point command fixes the kernel tolerance at `1e-12`; its
+  complete rerun returns the same S2 value as the five-format comparison below,
+  differing from MPFR192 by less than 2e-15 relative. A successful two-spinon
+  value does not imply that the four-spinon part of the same query succeeds.
 - The 75 JSON Lines records in the one-magnon precision tutorial deliberately
   compare five formats. They are checked against an independent Decimal sine
   evaluation. The examples exhibit observable cancellation and root sensitivity,
@@ -64,6 +67,22 @@ within 1.3e-16 relative, and MPFR192 confirms one reference. This is wider-value
 evidence for those three points only. The recorded binary128 failure uses the
 previous 53-bit lower comparison; this neighbourhood audit predates the
 intermediate native comparison.
+
+The later [binary128 neighbourhood record](four-spinon-native-neighbourhood-20261031.json)
+retains all 98 queries at the same 49 supported points, with a 64/113-bit pair.
+It completes 48/49 points at `1e-8` and 49/49 at `1e-6`; the strict failure at
+q=1.5, omega=4.5 remains unavailable. All 97 completed estimates agree with
+the matched MPFR128 S4 values within 1.3e-30 relative. These are clean-checkout
+exports from `865d701` on a Xeon Gold 6254, with two workers per query. The older
+MPFR exports retain their unavailable embedded revision and the review author's
+source attribution. They request sectors 2,4 with different worker counts;
+only the S4 value is compared, not total-query cost. Both sets retain complete
+numerical controls and raw hashes. The checker reconstructs the coverage and
+comparisons from the compact record; it does not claim to inspect raw archives:
+
+```sh
+python3 scripts/check_xxx_four_spinon_native_neighbourhood.py
+```
 
 The starting command now uses `1e-6`, with a margin below the integration
 changes it demonstrates; its actual two-sector rerun is checked separately.
