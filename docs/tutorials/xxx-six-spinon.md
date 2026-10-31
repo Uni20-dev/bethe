@@ -52,6 +52,9 @@ bethe-xxx-structure-factor-thermo --sectors 6 \
 
 ### Why evaluate the form factor at two precisions?
 
+You select one format with `--precision`; the program automatically chooses
+a lower precision for an internal accuracy check. It does not run two separate
+Monte Carlo integrations or draw a second set of random configurations.
 For each supported spinon configuration, the program evaluates the same
 form-factor density twice: once at a lower precision and once at a higher
 precision, called the **guard precision**. Both evaluations start from the
