@@ -18,19 +18,24 @@ iMPS-oriented introduction.
 
 ```sh
 bethe-xxx-structure-factor-thermo --momentum 1.5 --points 501 --csv cut.csv
-bethe-xxx-structure-factor-thermo --momentum 1.5 --omega 1.8 --precision long-double
+bethe-xxx-structure-factor-thermo --sectors 2 --momentum 1.5 --omega 1.8 \
+  --precision fp64 --tolerance 1e-12
 bethe-xxx-structure-factor-thermo --momentum-points 129 --points 401 \
   --threads 4 --csv spectrum.csv --csv-table continuum=edges.csv
 ```
 
-Commands assume an installed executable on `PATH`; from its build directory,
+The point example uses the binary64 setting checked in the
+[precision audit](validation/tutorial-precision.md). Commands assume an
+installed executable on `PATH`; from its build directory,
 use `./bethe-xxx-structure-factor-thermo`. The common
 [precision and export controls](command-line.md) apply, including optional fp128
 and scalar MPFR (`--precision bits-N` or `digits-N`). MPFR does not require
-MPLAPACK for this scalar integral. For example:
+MPLAPACK for this scalar integral. For an optional wider-arithmetic comparison
+of the same point, keep the kernel tolerance fixed:
 
 ```sh
-bethe-xxx-structure-factor-thermo --momentum 1.5 --omega 1.8 --precision bits-256
+bethe-xxx-structure-factor-thermo --sectors 2 --momentum 1.5 --omega 1.8 \
+  --precision bits-192 --tolerance 1e-12
 ```
 
 `--max-quadrature-order` bounds the Gauss–Legendre refinement (a power of two
