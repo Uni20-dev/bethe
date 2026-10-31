@@ -1,5 +1,9 @@
 # Resolving six spinons with importance sampling
 
+<!-- BEGIN GENERATED PAGE LINK -->
+[Read this page on the documentation site](https://uni20-dev.github.io/bethe/docs/tutorials/xxx-six-spinon/)
+<!-- END GENERATED PAGE LINK -->
+
 [Two-spinon spectrum](xxx-structure-factor-thermo.md) ·
 [Four-spinon quadrature](xxx-four-spinon.md) ·
 [Selected-sector options](../xxx-spinon-sectors.md)
