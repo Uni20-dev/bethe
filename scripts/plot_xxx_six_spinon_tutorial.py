@@ -12,7 +12,7 @@ import hashlib
 import json
 from pathlib import Path
 
-from spinon_tutorial_exports import close, decimal, read_spectrum
+from spinon_tutorial_exports import decimal, read_spectrum
 
 
 def integer(value, *, positive=False):
@@ -20,6 +20,13 @@ def integer(value, *, positive=False):
     if number != number.to_integral_value() or number < (1 if positive else 0):
         raise ValueError('Expected an exact nonnegative count')
     return int(number)
+
+
+def same_scalar(actual, expected, bits):
+    # A tiny spectral weight still needs a relative check. An absolute unit
+    # floor would accept a zeroed small error or an entirely missing faint tail.
+    a, b = decimal(actual), decimal(expected)
+    return abs(a - b) <= Decimal(2) ** (8 - bits) * max(abs(a), abs(b))
 
 
 def sampling_points(document, *, momentum, exchange='1', expected_metadata=None):
@@ -66,7 +73,7 @@ def sampling_points(document, *, momentum, exchange='1', expected_metadata=None)
                 if integer(row['completed_samples']) != samples or row['failed_sample'] is not None:
                     raise ValueError('Incomplete replicate; cannot estimate over survivors')
                 mean, maximum = decimal(row['density']), decimal(row['maximum_absolute_density'])
-                if mean < 0 or maximum < mean:
+                if mean < 0 or maximum < mean or maximum > samples * mean:
                     raise ValueError('Invalid nonnegative observation summary')
                 for key in ('supported_roots', 'density_attempts'):
                     integer(row[key])
@@ -78,7 +85,7 @@ def sampling_points(document, *, momentum, exchange='1', expected_metadata=None)
             mean = sum(means) / count
             error = (sum((value - mean) ** 2 for value in means) / (count * (count - 1))).sqrt()
             check = checks[0]
-            if not close(mean, spectrum['density'], bits) or not close(error, check['sampling_error'], bits):
+            if not same_scalar(mean, spectrum['density'], bits) or not same_scalar(error, check['sampling_error'], bits):
                 raise ValueError('Exported mean/SE differs from independent replicate calculation')
             attempts = sum(integer(row['density_attempts']) for row in groups)
             if attempts != integer(spectrum['evaluations']) or attempts != integer(check['evaluations']):

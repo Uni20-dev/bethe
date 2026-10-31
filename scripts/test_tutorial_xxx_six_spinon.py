@@ -48,7 +48,7 @@ class SixSpinonSampling(unittest.TestCase):
                     sampling_points(data, momentum='1.5')
 
     def test_missing_duplicate_or_failed_replicate_is_rejected(self):
-        for kind in ('missing', 'duplicate', 'failed', 'count', 'id', 'maximum', 'attempts'):
+        for kind in ('missing', 'duplicate', 'failed', 'count', 'id', 'maximum', 'overweight', 'attempts'):
             with self.subTest(kind=kind):
                 data = fixture()
                 rows = data['tables']['replicates']['rows']
@@ -58,6 +58,7 @@ class SixSpinonSampling(unittest.TestCase):
                 elif kind == 'count': rows[1][3] = '3'
                 elif kind == 'id': rows[1][2] = '2'
                 elif kind == 'maximum': rows[1][6] = '2'
+                elif kind == 'overweight': rows[1][6] = '13'
                 else: rows[1][5] = '7'
                 with self.assertRaises(ValueError):
                     sampling_points(data, momentum='1.5')
@@ -73,6 +74,19 @@ class SixSpinonSampling(unittest.TestCase):
             data['tables']['diagnostics']['rows'][0][3] = str(small)
             point = sampling_points(data, momentum='1.5')['points'][0]
             self.assertEqual(Decimal(point['sampling_se']), small)
+
+    def test_faint_tail_cannot_hide_a_zeroed_sampling_error(self):
+        data = fixture()
+        for row in data['tables']['replicates']['rows']:
+            for column in (6, 7):
+                row[column] = str(Decimal(row[column]) * Decimal('1e-100'))
+        data['tables']['spectrum']['rows'][0][3] = '2e-100'
+        data['tables']['diagnostics']['rows'][0][3] = '1e-100'
+        point = sampling_points(data, momentum='1.5')['points'][0]
+        self.assertEqual(Decimal(point['sampling_se']), Decimal('1e-100'))
+        data['tables']['diagnostics']['rows'][0][3] = '0'
+        with self.assertRaisesRegex(ValueError, 'mean/SE'):
+            sampling_points(data, momentum='1.5')
 
 
 if __name__ == '__main__':
