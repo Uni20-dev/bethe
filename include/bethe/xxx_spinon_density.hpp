@@ -144,7 +144,9 @@ template <uni20::Real R> class XXXSpinonDensity {
         bethe::detail::ControlledTailWorkspace<R> tail_workspace;
         std::vector<Moments> values(n, Moments{cz, cz, cz, cz});
         std::vector<Errors> errors(n, Errors{zero_, zero_, zero_, zero_}), rounds = errors;
-        R const two_pi = R{2} * pi_, half_pi = pi_ / R{2};
+        // Construct loop invariants once, at the same precision as the operands.
+        R const two_pi = R{2} * pi_, half_pi = pi_ / R{2}, half = one_ / R{2};
+        C const imaginary_half_pi = imaginary * half_pi;
         std::vector<R> positive_exp, negative_exp, hyperbolic, ladder_imaginary;
         for (int j = 0; j < n; ++j)
         {
@@ -186,9 +188,9 @@ template <uni20::Real R> class XXXSpinonDensity {
                                      "unrepresentable Gamma residue seed; increase precision or exponent range");
           for (int m = 0; m < terms; ++m)
           {
-            C ratio(-(one_ * R(m) - one_ / R{2}) / R(m + 1), zero_);
+            C ratio(-(one_ * R(m) - half) / R(m + 1), zero_);
             for (auto const& a : x)
-              ratio *= (R(m) - one_ / R{2} - a) / (a - R(m + 1));
+              ratio *= (R(m) - half - a) / (a - R(m + 1));
             residues[j][m + 1] = residues[j][m] * ratio;
             if (!uni20::isfinite(residues[j][m + 1]) || residues[j][m + 1] == cz)
               throw SpinonDensityError(SpinonDensityFailure::exponent_range,
@@ -212,28 +214,29 @@ template <uni20::Real R> class XXXSpinonDensity {
               C alpha(beta[j], ladder_imaginary[m]);
               C polynomial(one_, zero_);
               for (int k = 0; k < ell; ++k)
-                polynomial *= alpha - beta[k] + imaginary * half_pi;
+                polynomial *= alpha - beta[k] + imaginary_half_pi;
               for (int k = ell + 1; k < n; ++k)
-                polynomial *= beta[k] - alpha + imaginary * half_pi;
+                polynomial *= beta[k] - alpha + imaginary_half_pi;
               samples.push_back(m == 0 && j > ell ? cz : residues[j][m] * imaginary * hyperbolic[j] * polynomial);
             }
+            R const centered_beta = beta[j] - center;
             for (int moment = 0; moment < (n == 4 ? 1 : 2); ++moment)
             {
               SpinonSum<C> prefix(cz);
               SpinonSum<R> magnitudes(zero_);
-              C last = cz;
-              for (int m = 0; m <= terms; ++m)
+              auto add_sample = [&](C const& v) {
+                prefix.add(v);
+                magnitudes.add(abs(v));
+              };
+              // Borrow zeroth-moment samples; only the first moment needs a product.
+              for (int m = 0; m < terms; ++m)
               {
-                C v = samples[m];
-                if (moment) v *= C(beta[j] - center, ladder_imaginary[m]);
-                if (m < terms)
-                {
-                  prefix.add(v);
-                  magnitudes.add(abs(v));
-                }
+                if (moment)
+                  add_sample(samples[m] * C(centered_beta, ladder_imaginary[m]));
                 else
-                  last = v;
+                  add_sample(samples[m]);
               }
+              C const last = moment ? samples[terms] * C(centered_beta, ladder_imaginary[terms]) : samples[terms];
               a.clear();
               b.clear();
               for (int k = 0; k < n; ++k)
@@ -244,7 +247,7 @@ template <uni20::Real R> class XXXSpinonDensity {
               }
               if (moment)
               {
-                C offset(-one_ / R{4}, (beta[j] - center) / two_pi);
+                C offset(-one_ / R{4}, centered_beta / two_pi);
                 a.push_back(offset + one_);
                 b.push_back(offset);
               }
