@@ -20,14 +20,19 @@ density $`S^{zz}(q,\omega)`$; frequency integrals use $`d\omega/(2\pi)`$.
 
 ## Calculate both contributions
 
-With an MPFR-enabled [build or installation](../building.md), run:
+For this exact starting point and these controls, native `long double` passes
+on the tested x86 system (64 significand bits), and is much faster than MPFR.
+This is not a recommendation for every momentum or frequency: nearby points
+can fail the same arithmetic screen. Check `bethe-info` on your platform;
+`long-double` is a platform format, not a fixed bit count.
+With a [build or installation](../building.md), run:
 
 ```sh
 bethe-xxx-structure-factor-thermo --sectors 2,4 \
-  --momentum 1.5 --omega 1.8 --precision bits-192 \
+  --momentum 1.5 --omega 1.8 --precision long-double \
   --four-order 4 --four-cutoff 8 \
-  --density-relative-tolerance 1e-8 --density-absolute-tolerance 1e-30 \
-  --threads 2 --csv point.csv --csv-table diagnostics=point-checks.csv
+  --density-relative-tolerance 1e-6 --density-absolute-tolerance 1e-30 \
+  --tolerance 1e-12 --threads 2 --csv point.csv --csv-table diagnostics=point-checks.csv
 ```
 
 From a build directory, prefix the program with `./`. The three output rows
@@ -46,6 +51,20 @@ This deliberately modest rule gives approximately
 These extra digits identify the calculation, not its accuracy as an
 unrestricted four-spinon response. The refinement study below shows much
 larger integration changes than the arithmetic diagnostics.
+
+When changing the point or integration controls, inspect the exit status and
+diagnostics again. If the arithmetic screen fails, retain the failure and repeat
+the whole query with `--precision bits-128`, which strengthens both members of
+the density comparison. Binary128 alone may not help: its lower comparison
+still uses 53 bits. A failed screen does not supply an approximate spectral
+value or a usable partial sum.
+
+The starting command uses a $`10^{-6}`$ relative density screen, comfortably
+below the order/domain changes demonstrated here. Wider-reference checks at
+contrasting points support that choice; they do not certify a whole spectral
+curve. Even at this tolerance, some ordinary points need MPFR. See the
+[neighbourhood study](#changing-the-point-can-change-the-precision-requirement)
+before extending the command to a grid.
 
 ## Change order and soft cutoff separately
 
@@ -69,8 +88,14 @@ from 8 to 12 changes the four-spinon density by about 0.02647; changing the
 order from 8 to 16 at cutoff 12 changes it by about 0.00011. A small order
 change alone would therefore give a misleading accuracy impression here.
 
-The frontend can make the four comparisons in one command. Add to the first
-calculation:
+The frontend can make four comparisons in one command. Finer orders introduce
+more difficult nodes: at the refinement study's stricter $`10^{-8}`$ relative
+tolerance, orders 8 and 16 fail the native 53/64-bit density screen at both
+cutoffs. Keep those failures; do not use an
+incomplete prefix. For the validated refinement study, replace `--precision
+long-double` with `--precision bits-128` and replace the starting command's
+`--density-relative-tolerance 1e-6` with `--density-relative-tolerance 1e-8`.
+Then add these two refinement options:
 
 ```sh
 --four-refine-order 8 --four-extended-cutoff 12
@@ -84,32 +109,109 @@ columns as well as the density and its status.
 
 ## Arithmetic accuracy is a different check
 
-The measured runs use 192-bit geometry/output arithmetic, with density
-comparisons at 128 and 192 bits. The two contour controls use 64/80 terms and
-tail orders 16/20. These choices and the acceptance tolerances are retained in
-the exported metadata.
+A fixed-control comparison of the starting point, using the stricter
+$`10^{-8}`$ relative density screen, gives:
 
-At the initial order-4/cutoff-8 point, integrated contour and arithmetic
-screening diagnostics are below $`10^{-34}`$. They are far smaller than the
-order and cutoff changes. Tightening the density tolerance cannot resolve
-weight that lies outside the domain or between insufficient quadrature nodes.
-A larger production calculation should also repeat the complete geometry at
-higher precision, independently of these density-only checks.
+| Arithmetic | Density comparison / guard bits | Result | CPU seconds |
+| --- | ---: | --- | ---: |
+| Binary64 | 24 / 53 | Arithmetic screen fails | 0.0026 to failure |
+| x86 long double | 53 / 64 | Complete | 0.337 |
+| Binary128 | 53 / 113 | Complete | 6.69 |
+| MPFR, 128 bits | 64 / 128 | Complete | 48.2 |
+| MPFR, 192 bits | 128 / 192 | Complete | 64.0 |
 
-The absolute density tolerance matters near a zero of the density, where a
-relative-only check may be ill-conditioned. Failed nodes remain explicit
-failures: no incomplete prefix is used to form a successful contribution.
-If a requested sector fails, its sum row is `incomplete` rather than a sum
-of the surviving sectors.
+The complete native result agrees with MPFR192 to about $`1.14\times10^{-16}`$
+relative; MPFR128 and MPFR192 agree to about $`2.42\times10^{-38}`$. That
+is much more arithmetic agreement than this demonstration needs. It does not
+resolve the large omitted soft contribution. The native arithmetic screening
+diagnostic is about $`4.8\times10^{-11}`$ here, also well below the observed
+order/domain changes. Agreement between wider runs is a separate check.
+
+Every row uses the same quadrature, domain, 64/80 contour terms, 16/20 tail
+orders, density tolerances and explicit two-spinon tolerance of $`10^{-12}`$.
+One worker is used for this comparison. The [compact record](data/xxx-four-spinon-precision.json)
+retains the failed binary64 contribution and its missing partial sum, as well
+as successful values, diagnostics, controls, source revisions and costs.
+Check or regenerate all five formats with:
+
+```sh
+python3 scripts/check_xxx_four_spinon_precision.py --check
+# Requires a build with binary128 and MPFR; retains expected failures:
+python3 scripts/check_xxx_four_spinon_precision.py \
+  --solver bethe-xxx-structure-factor-thermo --raw-dir precision-exports
+```
+
+The failed native higher-order checks do not prove the 64-bit-significand
+answer would be wrong: its 53-bit comparison may be limiting. They do mean
+that this pair cannot certify every node under the requested policy. Increasing
+the precision pair and repeating the complete calculation tests that issue;
+loosening the guard solely to obtain success does not.
+
+### Changing the point can change the precision requirement
+
+An independent follow-up tests 54 points: six momenta from 0.6 to 3 radians
+and nine frequencies from $`1J`$ to $`4.5J`$, all at order 4 and cutoff 8.
+Five lie outside support. Among the remaining 49:
+
+| Arithmetic | `rtol=1e-8` | `rtol=1e-6` | `rtol=1e-4` |
+| --- | ---: | ---: | ---: |
+| Binary64, 24/53-bit pair | 0 complete | 0 complete | 0 complete |
+| x86 long double, 53/64-bit pair | 26 complete | 47 complete | 49 complete |
+
+The two native failures remaining at $`10^{-6}`$ are
+$`(q,\omega/J)=(2.5,1.8)`$ and $`(1.5,4.5)`$. MPFR128 completes both at the
+stricter $`10^{-8}`$ tolerance, as well as $`(1.5,3)`$, where native arithmetic
+passes at $`10^{-6}`$ but fails at $`10^{-8}`$. The successful native values at
+these three points differ from their MPFR128 references by less than
+$`1.3\times10^{-16}`$ relative. MPFR192 independently confirms the first
+reference. Binary128 still fails there because its lower comparison is 53 bits.
+
+These results distinguish screen coverage from measured value accuracy. The
+native grid costs 17.5 CPU seconds; five wider-reference checks cost 81.8 CPU
+seconds on the same i7-12700KF. These timings select **only sector 4**; do not
+compare them directly with the two-sector timings above. Wider values were
+checked at three contrasting points, not all 49. Passing all points at
+$`10^{-4}`$ is therefore not a blanket accuracy recommendation. Choose a
+tolerance from the observable's error budget, compare against stricter wider
+references, and keep that choice separate from order and domain checks.
+
+The [compact record](../validation/four-spinon-neighbourhood-precision-20261031.json)
+retains all 329 outcomes, effective precision, diagnostics, costs and raw hashes.
+Check it or repeat the study, including expected numerical failures, with:
+
+```sh
+python3 scripts/check_xxx_four_spinon_neighbourhood.py --check
+python3 scripts/check_xxx_four_spinon_neighbourhood.py \
+  --solver bethe-xxx-structure-factor-thermo --raw-dir neighbourhood-exports
+```
+
+For the complete eight-point refinement grid, MPFR128 passes every node and
+agrees with the original MPFR192 S4 estimates to within
+$`3.4\times10^{-38}`$ relative. Binary128 still fails at order 8 on both
+domains: its lower comparison remains at 53 bits, whereas MPFR128 raises that
+comparison to 64 bits. The
+[refinement precision record](../validation/four-spinon-refinement-precision-20261031.json)
+retains all native failures and the original 192-bit reference. The new figure
+and its reproducer use the validated 128-bit setting.
+
+The density screen is $`\mathrm{atol}+\mathrm{rtol}|W|`$. Its relative
+term dominates above $`|W|=10^{-22}`$ in the strict $`10^{-8}`$ comparison,
+or $`10^{-24}`$ in the starting command's $`10^{-6}`$ comparison.
+The `1e-30` absolute tolerance is a near-zero floor,
+not a demand for thirty-digit relative accuracy. The [accuracy guide](../numerical-accuracy.md)
+explains the scale and the separate solver, contour, quadrature, sampling and
+tail checks. For a small example of actual information loss and a stable
+reformulation, see [the one-magnon precision tutorial](xxx-precision.md).
 
 ## Cost and practical scope
 
-The first point used 33 seconds wall time and 66 CPU seconds with two workers
-on an Intel Core i7-12700KF. The right-hand panel shows measured CPU cost for
-the complete queries, including the inexpensive two-spinon reference. These
-measurements come from a shared host, with at most two simultaneous two-worker
-queries; they are not portable timing promises. The largest point, order 16
-and cutoff 12, used about 11.4 minutes wall time and 22.8 CPU minutes.
+The ordinary native point takes about 0.34 CPU seconds on the measured Intel
+Core i7-12700KF. The 128-bit refinement grid above takes about 41 CPU minutes
+in total with two workers. Its order-4/cutoff-8 point uses about 24 seconds wall
+and 48 CPU seconds; the largest point, order 16 and cutoff 12, uses about
+8.7 minutes wall and 17.4 CPU minutes. The original 192-bit grid took about
+54 CPU minutes and remains an optional arithmetic reference. These shared-host
+measurements describe the recorded runs, not portable performance guarantees.
 
 Doubling order increases the number of nodes in both integration directions.
 Start with a few representative points and separate the order and domain
@@ -132,7 +234,7 @@ momentum from the four-spinon study above:
 bethe-xxx-structure-factor-thermo --sectors 6 \
   --momentum 1.57079632679489661923132169163975 \
   --omega-min 1.8 --omega-max 2.2 --points 3 \
-  --precision bits-384 --six-cutoff 8 --replicates 4 --samples 32 \
+  --precision long-double --six-cutoff 8 --replicates 4 --samples 32 \
   --seed 42 --threads 2 --density-relative-tolerance 1e-5 \
   --diagnostics --replicate-output --quiet --json slice.json
 ```
@@ -153,11 +255,38 @@ sampling variation, while a larger cutoff addresses a different omission.
 The two cutoff types must not be equated: `--six-cutoff` bounds absolute
 rapidities, whereas `--four-cutoff` bounds the soft log-radius coordinate.
 
-The run used 62 seconds wall time and 101 CPU seconds on the same CPU model,
-with two workers. Its [compact record](../validation/six-spinon-cli-20261031.json)
-contains controls, source revisions and timings; the replicate exports allowed
-an independent recomputation of the means and sampling errors. See
+The native run used 0.31 seconds wall time and 0.38 CPU seconds on the same
+CPU model, with two workers. Its means agree with the 384-bit reference to
+within $`2.7\times10^{-16}`$ relative. The
+[eight-format comparison](../validation/six-spinon-precision-20261031.json)
+retains controls, source revisions, timings and failed formats; the replicate
+exports allowed independent reconstruction of the means and sampling errors.
+Binary64 fails both arithmetic and exponent-range checks on this stream;
+the successful MPFR128 alternative costs about 44 CPU seconds. These results
+justify the native setting for this small example, not for a new seed or a
+larger soft domain. See
 [six-spinon sampling](../xxx-six-spinon-structure-factor.md) before extending it.
+
+Changing the seed can expose a failed density screen even at this small cutoff.
+An independent scan of seeds 1–40 retained every outcome: seeds 2 and 35 fail
+at the printed $`10^{-5}`$ tolerance. For the first failing seed, 2, repeating
+the **whole query** at MPFR128 and MPFR192 with unchanged tolerance completes;
+the three means agree within $`4.4\times10^{-37}`$ relative. This is a useful
+small precision exercise: replace `--seed 42` with `--seed 2`, retain the native
+failure, then try `--precision bits-128` and `--precision bits-192`.
+
+Native arithmetic with a $`10^{-3}`$ density tolerance also completes seed 2;
+its means agree with the strict MPFR192 reference within $`3.3\times10^{-16}`$.
+That comparison supports a cheaper inner accuracy budget for this particular
+demonstration. It is not permission to keep loosening a screen until an unknown
+query passes. Binary64 still fails, including an exponent-range failure.
+The [seed comparison](../validation/six-spinon-seed-precision-20261031.json)
+retains the 40 discovery outcomes, four replays, sampling diagnostics, matched
+stream/count checks and costs. The strict MPFR128/192 replays cost 37.8/48.5
+CPU seconds; the looser native replay costs 0.31. Sampling errors remain large.
+Never search for a passing seed or discard failed observations to obtain a
+plotted estimate.
+
 To include lower sectors at these **same** spectral points, use `--sectors 2,4,6`
 and refine their numerical controls separately. No normalization step is needed.
 
