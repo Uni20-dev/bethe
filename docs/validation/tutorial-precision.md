@@ -98,6 +98,18 @@ partial estimates. Independent reconstruction checks successful means,
 sampling errors and work counts. The large sampling errors and omitted R8
 domain remain; precision agreement does not remove them.
 
+The subsequent [seed study](six-spinon-seed-precision-20261031.json) keeps all
+40 predeclared native queries at the same R8/4x32 settings and `rtol=1e-5`.
+Seeds 2 and 35 fail; the first failure, seed2, is replayed completely with
+MPFR128/192 at unchanged tolerance. All stream/work identities match, and the
+means agree within 4.35e-37 relative. A native `1e-3` replay agrees with that
+strict192 reference within 3.25e-16 in the means and 7.08e-15 in replicate
+means/maxima. Binary64 still fails, including exponent range. Independent
+reconstruction checked all44 raw hashes, failure identities, successful means
+and sampling errors. The printed seed42 example remains valid; its arithmetic
+recommendation does not automatically transfer to another stream or sample
+count. No passing seed is substituted for a failed one.
+
 A separate [geometry comparison](six-spinon-geometry-precision-20261031.json)
 holds the density pair at 192/256 bits and probes R1040. Geometry at 256,
 512 and 1024 bits is rejected before export: the soft endpoint rounds onto

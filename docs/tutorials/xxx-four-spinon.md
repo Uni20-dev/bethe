@@ -264,6 +264,27 @@ the successful MPFR128 alternative costs about 44 CPU seconds. These results
 justify the native setting for this small example, not for a new seed or a
 larger soft domain. See
 [six-spinon sampling](../xxx-six-spinon-structure-factor.md) before extending it.
+
+Changing the seed can expose a failed density screen even at this small cutoff.
+An independent scan of seeds 1–40 retained every outcome: seeds 2 and 35 fail
+at the printed $`10^{-5}`$ tolerance. For the first failing seed, 2, repeating
+the **whole query** at MPFR128 and MPFR192 with unchanged tolerance completes;
+the three means agree within $`4.4\times10^{-37}`$ relative. This is a useful
+small precision exercise: replace `--seed 42` with `--seed 2`, retain the native
+failure, then try `--precision bits-128` and `--precision bits-192`.
+
+Native arithmetic with a $`10^{-3}`$ density tolerance also completes seed 2;
+its means agree with the strict MPFR192 reference within $`3.3\times10^{-16}`$.
+That comparison supports a cheaper inner accuracy budget for this particular
+demonstration. It is not permission to keep loosening a screen until an unknown
+query passes. Binary64 still fails, including an exponent-range failure.
+The [seed comparison](../validation/six-spinon-seed-precision-20261031.json)
+retains the 40 discovery outcomes, four replays, sampling diagnostics, matched
+stream/count checks and costs. The strict MPFR128/192 replays cost 37.8/48.5
+CPU seconds; the looser native replay costs 0.31. Sampling errors remain large.
+Never search for a passing seed or discard failed observations to obtain a
+plotted estimate.
+
 To include lower sectors at these **same** spectral points, use `--sectors 2,4,6`
 and refine their numerical controls separately. No normalization step is needed.
 
