@@ -236,6 +236,33 @@ python3 scripts/plot_xxx_six_spinon_tutorial.py \
 A small difference does not bound the weight beyond the larger cutoff. Both
 estimates can omit the same soft region.
 
+## Distinguish contour failures from arithmetic failures
+
+Larger domains can require both stronger contours and wider arithmetic. The
+[slice calibration record](../validation/six-spinon-slice-calibration-20261031.json)
+keeps fifteen bounded queries, their commands and costs, two failed queries,
+paired cutoff comparisons and exact replays of the problematic configurations.
+
+At $`\omega=2J`$ and $`R=1040`$, a complete 2048-draw query fails with
+1040/1056 residue terms and tail orders 32/36. Raising the density guard from
+256 to 384 bits leaves the original contour failures. Two stronger contour
+choices pass the failed configurations and agree within
+$`5\times10^{-61}`$ relative. The cheaper passing choice uses 1560/1576 terms
+and tail orders 48/52; a complete replay then passes.
+
+At $`\omega=3J`$, those contours pass their truncation check, but one sampled
+configuration fails the 192/256-bit arithmetic comparison: its relative
+indicator is $`2.73\times10^{-6}`$ against a $`10^{-6}`$ target. Keeping the
+contours and tolerance fixed, the 256/320-bit pair passes; a 320/384-bit replay
+agrees within $`1.3\times10^{-91}`$ in the checked densities. The complete
+1024-draw query then passes at 256/320 bits, as does the $`\omega=4J`$ anchor.
+These cases motivate the wider density pair for the large-domain slice.
+
+Neither repair changes the sample stream or replaces a failed result with an
+average of surviving observations. The checks establish usable numerical
+controls at the tested points. They do not establish sampling convergence or
+bound the omitted soft domain; larger runs still check every observation.
+
 ## When the geometry needs higher precision
 
 Extending the rapidity domain can demand much more precision even with a loose
