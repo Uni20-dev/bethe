@@ -49,8 +49,8 @@ limitations. These examples show where to look before increasing precision:
 
 These are existing model checks, not new wider-arithmetic comparisons for all
 654 exports. For an observable requiring more accuracy than the tutorial plot,
-repeat its calculation at fixed non-arithmetic controls before refining the
-mesh, state family or domain separately. The spinon comparisons below measure
+compare successive precisions with non-arithmetic controls fixed, then refine
+the mesh, state family or domain separately. The spinon comparisons below measure
 the precision and cost choices explicitly.
 
 ## Four-spinon starting point
