@@ -219,6 +219,10 @@ def spectrum_figure(document, *, momentum, exchange='1'):
                     axis.axvline(edge, color='#777777', linestyle=style, linewidth=.8, label=label)
             axis.set_xlabel(r'$\omega/J$')
             axis.set_ylabel(r'$J S^{zz}_6(q,\omega)$')
+            # Autoscaling ignores NaN endpoints; retain the entire requested grid.
+            if len(x) > 1:
+                margin = .025 * (x[-1] - x[0])
+                axis.set_xlim(x[0] - margin, x[-1] + margin)
             axis.grid(alpha=.2)
             if axis.get_legend_handles_labels()[0]:
                 axis.legend(frameon=False, fontsize=9)
@@ -228,8 +232,13 @@ def spectrum_figure(document, *, momentum, exchange='1'):
         axes[1].set_title('Logarithmic density; no broadening')
         if not any(v > 0 for v in y):
             axes[1].set_yticks([])
-        fig.suptitle(f'q / π = {q / math.pi:.6g}; finite rapidity domain R = '
-                     f'{data["rapidity_cutoff"]}; sampling errors only', fontsize=11)
+        missing = sum(point['s6'] is None for point in data['points'])
+        title = f'q / π = {q / math.pi:.6g}; finite rapidity domain R = {data["rapidity_cutoff"]}'
+        if missing < len(x):
+            title += '; sampling errors only'
+        if missing:
+            title += f'\nSix-spinon results unavailable at {missing}/{len(x)} requested frequencies'
+        fig.suptitle(title, fontsize=11)
         return fig
 
 

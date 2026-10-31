@@ -61,6 +61,18 @@ class SixPlot(unittest.TestCase):
             segments = axis.containers[0].lines[2][0].get_segments()
             self.assertEqual(segments[0].tolist(), [[1, 2], [1, 6]])
 
+    def test_missing_endpoints_retain_requested_domain_and_count(self):
+        missing = [{'omega': omega, 'status': 'unavailable',
+                    'reason': 'not computed', 'raw_sha256': None} for omega in ('1.8', '3.7')]
+        fig = spectrum_figure(packed(frequencies=('1.8', '2', '3.7'), unavailable=missing), momentum='1.5')
+        for axis in fig.axes:
+            lower, upper = axis.get_xlim()
+            self.assertLessEqual(lower, 1.8)
+            self.assertGreaterEqual(upper, 3.7)
+            segments = list(spectrum_line(axis).get_path().iter_segments(remove_nans=True))
+            self.assertEqual([code for _, code in segments], [ArtistPath.MOVETO])
+        self.assertIn('unavailable at 2/3 requested frequencies', fig._suptitle.get_text())
+
     def test_all_missing_draws_no_physical_curve(self):
         data = packed()
         data['runs'] = []
