@@ -10,8 +10,12 @@
 This optional recipe specifies sixteen unbroadened frequencies at nominal
 $`q=\pi/2`$, with longitudinal normalization, $`J=1`$ and rapidity cutoff
 $`R=1040`$. Each frequency uses 32 independent replicates of 768 draws.
-The fixed budget was chosen from the [calibration calculations](../validation/six-spinon-slice-calibration-20261031.json)
-before production; it does not guarantee a particular sampling error.
+The fixed sampling budget was chosen from the
+[calibration calculations](../validation/six-spinon-slice-calibration-20261031.json)
+before production; it does not guarantee a particular sampling error. The first
+large query exposed two contour failures. The revised contour controls below
+come from [exact replays and additional boundary tests](../validation/six-spinon-contour-recovery-20261031.json),
+with unchanged frequencies, sample counts, seeds and tolerances.
 
 **Production is still in progress.** This recipe records the requested grid
 and controls; it is not a completed-data or convergence claim. The grid spans
@@ -26,9 +30,12 @@ Use an MPFR-enabled [installation](../building.md). The command below expects
 that name with `./bethe-xxx-structure-factor-thermo`.
 
 This is a costly calculation, unlike the small example in the tutorial.
-Pilot timings suggest about 1.5–2.2 hours **per frequency with sixteen workers**
-on the measured Xeon Gold 6254 system; rare difficult observations and machine
-load can change that cost. The recipe defaults to four workers. Set `threads`
+The first large query used 25.7 CPU hours and 104 minutes of wall time with
+sixteen workers on a Xeon Gold 6254, then failed its contour checks. The revised
+controls cost roughly 1.5 times as much in the bounded replays; their complete
+query cost has not yet been measured. Budget several hours per frequency with
+24 workers, and substantially longer with fewer workers. This is a planning
+estimate, not a completed-grid timing. The recipe defaults to four workers. Set `threads`
 to match the CPUs available to your job, and choose `out` on a filesystem with
 room for the exports and logs. The source tree need not be your working directory.
 
@@ -67,7 +74,7 @@ GRID
       --six-background-weight 0.5 --six-one-pair-weight 0.25 \
       --six-two-pairs-weight 0.25 --six-one-pair-scale 4 \
       --six-one-pair-gap 0.5 --six-two-pairs-scale 8 --six-two-pairs-gap 1 \
-      --density-terms 1560 --density-tail-order 48 --density-seconds 60 \
+      --density-terms 3120 --density-tail-order 52 --density-seconds 60 \
       --density-relative-tolerance 1e-6 --density-absolute-tolerance 0 \
       --threads "$threads" --diagnostics --replicate-output --quiet \
       --json "$out/w${omega}.json" \
@@ -85,7 +92,7 @@ failure by zero or average only successful observations.
 The recipe states the proposal parameters explicitly, including defaults, so
 they remain visible when comparing implementations. Geometry uses 1536 bits;
 the density comparisons use 256/320 bits. The contour comparisons use
-1560/1576 residue terms and tail orders 48/52. These controls address distinct
+3120/3136 residue terms and tail orders 52/56. These controls address distinct
 numerical limitations, as explained in the [precision study](xxx-six-spinon.md#distinguish-contour-failures-from-arithmetic-failures).
 Sampling error still excludes the omitted rapidity domain.
 

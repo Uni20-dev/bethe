@@ -50,6 +50,41 @@ bethe-xxx-structure-factor-thermo --sectors 6 \
   --diagnostics --replicate-output --json small-slice.json
 ```
 
+### Why evaluate the form factor at two precisions?
+
+For each supported spinon configuration, the program evaluates the same
+form-factor density twice: once at a lower precision and once at a higher
+precision, called the **guard precision**. Both evaluations start from the
+same geometry coordinates, converted separately into their respective formats,
+and use the same contour controls. The lower result is a fresh calculation,
+not a rounded copy of the higher result.
+
+This tests sensitivity to roundoff. The formula contains special functions
+and sums whose terms can nearly cancel; choosing a floating-point format alone
+does not tell us how many useful digits survive. The difference between the
+two results contributes to the arithmetic diagnostic, together with the
+kernel's roundoff indicators and a check of its scalar prefactor. The program
+uses the **higher-precision value**, not an average of the two.
+
+For example, `long-double` on the tested x86 system compares a 53-bit `double`
+evaluation with a 64-bit `long double` evaluation. The table below gives both
+precisions for every measured run. With MPFR, the higher density precision
+normally follows `--precision bits-N`; `--density-guard-bits` can lower it
+independently of geometry precision. The comparison uses 64 fewer bits, with
+a minimum of 24, so a 192-bit density guard gives a 128/192-bit pair.
+
+The arithmetic diagnostic plus the estimated contour remainder must fit within
+$`\mathrm{atol}+\mathrm{rtol}\,|W_{\mathrm{high}}|`$.
+The program also repeats this check with a larger contour budget and checks
+agreement between the passing results. Agreement is a numerical stability
+check, not a rigorous error bound. Disagreement can originate in the lower
+precision even when the higher result is accurate: it means the requested
+check has not passed, not that the higher format is necessarily inadequate.
+Neither check measures Monte Carlo sampling error or the weight excluded by
+the rapidity cutoff.
+
+### Compare cost and arithmetic stability
+
 On an x86 machine with native extended80 `long double`, this complete query
 took 0.38 CPU seconds. The same domains, streams and numerical controls gave:
 
@@ -262,6 +297,25 @@ Neither repair changes the sample stream or replaces a failed result with an
 average of surviving observations. The checks establish usable numerical
 controls at the tested points. They do not establish sampling convergence or
 bound the omitted soft domain; larger runs still check every observation.
+
+Increasing the budget to 32 replicates of 768 draws at $`\omega=2J`$ exposed
+two further contour failures. The complete query was rejected: its other
+replicates do not supply a usable spectral estimate. Replaying the two failed
+configurations showed that wider arithmetic again left the contour problem
+unresolved. Stronger contour controls repaired both cases without changing the
+precision, tolerance or sample identities.
+
+We also tested four constructed geometries close to the rapidity cutoff;
+these are additional stress tests, not Monte Carlo samples. The
+[recovery record](../validation/six-spinon-contour-recovery-20261031.json)
+retains 22 bounded checks. At 3120/3136 residue terms and tail orders 52/56,
+both failed configurations and all four constructed cases pass. Their largest
+relative contour diagnostic is below $`8.6\times10^{-11}`$, compared with the
+unchanged $`10^{-6}`$ target. Separate increases in arithmetic precision and
+residue count preserve the checked densities. These are the controls in the
+[large-domain reproduction recipe](xxx-six-spinon-reproduction.md); the
+replacement whole-query calculation is still in progress. Passing these
+selected configurations does not replace checking every production observation.
 
 ## When the geometry needs higher precision
 
