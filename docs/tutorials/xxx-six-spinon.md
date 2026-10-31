@@ -150,7 +150,7 @@ error bar. Examine replicate scatter and influential observations, increase
 independent work, and check a different seed. Calibrate proposal choices on
 separate streams before using them for a validation calculation.
 
-Four controls answer different questions:
+These controls answer different questions:
 
 | Change | What the comparison tests |
 | --- | --- |
@@ -254,6 +254,22 @@ points with their original controls. Unavailable points have `s6: null` and
 `sampling_se: null`; they must appear as gaps, not zeroes or connecting lines.
 These checks preserve the evidence for an estimate; they do not certify its
 sampling or cutoff convergence.
+
+To plot a compact slice, install the optional plotting dependencies and run:
+
+```sh
+python3 -m pip install -r docs/tutorials/requirements.txt
+python3 scripts/plot_xxx_six_spinon_tutorial.py \
+  --compact six-compact.json --momentum "$q" --figure six-slice.svg
+```
+
+This writes `six-slice.svg` and `six-slice-dark.svg`, each with linear and
+logarithmic density panels. The points are unbroadened; joining lines only
+guide the eye. Error bars show the sampling SE, excluding cutoff uncertainty.
+Unavailable frequencies interrupt the curve. The two-, four- and six-spinon
+upper boundaries are marked when they fall within the requested frequency
+range. A single-point file is useful for checking the renderer, but a physical
+line shape requires a resolved frequency grid.
 
 The [six-spinon library interface](../xxx-six-spinon-structure-factor.md)
 provides independent geometry and recovery precision when needed. To obtain
