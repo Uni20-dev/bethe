@@ -73,7 +73,9 @@ def sampling_points(document, *, momentum, exchange='1', expected_metadata=None)
                 if integer(row['completed_samples']) != samples or row['failed_sample'] is not None:
                     raise ValueError('Incomplete replicate; cannot estimate over survivors')
                 mean, maximum = decimal(row['density']), decimal(row['maximum_absolute_density'])
-                if mean < 0 or maximum < mean or maximum > samples * mean:
+                if (mean < 0 or maximum < 0
+                        or (maximum < mean and not same_scalar(maximum, mean, bits))
+                        or (maximum > samples * mean and not same_scalar(maximum, samples * mean, bits))):
                     raise ValueError('Invalid nonnegative observation summary')
                 for key in ('supported_roots', 'density_attempts'):
                     integer(row[key])

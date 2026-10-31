@@ -70,6 +70,7 @@ class SixSpinonSampling(unittest.TestCase):
             small = Decimal('1e-40')
             rows = data['tables']['replicates']['rows']
             rows[0][7], rows[1][7] = str(1 - small), str(1 + small)
+            rows[0][6] = rows[1][6] = '2'
             data['tables']['spectrum']['rows'][0][3] = '1'
             data['tables']['diagnostics']['rows'][0][3] = str(small)
             point = sampling_points(data, momentum='1.5')['points'][0]
