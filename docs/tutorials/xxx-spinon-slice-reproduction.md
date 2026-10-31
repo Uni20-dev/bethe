@@ -40,6 +40,14 @@ upper edge. Above it, the selected domain is smaller and order refinement
 determines the cost. The two sets of controls follow the
 [separate refinement checks](xxx-spinon-slice.md#measured-four-spinon-controls).
 
+The separate `--tolerance 1e-40` below applies only to the two-spinon kernel.
+It preserves the setting used for these production exports; it does not request
+or demonstrate forty-digit accuracy for the four-spinon integral. For an ordinary
+two-spinon point, the [introductory command](xxx-structure-factor-thermo.md#generate-the-data)
+uses validated binary64 arithmetic and a `1e-12` kernel tolerance. The wider
+geometry here is needed for the four-spinon soft domain, as explained in the
+calibration above.
+
 ```sh
 (
   set -eu
