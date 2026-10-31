@@ -11,8 +11,11 @@ bound for every model or every plotted point.
   This covers the ordinary finite-chain, gas, impurity, field-theory and
   dispersion examples. Their existing checks inspect successful statuses,
   model identities and the relevant analytical or numerical consistency tests.
-- The two-spinon thermodynamic heat map also uses binary64. Its introductory
-  single-point command did not need a different arithmetic recommendation.
+- The two-spinon thermodynamic heat map and introductory point command both
+  use binary64. The point command fixes the kernel tolerance at `1e-12`; its
+  complete rerun returns the same S2 value as the five-format comparison below,
+  differing from MPFR192 by less than 2e-15 relative. A successful two-spinon
+  value does not imply that the four-spinon part of the same query succeeds.
 - The 75 JSON Lines records in the one-magnon precision tutorial deliberately
   compare five formats. They are checked against an independent Decimal sine
   evaluation. The examples exhibit observable cancellation and root sensitivity,

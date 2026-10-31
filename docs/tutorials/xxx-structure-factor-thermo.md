@@ -48,10 +48,15 @@ For a denser single cut or one point:
 
 ```sh
 bethe-xxx-structure-factor-thermo --momentum 1.5 --points 2001 --csv cut.csv
-bethe-xxx-structure-factor-thermo --momentum 1.5 --omega 1.8 --precision long-double
+bethe-xxx-structure-factor-thermo --momentum 1.5 --omega 1.8 \
+  --precision fp64 --tolerance 1e-12
 ```
 
 The second command gives approximately $`S^{zz}_2=0.87313045511634`$.
+At these fixed controls, the binary64 and MPFR192 two-spinon values in the
+[precision comparison](data/xxx-four-spinon-precision.json) differ by less than
+$`2\times10^{-15}`$ relative. This checks arithmetic at this point; it does not
+bound quadrature error or sensitivity near a continuum edge.
 `--channel raising` doubles the density by SU(2) symmetry. `--exchange J`
 rescales the frequency axis by $`J`$ and density by $`1/J`$.
 
