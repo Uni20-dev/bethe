@@ -19,6 +19,7 @@ nav = [
       { "XXX: why high precision matters" = "docs/tutorials/xxx-precision.md" },
       { "XXX two-spinon spectral weights" = "docs/tutorials/xxx-structure-factor.md" },
       { "XXX thermodynamic intensity" = "docs/tutorials/xxx-structure-factor-thermo.md" },
+      { "XXX four-spinon refinement" = "docs/tutorials/xxx-four-spinon.md" },
       { "XXZ spinons and continua" = "docs/tutorials/xxz-spinons.md" },
       { "XYZ bound branches" = "docs/tutorials/xyz.md" },
       { "SU(3)/ULS excitations" = "docs/tutorials/su3-uls.md" },

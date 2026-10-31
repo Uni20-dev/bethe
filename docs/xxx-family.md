@@ -23,6 +23,9 @@ Start with [finite chains](tutorials/xxx.md) to understand quantum numbers,
 open versus periodic boundaries and the selected excitation family. For
 precision-sensitive gaps, use [the precision tutorial](tutorials/xxx-precision.md).
 
+The [four-spinon tutorial](tutorials/xxx-four-spinon.md) adds a physically
+normalized contribution and measures quadrature/cutoff refinement and cost.
+
 For a dynamical comparison, distinguish the [finite-ring spectral lines](tutorials/xxx-structure-factor.md)
 from the [unbroadened thermodynamic density](tutorials/xxx-structure-factor-thermo.md).
 The finite-ring tool computes the supported two-spinon family. The thermodynamic
