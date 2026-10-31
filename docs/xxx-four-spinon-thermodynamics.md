@@ -152,5 +152,7 @@ Tests cover the independent finite spectral slice, direct-global references,
 whole-geometry precision growth, exchange scaling, sum-rule fractions, serial
 versus Async agreement, a single-worker refinement chain and explicit failures.
 The generic accumulator additionally checks completion while another admitted
-observation is deliberately held open. Production command-line integration and
-a convergence tutorial are the next release checkpoint.
+observation is deliberately held open. For installed-program calculations, see
+the [selected-sector spectrum guide](xxx-spinon-sectors.md),
+[direct-moment guide](xxx-spinon-moments.md), and
+[measured four-spinon refinement tutorial](tutorials/xxx-four-spinon.md).
