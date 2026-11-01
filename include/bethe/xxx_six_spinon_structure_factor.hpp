@@ -62,6 +62,16 @@ template <uni20::Real R> struct SixSpinonSpectrumEstimate
     std::string reason;
 };
 
+/// Physical spectrum and optional observer-specific accounting share the same
+/// boundary, failure and sampling-error rules. Metadata counts retained samples,
+/// including a terminal failed sample; it is not a scheduler profiling record.
+template <uni20::Real R, class Metadata> struct SixSpinonObservedEstimate
+{
+    SixSpinonSpectrumEstimate<R> spectrum;
+    Metadata metadata;
+    std::vector<std::optional<Metadata>> replicate_metadata;
+};
+
 /// Infinite XXX chain, longitudinal S6zz at J>0 and a FINITE rapidity cutoff.
 /// Geometry/accumulation uses Geometry, independently of the density's Low/High
 /// recovery contexts. The geometry precision must hold every density result.
@@ -100,6 +110,10 @@ template <uni20::Real Geometry, uni20::Real Low, uni20::Real High = Low> class T
 
     class Point {
       public:
+        /// Null means interior. Precision-recovery stages compare this with
+        /// the reference Point before accepting a rounded boundary as zero.
+        std::optional<SixSpinonSpectrumStatus> boundary_status() const { return boundary_; }
+
         Observation observation(bethe::UniformSample<5> const& identity, std::stop_token stop = {}) const
         {
           Observation result;
@@ -227,6 +241,40 @@ template <uni20::Real Geometry, uni20::Real Low, uni20::Real High = Low> class T
           return output;
         }
 
+        /// Evaluate a model observation policy at this reference Point. The
+        /// observer must describe the same physical query/proposal and return
+        /// three columns (S6zz, contour diagnostic, arithmetic diagnostic) at G
+        /// precision, with metadata derived from SpinonSampleMetadata. The Point
+        /// retains physical boundary/status and sampling-error interpretation.
+        /// Ownership and scheduler lifetime follow evaluate_async().
+        template <class Observe>
+        [[nodiscard]] auto evaluate_observations_async(SpinonSamplingOptions options, Observe observe,
+                                                       bethe::ExecutionOptions execution = {}) const
+        {
+          using Metadata = bethe::detail::SampleMetadata<5, Observe>;
+          static_assert(std::is_base_of_v<SpinonSampleMetadata, Metadata>);
+          static_assert(
+              std::is_same_v<std::invoke_result_t<Observe const&, bethe::UniformSample<5> const&, std::stop_token>,
+                             bethe::MonteCarloObservation<G, Metadata>>);
+          using ObservedResult = SixSpinonObservedEstimate<G, Metadata>;
+          validate(options);
+          auto& scheduler = execution.continuous_scheduler();
+          auto run = std::make_shared<Run>(*this, options);
+          uni20::async::Async<ObservedResult> output;
+          if (boundary_)
+          {
+            auto task = finish_observed_boundary<Metadata>(std::move(run), execution.stop, output.write());
+            bethe::detail::schedule_owned(scheduler, std::move(task));
+          }
+          else
+          {
+            auto work = bethe::monte_carlo_async<5>(options, 3, kernel_->one, std::move(observe), execution);
+            auto task = finish_observations<Metadata>(work.read(), std::move(run), output.write());
+            bethe::detail::schedule_owned(scheduler, std::move(task));
+          }
+          return output;
+        }
+
         Result evaluate(SpinonSamplingOptions options, bethe::ExecutionOptions execution = {}) const
         {
           auto& scheduler = execution.continuous_scheduler();
@@ -292,7 +340,7 @@ template <uni20::Real Geometry, uni20::Real Low, uni20::Real High = Low> class T
           return result;
         }
 
-        static Replicate physical_record(SamplingRow const& row)
+        template <class Metadata> static Replicate physical_record(bethe::MonteCarloReplicate<G, Metadata> const& row)
         {
           Replicate result;
           result.id = row.id;
@@ -347,11 +395,9 @@ template <uni20::Real Geometry, uni20::Real Low, uni20::Real High = Low> class T
             }
         };
 
-        static uni20::async::AsyncTask finish_boundary(std::shared_ptr<Run> run, std::stop_token stop,
-                                                       uni20::async::WriteBuffer<Result> output)
+        static void assemble_boundary(Run& run, std::stop_token stop)
         {
-          auto destination = co_await output;
-          auto& r = run->result;
+          auto& r = run.result;
           if (stop.stop_requested())
           {
             r.status = SixSpinonSpectrumStatus::cancelled;
@@ -359,21 +405,18 @@ template <uni20::Real Geometry, uni20::Real Low, uni20::Real High = Low> class T
           }
           else
           {
-            r.status = *run->boundary;
+            r.status = *run.boundary;
             r.reason = "unrestricted continuum boundary";
             if (r.status != SixSpinonSpectrumStatus::lower_threshold)
-              r.value = r.sampling_error = r.contour_diagnostic = r.arithmetic_diagnostic = run->kernel->zero;
+              r.value = r.sampling_error = r.contour_diagnostic = r.arithmetic_diagnostic = run.kernel->zero;
           }
-          r.wall_seconds = std::chrono::duration<double>(std::chrono::steady_clock::now() - run->start).count();
-          destination = std::move(r);
+          r.wall_seconds = std::chrono::duration<double>(std::chrono::steady_clock::now() - run.start).count();
         }
 
-        static uni20::async::AsyncTask finish(uni20::async::ReadBuffer<SamplingResult> work, std::shared_ptr<Run> run,
-                                              uni20::async::WriteBuffer<Result> output)
+        template <class Metadata>
+        static void assemble_sample(Run& run, bethe::MonteCarloEstimate<G, Metadata> const& sample)
         {
-          auto destination = co_await output;
-          auto const& sample = co_await work;
-          auto& r = run->result;
+          auto& r = run.result;
           r.completed_samples = sample.completed_samples;
           r.supported_roots = sample.metadata.supported_configurations;
           r.density_attempts = sample.metadata.density_attempts;
@@ -403,8 +446,49 @@ template <uni20::Real Geometry, uni20::Real Low, uni20::Real High = Low> class T
             if (sample.covariance) r.sampling_error = uni20::math::sqrt((*sample.covariance)[0]);
             r.reason = "finite-cutoff Monte Carlo estimate; numerical diagnostics exclude sampling and cutoff errors";
           }
-          r.wall_seconds = std::chrono::duration<double>(std::chrono::steady_clock::now() - run->start).count();
-          destination = std::move(r);
+          r.wall_seconds = std::chrono::duration<double>(std::chrono::steady_clock::now() - run.start).count();
+        }
+        static uni20::async::AsyncTask finish_boundary(std::shared_ptr<Run> run, std::stop_token stop,
+                                                       uni20::async::WriteBuffer<Result> output)
+        {
+          auto destination = co_await output;
+          assemble_boundary(*run, stop);
+          destination = std::move(run->result);
+        }
+
+        static uni20::async::AsyncTask finish(uni20::async::ReadBuffer<SamplingResult> work, std::shared_ptr<Run> run,
+                                              uni20::async::WriteBuffer<Result> output)
+        {
+          auto destination = co_await output;
+          auto const& sample = co_await work;
+          assemble_sample(*run, sample);
+          destination = std::move(run->result);
+        }
+
+        template <class Metadata>
+        static uni20::async::AsyncTask
+        finish_observed_boundary(std::shared_ptr<Run> run, std::stop_token stop,
+                                 uni20::async::WriteBuffer<SixSpinonObservedEstimate<G, Metadata>> output)
+        {
+          auto destination = co_await output;
+          assemble_boundary(*run, stop);
+          destination = SixSpinonObservedEstimate<G, Metadata>{std::move(run->result), {}, {}};
+        }
+
+        template <class Metadata>
+        static uni20::async::AsyncTask
+        finish_observations(uni20::async::ReadBuffer<bethe::MonteCarloEstimate<G, Metadata>> work,
+                            std::shared_ptr<Run> run,
+                            uni20::async::WriteBuffer<SixSpinonObservedEstimate<G, Metadata>> output)
+        {
+          auto destination = co_await output;
+          auto const& sample = co_await work;
+          assemble_sample(*run, sample);
+          SixSpinonObservedEstimate<G, Metadata> result{std::move(run->result), sample.metadata, {}};
+          result.replicate_metadata.resize(sample.replicates.size());
+          for (std::size_t i = 0; i < sample.replicates.size(); ++i)
+            if (sample.replicates[i]) result.replicate_metadata[i] = sample.replicates[i]->metadata;
+          destination = std::move(result);
         }
     };
 

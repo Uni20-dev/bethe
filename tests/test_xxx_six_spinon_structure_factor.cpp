@@ -58,6 +58,138 @@ TEST(SixSpinonSpectrum, BoundaryLimitsDoNotStartSampling)
   EXPECT_THROW(f.at(pi / 2, 2.L).evaluate({2, 8, 0, 0, 100}), std::invalid_argument);
 }
 
+namespace
+{
+struct ObservedMetadata : SpinonSampleMetadata
+{
+    std::size_t observations = 0;
+    ObservedMetadata& operator+=(ObservedMetadata const& other)
+    {
+      SpinonSampleMetadata::operator+=(other);
+      observations += other.observations;
+      return *this;
+    }
+};
+using ObservedSample = bethe::MonteCarloObservation<long double, ObservedMetadata>;
+
+ObservedSample known_observation(bethe::UniformSample<5> const& identity, std::stop_token)
+{
+  auto const u = identity.at_precision(1.L);
+  ObservedSample result;
+  result.values = std::vector{u[0], u[0] / 8, u[0] / 16};
+  result.metadata.supported_configurations = 2;
+  result.metadata.density_attempts = 4;
+  result.metadata.observations = 1;
+  return result;
+}
+} // namespace
+
+TEST(SixSpinonObservedSpectrum, ReferenceBoundariesBypassObserverAndKeepPhysicalStatuses)
+{
+  if (uni20::numeric_limits<long double>::digits(1.L) <= uni20::numeric_limits<double>::digits(1.)) GTEST_SKIP();
+  ThermodynamicSixSpinonStructureFactor<long double, double, long double> f(proposal(1.L), native_policy(), 1.L);
+  auto const pi = 4 * std::atan(1.L);
+  auto never = [](auto const&, std::stop_token) -> ObservedSample { throw std::logic_error("boundary sampled"); };
+  for (auto const& point : {f.at(0.L, 2.L), f.at(pi, 0.L), f.at(pi, 3 * pi)})
+  {
+    auto ordinary = point.evaluate({2, 8});
+    auto observed = point.evaluate_observations_async({2, 8}, never).get_wait();
+    EXPECT_EQ(observed.spectrum.status, ordinary.status);
+    EXPECT_EQ(observed.spectrum.value, ordinary.value);
+    EXPECT_EQ(observed.spectrum.sampling_error, ordinary.sampling_error);
+    EXPECT_EQ(observed.spectrum.reason, ordinary.reason);
+    EXPECT_TRUE(observed.spectrum.replicates.empty());
+    EXPECT_TRUE(observed.replicate_metadata.empty());
+    EXPECT_EQ(observed.metadata.observations, 0u);
+    std::stop_source stop;
+    stop.request_stop();
+    auto cancelled = point.evaluate_observations_async({2, 8}, never, {.stop = stop.get_token()}).get_wait();
+    EXPECT_EQ(cancelled.spectrum.status, SixSpinonSpectrumStatus::cancelled);
+    EXPECT_FALSE(cancelled.spectrum.value);
+  }
+}
+
+TEST(SixSpinonObservedSpectrum, AssemblesSamplingErrorsAndReplicateAccounting)
+{
+  if (uni20::numeric_limits<long double>::digits(1.L) <= uni20::numeric_limits<double>::digits(1.)) GTEST_SKIP();
+  ThermodynamicSixSpinonStructureFactor<long double, double, long double> f(proposal(1.L), native_policy(), 1.L);
+  auto const pi = 4 * std::atan(1.L);
+  SpinonSamplingOptions options{3, 11, 42, 9, 52};
+  auto expected = bethe::monte_carlo_async<5>(options, 3, 1.L, known_observation).get_wait();
+  uni20::async::TbbScheduler scheduler(2);
+  auto pending = f.at(pi / 2, 2.L)
+                     .evaluate_observations_async(options, known_observation,
+                                                  {.scheduler = &scheduler, .batch_size = 4, .max_in_flight = 3});
+  auto observed = pending.get_wait(scheduler);
+  auto const& r = observed.spectrum;
+  ASSERT_EQ(r.status, SixSpinonSpectrumStatus::estimated);
+  ASSERT_TRUE(r.value && r.sampling_error && r.contour_diagnostic && r.arithmetic_diagnostic);
+  EXPECT_EQ(*r.value, (*expected.mean)[0]);
+  EXPECT_EQ(*r.contour_diagnostic, (*expected.mean)[1]);
+  EXPECT_EQ(*r.arithmetic_diagnostic, (*expected.mean)[2]);
+  EXPECT_EQ(*r.sampling_error, uni20::math::sqrt((*expected.covariance)[0]));
+  EXPECT_EQ(r.completed_samples, 33u);
+  EXPECT_EQ(r.supported_roots, 66u);
+  EXPECT_EQ(r.density_attempts, 132u);
+  EXPECT_EQ(observed.metadata.observations, 33u);
+  ASSERT_EQ(observed.replicate_metadata.size(), 3u);
+  for (std::size_t i = 0; i < 3; ++i)
+  {
+    ASSERT_TRUE(r.replicates[i]);
+    ASSERT_TRUE(observed.replicate_metadata[i]);
+    EXPECT_EQ(r.replicates[i]->id, 9 + i);
+    EXPECT_EQ(r.replicates[i]->completed_samples, 11u);
+    EXPECT_EQ(observed.replicate_metadata[i]->observations, 11u);
+    EXPECT_EQ((*r.replicates[i]->means)[0], (*expected.replicates[i]->means)[0]);
+  }
+}
+
+TEST(SixSpinonObservedSpectrum, NoSupportFailureCancellationAndExceptionsStayDistinct)
+{
+  if (uni20::numeric_limits<long double>::digits(1.L) <= uni20::numeric_limits<double>::digits(1.)) GTEST_SKIP();
+  ThermodynamicSixSpinonStructureFactor<long double, double, long double> f(proposal(1.L), native_policy(), 1.L);
+  auto point = f.at(2 * std::atan(1.L), 2.L);
+  auto empty = [](auto const&, std::stop_token) {
+    ObservedSample sample;
+    sample.values = std::vector{0.L, 0.L, 0.L};
+    sample.metadata.observations = 1;
+    return sample;
+  };
+  auto unsupported = point.evaluate_observations_async({2, 3}, empty).get_wait();
+  EXPECT_EQ(unsupported.spectrum.status, SixSpinonSpectrumStatus::no_support_sampled);
+  EXPECT_FALSE(unsupported.spectrum.value);
+  EXPECT_FALSE(unsupported.spectrum.sampling_error);
+  EXPECT_EQ(unsupported.metadata.observations, 6u);
+  auto failure = [](auto const&, std::stop_token) {
+    ObservedSample sample;
+    sample.metadata.failure = SpinonObservationFailure::density;
+    sample.metadata.density_status = SpinonRecoveryStatus::exhausted;
+    sample.metadata.observations = 1;
+    sample.reason = "controlled exhausted density";
+    return sample;
+  };
+  auto failed = point.evaluate_observations_async({2, 3}, failure).get_wait();
+  EXPECT_EQ(failed.spectrum.status, SixSpinonSpectrumStatus::numerical_failure);
+  EXPECT_FALSE(failed.spectrum.value);
+  EXPECT_EQ(failed.metadata.observations, 2u);
+  for (auto const& row : failed.spectrum.replicates)
+  {
+    ASSERT_TRUE(row);
+    EXPECT_EQ(row->failed_sample, 0u);
+    EXPECT_EQ(row->failure, SpinonObservationFailure::density);
+    EXPECT_EQ(row->density_status, SpinonRecoveryStatus::exhausted);
+  }
+  std::stop_source stop;
+  stop.request_stop();
+  auto never = [](auto const&, std::stop_token) -> ObservedSample { throw std::logic_error("deliberate exception"); };
+  auto cancelled = point.evaluate_observations_async({2, 3}, never, {.stop = stop.get_token()}).get_wait();
+  EXPECT_EQ(cancelled.spectrum.status, SixSpinonSpectrumStatus::cancelled);
+  EXPECT_EQ(cancelled.metadata.observations, 0u);
+  EXPECT_FALSE(cancelled.spectrum.value);
+  auto invalid = point.evaluate_observations_async({2, 3}, never);
+  EXPECT_THROW(invalid.get_wait(), std::logic_error);
+}
+
 #if UNI20_HAS_MPREAL
 namespace
 {
@@ -102,6 +234,34 @@ TEST(SixSpinonSpectrumMpfr, FreshReplicatesSerialAsyncAndExchangeScaling)
   EXPECT_EQ(concurrent.completed_samples, serial.completed_samples);
   for (std::size_t i = 0; i < options.replicates; ++i)
     EXPECT_EQ(concurrent.replicates[i]->means, serial.replicates[i]->means);
+  // The custom policy seam uses the same physical assembly and stream order.
+  auto observe = [point](auto const& identity, std::stop_token stop) {
+    auto value = point.observation(identity, stop);
+    bethe::MonteCarloObservation<R, ObservedMetadata> sample;
+    if (value.values) sample.values.emplace(value.values->begin(), value.values->end());
+    static_cast<SpinonSampleMetadata&>(sample.metadata) = {value.supported_roots, value.density_attempts, value.failure,
+                                                           value.density_status, value.density_failure};
+    sample.metadata.observations = 1;
+    sample.cancelled = value.failure == SpinonObservationFailure::cancelled;
+    sample.reason = std::move(value.reason);
+    return sample;
+  };
+  auto observed_pending = point.evaluate_observations_async(
+      options, std::move(observe), {.scheduler = &scheduler, .batch_size = 3, .max_in_flight = 2});
+  auto observed = observed_pending.get_wait(scheduler);
+  EXPECT_EQ(observed.spectrum.status, serial.status);
+  EXPECT_EQ(observed.spectrum.value, serial.value);
+  EXPECT_EQ(observed.spectrum.sampling_error, serial.sampling_error);
+  EXPECT_EQ(observed.spectrum.contour_diagnostic, serial.contour_diagnostic);
+  EXPECT_EQ(observed.spectrum.arithmetic_diagnostic, serial.arithmetic_diagnostic);
+  EXPECT_EQ(observed.spectrum.supported_roots, serial.supported_roots);
+  EXPECT_EQ(observed.spectrum.density_attempts, serial.density_attempts);
+  EXPECT_EQ(observed.metadata.observations, 24u);
+  for (std::size_t i = 0; i < options.replicates; ++i)
+  {
+    EXPECT_EQ(observed.spectrum.replicates[i]->means, serial.replicates[i]->means);
+    EXPECT_EQ(observed.replicate_metadata[i]->observations, 8u);
+  }
   // The temporary point/evaluator can die before the owning Async completes.
   auto scaled_pending = Spectrum(proposal(one), mp_policy(), 3 * one)
                             .at(pi / 2, 6 * one)
