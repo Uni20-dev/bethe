@@ -176,7 +176,8 @@ Compatibility is an explicit reviewed assertion with evidence identities;
 it does not waive any per-run numerical, stream, source or convention check.
 Unavailable nodes belong to a declared cohort and remain unavailable.
 """
-    from spinon_tutorial_provenance import compatibility_sources, source_identity, validate_sources
+    from spinon_tutorial_provenance import (compatibility_sources, source_identity,
+                                           validate_physics, validate_sources)
     if document.get('schema') != SET_SCHEMA or document.get('density_convention') != CONVENTION:
         raise ValueError('Unknown slice-set schema or physical convention')
     if (scalar_string(document['momentum']) != decimal(momentum)
@@ -198,6 +199,7 @@ Unavailable nodes belong to a declared cohort and remain unavailable.
     if not isinstance(cohorts, list) or len(cohorts) < 2:
         raise ValueError('A slice set needs at least two declared cohorts')
     ids, declared_sources, points = set(), set(), {}
+    physical_metadata = []
     for cohort in cohorts:
         if not isinstance(cohort, dict):
             raise ValueError('Invalid source cohort')
@@ -217,6 +219,8 @@ Unavailable nodes belong to a declared cohort and remain unavailable.
         expected_metadata = contract.get('metadata')
         if not isinstance(expected_metadata, dict) or not expected_metadata:
             raise ValueError('Missing bound cohort metadata')
+        physical_metadata.append(expected_metadata)
+        validate_physics(physical_metadata)
         fixed = {'Program': 'bethe-xxx-structure-factor-thermo', 'Channel': 'zz',
                  'Density convention': CONVENTION, 'Selected spinon sectors': '6'}
         if (any(expected_metadata.get(key) != value for key, value in fixed.items())

@@ -7,6 +7,8 @@ from spinon_tutorial_exports import CONVENTION, plotting_float, read_spectrum
 
 def fixture():
     metadata = {'Program': 'bethe-xxx-structure-factor-thermo', 'Channel': 'zz',
+                'Hamiltonian': 'H=J sum S_j.S_(j+1); infinite chain; zero field and temperature',
+                'Family': 'Partial DSF; physical normalization; no fitted rescaling',
                 'Density convention': CONVENTION, 'Geometry and output bits': '192',
                 'Exchange J': '1', 'Selected spinon sectors': '2,4', 'Spectral points': '1',
                 'Bethe revision': 'a' * 40, 'Uni20 revision': 'b' * 40}

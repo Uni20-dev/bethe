@@ -6,7 +6,8 @@ import json
 from pathlib import Path
 import unittest
 
-from spinon_tutorial_provenance import SCHEMA, compatibility_sources, validate_sources
+from spinon_tutorial_provenance import (PHYSICAL_KEYS, SCHEMA, compatibility_sources,
+                                       physical_identity, validate_physics, validate_sources)
 from test_tutorial_xxx_six_spinon import fixture
 from xxx_six_spinon_tutorial_data import (NODE_CONTROLS, cohort_metadata, compact_slice,
                                         compact_slice_set, read_compact_slice, read_slice)
@@ -42,6 +43,36 @@ def set_fixture():
             'nodes': [{'omega': cohort['slice']['frequencies'][0],
                        'metadata': {key: metadata[key] for key in NODE_CONTROLS}}]}
     return compact_slice_set(cohorts, record, momentum='1.5', frequencies=['2', '3'], rapidity_cutoff='64')
+
+
+class PhysicalIdentity(unittest.TestCase):
+    def test_every_identity_field_is_required_and_missing_is_not_an_agreement(self):
+        original = fixture()['tables']['spectrum']['metadata']
+        for key in PHYSICAL_KEYS:
+            for value in (None, '', '   ', 1):
+                with self.subTest(key=key, value=value):
+                    metadata = dict(original)
+                    metadata[key] = value
+                    with self.assertRaisesRegex(ValueError, key):
+                        validate_physics([metadata, metadata])
+        with self.assertRaisesRegex(ValueError, 'No physical'):
+            validate_physics([])
+
+    def test_each_physical_field_is_compared_without_source_compatibility(self):
+        original = fixture()['tables']['spectrum']['metadata']
+        for key in PHYSICAL_KEYS:
+            with self.subTest(key=key):
+                changed = dict(original)
+                changed[key] = '2' if key == 'Exchange J' else 'different ' + changed[key]
+                with self.assertRaisesRegex(ValueError, key):
+                    validate_physics([original, changed])
+        changed = dict(original, **NEW)
+        changed.update({'Exchange J': '1.000', 'Density guard bits': '320',
+                        'Selected spinon sectors': '2,4'})
+        self.assertEqual(validate_physics([original, changed]), physical_identity(original))
+        for value in ('NaN', 'sNaN', 'Infinity', '-Infinity', '0', '-1', 'unknown'):
+            with self.subTest(exchange=value), self.assertRaisesRegex(ValueError, 'Exchange J'):
+                physical_identity(dict(original, **{'Exchange J': value}))
 
 
 class SourceCompatibility(unittest.TestCase):
@@ -153,7 +184,7 @@ class SourceCohorts(unittest.TestCase):
                 pending['unavailable'] = [{'omega': '3', 'status': 'unavailable',
                                            'reason': 'not yet calculated', 'raw_sha256': None}]
                 document['source_compatibility']['cohort_controls']['blocks']['metadata'][key] = value
-                with self.assertRaisesRegex(ValueError, 'physics'):
+                with self.assertRaisesRegex(ValueError, 'physic'):
                     read_slice(document, momentum='1.5')
 
     def test_bound_sampling_counts_reject_consistently_edited_export(self):
@@ -165,6 +196,48 @@ class SourceCohorts(unittest.TestCase):
         read_compact_slice(changed, momentum='1.5')
         with self.assertRaisesRegex(ValueError, 'sampling controls differ'):
             read_slice(document, momentum='1.5')
+
+    def test_reviewed_sources_cannot_combine_different_models_or_normalizations(self):
+        for key, value in [('Hamiltonian', 'XXZ Delta=2'), ('Family', 'Fitted intensity')]:
+            for available in (True, False):
+                with self.subTest(key=key, available=available):
+                    document = set_fixture()
+                    changed = document['cohorts'][1]['slice']
+                    document['source_compatibility']['cohort_controls']['blocks']['metadata'][key] = value
+                    if available:
+                        changed['runs'][0]['metadata'][key] = value
+                    else:
+                        changed['runs'] = []
+                        changed['unavailable'] = [{'omega': '3', 'status': 'unavailable',
+                                                   'reason': 'not yet calculated', 'raw_sha256': None}]
+                    # The per-cohort contract is consistent; the inter-cohort physics is not.
+                    with self.assertRaisesRegex(ValueError, 'physical'):
+                        read_slice(document, momentum='1.5')
+
+    def test_missing_physical_identity_cannot_be_hidden_by_matching_contracts(self):
+        for key in ('Hamiltonian', 'Family'):
+            for value in (None, '', '   '):
+                with self.subTest(key=key, value=value):
+                    document = set_fixture()
+                    for cohort in document['cohorts']:
+                        metadata = [cohort['slice']['runs'][0]['metadata'],
+                                    document['source_compatibility']['cohort_controls'][cohort['id']]['metadata']]
+                        for item in metadata:
+                            if value is None:
+                                item.pop(key)
+                            else:
+                                item[key] = value
+                    with self.assertRaisesRegex(ValueError, key):
+                        read_slice(document, momentum='1.5')
+
+    def test_reviewed_numerical_control_differences_remain_allowed(self):
+        document = set_fixture()
+        for metadata in (document['cohorts'][1]['slice']['runs'][0]['metadata'],
+                         document['source_compatibility']['cohort_controls']['blocks']['metadata']):
+            metadata.update({'Density guard bits': '512', 'Maximum samples per Async task': '16',
+                             'Scheduler concurrency limit': '24', 'Exchange J': '1.0'})
+        checked = read_slice(document, momentum='1.5')
+        self.assertEqual([p['s6'] for p in checked['points']], ['2', '2'])
 
     def test_source_contract_and_evidence_are_required_even_with_valid_inner_slices(self):
         mutations = [lambda d: d['cohorts'][1].update(source=OLD),
