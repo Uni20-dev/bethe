@@ -13,9 +13,9 @@ Two tools cover the first excitation checkpoint:
   These are **asymptotic**, not exact finite-volume excited energies.
 
 Both use fp64 by default, native long-double and optional MPLAPACK fp128.
-Particle dispersions additionally accept `--precision bits-N` or `digits-N`
-with Uni20's MPFR scalars enabled; this requires no MPLAPACK. The scattering
-phase and finite-volume solvers still use the configured fixed formats.
+Both additionally accept `--precision bits-N` or `digits-N` with Uni20's MPFR
+scalars enabled; this requires no MPLAPACK. The Bethe-Yang phase integrals use
+the same explicit working precision as the level solve.
 All dimensional quantities use velocity=hbar=1. The mass input M is the physical
 soliton mass, not the bare cosine coefficient or the lightest breather mass.
 
@@ -120,7 +120,7 @@ One worker (the default), a single level, or the analytic free point p=1 uses
 direct serial evaluation. Otherwise a bounded window holds at most 128 active or
 uncollected results; rows are written on the calling thread in Bethe-number
 order, including failed levels and their diagnostics. `--no-retain` disables
-table storage after delivery. Each bisection and phase quadrature remains
+table storage after delivery. Each root search and phase quadrature remains
 sequential. Short interacting scans may not benefit from scheduling. CPU timing
 covers the whole level grid including ordered output; its scope, the execution
 mode and the requested concurrency limit are recorded in metadata.
@@ -148,6 +148,14 @@ physical wrapping corrections. Energy and rapidity are absent on failed solves
 (JSON null), with exit 2; invalid parameters exit 1 before exports are opened.
 Dispersion rows likewise omit unrepresentable energies. Unrepresentable input
 mass scales are rejected before exporting a spectrum.
+
+The level solver interpolates successive counting residuals with a safeguarded
+secant step. Trials stay inside the analytic bracket between zero and the free
+rapidity; unsafe steps or inadequate residual reduction trigger bisection.
+Every trial uses the full phase tolerance, and acceptance still requires the
+counting residual plus the phase's quadrature and tail estimates to meet the
+requested tolerance. This avoids spending a phase integral on every bisection
+bit without loosening the numerical target.
 
 Checks include the free Dirac spectrum, the p=1/2 closed phase
 $`\chi=-\arctan(\sinh\theta)`$, the p=2 rapidity-space kernel, near-free
@@ -215,9 +223,10 @@ bethe-sine-gordon-bethe-yang --p 2 --length 10 --precision bits-333 \
     --tolerance 1e-80 --max-iterations 512 --levels 3 --threads 2
 ```
 
-Arithmetic precision, bisection iterations and Fourier quadrature budgets are
-independent. The default 256 iterations can be insufficient at larger bit
-counts. A converged counting equation remains an asymptotic Bethe–Yang energy:
+Arithmetic precision, root iterations and Fourier quadrature budgets are
+independent. Interpolation usually needs far fewer iterations than bisection,
+but the iteration budget is still enforced. A converged counting equation
+remains an asymptotic Bethe–Yang energy:
 extra digits do not restore the omitted wrapping corrections.
 
 ```cpp

@@ -2,11 +2,56 @@
 
 [Benchmark index and methodology](benchmarks.md) · [Current capabilities](app-capabilities.md)
 
-These are dated October 2026 measurements. Hardware, precision, providers and
+These are dated measurements. Hardware, precision, providers and
 timing scope belong to each record; later capabilities do not change what was
 measured. Reproduction commands describe those workloads, not recommended defaults.
 
+## Safeguarded Bethe–Yang solver, 2 November 2026
+
+The level solver now uses bracketed secant trials with bisection fallback.
+Every trial retains the full phase-integral tolerance; the original counting
+residual plus quadrature and tail error still decides convergence. This reduces
+the number of expensive phase integrals in both library calls and the CLI.
+
+The matched workload is one same-charge pair at p=2, M=1, L=10 and I=1/2,
+using the default precision-dependent counting tolerance. Measurements use
+GCC 13 Release, Uni20 `1cb2474e`, one CPU core on a shared i7-12700KF, and
+one BLAS/OpenMP thread. CPU times cover solving and ordered output, with three
+alternating repeats. All results satisfy the requested residual target and
+the independent rapidity-space energy reference.
+
+| Arithmetic | Phase integrals, before → after | Median CPU seconds, before → after | Observed ratio |
+| --- | ---: | ---: | ---: |
+| binary64 | 39 → 5 | 0.00176 → 0.000232 | 7.6× |
+| binary80 | 49 → 6 | 0.0353 → 0.00434 | 8.1× |
+| binary128 | 99 → 7 | 2.13 → 0.151 | 14.2× |
+| MPFR, 128 bits | 114 → 7 | 7.22 → 0.447 | 16.1× |
+| MPFR, 256 bits | 239 → 9 | 43.28 → 1.62 | 26.7× |
+
+Small native timings are sensitive to timing granularity and other desktop
+activity. The work counts are deterministic, but the ratios describe this
+level, not every coupling or a whole CI job. At 256 bits the integrand count
+falls from 2,850,792 to 107,352. Precision, quadrature settings and convergence
+targets are unchanged; wrapping corrections remain outside Bethe–Yang theory.
+
+[Compact measurements and provenance](validation/sine-gordon-level-solver-20261102.json)
+retain all repeats and original binary identities. To compare two installed
+versions independently of CTest:
+
+```sh
+python tests/benchmark_sine_gordon_bethe_yang.py \
+  /path/to/baseline/bin/bethe-sine-gordon-bethe-yang \
+  /path/to/candidate/bin/bethe-sine-gordon-bethe-yang \
+  --precision fp64 long-double fp128 bits-128 bits-256 --repeats 3 > timings.json
+```
+
+The independent reference supports up to 333-bit arithmetic. The benchmark
+checks convergence and energy accuracy before reporting a measurement.
+
 ## Sine-Gordon Bethe–Yang level scans
+
+This section records the 28 October 2026 implementation, which used bisection
+within each level. The later solver change is measured separately above.
 
 `bethe-sine-gordon-bethe-yang --threads N` schedules independent interacting
 levels with the shared bounded grid. Each level keeps its bisection and phase

@@ -91,10 +91,13 @@ BetheYangResult<Real> same_charge_pair(Real mass, Real length, Real p, uni20::ha
     return out;
   }
   options.phase.tolerance = options.tolerance / Real{16};
+  Real candidate = p == Real{1} ? hi : lo + (hi - lo) / Real{2};
+  Real previous = zero, previous_residual = -target, previous_error = zero;
+  bool secant_trial = false;
   for (; out.iterations < options.max_iterations;)
   {
     ++out.iterations;
-    Real const theta = p == Real{1} ? hi : lo + (hi - lo) / Real{2};
+    Real const theta = candidate;
     auto const phase = soliton_phase(Real{2} * theta, p, options.phase);
     out.evaluations += phase.evaluations;
     out.phase_status = phase.status;
@@ -136,6 +139,34 @@ BetheYangResult<Real> same_charge_pair(Real mass, Real length, Real p, uni20::ha
       hi = theta;
     else
       lo = theta;
+
+    // A phase integral is much more expensive than interpolation. Use the
+    // two preceding counting residuals, retaining the analytic bracket and
+    // the full phase accuracy at every trial. A secant trial that fails to
+    // halve the residual is followed by bisection; an unsafe or noise-dominated
+    // slope also falls back to bisection. Acceptance above still requires the
+    // measured residual plus phase uncertainty, not an estimated displacement.
+    candidate = lo + (hi - lo) / Real{2};
+    bool const sufficient_progress = !secant_trial || out.residual <= uni20::math::abs(previous_residual) / Real{2};
+    secant_trial = false;
+    Real const difference = residual - previous_residual;
+    if (sufficient_progress && theta != previous &&
+        uni20::math::abs(difference) > Real{4} * (out.phase_error + previous_error))
+    {
+      Real const slope = difference / (theta - previous);
+      if (slope > Real{0} && uni20::isfinite(slope))
+      {
+        Real const interpolated = theta - residual / slope;
+        if (interpolated > lo && interpolated < hi && interpolated != theta)
+        {
+          candidate = interpolated;
+          secant_trial = true;
+        }
+      }
+    }
+    previous = theta;
+    previous_residual = residual;
+    previous_error = out.phase_error;
   }
   return out;
 }

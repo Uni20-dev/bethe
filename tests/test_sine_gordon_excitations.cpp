@@ -125,6 +125,29 @@ TYPED_TEST(SineGordonExcitations, BetheYangFreeAndInteractingQuantization)
   EXPECT_GT(*higher.energy, *state.energy);
 }
 
+TYPED_TEST(SineGordonExcitations, BetheYangBracketAcrossScalesAndNearFreeLimit)
+{
+  using Real = TypeParam;
+  Real const eps = uni20::numeric_limits<Real>::epsilon(), pi = Real{4} * std::atan(Real{1});
+  sg::BetheYangOptions<Real> options;
+  // Short length gives a strongly nonlinear counting function; the near-free
+  // root approaches the analytic upper bracket. Both must satisfy the original
+  // counting equation at the unchanged tolerance.
+  for (auto const& [length, p] : std::array<std::pair<Real, Real>, 3>{
+           {{Real{1} / Real{10}, Real{2}}, {Real{100}, Real{20}}, {Real{10}, Real{1} + std::sqrt(eps)}}})
+  {
+    auto const state = sg::same_charge_pair(Real{1}, length, p, uni20::from_twice(1), options);
+    ASSERT_TRUE(state.converged) << int(state.status);
+    EXPECT_GT(*state.rapidity, Real{0});
+    EXPECT_LE(*state.rapidity, std::asinh(pi / length));
+    EXPECT_LE(state.residual + state.phase_error, options.tolerance);
+    auto const phase = sg::soliton_phase(Real{2} * *state.rapidity, p);
+    ASSERT_TRUE(phase.converged);
+    EXPECT_REAL_NEAR(length * std::sinh(*state.rapidity) + *phase.phase, pi,
+                     options.tolerance + phase.quadrature_error + phase.tail_bound);
+  }
+}
+
 TYPED_TEST(SineGordonExcitations, ValidationAndDistinctNumericalBudgets)
 {
   using Real = TypeParam;

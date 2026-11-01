@@ -60,7 +60,7 @@ TEST(SineGordonBetheYangMpfr, IndependentPhaseKernelAndLevelsGainAccuracy)
   auto const reference = Precision::bits(768);
   R previous(1, reference);
   auto const ambient = mpfr_get_default_prec();
-  for (int bits : {80, 160, 256})
+  for (int bits : {80, 160, 256, 333})
   {
     SCOPED_TRACE(bits);
     auto const p = Precision::bits(bits);
@@ -72,6 +72,8 @@ TEST(SineGordonBetheYangMpfr, IndependentPhaseKernelAndLevelsGainAccuracy)
     sg::BetheYangOptions<R> options(p);
     auto const pair = sg::same_charge_pair(R(1, p), R(10, p), R(2, p), uni20::from_twice(1), options);
     ASSERT_TRUE(pair.converged) << int(pair.status) << ", " << pair.iterations;
+    // Full-accuracy phase integrals must not be spent on one bisection per bit.
+    EXPECT_LE(pair.iterations, 32u);
     check(pair, p);
     std::array<R, 5> const actual{*phase.phase, kernel.value->real(), kernel.value->imag(), *pair.rapidity,
                                   *pair.energy};

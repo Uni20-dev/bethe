@@ -50,7 +50,7 @@ void add_options(CLI::App& app, Arguments& a)
   cli::count_option(app, "--levels", a.levels, "Consecutive levels, 1..10000")->capture_default_str();
   cli::text_option(app, "--tolerance", a.tolerance, "Absolute counting residual; default 16384 epsilon")
       ->type_name("REAL");
-  cli::count_option(app, "--max-iterations", a.iterations, "Bisection updates per level")->capture_default_str();
+  cli::count_option(app, "--max-iterations", a.iterations, "Safeguarded root updates per level")->capture_default_str();
   cli::count_option(app, "--max-phase-evaluations", a.evaluations, "Fourier evaluations per phase integral")
       ->capture_default_str();
   cli::count_option(app, "--max-phase-levels", a.quadrature_levels, "Quadrature refinement levels")
