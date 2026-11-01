@@ -56,7 +56,7 @@ TYPED_TEST_SUITE(SpinonSurface, test_support::RealTypes, test_support::Precision
 TYPED_TEST(SpinonSurface, IndependentForwardKinematicsAndBothRoots)
 {
   for (auto const& row : spinon_surface_reference::points)
-    if (row.cutoff == 8 || math::exp(TypeParam{-1040}) > TypeParam{0}) check_reference(row, TypeParam{1});
+    check_reference(row, TypeParam{1});
 }
 
 TYPED_TEST(SpinonSurface, SupportZerosAndUnresolvedBoundariesDiffer)
@@ -66,15 +66,37 @@ TYPED_TEST(SpinonSurface, SupportZerosAndUnresolvedBoundariesDiffer)
   EXPECT_FALSE((Surface<R>(2, R{8}, q, 0, R{10}).solve({}).inside));
   EXPECT_FALSE((Surface<R>(2, R{8}, q, 0, R{1}).solve({}).inside));
   EXPECT_THROW((Surface<R>(2, R{8}, q, 0, pi * math::sin(q / R{2})).solve({})), std::runtime_error);
-  if (math::exp(R{-1040}) == R{0})
-    EXPECT_THROW((Surface<R>(2, R{1040}, q, 0, R{2})), std::runtime_error);
-  else
-    EXPECT_TRUE((Surface<R>(2, R{1040}, q, 0, R{2}).solve({}).inside));
+  EXPECT_TRUE((Surface<R>(2, R{1040}, q, 0, R{2}).solve({}).inside));
   EXPECT_THROW((Surface<R>(2, R{8}, q, 1, R{2})), std::invalid_argument);
   EXPECT_THROW((Surface<R>(3, R{8}, q, 0, R{2})), std::invalid_argument);
   EXPECT_THROW((Surface<R>(6, R{8}, q, 0, R{2}).solve({})), std::invalid_argument);
   std::array<R, 4> bad{R{-8}, R{-2}, R{-1}, R{0}};
   EXPECT_THROW((Surface<R>(6, R{8}, q, 0, R{20}).solve(bad)), std::invalid_argument);
+}
+
+TYPED_TEST(SpinonSurface, ScaledEndpointRetainsDistanceBeyondExponentRange)
+{
+  using R = TypeParam;
+  using Endpoint = bethe::heisenberg::detail::SpinonScaledEndpoint<R>;
+  R const one{1}, pi = R{4} * math::atan(one), eps = uni20::numeric_limits<R>::epsilon(one);
+  R const floor = eps * eps, log_floor = math::log(floor);
+  R const depth{100000};
+  auto const endpoint = Endpoint::from_depth(depth, pi, log_floor);
+  EXPECT_EQ(endpoint.log_scale, -depth);
+  EXPECT_EQ(endpoint.distance_factor, R{2});
+  EXPECT_EQ(endpoint.energy_factor, pi);
+  EXPECT_REAL_NEAR(endpoint.log_distance(), math::log(R{2}) - depth, R{4} * eps * depth);
+  auto const projected = endpoint.project(floor, log_floor);
+  EXPECT_EQ(projected.distance, R{0});
+  EXPECT_EQ(projected.energy, R{0});
+  EXPECT_GT(projected.distance_error, R{0});
+  EXPECT_GT(projected.energy_error, R{0});
+
+  // A projected zero cannot resolve a physical support boundary. All free
+  // distances below the ordinary range must retain failure at this boundary.
+  std::array<R, 4> free{R{-1039}, R{-1037}, R{-1033}, R{-1029}};
+  EXPECT_THROW((Surface<R>(6, R{1040}, R{0}, 0, R{2}).solve(free)), std::runtime_error);
+  EXPECT_TRUE((Surface<R>(6, R{1040}, pi / R{2}, 0, R{2}).solve(free)).inside);
 }
 
 TYPED_TEST(SpinonSurface, FiniteIllConditionedJacobianIsNotAccepted)
@@ -89,6 +111,36 @@ TYPED_TEST(SpinonSurface, FiniteIllConditionedJacobianIsNotAccepted)
 }
 
 #if UNI20_HAS_MPREAL
+TEST(SpinonSurfaceMpfr, NativeEndpointProjectionBoundsIndependentHighPrecisionValues)
+{
+  using R = uni20::mpreal;
+  auto const precision = uni20::Precision::bits(512);
+  R const high_one(1, precision), high_pi = R{4} * math::atan(high_one);
+  double const pi = 4 * std::atan(1.), eps = uni20::numeric_limits<double>::epsilon();
+  double const floor = eps * eps, log_floor = std::log(floor);
+  // Both sides of the projection threshold, and beyond binary64's range.
+  for (double depth : {0., 8., 40., 72., 73., 1040.})
+  {
+    SCOPED_TRACE(depth);
+    auto const endpoint = bethe::heisenberg::detail::SpinonScaledEndpoint<double>::from_depth(depth, pi, log_floor);
+    auto const projected = endpoint.project(floor, log_floor);
+    R const t = math::exp(-R(depth, precision));
+    R const distance = R{2} * math::atan(t), energy = high_pi * t / (high_one + t * t);
+    if (projected.distance == 0)
+    {
+      EXPECT_LT(distance, R(projected.distance_error, precision));
+      EXPECT_LT(energy, R(projected.energy_error, precision));
+    }
+    else
+    {
+      EXPECT_EQ(projected.distance_error, 0);
+      EXPECT_EQ(projected.energy_error, 0);
+      EXPECT_REAL_NEAR(R(projected.distance, precision), distance, R(8 * eps, precision) * distance);
+      EXPECT_REAL_NEAR(R(projected.energy, precision), energy, R(8 * eps, precision) * energy);
+    }
+  }
+}
+
 TEST(SpinonSurfaceMpfr, ExplicitPrecisionAndDeepSoftGeometry)
 {
   using R = uni20::mpreal;
