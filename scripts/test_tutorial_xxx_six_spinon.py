@@ -1,6 +1,12 @@
 """Reject incomplete or misleading six-spinon sampling summaries."""
 from copy import deepcopy
 from decimal import Decimal, localcontext
+import hashlib
+import json
+from pathlib import Path
+import subprocess
+import sys
+import tempfile
 import unittest
 
 from plot_xxx_six_spinon_tutorial import paired_cutoffs, sampling_points
@@ -34,6 +40,48 @@ def fixture():
 
 
 class SixSpinonSampling(unittest.TestCase):
+    def test_raw_analysis_omits_local_commands_and_keeps_evidence(self):
+        for paired in (False, True):
+            with self.subTest(paired=paired), tempfile.TemporaryDirectory() as directory:
+                directory = Path(directory)
+                data = fixture()
+                for table in data['tables'].values():
+                    table['metadata']['Command'] = (
+                        '/local/build/bethe-xxx-structure-factor-thermo '
+                        '--omega 2 --json /local/results/raw.json')
+                raw = json.dumps(data).encode()
+                source = directory / 'raw.json'
+                source.write_bytes(raw)
+                output = directory / 'analysis.json'
+                command = [sys.executable, str(Path(__file__).with_name(
+                    'plot_xxx_six_spinon_tutorial.py')), '--raw', str(source),
+                    '--momentum', '1.5', '--output', str(output)]
+                if paired:
+                    upper = deepcopy(data)
+                    for table in upper['tables'].values():
+                        table['metadata']['Six-spinon absolute rapidity cutoff'] = '256'
+                        table['metadata']['Command'] += ' --six-cutoff 256'
+                    other = directory / 'upper.json'
+                    other.write_text(json.dumps(upper))
+                    command += ['--compare-raw', str(other)]
+                subprocess.run(command, check=True, capture_output=True, text=True)
+                result = json.loads(output.read_text())
+                self.assertNotIn('Command', result['metadata'])
+                self.assertNotIn('/local/', output.read_text())
+                self.assertEqual(result['metadata'], {
+                    key: value for key, value in data['tables']['spectrum']['metadata'].items()
+                    if key != 'Command'})
+                self.assertEqual(result['raw_sha256'], hashlib.sha256(raw).hexdigest())
+                self.assertEqual(source.read_bytes(), raw)
+                point, = result['points']
+                self.assertEqual(Decimal(point['s6']), 2)
+                self.assertEqual(Decimal(point['sampling_se']), 1)
+                self.assertEqual(len(point['replicate_records']), 2)
+                if paired:
+                    self.assertEqual(result['comparison_raw_sha256'],
+                                     hashlib.sha256(other.read_bytes()).hexdigest())
+                    self.assertEqual(Decimal(result['cutoff_comparison']['points'][0]['change']), 0)
+
     def test_recomputes_se_of_mean_and_weight_concentrations(self):
         point = sampling_points(fixture(), momentum='1.5')['points'][0]
         self.assertEqual(Decimal(point['s6']), 2)

@@ -340,8 +340,11 @@ At $`\omega=2J`$ and $`R=1040`$, a complete 2048-draw query fails with
 1040/1056 residue terms and tail orders 32/36. Raising the density guard from
 256 to 384 bits leaves the original contour failures. Two stronger contour
 choices pass the failed configurations and agree within
-$`5\times10^{-61}`$ relative. The cheaper passing choice uses 1560/1576 terms
-and tail orders 48/52; a complete replay then passes.
+$`5\times10^{-61}`$ relative. Using 1560/1576 terms and tail orders 48/52
+completed this 2048-draw calibration replay at lower cost. Those controls later
+failed in the larger production query; production uses 3120/3136 terms and
+tail orders 52/56, as described below and in the
+[production reference recipe](xxx-six-spinon-reproduction.md).
 
 At $`\omega=3J`$, those contours pass their truncation check, but one sampled
 configuration fails the 192/256-bit arithmetic comparison: its relative
