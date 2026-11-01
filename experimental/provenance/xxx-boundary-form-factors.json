@@ -1,4 +1,6 @@
 {
+  "provenance_kind": "frozen_research_inputs",
+  "description": "source_revision and sources identify the original research input files before adaptation, not files or the commit of this public port. Public output paths are listed separately below.",
   "source_revision": "2242fd5d78ec2c6c81a64993eca5dd6eea6cd732",
   "sources": [
     {
@@ -22,5 +24,13 @@
       "sha256": "ceb0fa66ce8bec7f26b7cce1eeb75fef0a9c5870ff1a51188e5f41656721a107"
     }
   ],
-  "adaptation": "Prepared positive-real-root boundary weights; shared phase-retaining determinant dispatch; explicit runtime precision. Spectrum and magnetization layers are separate ports."
+  "adaptation": "Prepared positive-real-root boundary weights; shared phase-retaining determinant dispatch; explicit runtime precision. Spectrum and magnetization layers are separate ports.",
+  "public_outputs": [
+    "experimental/include/bethe/experimental/xxx_boundary_form_factors.hpp",
+    "experimental/include/bethe/experimental/detail/xxx_open_gaudin.hpp",
+    "include/bethe/detail/log_determinant.hpp",
+    "experimental/tests/xxx_open_wave_oracle.hpp",
+    "experimental/tests/test_xxx_boundary_form_factors.cpp",
+    "docs/experimental-xxx-boundary-form-factors.md"
+  ]
 }

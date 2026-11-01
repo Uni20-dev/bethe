@@ -90,7 +90,8 @@ The [boundary form-factor guide](experimental-xxx-boundary-form-factors.md)
 describes local singlet-to-triplet weights, an owned prepared normalization,
 the fixed-imaginary-root construction, explicit precision and independent
 small-chain checks. These free-end weights carry no periodic Fourier factor.
-Build the standalone example with `BETHE_BUILD_EXAMPLES=ON`.
+Build the standalone example with `BETHE_BUILD_EXPERIMENTAL=ON` and
+`BETHE_BUILD_EXAMPLES=ON`.
 
 ## Scope and promotion
 

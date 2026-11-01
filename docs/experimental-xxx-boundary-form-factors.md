@@ -129,9 +129,11 @@ In the scalar-product determinant, each finite-root column has a common
 unit-modulus phase and a product of $`|q(v_b+i,g_a)|`$. Remove these before
 factorization. At the fixed imaginary root, one of the two ABA terms vanishes
 exactly and its column reduces to $`K_{aM}`$, with its remaining common product
-restored in logarithmic form. The final matrix is real. The factors with
-powers proportional to N cancel between the scalar product and the norms,
-so none of those large products are evaluated numerically.
+restored in logarithmic form. The final matrix is real. The N-dependent magnitudes cancel between the
+scalar product and the norms. The unit-modulus phase $`\eta_b`$ remains
+in each finite-root column and is evaluated by integer exponentiation; it
+must not be dropped. Remaining magnitude products are accumulated as
+logarithms, avoiding exponentially large or small intermediate products.
 
 For a finite on-shell root set $`r`$, the Gaudin matrix is
 
