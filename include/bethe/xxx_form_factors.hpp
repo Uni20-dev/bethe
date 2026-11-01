@@ -164,6 +164,22 @@ template <uni20::Real Real> class PreparedRaisingFormFactors {
     }
     bool ready() const { return status() == FormFactorStatus::converged; }
 
+    /// Ground-only part of the log Fourier raising weight, shared by real and
+    /// complex excited-root formulas. Absent unless this snapshot is ready.
+    /// log(N)-log|det G|+sum log(mu^2+1/4)-sum_{a>b} log(1+(mu_a-mu_b)^2).
+    std::optional<Real> ground_log_prefactor() const
+    {
+      if (!ready()) return {};
+      return ground_log_prefactor_;
+    }
+
+    /// Ground norm's rejection diagnostic, not a condition-number/error bound.
+    std::optional<Real> ground_pivot_margin() const
+    {
+      if (!ready()) return {};
+      return ground_pivot_margin_;
+    }
+
     [[nodiscard]] FormFactor<Real> operator()(RealState<Real> const& excited) const
     {
       using Complex = uni20::complex<Real>;

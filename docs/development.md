@@ -31,6 +31,7 @@ repeated scans with shared root preparation and dependent field/rung queries.
 | `include/bethe/detail/` | Shared numerical implementation helpers |
 | `apps/` | Command-line frontends, model-specific arguments, formatting and report metadata |
 | `tests/` | Numerical regressions, independent reference checks and frontend tests |
+| `experimental/` | [Opt-in components](experimental.md) with explicit coverage/API limits and separate tests; not installed by default |
 | `data/citations.json` | Literature metadata used to generate the C++ registry and bibliography |
 
 Formatting stays in `apps/`, separate from the numerical API and any future
