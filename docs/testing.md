@@ -62,8 +62,8 @@ Use independent physics and precision-growth tests to establish numerical
 accuracy. For grid construction, scheduling, ownership and export checks,
 choose an interacting fixture that converges economically at the same working
 precision and tolerance. Keep every branch, scheduler mode, failure path and
-format assertion. For example, the Lieb–Liniger CLI grid tests use $c=40$;
-the separate $c=4$ accuracy and density-scaling checks keep their original
+format assertion. For example, the Lieb–Liniger CLI grid tests use `c=40`;
+the separate `c=4` accuracy and density-scaling checks keep their original
 inputs and tolerances.
 
 When testing multiple output sinks, attach them to one calculation and compare
