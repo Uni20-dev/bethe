@@ -32,19 +32,47 @@ normalization and diagnostics at modest cost. The small four- and six-spinon
 examples use restricted integration domains; they are not converged replacements
 for the reference spectra.
 
-This comparison uses large-domain reference calculations. Once a checked
-compact record is available, [redrawing it](xxx-spinon-slice-reproduction.md#redraw-saved-results)
-requires only the plotting tools; it does not run any integrations. Regenerating
+This comparison uses large-domain reference calculations. The checked
+compact record can be [redrawn](xxx-spinon-slice-reproduction.md#redraw-saved-results)
+using only the plotting tools; no integrations are run. Regenerating
 the reference is a separate, optional production task. Consult the
 [two/four-spinon compute budget](xxx-spinon-slice-reproduction.md#recorded-production-cost)
 and [six-spinon compute budget](xxx-six-spinon-reproduction.md#dataset-settings-and-compute-budget)
 before running those recipes. Their settings and costs describe the saved
 datasets; benchmark a representative complete query before budgeting new work.
 
-**The full sixteen-frequency reference dataset is still being calculated.**
-Its checked compact data and comparison figures will be added after validation.
-The small sector tutorials are available now; running the production recipes
-is not a prerequisite for following them.
+## Read the reference comparison
+
+The sixteen requested frequencies now have checked two-, four- and six-spinon
+results. The left panel separates the three contributions; the right compares
+their partial sums on the same logarithmic density scale.
+
+![Individual two-, four- and six-spinon contributions and their partial sums at q=pi/2](figures/xxx-spinon-slice.svg#gh-light-mode-only)
+![Individual two-, four- and six-spinon contributions and their partial sums at q=pi/2](figures/xxx-spinon-slice-dark.svg#gh-dark-mode-only)
+
+Above the two-spinon upper edge, the blue contribution is exactly zero.
+The four- and six-spinon contributions continue, so the difference between the
+$`2+4`$ and $`2+4+6`$ curves directly shows the extra six-spinon response.
+Inside the two-spinon band, compare the individual sectors as well as the sums:
+a smaller contribution can be difficult to see on a curve dominated by
+$`S^{zz}_2`$.
+
+Symbols mark calculated values; joining lines guide the eye. The plotted
+range ends at $`\omega/J=4`$, before the outer four- and six-spinon edges.
+The bars on $`S^{zz}_6`$ and $`S^{zz}_{2+4+6}`$ are the same observed sampling
+standard error. Their relative size for the six-spinon contribution ranges
+from 2.49--6.52%; 15 of the sixteen points meet the initial 5% sampling target. They exclude the deterministic
+quadrature, contour, arithmetic and omitted-domain uncertainties discussed
+below, as well as uncertainty from rare configurations not adequately sampled.
+
+Download the [combined compact data](data/xxx-spinon-slice.json), or use the
+[fast redraw command](xxx-spinon-slice-reproduction.md#redraw-saved-results).
+The [validation record](../validation/spinon-slice-reference-20261102.json)
+keeps each sector, its sampling diagnostics, the original source identities
+and the checks used to assemble the comparison. The original two/four data
+and the new six-spinon data come from different Bethe revisions; the
+[reviewed source comparison](../validation/spinon-cross-sector-source-review-20261102.json)
+explains why they can be joined without changing their recorded provenance.
 
 ## What the comparison tests
 

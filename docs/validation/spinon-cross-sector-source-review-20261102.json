@@ -1,0 +1,309 @@
+{
+  "schema": "bethe-cross-sector-source-review-v1",
+  "scope": "Reuse the recorded two/four-spinon exports with the new single-source six-spinon slice; no source relabelling, normalization change or mixing of overlapping streams.",
+  "two_four_source": "b573fb4bba7d7fee9df6853fb29bc7cb051898da",
+  "six_source": "d30b665588c4a093e1081eaf4f6c54cc2b5445fd",
+  "uni20_source": "1cb2474eb0a54e13ec7d5f2c1823752020b2425c",
+  "compatibility_record_sha256": "7d03f088dc47fc094b0c7ab7ebf7607fc5557f283f605574124670747fbeb0c1",
+  "intermediate_control_source": "d72a97d0bdcbd0b2bcc39bd227d831cb01019502",
+  "original_control_source": "ab54b536b20f8a1b5646d0f4bc5ae630f523806b",
+  "original_audit_sha256": "a8c00f5bfe97da02241dff76bbabedcdcaf49c2d471314c405bf6b1f685f7dd1",
+  "model_header_closure": [
+    {
+      "path": "include/bethe/detail/async_execution.hpp",
+      "changed": false,
+      "old_blob": "d7c711aa2f769156998b9eca7022ac8d33640f2b",
+      "new_blob": "d7c711aa2f769156998b9eca7022ac8d33640f2b",
+      "old_sha256": "904b80b35de2be529b70c3056dfd9fe229950470bcd37d4898d37e54639a3885",
+      "new_sha256": "904b80b35de2be529b70c3056dfd9fe229950470bcd37d4898d37e54639a3885",
+      "review": "Byte-identical model dependency."
+    },
+    {
+      "path": "include/bethe/detail/controlled_hypergeometric_tail.hpp",
+      "changed": false,
+      "old_blob": "9f2bff38a829ee83cdb9cdf33c3fdc958f70f051",
+      "new_blob": "9f2bff38a829ee83cdb9cdf33c3fdc958f70f051",
+      "old_sha256": "fa381ee1697de6576ecf1fc6a771dc6179b61efd0bbfc7fe1e28c2a265a2c4c9",
+      "new_sha256": "fa381ee1697de6576ecf1fc6a771dc6179b61efd0bbfc7fe1e28c2a265a2c4c9",
+      "review": "Byte-identical model dependency."
+    },
+    {
+      "path": "include/bethe/detail/gauss_legendre.hpp",
+      "changed": false,
+      "old_blob": "8ca0a6657676d30a00777d80360057eadd8e43f5",
+      "new_blob": "8ca0a6657676d30a00777d80360057eadd8e43f5",
+      "old_sha256": "38f24b5e73842e4f66b4e7e78f52105085205561546ba02f278fbea914f14b25",
+      "new_sha256": "38f24b5e73842e4f66b4e7e78f52105085205561546ba02f278fbea914f14b25",
+      "review": "Byte-identical model dependency."
+    },
+    {
+      "path": "include/bethe/detail/spinon_barnes.hpp",
+      "changed": false,
+      "old_blob": "9c4916bea9edcc4363ed1a10523e178bcdeb45ce",
+      "new_blob": "9c4916bea9edcc4363ed1a10523e178bcdeb45ce",
+      "old_sha256": "71ac9175e81b3ec0ac21f1e14ada3af19eb564b0479a17d55bbef1d993fd04ab",
+      "new_sha256": "71ac9175e81b3ec0ac21f1e14ada3af19eb564b0479a17d55bbef1d993fd04ab",
+      "review": "Byte-identical model dependency."
+    },
+    {
+      "path": "include/bethe/detail/spinon_numerics.hpp",
+      "changed": false,
+      "old_blob": "f85a4448c791f28844a89b679ac6aeb5c8d35f65",
+      "new_blob": "f85a4448c791f28844a89b679ac6aeb5c8d35f65",
+      "old_sha256": "255f58a29a4575e5139b2ee5db0236ed3057d94a7df7cc5bb102420b010741a5",
+      "new_sha256": "255f58a29a4575e5139b2ee5db0236ed3057d94a7df7cc5bb102420b010741a5",
+      "review": "Byte-identical model dependency."
+    },
+    {
+      "path": "include/bethe/detail/spinon_weighted_value.hpp",
+      "changed": false,
+      "old_blob": "02b2e4f9d1aa8b408cc1e0651b26fc2bfc7c8116",
+      "new_blob": "02b2e4f9d1aa8b408cc1e0651b26fc2bfc7c8116",
+      "old_sha256": "e595117de88cce94a3bbc464485eaea75609f42d49ebfebff512aa53b1074983",
+      "new_sha256": "e595117de88cce94a3bbc464485eaea75609f42d49ebfebff512aa53b1074983",
+      "review": "Byte-identical model dependency."
+    },
+    {
+      "path": "include/bethe/detail/xxx_barnes_transition_rate.hpp",
+      "changed": false,
+      "old_blob": "080b14c5d5049df30626e2e0a2bf1598b397fba3",
+      "new_blob": "080b14c5d5049df30626e2e0a2bf1598b397fba3",
+      "old_sha256": "3d46086bc44da3bce6d8c25cc95935858e50239a492abeebb0985eaa64cc65b0",
+      "new_sha256": "3d46086bc44da3bce6d8c25cc95935858e50239a492abeebb0985eaa64cc65b0",
+      "review": "Byte-identical model dependency."
+    },
+    {
+      "path": "include/bethe/detail/xxx_four_spinon_common_shift.hpp",
+      "changed": false,
+      "old_blob": "0b64bdf86a9275dc7c6c63a185bdfd9ad84bca78",
+      "new_blob": "0b64bdf86a9275dc7c6c63a185bdfd9ad84bca78",
+      "old_sha256": "16b17fbec8dfb69db6101d2170f00781587d077f585b0ef47f7929adebbba131",
+      "new_sha256": "16b17fbec8dfb69db6101d2170f00781587d077f585b0ef47f7929adebbba131",
+      "review": "Byte-identical model dependency."
+    },
+    {
+      "path": "include/bethe/detail/xxx_four_spinon_geometry.hpp",
+      "changed": false,
+      "old_blob": "8436105986b74bd16dee8bee0a537e39a8e7865f",
+      "new_blob": "8436105986b74bd16dee8bee0a537e39a8e7865f",
+      "old_sha256": "2dd05c2623022a8728cd0689186754c24bae47e1d1623d2b901bb23847a7a1e5",
+      "new_sha256": "2dd05c2623022a8728cd0689186754c24bae47e1d1623d2b901bb23847a7a1e5",
+      "review": "Byte-identical model dependency."
+    },
+    {
+      "path": "include/bethe/detail/xxx_transition_rate.hpp",
+      "changed": false,
+      "old_blob": "c4d8523123c5e30f775051a92264842164813059",
+      "new_blob": "c4d8523123c5e30f775051a92264842164813059",
+      "old_sha256": "d287893110a1b7c7b7a2ae291f2029d82e46ac99b0f458e21d2331ddda2933d5",
+      "new_sha256": "d287893110a1b7c7b7a2ae291f2029d82e46ac99b0f458e21d2331ddda2933d5",
+      "review": "Byte-identical model dependency."
+    },
+    {
+      "path": "include/bethe/execution.hpp",
+      "changed": true,
+      "old_blob": "2293264aacc8ad1645ea1074401cff1e9024549d",
+      "new_blob": "847d26d0adb0dcf221fad2ad4d063a47bddb766d",
+      "old_sha256": "59e631fa4b3fe4645212e768821be8ef9afd5087e5a63edd4ac58827e976a1b7",
+      "new_sha256": "30ada51e7d1b778d43e7f80f968d0355bc3686296b91385975db9d8d4b7673d8",
+      "review": "Only batch-size documentation changes; defaults and execution fields are identical."
+    },
+    {
+      "path": "include/bethe/observable_grid.hpp",
+      "changed": true,
+      "old_blob": "c6d87aa619ca06d1640beb4b365f00e3f64cba1a",
+      "new_blob": "8c7538dfdbc511c3ba6f12b373998d93e20705a9",
+      "old_sha256": "721a349bcae7ee1a467ae998c4bd16c71b8cde829724cc724a4c7ea0b2aeccaf",
+      "new_sha256": "628f814fdf4ab2a7c4efe94e207f0f61cc3b28a8643f46e5bf0b45cb9e2dbd84",
+      "review": "Adds an owning preparation callback. Existing two/four clients use the default identity index; evaluation and ordered collection preserve their numerical operation order."
+    },
+    {
+      "path": "include/bethe/quadrature_accumulation.hpp",
+      "changed": false,
+      "old_blob": "ef28bde5f7899abbe06fbbd909878b709b5dd431",
+      "new_blob": "ef28bde5f7899abbe06fbbd909878b709b5dd431",
+      "old_sha256": "07db1c58043d87b87fdd3af6eed57919eb74e1ead3c6c802841ed3d5363ba8b8",
+      "new_sha256": "07db1c58043d87b87fdd3af6eed57919eb74e1ead3c6c802841ed3d5363ba8b8",
+      "review": "Byte-identical model dependency."
+    },
+    {
+      "path": "include/bethe/solver.hpp",
+      "changed": false,
+      "old_blob": "579e1f12c345ec9fd3151e82fe074b5dbef5cf77",
+      "new_blob": "579e1f12c345ec9fd3151e82fe074b5dbef5cf77",
+      "old_sha256": "6732ab821d238f0b1c423289c4917a049b21337c1203c80374f6f2f057bf5a64",
+      "new_sha256": "6732ab821d238f0b1c423289c4917a049b21337c1203c80374f6f2f057bf5a64",
+      "review": "Byte-identical model dependency."
+    },
+    {
+      "path": "include/bethe/spinon.hpp",
+      "changed": false,
+      "old_blob": "79be6edc449767d2def5531463a82b315866aaa9",
+      "new_blob": "79be6edc449767d2def5531463a82b315866aaa9",
+      "old_sha256": "635e9da6a6b49adafa645712e0930919b2187e40bfb220ff7344434483e6aadd",
+      "new_sha256": "635e9da6a6b49adafa645712e0930919b2187e40bfb220ff7344434483e6aadd",
+      "review": "Byte-identical model dependency."
+    },
+    {
+      "path": "include/bethe/xxx_four_spinon_thermodynamics.hpp",
+      "changed": true,
+      "old_blob": "a344e59f076b38a854255c04961ceeaf22d204a1",
+      "new_blob": "35d999f80f5fb1d91811c1811e1ae01d2819fa9c",
+      "old_sha256": "0038f3b4c255a9ecc57df92303c7aa007e26e003da2bb7c9c6a4c2d6275219a3",
+      "new_sha256": "68c2845a97cb9b7b7dec03fd2fb76ef33888fd637c50da52d67c57446e5719ea",
+      "review": "Removes duplicated failure text. Successful observations and quadrature are unchanged."
+    },
+    {
+      "path": "include/bethe/xxx_spinon_density.hpp",
+      "changed": true,
+      "old_blob": "e31945a245c1b5e40d66e68aefae438e750e5529",
+      "new_blob": "acc7d494211aff6009ab674d572e60fa1e7e7b6e",
+      "old_sha256": "a8519116bf2a01d834d51953be59f38a285a171bdd02d7e12dbe2d3918e41b54",
+      "new_sha256": "d2407c9203a2967c66262a395a049655981973d6ecd6c90e842a6d9995995e10",
+      "review": "Hoists half, imaginary half-pi and centered beta at operand precision and borrows zeroth-moment samples instead of copying them. The four-spinon ordered sum, last sample and controlled-tail formula retain the same arithmetic."
+    },
+    {
+      "path": "include/bethe/xxx_spinon_density_recovery.hpp",
+      "changed": true,
+      "old_blob": "4172a90bfb88033c17740ac3cee59504238337ad",
+      "new_blob": "d85dfc7cd703be8475129d48310a7b8691504495",
+      "old_sha256": "9d2a311f24f57d65711bc79fd11793ae755034fd9a3872e63e146a9ba6d6dee5",
+      "new_sha256": "f047db576648b08c733101affcb2dd8649288bf4b0431064d1d09296e14bb420",
+      "review": "Records the last failed density control only when stages are exhausted. The acceptance calculation and successful return path are unchanged."
+    },
+    {
+      "path": "include/bethe/xxx_thermodynamic_structure_factor.hpp",
+      "changed": false,
+      "old_blob": "5f645ee0b80645637b5b41afabe64995dc5e5f49",
+      "new_blob": "5f645ee0b80645637b5b41afabe64995dc5e5f49",
+      "old_sha256": "3c0a55b7289b4921cde0c5f46bb8207f3d034d7243841c36124807eb37473ef3",
+      "new_sha256": "3c0a55b7289b4921cde0c5f46bb8207f3d034d7243841c36124807eb37473ef3",
+      "review": "Byte-identical model dependency."
+    }
+  ],
+  "control_to_production": {
+    "all_include_and_build_sources_identical": true,
+    "frontend_review": "Adds optional independent density-guard precision. The absent option retains the 192-bit guard and 128-bit comparison used by these controls."
+  },
+  "frontend_review": [
+    "Runtime-precision DensityLow remains the MPFR type, and default precision/control parsing is unchanged.",
+    "Two/four point dispatch, result conversion and physical normalization are unchanged.",
+    "New retry callbacks, replicate accounting and stage preflight are entered only for selected six-spinons.",
+    "The new samples-per-task setting changes six-spinon tasks; two/four ordered grids use max_in_flight.",
+    "The fixed path retains geometry/density metadata; the new native-stage metadata applies only to an explicit policy."
+  ],
+  "bounded_two_four_controls": [
+    {
+      "command": [
+        "bethe-xxx-structure-factor-thermo",
+        "--sectors",
+        "2,4",
+        "--momentum",
+        "1.5707963267948966192313216916397514420985846996875529104874722961539082031431045",
+        "--omega",
+        "2.0",
+        "--exchange",
+        "1",
+        "--channel",
+        "zz",
+        "--precision",
+        "bits-192",
+        "--four-order",
+        "4",
+        "--four-cutoff",
+        "48",
+        "--threads",
+        "2",
+        "--density-relative-tolerance",
+        "1e-8",
+        "--density-absolute-tolerance",
+        "1e-30",
+        "--diagnostics",
+        "--format",
+        "json"
+      ],
+      "reference_source": "ab54b536b20f8a1b5646d0f4bc5ae630f523806b",
+      "comparison_source": "d72a97d0bdcbd0b2bcc39bd227d831cb01019502",
+      "reference_raw_sha256": "b4766eacab200bffb7e1e2cb5470db466ef1f7a70f64c8ab153062e0810c3498",
+      "comparison_raw_sha256": "c42d8d64250ebeb1743224a0d755b8e1131dbfa788c5df8e4dc1280aa20bcf73",
+      "equal_tables": {
+        "spectrum": 3,
+        "diagnostics": 2,
+        "continuum": 2
+      },
+      "comparison": "Every numerical row and column exactly equal at the exported precision."
+    },
+    {
+      "command": [
+        "bethe-xxx-structure-factor-thermo",
+        "--sectors",
+        "2,4",
+        "--momentum",
+        "1.5707963267948966192313216916397514420985846996875529104874722961539082031431045",
+        "--omega",
+        "2.3",
+        "--exchange",
+        "1",
+        "--channel",
+        "zz",
+        "--precision",
+        "bits-192",
+        "--four-order",
+        "4",
+        "--four-cutoff",
+        "24",
+        "--threads",
+        "2",
+        "--density-relative-tolerance",
+        "1e-8",
+        "--density-absolute-tolerance",
+        "1e-30",
+        "--diagnostics",
+        "--format",
+        "json"
+      ],
+      "reference_source": "ab54b536b20f8a1b5646d0f4bc5ae630f523806b",
+      "comparison_source": "d72a97d0bdcbd0b2bcc39bd227d831cb01019502",
+      "reference_raw_sha256": "3e7b9cf7ba4adcae442fa613304d192fedc5cab53b74b845a8b4011bb1487171",
+      "comparison_raw_sha256": "a3b9d6d49213f0bf002d919a470d37790e05f78ab25c546849fa4f7bf68cf3eb",
+      "equal_tables": {
+        "spectrum": 3,
+        "diagnostics": 2,
+        "continuum": 2
+      },
+      "comparison": "Every numerical row and column exactly equal at the exported precision."
+    }
+  ],
+  "final_source_delta": {
+    "cpp_paths": [
+      "apps/spinon-thermo.hpp"
+    ],
+    "patch_sha256": "d987795a4014f0bd92bd69d57f3dee35e3ebf10a8e7f19ae905ae1ae0c1dc033",
+    "review": "Parses the optional precision-stage list before the existing six-sector work-budget check, which now includes all precision attempts. No model header or successful two/four calculation changes; when no stages are requested the list stays empty. Other changed files are export readers and tests.",
+    "code_review": "https://github.com/Uni20-dev/bethe/pull/97#pullrequestreview-5728799143",
+    "installed_six_control": {
+      "momentum": "1.5707963267948966192313216916397514420985846996875529104874722961539082031431045",
+      "omega": "2.3",
+      "replicates": 2,
+      "samples_per_replicate": 128,
+      "seed": 7410,
+      "raw_sha256": {
+        "old": "e679291ff57520841f1f817976c0f89143ee888528e7d7902ffcde8ef4f18739",
+        "new": "31f5cee5c130540a96827dfaeefe047b325c54f872ee968c78b64f6c521cd7cd"
+      },
+      "equal_tables": {
+        "spectrum": 1,
+        "diagnostics": 1,
+        "replicates": 2,
+        "recovery": 7,
+        "continuum": 1
+      },
+      "comparison": "All five numerical tables exactly equal between installed intermediate and final binaries."
+    }
+  },
+  "limitations": [
+    "The two/four controls use order4 and straddle the two-spinon upper edge; they do not rerun all16production quadratures.",
+    "This evidence is specific to the two named source pairs and the stated sector assignment.",
+    "Source correspondence and arithmetic agreement do not bound quadrature, sampling or omitted-domain uncertainty."
+  ]
+}
