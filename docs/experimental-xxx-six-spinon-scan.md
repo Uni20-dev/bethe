@@ -93,7 +93,7 @@ In a clean public source build with `BETHE_BUILD_EXPERIMENTAL=ON` and
 
 ```sh
 cmake --build . --target bethe_example_six_spinon_scan
-./bethe_example_six_spinon_scan
+./experimental/bethe_example_six_spinon_scan
 ```
 
 It enumerates and evaluates the 11 nominal `N=12`, `q=pi/2` candidates, prints
