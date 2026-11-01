@@ -15,6 +15,8 @@ from spinon_tutorial_exports import CONVENTION
 
 def fixture():
     meta = {'Program': 'bethe-xxx-structure-factor-thermo', 'Channel': 'zz',
+            'Hamiltonian': 'H=J sum S_j.S_(j+1); infinite chain; zero field and temperature',
+            'Family': 'Partial DSF; physical normalization; no fitted rescaling',
             'Density convention': CONVENTION, 'Geometry and output bits': '192',
             'Exchange J': '1', 'Selected spinon sectors': '6', 'Spectral points': '1',
             'Bethe revision': 'a' * 40, 'Uni20 revision': 'b' * 40,

@@ -202,6 +202,18 @@ The [parallel-calculation guide](parallel-calculations.md#six-spinon-monte-carlo
 describes the interface and cancellation behavior. Whole-query throughput is
 the useful performance measure, rather than a brief snapshot of full CPU use.
 
+### Matched scheduler controls
+
+The [scheduler comparison](validation/six-spinon-scheduler-controls-20261101.json)
+retains a small historical check of whole-replicate tasks, 16-sample tasks and
+7-sample tasks at the production MPFR precisions. All numerical tables agree
+for 128 matched draws, including 40 supported roots. The 7-sample case also
+checks a partially filled final task. The record identifies every relevant
+source change and preserves the timing and source provenance. It establishes
+agreement on those successful samples, not convergence, failed-run equivalence
+or a production speedup. These measurements explain the scheduler change;
+they are not a requirement to mix executable versions in a new dataset.
+
 ## Preserve the evidence as the code improves
 
 For every change, retain enough information to compare the same calculation:
