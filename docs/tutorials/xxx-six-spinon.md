@@ -24,12 +24,13 @@ already included; no multiplier is fitted to a sum rule or another calculation.
 
 The hands-on tutorial uses two small calculations. Start with the native
 `long-double` example to learn the command and output, then use the single-point
-MPFR example to examine soft spinons, sampling errors and precision controls.
+example with precision retries to examine soft spinons, sampling errors and
+numerical controls.
 
 | Calculation | Purpose | Measured cost |
 | --- | --- | --- |
 | [Three-frequency example, $`R=8`$](#start-with-an-inexpensive-calculation) | Learn the workflow | 0.38 CPU seconds with x86 extended80 `long double` |
-| [Single point, $`R=256`$](#extend-the-soft-domain) | Inspect sampling and numerical diagnostics | About five minutes with four workers; 1,150 CPU seconds |
+| [Single point, $`R=256`$](#extend-the-soft-domain) | Inspect sampling and numerical diagnostics | About 20 seconds with four workers; 68 CPU seconds |
 | [Reference dataset, $`R=1040`$](xxx-six-spinon-reproduction.md) | Reproduce the recorded spectrum and plot compact data | See the dataset-specific compute budget |
 
 The first two examples have substantial sampling and cutoff uncertainty; they
@@ -140,10 +141,38 @@ Choose an inner tolerance for the accuracy you need, then check against a
 stricter calculation. The [development study](../spinon-numerics-development.md)
 collects the wider precision and seed scans separately.
 
+### Retry difficult configurations at wider precision
+
+A larger calculation can use `--six-precision-stages fp80,fp128,reference`.
+On the x86 build used here, each draw first attempts extended80 geometry and
+its 53/64-bit density check.
+If the numerical checks fail for a recoverable reason, the same draw is retried
+with binary128 geometry and a 64/113-bit density check. A final `reference`
+retry uses MPFR with the precision and density guard you specify. The stage
+list requires the corresponding native formats in your build; omit an
+unavailable native stage and keep `reference` last.
+
+These are whole-observation retries, including geometry and every contributing
+root. They preserve the exact random draw and full importance weight. An
+accepted result replaces the previous attempt; results from different
+precisions are not averaged. A terminal failure prevents a spectrum estimate,
+and failed draws are never discarded or replaced with new random numbers.
+The `recovery` table retains each stage's attempts, accepts, retries and work.
+
+The two-precision density check above still operates within each stage. The
+stage list adds a way to recover the difficult observations without computing
+every draw in MPFR. With a stage list, `--precision` sets the MPFR reference,
+accumulation and output precision; it does not describe the arithmetic used
+for every accepted observation. The export records all these precisions.
+Omit `--six-precision-stages` to use a fixed-precision calculation. This also
+provides a reference check: rerun the same inputs without the stage list to
+compare against MPFR for every observation, rather than just the retries.
+
 ## Extend the soft domain
 
-An MPFR-enabled [build or installation](../building.md) supports the explicit
-precision used here. This decimal input denotes a point extremely close to
+Use a [build or installation](../building.md) with extended80, binary128 and
+MPFR enabled for this stage list. This decimal input denotes a point extremely
+close to
 $`q=\pi/2`$; its exact string is retained for comparing runs.
 
 ```sh
@@ -151,6 +180,7 @@ q=1.5707963267948966192313216916397514420985846996875529104874722961539082031431
 bethe-xxx-structure-factor-thermo --sectors 6 \
   --momentum "$q" --omega 2 --exchange 1 --channel zz \
   --precision bits-512 --density-guard-bits 256 --six-cutoff 256 \
+  --six-precision-stages fp80,fp128,reference --samples-per-task 128 \
   --replicates 16 --samples 128 --seed 7304 --threads 4 \
   --density-terms 256 --density-tail-order 24 \
   --density-relative-tolerance 1e-6 --density-absolute-tolerance 0 \
@@ -163,20 +193,27 @@ integration domain and numerical checks; they do not promise a particular
 relative sampling error. The point is a starting calculation to inspect before
 running a frequency grid.
 
-Here geometry and output retain 512 bits, while the density comparison uses
-192/256 bits. A comparison with 448/512-bit density checks preserves every
-replicate's work counts and changes the mean by less than
-$`2\times10^{-75}`$ relative. The measured cost of the displayed command is
-1,150 CPU seconds, about five minutes with four workers. The
-[comparison record](../validation/six-spinon-density-precision-20261031.json)
-retains the actual point and its replicate summaries. Its sampling error is
-still 15.4%; lowering arithmetic cost does not improve that error or recover
-the omitted rapidity tail.
+This query completed in 20.1 seconds with four workers on a Xeon Gold 6254,
+using 67.8 CPU seconds. Of its 2,048 draws, 2,026 passed in extended80;
+22 retried in binary128, and 11 of those required MPFR. The final reference
+uses 512-bit geometry and a 192/256-bit density comparison. Accumulation and
+output retain 512 bits regardless of the successful stage.
+
+The complete query preserves the original MPFR control's replicate identities,
+root counts and final density-work counts. Its mean differs by
+$`2.1\times10^{-16}`$ relative, and every replicate mean and maximum by less
+than $`6\times10^{-16}`$. The
+[installed-program validation record](../validation/six-spinon-native-retry-tutorial-20261101.json)
+retains the commands, precision stages, comparison and measured costs.
+The sampling error remains 15.4%; faster arithmetic neither reduces that
+scatter nor recovers the omitted rapidity tail.
 
 The `spectrum` table contains the density. The `diagnostics` table separates
 sampling error from contour and arithmetic diagnostics. The `replicates` table
 retains each mean, sample count, supported-root count and largest observation.
-An unsuccessful replicate prevents an estimate over the remaining replicates.
+The `recovery` table counts work from every attempted stage, including rejected
+attempts; the `diagnostics` table reports the final observation work. An
+unsuccessful replicate prevents an estimate over the remaining replicates.
 
 The accompanying analysis script independently checks all replicate identities
 and recomputes the reported mean and sampling standard error:
@@ -215,7 +252,7 @@ These controls answer different questions:
 | More independent draws/replicates | Sampling scatter and sensitivity to rare large weights |
 | Larger `--six-cutoff` | Weight outside the current rapidity domain |
 | More residue terms and higher tail order | Evaluation of the auxiliary contour sums |
-| Higher `--precision` | Energy-surface arithmetic; also density if no guard override is set |
+| Higher `--precision` | Fixed-mode energy-surface arithmetic, or the final MPFR stage when retries are enabled; also density if no guard override is set |
 | Higher `--density-guard-bits` at fixed geometry | Density arithmetic alone, with MPFR |
 
 The density check uses $`\mathrm{atol}+\mathrm{rtol}\,|W_6|`$. The relative
@@ -287,9 +324,11 @@ that dataset; they are not a minimum-precision rule for new calculations.
 
 ## Keep the plotted data independently checkable
 
-The compact `bethe-six-spinon-slice-v1` format retains the full requested
-frequency grid and stores numerical metadata once per run, together with
-spectrum, diagnostic and replicate rows. It includes each raw export's SHA256,
+The compact format retains the full requested frequency grid and stores
+numerical metadata once per run, together with spectrum, diagnostic and
+replicate rows. Fixed-precision results use `bethe-six-spinon-slice-v1`; staged
+precision results use `bethe-six-spinon-slice-v2` and also retain every recovery
+row, including unused stages and failed attempts. Both include each raw export's SHA256,
 source revisions, cutoff, proposal controls and timing summary. Local command
 paths are omitted. Raw observations and archives are not needed to redraw a
 figure, and are not included in the compact file.
