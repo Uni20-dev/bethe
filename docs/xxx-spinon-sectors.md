@@ -122,12 +122,124 @@ are recorded. The [accuracy guide](numerical-accuracy.md#why-evaluate-a-density-
 explains why a failed pair need not imply an inaccurate higher-precision value.
 Raising precision does not replace order, sampling or cutoff studies.
 
+The six-spinon surface keeps endpoint distances and integer multiples of pi
+separately when summing free momenta. A cutoff of 1040 therefore does not by
+itself require a 1500-bit significand to distinguish a momentum from pi.
+Endpoint distances and energies now retain their common exponential factor as
+`log_scale = -abs(beta)`. The cutoff distance is compared logarithmically.
+Ordinary projections below the square of the arithmetic epsilon carry an
+absolute omission bound into the support and conditioning screens; a projected
+zero is not a physical zero. This lets binary64 geometry handle cutoffs whose
+endpoint distances are outside its exponent range. Unresolved boundaries still
+fail explicitly.
+
+Near a degenerate solved pair, arithmetic can still amplify roundoff. The
+surface checks conditioning of the solved rapidities and log coarea Jacobian
+against the square root of the input epsilon. MPFR retries an unresolved
+surface at twice and then four times the requested precision, with results
+rounded back to the requested output precision; native formats report the
+failure. The input rapidities and query values remain the same represented
+numbers. Refinement cannot recover input digits already rounded away. These
+checks are arithmetic indicators, not interval certification or an error
+bound on the spectral density. Exhausted geometry remains a failed sample.
+The internal surface result records working bits and retry count; CLI
+precision metadata describes the requested base and output precision.
+
+The [fixed 64-draw validation](validation/six-spinon-endpoint-geometry-20261101.json)
+at cutoff 1040 completes at 256 geometry bits with the same sample counts as
+the archived 1536-bit calculation. Its geometry-only replay at 128 and 256
+bits matches support classifications against 2048 bits without any internal
+refinement. This checks those arithmetic paths; the small pilot does not
+establish sampling or cutoff convergence.
+
+Before the scaled-endpoint stage, the
+[precision-floor probes](validation/six-spinon-precision-floor-20261101.json)
+extended this to 1359 geometry solves over seven queries and prescribed deep and
+nearly degenerate configurations. The raw density comparison uses 42 labelled
+configurations, including rapidities of magnitude 1039. Relative to 512-bit
+geometry and 320-bit density, the largest error in a weighted contribution was:
+
+| Arithmetic | Largest relative change | Returned labels |
+| --- | ---: | ---: |
+| MPFR, 53 significand bits | 2.53e-6 | 42/42 |
+| MPFR, 64 significand bits | 1.19e-7 | 42/42 |
+| MPFR, 80 significand bits | 1.72e-12 | 42/42 |
+| Native extended80, 64 significand bits | 7.07e-13 | 40/42 |
+| Native binary128, 113 significand bits | 7.08e-28 | 42/42 |
+
+These raw comparisons recombine returned densities and log weights in
+200-digit Decimal arithmetic. MPFR uses bounded internal geometry retries;
+extended80 rejects the nearly degenerate geometry. That case regenerates
+the energy at each precision, so its error includes input rounding. The geometry
+then required an explicitly representable cutoff endpoint distance, excluding
+native binary64. MPFR with 53 bits has a much wider exponent range.
+
+The complete 64-draw pilot also passes the existing recovery controller with
+96-bit geometry and an explicitly configured 80/96-bit density pair. Its mean
+changes by 9.32e-26 relative to the reference; a 64/80-bit pair rejects two draws.
+This library policy differs from the CLI's default 64-bit precision gap.
+The raw density alone reaches 1e-6 accuracy at 40 MPFR bits in this finite probe,
+but that leaves almost no margin and does not satisfy the recovery screens.
+
+Extreme mixed-sign configurations still fail low-precision error screens even
+with larger contour budgets. Three representative stress configurations pass
+an offline replay of the screens at 320/384 bits with controls (3120,128) and
+(3136,132); their values change by at most 1.71e-23 from the original controls.
+This supports a low-precision first attempt with fallback, not relaxing the
+screens or claiming a universal precision floor. No production defaults change.
+
+Native binary64 returns 40 of 84 raw density evaluations (two controls for each
+of 42 labelled configurations), agreeing to 1.53e-12 on those successful
+evaluations. The remaining evaluations fail at the Gamma-residue seed because
+of exponent range. In the original pilot, four of 20 labels fail this way and
+carry 21.6% of its reference weighted sum, so discarding failures is not viable.
+For the same 84-evaluation raw density workload, native extended80 takes 0.59
+CPU seconds, binary128 14.18 seconds and 256-bit MPFR 56.23 seconds on the
+recorded host. These single-run timings exclude recovery checks and geometry.
+
+The [scaled-endpoint replay](validation/scaled-spinon-endpoints-20261101.json)
+is the first stage toward wider native-binary64 coverage. It repeats all 1359
+geometry solves against the frozen 512-bit reference. Native binary64 resolves
+1358 cases with no support mismatches: 52 inside and 1306 outside. The maximum
+absolute log-weight difference is 1.35e-11. The nearly degenerate case remains
+an explicit conditioning failure; native extended80 rejects the same case.
+The deep reference fixtures, bounded-projection checks and unresolved-boundary
+tests exercise this behavior independently of the replay.
+
+The next stage is to retain residue amplitudes and density prefactors in scaled
+form. Recovery and weighted observations must then compare errors and combine
+scales before materializing the final contribution. This should preserve
+conditioning checks and higher-precision fallback. The geometry stage alone
+does not make the deep-domain density representable in binary64, change the
+recovery policy, or establish that pure binary64 covers every configuration.
+
+Build `bethe_xxx_spinon_precision_probe` explicitly to run these opt-in probes.
+Its `geometry` mode replays the fixed designs; `density` reads lines containing
+an identifier, log weight and six rapidities; `checked bits-96 80` runs the
+complete pilot through recovery. The store retains the raw inputs, runners,
+outputs and receipts. Regenerate the compact record using
+`scripts/check_xxx_six_spinon_precision_probe.py STORE_DIRECTORY --pilot-reference FILE`.
+`FILE` is the archived `geometry-1536.json` pilot output (1536-bit geometry,
+192/256-bit density). It is a separate required input; its SHA256 appears in
+the summary. Neither its path nor its parent directory is inferred from
+`STORE_DIRECTORY`. To check relocation using temporary copies in host-local
+storage, run
+`scripts/check_xxx_spinon_archive_relocation.py STORE_DIRECTORY --pilot-reference FILE --scratch-directory SCRATCH_DIRECTORY`.
+Choose an existing host-local directory for the temporary copies.
+The later geometry-only record uses
+`scripts/check_xxx_scaled_spinon_endpoints.py STORE_DIRECTORY --reference-directory DIRECTORY`.
+The reference directory must contain the frozen PR #93 `geometry-bits-512.jsonl`
+and `geometry-receipt.json`; their hash relationship is checked before analysis.
+It need not be adjacent to the stage-1 archive. Its relocation check is
+`scripts/check_xxx_spinon_archive_relocation.py STORE_DIRECTORY --reference-directory DIRECTORY --scratch-directory SCRATCH_DIRECTORY`;
+this also verifies rejection of an altered reference file.
+
 For MPFR, `--density-guard-bits B` lets the W4/W6 density use a smaller guard
 precision while retaining the geometry and output precision. It requires sector
 4 or 6 and $`25\le B\le N`$ for `--precision bits-N`; native formats reject this
 override. The lower comparison uses `max(24, B-64)` bits. Both arithmetic checks
-and both contour budgets still have to pass. For example, a deeply extended
-soft domain may need 768-bit geometry while its density passes at 192/256 bits:
+and both contour budgets still have to pass. For example, a query may use
+768-bit geometry while its density passes at 192/256 bits:
 use `--precision bits-768 --density-guard-bits 256`. Validate this separation
 against a higher density precision on the same complete query before using it
 for a larger calculation. The two-spinon kernel has its own `--tolerance`.

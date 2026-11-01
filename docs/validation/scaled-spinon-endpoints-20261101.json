@@ -1,0 +1,120 @@
+{
+  "schema": "bethe-scaled-spinon-endpoints-v1",
+  "date": "2026-11-01",
+  "scope": "Stage 1: geometry only. No density scaling, recovery-policy change, sampling convergence or cutoff-convergence claim.",
+  "base_commit": "4e30b7a0edf93653703deb10d36ab2362e3b854b",
+  "program_sha256": "987073d47cc4a1478c01604e2f9006147bd576ee49f112ab81cfb94cab8e0f19",
+  "raw_store_directory": "scaled-spinon-endpoints-20261101",
+  "reference_store_directory": "deep-geometry-precision-probes-20261101",
+  "reference_sha256": "48db26b8f415e98297518a4896b746c5d7e4aabee3aa4ff090cdf44c2a5b460e",
+  "reference_bits": 512,
+  "design": "R=1040; 4x16 exact 52-bit midpoint draws, seed7303, seven queries and three sections, plus four prescribed deep configurations and one nearly degenerate pair; 1359 solves per format.",
+  "representation": "Positive endpoint distance and J=1 energy share log_scale=-abs(beta). The cutoff is compared logarithmically. Ordinary projections below epsilon^2 carry explicit absolute omission bounds into support and conditioning screens.",
+  "edge_caveat": "The edge energy is regenerated in each format, so differences there include input rounding. MPFR can retry locally; native formats report unresolved conditioning.",
+  "results": {
+    "fp64": {
+      "status_counts": {
+        "outside": 1306,
+        "inside": 52,
+        "error": 1
+      },
+      "resolved_support_mismatches": 0,
+      "failures": [
+        {
+          "id": "stress_edge_pi2_edge_s0",
+          "reason": "surface conditioning unresolved; increase geometry precision"
+        }
+      ],
+      "retries": [],
+      "max_absolute_beta_error": "6.137178712913E-12",
+      "max_absolute_log_weight_error": {
+        "draws": "1.350048503636E-11",
+        "deep": "3.202917404039E-13",
+        "edge": null
+      },
+      "output_sha256": "1a1ccc9f6650827f2117b010f2d3118fd5a7fbb787f49900b6c0c9ea838166e2"
+    },
+    "extended80": {
+      "status_counts": {
+        "outside": 1306,
+        "inside": 52,
+        "error": 1
+      },
+      "resolved_support_mismatches": 0,
+      "failures": [
+        {
+          "id": "stress_edge_pi2_edge_s0",
+          "reason": "surface conditioning unresolved; increase geometry precision"
+        }
+      ],
+      "retries": [],
+      "max_absolute_beta_error": "1.398563970421E-15",
+      "max_absolute_log_weight_error": {
+        "draws": "2.887764978462E-15",
+        "deep": "8.582595961249E-16",
+        "edge": null
+      },
+      "output_sha256": "1c2ab44bec0cb0cfefb0b12526af23f2cdf3ebe7c063bc26737b79db6056bf7c"
+    },
+    "fp128": {
+      "status_counts": {
+        "outside": 1306,
+        "inside": 53
+      },
+      "resolved_support_mismatches": 0,
+      "failures": [],
+      "retries": [],
+      "max_absolute_beta_error": "3.717330607115E-30",
+      "max_absolute_log_weight_error": {
+        "draws": "8.587946199719E-30",
+        "deep": "5.281914089605E-31",
+        "edge": "4.501919451617E-29"
+      },
+      "output_sha256": "7730e2eacfdaa02cc79c4c4095871ca4dbcca8543697b187d7a1450ab2b3b036"
+    },
+    "bits-53": {
+      "status_counts": {
+        "outside": 1306,
+        "inside": 53
+      },
+      "resolved_support_mismatches": 0,
+      "failures": [],
+      "retries": [
+        {
+          "id": "stress_edge_pi2_edge_s0",
+          "working_bits": 106,
+          "refinements": 1
+        }
+      ],
+      "max_absolute_beta_error": "6.137178712913E-12",
+      "max_absolute_log_weight_error": {
+        "draws": "1.350048503636E-11",
+        "deep": "3.202917404039E-13",
+        "edge": "2.529789686846E-6"
+      },
+      "output_sha256": "731027a6dbd928006636432f768e32ecd166785dfab979f349e08b938c804871"
+    },
+    "bits-512": {
+      "status_counts": {
+        "outside": 1306,
+        "inside": 53
+      },
+      "resolved_support_mismatches": 0,
+      "failures": [],
+      "retries": [],
+      "max_absolute_beta_error": "2.745000000000E-152",
+      "max_absolute_log_weight_error": {
+        "draws": "1.462000000000E-152",
+        "deep": "0.000000000000E-140",
+        "edge": "0.000000000000E-139"
+      },
+      "output_sha256": "8893400bc8c0255de6721944951a0195e4b34deff60d7246a58193f69363fdff"
+    }
+  },
+  "artifacts_sha256": {
+    "receipt.json": "b9f6c882ff86d05084a4b8275602d4f57af40127fea8a62ef277a32e6130f5ba",
+    "source.patch": "2903a1080a80dedef9f29f389e18c06873519ff14bf08b5ae46eb076ee887c4b",
+    "xxx_spinon_endpoint.hpp": "fc91c3b514f3292b2d0a23a38893bb27c4f70032d15ce041947968c244a004f0",
+    "run_geometry.py": "39a35760ab71adbf110832e4a2e69ebba03ebd930d6519eb59a5e6439843db43"
+  }
+}

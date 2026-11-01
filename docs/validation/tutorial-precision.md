@@ -1,8 +1,11 @@
 # Tutorial precision audit
 
-Audit started 31 October 2026 against public main `4e776f6`. This records
-precision choices and their evidence; it does not claim a single accuracy
-bound for every model or every plotted point.
+This ledger links the tutorials' precision choices to measured comparisons.
+Each record identifies its numerical controls, source revision and hardware;
+agreement at those inputs does not establish one accuracy bound for every
+model or plotted point. See the [precision guide](../numerical-accuracy.md)
+for the decision procedure and the
+[development study](../spinon-numerics-development.md) for implementation history.
 
 ## Inventory
 
@@ -20,10 +23,10 @@ bound for every model or every plotted point.
   compare five formats. They are checked against an independent Decimal sine
   evaluation. The examples exhibit observable cancellation and root sensitivity,
   and explain the stable special-case formula; they are not ordinary defaults.
-- Four-spinon refinement and the small six-spinon example originally used MPFR
-  without a cheaper-format comparison. These are the main corrective work here.
-  The separate resolved-slice tutorials must make their own checks on their much
-  larger soft domains.
+- Four-spinon refinement uses binary128; the small six-spinon example uses
+  native extended80 where available. Their measured comparisons are below.
+  The resolved-slice tutorials need separate checks on their much larger
+  soft domains.
 
 Most root-solving CSV examples use residual tolerances near a few multiples of
 binary64 epsilon. Those are stopping criteria, not energy-error bounds. The
@@ -78,74 +81,63 @@ the MPFR192 value by about 1.14e-16 relative; MPFR128 and MPFR192 differ by
 about 2.42e-38. These comparisons describe the **same truncated quadrature**,
 not the unrestricted physical response.
 
-The [neighbourhood audit](four-spinon-neighbourhood-precision-20261031.json)
-extends this check to 54 points at the same order and cutoff. It independently
-reproduces the review finding: excluding five physical zeros, long double
-completes 26/49 points at `1e-8`, 47/49 at `1e-6`, and 49/49 at `1e-4`;
-binary64 completes none at any of those tolerances. All 324 native outcomes
-are retained. Five additional checks compare binary128/MPFR at three difficult
-points: the complete MPFR128 references agree with accepted native values to
-within 1.3e-16 relative, and MPFR192 confirms one reference. This is wider-value
-evidence for those three points only. The recorded binary128 failure uses the
-previous 53-bit lower comparison; this neighbourhood audit predates the
-intermediate native comparison.
+### Changing the momentum or frequency
 
-The later [binary128 neighbourhood record](four-spinon-native-neighbourhood-20261031.json)
-retains all 98 queries at the same 49 supported points, with a 64/113-bit pair.
-It completes 48/49 points at `1e-8` and 49/49 at `1e-6`; the strict failure at
-q=1.5, omega=4.5 remains unavailable. All 97 completed estimates agree with
-the matched MPFR128 S4 values within 1.3e-30 relative. These are clean-checkout
-exports from `865d701` on a Xeon Gold 6254, with two workers per query. The older
-MPFR exports retain their unavailable embedded revision and the review author's
-source attribution. They request sectors 2,4 with different worker counts;
-only the S4 value is compared, not total-query cost. Both sets retain complete
-numerical controls and raw hashes. The checker reconstructs the coverage and
-comparisons from the compact record; it does not claim to inspect raw archives:
+The [native neighbourhood record](four-spinon-neighbourhood-precision-20261031.json)
+checks 49 supported points and five physical zeros at the same order and cutoff.
+With a 53/64-bit pair, extended80 completes 26/49 supported points at `1e-8`,
+47/49 at `1e-6`, and 49/49 at `1e-4`. Binary64 completes none at these
+tolerances. All outcomes are retained. Wider references at three difficult
+points agree with accepted native S4 values within 1.3e-16 relative; that
+comparison does not certify every point at the relaxed tolerances.
+
+The [binary128 neighbourhood record](four-spinon-native-neighbourhood-20261031.json)
+uses a 64/113-bit pair at all 49 supported points. It completes 48/49 at `1e-8`
+and 49/49 at `1e-6`; the strict failure at q=1.5, omega=4.5 remains unavailable.
+All 97 successful estimates agree with matched MPFR128 S4 references within
+1.3e-30 relative. The binary128 exports identify source `865d701`, a Xeon Gold
+6254 and two workers per query. The MPFR exports lack an embedded revision;
+the record retains the review author's source attribution. Worker counts and
+sector selections differ, so the comparison concerns S4 values, not total-query
+cost. Both sets preserve numerical controls and raw hashes. The checker
+reconstructs the compact coverage and comparisons without reading raw archives:
 
 ```sh
 python3 scripts/check_xxx_four_spinon_native_neighbourhood.py
 ```
 
-The starting command now uses `1e-6`, with a margin below the integration
+The starting command uses `1e-6`, with a margin below the integration
 changes it demonstrates; its actual two-sector rerun is checked separately.
 The strict five-format and refinement comparisons retain `1e-8`. Changing the
-momentum/frequency can still require a stronger precision pair. The full native neighbourhood takes
-17.5 CPU seconds and the five reference checks 81.8; these select only sector4,
-so they are not directly comparable with the two-sector costs above.
+momentum/frequency can still require a stronger precision pair. A successful
+relaxed screen needs a separate comparison with a stricter reference.
 
-The original 53/64-bit full-grid check is separate: orders 2/4 pass at T8 and T12, but
-orders 8/16 fail the arithmetic screen at both cutoffs. Thus the cheap starting
-command is not an adequate uniform setting for the refinement figure. The
-[refinement comparison](four-spinon-refinement-precision-20261031.json) also
-records binary128 failing at order 8 on both cutoffs with a 53-bit lower
-comparison. MPFR128 raises that comparison to 64 bits and passes
-all eight points, agreeing with the original MPFR192 S4 values to within
-3.4e-38 relative. That MPFR128 grid cost 41 CPU minutes; the original MPFR192
-grid cost 54. Sources and two-spinon kernel tolerance differ between those grids,
-so this compares the unchanged S4 calculation and measured costs, not identical
-two-sector benchmarks.
+### Refining the quadrature
 
-The [native follow-up](spinon-native-precision-20261031.json) uses the stronger
-64/113-bit binary128 pair, with the same strict density tolerances and contour
-controls. All eight quadratures now pass and agree with MPFR192 within 6.3e-31
-relative. They cost 348 CPU seconds, or 5.80 CPU minutes. **The tutorial figure
-and reproducer now use these binary128 data.** Earlier failed cases and MPFR
-reference values remain in their original audit. No failed node is replaced by
-a successful prefix or a looser acceptance threshold.
+The [refinement checks](four-spinon-refinement-precision-20261031.json) show
+that extended80 passes orders 2/4 at T8 and T12, but fails the arithmetic screen
+at orders 8/16. The cheap starting command therefore cannot support the whole
+refinement figure. With the 64/113-bit pair, all eight binary128 quadratures
+pass the strict `1e-8` screen and agree with MPFR192 within 6.3e-31 relative.
+The [comparison record](spinon-native-precision-20261031.json) retains their
+controls and total cost of 348 CPU seconds on an i7-12700KF. **The tutorial
+figure and reproducer use these binary128 data.** Failed cases remain in the
+records; no failed node is replaced by a successful prefix.
 
-The follow-up also validates the exact small six-sector API spectrum and moment
-commands in six formats. Native 80-bit agrees with MPFR384 to better than 4e-16
-relative across values, replicate means/maxima, sampling errors and covariance;
-binary128 agrees within 3e-30. Both binary64 failures are retained. These small
-API examples now recommend native 80-bit on platforms providing that format.
-Their tiny samples and finite cutoff still limit the physical estimates.
+The same record validates the small six-sector API spectrum and moment commands
+in six formats. Native extended80 agrees with MPFR384 within 4e-16 relative
+across values, replicate means/maxima, sampling errors and covariance;
+binary128 agrees within 3e-30. Both binary64 failures are retained. Those small
+API examples recommend extended80 where available, with measured CPU costs
+of 0.036 and 0.040 seconds respectively. Their tiny samples and finite cutoff
+limit the physical estimates separately.
 
 ## Six-spinon starting point and difficult geometry
 
 The [eight-format comparison](six-spinon-precision-20261031.json) fixes the
 three-frequency R8 example, including all 384 draws and replicate identities.
 Native x86 long double succeeds in 0.31 seconds wall / 0.38 CPU seconds and
-agrees with the 384-bit reference means to within 2.7e-16 relative. MPFR128
+agrees with the 384-bit reference means to within 3e-16 relative. MPFR128
 also succeeds, costing 43.6 CPU seconds; MPFR384 costs 101.1. Binary64 fails
 arithmetic screens and an exponent-range check. MPFR96 fails its 32/96-bit
 arithmetic pair. The record preserves these failures rather than publishing
@@ -153,40 +145,29 @@ partial estimates. Independent reconstruction checks successful means,
 sampling errors and work counts. The large sampling errors and omitted R8
 domain remain; precision agreement does not remove them.
 
-The subsequent [seed study](six-spinon-seed-precision-20261031.json) keeps all
-40 predeclared native queries at the same R8/4x32 settings and `rtol=1e-5`.
-Seeds 2 and 35 fail; the first failure, seed2, is replayed completely with
-MPFR128/192 at unchanged tolerance. All stream/work identities match, and the
-means agree within 4.35e-37 relative. A native `1e-3` replay agrees with that
-strict192 reference within 3.25e-16 in the means and 7.08e-15 in replicate
-means/maxima. Binary64 still fails, including exponent range. Independent
-reconstruction checked all44 raw hashes, failure identities, successful means
-and sampling errors. The printed seed42 example remains valid; its arithmetic
-recommendation does not automatically transfer to another stream or sample
-count. No passing seed is substituted for a failed one.
+### Changing the sample stream
 
-The [native binary128 follow-up](six-spinon-native-comparison-20261031.json)
-repeats the exact three-frequency queries for seeds 42, 2 and 35 with the
-64/113-bit pair and unchanged `rtol=1e-5`, `atol=0`. All three complete, costing
-7.32, 6.34 and 7.02 CPU seconds respectively on the same i7-12700KF. Independent
-reconstruction of all six native/reference exports verifies every compact
-field, stream/work identity and replicate statistic. Means, sampling SE and
-replicate means/maxima differ from MPFR192 by less than 4.9e-30 relative.
-The corresponding checker is `scripts/check_xxx_six_spinon_native_precision.py`.
-This supplies a measured native retry before MPFR for the two observed failures;
-it does not extend the seed scan to forty binary128 queries or establish
-sampling/domain convergence. Original failed native80 records remain intact.
+The [seed comparison](six-spinon-native-comparison-20261031.json) retains
+complete R8/4x32 queries for seeds 42, 2 and 35. Extended80 fails the arithmetic
+screen at seeds 2 and 35. Binary128 with a 64/113-bit pair completes all three
+at unchanged `rtol=1e-5`, `atol=0`, costing 7.32, 6.34 and 7.02 CPU seconds
+on the same i7-12700KF. Every stream/work identity matches its MPFR192
+reference; means, sampling SE and replicate means/maxima agree within 4.9e-30
+relative. The checker is `scripts/check_xxx_six_spinon_native_precision.py`.
+These measurements support trying binary128 on a failed extended80 stream;
+they do not establish sampling or cutoff convergence. The development page
+links the larger seed scans and additional tolerance experiments.
 
-A separate [geometry comparison](six-spinon-geometry-precision-20261031.json)
-holds the density pair at 192/256 bits and probes R1040. Geometry at 256,
-512 and 1024 bits is rejected before export: the soft endpoint rounds onto
-pi. The same 64-draw stream succeeds at 1536 and 2048 bits, with matching
-support/work identities and relative changes in replicate means and maxima
-below 1e-450. Individual observation values were not retained in this probe.
-This demonstrates a genuine precision requirement of the current coordinate
-representation, without asserting that the physical estimate has that accuracy.
-Only 64 draws were used; this is a geometry and arithmetic probe, not a
-converged spectral calculation.
+### Separating geometry from density precision
+
+The [endpoint-preserving geometry comparison](six-spinon-endpoint-geometry-20261101.json)
+checks R1040 with 256-bit geometry and a 192/256-bit density pair against a
+1536-bit reference on identical 64-draw streams. Sample identities and support
+counts match, and the mean changes by less than 8e-74 relative. Its roughly
+100% relative sampling SE remains; this is arithmetic evidence on those inputs,
+not a production precision floor or a bound on omitted soft weight.
+The [development account](../spinon-numerics-development.md#a-representation-can-create-its-own-precision-requirement)
+explains the representation and preserves the earlier failed geometry checks.
 
 ## Scope of the resolved slice
 
