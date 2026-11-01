@@ -70,12 +70,22 @@ before proposal or free-rapidity Jacobians. Use either that unbalanced chart
 measure with the complete proposal PDF or the balanced measure below, not
 their product. The map has no physical form-factor normalization.
 
-Resolved support exclusions return `inside=false`. Ambiguous boundaries,
-unresolved cutoffs and numerical collisions of the solved roots require higher
-precision or a separate limiting calculation. In particular, resolving the
-momentum cutoff for R=1040 needs much more arithmetic precision than evaluating
-the proposal's logarithmic PDF. The tests exercise this geometry at 1800 and
-2048 bits; successful low-precision proposal evaluation is not a geometry check.
+Resolved support exclusions return `inside=false`. The spectral surface keeps
+signed endpoint distances separate from integer multiples of pi, and retains
+their exponential scale when those distances cannot be represented directly.
+A cutoff of 1040 therefore no longer imposes a significand precision proportional
+to the cutoff. The [endpoint-preserving pilot](validation/six-spinon-endpoint-geometry-20261101.json)
+completes at 256 geometry bits with the same sample counts as the archived
+1536-bit calculation. Geometry tests also compare 128 and 256 bits against
+2048 bits; the [scaled-endpoint replay](validation/scaled-spinon-endpoints-20261101.json)
+checks native formats separately.
+
+Ambiguous boundaries, poorly conditioned solutions and numerical collisions
+still fail explicitly and can require higher precision or a separate limiting
+calculation. These checks do not establish density, sampling or cutoff
+convergence; successful proposal evaluation alone is not a geometry check.
+The [fixed-momentum moments proposal](xxx-six-spinon-moments.md) uses a different
+geometry construction and still requires much wider precision at cutoff 1040.
 
 ## Balanced coarea charts
 

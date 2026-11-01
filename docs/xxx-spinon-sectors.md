@@ -189,9 +189,9 @@ This supports a low-precision first attempt with fallback, not relaxing the
 screens or claiming a universal precision floor. No production defaults change.
 
 Native binary64 returns 40 of 84 raw density evaluations (two controls for each
-of 42 labelled configurations), agreeing to 1.53e-12 on those successful
-evaluations. The remaining evaluations fail at the Gamma-residue seed because
-of exponent range. In the original pilot, four of 20 labels fail this way and
+of 42 labelled configurations). The largest observed relative difference among
+those successful evaluations is about 1.52e-12. The remaining evaluations fail
+at the Gamma-residue seed because of exponent range. In the original pilot, four of 20 labels fail this way and
 carry 21.6% of its reference weighted sum, so discarding failures is not viable.
 For the same 84-evaluation raw density workload, native extended80 takes 0.59
 CPU seconds, binary128 14.18 seconds and 256-bit MPFR 56.23 seconds on the
