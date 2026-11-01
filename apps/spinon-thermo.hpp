@@ -226,6 +226,7 @@ template <uni20::Real R> struct Plan
           six_cutoff(parse_solver_real<R>(controls.six_cutoff, options))
     {
       policy = recovery(controls, one);
+      stages = precision_stages(controls.precision_stages);
       auto has = [&](int n) { return std::ranges::find(selected, n) != selected.end(); };
       if (has(4))
       {
@@ -244,11 +245,15 @@ template <uni20::Real R> struct Plan
       {
         six.emplace(joint_proposal(controls, one, options), policy, exchange);
         bethe::detail::validate_monte_carlo(controls.sampling, 3, one);
-        if (controls.sampling.samples_per_replicate >
-            std::numeric_limits<std::size_t>::max() / controls.sampling.replicates / 6 / (2 * policy.stages.size()))
+        // Bound inclusive work across every precision retry: at most six roots
+        // and two contours per density stage. Divide to avoid overflowing the
+        // bound itself; validated sampling and density policies are nonempty.
+        auto const precision_attempts = std::max(std::size_t{1}, stages.size());
+        if (controls.sampling.samples_per_replicate > std::numeric_limits<std::size_t>::max() /
+                                                          controls.sampling.replicates / 6 / 2 / policy.stages.size() /
+                                                          precision_attempts)
           throw std::invalid_argument("six-spinon work counters overflow");
       }
-      stages = precision_stages(controls.precision_stages);
       if (!stages.empty())
       {
         if constexpr (!uni20::has_runtime_precision_v<R>)

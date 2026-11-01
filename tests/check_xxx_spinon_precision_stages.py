@@ -1,6 +1,7 @@
 """Whole-observation precision stages preserve physical results and retry work."""
 from decimal import Decimal, localcontext
 import csv
+import ctypes
 import json
 import os
 from pathlib import Path
@@ -65,6 +66,7 @@ with tempfile.TemporaryDirectory() as directory:
         assert protected.read_text() == 'keep JSON\n'
         assert named.read_text() == 'keep CSV\n'
         assert not absent.exists()
+        return result
 
     for arguments in [
             ['--six-precision-stages', 'fp80,reference', '--precision', 'fp64'],
@@ -88,6 +90,18 @@ with tempfile.TemporaryDirectory() as directory:
         policies.append('fp128,reference')
     if fp80 and fp128:
         policies.append('fp80,fp128,reference')
+    # The physical-zero point makes these enormous boundary budgets cheap;
+    # preflight must still reject overflow before opening any export.
+    size_max = (1 << (8 * ctypes.sizeof(ctypes.c_size_t))) - 1
+    for policy in policies:
+        limit = size_max // 2 // 6 // 2 // len(policy.split(','))
+        arguments = ['--precision', 'bits-192', '--momentum', '0',
+                     '--six-precision-stages', policy, '--samples', str(limit)]
+        accepted = json.loads(invoke([*query(arguments), '--format', 'json']).stdout)
+        assert rows(accepted, 'spectrum')[0]['status'] == 'physical_zero'
+        arguments[-1] = str(limit + 1)
+        overflow = rejected(arguments)
+        assert 'six-spinon work counters overflow' in overflow.stderr
     fixed = document(['--precision', 'bits-192'])
     assert 'recovery' not in fixed['tables']
     assert fixed['tables']['spectrum']['metadata']['Geometry and output bits'] == '192'

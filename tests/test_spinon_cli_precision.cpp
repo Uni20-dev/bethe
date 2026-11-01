@@ -149,6 +149,47 @@ TEST(CliPrecision, NativeStagePreservesPhysicalControlsAndUsesItsOwnDensityPair)
 }
 
 #if UNI20_HAS_MPREAL
+TEST(CliPrecision, SixWorkBudgetIncludesEveryPrecisionAttempt)
+{
+  namespace spinon = cli::spinon;
+  using R = uni20::mpreal;
+  auto const precision = uni20::Precision::bits(192);
+  R const one(1, precision);
+  bethe::heisenberg::StructureFactorOptions<R> options(precision);
+  spinon::Controls controls;
+  controls.sectors = "6";
+  controls.sampling.replicates = 2;
+  // Plan construction validates budgets without allocating or sampling them.
+  // Each attempt has at most six roots and two density contours.
+  auto const fixed_limit = std::numeric_limits<std::size_t>::max() / 2 / 6 / 2;
+  controls.sampling.samples_per_replicate = fixed_limit;
+  EXPECT_NO_THROW((spinon::Plan<R>{controls, one, options}));
+  controls.sampling.samples_per_replicate = fixed_limit + 1;
+  EXPECT_THROW((spinon::Plan<R>{controls, one, options}), std::invalid_argument);
+
+  std::vector<std::string> policies{"reference"};
+  if (cli::has_fp80) policies.push_back("fp80,reference");
+#if UNI20_HAS_FLOAT128
+  policies.push_back("fp128,reference");
+  if (cli::has_fp80) policies.push_back("fp80,fp128,reference");
+#endif
+  for (auto const& policy : policies)
+  {
+    SCOPED_TRACE(policy);
+    controls.precision_stages = policy;
+    auto const limit = fixed_limit / spinon::precision_stages(policy).size();
+    controls.sampling.samples_per_replicate = limit;
+    EXPECT_NO_THROW((spinon::Plan<R>{controls, one, options}));
+    controls.sampling.samples_per_replicate = limit + 1;
+    EXPECT_THROW((spinon::Plan<R>{controls, one, options}), std::invalid_argument);
+    if (policy != "reference")
+    {
+      controls.precision_stages.reset();
+      EXPECT_NO_THROW((spinon::Plan<R>{controls, one, options}));
+    }
+  }
+}
+
 TEST(CliPrecision, SixPrecisionDispatchKeepsPhysicalResultsAndPerReplicateStageWork)
 {
   if (!cli::has_fp80) GTEST_SKIP();
