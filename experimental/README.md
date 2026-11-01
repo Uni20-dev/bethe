@@ -12,3 +12,6 @@ Finite complex-root solvers and multiparticle form-factor consumers are not
 provided by this first foundation. Experimental status does not permit silent
 failed-state deletion, altered physical normalization or an undocumented
 ideal-string fallback.
+
+The [open XXX boundary guide](../docs/experimental-xxx-boundary-form-factors.md)
+covers normalized local raising weights and a fresh standalone example.
