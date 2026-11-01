@@ -79,9 +79,12 @@ Moment sums instead require an explicit finite-precision `exemplar`:
 using Real = uni20::mpreal;
 auto const precision = uni20::Precision::bits(160);
 Real const zero(0, precision), time(1, precision);
-// Construct every gap, weight and complex coefficient at this precision.
-auto moments = bethe::local_spectral_moments<Real>(lines, zero);
-auto signal = bethe::local_time_correlation<Real>(lines, time);
+std::array<bethe::LocalSpectralLine<Real>, 2> runtime_lines{{
+    {0, Real(0, precision), Real(2, precision)},
+    {1, Real(1, precision), Real(3, precision)}
+}};
+auto moments = bethe::local_spectral_moments<Real>(runtime_lines, zero);
+auto signal = bethe::local_time_correlation<Real>(runtime_lines, time);
 ```
 
 The exemplar's precision is used even for an empty spectrum; its numeric value
