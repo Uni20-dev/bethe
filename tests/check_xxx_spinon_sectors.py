@@ -43,26 +43,26 @@ def close(a, b, relative='2e-14'):
 
 # Query-dependent six-spinon geometry must be checked for the entire grid
 # before --force opens any exports. The first point in the grids below is a
-# physical zero; checking only that point misses the unresolved interior cutoff.
+# physical zero; checking only that point misses the interior exponent failure.
 with tempfile.TemporaryDirectory() as tmp:
     protected=Path(tmp)/'keep.json'
     table=Path(tmp)/'keep.csv'
     absent=Path(tmp)/'not-created.tsv'
     six_base=['--sectors','6','--replicates','2','--samples','4','--seed','1','--threads','2']
-    invalid=[['--precision','fp64','--momentum','1.5','--omega','2','--six-cutoff','40'],
-             ['--precision','long-double','--momentum','1.5','--omega','2','--six-cutoff','1000'],
+    invalid=[['--precision','fp64','--momentum','1.5','--omega','2','--six-cutoff','1000'],
+             ['--precision','long-double','--momentum','1.5','--omega','2','--six-cutoff','20000'],
              ['--precision','fp64','--momentum','1.5','--omega','6e307','--exchange','3e307'],
              ['--precision','fp64','--momentum','1.5','--omega-min','0','--omega-max','2',
-              '--points','2','--six-cutoff','40'],
-             ['--precision','fp64','--momentum-points','3','--omega','2','--six-cutoff','40']]
+              '--points','2','--six-cutoff','1000'],
+             ['--precision','fp64','--momentum-points','3','--omega','2','--six-cutoff','1000']]
     if mpfr.upper() in ('ON','TRUE','1'):
-        invalid.append(['--precision','bits-128','--momentum','1.5','--omega','2','--six-cutoff','1000'])
+        invalid.append(['--precision','bits-128','--momentum','1.5','--omega','2','--six-cutoff','1e12'])
     for args in invalid:
         protected.write_bytes(b'preserve prior JSON\n')
         table.write_bytes(b'preserve prior CSV\n')
         invoke([*six_base,*args,'--json',protected,'--csv-table',f'spectrum={table}',
                 '--tsv-table',f'diagnostics={absent}','--force'],1,
-               'spectral support exceeds range' if '--exchange' in args else 'surface cutoff unresolved')
+               'spectral support exceeds range' if '--exchange' in args else 'surface cutoff exceeds exponent range')
         assert protected.read_bytes()==b'preserve prior JSON\n', args
         assert table.read_bytes()==b'preserve prior CSV\n', args
         assert not absent.exists(), args

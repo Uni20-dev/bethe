@@ -1,0 +1,133 @@
+{
+  "schema": "bethe-six-spinon-endpoint-geometry-validation-v1",
+  "scope": "Fixed-input arithmetic and implementation validation only. These 64 draws have approximately 100 percent relative sampling SE and do not establish sampling or cutoff convergence.",
+  "date": "2026-11-01",
+  "base_commit": "fc8320cc148bb3b5243b9cbbdac20bcd16f2a3f0",
+  "uni20": "1cb2474eb0a54e13ec7d5f2c1823752020b2425c",
+  "compiler": "GNU 13.3.0 Release",
+  "cpu": "12th Gen Intel(R) Core(TM) i7-12700KF",
+  "workers": 2,
+  "precision_contract": "Endpoint distances remove the cutoff-dependent significand requirement. MPFR conditioning retries use at most 2x and 4x base bits and preserve output precision; returned pair gaps are checked after rounding.",
+  "source_files_sha256": {
+    "include/bethe/detail/xxx_spinon_surface.hpp": "2d917366eaa7e12a5678102d898f89ce9bb376e096b6e9ee406bbbcc15d8a06a",
+    "tests/test_xxx_spinon_surface.cpp": "be2d23534033cb8e00c3f60ecaa9e55fae24e84ae093a25bb7b70bcfd01184a2",
+    "tests/reference_xxx_spinon_surface.py": "b07bf6304b71d728f149c59fff0734840aa99f0e0315d8606e7a15672caff865",
+    "tests/xxx_spinon_surface_references.hpp": "6228bb9be4a025a1314f6bfed8eeeeaae0d6f877babe29440ff44e75dc3486bd"
+  },
+  "frozen_reference": {
+    "record": "six-spinon-geometry-precision-20261031.json",
+    "source": "b573fb4bba7d7fee9df6853fb29bc7cb051898da",
+    "raw_sha256": "a5f6a1c9267bd2534089f95a8a6873fdf08db028a4fb2c8b154b2045deb9c5a4",
+    "cutoff": "1040",
+    "geometry_bits": 1536,
+    "density_bits": [
+      192,
+      256
+    ]
+  },
+  "final_spectrum_replay": {
+    "bits": 256,
+    "exit_code": 0,
+    "wall_seconds": 44.639146637986414,
+    "cpu_seconds": 56.208065,
+    "same_replicate_identities_and_counts": true,
+    "completed_samples": 64,
+    "supported_roots": 20,
+    "status": "estimated",
+    "relative_mean_change": "7.797792602695E-74",
+    "max_relative_replicate_or_maximum_change": "7.799892262806E-74",
+    "program_sha256": "5b39399e42c86bb8d0e6b79ff4e4f6d66c5105640298816794b169fa07928e1b",
+    "source_patch_sha256": "3002fecf3262eb4fd07de9f00905e31f6616403ba61363c821f77cdd21dfdc4b",
+    "output_sha256": "92fc6309a585899e2f49e67dc19aa678131e2ed851c11900748ddbb8465e6b01",
+    "command": [
+      "bethe-xxx-structure-factor-thermo",
+      "--sectors",
+      "6",
+      "--momentum",
+      "1.5707963267948966192313216916397514420985846996875529104874722961539082031431045",
+      "--omega",
+      "2",
+      "--exchange",
+      "1",
+      "--channel",
+      "zz",
+      "--six-cutoff",
+      "1040",
+      "--replicates",
+      "4",
+      "--samples",
+      "16",
+      "--seed",
+      "7303",
+      "--threads",
+      "2",
+      "--density-guard-bits",
+      "256",
+      "--density-relative-tolerance",
+      "1e-6",
+      "--density-absolute-tolerance",
+      "0",
+      "--density-terms",
+      "1040",
+      "--density-tail-order",
+      "32",
+      "--density-seconds",
+      "60",
+      "--diagnostics",
+      "--replicate-output",
+      "--format",
+      "json",
+      "--precision",
+      "bits-256"
+    ]
+  },
+  "earlier_high_precision_control": {
+    "bits": 1536,
+    "exit_code": 0,
+    "wall_seconds": 42.434792254003696,
+    "cpu_seconds": 74.654433,
+    "same_replicate_identities_and_counts": true,
+    "completed_samples": 64,
+    "supported_roots": 20,
+    "status": "estimated",
+    "relative_mean_change": "5.076114080741E-461",
+    "max_relative_replicate_or_maximum_change": "5.313269025621E-461",
+    "program_sha256": "1208d220c7219dddbbef0c228270b5e834fcb9d43bb75443ccdbaf644bc1d5fe",
+    "source_patch_sha256": "7793c1d390ccb20f870208bacdedbb9abf457b63b571ccb7cbde399ccda5bbfd",
+    "note": "Before the final output-rounding guard; that guard is inactive for every pilot geometry at 128 and 256 bits."
+  },
+  "geometry_only_regression": {
+    "test": "SpinonSurfaceMpfr.SavedDeepPilotGeometryNeedsNoHiddenRefinement",
+    "replicates": 4,
+    "draws_per_replicate": 16,
+    "seed": 7303,
+    "uniform_bits": 52,
+    "sections_per_draw": 3,
+    "reference_bits": 2048,
+    "comparison_bits": [
+      128,
+      256
+    ],
+    "support_mismatches": 0,
+    "refinements": 0,
+    "supported_labelled_roots": 20,
+    "maximum_absolute_errors": {
+      "maximum_beta_error_bits_128": "1.0582329e-34",
+      "maximum_log_weight_error_bits_128": "1.8470593e-34",
+      "maximum_beta_error_bits_256": "2.8079374e-73",
+      "maximum_log_weight_error_bits_256": "5.6339571e-73"
+    }
+  },
+  "guard_regressions": [
+    "FiniteIllConditionedJacobianIsNotAccepted",
+    "ConditioningRefinesLocallyAndRetainsOutputPrecision",
+    "UnresolvedBoundaryExhaustsBoundedRefinement",
+    "RefinementCannotHideAnUnrepresentablePairGap"
+  ],
+  "raw_store_relative_directory": "deep-geometry-20261101",
+  "raw_store_locations": {
+    "ryzen": "/mnt/store-ian/bethe-6spinon/deep-geometry-20261101",
+    "polaron": "/store/ian/bethe-6spinon/deep-geometry-20261101"
+  },
+  "timing_scope": "Single complete-process measurements; wall times are affected by concurrent work. No general speedup claim."
+}
