@@ -35,7 +35,11 @@ before indexing roots or dereferencing optional gaps. Use parameter traces
 inside scans and keep expensive ED loops grouped into logical cases.
 
 CTest gives each test one BLAS/OpenMP thread; it can still run independent
-cases concurrently with `ctest --parallel`.
+cases concurrently with `ctest --parallel`. The shared discovery helper applies
+list-valued environments and labels after discovery, so they remain intact
+across supported CMake releases. Parameterized cases retain their GoogleTest
+identifiers (including value indices), rather than substituting printed values
+that can disappear from CMake's discovered test list.
 
 Expensive end-to-end numerical checks carry the `long-running` label. From a
 build directory, choose routine checks, long checks alone, or the complete suite:

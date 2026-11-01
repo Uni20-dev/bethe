@@ -75,7 +75,9 @@ must already have one explicit finite precision; mixed, exact or unset root
 precision is rejected. The context owns its snapshot, so later input mutation
 or destruction cannot invalidate it. Const evaluations use local scratch.
 Failed and moved-from contexts expose no usable energy, roots, prefactor,
-pivot diagnostic or working exemplar; status/residual remain diagnostic.
+pivot diagnostic or working exemplar. Failed preparations retain a measured
+residual when available; moved-from contexts report an absent residual and
+unavailable status.
 The pivot value is a rejection indicator, not a condition number or error bound.
 
 This interface intentionally has no disk-cache reader. Historical serialized

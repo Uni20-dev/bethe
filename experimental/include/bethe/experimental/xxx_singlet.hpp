@@ -82,7 +82,7 @@ template <uni20::Real Real> class PreparedSinglet {
       if (!ready()) return {};
       return factors_.ground_pivot_margin();
     }
-    /// Measured residual remains available to diagnose an unsuccessful preparation.
+    /// Measured residual diagnoses failed preparation; absent after moving the snapshot.
     std::optional<Real> ground_residual() const { return factors_.ground_residual(); }
 
     /// Existing supported real-root triplets, using the same prepared norm.

@@ -40,61 +40,65 @@ if(BETHE_TEST_UNI20_LSAN_SUPPRESSIONS)
   list(APPEND bethe_test_environment
     "LSAN_OPTIONS=suppressions=${bethe_uni20_lsan_suppressions}:print_suppressions=0")
 endif()
-# GoogleTest discovery forwards PROPERTIES as a list; preserve ENVIRONMENT's
-# nested list as one property value for both routine and long-running cases.
-string(REPLACE ";" "\\;" bethe_discovered_test_environment "${bethe_test_environment}")
+# Quote generated CTest script values without any intermediate list expansion.
+function(bethe_test_literal output value)
+  set(equals "=")
+  while("${value}" MATCHES "\\]${equals}\\]")
+    string(APPEND equals "=")
+  endwhile()
+  set(${output} "[${equals}[${value}]${equals}]" PARENT_SCOPE)
+endfunction()
 
 function(bethe_discover_tests target)
   cmake_parse_arguments(PARSE_ARGV 1 arg "" "TEST_PREFIX;TIMEOUT" "LONG_RUNNING_TESTS;LABELS")
   if(arg_UNPARSED_ARGUMENTS OR arg_KEYWORDS_MISSING_VALUES)
     message(FATAL_ERROR "Invalid arguments to bethe_discover_tests(${target})")
   endif()
+  if(arg_TEST_PREFIX MATCHES "[][;]")
+    message(FATAL_ERROR "Test prefixes cannot contain brackets or list separators")
+  endif()
   set_target_properties(${target} PROPERTIES CXX_EXTENSIONS OFF)
   target_link_libraries(${target} PRIVATE GTest::gtest_main)
-  # Optional family metadata uses the same discovery/environment policy.
-  # Existing callers retain their names, labels and timeout defaults.
   set(discovery_options)
-  set(routine_properties)
   if(DEFINED arg_TEST_PREFIX)
     list(APPEND discovery_options TEST_PREFIX "${arg_TEST_PREFIX}")
   endif()
-  if(arg_LABELS)
-    # Preserve the label list through routine_properties and then discovery.
-    string(REPLACE ";" "\\\\;" routine_labels "${arg_LABELS}")
-    list(APPEND routine_properties LABELS "${routine_labels}")
-  endif()
   set(long_timeout 1800)
   if(DEFINED arg_TIMEOUT)
-    list(APPEND routine_properties TIMEOUT "${arg_TIMEOUT}")
     set(long_timeout "${arg_TIMEOUT}")
   endif()
-  # Discovery happens at test time; the directory's configure-time TESTS
-  # property does not include these dynamically registered cases.
-  # Partition by GoogleTest name before registration, without duplicating cases
-  # or relying on CTest's version-dependent pretty names for typed tests.
+  # Keep original GoogleTest identifiers: pretty values can contain brackets,
+  # which CMake omits from TEST_LIST. All discovered names must receive policy.
+  # Partition by the original GoogleTest name, without registering duplicates.
   set(routine_filter "*")
   if(arg_LONG_RUNNING_TESTS)
     list(JOIN arg_LONG_RUNNING_TESTS ":" long_filter)
     set(routine_filter "*-${long_filter}")
-    set(long_labels "long-running" ${arg_LABELS})
-    string(REPLACE ";" "\\;" long_labels "${long_labels}")
     gtest_discover_tests(${target}
       DISCOVERY_MODE PRE_TEST
-      NO_PRETTY_TYPES
+      NO_PRETTY_TYPES NO_PRETTY_VALUES
       TEST_FILTER "${long_filter}"
       TEST_LIST ${target}_LONG_RUNNING_TESTS
       ${discovery_options}
-      PROPERTIES
-        ENVIRONMENT "${bethe_discovered_test_environment}"
-        LABELS "${long_labels}"
-        TIMEOUT "${long_timeout}"
     )
   endif()
   gtest_discover_tests(${target}
     DISCOVERY_MODE PRE_TEST
-    NO_PRETTY_TYPES
+    NO_PRETTY_TYPES NO_PRETTY_VALUES
     TEST_FILTER "${routine_filter}"
     ${discovery_options}
-    PROPERTIES ENVIRONMENT "${bethe_discovered_test_environment}" ${routine_properties}
   )
+  # PROPERTIES is repeatedly flattened by GoogleTest discovery, differently
+  # across supported CMake versions. Apply list-valued properties directly in
+  # CTest, after discovery, using its documented TEST_INCLUDE_FILES mechanism.
+  bethe_test_literal(environment_literal "${bethe_test_environment}")
+  bethe_test_literal(routine_labels_literal "${arg_LABELS}")
+  set(long_labels long-running ${arg_LABELS})
+  bethe_test_literal(long_labels_literal "${long_labels}")
+  bethe_test_literal(routine_timeout_literal "${arg_TIMEOUT}")
+  bethe_test_literal(long_timeout_literal "${long_timeout}")
+  set(properties_file "${CMAKE_CURRENT_BINARY_DIR}/${target}_properties.cmake")
+  configure_file("${CMAKE_CURRENT_FUNCTION_LIST_DIR}/BetheTestProperties.cmake.in"
+    "${properties_file}" @ONLY)
+  set_property(DIRECTORY APPEND PROPERTY TEST_INCLUDE_FILES "${properties_file}")
 endfunction()

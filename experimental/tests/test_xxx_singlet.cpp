@@ -55,12 +55,46 @@ template <uni20::Real R> void check_analytic_singlet(R const& zero)
   ASSERT_TRUE(factor.weight);
   EXPECT_REAL_NEAR(*factor.weight, uni20::scalar_like(zero, 4) / 3, tolerance);
 }
+template <uni20::Real R> void check_moved_residual(R const& zero)
+{
+  auto ground = analytic_singlet(zero);
+  experiment::PreparedSinglet<R> source(4, ground);
+  auto const residual = source.ground_residual();
+  ASSERT_TRUE(residual);
+  auto moved = std::move(source);
+  EXPECT_EQ(moved.ground_residual(), residual);
+  EXPECT_FALSE(source.ground_residual());
+  auto moved_twice = std::move(source);
+  EXPECT_FALSE(moved_twice.ready());
+  EXPECT_FALSE(moved_twice.ground_residual());
+  experiment::PreparedSinglet<R> destination(4, ground);
+  destination = std::move(moved);
+  EXPECT_TRUE(destination.ready());
+  EXPECT_EQ(destination.ground_residual(), residual);
+  EXPECT_FALSE(moved.ground_residual());
+  auto& alias = destination;
+  destination = std::move(alias);
+  EXPECT_TRUE(destination.ready());
+  EXPECT_EQ(destination.ground_residual(), residual);
+  // A rejected preparation still carries its measured residual until moved.
+  ground.rapidities.front() += uni20::scalar_like(zero, 1) / 8;
+  experiment::PreparedSinglet<R> failed(4, ground);
+  ASSERT_FALSE(failed.ready());
+  auto const failed_residual = failed.ground_residual();
+  ASSERT_TRUE(failed_residual);
+  destination = std::move(failed);
+  EXPECT_FALSE(destination.ready());
+  EXPECT_EQ(destination.ground_residual(), failed_residual);
+  EXPECT_FALSE(failed.ground_residual());
+}
 } // namespace
 
 template <typename T> class ExperimentalSinglet : public ::testing::Test {};
 TYPED_TEST_SUITE(ExperimentalSinglet, test_support::RealTypes, test_support::PrecisionNames);
 
 TYPED_TEST(ExperimentalSinglet, AnalyticNormalizationAndEnergy) { check_analytic_singlet(TypeParam{0}); }
+
+TYPED_TEST(ExperimentalSinglet, MoveClearsResidualDiagnostic) { check_moved_residual(TypeParam{0}); }
 
 TYPED_TEST(ExperimentalSinglet, RechecksRootsAndOwnsSnapshot)
 {
@@ -126,6 +160,7 @@ TEST(ExperimentalSingletMpfr, ExplicitPrecisionAndMixedPrecisionRejection)
   {
     R const zero(0, uni20::Precision::bits(bits));
     check_analytic_singlet(zero);
+    check_moved_residual(zero);
     experiment::PreparedSinglet<R> const prepared(4, analytic_singlet(zero));
     ASSERT_TRUE(prepared.energy());
     EXPECT_EQ(prepared.energy()->precision(), zero.precision());

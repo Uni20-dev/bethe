@@ -29,7 +29,14 @@ def discovered_tests(ctest, build):
         if test["name"].endswith("_NOT_BUILT"):
             raise RuntimeError("build every test target before comparing discovered coverage")
         properties = {p["name"]: p["value"] for p in test.get("properties", [])}
-        group = experimental if "experimental" in properties.get("LABELS", []) else ordinary
+        environment = properties.get("ENVIRONMENT", [])
+        if not {"OPENBLAS_NUM_THREADS=1", "OMP_NUM_THREADS=1"}.issubset(environment):
+            raise RuntimeError(f"lost numerical test environment: {test['name']}")
+        labels = properties.get("LABELS", [])
+        if test["name"].startswith("Experimental."):
+            if "experimental" not in labels or properties.get("TIMEOUT", 0) <= 0:
+                raise RuntimeError(f"lost experimental test policy: {test['name']}")
+        group = experimental if "experimental" in labels else ordinary
         group[test["name"]] += 1
     return ordinary, experimental
 
