@@ -23,20 +23,23 @@ MOMENTUM = '1.570796326794896619231321691639751442098584699687552910487472296153
 SCHEMA = 'bethe.xxx-spinon-slice.v1'
 
 
-def join_points(four_runs, six_points):
+def join_points(four_runs, six_points, *, compatibility=None):
     """Join checked sectors on the declared input grid, retaining explicit gaps.
 
-    Six records come from read_compact_slice; their metadata, replicate checks
+    Six records come from read_slice; their metadata, replicate checks
     and declared missing nodes are owned by that reader. T and R are not equated.
+    Different executable cohorts require explicit sector-scoped source evidence.
     """
     from xxx_six_spinon_tutorial_data import match_requested_frequency
+    from spinon_tutorial_provenance import validate_sources
     if not four_runs or not six_points:
         raise ValueError('Both checked two/four and six inputs are required')
     sources = four_runs + [p for p in six_points if p['s6'] is not None]
     meta = sources[0]['metadata']
-    identity = ('Bethe revision', 'Uni20 revision', 'Density convention', 'Channel', 'Exchange J')
+    validate_sources((run['metadata'] for run in sources), compatibility)
+    identity = ('Density convention', 'Channel', 'Exchange J')
     if any(run['metadata'][key] != meta[key] for run in sources for key in identity):
-        raise ValueError('Cannot combine different source revisions or physical conventions')
+        raise ValueError('Cannot combine different physical conventions')
     four, six = {}, {}
     for point in six_points:
         omega = decimal(point['omega'])
@@ -68,6 +71,8 @@ def join_points(four_runs, six_points):
                      'six_computed_omega': sampled['computed_omega'],
                      's2': str(s2), 's4': str(s4), 's2_plus_s4': str(s2 + s4),
                      'four_run': fi, 'six_run': sampled['run_index'], 's6_status': sampled['status']}
+            if 'cohort_id' in sampled:
+                point['six_cohort'] = sampled['cohort_id']
             if sampled['s6'] is None:
                 point.update(s6=None, s6_sampling_se=None, s2_plus_s4_plus_s6=None,
                              reason=sampled['reason'])
@@ -102,8 +107,8 @@ def provenance(run, raw):
 
 
 def collect(four_paths, six_document, *, momentum=MOMENTUM):
-    from xxx_six_spinon_tutorial_data import read_compact_slice
-    six = read_compact_slice(six_document, momentum=momentum, exchange='1')
+    from xxx_six_spinon_tutorial_data import read_slice
+    six = read_slice(six_document, momentum=momentum, exchange='1')
     four, records = [], []
     for path in four_paths:
         raw = path.read_bytes()
@@ -115,7 +120,7 @@ def collect(four_paths, six_document, *, momentum=MOMENTUM):
     data = {'schema': SCHEMA, 'momentum': momentum, 'exchange': '1', 'channel': 'zz',
             'density_convention': CONVENTION, 'four_runs': records, 'six_slice': six_document,
             'scope': 'Finite-domain partial spectra; sampling SE excludes cutoff and numerical bias',
-            'points': join_points(four, six['points'])}
+            'points': join_points(four, six['points'], compatibility=six.get('source_compatibility'))}
     return validate(data)
 
 
@@ -137,14 +142,14 @@ def checked_four_run(run, *, momentum, exchange):
 
 
 def validate(data):
-    from xxx_six_spinon_tutorial_data import read_compact_slice
+    from xxx_six_spinon_tutorial_data import read_slice
     if (data['schema'] != SCHEMA or data['channel'] != 'zz' or decimal(data['exchange']) != 1
             or data['density_convention'] != CONVENTION):
         raise ValueError('Wrong slice schema or physical convention')
     four = [checked_four_run(run, momentum=data['momentum'], exchange=data['exchange'])
             for run in data['four_runs']]
-    six = read_compact_slice(data['six_slice'], momentum=data['momentum'], exchange=data['exchange'])
-    expected = join_points(four, six['points'])
+    six = read_slice(data['six_slice'], momentum=data['momentum'], exchange=data['exchange'])
+    expected = join_points(four, six['points'], compatibility=six.get('source_compatibility'))
     if data['points'] != expected:
         raise ValueError('Plotted values differ from retained sector records')
     return data

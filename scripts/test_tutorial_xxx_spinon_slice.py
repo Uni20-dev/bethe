@@ -43,6 +43,122 @@ def compact_fixture():
             'points': tutorial.join_points([four], [six])}
 
 
+def cohort_inputs():
+    from test_tutorial_spinon_cohorts import set_fixture
+    document = set_fixture()
+    four, _ = checked_inputs()
+    runs = []
+    for omega in document['frequencies']:
+        run = deepcopy(four)
+        for row in run['spectrum']:
+            row['omega'] = omega
+        runs.append(run)
+    return runs, document
+
+
+def cohort_compact_fixture():
+    from xxx_six_spinon_tutorial_data import read_slice
+    four, document = cohort_inputs()
+    six = read_slice(document, momentum='1.5')
+    return {'schema': tutorial.SCHEMA, 'channel': 'zz', 'exchange': '1', 'momentum': '1.5',
+            'density_convention': CONVENTION,
+            'four_runs': [{**tutorial.provenance(run, b'four cohort fixture'),
+                           'spectrum': run['spectrum'], 'diagnostics': []} for run in four],
+            'six_slice': document,
+            'points': tutorial.join_points(four, six['points'],
+                                          compatibility=six['source_compatibility'])}
+
+
+class CombinedSourceCohorts(unittest.TestCase):
+    def test_collect_retains_full_compatibility_and_cohort_local_run_indices(self):
+        four, document = cohort_inputs()
+        original = deepcopy(document)
+        with TemporaryDirectory() as directory:
+            paths = []
+            for index, run in enumerate(four):
+                raw = fixture()
+                raw['tables']['spectrum']['metadata']['Command'] = run['metadata']['Command']
+                for row in raw['tables']['spectrum']['rows']:
+                    row[1] = document['frequencies'][index]
+                path = Path(directory) / f'four-{index}.json'
+                path.write_text(json.dumps(raw))
+                paths.append(path)
+            data = tutorial.collect(paths, document, momentum='1.5')
+        self.assertEqual(document, original)
+        self.assertEqual(data['six_slice'], original)
+        self.assertEqual([(p['six_cohort'], p['six_run']) for p in data['points']],
+                         [('replicas', 0), ('blocks', 0)])
+        for point in data['points']:
+            self.assertEqual(Decimal(point['s2_plus_s4']), Decimal('0.625'))
+            self.assertEqual(Decimal(point['s6']), Decimal('2'))
+            self.assertEqual(Decimal(point['s2_plus_s4_plus_s6']), Decimal('2.625'))
+        self.assertEqual(tutorial.validate(json.loads(json.dumps(data))), data)
+
+    def test_different_sources_still_require_explicit_compatibility(self):
+        from xxx_six_spinon_tutorial_data import read_slice
+        four, document = cohort_inputs()
+        six = read_slice(document, momentum='1.5')
+        with self.assertRaisesRegex(ValueError, 'different source'):
+            tutorial.join_points(four, six['points'])
+
+    def test_compatibility_does_not_admit_new_or_unrelated_four_sources(self):
+        from xxx_six_spinon_tutorial_data import read_slice
+        for revision in ('c' * 40, 'f' * 40):
+            with self.subTest(revision=revision):
+                four, document = cohort_inputs()
+                six = read_slice(document, momentum='1.5')
+                four[0]['metadata']['Bethe revision'] = revision
+                with self.assertRaises(ValueError):
+                    tutorial.join_points(four, six['points'], compatibility=six['source_compatibility'])
+
+    def test_physical_checks_are_independent_of_source_permission(self):
+        from xxx_six_spinon_tutorial_data import read_slice
+        for key, value in [('Channel', 'raising'), ('Exchange J', '2'),
+                           ('Density convention', 'another measure')]:
+            with self.subTest(key=key):
+                four, document = cohort_inputs()
+                six = read_slice(document, momentum='1.5')
+                six['points'][1]['metadata'][key] = value
+                with self.assertRaisesRegex(ValueError, 'physical conventions'):
+                    tutorial.join_points(four, six['points'], compatibility=six['source_compatibility'])
+        four, document = cohort_inputs()
+        six = read_slice(document, momentum='1.5')
+        six['points'][1]['replicate_records'][0]['q'] = '1.6'
+        with self.assertRaisesRegex(ValueError, 'momenta'):
+            tutorial.join_points(four, six['points'], compatibility=six['source_compatibility'])
+
+    def test_failed_new_cohort_point_keeps_its_identity_and_gap(self):
+        from xxx_six_spinon_tutorial_data import read_slice
+        data = cohort_compact_fixture()
+        missing = data['six_slice']['cohorts'][1]['slice']
+        missing['runs'] = []
+        missing['unavailable'] = [{'omega': '3', 'status': 'failed',
+                                   'reason': 'density recovery exhausted', 'raw_sha256': 'd' * 64}]
+        four = [tutorial.checked_four_run(run, momentum='1.5', exchange='1') for run in data['four_runs']]
+        six = read_slice(data['six_slice'], momentum='1.5')
+        data['points'] = tutorial.join_points(four, six['points'], compatibility=six['source_compatibility'])
+        self.assertIs(tutorial.validate(data), data)
+        point = data['points'][1]
+        self.assertEqual((point['six_cohort'], point['six_run'], point['s6_status']),
+                         ('blocks', None, 'failed'))
+        self.assertIsNone(point['s6'])
+        self.assertIsNone(point['s2_plus_s4_plus_s6'])
+        self.assertEqual(Decimal(point['s2_plus_s4']), Decimal('0.625'))
+
+    def test_embedded_evidence_controls_and_point_provenance_are_revalidated(self):
+        mutations = [lambda d: d['six_slice']['source_compatibility'].update(evidence=[]),
+                     lambda d: d['six_slice']['cohorts'][1]['slice']['runs'][0]['metadata'].update(
+                         {'Six-spinon seed': '99'}),
+                     lambda d: d['points'][1].update(six_cohort='replicas'),
+                     lambda d: d['points'][1].update(six_run=1),
+                     lambda d: d['six_slice'].update(frequencies=['2', '2.5', '3'])]
+        for mutate in mutations:
+            data = cohort_compact_fixture()
+            mutate(data)
+            with self.assertRaises(ValueError):
+                tutorial.validate(data)
+
+
 class SpinonSlice(unittest.TestCase):
     def assert_plot_range_rejection(self, data):
         four = [tutorial.checked_four_run(run, momentum=data['momentum'], exchange='1')
