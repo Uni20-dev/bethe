@@ -1,0 +1,553 @@
+{
+  "schema": "bethe-six-spinon-precision-probe-v1",
+  "date": "2026-11-01",
+  "scope": "Arithmetic probes at R=1040; no claim of sampling convergence, cutoff convergence or universal minimum precision. Raw density values are not controller-accepted results.",
+  "base_commit": "fc8320cc148bb3b5243b9cbbdac20bcd16f2a3f0",
+  "uni20_commit": "1cb2474eb0a54e13ec7d5f2c1823752020b2425c",
+  "compiler": "GNU 13.3.0 Release",
+  "cpu": "12th Gen Intel(R) Core(TM) i7-12700KF",
+  "raw_store_directory": "deep-geometry-precision-probes-20261101",
+  "reference_bits": {
+    "geometry": 512,
+    "density": 320,
+    "strong_contour_density": 384
+  },
+  "selection": "All 20 pilot labels, 10 prescribed stress labels, and both branches of the deepest sampled configuration at each of six other queries; selected before density evaluation.",
+  "geometry_design": "4x16 exact 52-bit midpoint draws, seed 7303, seven queries, three sections, four deep configurations plus one nearly degenerate pair; 1359 solves at each format.",
+  "edge_caveat": "omega=pi*sin(q/2)-2^-40 is regenerated at each format; edge errors include input rounding, which internal solver retries cannot repair.",
+  "weighting_caveat": "Joint raw comparisons recombine each format's returned density and log weight using 200-digit Decimal; only full_controller_pilot exercises weighting and accumulation at the stated geometry precision.",
+  "units": "bits-N is MPFR significand bits. Native extended80 has 64 significand bits; fp128 has 113. MPFR has a wider exponent range than native fp64.",
+  "controls": [
+    [
+      1040,
+      32
+    ],
+    [
+      1056,
+      36
+    ]
+  ],
+  "relative_tolerance": "1e-6",
+  "geometry": {
+    "bits-113": {
+      "status_counts": {
+        "outside": 1306,
+        "inside": 53
+      },
+      "support_mismatches": [],
+      "failure_reasons": {},
+      "retries": [],
+      "max_absolute_beta_error": "3.717330607115E-30",
+      "max_absolute_log_weight_error": {
+        "draws": "8.777946199719E-30",
+        "deep": "5.281914089605E-31",
+        "edge": "4.501919451617E-29"
+      }
+    },
+    "bits-128": {
+      "status_counts": {
+        "outside": 1306,
+        "inside": 53
+      },
+      "support_mismatches": [],
+      "failure_reasons": {},
+      "retries": [],
+      "max_absolute_beta_error": "1.057773005858E-34",
+      "max_absolute_log_weight_error": {
+        "draws": "1.954300996378E-34",
+        "deep": "3.642603187416E-35",
+        "edge": "1.102516172357E-33"
+      }
+    },
+    "bits-192": {
+      "status_counts": {
+        "outside": 1306,
+        "inside": 53
+      },
+      "support_mismatches": [],
+      "failure_reasons": {},
+      "retries": [],
+      "max_absolute_beta_error": "2.317810409914E-54",
+      "max_absolute_log_weight_error": {
+        "draws": "4.630730417479E-54",
+        "deep": "1.427659313158E-54",
+        "edge": "1.285243676172E-53"
+      }
+    },
+    "bits-512": {
+      "status_counts": {
+        "outside": 1306,
+        "inside": 53
+      },
+      "support_mismatches": [],
+      "failure_reasons": {},
+      "retries": [],
+      "max_absolute_beta_error": "0.000000000000E-144",
+      "max_absolute_log_weight_error": {
+        "draws": "0.000000000000E-142",
+        "deep": "0.000000000000E-140",
+        "edge": "0.000000000000E-139"
+      }
+    },
+    "bits-53": {
+      "status_counts": {
+        "outside": 1306,
+        "inside": 53
+      },
+      "support_mismatches": [],
+      "failure_reasons": {},
+      "retries": [
+        {
+          "id": "stress_edge_pi2_edge_s0",
+          "working_bits": 106,
+          "refinements": 1
+        }
+      ],
+      "max_absolute_beta_error": "6.137178712913E-12",
+      "max_absolute_log_weight_error": {
+        "draws": "1.350048503636E-11",
+        "deep": "3.202917404039E-13",
+        "edge": "2.529789686846E-6"
+      }
+    },
+    "bits-64": {
+      "status_counts": {
+        "outside": 1306,
+        "inside": 53
+      },
+      "support_mismatches": [],
+      "failure_reasons": {},
+      "retries": [
+        {
+          "id": "stress_edge_pi2_edge_s0",
+          "working_bits": 128,
+          "refinements": 1
+        }
+      ],
+      "max_absolute_beta_error": "1.525461595853E-13",
+      "max_absolute_log_weight_error": {
+        "draws": "2.887764978462E-15",
+        "deep": "8.582595961249E-16",
+        "edge": "1.192032658437E-7"
+      }
+    },
+    "bits-80": {
+      "status_counts": {
+        "outside": 1306,
+        "inside": 53
+      },
+      "support_mismatches": [],
+      "failure_reasons": {},
+      "retries": [
+        {
+          "id": "stress_edge_pi2_edge_s0",
+          "working_bits": 160,
+          "refinements": 1
+        }
+      ],
+      "max_absolute_beta_error": "2.197139451680E-18",
+      "max_absolute_log_weight_error": {
+        "draws": "5.284377050389E-20",
+        "deep": "8.855948590022E-21",
+        "edge": "1.716897950046E-12"
+      }
+    },
+    "bits-96": {
+      "status_counts": {
+        "outside": 1306,
+        "inside": 53
+      },
+      "support_mismatches": [],
+      "failure_reasons": {},
+      "retries": [
+        {
+          "id": "stress_edge_pi2_edge_s0",
+          "working_bits": 192,
+          "refinements": 1
+        }
+      ],
+      "max_absolute_beta_error": "2.136964511771E-23",
+      "max_absolute_log_weight_error": {
+        "draws": "1.657719209198E-24",
+        "deep": "3.787605180859E-26",
+        "edge": "1.669875678969E-17"
+      }
+    },
+    "extended80": {
+      "status_counts": {
+        "outside": 1306,
+        "inside": 52,
+        "error": 1
+      },
+      "support_mismatches": [],
+      "failure_reasons": {
+        "surface conditioning unresolved; increase geometry precision": 1
+      },
+      "retries": [],
+      "max_absolute_beta_error": "1.398563970421E-15",
+      "max_absolute_log_weight_error": {
+        "draws": "2.887764978462E-15",
+        "deep": "8.582595961249E-16",
+        "edge": null
+      }
+    },
+    "fp128": {
+      "status_counts": {
+        "outside": 1306,
+        "inside": 53
+      },
+      "support_mismatches": [],
+      "failure_reasons": {},
+      "retries": [],
+      "max_absolute_beta_error": "3.717330607115E-30",
+      "max_absolute_log_weight_error": {
+        "draws": "8.587946199719E-30",
+        "deep": "5.281914089605E-31",
+        "edge": "4.501919451617E-29"
+      }
+    },
+    "fp64": {
+      "status_counts": {
+        "error": 1359
+      },
+      "support_mismatches": [],
+      "failure_reasons": {
+        "surface cutoff exceeds exponent range": 1359
+      },
+      "retries": [],
+      "max_absolute_beta_error": null,
+      "max_absolute_log_weight_error": {
+        "draws": null,
+        "deep": null,
+        "edge": null
+      }
+    }
+  },
+  "raw_density": {
+    "bits-128": {
+      "status_counts": {
+        "value": 84
+      },
+      "max_relative_value_error": "1.642287513431E-33",
+      "failure_reasons": {},
+      "cpu_seconds": 46.550000000000004
+    },
+    "bits-256": {
+      "status_counts": {
+        "value": 84
+      },
+      "max_relative_value_error": "3.399012503081E-72",
+      "failure_reasons": {},
+      "cpu_seconds": 56.23
+    },
+    "bits-32": {
+      "status_counts": {
+        "value": 84
+      },
+      "max_relative_value_error": "1.718422967751E-4",
+      "failure_reasons": {},
+      "cpu_seconds": 39.75
+    },
+    "bits-320": {
+      "status_counts": {
+        "value": 84
+      },
+      "max_relative_value_error": "0.000000000000E+12",
+      "failure_reasons": {},
+      "cpu_seconds": 61.52
+    },
+    "bits-40": {
+      "status_counts": {
+        "value": 84
+      },
+      "max_relative_value_error": "9.691271456120E-7",
+      "failure_reasons": {},
+      "cpu_seconds": 39.62
+    },
+    "bits-44": {
+      "status_counts": {
+        "value": 84
+      },
+      "max_relative_value_error": "3.733225804342E-8",
+      "failure_reasons": {},
+      "cpu_seconds": 39.46
+    },
+    "bits-48": {
+      "status_counts": {
+        "value": 84
+      },
+      "max_relative_value_error": "3.094770747533E-9",
+      "failure_reasons": {},
+      "cpu_seconds": 39.78
+    },
+    "bits-53": {
+      "status_counts": {
+        "value": 84
+      },
+      "max_relative_value_error": "7.651828139815E-11",
+      "failure_reasons": {},
+      "cpu_seconds": 40.03
+    },
+    "bits-64": {
+      "status_counts": {
+        "value": 84
+      },
+      "max_relative_value_error": "3.222197156175E-14",
+      "failure_reasons": {},
+      "cpu_seconds": 43.0
+    },
+    "bits-80": {
+      "status_counts": {
+        "value": 84
+      },
+      "max_relative_value_error": "8.521034440841E-19",
+      "failure_reasons": {},
+      "cpu_seconds": 43.29
+    },
+    "bits-96": {
+      "status_counts": {
+        "value": 84
+      },
+      "max_relative_value_error": "1.047811967825E-23",
+      "failure_reasons": {},
+      "cpu_seconds": 43.98
+    },
+    "extended80": {
+      "status_counts": {
+        "value": 84
+      },
+      "max_relative_value_error": "7.077281567780E-13",
+      "failure_reasons": {},
+      "cpu_seconds": 0.59
+    },
+    "fp128": {
+      "status_counts": {
+        "value": 84
+      },
+      "max_relative_value_error": "7.076967555013E-28",
+      "failure_reasons": {},
+      "cpu_seconds": 14.18
+    },
+    "fp64": {
+      "status_counts": {
+        "value": 40,
+        "error": 44
+      },
+      "max_relative_value_error": "1.521522690132E-12",
+      "failure_reasons": {
+        "unrepresentable Gamma residue seed; increase precision or exponent range": 44
+      },
+      "cpu_seconds": 0.07,
+      "pilot": {
+        "returned_labels": 16,
+        "failed_labels": 4,
+        "failed_reference_weight_fraction": "2.156899742779E-1"
+      }
+    }
+  },
+  "offline_recovery_screen": {
+    "bits-53/bits-64": {
+      "accepted_labels": 20,
+      "pilot_labels": 16,
+      "stress_labels": 0
+    },
+    "bits-64/bits-80": {
+      "accepted_labels": 20,
+      "pilot_labels": 16,
+      "stress_labels": 0
+    },
+    "bits-80/bits-96": {
+      "accepted_labels": 32,
+      "pilot_labels": 20,
+      "stress_labels": 0
+    },
+    "bits-96/bits-128": {
+      "accepted_labels": 32,
+      "pilot_labels": 20,
+      "stress_labels": 0
+    },
+    "extended80/fp128": {
+      "accepted_labels": 20,
+      "pilot_labels": 16,
+      "stress_labels": 0
+    },
+    "bits-256/bits-320": {
+      "accepted_labels": 32,
+      "pilot_labels": 20,
+      "stress_labels": 0
+    }
+  },
+  "joint_raw_weighted_observations": {
+    "bits-53": {
+      "returned_labels": 42,
+      "excluded_geometry_labels": [],
+      "density_failure_count": 0,
+      "max_relative_weighted_error": "2.529800584714E-6",
+      "max_relative_weighted_draw_error": "1.299039561611E-11",
+      "pilot_mean_relative_error": "7.326563212548E-13"
+    },
+    "bits-64": {
+      "returned_labels": 42,
+      "excluded_geometry_labels": [],
+      "density_failure_count": 0,
+      "max_relative_weighted_error": "1.192032369106E-7",
+      "max_relative_weighted_draw_error": "5.499712996746E-15",
+      "pilot_mean_relative_error": "1.932346353225E-16"
+    },
+    "bits-80": {
+      "returned_labels": 42,
+      "excluded_geometry_labels": [],
+      "density_failure_count": 0,
+      "max_relative_weighted_error": "1.716898095707E-12",
+      "max_relative_weighted_draw_error": "4.599140335022E-20",
+      "pilot_mean_relative_error": "1.816367393660E-21"
+    },
+    "extended80": {
+      "returned_labels": 40,
+      "excluded_geometry_labels": [
+        {
+          "id": "stress_edge_pi2_edge_s0_b0",
+          "geometry": {
+            "id": "stress_edge_pi2_edge_s0",
+            "status": "error",
+            "reason": "surface conditioning unresolved; increase geometry precision"
+          }
+        },
+        {
+          "id": "stress_edge_pi2_edge_s0_b1",
+          "geometry": {
+            "id": "stress_edge_pi2_edge_s0",
+            "status": "error",
+            "reason": "surface conditioning unresolved; increase geometry precision"
+          }
+        }
+      ],
+      "density_failure_count": 0,
+      "max_relative_weighted_error": "7.070632978314E-13",
+      "max_relative_weighted_draw_error": "3.518312837382E-14",
+      "pilot_mean_relative_error": "2.416564228897E-15"
+    },
+    "fp128": {
+      "returned_labels": 42,
+      "excluded_geometry_labels": [],
+      "density_failure_count": 0,
+      "max_relative_weighted_error": "7.082290672385E-28",
+      "max_relative_weighted_draw_error": "8.130829307570E-29",
+      "pilot_mean_relative_error": "1.213263869663E-30"
+    }
+  },
+  "strong_contour_reference": {
+    "labels": [
+      "stress_0_pi2_w2_s0_b0",
+      "stress_2_pi2_w2_s1_b0",
+      "stress_3_pi2_w2_s1_b0"
+    ],
+    "controls": [
+      [
+        3120,
+        128
+      ],
+      [
+        3136,
+        132
+      ]
+    ],
+    "max_relative_320_to_384_change": "4.486952595633E-91",
+    "max_relative_change_from_original_320": "1.705382465455E-23",
+    "screen_320_384": {
+      "accepted_labels": 3,
+      "pilot_labels": 0,
+      "stress_labels": 3
+    },
+    "max_relative_tail_384": "5.755204198473E-53",
+    "max_relative_arithmetic_indicator_384": "8.085923970943E-45",
+    "lower_precision": {
+      "extended80": {
+        "status_counts": {
+          "value": 6
+        },
+        "max_relative_value_error": "7.077278791370E-13",
+        "failure_reasons": {}
+      },
+      "fp128": {
+        "status_counts": {
+          "value": 6
+        },
+        "max_relative_value_error": "7.076803184882E-28",
+        "failure_reasons": {}
+      },
+      "bits-80": {
+        "status_counts": {
+          "value": 6
+        },
+        "max_relative_value_error": "8.518235698623E-19",
+        "failure_reasons": {}
+      },
+      "bits-96": {
+        "status_counts": {
+          "value": 6
+        },
+        "max_relative_value_error": "1.047813279673E-23",
+        "failure_reasons": {}
+      }
+    },
+    "lower_precision_screens": {
+      "80/96": {
+        "accepted_labels": 1,
+        "pilot_labels": 0,
+        "stress_labels": 1
+      },
+      "extended80/fp128": {
+        "accepted_labels": 0,
+        "pilot_labels": 0,
+        "stress_labels": 0
+      }
+    }
+  },
+  "full_controller_pilot": {
+    "checked-64-80": {
+      "status_counts": {
+        "value": 62,
+        "error": 2
+      },
+      "failure_reasons": {
+        "all declared recovery stages exhausted: arithmetic screen failed": 2
+      },
+      "supported_roots": 18,
+      "max_relative_accepted_draw_error": "5.926442572851E-21",
+      "mean_relative_error": null,
+      "cpu_seconds": 36.24
+    },
+    "checked-80-96": {
+      "status_counts": {
+        "value": 64
+      },
+      "failure_reasons": {},
+      "supported_roots": 20,
+      "max_relative_accepted_draw_error": "4.448406538513E-25",
+      "mean_relative_error": "9.313917398477E-26",
+      "cpu_seconds": 41.35
+    }
+  },
+  "reference_pilot_mean": "5.8745724634393438406044285604791270832657E-2",
+  "archived_1536_geometry_256_density_pilot": {
+    "sha256": "a5f6a1c9267bd2534089f95a8a6873fdf08db028a4fb2c8b154b2045deb9c5a4",
+    "reference_mean_relative_change": "2.411242842558E-74"
+  },
+  "timing_scope": "Single-process CPU seconds, two workers per batch; raw density timing excludes recovery checks and geometry. Not an end-to-end speedup benchmark.",
+  "receipts": {
+    "checked-receipt.json": "14f6f344ca1f3b517da1e1c18e1753cca4a8f42c67d1cbf5c3ef07c700a771f8",
+    "density-low-receipt.json": "8fc3cb17ae57932fbe4415a60bcd1fd87d987e190ffc1f2296ae3ef55c7c1656",
+    "density-receipt.json": "7367372f509224c6b70779738add53bb2fe1ebdc88c03ddba93730f073ad02ff",
+    "geometry-receipt.json": "fefb3f5dc355200679eec1d9818c1c23ab13c889efdd37340a7833109dcfc1ce",
+    "joint-receipt.json": "d577fde59d49074646e9d70a7678810b5cca170b054858b2d0f160639bffb59c",
+    "stress-low-receipt.json": "a773f00f5cd64f06fec17694ab232ac000b2a3d11a3a91a3e087971b879f1124",
+    "stress-strong-receipt.json": "8cd4990e8ec7276005e3e2b3d46b7b10ad1f6c0bffcd793aa4894258defb7eb5"
+  },
+  "source_artifacts": {
+    "probe-source.cpp": "46b0ea3467cc1695a72fe4f672b4708e314741d48aa1968e2ad09816155d3d33",
+    "source.patch": "6ffd7808aa5a305facba9df252ed7090c1ba1fd008e365ab119bdc31e5594ace",
+    "checked-probe-source.cpp": "419ba6ab83224e8df54f187202a133b70d0d15d79f401dd6ba1dfdba3267c6d2",
+    "checked-source.patch": "6ffd7808aa5a305facba9df252ed7090c1ba1fd008e365ab119bdc31e5594ace"
+  }
+}
