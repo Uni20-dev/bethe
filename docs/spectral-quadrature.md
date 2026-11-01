@@ -130,8 +130,9 @@ This slower path preserves representable standard errors even when their
 squared variances underflow or overflow, and preserves tiny covariances that
 large coefficients amplify. It uses Python's standard library, with no extra
 dependency. It does not improve the precision of the input measurements or the
-symmetry/positive-semidefinite check. An unrepresentable returned value still
-raises `OverflowError`; finite means use the usual NumPy transform.
+symmetry/positive-semidefinite check. Overflowing returned values still raise
+`OverflowError`; values below the subnormal range can round to zero. Finite
+means use the usual NumPy transform.
 
 ## Separate accuracy controls
 
