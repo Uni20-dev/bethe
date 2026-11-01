@@ -20,6 +20,26 @@ The output is the unbroadened longitudinal density $`S^{zz}_6(q,\omega)`$.
 Frequency integrals use $`d\omega/(2\pi)`$. The physical normalization is
 already included; no multiplier is fitted to a sum rule or another calculation.
 
+## Choose the scale of calculation
+
+The hands-on tutorial uses two small calculations. Start with the native
+`long-double` example to learn the command and output, then use the single-point
+MPFR example to examine soft spinons, sampling errors and precision controls.
+
+| Calculation | Purpose | Measured cost |
+| --- | --- | --- |
+| [Three-frequency example, $`R=8`$](#start-with-an-inexpensive-calculation) | Learn the workflow | 0.38 CPU seconds with x86 extended80 `long double` |
+| [Single point, $`R=256`$](#extend-the-soft-domain) | Inspect sampling and numerical diagnostics | About five minutes with four workers; 1,150 CPU seconds |
+| [Sixteen-frequency reference campaign, $`R=1040`$](xxx-six-spinon-reproduction.md) | Regenerate a resolved reference slice | The first completed frequency alone used 38 CPU hours |
+
+The first two examples have substantial sampling and cutoff uncertainty; they
+teach the method without resolving the full physical response. Their measured
+costs and checks are described below. The reference campaign is a separate,
+production-scale calculation, not a step required to work through this tutorial.
+Its compact results can be plotted without rerunning the integrations; the
+complete reference grid is still being calculated. Historical timings describe
+the recorded executables and machines, not a runtime guarantee for your system.
+
 ## Why sampling needs a physical proposal
 
 Momentum and energy conservation determine two momenta after four rapidities
@@ -452,10 +472,12 @@ upper boundaries are marked when they fall within the requested frequency
 range. A single-point file is useful for checking the renderer, but a physical
 line shape requires a resolved frequency grid.
 
-The optional [large-domain reproduction recipe](xxx-six-spinon-reproduction.md)
-records the installed-program commands and predetermined streams for a
-sixteen-frequency slice. Its numerical production is still in progress; the
-recipe is not a claim of completed or converged data.
+The separate [production reference recipe](xxx-six-spinon-reproduction.md)
+records the installed-program commands and predetermined streams for the
+sixteen-frequency slice. Regenerating that dataset requires a substantial
+compute budget; it is optional even when using the reference data for plots.
+Its numerical production is still in progress, so the recipe is not a claim
+of completed or converged data.
 
 The [six-spinon library interface](../xxx-six-spinon-structure-factor.md)
 provides independent geometry and recovery precision when needed. To obtain
