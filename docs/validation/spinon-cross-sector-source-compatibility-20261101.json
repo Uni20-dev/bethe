@@ -1,0 +1,46 @@
+{
+  "schema": "bethe-spinon-source-compatibility-v1",
+  "sources": [
+    {
+      "Bethe revision": "b573fb4bba7d7fee9df6853fb29bc7cb051898da",
+      "Uni20 revision": "1cb2474eb0a54e13ec7d5f2c1823752020b2425c"
+    },
+    {
+      "Bethe revision": "d30b665588c4a093e1081eaf4f6c54cc2b5445fd",
+      "Uni20 revision": "1cb2474eb0a54e13ec7d5f2c1823752020b2425c"
+    }
+  ],
+  "sector_sources": {
+    "2,4": [
+      {
+        "Bethe revision": "b573fb4bba7d7fee9df6853fb29bc7cb051898da",
+        "Uni20 revision": "1cb2474eb0a54e13ec7d5f2c1823752020b2425c"
+      }
+    ],
+    "6": [
+      {
+        "Bethe revision": "d30b665588c4a093e1081eaf4f6c54cc2b5445fd",
+        "Uni20 revision": "1cb2474eb0a54e13ec7d5f2c1823752020b2425c"
+      }
+    ]
+  },
+  "reason": "Join retained successful fixed-MPFR two/four spectra with the new staged-six source. The two/four normalization, numerical dispatch and model dependencies are covered by the source audit and exact bounded controls; the final source bridge changes only admission validation. Original metadata and results remain intact. These checks do not certify quadrature, sampling or omitted-domain convergence.",
+  "evidence": [
+    {
+      "description": "Reviewed two/four source dependency audit; accepted by S6-0510",
+      "sha256": "a8c00f5bfe97da02241dff76bbabedcdcaf49c2d471314c405bf6b1f685f7dd1"
+    },
+    {
+      "description": "Two installed two/four controls exactly reproduce retained numerical tables; accepted by S6-0510",
+      "sha256": "897e3e0f20cc9b019286df89125ccdba3dac9921c92ba1981a975b59c1eabf15"
+    },
+    {
+      "description": "Final d72 to d30 source bridge: unchanged model closure and admission-only frontend delta",
+      "sha256": "43c9cad47d4d9134c6a2eb8d49be9ab7b28117c7dc22d11bd18c4db82c6b2faf"
+    },
+    {
+      "description": "Final installed d30 paired same-input control; independently accepted by R4-0612",
+      "sha256": "d9880e07f94f75ab2eefb0e80aef4b2cfa2c023130ecd969225c31d111a04bb0"
+    }
+  ]
+}

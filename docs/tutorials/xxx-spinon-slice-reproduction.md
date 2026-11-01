@@ -16,27 +16,26 @@ the commands, use the [small four-spinon example](xxx-four-spinon.md) and
 and longitudinal normalization throughout. No normalization multiplier is
 applied when the sectors are combined.
 
-**All sixteen two/four queries are complete; six-spinon production is still
-in progress.** The recipe records the requested grid and controls. Completing
+**All sixteen frequencies have checked two-, four- and six-spinon results.**
+The recipe records the requested grid and controls. Completing
 these queries does not bound the omitted integration domains. The frequency range
 $`1.6\le\omega/J\le4`$ samples both sides of the two-spinon upper edge. It
 omits the outer four- and six-spinon upper edges and is not a moment grid.
 
 ## Redraw saved results
 
-Once you have a checked compact record named `spinon-slice.json`, run the
-following from the source checkout with the
+Redraw the [published compact record](data/xxx-spinon-slice.json) from
+the source checkout with the
 [plotting dependencies](contributing.md#plotting-environment) installed:
 
 ```sh
 python3 scripts/plot_xxx_spinon_slice_tutorial.py \
-  --data spinon-slice.json --figure spinon-slice.svg
+  --data docs/tutorials/data/xxx-spinon-slice.json --figure spinon-slice.svg
 ```
 
 This reads the saved values and sampling errors and writes light/dark figures;
-it does not call a solver or perform an integration. The full reference record
-is still in preparation. The sections below describe how to regenerate it,
-not work required for a redraw.
+it does not call a solver or perform an integration. The sections below
+describe the separate task of regenerating the numerical data.
 
 ## Recorded production cost
 
@@ -57,13 +56,11 @@ are not the elapsed duration of the campaign. The source revisions and
 executable hashes identify the original calculations; later code improvements
 do not alter these historical measurements.
 
-Six-spinon reference generation is substantially more expensive. The first
-successful large-domain frequency used 38.0 CPU hours and 143 minutes of wall
-time with 24 workers on a Xeon Gold 6254. The
-[six-spinon production recipe](xxx-six-spinon-reproduction.md) records its
-controls and scheduling caveats; its full sixteen-frequency campaign remains
-in progress. These costs are historical measurements, not timings of every
-current implementation or a guarantee for other parameters.
+The complete six-spinon reference used 30.34 CPU hours and
+2.49 summed query wall hours with 24 workers on a Xeon Gold 6254.
+The [six-spinon production recipe](xxx-six-spinon-reproduction.md) records
+its precision stages, sampling controls and per-query costs. These timings
+describe the saved calculation and depend on the hardware and parameters.
 
 ## Calculate the two- and four-spinon sectors
 
@@ -199,3 +196,8 @@ Both the individual six-spinon estimates and the $`2+4+6`$ partial sum carry
 the six-spinon sampling standard error. Numerical and omitted-domain effects
 are recorded separately, so these bars do not represent total uncertainty.
 No missing value is filled with zero, and no sector is rescaled.
+
+The published comparison includes the original two/four source and the new
+six-spinon source. Its [compatibility record](../validation/spinon-cross-sector-source-compatibility-20261101.json)
+and [source/control review](../validation/spinon-cross-sector-source-review-20261102.json)
+retain the evidence without rewriting either calculation's provenance.
