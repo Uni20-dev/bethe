@@ -18,16 +18,8 @@ from plot_xxx_six_spinon_tutorial import sampling_points
 from spinon_tutorial_exports import CONVENTION, decimal, read_spectrum
 
 SCHEMA = 'bethe-six-spinon-slice-v1'
-SET_SCHEMA = 'bethe-six-spinon-slice-set-v1'
 CUTOFF = 'Six-spinon absolute rapidity cutoff'
 SCOPE = 'Finite-domain estimates; sampling SE excludes rapidity-tail and numerical bias'
-NODE_CONTROLS = ('Six-spinon seed', 'Six-spinon replicates', 'Samples per replicate')
-
-
-def cohort_metadata(metadata):
-    """Bind all exported settings except invocation, date and node-specific counts."""
-    return {key: value for key, value in metadata.items()
-            if key not in ('Command', 'Date', *NODE_CONTROLS)}
 
 
 def scalar_string(value):
@@ -166,141 +158,6 @@ def compact_slice(raw_exports, *, momentum, frequencies, exchange='1',
                                  'metadata': metadata, 'summary': data['summary'],
                                  **{key: data[key] for key in ('spectrum', 'diagnostics', 'replicates')}})
     read_compact_slice(document, momentum=momentum, exchange=exchange)
-    return document
-
-
-def read_slice_set(document, *, momentum, exchange='1'):
-    """Read disjoint, individually strict source cohorts on one declared grid.
-
-Compatibility is an explicit reviewed assertion with evidence identities;
-it does not waive any per-run numerical, stream, source or convention check.
-Unavailable nodes belong to a declared cohort and remain unavailable.
-"""
-    from spinon_tutorial_provenance import (compatibility_sources, source_identity,
-                                           validate_physics, validate_sources)
-    if document.get('schema') != SET_SCHEMA or document.get('density_convention') != CONVENTION:
-        raise ValueError('Unknown slice-set schema or physical convention')
-    if (scalar_string(document['momentum']) != decimal(momentum)
-            or scalar_string(document['exchange']) != decimal(exchange) or decimal(exchange) <= 0):
-        raise ValueError('Wrong slice-set momentum or exchange')
-    cutoff = scalar_string(document['rapidity_cutoff'])
-    if cutoff <= 0:
-        raise ValueError('Expected a positive rapidity cutoff')
-    frequencies = [scalar_string(value) for value in document['frequencies']]
-    if (not frequencies or any(value < 0 for value in frequencies)
-            or any(a >= b for a, b in zip(frequencies, frequencies[1:]))):
-        raise ValueError('Slice-set frequency grid must be nonnegative and strictly increasing')
-    requested = dict(zip(frequencies, document['frequencies']))
-    compatible = compatibility_sources(document['source_compatibility'])
-    contracts = document['source_compatibility'].get('cohort_controls')
-    if not isinstance(contracts, dict):
-        raise ValueError('Slice-set compatibility needs explicit cohort controls')
-    cohorts = document['cohorts']
-    if not isinstance(cohorts, list) or len(cohorts) < 2:
-        raise ValueError('A slice set needs at least two declared cohorts')
-    ids, declared_sources, points = set(), set(), {}
-    physical_metadata = []
-    for cohort in cohorts:
-        if not isinstance(cohort, dict):
-            raise ValueError('Invalid source cohort')
-        name = cohort.get('id')
-        if not isinstance(name, str) or not re.fullmatch('[a-z0-9][a-z0-9._-]*', name) or name in ids:
-            raise ValueError('Cohort IDs must be unique nonempty identifiers')
-        ids.add(name)
-        source = source_identity(cohort['source'])
-        if source not in compatible:
-            raise ValueError('Cohort source is outside the compatibility record')
-        declared_sources.add(source)
-        contract = contracts.get(name)
-        if not isinstance(contract, dict) or source_identity(contract.get('source')) != source:
-            raise ValueError('Cohort source differs from its reviewed control record')
-        for key in ('binary_sha256', 'manifest_sha256'):
-            source_hash(contract.get(key))
-        expected_metadata = contract.get('metadata')
-        if not isinstance(expected_metadata, dict) or not expected_metadata:
-            raise ValueError('Missing bound cohort metadata')
-        physical_metadata.append(expected_metadata)
-        validate_physics(physical_metadata)
-        fixed = {'Program': 'bethe-xxx-structure-factor-thermo', 'Channel': 'zz',
-                 'Density convention': CONVENTION, 'Selected spinon sectors': '6'}
-        if (any(expected_metadata.get(key) != value for key, value in fixed.items())
-                or scalar_string(expected_metadata['Exchange J']) != decimal(exchange)
-                or scalar_string(expected_metadata[CUTOFF]) != cutoff
-                or cohort_metadata(expected_metadata) != expected_metadata):
-            raise ValueError('Bound cohort physics or common metadata is invalid')
-        validate_sources([expected_metadata], document['source_compatibility'])
-        if source_identity(expected_metadata) != source:
-            raise ValueError('Bound metadata has a different source')
-        nodes = contract.get('nodes')
-        if not isinstance(nodes, list) or not nodes:
-            raise ValueError('Missing declared cohort node controls')
-        expected_nodes = {}
-        for node in nodes:
-            if not isinstance(node, dict):
-                raise ValueError('Invalid cohort node controls')
-            omega = scalar_string(node['omega'])
-            if omega in expected_nodes:
-                raise ValueError('Duplicate cohort node controls')
-            controls = node.get('metadata')
-            if not isinstance(controls, dict) or set(controls) != set(NODE_CONTROLS):
-                raise ValueError('Node controls must bind seed, replicates and samples')
-            for key, value in controls.items():
-                count = scalar_string(value)
-                minimum = 0 if key == NODE_CONTROLS[0] else 2 if key == NODE_CONTROLS[1] else 1
-                if count != count.to_integral_value() or count < minimum:
-                    raise ValueError('Invalid cohort stream/sample controls')
-            expected_nodes[omega] = controls
-        data = read_compact_slice(cohort['slice'], momentum=momentum, exchange=exchange)
-        if scalar_string(data['rapidity_cutoff']) != cutoff:
-            raise ValueError('Cohort rapidity cutoffs differ')
-        if any(source_identity(run['metadata']) != source for run in cohort['slice']['runs']):
-            raise ValueError('Declared cohort source differs from its actual runs')
-        if any(cohort_metadata(run['metadata']) != expected_metadata for run in cohort['slice']['runs']):
-            raise ValueError('Cohort numerical controls differ from the reviewed record')
-        if {decimal(point['omega']) for point in data['points']} != set(expected_nodes):
-            raise ValueError('Cohort grid differs from its reviewed node controls')
-        for point in data['points']:
-            omega = decimal(point['omega'])
-            if omega not in requested:
-                raise ValueError('Cohort frequency was not requested')
-            if omega in points:
-                raise ValueError('Duplicate frequency across cohorts; replacement is not allowed')
-            if point['s6'] is not None and any(point['metadata'].get(key) != value
-                                             for key, value in expected_nodes[omega].items()):
-                raise ValueError('Cohort seed or sampling controls differ from the reviewed record')
-            points[omega] = dict(point, omega=requested[omega], cohort_id=name,
-                                source=dict(zip(('Bethe revision', 'Uni20 revision'), source)))
-    if declared_sources != compatible:
-        raise ValueError('Compatibility record contains an undeclared cohort source')
-    if ids != set(contracts):
-        raise ValueError('Compatibility record contains undeclared cohort controls')
-    if set(points) != set(frequencies):
-        raise ValueError('Missing frequency from source cohorts')
-    return {'momentum': document['momentum'], 'exchange': document['exchange'],
-            'rapidity_cutoff': document['rapidity_cutoff'], 'scope': SCOPE,
-            'source_compatibility': deepcopy(document['source_compatibility']),
-            'points': [points[value] for value in frequencies]}
-
-
-def read_slice(document, *, momentum, exchange='1'):
-    """Dispatch one strict source slice or an explicit reviewed slice set."""
-    if document.get('schema') == SET_SCHEMA:
-        return read_slice_set(document, momentum=momentum, exchange=exchange)
-    return read_compact_slice(document, momentum=momentum, exchange=exchange)
-
-
-def compact_slice_set(cohorts, compatibility, *, momentum, frequencies,
-                      exchange='1', rapidity_cutoff):
-    """Assemble without replacing points or changing any cohort's records.
-
-Each cohort has an id, exact source metadata and a strict v1 compact slice.
-Local run indices remain local to cohort_id in the checked output.
-"""
-    document = {'schema': SET_SCHEMA, 'density_convention': CONVENTION,
-                'momentum': momentum, 'exchange': exchange, 'rapidity_cutoff': rapidity_cutoff,
-                'frequencies': list(frequencies), 'cohorts': deepcopy(cohorts),
-                'source_compatibility': deepcopy(compatibility)}
-    read_slice_set(document, momentum=momentum, exchange=exchange)
     return document
 
 

@@ -143,8 +143,10 @@ the frequency or replace a failed sector by zero.
 
 Run the [six-spinon recipe](xxx-six-spinon-reproduction.md), which supplies
 the same declared frequencies and produces the checked compact file
-`six-slice.json`. Use the same Bethe and Uni20 revisions for both sectors:
-the joining script rejects mixed source revisions or physical conventions.
+`six-slice.json`. With the same Bethe and Uni20 revisions for both sectors,
+the joining script needs no additional source record. Different source
+revisions require an explicit, reviewed cross-sector compatibility record;
+different physical conventions are always rejected.
 
 Once every requested frequency has completed, run the following from the
 source directory, adjusting `raw_dir` and `six_data` to your output locations.
@@ -170,6 +172,28 @@ subprocess.run(command, check=True)
 The plotting dependencies are listed in `docs/tutorials/requirements.txt`.
 The command writes a checked compact record and light/dark SVG figures.
 Subsequent [redraws](#redraw-saved-results) use only that record.
+
+### Reusing calculations from another source revision
+
+Existing two/four data need not be rerun solely because six-spinons were
+calculated with a newer executable. First review the changes affecting each
+sector and compare matched calculations where the numerical implementation
+changed. Record that evidence; do not replace the original revision fields.
+
+For this case, add `--source-compatibility source-compatibility.json` to the
+import command. The record uses schema `bethe-spinon-source-compatibility-v1`:
+`sources` contains the two exact, clean Bethe/Uni20 revision pairs;
+`sector_sources` maps `2,4` and `6` to their respective one-element source
+lists; `reason` explains the compatibility; and each `evidence` entry gives
+a description and SHA256 of the reviewed evidence. Both declared sources
+must occur in the actual input. The parser checks identities and record
+structure; the scientific justification still requires review.
+
+The combined file retains this complete record and both original sector
+datasets. Every redraw rechecks source permissions, physical identity and
+the numerical records. The single-source six-spinon compact format stays
+strict: this option does not combine different six-spinon executables,
+replace existing points or permit a mean over surviving observations.
 
 Both the individual six-spinon estimates and the $`2+4+6`$ partial sum carry
 the six-spinon sampling standard error. Numerical and omitted-domain effects

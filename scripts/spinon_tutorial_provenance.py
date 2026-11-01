@@ -37,7 +37,7 @@ def physical_identity(metadata):
 
 
 def validate_physics(metadata):
-    """Require one physical identity, including declared unavailable cohorts."""
+    """Require one physical identity, independently of the source-compatibility record."""
     reference = None
     for item in metadata:
         identity = physical_identity(item)
@@ -65,23 +65,28 @@ def source_identity(metadata):
 def compatibility_sources(record):
     if not isinstance(record, dict) or record.get('schema') != SCHEMA:
         raise ValueError('Unknown source-compatibility record')
+    if set(record) != {'schema', 'sources', 'sector_sources', 'reason', 'evidence'}:
+        raise ValueError('Unexpected or missing cross-sector compatibility fields')
     if not isinstance(record.get('reason'), str) or not record['reason'].strip():
         raise ValueError('Source compatibility needs an explicit reason')
     sources = record.get('sources')
-    if not isinstance(sources, list) or len(sources) < 2:
-        raise ValueError('Source compatibility needs at least two exact source identities')
+    if not isinstance(sources, list) or len(sources) != 2:
+        raise ValueError('Source compatibility needs exactly two source identities')
     identities = [source_identity(source) for source in sources]
     if len(set(identities)) != len(identities):
         raise ValueError('Duplicate compatible source identity')
     sectors = record.get('sector_sources')
-    if not isinstance(sectors, dict) or not sectors or set(sectors) - {'2,4', '6'}:
+    if not isinstance(sectors, dict) or set(sectors) != {'2,4', '6'}:
         raise ValueError('Compatibility needs explicit sector-scoped sources')
     for allowed in sectors.values():
-        if not isinstance(allowed, list) or not allowed:
-            raise ValueError('Each sector needs its allowed source identities')
+        if not isinstance(allowed, list) or len(allowed) != 1:
+            raise ValueError('Each sector needs one exact source identity')
         pairs = [source_identity(source) for source in allowed]
         if len(set(pairs)) != len(pairs) or not set(pairs) <= set(identities):
             raise ValueError('Invalid sector-scoped source identities')
+    declared = {source_identity(source) for allowed in sectors.values() for source in allowed}
+    if declared != set(identities):
+        raise ValueError('Compatibility sources must match the two sector declarations')
     evidence = record.get('evidence')
     if not isinstance(evidence, list) or not evidence:
         raise ValueError('Source compatibility needs reviewed evidence')
@@ -101,8 +106,8 @@ def compatibility_sources(record):
 def validate_sources(metadata, compatibility=None):
     """Check exact source pairs; callers must also check physical conventions.
 
-An explicit record may cover a declared cohort with no available points yet.
-The collection reader separately rejects unused identities in that record.
+A record permits one two/four source and one six source. Every declared source
+must occur in the actual data; it cannot approve an uncomputed future cohort.
 """
     metadata = list(metadata)
     observed = frozenset(source_identity(item) for item in metadata)
@@ -112,8 +117,8 @@ The collection reader separately rejects unused identities in that record.
         if len(observed) != 1:
             raise ValueError('Cannot combine different source revisions without reviewed compatibility')
     else:
-        if not observed <= compatibility_sources(compatibility):
-            raise ValueError('Source revision is outside the explicit compatibility record')
+        if observed != compatibility_sources(compatibility):
+            raise ValueError('Actual source revisions differ from the explicit compatibility record')
         for item in metadata:
             allowed = compatibility['sector_sources'].get(item.get('Selected spinon sectors'), [])
             if source_identity(item) not in {source_identity(source) for source in allowed}:

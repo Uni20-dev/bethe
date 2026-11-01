@@ -6,6 +6,7 @@ and errors. This establishes identities and completeness, not convergence.
 The tutorial's separate order, cutoff and sampling study supplies that evidence.
 """
 import argparse
+from copy import deepcopy
 from decimal import localcontext
 import hashlib
 import json
@@ -26,9 +27,9 @@ SCHEMA = 'bethe.xxx-spinon-slice.v1'
 def join_points(four_runs, six_points, *, compatibility=None):
     """Join checked sectors on the declared input grid, retaining explicit gaps.
 
-    Six records come from read_slice; their metadata, replicate checks
+    Six records come from read_compact_slice; their metadata, replicate checks
     and declared missing nodes are owned by that reader. T and R are not equated.
-    Different executable cohorts require explicit sector-scoped source evidence.
+    Different sector executables require explicit, reviewed source evidence.
     """
     from xxx_six_spinon_tutorial_data import match_requested_frequency
     from spinon_tutorial_provenance import validate_physics, validate_sources
@@ -37,10 +38,6 @@ def join_points(four_runs, six_points, *, compatibility=None):
     sources = four_runs + [p for p in six_points if p['s6'] is not None]
     validate_sources((run['metadata'] for run in sources), compatibility)
     metadata = [run['metadata'] for run in sources]
-    if compatibility is not None:
-        # Missing six-sector values still declare their physical model. Source
-        # compatibility permits executable changes, never different physics.
-        metadata.extend(contract['metadata'] for contract in compatibility['cohort_controls'].values())
     validate_physics(metadata)
     four, six = {}, {}
     for point in six_points:
@@ -73,8 +70,6 @@ def join_points(four_runs, six_points, *, compatibility=None):
                      'six_computed_omega': sampled['computed_omega'],
                      's2': str(s2), 's4': str(s4), 's2_plus_s4': str(s2 + s4),
                      'four_run': fi, 'six_run': sampled['run_index'], 's6_status': sampled['status']}
-            if 'cohort_id' in sampled:
-                point['six_cohort'] = sampled['cohort_id']
             if sampled['s6'] is None:
                 point.update(s6=None, s6_sampling_se=None, s2_plus_s4_plus_s6=None,
                              reason=sampled['reason'])
@@ -108,9 +103,9 @@ def provenance(run, raw):
             'raw_sha256': hashlib.sha256(raw).hexdigest()}
 
 
-def collect(four_paths, six_document, *, momentum=MOMENTUM):
-    from xxx_six_spinon_tutorial_data import read_slice
-    six = read_slice(six_document, momentum=momentum, exchange='1')
+def collect(four_paths, six_document, *, momentum=MOMENTUM, compatibility=None):
+    from xxx_six_spinon_tutorial_data import read_compact_slice
+    six = read_compact_slice(six_document, momentum=momentum, exchange='1')
     four, records = [], []
     for path in four_paths:
         raw = path.read_bytes()
@@ -122,7 +117,9 @@ def collect(four_paths, six_document, *, momentum=MOMENTUM):
     data = {'schema': SCHEMA, 'momentum': momentum, 'exchange': '1', 'channel': 'zz',
             'density_convention': CONVENTION, 'four_runs': records, 'six_slice': six_document,
             'scope': 'Finite-domain partial spectra; sampling SE excludes cutoff and numerical bias',
-            'points': join_points(four, six['points'], compatibility=six.get('source_compatibility'))}
+            'points': join_points(four, six['points'], compatibility=compatibility)}
+    if compatibility is not None:
+        data['source_compatibility'] = deepcopy(compatibility)
     return validate(data)
 
 
@@ -144,14 +141,14 @@ def checked_four_run(run, *, momentum, exchange):
 
 
 def validate(data):
-    from xxx_six_spinon_tutorial_data import read_slice
+    from xxx_six_spinon_tutorial_data import read_compact_slice
     if (data['schema'] != SCHEMA or data['channel'] != 'zz' or decimal(data['exchange']) != 1
             or data['density_convention'] != CONVENTION):
         raise ValueError('Wrong slice schema or physical convention')
     four = [checked_four_run(run, momentum=data['momentum'], exchange=data['exchange'])
             for run in data['four_runs']]
-    six = read_slice(data['six_slice'], momentum=data['momentum'], exchange=data['exchange'])
-    expected = join_points(four, six['points'], compatibility=six.get('source_compatibility'))
+    six = read_compact_slice(data['six_slice'], momentum=data['momentum'], exchange=data['exchange'])
+    expected = join_points(four, six['points'], compatibility=data.get('source_compatibility'))
     if data['points'] != expected:
         raise ValueError('Plotted values differ from retained sector records')
     return data
@@ -223,6 +220,8 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--four-json', nargs='+', type=Path, help='Complete two/four spectral exports')
     parser.add_argument('--six-data', type=Path, help='Validated compact six-spinon slice')
+    parser.add_argument('--source-compatibility', type=Path,
+                        help='Reviewed cross-sector source record; only with --four-json and --six-data')
     parser.add_argument('--data', type=Path, default=DATA)
     parser.add_argument('--figure', type=Path, default=FIGURE)
     parser.add_argument('--momentum', default=MOMENTUM)
@@ -230,8 +229,12 @@ def main():
     args = parser.parse_args()
     if bool(args.four_json) != bool(args.six_data):
         parser.error('Import both --four-json and --six-data together')
+    if args.source_compatibility and not args.four_json:
+        parser.error('--source-compatibility requires importing both sector datasets')
     if args.four_json:
-        data = collect(args.four_json, json.loads(args.six_data.read_text()), momentum=args.momentum)
+        compatibility = json.loads(args.source_compatibility.read_text()) if args.source_compatibility else None
+        data = collect(args.four_json, json.loads(args.six_data.read_text()), momentum=args.momentum,
+                       compatibility=compatibility)
         if not args.check:
             with args.data.open('x') as output:
                 json.dump(data, output, indent=2)
