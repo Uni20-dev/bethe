@@ -357,6 +357,105 @@ TEST(MonteCarlo, BlockCancellationRetainsCompletedObservations)
   EXPECT_LE(result.completed_samples, 3u);
 }
 
+TEST(MonteCarlo, CancellationAtBlockBoundaryClassifiesUnfinishedReplicate)
+{
+  for (unsigned workers : {1u, 2u})
+    for (std::size_t samples : {4u, 8u})
+    {
+      SCOPED_TRACE(workers);
+      SCOPED_TRACE(samples);
+      std::stop_source stop;
+      unsigned calls = 0;
+      uni20::async::TbbScheduler scheduler(workers);
+      auto result = bethe::monte_carlo_async<1>(
+                        {2, samples, 19}, 1, 1.,
+                        [&](auto const&, std::stop_token) {
+                          if (++calls == 4) stop.request_stop();
+                          return bethe::MonteCarloObservation<double>{std::vector{1.}};
+                        },
+                        {.scheduler = &scheduler, .batch_size = 4, .max_in_flight = 1,
+                         .stop = stop.get_token()})
+                        .get_wait(scheduler);
+      EXPECT_EQ(result.status, bethe::MonteCarloStatus::cancelled);
+      EXPECT_FALSE(result.mean);
+      EXPECT_FALSE(result.covariance);
+      EXPECT_EQ(calls, 4u);
+      ASSERT_TRUE(result.replicates[0]);
+      auto const& row = *result.replicates[0];
+      EXPECT_EQ(row.completed_samples, 4u);
+      EXPECT_EQ(row.cancelled, samples == 8);
+      if (samples == 8)
+      {
+        EXPECT_EQ(row.failed_sample, 4u);
+        EXPECT_EQ(row.reason, "replicate cancelled");
+        EXPECT_FALSE(row.means);
+      }
+      else
+      {
+        EXPECT_FALSE(row.failed_sample);
+        ASSERT_TRUE(row.means);
+        EXPECT_EQ(row.means->front(), 1.);
+      }
+      EXPECT_FALSE(result.replicates[1]); // Never admitted; no fabricated row.
+    }
+}
+
+TEST(MonteCarlo, CancelledCountsIncludeCompletedSpeculativeBlocks)
+{
+  bethe::MonteCarloOptions options{1, 12, 19};
+  std::vector<std::uint64_t> words;
+  bethe::MonteCarloStream<1> stream(options.seed, 0, options.uniform_bits);
+  for (std::size_t i = 0; i < options.samples_per_replicate; ++i)
+    words.push_back(stream.next().words()[0][0]);
+  std::stop_source stop;
+  std::mutex mutex;
+  std::condition_variable cv;
+  bool first_entered = false;
+  unsigned later_calls = 0;
+  uni20::async::TbbScheduler scheduler(3);
+  auto result = bethe::monte_carlo_async<1>(
+                    options, 1, 1.,
+                    [&](auto const& identity, std::stop_token) {
+                      auto found = std::ranges::find(words, identity.words()[0][0]);
+                      if (found == words.end()) throw std::logic_error("unexpected sample identity");
+                      auto index = std::size_t(found - words.begin());
+                      std::unique_lock lock(mutex);
+                      if (index == 0)
+                      {
+                        first_entered = true;
+                        cv.notify_all();
+                        if (!cv.wait_for(lock, std::chrono::seconds(10), [&] { return stop.stop_requested(); }))
+                          throw std::runtime_error("later blocks did not complete");
+                      }
+                      else
+                      {
+                        if (!cv.wait_for(lock, std::chrono::seconds(10), [&] { return first_entered; }))
+                          throw std::runtime_error("first block did not enter");
+                        if (++later_calls == 8)
+                        {
+                          stop.request_stop();
+                          cv.notify_all();
+                        }
+                      }
+                      return bethe::MonteCarloObservation<double, Counters>{std::vector{double(index)}, {1, 0}};
+                    },
+                    {.scheduler = &scheduler, .batch_size = 4, .max_in_flight = 3, .stop = stop.get_token()})
+                    .get_wait(scheduler);
+  EXPECT_EQ(result.status, bethe::MonteCarloStatus::cancelled);
+  EXPECT_FALSE(result.mean);
+  EXPECT_FALSE(result.covariance);
+  ASSERT_TRUE(result.replicates[0]);
+  auto const& row = *result.replicates[0];
+  EXPECT_TRUE(row.cancelled);
+  EXPECT_EQ(row.failed_sample, 1u); // First missing index, not the completed count.
+  EXPECT_EQ(row.completed_samples, 9u); // Sample 0 and both later four-sample blocks.
+  EXPECT_EQ(row.metadata.uniform, 9u);
+  EXPECT_EQ(row.maximum_absolute_observation, std::vector{11.});
+  EXPECT_FALSE(row.means);
+  EXPECT_EQ(result.completed_samples, 9u);
+  EXPECT_EQ(result.metadata.uniform, 9u);
+}
+
 TEST(MonteCarlo, ObservationStorageIsBoundedByAdmittedBlocks)
 {
   struct Counts

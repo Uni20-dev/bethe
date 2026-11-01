@@ -701,5 +701,23 @@
       "monte-carlo-terminal-fix.log": "0aa8e4e5edc30ab9fda40ffebdbff33a6667b99f2a325efdfc2347df6d284d07",
       "monte-carlo-terminal-fix-san.log": "7d691346eb9d35de42d365294084d168a09e47824fd9f1cee5c845ae2cddd29b"
     }
+  },
+  "cancellation_followup": {
+    "review": "https://github.com/Uni20-dev/bethe/pull/90#discussion_r4433711166",
+    "base_revision": "e2e2e93b1744a706072ab7b688c7deb97e99f689",
+    "scope": "After draining a cancelled grid, mark unfinished rows cancelled when no earlier failure exists. Complete rows and unadmitted replicates are unchanged. No new physical timing measurement.",
+    "regression": "CancellationAtBlockBoundaryClassifiesUnfinishedReplicate fails on the base at one and two workers: completed=4, cancelled=false, failed_sample absent. The fixed row records cancelled=true, failed_sample=4 and no means. Complete four-sample rows keep their means and the unadmitted second replicate stays absent.",
+    "count_semantics": "CancelledCountsIncludeCompletedSpeculativeBlocks forces sample zero to enter before later blocks request a stop. Completed count=9 includes sample zero and two later four-sample blocks; first missing index=1 remains separate. No incomplete-row mean, overall estimate or covariance is exposed.",
+    "tests": "All 17 Monte Carlo tests pass normally and with GCC AddressSanitizer/UndefinedBehaviorSanitizer and leak detection; both cancellation cases pass 50 repeats in each build. Reused dependency libraries are not sanitizer-instrumented.",
+    "fixture_history": "The initial speculative-work fixture did not ensure sample zero entered before the stop. Repetition exposed that test race; the final fixture explicitly synchronizes entry. Original logs are retained locally.",
+    "header_sha256": "b14cd49b975fd2ce463092c22e7b5c1891a1ce835537939b0372ec5ef0a5325c",
+    "test_source_sha256": "0f978219dfe6216c5b58f021976565708faf5269ef49f5bc973c3f8616ff7097",
+    "logs": {
+      "before2-regression.log": "9c05e63ec0d5e1a8486923ea99b01a36bc20dc0a5ef8f1d99a105133f32e4b2e",
+      "after2-tests.log": "ad4339b7b6101ea0d1d35dd516bf4f450be3f4a5ee691362d59a9a8a8add5374",
+      "after2-cancellation-repeat.log": "fec65760963dc3844f7e6262cfe4d40bbc10a1b00e644ae05f01ac06852cf8e8",
+      "san-final-tests.log": "b2b3574fb83bf42339576c1627cd797b48ce05d6c6dd98d42b13314ae035231f",
+      "san-final-cancellation-repeat.log": "5963ec666bf18e8fa9fd42cc24135c6b47d43360cc827d58631ba25fd1b05da7"
+    }
   }
 }

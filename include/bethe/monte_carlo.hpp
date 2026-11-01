@@ -36,10 +36,11 @@ template <uni20::Real R, class Metadata = EmptySampleMetadata> struct MonteCarlo
 template <uni20::Real R, class Metadata = EmptySampleMetadata> struct MonteCarloReplicate
 {
     std::uint64_t id = 0;
+    // Includes completed speculative blocks after cancellation; not a prefix length.
     std::size_t completed_samples = 0;
     std::optional<std::vector<R>> means;
     std::vector<R> maximum_absolute_observation;
-    std::optional<std::size_t> failed_sample;
+    std::optional<std::size_t> failed_sample; // First failed or skipped sample index.
     Metadata metadata;
     bool cancelled = false;
     std::string reason;
@@ -287,7 +288,7 @@ template <std::size_t D, uni20::Real R, class Observe> struct MonteCarloRun
       slot.reset();
     }
 
-    void collect_drained()
+    void collect_drained(bool cancelled)
     {
       // Cancellation stops ordered grid collection, but completed observations
       // remain owned here. Recover them only after every admitted task drains.
@@ -303,6 +304,12 @@ template <std::size_t D, uni20::Real R, class Observe> struct MonteCarloRun
       for (std::size_t i = 0; i < accumulators.size(); ++i)
         if (auto& accumulator = accumulators[i])
         {
+          // A stop can prevent the next block from being admitted after every
+          // earlier block completed. No block then carries the cancellation;
+          // mark the unfinished row here, preserving any earlier failure.
+          if (cancelled && !accumulator->row.failed_sample &&
+              accumulator->row.completed_samples < options.samples_per_replicate)
+            accumulator->fail(accumulator->row.completed_samples, "replicate cancelled", true);
           accumulator->finish(options.samples_per_replicate);
           result.replicates[i] = std::move(accumulator->row);
         }
@@ -329,7 +336,7 @@ template <std::size_t D, uni20::Real R, class Observe> struct MonteCarloRun
         run->accumulators.clear();
         throw;
       }
-      run->collect_drained();
+      run->collect_drained(cancelled);
       auto& r = run->result;
       ReplicateStatistics<R> statistics(run->options.replicates, run->options.samples_per_replicate, run->dimension,
                                         run->exemplar);
@@ -379,6 +386,10 @@ template <std::size_t D, uni20::Real R, class Observe> struct MonteCarloRun
 /// admitted blocks and their retained observations. Sample identities and
 /// accumulation order do not depend on task size or completion order.
 /// Observe receives exact uniform identities; physical proposals remain its responsibility.
+/// Cancellation drains admitted work and retains its completed-observation counts
+/// and diagnostics, including later blocks beyond the first skipped sample. These
+/// counts are not restart offsets. Incomplete cancelled rows have no means, and
+/// the cancelled run never exposes an estimate or covariance.
 template <std::size_t D, uni20::Real R, class Observe>
 [[nodiscard]] auto monte_carlo_async(MonteCarloOptions options, std::size_t dimension, R exemplar, Observe observe,
                                      ExecutionOptions execution = {})

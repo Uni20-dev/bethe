@@ -123,9 +123,15 @@ survivors. Nonfinite contributions or unrepresentable means/variances fail
 explicitly. A numerical failure retains the valid prefix of its replicate;
 newly admitted blocks of that replicate skip observation work. Already-admitted
 blocks drain, but their later observations do not enter its sums or metadata.
-Cancellation retains available completed work but never returns a successful
-estimate. An integrand may return a genuine support zero; the physical adapter
-must distinguish a known zero from a pilot that happened to miss support.
+Cancellation retains completed observations and diagnostics but never returns
+an estimate or covariance. An unfinished row is marked cancelled even when the
+stop prevents its next block from being admitted. Its `completed_samples` can
+include later blocks that finished beyond the first skipped sample;
+`failed_sample` records that first index separately. The count is therefore
+not a restart offset. Fully completed rows keep their means, while replicates
+never admitted remain absent. An integrand may return a genuine support zero;
+the physical adapter must distinguish a known zero from a pilot that happened
+to miss support.
 
 The engine does not certify omitted tails, proposal-grid resolution, contour
 convergence or geometry precision. Nor does it supply a quadrature error estimate:
