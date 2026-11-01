@@ -2,8 +2,10 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 """Summarize retained opt-in precision probes; never discard failed points.
 
-Usage: python scripts/check_xxx_six_spinon_precision_probe.py STORE_DIRECTORY
+Usage: python scripts/check_xxx_six_spinon_precision_probe.py STORE_DIRECTORY --pilot-reference FILE
 Prints compact JSON. Raw inputs, outputs, runners and receipts remain in store.
+FILE is the archived geometry-1536.json pilot output, supplied independently of
+the probe archive's location; its content hash is retained in the summary.
 Decimal arithmetic keeps tiny densities and large inverse weights representable.
 """
 
@@ -32,7 +34,7 @@ def group(identity):
     return "edge" if identity.startswith("stress_edge") else "deep" if identity.startswith("stress_") else "draws"
 
 
-def main(root):
+def main(root, archive):
     def load(name):
         return json.loads((root / name).read_text())
 
@@ -145,7 +147,6 @@ def main(root):
             sum(pilot[identity] for identity in native_pilot_failures) / sum(pilot.values()), ".12E"
         ),
     }
-    archive = root.parent / "public-six-spinon-tutorial-20261031/pilot-09-geometry-precision/geometry-1536.json"
     archived_mean = D(json.loads(archive.read_text())["tables"]["spectrum"]["rows"][0][3]["value"])
     assert relative(pilot_mean, archived_mean) < D("1e-60")
     joint = {}
@@ -239,4 +240,7 @@ def main(root):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("store_directory", type=Path)
-    main(parser.parse_args().store_directory)
+    parser.add_argument("--pilot-reference", type=Path, required=True,
+                        help="archived geometry-1536.json pilot output (hashed in the summary)")
+    args = parser.parse_args()
+    main(args.store_directory, args.pilot_reference)

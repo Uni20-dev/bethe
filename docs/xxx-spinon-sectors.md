@@ -204,7 +204,13 @@ Its `geometry` mode replays the fixed designs; `density` reads lines containing
 an identifier, log weight and six rapidities; `checked bits-96 80` runs the
 complete pilot through recovery. The store retains the raw inputs, runners,
 outputs and receipts. Regenerate the compact record using
-`scripts/check_xxx_six_spinon_precision_probe.py STORE_DIRECTORY`.
+`scripts/check_xxx_six_spinon_precision_probe.py STORE_DIRECTORY --pilot-reference FILE`.
+`FILE` is the archived `geometry-1536.json` pilot output (1536-bit geometry,
+192/256-bit density). It is a separate required input; its SHA256 appears in
+the summary. Neither its path nor its parent directory is inferred from
+`STORE_DIRECTORY`. To check relocation using temporary copies in host-local
+storage, run
+`scripts/check_xxx_spinon_archive_relocation.py STORE_DIRECTORY --pilot-reference FILE --scratch-directory build_codex`.
 
 For MPFR, `--density-guard-bits B` lets the W4/W6 density use a smaller guard
 precision while retaining the geometry and output precision. It requires sector
