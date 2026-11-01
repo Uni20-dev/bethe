@@ -2,8 +2,10 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 """Verify the stored scaled-endpoint replay against the frozen PR #93 reference.
 
-Usage: python scripts/check_xxx_scaled_spinon_endpoints.py STORE_DIRECTORY
+Usage: python scripts/check_xxx_scaled_spinon_endpoints.py STORE_DIRECTORY --reference-directory DIRECTORY
 Raw geometry rows stay in store; stdout is the compact validation record.
+DIRECTORY contains the frozen PR #93 geometry-bits-512.jsonl and its
+geometry-receipt.json. Their location is independent of STORE_DIRECTORY.
 """
 
 import argparse
@@ -27,12 +29,11 @@ def rows(path):
     return result
 
 
-def main(root):
-    frozen = root.parent / "deep-geometry-precision-probes-20261101"
+def main(root, frozen):
     reference_path = frozen / "geometry-bits-512.jsonl"
     original_receipt = json.loads((frozen / "geometry-receipt.json").read_text())
     original_run = next(r for r in original_receipt["runs"] if r["name"] == "geometry-bits-512")
-    assert digest(reference_path) == original_run["sha256"]
+    assert digest(reference_path) == original_run["sha256"], "reference SHA256 mismatch"
     reference = rows(reference_path)
     assert Counter(r["status"] for r in reference.values()) == {"inside": 53, "outside": 1306}
     receipt = json.loads((root / "receipt.json").read_text())
@@ -89,4 +90,7 @@ def main(root):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("store_directory", type=Path)
-    main(parser.parse_args().store_directory)
+    parser.add_argument("--reference-directory", type=Path, required=True,
+                        help="frozen PR #93 archive containing geometry-bits-512.jsonl and geometry-receipt.json")
+    args = parser.parse_args()
+    main(args.store_directory, args.reference_directory)

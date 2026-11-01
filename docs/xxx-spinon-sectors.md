@@ -227,7 +227,12 @@ storage, run
 `scripts/check_xxx_spinon_archive_relocation.py STORE_DIRECTORY --pilot-reference FILE --scratch-directory SCRATCH_DIRECTORY`.
 Choose an existing host-local directory for the temporary copies.
 The later geometry-only record uses
-`scripts/check_xxx_scaled_spinon_endpoints.py STORE_DIRECTORY`.
+`scripts/check_xxx_scaled_spinon_endpoints.py STORE_DIRECTORY --reference-directory DIRECTORY`.
+The reference directory must contain the frozen PR #93 `geometry-bits-512.jsonl`
+and `geometry-receipt.json`; their hash relationship is checked before analysis.
+It need not be adjacent to the stage-1 archive. Its relocation check is
+`scripts/check_xxx_spinon_archive_relocation.py STORE_DIRECTORY --reference-directory DIRECTORY --scratch-directory SCRATCH_DIRECTORY`;
+this also verifies rejection of an altered reference file.
 
 For MPFR, `--density-guard-bits B` lets the W4/W6 density use a smaller guard
 precision while retaining the geometry and output precision. It requires sector
