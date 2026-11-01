@@ -29,3 +29,14 @@ TEST(CliPrecision, SpinonNativeComparisonUsesDistinctIntermediatePrecision)
 #endif
 }
 
+TEST(CliPrecision, SampleTaskSizeIsIndependentOfTheSamplingBudget)
+{
+  cli::spinon::Controls controls;
+  CLI::App app;
+  cli::spinon::add_options(app, controls);
+  app.parse("--samples-per-task 3 --samples 29 --replicates 5");
+  EXPECT_EQ(controls.samples_per_task, 3u);
+  EXPECT_EQ(controls.sampling.samples_per_replicate, 29u);
+  EXPECT_EQ(controls.sampling.replicates, 5u);
+  EXPECT_THROW(app.parse("--samples-per-task 0"), CLI::ValidationError);
+}

@@ -95,13 +95,13 @@ TEST(SixSpinonFixedMomentsMpfr, DirectMomentsCovarianceScalingAndOwnedAsync)
   uni20::async::TbbScheduler scheduler(2);
   auto pending = Moments(proposal(one), policy(), one)
                      .fixed_moments(pi / 2)
-                     .evaluate_async(options, {.scheduler = &scheduler, .max_in_flight = 2});
+                     .evaluate_async(options, {.scheduler = &scheduler, .batch_size = 1, .max_in_flight = 2});
   auto parallel = pending.get_wait(scheduler);
   EXPECT_EQ(serial.integral.mean, parallel.integral.mean);
   EXPECT_EQ(serial.integral.covariance, parallel.integral.covariance);
   auto scaled = Moments(proposal(one), policy(), 3 * one)
                     .fixed_moments(pi / 2)
-                    .evaluate(options, {.scheduler = &scheduler, .max_in_flight = 2});
+                    .evaluate(options, {.scheduler = &scheduler, .batch_size = 1, .max_in_flight = 2});
   ASSERT_TRUE(scaled.integral.mean && scaled.integral.covariance && scaled.first_moment_fraction);
   EXPECT_EQ((*scaled.integral.mean)[0], (*serial.integral.mean)[0]);
   EXPECT_REAL_NEAR((*scaled.integral.mean)[1], 3 * (*serial.integral.mean)[1], tol);

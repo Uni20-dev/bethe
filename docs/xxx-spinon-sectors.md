@@ -79,6 +79,12 @@ of the example, not its sampling accuracy or omitted tail. Other seeds or
 domains can require wider arithmetic; follow the
 [precision procedure](numerical-accuracy.md#why-evaluate-a-density-at-two-precisions).
 
+`--samples-per-task` (default 16) sets the maximum observations per Async task.
+Smaller blocks can keep more of `--threads` busy when observations have uneven
+costs, including within a single replicate. This scheduling option does not
+change the stream, replicate count or sample-order accumulation, and is recorded
+in output metadata. See [parallel calculations](parallel-calculations.md#six-spinon-monte-carlo).
+
 The physical mixture remains explicit:
 
 | Option | Default | Meaning |

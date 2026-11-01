@@ -130,6 +130,10 @@ if mpfr.upper() in ("ON","TRUE","1"):
           "--density-absolute-tolerance","1e-30",
           "--threads","2","--diagnostics","--replicate-output","--covariance"]
     doc=document(args);sums(doc,(2,4,6))
+    blocked=document([*args,"--samples-per-task","1"])
+    for table in ("moments","replicates","covariance"):
+        assert rows(blocked,table)==rows(doc,table)
+    assert blocked["tables"]["moments"]["metadata"]["Maximum samples per Async task"]=="1"
     assert len(rows(doc,"replicates"))==2
     assert all(r["failed_sample"] is None for r in rows(doc,"replicates"))
     assert number(indexed(doc)[("6",0)]["value"])>0

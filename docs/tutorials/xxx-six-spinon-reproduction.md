@@ -38,10 +38,15 @@ The first large query used 25.7 CPU hours and 104 minutes of wall time with
 sixteen workers on a Xeon Gold 6254, then failed its contour checks. Its
 successful replacement used 38.0 CPU hours and 143 minutes of wall time with
 24 workers on the same machine. These are whole-query costs, including
-preparation and output. The solver schedules whole replicates, so worker
-utilization can fall near the end of a query. Budget several hours per frequency with
-24 workers, and substantially longer with fewer workers. This is a planning
-estimate, not a completed-grid timing. The recipe defaults to four workers. Set `threads`
+preparation and output. These historical runs scheduled whole replicates, so
+worker utilization fell near the end of each query. Current releases split
+replicates into sample blocks; `--samples-per-task` controls that scheduling
+grain without changing sample identities or their accumulation order. See the
+[parallel-calculation guide](../parallel-calculations.md#six-spinon-monte-carlo).
+Allow several hours per frequency with 24 workers, and longer with fewer workers.
+This remains a planning estimate from the original executable, not a measured
+runtime for the newer scheduling implementation. The recipe defaults to four
+workers. Set `threads`
 to match the CPUs available to your job, and choose `out` on a filesystem with
 room for the exports and logs. The source tree need not be your working directory.
 

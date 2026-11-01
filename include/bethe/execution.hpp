@@ -15,10 +15,11 @@ namespace bethe
 struct ExecutionOptions
 {
     uni20::async::IAsyncScheduler* scheduler = nullptr;
+    /// Work per task: Monte Carlo observations, or legacy client batch size.
+    /// This is independent of the number of tasks admitted concurrently.
     std::size_t batch_size = 128;
     /// Independent bound for continuous work; not a scheduler thread count.
     /// Ordered grids include completed-but-not-collected results in this bound.
-    /// batch_size remains the granularity of clients that still use batches.
     std::size_t max_in_flight = 128;
     /// Stop admitting work and finish active kernels before reporting cancellation.
     /// Dropping an Async handle does not request cancellation.

@@ -150,6 +150,11 @@ add_executable(bethe_monte_carlo_tests test_monte_carlo.cpp)
 target_link_libraries(bethe_monte_carlo_tests PRIVATE bethe::bethe TBB::tbb)
 bethe_discover_tests(bethe_monte_carlo_tests)
 
+add_executable(bethe_monte_carlo_benchmark EXCLUDE_FROM_ALL benchmark_monte_carlo.cpp)
+target_link_libraries(bethe_monte_carlo_benchmark PRIVATE bethe::bethe TBB::tbb)
+set_target_properties(bethe_monte_carlo_benchmark PROPERTIES CXX_EXTENSIONS OFF)
+
+
 add_executable(bethe_xxx_six_spinon_structure_factor_tests test_xxx_six_spinon_structure_factor.cpp)
 target_link_libraries(bethe_xxx_six_spinon_structure_factor_tests PRIVATE bethe::bethe TBB::tbb)
 bethe_discover_tests(bethe_xxx_six_spinon_structure_factor_tests)
