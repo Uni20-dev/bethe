@@ -179,6 +179,25 @@ class SpectralTimeTests(unittest.TestCase):
         with self.assertRaises(OverflowError):
             weights([10., 11.], [1e308])
 
+    def test_covariance_symmetrization_preserves_numeric_range(self):
+        tiny = np.nextafter(0., 1.)
+        expected = np.sqrt(tiny)*1e160
+        result = statistics([[1e160]], [0.], [[tiny]])
+        np.testing.assert_allclose(result['real_standard_error'], [expected], rtol=1e-15)
+        # Normalizing the whole matrix and scaling it back also loses this
+        # covariance. It must survive alongside a much larger diagonal.
+        C = np.diag([tiny, 1e300])
+        saved = C.copy()
+        result = statistics([[1e160, 0], [0, 1e-150]], [0, 0], C)
+        np.testing.assert_allclose(result['real_standard_error'], [expected, 1.], rtol=1e-15)
+        np.testing.assert_array_equal(C, saved)
+        result = statistics([[1e160, 1e160]], [0, 0], np.full((2, 2), tiny))
+        np.testing.assert_allclose(result['real_standard_error'], [2*expected], rtol=1e-15)
+        # Conversely, adding large entries before halving would overflow.
+        C = np.array([[1.7e308, 9e307], [np.nextafter(9e307, np.inf), 1.7e308]])
+        result = statistics([[1e-154, -1e-154]], [0, 0], C)
+        np.testing.assert_allclose(result['real_standard_error'], [np.sqrt(1.6)], rtol=1e-15)
+
     def test_statistics_rejects_invalid_covariance_and_complex_means(self):
         W = np.array([[1, 1j]])
         for covariance in ([[1, 1], [0, 1]], [[1, 2], [2, 1]], [[-1e-30, 0], [0, 0]],

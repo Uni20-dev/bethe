@@ -137,10 +137,18 @@ def statistics(operator, mean, covariance):
     if scale:
         normalized = C/scale
         _require(np.max(np.abs(normalized-normalized.T)) <= tol, "asymmetric covariance")
-        normalized = normalized/2 + normalized.T/2
+        normalized = (normalized + normalized.T)/2
         _require(np.linalg.eigvalsh(normalized)[0] >= -tol,
                  "covariance must be positive semidefinite")
-        C = C/2 + C.T/2
+        # Average the original entries: rescaling back from normalized can
+        # erase tiny covariances, while halving both entries first erases
+        # equal subnormals. Split only sums that could overflow.
+        small = np.abs(C) <= np.finfo(float).max/2
+        safe_sum = small & small.T
+        symmetric = np.empty_like(C)
+        symmetric[safe_sum] = (C[safe_sum] + C.T[safe_sum])/2
+        symmetric[~safe_sum] = C[~safe_sum]/2 + C.T[~safe_sum]/2
+        C = symmetric
     try:
         with np.errstate(over="raise", invalid="raise"):
             y = W@m
