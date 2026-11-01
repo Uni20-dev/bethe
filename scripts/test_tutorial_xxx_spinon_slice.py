@@ -1,6 +1,7 @@
 """Do not interpolate, rescale, or mismatch the sectors in a comparison plot."""
 from copy import deepcopy
 from decimal import Decimal, localcontext
+from importlib.util import find_spec
 import unittest
 import json
 import math
@@ -195,6 +196,8 @@ class SpinonSlice(unittest.TestCase):
         self.assertEqual(Decimal(point['s2_plus_s4']), Decimal('0.625'))
         self.assertEqual(point['s6_status'], 'failed')
 
+    @unittest.skipIf(find_spec('matplotlib') is None,
+                     'Install docs/tutorials/requirements.txt for rendering checks')
     def test_plot_identifies_unavailable_six_results_without_zeroing_them(self):
         for partly_available in (False, True):
             with self.subTest(partly_available=partly_available):
@@ -230,6 +233,8 @@ class SpinonSlice(unittest.TestCase):
                         self.assertIn('unavailable', six_container.get_label())
                         self.assertNotIn('sampling', six_container.get_label())
 
+    @unittest.skipIf(find_spec('matplotlib') is None,
+                     'Install docs/tutorials/requirements.txt for rendering checks')
     def test_zero_sectors_and_missing_six_retain_requested_frequency_range(self):
         for has_available_point in (False, True):
             with self.subTest(has_available_point=has_available_point):
