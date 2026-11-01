@@ -3,6 +3,7 @@
 #pragma once
 
 #include <bethe/xxx_six_spinon_structure_factor.hpp>
+#include <iterator>
 #include <map>
 #include <tuple>
 
