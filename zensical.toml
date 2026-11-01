@@ -125,6 +125,7 @@ nav = [
     { "Source organization and methods" = "docs/development.md" },
     { "Testing and CI" = "docs/testing.md" },
     { "Performance measurements" = "docs/benchmarks.md" },
+    { "Spinon numerical development" = "docs/spinon-numerics-development.md" },
     { "Validation records" = "docs/validation-records.md" },
     { "Model roadmap" = "docs/model-roadmap.md" },
     { "Citation maintenance" = "docs/citations.md" },

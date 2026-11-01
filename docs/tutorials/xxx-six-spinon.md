@@ -30,15 +30,15 @@ MPFR example to examine soft spinons, sampling errors and precision controls.
 | --- | --- | --- |
 | [Three-frequency example, $`R=8`$](#start-with-an-inexpensive-calculation) | Learn the workflow | 0.38 CPU seconds with x86 extended80 `long double` |
 | [Single point, $`R=256`$](#extend-the-soft-domain) | Inspect sampling and numerical diagnostics | About five minutes with four workers; 1,150 CPU seconds |
-| [Sixteen-frequency reference campaign, $`R=1040`$](xxx-six-spinon-reproduction.md) | Regenerate a resolved reference slice | The first completed frequency alone used 38 CPU hours |
+| [Reference dataset, $`R=1040`$](xxx-six-spinon-reproduction.md) | Reproduce the recorded spectrum and plot compact data | See the dataset-specific compute budget |
 
 The first two examples have substantial sampling and cutoff uncertainty; they
 teach the method without resolving the full physical response. Their measured
 costs and checks are described below. The reference campaign is a separate,
 production-scale calculation, not a step required to work through this tutorial.
 Its compact results can be plotted without rerunning the integrations; the
-complete reference grid is still being calculated. Historical timings describe
-the recorded executables and machines, not a runtime guarantee for your system.
+complete reference grid is still being calculated. Timings refer to the linked
+validation records; measure a small query on your machine before budgeting a grid.
 
 ## Why sampling needs a physical proposal
 
@@ -90,9 +90,8 @@ kernel's roundoff indicators and a check of its scalar prefactor. The program
 uses the **higher-precision value**, not an average of the two.
 
 For example, `long-double` on the tested x86 system compares a 53-bit `double`
-evaluation with a 64-bit `long double` evaluation. The table below gives both
-precisions for every measured run. With MPFR, the higher density precision
-normally follows `--precision bits-N`; `--density-guard-bits` can lower it
+evaluation with a 64-bit `long double` evaluation. With MPFR, the higher density
+precision normally follows `--precision bits-N`; `--density-guard-bits` can lower it
 independently of geometry precision. The comparison uses 64 fewer bits, with
 a minimum of 24, so a 192-bit density guard gives a 128/192-bit pair.
 
@@ -108,117 +107,38 @@ check has not passed, not that the higher format is necessarily inadequate.
 Neither check measures Monte Carlo sampling error or the weight excluded by
 the rapidity cutoff.
 
-### Compare cost and arithmetic stability
+### Choose arithmetic for your calculation
 
-On an x86 machine with native extended80 `long double`, this complete query
-took 0.38 CPU seconds. The same domains, streams and numerical controls gave:
+On a machine with native extended80 `long double`, this example completes in
+0.38 CPU seconds. Its three densities agree with a 384-bit MPFR check within
+$`3\times10^{-16}`$ relative. The observed sampling errors are still 66–76%,
+and cutoff 8 omits substantial soft weight: arithmetic agreement does not make
+this small run an accurate physical spectrum. The
+[validation record](../validation/six-spinon-precision-20261031.json) contains
+the numerical controls, hardware and measured costs.
 
-| Arithmetic | Density comparison / guard bits | Outcome | CPU seconds |
-| --- | ---: | --- | ---: |
-| `fp64` | 24 / 53 | Recovery failed | 0.04 |
-| `long-double` | 53 / 64 | Complete | 0.38 |
-| `fp128` | 64 / 113 | Complete | 7.32 |
-| `bits-96` | 32 / 96 | Recovery failed | 6.41 |
-| `bits-128` | 64 / 128 | Complete | 43.59 |
-| `bits-192` | 128 / 192 | Complete | 55.73 |
-| `bits-384` | 320 / 384 | Complete | 101.14 |
-
-All successful runs retain the same replicate identities and work counts. The
-largest relative change in the densities from extended80 to 384-bit MPFR is
-$`2.7\times10^{-16}`$. The [comparison record](../validation/six-spinon-precision-20261031.json)
-contains the commands, effective precision, diagnostics, sampling errors,
-hardware and timings, including an additional 256-bit check. These tiny
-arithmetic differences do not measure the accuracy of the physical spectrum:
-the observed sampling errors remain 66–76%, and cutoff 8 omits substantial
-soft weight.
-
-The binary128 row uses the later
-[intermediate-native comparison](../validation/six-spinon-native-comparison-20261031.json):
-it checks against 64-bit-significand `long double`, where available, instead
-of the earlier 53-bit comparison. Its three densities agree with the retained
-MPFR192 calculation within $`7.3\times10^{-31}`$ relative, with matching sample
-identities and work counts. The other rows retain the original measurements.
-The [precision guide](../numerical-accuracy.md#why-evaluate-a-density-at-two-precisions)
-explains selection on platforms with different `long double` formats.
-
-The two failing settings illustrate why the guard precision alone is not
-enough. Recovery compares two arithmetic precisions. Binary64 uses a binary32
-comparison, which fails arithmetic checks and encounters a subnormal-density
-failure in one replicate. MPFR at 96 bits uses a 32-bit comparison and also
-fails arithmetic checks. Neither failed query is replaced by an estimate over
-its surviving replicates. Native extended80 is the cheapest checked setting
-for this particular query; binary128 is the next format to try before MPFR. Check
-`bethe-info` for the actual native format on your platform, and repeat the
-precision comparison when changing the domain, grid or sample streams.
+Check `bethe-info` for the actual native formats on your platform. If
+`long-double` fails a check, try `--precision fp128` with the same seed,
+frequencies, domain and tolerance before using MPFR. Where extended80 is
+available, binary128 compares a 64-bit-significand `long double` result against
+its own 113-bit result. The [precision guide](../numerical-accuracy.md#why-evaluate-a-density-at-two-precisions)
+explains the comparison selected on other platforms. Binary128 support needs
+an appropriate [build](../building.md).
 
 ### Changing the seed can change the precision requirement
 
-More samples explore more configurations, including ones with stronger
-cancellation. With the same three frequencies, cutoff and 32 samples per
-replicate, 38 of the 40 seeds from 1 through 40 complete in extended80 at
-relative tolerance `1e-5`. Seeds 2 and 35 fail an arithmetic screen. This
-small, fixed scan illustrates the limitation; it is not a failure probability
-for other calculations. The [seed comparison record](../validation/six-spinon-seed-precision-20261031.json)
-retains all 40 outcomes, including failures.
+More samples, a new seed or a larger domain can encounter harder configurations.
+For example, this query with `--seed 2` fails its arithmetic check in extended80
+but completes with binary128 at the same tolerance. Its densities agree with
+MPFR192 within $`1.5\times10^{-30}`$ relative; see the
+[native comparison record](../validation/six-spinon-native-comparison-20261031.json).
+This is a useful same-input check to repeat before increasing the sample count.
 
-Seed 2 provides a reproducible example. Use `--seed 2` and distinct output
-filenames. First vary only `--precision`, keeping relative tolerance `1e-5`;
-the final two rows separately test `--density-relative-tolerance 1e-3`:
-
-| Arithmetic | Relative tolerance | Complete three-point query | CPU seconds |
-| --- | ---: | --- | ---: |
-| `long-double` | `1e-5` | Arithmetic screen fails | 0.31 |
-| `fp128`, native 64/113-bit pair | `1e-5` | Complete | 6.34 |
-| `bits-128` | `1e-5` | Complete | 37.81 |
-| `bits-192` | `1e-5` | Complete | 48.54 |
-| `long-double` | `1e-3` | Complete | 0.31 |
-| `fp64` | `1e-3` | Arithmetic and exponent-range failures | 0.03 |
-
-The native 64/113-bit pair repairs this comparison without changing the
-tolerance, domain or sample stream. Its three means agree with MPFR192 within
-$`1.5\times10^{-30}`$ relative. It also passes seed 35, the other failure in
-the original scan. Across these two seeds and the default seed 42, the
-replicate means and largest observations agree with MPFR192 within
-$`4.9\times10^{-30}`$ relative; all stream identities and work counts match.
-The [native follow-up record](../validation/six-spinon-native-comparison-20261031.json)
-retains both sides of these comparisons, including replicate summaries and
-source identities. Check it without running the solver:
-
-```sh
-python3 scripts/check_xxx_six_spinon_native_precision.py
-```
-
-An independent, broader binary128 scan completes all three frequencies for
-40 of 40 seeds at 32 samples per replicate, and 20 of 20 seeds at 128 samples.
-The [scan record](../validation/six-spinon-native-seed-scan-20261031.json)
-retains every outcome and the reconstructed sampling diagnostics. Mean CPU
-costs were 12.3 and 48.8 seconds per query on a Xeon Gold 6254, respectively;
-these timings are from a different machine than the tables above. This scan
-checks completion under the same density controls, not wider-precision
-agreement for every seed or convergence of the sampled spectrum.
-
-Increasing MPFR precision from 128 to 192 bits changes the three means by
-at most $`4.4\times10^{-37}`$ relative, with matching replicate identities
-and work counts. Both MPFR runs also complete at the original tolerance,
-domain and sample stream. A failed paired-precision check does not by itself
-show that the higher-precision value was inaccurate: it shows that the
-requested agreement with its lower-precision comparison was not established.
-
-The `1e-3` native run is a separate tolerance experiment. Its means agree with
-the unchanged, strict 192-bit reference within $`3.3\times10^{-16}`$ relative;
-the largest relative change among replicate means and maxima is
-$`7.1\times10^{-15}`$. Such a tolerance can be economical for this coarse
-demonstration after checking it against a stricter reference. These results
-do not certify it for a larger sample, domain or resolved spectrum. Binary64
-also encounters an exponent-range limit, which loosening the tolerance does
-not repair.
-
-When your query fails, preserve that result and rerun the **same** frequencies,
-seed and sample count at higher precision. Compare successful wider runs
-before increasing the sampling budget. Do not search for a passing seed or
-average only successful replicates. Choose an inner tolerance for the accuracy
-you need, then validate it against a stricter calculation; a passing screen
-alone does not establish the error of the spectral integral.
+Keep failed results and use distinct output filenames for each comparison.
+Do not search for a passing seed or average only successful replicates.
+Choose an inner tolerance for the accuracy you need, then check against a
+stricter calculation. The [development study](../spinon-numerics-development.md)
+collects the wider precision and seed scans separately.
 
 ## Extend the soft domain
 
@@ -244,10 +164,10 @@ relative sampling error. The point is a starting calculation to inspect before
 running a frequency grid.
 
 Here geometry and output retain 512 bits, while the density comparison uses
-192/256 bits. Replaying all 2,048 draws against the original 448/512-bit density
-checks preserves every replicate's work counts and changes the mean by less
-than $`2\times10^{-75}`$ relative. In these runs, CPU cost fell from 1,850 to
-1,150 seconds (about five minutes wall time with four workers). The
+192/256 bits. A comparison with 448/512-bit density checks preserves every
+replicate's work counts and changes the mean by less than
+$`2\times10^{-75}`$ relative. The measured cost of the displayed command is
+1,150 CPU seconds, about five minutes with four workers. The
 [comparison record](../validation/six-spinon-density-precision-20261031.json)
 retains the actual point and its replicate summaries. Its sampling error is
 still 15.4%; lowering arithmetic cost does not improve that error or recover
@@ -331,98 +251,39 @@ estimates can omit the same soft region.
 
 ## Distinguish contour failures from arithmetic failures
 
-Larger domains can require both stronger contours and wider arithmetic. The
-[slice calibration record](../validation/six-spinon-slice-calibration-20261031.json)
-keeps fifteen bounded queries, their commands and costs, two failed queries,
-paired cutoff comparisons and exact replays of the problematic configurations.
+The diagnostics identify which part of a calculation needs improvement.
+For a contour-tail failure, increase `--density-terms` and
+`--density-tail-order`, holding precision and sample identities fixed.
+For an arithmetic failure, increase precision while holding the contour
+controls fixed. Raising precision alone does not shorten a truncated contour
+tail, and adding samples does not repair either failure.
 
-At $`\omega=2J`$ and $`R=1040`$, a complete 2048-draw query fails with
-1040/1056 residue terms and tail orders 32/36. Raising the density guard from
-256 to 384 bits leaves the original contour failures. Two stronger contour
-choices pass the failed configurations and agree within
-$`5\times10^{-61}`$ relative. Using 1560/1576 terms and tail orders 48/52
-completed this 2048-draw calibration replay at lower cost. Those controls later
-failed in the larger production query; production uses 3120/3136 terms and
-tail orders 52/56, as described below and in the
-[production reference recipe](xxx-six-spinon-reproduction.md).
-
-At $`\omega=3J`$, those contours pass their truncation check, but one sampled
-configuration fails the 192/256-bit arithmetic comparison: its relative
-indicator is $`2.73\times10^{-6}`$ against a $`10^{-6}`$ target. Keeping the
-contours and tolerance fixed, the 256/320-bit pair passes; a 320/384-bit replay
-agrees within $`1.3\times10^{-91}`$ in the checked densities. The complete
-1024-draw query then passes at 256/320 bits, as does the $`\omega=4J`$ anchor.
-These cases motivate the wider density pair for the large-domain slice.
-
-Neither repair changes the sample stream or replaces a failed result with an
-average of surviving observations. The checks establish usable numerical
-controls at the tested points. They do not establish sampling convergence or
-bound the omitted soft domain; larger runs still check every observation.
-
-Increasing the budget to 32 replicates of 768 draws at $`\omega=2J`$ exposed
-two further contour failures. The complete query was rejected: its other
-replicates do not supply a usable spectral estimate. Replaying the two failed
-configurations showed that wider arithmetic again left the contour problem
-unresolved. Stronger contour controls repaired both cases without changing the
-precision, tolerance or sample identities.
-
-We also tested four constructed geometries close to the rapidity cutoff;
-these are additional stress tests, not Monte Carlo samples. The
-[recovery record](../validation/six-spinon-contour-recovery-20261031.json)
-retains 22 bounded checks. At 3120/3136 residue terms and tail orders 52/56,
-both failed configurations and all four constructed cases pass. Their largest
-relative contour diagnostic is below $`8.6\times10^{-11}`$, compared with the
-unchanged $`10^{-6}`$ target. Separate increases in arithmetic precision and
-residue count preserve the checked densities. These are the controls in the
-[large-domain reproduction recipe](xxx-six-spinon-reproduction.md).
-
-The [replacement whole query](../validation/six-spinon-first-production-20261031.json)
-now completes all 32 replicates and 24,576 draws at $`\omega=2J`$, with the
-original seed 7405. Its estimate is $`S^{zz}_6=0.03604\pm0.00214`$, where the
-uncertainty is one sampling standard error (5.94%). The largest individual
-draw contributes 4.17% of the estimate, so inspecting influential observations
-still matters even after the numerical failures are repaired. This is a
-finite-$`R=1040`$ result, not a five-percent bound on the unrestricted response.
-The remaining frequencies still need their own complete-query checks.
-
-The earlier independent 2048-draw pilot at the same momentum, frequency and
-cutoff gave $`0.05246\pm0.00646`$. Its difference from the production estimate
-is 2.41 times the two reported standard errors combined in quadrature.
-The runs use different seeds, sample counts, density precisions and contour
-budgets, so this is not a paired precision or cutoff test. Both results are
-retained separately. Their separation illustrates why independent sampling
-checks matter: an SE is inferred from the observed replicate scatter; it does
-not bound the effect of rare configurations they may have missed.
-This comparison alone establishes neither a numerical bias nor convergence.
+Compare two successful sets of stronger controls on the same inputs before
+expanding the sampling budget. A larger sample can expose configurations that
+a small calibration did not encounter; every observation still needs its
+checks. Preserve each failed export and its reason. Numerical agreement on a
+fixed sample is separate from sampling and cutoff convergence.
 
 ## When the geometry needs higher precision
 
-Extending the rapidity domain can demand much more precision even with a loose
-sampling target. In a separate fixed-stream check at $`R=1040`$, we held the
-density comparison at 192/256 bits and varied only the geometry precision.
-At 256, 512 and 1024 bits the program rejected the surface with
-`surface cutoff unresolved; increase geometry precision`. At 1536 and 2048
-bits, all 64 draws completed with matching supported-root counts and agreeing
-replicate estimates. The [geometry comparison record](../validation/six-spinon-geometry-precision-20261031.json)
-retains these controls, outcomes and costs.
+The energy surface retains distances from momentum zero or pi separately
+from integer multiples of pi. This avoids subtracting a very soft endpoint
+displacement from a number of order one. The rapidity cutoff alone therefore
+does not set a large significand-bit requirement.
 
-Very soft momenta approach zero or $`\pi`$ exponentially in the rapidity.
-The current surface representation needs enough bits to distinguish its domain
-boundaries: $`\pi-2\arctan(e^{-R})`$ must remain distinguishable from $`\pi`$.
-This alone requires roughly $`R/\ln 2`$ bits, before allowing for accuracy in
-the subsequent calculation. Raising density precision cannot repair an unresolved surface:
-rebuild the geometry with higher `--precision`. With MPFR,
-`--density-guard-bits 256` keeps the density checks at 192/256 bits while the
-geometry precision increases. That separation substantially reduces cost.
-The 64-draw check establishes feasibility and arithmetic agreement only; it
-does not resolve the spectrum or its omitted soft tail.
+Near a degenerate solved pair, the roots and coarea Jacobian can still be
+ill-conditioned. If geometry fails, repeat the same inputs at higher
+`--precision`; raising `--density-guard-bits` alone does not change geometry.
+MPFR can also refine a difficult solve locally. The
+[sector guide](../xxx-spinon-sectors.md) describes these checks.
+Successful geometry must still be followed by density, contour and weighting
+checks. A wider significand does not necessarily provide a wider exponent
+range, and refinement cannot recover input digits already rounded away.
 
 For a new calculation, hold the domain, contour budgets and sample identities
-fixed while comparing precisions. Then vary the non-arithmetic controls
-separately. A contour-tail failure calls for a contour study; a large sampling
-error calls for more independent samples and examination of influential weights.
-Keep failed configurations visible, and retain the diagnostic that identifies
-what needs improvement.
+fixed while comparing precisions. Then vary the other controls separately.
+Use [reference-data settings](xxx-six-spinon-reproduction.md) when reproducing
+that dataset; they are not a minimum-precision rule for new calculations.
 
 ## Keep the plotted data independently checkable
 
