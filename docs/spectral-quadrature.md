@@ -123,6 +123,16 @@ roundoff. The covariance eigenvalue check costs `O(nodes^3)`. Returned marginal
 statistics avoid storing a dense `times × times` covariance; obtain any required
 time contrast through its rows instead. Inputs are not modified.
 
+Ordinary rows use NumPy matrix products. For extreme exponents, covariance
+propagation falls back to exact rational products of the supplied binary64
+entries, then rounds the standard errors and cross covariance to binary64.
+This slower path preserves representable standard errors even when their
+squared variances underflow or overflow, and preserves tiny covariances that
+large coefficients amplify. It uses Python's standard library, with no extra
+dependency. It does not improve the precision of the input measurements or the
+symmetry/positive-semidefinite check. An unrepresentable returned value still
+raises `OverflowError`; finite means use the usual NumPy transform.
+
 ## Separate accuracy controls
 
 1. **Phase quadrature:** increase `order` at fixed grid. Long times may need

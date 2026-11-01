@@ -6,6 +6,8 @@ NumPy binary64 analysis, independent of any model, archive or plotting code.
 No endpoint extrapolation, broadening or amplitude matching is performed.
 """
 
+from fractions import Fraction
+import math
 from numbers import Integral
 
 import numpy as np
@@ -113,6 +115,62 @@ def weights(frequencies, times, *, offsets=None, indices=None, order=24,
     return result
 
 
+def _wide_covariance_rows(W, C):
+    """Conservative exponent check for unscaled binary64 quadratic forms."""
+    nonzero = C[C != 0]
+    if not len(nonzero):
+        return np.zeros(len(W), dtype=bool)
+    ce = np.frexp(nonzero)[1]
+    parts = np.stack((W.real, W.imag))
+    exponents = np.frexp(parts)[1]
+    smallest = np.min(np.where(parts != 0, exponents, 10000), axis=(0, 2))
+    largest = np.max(np.where(parts != 0, exponents, -10000), axis=(0, 2))
+    # Leave headroom for matrix products, n^2-term allowances and sqrt.
+    # This is an arithmetic dispatch check, not a statistical tolerance.
+    headroom = 2*(W.shape[1]-1).bit_length()
+    return ((2*smallest + int(ce.min()) < -900) |
+            (2*largest + int(ce.max()) + headroom > 900))
+
+
+def _fraction_sqrt(value):
+    """Round sqrt of a nonnegative rational without first rounding its square."""
+    if not value:
+        return 0.
+    n, d = value.numerator, value.denominator
+    exponent = (n.bit_length()-d.bit_length())//2
+    scaled = Fraction(n, d << (2*exponent)) if exponent >= 0 else Fraction(n << (-2*exponent), d)
+    return math.ldexp(math.sqrt(float(scaled)), exponent)
+
+
+def _wide_covariance_row(row, covariance, tolerance):
+    """Exact products of binary64 inputs; used only outside the fast range.
+
+    Scaling the whole covariance matrix can erase tiny entries before a large
+    operator amplifies them. Rational products also preserve exact correlated
+    cancellations without requiring the variance/allowance to fit in binary64.
+    """
+    real = list(map(Fraction, row.real.tolist()))
+    imag = list(map(Fraction, row.imag.tolist()))
+
+    def bilinear(left, right):
+        total, absolute = Fraction(), Fraction()
+        for a, c_row in zip(left, covariance):
+            if a:
+                for c, b in zip(c_row, right):
+                    if c and b:
+                        term = a*c*b
+                        total += term
+                        absolute += abs(term)
+        return total, absolute
+
+    vr, ar = bilinear(real, real)
+    vi, ai = bilinear(imag, imag)
+    ri, _ = bilinear(real, imag)
+    _require(vr >= -tolerance*ar and vi >= -tolerance*ai,
+             "negative transformed variance")
+    return (_fraction_sqrt(max(0, vr)), _fraction_sqrt(max(0, vi)), float(ri))
+
+
 def statistics(operator, mean, covariance):
     """Transform real sample means with their full covariance-of-the-mean.
 
@@ -124,7 +182,8 @@ def statistics(operator, mean, covariance):
 
     Covariance is checked for symmetry and positive semidefiniteness (an O(n^3)
     eigenvalue check); roundoff-size violations are tolerated, not a physical
-    negative variance. Inputs are not mutated.
+    negative variance. Extreme exponent rows use exact products of the input
+    binary64 entries before rounding outputs. Inputs are not mutated.
     """
     W = np.asarray(operator, dtype=complex)
     m = _real_array(mean, "mean")
@@ -149,27 +208,38 @@ def statistics(operator, mean, covariance):
         symmetric[safe_sum] = (C[safe_sum] + C.T[safe_sum])/2
         symmetric[~safe_sum] = C[~safe_sum]/2 + C.T[~safe_sum]/2
         C = symmetric
+    wide = _wide_covariance_rows(W, C)
+    any_wide = bool(wide.any())
     try:
         with np.errstate(over="raise", invalid="raise"):
             y = W@m
-            vr = np.einsum("ij,ij->i", W.real@C, W.real)
-            vi = np.einsum("ij,ij->i", W.imag@C, W.imag)
-            ri = np.einsum("ij,ij->i", W.real@C, W.imag)
-            # Scale the negative-variance allowance by this observable's
-            # absolute terms, so small physical variances are not zeroed by
-            # an unrelated, fixed absolute tolerance.
+            ordinary = W[~wide] if any_wide else W
+            vr = np.einsum("ij,ij->i", ordinary.real@C, ordinary.real)
+            vi = np.einsum("ij,ij->i", ordinary.imag@C, ordinary.imag)
+            ri = np.einsum("ij,ij->i", ordinary.real@C, ordinary.imag)
+            # The allowance follows this observable's absolute terms, not an
+            # unrelated fixed scale. Extreme rows use exact products below.
             allowances = [tol*np.einsum("ij,ij->i", np.abs(part)@np.abs(C), np.abs(part))
-                          for part in (W.real, W.imag)]
-    except FloatingPointError as error:
+                          for part in (ordinary.real, ordinary.imag)]
+        if not all(np.isfinite(x).all() for x in (y, vr, vi, ri, *allowances)):
+            raise OverflowError("nonfinite transformed statistics")
+        _require(np.all(vr >= -allowances[0]) and np.all(vi >= -allowances[1]),
+                 "negative transformed variance")
+        real_error, imag_error, covariance_ri = (np.zeros(len(W)) for _ in range(3))
+        real_error[~wide] = np.sqrt(np.maximum(0, vr))
+        imag_error[~wide] = np.sqrt(np.maximum(0, vi))
+        covariance_ri[~wide] = ri
+        if any_wide:
+            exact = [list(map(Fraction, row)) for row in C.tolist()]
+            tolerance = Fraction(tol)
+            for i in np.flatnonzero(wide):
+                real_error[i], imag_error[i], covariance_ri[i] = _wide_covariance_row(W[i], exact, tolerance)
+    except (FloatingPointError, OverflowError) as error:
         raise OverflowError("nonfinite transformed statistics") from error
-    if not all(np.isfinite(x).all() for x in (y, vr, vi, ri, *allowances)):
-        raise OverflowError("nonfinite transformed statistics")
-    _require(np.all(vr >= -allowances[0]) and np.all(vi >= -allowances[1]),
-             "negative transformed variance")
     return dict(real=y.real.tolist(), imag=y.imag.tolist(),
-                real_standard_error=np.sqrt(np.maximum(0, vr)).tolist(),
-                imag_standard_error=np.sqrt(np.maximum(0, vi)).tolist(),
-                real_imag_covariance=ri.tolist())
+                real_standard_error=real_error.tolist(),
+                imag_standard_error=imag_error.tolist(),
+                real_imag_covariance=covariance_ri.tolist())
 
 
 def coarser_indices(count, stride):

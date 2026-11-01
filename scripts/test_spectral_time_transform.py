@@ -1,6 +1,8 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 # Copyright (C) 2026 Ian McCulloch
 """Independent analytic integrals and correlated-replicate checks."""
+from decimal import Decimal, localcontext
+import math
 import unittest
 
 import numpy as np
@@ -197,6 +199,74 @@ class SpectralTimeTests(unittest.TestCase):
         C = np.array([[1.7e308, 9e307], [np.nextafter(9e307, np.inf), 1.7e308]])
         result = statistics([[1e-154, -1e-154]], [0, 0], C)
         np.testing.assert_allclose(result['real_standard_error'], [np.sqrt(1.6)], rtol=1e-15)
+
+    def test_standard_errors_do_not_require_representable_variances(self):
+        for coefficient, variance, expected in [(1e-100, 1e-130, 1e-165),
+                                                 (1e-160, 1., 1e-160),
+                                                 (1e-200, 1., 1e-200),
+                                                 (1e200, 1., 1e200)]:
+            with self.subTest(coefficient=coefficient, variance=variance):
+                result = statistics([[coefficient]], [0.], [[variance]])
+                np.testing.assert_allclose(result['real_standard_error'], [expected], rtol=2e-15)
+                self.assertEqual(result['imag_standard_error'], [0.])
+                self.assertEqual(result['real_imag_covariance'], [0.])
+        # Both marginal variances exceed binary64's useful exponent range,
+        # while the two standard errors and their covariance are representable.
+        result = statistics([[complex(1e200, 1e-200)]], [0.], [[1.]])
+        np.testing.assert_allclose(result['real_standard_error'], [1e200], rtol=2e-15)
+        np.testing.assert_allclose(result['imag_standard_error'], [1e-200], rtol=2e-15)
+        np.testing.assert_allclose(result['real_imag_covariance'], [1.], rtol=2e-15)
+
+    def test_covariance_cancellation_does_not_overflow_its_allowance(self):
+        for scale in (1e154, 1e200):
+            result = statistics([[scale, -scale]], [0., 0.], np.ones((2, 2)))
+            self.assertEqual(result['real_standard_error'], [0.])
+            self.assertEqual(result['real_imag_covariance'], [0.])
+        # A global normalization of C followed by rescaling would lose the
+        # first independent contribution, even though it matters to this row.
+        tiny = np.nextafter(0., 1.)
+        result = statistics([[1e160, 1e-150]], [0., 0.], np.diag([tiny, 1e300]))
+        expected = np.hypot(np.sqrt(tiny)*1e160, 1.)
+        np.testing.assert_allclose(result['real_standard_error'], [expected], rtol=2e-15)
+        with self.assertRaises(OverflowError):
+            statistics([[complex(1e200, 1e200)]], [0.], [[1.]])
+        with self.assertRaises(OverflowError):
+            statistics([[1e300]], [0.], [[1e300]])
+        # A negative covariance hidden by the initial global eigenvalue
+        # allowance must still fail the observable's relative variance check.
+        with self.assertRaisesRegex(ValueError, 'negative transformed variance'):
+            statistics([[1e200, 0]], [0., 0.], np.diag([-1e-300, 1e300]))
+        near = np.array([[1., 1.+1e-15], [1.+1e-15, 1.]])
+        result = statistics([[1e200, -1e200]], [0., 0.], near)
+        self.assertEqual(result['real_standard_error'], [0.])
+
+    def test_extreme_covariance_against_decimal_oracle(self):
+        # Full, correlated covariance at very different input scales. This
+        # independent decimal matrix expression checks the fallback's cross
+        # covariance as well as its square-root conversion and range rejection.
+        d = np.array([math.ldexp(1., 500), math.ldexp(1., -500), 1.])
+        C = np.outer(d, d) + np.diag(d*d)
+        with localcontext() as context:
+            context.prec = 2200
+            dc = [[Decimal.from_float(float(v)) for v in row] for row in C]
+            for re in (-900, -400, 0, 400):
+                for im in (-900, -400, 0, 400):
+                    real = np.array([math.ldexp(1., re), -math.ldexp(1., re-2), math.ldexp(1., re-4)])
+                    imag = np.array([-math.ldexp(1., im), math.ldexp(1., im-3), math.ldexp(1., im-5)])
+                    parts = [list(map(Decimal.from_float, values.tolist())) for values in (real, imag)]
+                    forms = [sum((parts[a][i]*dc[i][j]*parts[b][j]
+                                  for i in range(3) for j in range(3)), Decimal(0))
+                             for a, b in ((0, 0), (1, 1), (0, 1))]
+                    expected = [float(forms[0].sqrt()), float(forms[1].sqrt()), float(forms[2])]
+                    with self.subTest(real_exponent=re, imaginary_exponent=im):
+                        if not all(math.isfinite(x) for x in expected):
+                            with self.assertRaises(OverflowError):
+                                statistics([real+1j*imag], np.zeros(3), C)
+                        else:
+                            result = statistics([real+1j*imag], np.zeros(3), C)
+                            actual = [result[key][0] for key in ('real_standard_error',
+                                      'imag_standard_error', 'real_imag_covariance')]
+                            np.testing.assert_allclose(actual, expected, rtol=3e-15, atol=0)
 
     def test_statistics_rejects_invalid_covariance_and_complex_means(self):
         W = np.array([[1, 1j]])
