@@ -3,6 +3,7 @@
 #pragma once
 
 #include <array>
+#include <bethe/detail/xxx_spinon_endpoint.hpp>
 #include <bethe/solver.hpp>
 #include <limits>
 #include <span>
@@ -42,13 +43,20 @@ template <uni20::Real R> class SpinonEnergySurface {
       pi_ = R{4} * uni20::math::atan(one_);
       tolerance_ = R{64} * uni20::numeric_limits<R>::epsilon(one_) * pi_;
       accuracy_ = uni20::math::sqrt(uni20::numeric_limits<R>::epsilon(one_));
+      R const eps = uni20::numeric_limits<R>::epsilon(one_);
+      projection_floor_ = eps * eps;
+      if (projection_floor_ == zero_) projection_floor_ = eps;
+      log_projection_floor_ = uni20::math::log(projection_floor_);
       if ((n_ != 2 && n_ != 4 && n_ != 6) || section < 0 || section >= n_ / 2 || cutoff_ <= zero_ ||
           momentum_ < zero_ || momentum_ >= R{2} * pi_ || omega_ <= zero_)
         throw std::invalid_argument("invalid spinon surface/section/cutoff");
       total_ = momentum_ + R(2 * section) * pi_;
-      lower_ = R{2} * uni20::math::atan(uni20::math::exp(-cutoff_));
-      if (lower_ == zero_) throw std::runtime_error("surface cutoff exceeds exponent range");
-      if (!(zero_ < lower_ && lower_ < pi_ / R{2}))
+      auto const endpoint = SpinonScaledEndpoint<R>::from_depth(cutoff_, pi_, log_projection_floor_);
+      log_lower_ = endpoint.log_distance();
+      auto const projected = endpoint.project(projection_floor_, log_projection_floor_);
+      lower_ = projected.distance;
+      lower_error_ = projected.distance_error;
+      if (!(log_lower_ < uni20::math::log(pi_ / R{2})))
         throw std::runtime_error("surface cutoff unresolved; increase geometry precision");
     }
 
@@ -128,33 +136,37 @@ template <uni20::Real R> class SpinonEnergySurface {
     {
       auto const bits = uni20::numeric_limits<R>::digits(one_);
       auto outside = [&] { return Point{false, {}, zero_, bits}; };
-      if (outside_interval(total_, R(n_) * lower_, R(n_) * pi_ - R(n_) * lower_)) return outside();
+      R tolerance = tolerance_ + R(n_) * lower_error_;
+      if (outside_interval(total_, R(n_) * lower_, R(n_) * pi_ - R(n_) * lower_, tolerance)) return outside();
       R const maximum = R(n_) * pi_ / R{2} * uni20::math::sin(total_ / R(n_));
-      if (omega_ > maximum + tolerance_) return outside();
-      if (uni20::math::abs(omega_ - maximum) <= tolerance_)
+      if (omega_ > maximum + tolerance) return outside();
+      if (uni20::math::abs(omega_ - maximum) <= tolerance)
         throw std::runtime_error("upper surface edge unresolved; requires refinement or a limiting calculation");
 
       bethe::detail::CompensatedSum<R> distances(zero_), energies(zero_);
       int positive = 0;
       for (auto const& b : free_beta)
       {
-        R const e = uni20::math::exp(-uni20::math::abs(b));
-        R const distance = R{2} * uni20::math::atan(e);
+        auto const endpoint = SpinonScaledEndpoint<R>::from_depth(uni20::math::abs(b), pi_, log_projection_floor_);
+        auto const projected = endpoint.project(projection_floor_, log_projection_floor_);
         // The original beta already establishes open cutoff support. Keep the
         // endpoint's integer pi contribution separate from its tiny distance.
         if (b > zero_) ++positive;
-        distances.add(b > zero_ ? -distance : distance);
-        energies.add(pi_ * e / (one_ + e * e));
+        distances.add(b > zero_ ? -projected.distance : projected.distance);
+        energies.add(projected.energy);
+        // Carry the known omission bounds into support and conditioning checks.
+        // pi bounds the change of the pair amplitude under a momentum change.
+        tolerance += pi_ * projected.distance_error + projected.energy_error;
       }
       R const half = (momentum_ + R(2 * section_ - positive) * pi_ - distances.value()) / R{2};
-      if (outside_interval(half, lower_, pi_ - lower_)) return outside();
+      if (outside_interval(half, lower_, pi_ - lower_, tolerance)) return outside();
       R const residual = omega_ - energies.value();
       bool const reflected = half > pi_ / R{2};
       R const center = reflected ? pi_ - half : half;
       R const amplitude = pi_ * uni20::math::sin(center);
       R const max_angle = center - lower_;
       R const minimum = amplitude * uni20::math::cos(max_angle);
-      if (outside_interval(residual, minimum, amplitude)) return outside();
+      if (outside_interval(residual, minimum, amplitude, tolerance)) return outside();
 
       R const discriminant = (amplitude - residual) * (amplitude + residual);
       if (!(discriminant > zero_)) throw Unresolved("unresolved surface discriminant");
@@ -164,13 +176,15 @@ template <uni20::Real R> class SpinonEnergySurface {
       bool const large_reflected = large > pi_ / R{2};
       // pi-(center+theta) = (pi-2*center)+(center-theta).
       R const large_distance = large_reflected ? (pi_ - R{2} * center) + small : large;
-      if (!(small > lower_ && large_distance > lower_)) throw Unresolved("solved momenta lost cutoff resolution");
+      if (!(small > zero_ && large_distance > zero_) || uni20::math::log(small) <= log_lower_ ||
+          uni20::math::log(large_distance) <= log_lower_)
+        throw Unresolved("solved momenta lost cutoff resolution");
 
       // Boundary tests alone do not detect a finite but inaccurate Jacobian.
       // These conservative forward-error indicators include conditioning of
       // the discriminant, atan2 and log(tan(p/2)); they are not interval bounds.
-      R const log_error = tolerance_ * (one_ / (amplitude - residual) + one_ / (amplitude + residual));
-      R const angle_error = tolerance_ * (one_ + (amplitude + uni20::math::abs(residual)) / root);
+      R const log_error = tolerance * (one_ / (amplitude - residual) + one_ / (amplitude + residual));
+      R const angle_error = tolerance * (one_ + (amplitude + uni20::math::abs(residual)) / root);
       R const beta_error = angle_error / std::min(uni20::math::sin(small), uni20::math::sin(large_distance));
       if (!uni20::isfinite(log_error) || !uni20::isfinite(beta_error) || log_error > accuracy_ ||
           beta_error > accuracy_)
@@ -198,14 +212,15 @@ template <uni20::Real R> class SpinonEnergySurface {
       if (!uni20::isfinite(value)) throw std::invalid_argument("nonfinite surface coordinate/control");
       (void)(value * one_);
     }
-    bool outside_interval(R const& x, R const& lo, R const& hi) const
+    bool outside_interval(R const& x, R const& lo, R const& hi, R const& tolerance) const
     {
-      if (x < lo - tolerance_ || x > hi + tolerance_) return true;
-      if (x <= lo + tolerance_ || x >= hi - tolerance_)
+      if (x < lo - tolerance || x > hi + tolerance) return true;
+      if (x <= lo + tolerance || x >= hi - tolerance)
         throw Unresolved("surface boundary unresolved; increase geometry precision");
       return false;
     }
     int n_, section_;
     R cutoff_, momentum_, omega_, zero_, one_, pi_, tolerance_, accuracy_, total_, lower_;
+    R lower_error_, log_lower_, projection_floor_, log_projection_floor_;
 };
 } // namespace bethe::heisenberg::detail
