@@ -210,7 +210,8 @@ outputs and receipts. Regenerate the compact record using
 the summary. Neither its path nor its parent directory is inferred from
 `STORE_DIRECTORY`. To check relocation using temporary copies in host-local
 storage, run
-`scripts/check_xxx_spinon_archive_relocation.py STORE_DIRECTORY --pilot-reference FILE --scratch-directory build_codex`.
+`scripts/check_xxx_spinon_archive_relocation.py STORE_DIRECTORY --pilot-reference FILE --scratch-directory SCRATCH_DIRECTORY`.
+Choose an existing host-local directory for the temporary copies.
 
 For MPFR, `--density-guard-bits B` lets the W4/W6 density use a smaller guard
 precision while retaining the geometry and output precision. It requires sector
