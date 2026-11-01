@@ -49,10 +49,18 @@ def weights(frequencies, times, *, offsets=None, indices=None, order=24,
     t = _real_array(times, "times")
     _require(w.ndim == t.ndim == 1 and len(w) >= 2 and len(t) > 0
              and np.all(w[1:] > w[:-1]), "invalid frequencies or times")
-    ids = np.arange(len(w)) if indices is None else np.asarray(indices)
-    _require(ids.ndim == 1 and np.issubdtype(ids.dtype, np.integer)
-             and len(ids) >= 2 and np.all(ids[1:] > ids[:-1])
-             and ids[0] >= 0 and ids[-1] < len(w), "invalid selected nodes")
+    if indices is None:
+        ids = np.arange(len(w))
+    else:
+        # Preserve original element types: np.asarray([0, True]) would
+        # otherwise erase the Boolean by converting it to integer 1.
+        selected = np.asarray(indices, dtype=object)
+        _require(selected.ndim == 1 and len(selected) >= 2,
+                 "invalid selected nodes")
+        values = [_integer(value, 0, "selected node") for value in selected]
+        _require(all(left < right for left, right in zip(values, values[1:]))
+                 and values[-1] < len(w), "invalid selected nodes")
+        ids = np.asarray(values, dtype=np.intp)
     order = _integer(order, 2, "phase quadrature order")
     energy_power = _integer(energy_power, 0, "energy power")
     if offsets is None:

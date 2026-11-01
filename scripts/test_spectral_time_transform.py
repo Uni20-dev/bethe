@@ -149,10 +149,16 @@ class SpectralTimeTests(unittest.TestCase):
             weights(w, t, window=(1., 1.8))
 
     def test_bad_indices_are_not_silently_rounded(self):
-        for indices in ([0., 1.9], [0., 2.], [False, True], [0, 0], [2, 1],
-                        [-1, 2], [0, 3], [1], [[0, 2]], 1):
+        for indices in ([0., 1.9], [0., 2.], [False, True], [0, True],
+                        [False, 2], (0, np.bool_(True)),
+                        np.array([0, True], dtype=object), [0, 0], [2, 1],
+                        [-1, 2], [0, 3], [0, 2**80], [1], [[0, 2]], 1):
             with self.subTest(indices=indices), self.assertRaises(ValueError):
                 weights([1, 2, 3], [0], indices=indices)
+        expected = weights([1, 2, 3], [0], indices=[0, 2])
+        for indices in (np.array([0, 2], dtype=np.int32),
+                        np.array([0, 2], dtype=np.uint64), (np.int64(0), 2)):
+            np.testing.assert_array_equal(weights([1, 2, 3], [0], indices=indices), expected)
 
     def test_invalid_inputs_and_controls(self):
         for w, t in [([1, 1], [0]), ([2, 1], [0]), ([1, np.inf], [0]),
