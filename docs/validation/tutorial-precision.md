@@ -25,8 +25,8 @@ for the decision procedure and the
   and explain the stable special-case formula; they are not ordinary defaults.
 - Four-spinon refinement uses binary128; the small six-spinon example uses
   native extended80 where available. Their measured comparisons are below.
-  The resolved-slice tutorials need separate checks on their much larger
-  soft domains.
+  The resolved-slice tutorials have [separate recorded checks](#scope-of-the-resolved-slice)
+  on their much larger soft domains.
 
 Most root-solving CSV examples use residual tolerances near a few multiples of
 binary64 epsilon. Those are stopping criteria, not energy-error bounds. The
@@ -175,10 +175,21 @@ The small examples and large-domain resolved slice need separate
 recommendations. Representative [four-spinon controls](four-spinon-slice-calibration-20261031.json)
 and [six-spinon controls](six-spinon-slice-calibration-20261031.json) have been
 checked on both sides of the two-spinon upper edge. They separate arithmetic,
-contour, quadrature/sampling and domain comparisons. The sixteen-frequency
-display calculation is still in progress; its final sampling quality and
-figures remain to be assessed. The measured control changes are not bounds on
-the omitted tails. This inventory does not replace model-specific accuracy
-tests for every parameter in the library.
+contour, quadrature/sampling and domain comparisons. The complete
+[sixteen-frequency comparison](../tutorials/xxx-spinon-slice.md#read-the-reference-comparison)
+retains the independent sector estimates and their partial sums. All six-spinon
+queries are complete, including precision retries; observed sampling standard
+errors range from 2.49% to 6.52%, with fifteen points meeting the initial 5% aim.
+The [reference record](six-spinon-reference-20261102.json) preserves the
+individual errors, influence diagnostics, arithmetic stages and measured costs.
+
+The [smaller installed example](six-spinon-native-retry-tutorial-20261101.json)
+demonstrates the same retry workflow at R=256 in about 68 CPU seconds, or
+20 seconds with four workers on the measured Xeon Gold 6254. It retains its
+15.43% sampling standard error and separate domain limitation. The full
+reference is optional; readers can redraw its compact data without integrations.
+Neither the sampling bars nor the measured control changes bound omitted tails.
+This inventory does not replace model-specific accuracy tests for every
+parameter in the library.
 The [precision guide](../numerical-accuracy.md) gives the decision procedure and
 explains the relative/absolute screen and demonstrated higher-precision case.
