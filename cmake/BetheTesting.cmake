@@ -45,12 +45,28 @@ endif()
 string(REPLACE ";" "\\;" bethe_discovered_test_environment "${bethe_test_environment}")
 
 function(bethe_discover_tests target)
-  cmake_parse_arguments(PARSE_ARGV 1 arg "" "" "LONG_RUNNING_TESTS")
+  cmake_parse_arguments(PARSE_ARGV 1 arg "" "TEST_PREFIX;TIMEOUT" "LONG_RUNNING_TESTS;LABELS")
   if(arg_UNPARSED_ARGUMENTS OR arg_KEYWORDS_MISSING_VALUES)
     message(FATAL_ERROR "Invalid arguments to bethe_discover_tests(${target})")
   endif()
   set_target_properties(${target} PROPERTIES CXX_EXTENSIONS OFF)
   target_link_libraries(${target} PRIVATE GTest::gtest_main)
+  # Optional family metadata uses the same discovery/environment policy.
+  # Existing callers retain their names, labels and timeout defaults.
+  set(discovery_options)
+  set(routine_properties)
+  if(DEFINED arg_TEST_PREFIX)
+    list(APPEND discovery_options TEST_PREFIX "${arg_TEST_PREFIX}")
+  endif()
+  if(arg_LABELS)
+    string(REPLACE ";" "\\;" routine_labels "${arg_LABELS}")
+    list(APPEND routine_properties LABELS "${routine_labels}")
+  endif()
+  set(long_timeout 1800)
+  if(DEFINED arg_TIMEOUT)
+    list(APPEND routine_properties TIMEOUT "${arg_TIMEOUT}")
+    set(long_timeout "${arg_TIMEOUT}")
+  endif()
   # Discovery happens at test time; the directory's configure-time TESTS
   # property does not include these dynamically registered cases.
   # Partition by GoogleTest name before registration, without duplicating cases
@@ -59,21 +75,25 @@ function(bethe_discover_tests target)
   if(arg_LONG_RUNNING_TESTS)
     list(JOIN arg_LONG_RUNNING_TESTS ":" long_filter)
     set(routine_filter "*-${long_filter}")
+    set(long_labels "long-running" ${arg_LABELS})
+    string(REPLACE ";" "\\;" long_labels "${long_labels}")
     gtest_discover_tests(${target}
       DISCOVERY_MODE PRE_TEST
       NO_PRETTY_TYPES
       TEST_FILTER "${long_filter}"
       TEST_LIST ${target}_LONG_RUNNING_TESTS
+      ${discovery_options}
       PROPERTIES
         ENVIRONMENT "${bethe_discovered_test_environment}"
-        LABELS "long-running"
-        TIMEOUT 1800
+        LABELS "${long_labels}"
+        TIMEOUT "${long_timeout}"
     )
   endif()
   gtest_discover_tests(${target}
     DISCOVERY_MODE PRE_TEST
     NO_PRETTY_TYPES
     TEST_FILTER "${routine_filter}"
-    PROPERTIES ENVIRONMENT "${bethe_discovered_test_environment}"
+    ${discovery_options}
+    PROPERTIES ENVIRONMENT "${bethe_discovered_test_environment}" ${routine_properties}
   )
 endfunction()
