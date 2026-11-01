@@ -100,6 +100,10 @@ template <uni20::Real Geometry, uni20::Real Low, uni20::Real High = Low> class T
 
     class Point {
       public:
+        /// Null means interior. Precision-recovery stages compare this with
+        /// the reference Point before accepting a rounded boundary as zero.
+        std::optional<SixSpinonSpectrumStatus> boundary_status() const { return boundary_; }
+
         Observation observation(bethe::UniformSample<5> const& identity, std::stop_token stop = {}) const
         {
           Observation result;
