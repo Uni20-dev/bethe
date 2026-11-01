@@ -1,4 +1,4 @@
-# Reproducing a large-domain six-spinon slice
+# Production reference: a large-domain six-spinon slice
 
 <!-- BEGIN GENERATED PAGE LINK -->
 [Read this page on the documentation site](https://uni20-dev.github.io/bethe/docs/tutorials/xxx-six-spinon-reproduction/)
@@ -7,7 +7,14 @@
 [Six-spinon tutorial](xxx-six-spinon.md) ·
 [Selected-sector options](../xxx-spinon-sectors.md)
 
-This optional recipe specifies sixteen unbroadened frequencies at nominal
+This is a production-scale reference calculation, separate from the hands-on
+[six-spinon tutorial](xxx-six-spinon.md#choose-the-scale-of-calculation).
+For learning the workflow, use that tutorial's sub-second native example or
+its roughly five-minute MPFR example. Regenerate the reference slice only when
+you need fresh numerical data or want to study the production calculation;
+plotting compact reference data does not require rerunning the integrations.
+
+This recipe specifies sixteen unbroadened frequencies at nominal
 $`q=\pi/2`$, with longitudinal normalization, $`J=1`$ and rapidity cutoff
 $`R=1040`$. Each frequency uses 32 independent replicates of 768 draws.
 The fixed sampling budget was chosen from the
@@ -17,23 +24,19 @@ large query exposed two contour failures. The revised contour controls below
 come from [exact replays and additional boundary tests](../validation/six-spinon-contour-recovery-20261031.json),
 with unchanged frequencies, sample counts, seeds and tolerances.
 
-**Production is still in progress.** This recipe records the requested grid
-and controls. The revised $`\omega=2J`$ query is complete, with a 5.94% sampling
-standard error; the other fifteen frequencies remain outstanding. The
+**The complete reference grid is not yet included.** This recipe records the
+requested grid and controls. The committed
 [first-query record](../validation/six-spinon-first-production-20261031.json)
-retains its complete replicate summaries and controls. This is not a
-completed-grid or convergence claim. The grid spans
+retains the complete replicate summaries and controls for the revised
+$`\omega=2J`$ query, with a 5.94% sampling standard error. It is a snapshot
+of that query, not a live progress report or a completed-grid or convergence
+claim. The grid spans
 $`1.6\le\omega/J\le4`$, including both sides of the two-spinon upper edge.
 It does not reach the four- or six-spinon outer upper edges, and it is not a
 grid for evaluating global moments.
 
-## Run the installed program
+## Compute budget
 
-Use an MPFR-enabled [installation](../building.md). The command below expects
-`bethe-xxx-structure-factor-thermo` on `PATH`; from a build directory, replace
-that name with `./bethe-xxx-structure-factor-thermo`.
-
-This is a costly calculation, unlike the small example in the tutorial.
 The first large query used 25.7 CPU hours and 104 minutes of wall time with
 sixteen workers on a Xeon Gold 6254, then failed its contour checks. Its
 successful replacement used 38.0 CPU hours and 143 minutes of wall time with
@@ -45,10 +48,19 @@ grain without changing sample identities or their accumulation order. See the
 [parallel-calculation guide](../parallel-calculations.md#six-spinon-monte-carlo).
 Allow several hours per frequency with 24 workers, and longer with fewer workers.
 This remains a planning estimate from the original executable, not a measured
-runtime for the newer scheduling implementation. The recipe defaults to four
-workers. Set `threads`
-to match the CPUs available to your job, and choose `out` on a filesystem with
-room for the exports and logs. The source tree need not be your working directory.
+runtime for the newer scheduling implementation. The full sixteen-point grid
+therefore belongs in a substantial compute allocation, rather than an
+interactive tutorial session.
+
+## Run the installed program
+
+Use an MPFR-enabled [installation](../building.md). The command below expects
+`bethe-xxx-structure-factor-thermo` on `PATH`; from a build directory, replace
+that name with `./bethe-xxx-structure-factor-thermo`.
+
+The recipe defaults to four workers. Set `threads` to match the CPUs available
+to your job, and choose `out` on a filesystem with room for the exports and
+logs. The source tree need not be your working directory.
 
 ```sh
 (
