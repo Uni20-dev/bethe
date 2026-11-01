@@ -3,6 +3,7 @@
 #pragma once
 
 #include <bethe/xxx_six_spinon_structure_factor.hpp>
+#include <map>
 #include <tuple>
 
 namespace bethe::heisenberg
@@ -25,6 +26,74 @@ template <uni20::Real R, std::size_t Stages> struct SixSpinonPrecisionResult
     std::size_t evaluated_roots = 0, density_attempts = 0;
 };
 
+namespace detail
+{
+inline void add_precision_work(std::size_t& count, std::size_t extra)
+{
+  if (extra > std::numeric_limits<std::size_t>::max() - count)
+    throw std::length_error("precision-recovery work counter overflow");
+  count += extra;
+}
+} // namespace detail
+
+struct SixSpinonPrecisionFailureWork
+{
+    std::size_t attempts = 0, evaluated_roots = 0, density_attempts = 0;
+    SixSpinonPrecisionFailureWork& operator+=(SixSpinonPrecisionFailureWork const& other)
+    {
+      detail::add_precision_work(attempts, other.attempts);
+      detail::add_precision_work(evaluated_roots, other.evaluated_roots);
+      detail::add_precision_work(density_attempts, other.density_attempts);
+      return *this;
+    }
+};
+
+struct SixSpinonPrecisionStageWork
+{
+    using FailureKey = std::tuple<SpinonObservationFailure, std::optional<SpinonRecoveryStatus>,
+                                  std::optional<SpinonDensityFailure>, std::string>;
+    std::size_t attempts = 0, accepted = 0, retried = 0;
+    std::size_t evaluated_roots = 0, density_attempts = 0;
+    // Successful observations allocate no failure entries. A retry means that
+    // a later stage actually started, not merely that one was requested.
+    std::map<FailureKey, SixSpinonPrecisionFailureWork> failures;
+
+    SixSpinonPrecisionStageWork& operator+=(SixSpinonPrecisionStageWork const& other)
+    {
+      detail::add_precision_work(attempts, other.attempts);
+      detail::add_precision_work(accepted, other.accepted);
+      detail::add_precision_work(retried, other.retried);
+      detail::add_precision_work(evaluated_roots, other.evaluated_roots);
+      detail::add_precision_work(density_attempts, other.density_attempts);
+      for (auto const& [key, work] : other.failures)
+        failures[key] += work;
+      return *this;
+    }
+};
+
+/// The inherited counters describe the final physical observation. Summing
+/// stage work includes unsuccessful attempts as well. These records follow
+/// the Monte Carlo engine's retained-sample semantics, not speculative work
+/// discarded after another sample has failed.
+template <std::size_t Stages> struct SixSpinonPrecisionMetadata : SpinonSampleMetadata
+{
+    std::array<SixSpinonPrecisionStageWork, Stages> stages;
+    SixSpinonPrecisionMetadata& operator+=(SixSpinonPrecisionMetadata const& other)
+    {
+      detail::add_precision_work(supported_configurations, other.supported_configurations);
+      detail::add_precision_work(density_attempts, other.density_attempts);
+      if (other.failure != SpinonObservationFailure::none)
+      {
+        failure = other.failure;
+        density_status = other.density_status;
+        density_failure = other.density_failure;
+      }
+      for (std::size_t i = 0; i < Stages; ++i)
+        stages[i] += other.stages[i];
+      return *this;
+    }
+};
+
 /// Recover one physical observation through an explicitly ordered list of
 /// immutable Point objects. Each Point must describe the SAME physical query,
 /// proposal and controls, differing only in its declared precision policy.
@@ -41,6 +110,7 @@ template <uni20::Real R, class... Points> class SixSpinonPrecisionRecovery {
   public:
     static constexpr std::size_t stage_count = sizeof...(Points);
     using Result = SixSpinonPrecisionResult<R, stage_count>;
+    using Metadata = SixSpinonPrecisionMetadata<stage_count>;
 
     SixSpinonPrecisionRecovery(R exemplar, Points... points)
         : exemplar_(std::move(exemplar)), points_(std::move(points)...)
@@ -59,16 +129,40 @@ template <uni20::Real R, class... Points> class SixSpinonPrecisionRecovery {
       return result;
     }
 
+    /// Monte Carlo callback for Point::evaluate_observations_async(). Sampling
+    /// and physical result assembly remain in their existing model/engine layers.
+    [[nodiscard]] bethe::MonteCarloObservation<R, Metadata> operator()(bethe::UniformSample<5> const& identity,
+                                                                       std::stop_token stop = {}) const
+    {
+      auto recovered = observation(identity, stop);
+      auto& final = recovered.observation;
+      bethe::MonteCarloObservation<R, Metadata> result;
+      if (final.values)
+        result.values.emplace(std::make_move_iterator(final.values->begin()),
+                              std::make_move_iterator(final.values->end()));
+      static_cast<SpinonSampleMetadata&>(result.metadata) = {
+          final.supported_roots, final.density_attempts, final.failure, final.density_status, final.density_failure};
+      result.cancelled = final.failure == SpinonObservationFailure::cancelled;
+      result.reason = std::move(final.reason);
+      for (std::size_t i = 0; i < recovered.attempted_stages; ++i)
+      {
+        auto& attempt = recovered.attempts[i];
+        auto& work = result.metadata.stages[i];
+        work.attempts = 1;
+        work.accepted = i + 1 == recovered.attempted_stages && result.values.has_value();
+        work.retried = i + 1 < recovered.attempted_stages;
+        work.evaluated_roots = attempt.supported_roots;
+        work.density_attempts = attempt.density_attempts;
+        if (!work.accepted)
+          work.failures[{attempt.failure, attempt.density_status, attempt.density_failure, std::move(attempt.reason)}] =
+              {1, attempt.supported_roots, attempt.density_attempts};
+      }
+      return result;
+    }
+
   private:
     R exemplar_;
     std::tuple<Points...> points_;
-
-    static void add_work(std::size_t& count, std::size_t extra)
-    {
-      if (extra > std::numeric_limits<std::size_t>::max() - count)
-        throw std::length_error("precision-recovery work counter overflow");
-      count += extra;
-    }
 
     template <class G> static bool retryable(SpinonSpectrumObservation<G> const& value)
     {
@@ -122,8 +216,8 @@ template <uni20::Real R, class... Points> class SixSpinonPrecisionRecovery {
       result.attempts[I] = {value.supported_roots, value.density_attempts, value.failure,
                             value.density_status,  value.density_failure,  value.reason};
       ++result.attempted_stages;
-      add_work(result.evaluated_roots, value.supported_roots);
-      add_work(result.density_attempts, value.density_attempts);
+      detail::add_precision_work(result.evaluated_roots, value.supported_roots);
+      detail::add_precision_work(result.density_attempts, value.density_attempts);
       if constexpr (I + 1 < stage_count)
       {
         if (retryable(value))

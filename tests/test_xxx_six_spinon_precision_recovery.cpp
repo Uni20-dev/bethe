@@ -281,3 +281,90 @@ TEST_F(SixSpinonPrecisionRecovery, RejectsInexactButAcceptsExactNativeSubnormal)
 }
 #endif
 } // namespace
+
+TEST_F(SixSpinonPrecisionRecovery, CallbackRetainsFinalAndPerStageAccounting)
+{
+  a.result = failure<double>(Failure::geometry, 1, 0);
+  b.result = failure<long double>(Failure::density, 2, 1, Status::exhausted);
+  auto callback = model::make_six_spinon_precision_recovery(1.L, a, b, c);
+  auto sample = callback(identity);
+  ASSERT_TRUE(sample.values);
+  EXPECT_EQ((*sample.values)[0], 3.75L);
+  EXPECT_EQ(sample.metadata.supported_configurations, 2u);
+  EXPECT_EQ(sample.metadata.density_attempts, 4u);
+  EXPECT_EQ(sample.metadata.failure, Failure::none);
+  EXPECT_FALSE(sample.cancelled);
+  auto const& stages = sample.metadata.stages;
+  for (auto const& stage : stages)
+    EXPECT_EQ(stage.attempts, 1u);
+  EXPECT_EQ(stages[0].accepted, 0u);
+  EXPECT_EQ(stages[1].accepted, 0u);
+  EXPECT_EQ(stages[2].accepted, 1u);
+  EXPECT_EQ(stages[0].retried, 1u);
+  EXPECT_EQ(stages[1].retried, 1u);
+  EXPECT_EQ(stages[2].retried, 0u);
+  EXPECT_EQ(stages[0].evaluated_roots + stages[1].evaluated_roots + stages[2].evaluated_roots, 5u);
+  EXPECT_EQ(stages[0].density_attempts + stages[1].density_attempts + stages[2].density_attempts, 5u);
+  EXPECT_EQ(stages[0].failures.begin()->first,
+            (model::SixSpinonPrecisionStageWork::FailureKey{Failure::geometry, {}, {}, "controlled failure"}));
+  EXPECT_EQ(stages[1].failures.begin()->first, (model::SixSpinonPrecisionStageWork::FailureKey{
+                                                   Failure::density, Status::exhausted, {}, "controlled failure"}));
+  EXPECT_EQ(stages[0].failures.begin()->second.evaluated_roots, 1u);
+  EXPECT_EQ(stages[1].failures.begin()->second.density_attempts, 1u);
+  EXPECT_TRUE(stages[2].failures.empty());
+  auto aggregate = sample.metadata;
+  aggregate += sample.metadata;
+  EXPECT_EQ(aggregate.supported_configurations, 4u);
+  EXPECT_EQ(aggregate.density_attempts, 8u);
+  EXPECT_EQ(aggregate.stages[0].failures.begin()->second.attempts, 2u);
+  EXPECT_EQ(aggregate.stages[2].accepted, 2u);
+}
+
+TEST_F(SixSpinonPrecisionRecovery, CallbackCancellationDoesNotInventAnAttempt)
+{
+  std::stop_source stop;
+  a.result = failure<double>(Failure::geometry, 1, 0);
+  a.cancel_after = &stop;
+  auto sample = model::make_six_spinon_precision_recovery(1.L, a, b)(identity, stop.get_token());
+  EXPECT_TRUE(sample.cancelled);
+  EXPECT_FALSE(sample.values);
+  EXPECT_EQ(sample.metadata.failure, Failure::cancelled);
+  EXPECT_EQ(sample.metadata.stages[0].attempts, 1u);
+  EXPECT_EQ(sample.metadata.stages[0].retried, 0u);
+  EXPECT_EQ(sample.metadata.stages[1].attempts, 0u);
+  EXPECT_TRUE(sample.metadata.stages[1].failures.empty());
+}
+
+TEST_F(SixSpinonPrecisionRecovery, CallbackWorksWithModelAssembly)
+{
+  if (uni20::numeric_limits<long double>::digits(1.L) <= uni20::numeric_limits<double>::digits(1.)) GTEST_SKIP();
+  using Kind = model::detail::SpinonProposalKind;
+  model::detail::SpinonJointProposal<long double> proposal(8.L, .5L, {{Kind::background, 1.L, 1.L, 1.L}});
+  model::SpinonRecoveryPolicy policy{
+      "1e-5", "0", {{53, uni20::numeric_limits<long double>::digits(1.L), {{{32, 12}, {64, 20}}}}}, 60};
+  model::ThermodynamicSixSpinonStructureFactor<long double, double, long double> spectrum(proposal, policy, 1.L);
+  a.result = failure<double>(Failure::geometry, 1, 0);
+  auto callback = model::make_six_spinon_precision_recovery(1.L, a, b);
+  auto result = spectrum.at(1.5L, 2.L).evaluate_observations_async({1, 1, 123, 8, 52}, callback).get_wait();
+  ASSERT_EQ(result.spectrum.status, model::SixSpinonSpectrumStatus::estimated);
+  EXPECT_EQ(result.spectrum.value, 2.5L);
+  EXPECT_FALSE(result.spectrum.sampling_error); // one replicate has no SE
+  EXPECT_EQ(result.metadata.stages[0].retried, 1u);
+  EXPECT_EQ(result.metadata.stages[1].accepted, 1u);
+  ASSERT_TRUE(result.replicate_metadata[0]);
+  EXPECT_EQ(result.replicate_metadata[0]->stages[0].evaluated_roots, 1u);
+  EXPECT_EQ(result.spectrum.supported_roots, 2u);
+}
+
+TEST(SixSpinonPrecisionMetadata, OverflowCannotWrapReportedWork)
+{
+  model::SixSpinonPrecisionMetadata<1> all, extra;
+  all.supported_configurations = std::numeric_limits<std::size_t>::max();
+  extra.supported_configurations = 1;
+  EXPECT_THROW(all += extra, std::length_error);
+  all = {};
+  extra = {};
+  all.stages[0].attempts = std::numeric_limits<std::size_t>::max();
+  extra.stages[0].attempts = 1;
+  EXPECT_THROW(all += extra, std::length_error);
+}
