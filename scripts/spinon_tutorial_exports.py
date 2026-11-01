@@ -59,6 +59,35 @@ def close(actual, expected, bits, *, scale_floor='1'):
         return abs(a - b) <= Decimal(2) ** (8 - bits) * max(Decimal(scale_floor), abs(a), abs(b))
 
 
+def output_precision_bits(metadata):
+    """Decode printed scalars without treating output bits as every stage's bits.
+
+    Fixed-format archives retain their original geometry/output field. A mixed
+    run declares its ordered recovery stages and uses the output-only label.
+    The stage policy and work records require separate validation by its reader.
+    """
+    fixed_key, mixed_key = 'Geometry and output bits', 'Accumulation and output bits'
+    fixed, mixed = fixed_key in metadata, mixed_key in metadata
+    if fixed == mixed:
+        raise ValueError('Missing or ambiguous output precision')
+    stages = metadata.get('Six-spinon precision stages')
+    if mixed:
+        if not isinstance(stages, str) or '6' not in metadata.get('Selected spinon sectors', '').split(','):
+            raise ValueError('Mixed output precision requires explicit six-spinon stages')
+        names = stages.split(',')
+        allowed = ('fp80', 'fp128', 'reference')
+        if (any(name not in allowed for name in names) or names[-1] != 'reference'
+                or len(set(names)) != len(names)
+                or names != sorted(names, key=allowed.index)):
+            raise ValueError('Invalid six-spinon precision stages')
+    elif stages is not None:
+        raise ValueError('Mixed precision must not label all geometry with output bits')
+    value = metadata[mixed_key if mixed else fixed_key]
+    if not isinstance(value, str) or not re.fullmatch('[1-9][0-9]*', value) or int(value) < 24:
+        raise ValueError('Invalid output precision')
+    return int(value)
+
+
 def read_spectrum(document, *, momentum, exchange='1', expected_metadata=None):
     """Return normalized rows plus complete metadata/summary for a successful run.
 
@@ -77,7 +106,7 @@ def read_spectrum(document, *, momentum, exchange='1', expected_metadata=None):
         expected[key] = value
     if any(metadata.get(key) != value for key, value in expected.items()):
         raise ValueError('Wrong physical convention or numerical controls')
-    bits = int(metadata['Geometry and output bits'])
+    bits = output_precision_bits(metadata)
     if bits < 24 or not close(metadata['Exchange J'], exchange, bits):
         raise ValueError('Wrong exchange or arithmetic precision')
     for key in ('Bethe revision', 'Uni20 revision'):

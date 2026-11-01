@@ -15,9 +15,10 @@ from pathlib import Path
 import re
 
 from plot_xxx_six_spinon_tutorial import sampling_points
-from spinon_tutorial_exports import CONVENTION, decimal, read_spectrum
+from spinon_tutorial_exports import CONVENTION, decimal, output_precision_bits, read_spectrum
 
 SCHEMA = 'bethe-six-spinon-slice-v1'
+RECOVERY_SCHEMA = 'bethe-six-spinon-slice-v2'
 CUTOFF = 'Six-spinon absolute rapidity cutoff'
 SCOPE = 'Finite-domain estimates; sampling SE excludes rapidity-tail and numerical bias'
 
@@ -60,7 +61,8 @@ def match_requested_frequency(value, requested, bits):
 def restored_export(run):
     """Reconstruct only the table envelope, leaving numerical checks shared."""
     tables = {}
-    for name in ('spectrum', 'diagnostics', 'replicates'):
+    names_to_restore = ('spectrum', 'diagnostics', 'replicates') + (('recovery',) if 'recovery' in run else ())
+    for name in names_to_restore:
         rows = run[name]
         names = list(rows[0]) if rows else []
         if any(set(row) != set(names) for row in rows):
@@ -79,7 +81,7 @@ def read_compact_slice(document, *, momentum, exchange='1'):
     rounded export coordinate. A slice has one convention, cutoff and source
     revision. Missing values are explicit records, never survivor means.
     """
-    if document.get('schema') != SCHEMA or document.get('density_convention') != CONVENTION:
+    if document.get('schema') not in (SCHEMA, RECOVERY_SCHEMA) or document.get('density_convention') != CONVENTION:
         raise ValueError('Unknown compact schema or physical convention')
     if (scalar_string(document['momentum']) != decimal(momentum)
             or scalar_string(document['exchange']) != decimal(exchange)
@@ -98,6 +100,8 @@ def read_compact_slice(document, *, momentum, exchange='1'):
     for index, run in enumerate(document['runs']):
         raw_hash = source_hash(run['raw_sha256'])
         meta = run['metadata']
+        if document['schema'] == SCHEMA and ('recovery' in run or 'Six-spinon precision stages' in meta):
+            raise ValueError('Precision-recovery records require compact schema v2')
         if meta['Selected spinon sectors'] != '6' or decimal(meta[CUTOFF]) != cutoff:
             raise ValueError('A compact six-spinon slice must have one sector and cutoff')
         current = (meta['Bethe revision'], meta['Uni20 revision'])
@@ -107,7 +111,7 @@ def read_compact_slice(document, *, momentum, exchange='1'):
         checked = sampling_points(restored_export(run), momentum=momentum, exchange=exchange)
         for point in checked['points']:
             computed_omega = point['omega']
-            omega = match_requested_frequency(computed_omega, frequencies, int(meta['Geometry and output bits']))
+            omega = match_requested_frequency(computed_omega, frequencies, output_precision_bits(meta))
             if omega in by_frequency:
                 raise ValueError('Duplicate frequency; combining runs requires a separate analysis')
             by_frequency[omega] = dict(point, omega=requested_text[omega], computed_omega=computed_omega,
@@ -154,9 +158,13 @@ def compact_slice(raw_exports, *, momentum, frequencies, exchange='1',
         # Numerical controls, source identities and timing summaries remain.
         metadata = dict(data['metadata'])
         metadata.pop('Command', None)
+        tables = ('spectrum', 'diagnostics', 'replicates')
+        if 'recovery' in data:
+            document['schema'] = RECOVERY_SCHEMA
+            tables += ('recovery',)
         document['runs'].append({'raw_sha256': hashlib.sha256(raw).hexdigest(),
                                  'metadata': metadata, 'summary': data['summary'],
-                                 **{key: data[key] for key in ('spectrum', 'diagnostics', 'replicates')}})
+                                 **{key: data[key] for key in tables}})
     read_compact_slice(document, momentum=momentum, exchange=exchange)
     return document
 

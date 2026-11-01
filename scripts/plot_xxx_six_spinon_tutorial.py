@@ -12,7 +12,8 @@ import hashlib
 import json
 from pathlib import Path
 
-from spinon_tutorial_exports import decimal, plotting_float, read_spectrum
+from spinon_tutorial_exports import decimal, output_precision_bits, plotting_float, read_spectrum
+from spinon_recovery_exports import recovery_policy, recovery_records
 
 
 def integer(value, *, positive=False):
@@ -41,7 +42,8 @@ def sampling_points(document, *, momentum, exchange='1', expected_metadata=None)
     meta = data['metadata']
     if '6' not in meta['Selected spinon sectors'].split(','):
         raise ValueError('The export has no six-spinon sector')
-    bits = integer(meta['Geometry and output bits'], positive=True)
+    bits = output_precision_bits(meta)
+    recovery = recovery_records(data)
     count = integer(meta['Six-spinon replicates'], positive=True)
     samples = integer(meta['Samples per replicate'], positive=True)
     if count < 2:
@@ -114,8 +116,15 @@ def sampling_points(document, *, momentum, exchange='1', expected_metadata=None)
                 'density_attempts': attempts, 'replicate_records': groups,
                 'status': spectrum['status'],
             })
-    return {'metadata': data['metadata'], 'summary': data['summary'], 'points': points,
-            'scope': 'Finite-domain estimates; sampling SE excludes rapidity-tail and numerical bias'}
+    result = {'metadata': data['metadata'], 'summary': data['summary'], 'points': points,
+              'scope': 'Finite-domain estimates; sampling SE excludes rapidity-tail and numerical bias'}
+    if recovery is not None:
+        result['recovery_policy'] = recovery['policy']
+        result['recovery_totals'] = recovery['totals']
+        for point in points:
+            point['recovery_records'] = [row for row in recovery['rows']
+                                         if decimal(row['omega']) == decimal(point['omega'])]
+    return result
 
 
 def paired_cutoffs(lower, upper):
@@ -130,11 +139,16 @@ def paired_cutoffs(lower, upper):
     cutoff = 'Six-spinon absolute rapidity cutoff'
     required = ('Bethe revision', 'Uni20 revision', 'Program', 'Channel',
                 'Density convention', 'Exchange J', 'Selected spinon sectors',
-                'Geometry and output bits', 'Samples per replicate',
+                'Samples per replicate',
                 'Six-spinon seed', 'Six-spinon uniform grid bits',
                 'Six-spinon replicates', 'Six-spinon stream identities')
-    prefixes = ('Six-spinon ', 'Density ', 'First density ', 'Second density ')
-    keys = set(required) | {key for key in lm.keys() | um.keys() if key.startswith(prefixes)}
+    if recovery_policy(lm) != recovery_policy(um):
+        raise ValueError('Cutoff comparison requires the same precision recovery policy')
+    prefixes = ('Six-spinon ', 'Density ', 'Reference density ', 'First density ', 'Second density ')
+    precision_keys = {'Geometry and output bits', 'Accumulation and output bits',
+                      'Two/four-spinon geometry bits', 'Recovery seconds per configuration'}
+    keys = set(required) | {key for key in lm.keys() | um.keys()
+                            if key.startswith(prefixes) or key in precision_keys}
     keys.discard(cutoff)
     if any(key not in lm or key not in um or lm[key] != um[key] for key in keys):
         raise ValueError('Cutoff comparison requires common streams, precision, proposal and controls')
@@ -145,7 +159,7 @@ def paired_cutoffs(lower, upper):
         raise ValueError('Cutoff comparison has different frequency grids')
     pairs = []
     with localcontext() as context:
-        context.prec = max(80, integer(lm['Geometry and output bits']) // 3 + 50)
+        context.prec = max(80, output_precision_bits(lm) // 3 + 50)
         for a, b in zip(lower['points'], upper['points']):
             if decimal(a['omega']) != decimal(b['omega']):
                 raise ValueError('Cutoff comparison has different frequency grids')
