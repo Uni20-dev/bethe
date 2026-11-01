@@ -37,9 +37,9 @@ The first two examples have substantial sampling and cutoff uncertainty; they
 teach the method without resolving the full physical response. Their measured
 costs and checks are described below. The reference campaign is a separate,
 production-scale calculation, not a step required to work through this tutorial.
-Its compact results can be plotted without rerunning the integrations; the
-complete reference grid is still being calculated. Timings refer to the linked
-validation records; measure a small query on your machine before budgeting a grid.
+Its complete compact results can be plotted without rerunning the integrations.
+Timings refer to the linked validation records; measure a small query on your
+machine before budgeting a grid.
 
 ## Why sampling needs a physical proposal
 
@@ -375,12 +375,46 @@ upper boundaries are marked when they fall within the requested frequency
 range. A single-point file is useful for checking the renderer, but a physical
 line shape requires a resolved frequency grid.
 
-The separate [production reference recipe](xxx-six-spinon-reproduction.md)
-records the installed-program commands and predetermined streams for the
-sixteen-frequency slice. Regenerating that dataset requires a substantial
-compute budget; it is optional even when using the reference data for plots.
-Its numerical production is still in progress, so the recipe is not a claim
-of completed or converged data.
+## Read the reference spectrum
+
+The reference calculation extends the rapidity domain to $`R=1040`$ and uses
+32 independent replicates at each of sixteen frequencies. The left panel
+shows the density on a linear scale; the logarithmic scale on the right makes
+the weaker high-frequency response visible.
+
+![Unbroadened six-spinon longitudinal spectrum at q=pi/2, with sampling error bars](figures/xxx-six-spinon-slice.svg#gh-light-mode-only)
+![Unbroadened six-spinon longitudinal spectrum at q=pi/2, with sampling error bars](figures/xxx-six-spinon-slice-dark.svg#gh-dark-mode-only)
+
+At this momentum the two-spinon band ends at
+$`\omega_{2,u}/J=\pi/\sqrt{2}\simeq2.2214`$. Six spinons contribute on both
+sides of that boundary. The [combined comparison](xxx-spinon-slice.md) puts
+this curve alongside the two- and four-spinon contributions and their partial
+sums. This frequency window ends at $`\omega/J=4`$, well below the six-spinon
+upper edge; the final plotted point is not a band cutoff.
+
+The symbols are the computed values, with no broadening or interpolation;
+joining lines guide the eye. Bars show the observed sampling standard error,
+which ranges from 2.49--6.52%. 15 of the sixteen points meet the initial 5% sampling target. The
+[validation record](../validation/six-spinon-reference-20261102.json)
+retains the individual errors, influential-observation diagnostics and
+precision-retry counts. These are finite-domain estimates: the bars do not
+include the omitted rapidity tail or certify that rare configurations have
+been adequately sampled.
+
+Redraw either theme directly from the [compact data](data/xxx-six-spinon-slice.json):
+
+```sh
+python3 scripts/plot_xxx_six_spinon_tutorial.py \
+  --compact docs/tutorials/data/xxx-six-spinon-slice.json \
+  --momentum 1.5707963267948966192313216916397514420985846996875529104874722961539082031431045 \
+  --figure six-slice.svg
+```
+
+This command uses the saved estimates and runs no integrations. The optional
+[production recipe](xxx-six-spinon-reproduction.md) gives the installed-program
+commands, predetermined sample streams and measured cost of recalculating
+the full dataset. The smaller examples above are sufficient to learn the
+workflow.
 
 The [six-spinon library interface](../xxx-six-spinon-structure-factor.md)
 provides independent geometry and recovery precision when needed. To obtain

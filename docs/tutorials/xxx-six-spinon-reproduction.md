@@ -7,135 +7,132 @@
 [Six-spinon tutorial](xxx-six-spinon.md) ·
 [Selected-sector options](../xxx-spinon-sectors.md)
 
-This is a production-scale reference calculation, separate from the hands-on
-[six-spinon tutorial](xxx-six-spinon.md#choose-the-scale-of-calculation).
-For learning the workflow, use that tutorial's sub-second native example or
-its roughly five-minute MPFR example. Regenerate the reference slice only when
-you need fresh numerical data or want to study the production calculation;
-plotting compact reference data does not require rerunning the integrations.
+This page reproduces the sixteen-frequency reference slice at $`q=\pi/2`$,
+$`J=1`$, with longitudinal normalization and rapidity cutoff $`R=1040`$.
+The points are unbroadened. They span $`1.6\le\omega/J\le4`$, including both
+sides of the two-spinon upper edge. This display grid does not reach the outer
+four- or six-spinon edges and is not a grid for calculating global moments.
 
-This recipe specifies sixteen unbroadened frequencies at nominal
-$`q=\pi/2`$, with longitudinal normalization, $`J=1`$ and rapidity cutoff
-$`R=1040`$. Each frequency uses 32 independent replicates of 768 draws.
-The fixed sampling budget was chosen from the
-[calibration calculations](../validation/six-spinon-slice-calibration-20261031.json)
-before production; it does not guarantee a particular sampling error. The
-contour controls are checked against [representative configurations and
-boundary tests](../validation/six-spinon-contour-recovery-20261031.json).
-
-**The complete reference grid is not yet included.** This recipe records the
-requested grid and controls. The committed
-[first-query record](../validation/six-spinon-first-production-20261031.json)
-retains the complete replicate summaries and controls for the revised
-$`\omega=2J`$ query, with a 5.94% sampling standard error. It is a snapshot
-of that query, not a live progress report or a completed-grid or convergence
-claim. The grid spans
-$`1.6\le\omega/J\le4`$, including both sides of the two-spinon upper edge.
-It does not reach the four- or six-spinon outer upper edges, and it is not a
-grid for evaluating global moments.
+For a hands-on introduction, use the [small examples](xxx-six-spinon.md) first.
+You can redraw the reference figure immediately from the
+[compact dataset](data/xxx-six-spinon-slice.json); rerunning the integrations is
+optional. The compact file retains the measured values, replicate summaries,
+precision stages, numerical controls, costs and original source identities.
 
 ## Dataset settings and compute budget
 
-The recipe below records the settings used for this dataset, including
-1536-bit geometry and 256/320-bit density comparisons. It is a reproducibility
-record, not a recommendation for the minimum precision of a new calculation.
-A lower-cost production recipe needs complete checked-query validation before
-it can replace these settings.
+The sixteen queries used 30.34 CPU hours and 2.49 wall
+hours in total on a Xeon Gold 6254 with 24 workers. Individual queries took
+3.4--24.3 minutes. These are measured costs of the recorded
+executable, not a runtime guarantee for another machine. Start with one query
+when budgeting a new calculation. The [validation record](../validation/six-spinon-reference-20261102.json)
+retains per-point costs, source revisions, checks and sampling diagnostics.
 
-The saved $`\omega=2J`$ query used 38.0 CPU hours and 143 minutes of wall time
-with 24 workers on a Xeon Gold 6254. Its exact executable identity, controls
-and costs are in the [first-query record](../validation/six-spinon-first-production-20261031.json).
-Do not extrapolate that timing to a different executable or precision policy;
-measure a representative query on your system before allocating the full grid.
-The [development study](../spinon-numerics-development.md) explains how the
-numerical representation and scheduling affect the cost.
+Each frequency has 32 independent replicates. The sample counts below were
+chosen before this campaign, using earlier sampling errors where available.
+They total 1,613,824 draws. The observed relative sampling errors are
+2.49--6.52%; 15 of the sixteen points meet the initial 5% sampling target. These errors describe observed replicate
+scatter, not a bound on rare unsampled configurations or the omitted rapidity
+domain. The [tutorial](xxx-six-spinon.md#read-the-errors-before-increasing-the-grid)
+explains these separate uncertainties.
 
-Current releases split replicates into sample blocks; `--samples-per-task`
-controls the scheduling grain without changing sample identities or their
-accumulation order. Set the worker count to the CPUs available to your job;
-see the [parallel-calculation guide](../parallel-calculations.md#six-spinon-monte-carlo).
+Most observations use native arithmetic. On the recorded x86 build, the
+ordered stage list `fp80,fp128,reference` first attempts extended80 geometry
+with a 53/64-bit density comparison, then binary128 geometry with a 64/113-bit
+comparison. A final MPFR retry uses 1536-bit geometry and a 256/320-bit density
+comparison. Accumulation and output use 1536 bits throughout. Thus the large
+reference precision does not imply that every form factor is evaluated in MPFR.
+
+Every stage uses the same contour controls and target tolerances: 3120/3136
+residue terms, tail orders 52/56, relative tolerance `1e-6`, and zero absolute
+tolerance. A retry repeats the same random draw, including the geometry and
+all supported roots. It does not discard a difficult observation or draw a
+replacement. See [precision retries](xxx-six-spinon.md#retry-difficult-configurations-at-wider-precision)
+for the meaning of the individual checks.
 
 ## Run the installed program
 
-Use an MPFR-enabled [installation](../building.md). The command below expects
-`bethe-xxx-structure-factor-thermo` on `PATH`; from a build directory, replace
-that name with `./bethe-xxx-structure-factor-thermo`.
+Use an [installation](../building.md) with extended80, binary128 and MPFR enabled
+for this stage list. The executable is assumed to be on `PATH`; from a build
+directory, use `./bethe-xxx-structure-factor-thermo`.
 
-The recipe defaults to four workers. Set `threads` to match the CPUs available
-to your job, and choose `out` on a filesystem with room for the exports and
-logs. The source tree need not be your working directory.
+The recipe defaults to four workers. Set `threads` to the CPUs available to your
+job, and place `out` on a filesystem with room for the exports and logs. The
+source tree need not be your working directory. `--samples-per-task 128` is the
+measured choice for the reference machine; scheduling grain does not change
+the sample identities or accumulation order.
 
 ```sh
 (
   set -eu
-  export OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1
+  export OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 MKL_NUM_THREADS=1
   threads=4
   out=six-slice-raw
   mkdir "$out"
   q=1.5707963267948966192313216916397514420985846996875529104874722961539082031431045
   cat > "$out/grid.txt" <<'GRID'
-1.6 7400
-1.65 7401
-1.7 7402
-1.8 7403
-1.95 7404
-2 7405
-2.1 7406
-2.18 7407
-2.215 7408
-2.23 7409
-2.3 7410
-2.5 7411
-2.75 7412
-3 7413
-3.5 7414
-4 7415
+1.6 7400 7936
+1.65 7401 2304
+1.7 7402 3072
+1.8 7403 2048
+1.95 7404 1280
+2 7405 1792
+2.1 7406 1792
+2.18 7407 3584
+2.215 7408 1024
+2.23 7409 1280
+2.3 7410 3840
+2.5 7411 4096
+2.75 7412 4096
+3 7413 4096
+3.5 7414 4096
+4 7415 4096
 GRID
-  while read -r omega seed; do
+  while read -r omega seed samples; do
     bethe-xxx-structure-factor-thermo --sectors 6 \
       --momentum "$q" --omega "$omega" --exchange 1 --channel zz \
       --precision bits-1536 --density-guard-bits 320 \
-      --six-cutoff 1040 --replicates 32 --samples 768 --seed "$seed" \
+      --six-precision-stages fp80,fp128,reference --samples-per-task 128 \
+      --six-cutoff 1040 --replicates 32 --samples "$samples" --seed "$seed" \
       --uniform-bits 52 --six-soft-fraction 0.5 \
       --six-background-weight 0.5 --six-one-pair-weight 0.25 \
       --six-two-pairs-weight 0.25 --six-one-pair-scale 4 \
       --six-one-pair-gap 0.5 --six-two-pairs-scale 8 --six-two-pairs-gap 1 \
       --density-terms 3120 --density-tail-order 52 --density-seconds 60 \
       --density-relative-tolerance 1e-6 --density-absolute-tolerance 0 \
-      --threads "$threads" --diagnostics --replicate-output --quiet \
+      --detail-row-limit 1000000 --threads "$threads" \
+      --diagnostics --replicate-output --quiet \
       --json "$out/w${omega}.json" \
       > "$out/w${omega}.stdout" 2> "$out/w${omega}.stderr"
   done < "$out/grid.txt"
 )
 ```
 
-The new directory prevents accidental overwriting of a previous run. A nonzero
-program exit stops the loop and retains that query's output and logs. Preserve
-failed results and investigate their diagnostics before rerunning the same
-frequency, seed and sample count in a different directory. Do not replace a
-failure by zero or average only successful observations.
+The new directory protects previous output. A nonzero exit stops the loop and
+retains that query's logs. Preserve failed results and investigate the reason
+before rerunning the same input in a different directory. Neither a zero
+placeholder nor an average over successful survivors represents a failed query.
+The detail-row limit permits the worst-case recovery accounting at the largest
+sample count; it does not change numerical precision or tolerances.
 
-The recipe states the proposal parameters explicitly, including defaults, so
-they remain visible when comparing implementations. Geometry uses 1536 bits;
-the density comparisons use 256/320 bits. The contour comparisons use
-3120/3136 residue terms and tail orders 52/56. These controls address distinct
-numerical limitations, as explained in the [precision study](xxx-six-spinon.md#distinguish-contour-failures-from-arithmetic-failures).
-Sampling error still excludes the omitted rapidity domain.
+The proposal weights and scales are explicit, including their defaults. This
+keeps the importance distribution visible when comparing implementations.
+Raising the cutoff, changing that distribution or increasing the sample count
+is a new numerical experiment; it is not required to redraw this dataset.
 
 ## Pack and redraw completed results
 
-Once every frequency has completed, run this from the source directory, with
-`raw_dir` pointing to the calculation directory above. It reads the recorded
-grid, calls the shared validator and packs all requested frequencies. Failed,
-missing or inconsistent exports are errors, so a partial run cannot silently
-become a shorter successful curve.
+Once all sixteen queries complete, run the following from the source directory,
+with `raw_dir` pointing to their output. It reads the declared grid and validates
+every replicate and recovery record. Missing, failed or inconsistent exports
+are errors; an incomplete run cannot silently become a shorter successful curve.
 
 ```python
 from pathlib import Path
 import subprocess
 import sys
 
-raw_dir = Path("six-slice-raw")  # Change this if the calculation ran elsewhere.
+raw_dir = Path("six-slice-raw")
 q = "1.5707963267948966192313216916397514420985846996875529104874722961539082031431045"
 nodes = [line.split()[0] for line in (raw_dir / "grid.txt").read_text().splitlines()]
 command = [sys.executable, "scripts/xxx_six_spinon_tutorial_data.py",
@@ -155,9 +152,9 @@ python3 scripts/plot_xxx_six_spinon_tutorial.py \
   --figure six-slice.svg
 ```
 
-This produces light and dark SVG figures. The compact data retain decimal
-values, source revisions, controls, costs, sampling diagnostics, replicate
-summaries and raw-export hashes. They suffice to redraw and independently
-check the plotted estimates without distributing per-observation payloads.
-Different program versions or machines need not reproduce every last digit;
-compare the physical estimates, numerical checks and observed sampling errors.
+This produces light and dark SVG figures. To redraw the supplied results, use
+`--compact docs/tutorials/data/xxx-six-spinon-slice.json` instead. The compact
+file contains decimal values, sampling and recovery diagnostics, controls and
+raw-export hashes. Per-observation payloads and raw archives are not needed for
+the plot. Different program versions or machines need not reproduce every last
+digit; compare the physical estimates, numerical checks and sampling errors.
