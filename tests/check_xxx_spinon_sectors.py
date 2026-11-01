@@ -125,6 +125,10 @@ if mpfr.upper() in ('ON','TRUE','1'):
          '--precision','bits-384','--four-order','2','--four-cutoff','2','--replicates','3','--samples','8','--seed','42',
          '--density-relative-tolerance','1e-5','--threads','2','--diagnostics','--replicate-output']
     doc=document(six)
+    blocked=document([*six,'--samples-per-task','1'])
+    assert rows(blocked)==rows(doc)
+    assert rows(blocked,'replicates')==rows(doc,'replicates')
+    assert blocked['tables']['spectrum']['metadata']['Maximum samples per Async task']=='1'
     r={row['sector']:row for row in rows(doc)}
     assert all(r[str(n)]['density'] is not None for n in (2,4,6))
     assert Decimal(r['6']['density'])>0

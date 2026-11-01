@@ -380,6 +380,7 @@ template <class R> int run(Arguments const& a, model::StructureFactorOptions<R> 
   cli::DataOutput output(a.output, tables);
   uni20::async::TbbScheduler scheduler(a.threads);
   bethe::ExecutionOptions execution{.scheduler = &scheduler,
+                                    .batch_size = a.controls.samples_per_task,
                                     .max_in_flight = std::max(std::size_t{2}, std::size_t(a.threads) * 2)};
   uni20::run_context context(program_info(), {.invocation = std::vector<std::string>(argv, argv + argc)});
   cli::RunReport report(context, "XXX thermodynamic spinon moments");
@@ -433,6 +434,7 @@ template <class R> int run(Arguments const& a, model::StructureFactorOptions<R> 
     report.field("six_rapidity_cutoff", "Six-spinon absolute rapidity cutoff", p->six_cutoff)
         .field("six_replicates", "Six-spinon replicates", p->sampling.replicates)
         .field("six_samples", "Samples per replicate", p->sampling.samples_per_replicate)
+        .field("six_samples_per_task", "Maximum samples per Async task", a.controls.samples_per_task)
         .field("six_seed", "Six-spinon seed", p->sampling.seed)
         .field("six_uniform_bits", "Uniform grid bits", p->sampling.uniform_bits)
         .field("six_soft_fraction", "Native soft fraction", a.controls.six_soft)

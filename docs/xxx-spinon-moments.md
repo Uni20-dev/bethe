@@ -105,6 +105,10 @@ bethe-xxx-moments-thermo \
   --seed 42 --threads 2 --diagnostics --replicate-output --covariance
 ```
 
+As in the spectrum frontend, `--samples-per-task` (default 16) adjusts Async
+block size independently of the sampling budget. Small blocks expose parallelism
+within replicates; see [parallel calculations](parallel-calculations.md#six-spinon-monte-carlo).
+
 These eight draws are only an execution check. Increase independent work,
 inspect influential observations and change proposal weights at fixed domain.
 Separately extend the rapidity cutoff: a small replicate error does not bound

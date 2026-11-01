@@ -17,6 +17,7 @@ struct Controls
     std::string absolute_tolerance = "0";
     std::string six_soft = "0.5", background_weight = "0.5", one_pair_weight = "0.25", two_pairs_weight = "0.25";
     std::string one_pair_scale = "4", one_pair_gap = "0.5", two_pairs_scale = "8", two_pairs_gap = "1";
+    std::size_t samples_per_task = 16;
     std::size_t order = 8, nodes = 100000, terms = 64, tail_order = 16, detail_rows = 100000;
     std::optional<std::size_t> fine_order;
     std::optional<std::size_t> density_guard_bits;
@@ -77,6 +78,10 @@ inline void add_options(CLI::App& app, Controls& c, bool moments = false)
       ->capture_default_str();
   count_option(app, "--replicates", c.sampling.replicates, "Independent six-spinon replicates")->capture_default_str();
   count_option(app, "--samples", c.sampling.samples_per_replicate, "Configurations per six-spinon replicate")
+      ->capture_default_str();
+  count_option(app, "--samples-per-task", c.samples_per_task,
+               "Maximum six-spinon observations per Async task; scheduling only")
+      ->check(CLI::PositiveNumber)
       ->capture_default_str();
   option(app, "--seed", c.sampling.seed, "Six-spinon reproducible stream seed")->capture_default_str();
   option(app, "--density-relative-tolerance", c.relative_tolerance, "W4/W6 recovery relative tolerance")
@@ -464,6 +469,7 @@ int run_spectrum(Arguments const& a, model::StructureFactorOptions<R> options, I
   std::vector<std::tuple<R, R, model::SpinonSpectrumReplicate<R>>> replicate_rows;
   uni20::async::TbbScheduler scheduler(a.threads);
   bethe::ExecutionOptions execution{.scheduler = &scheduler,
+                                    .batch_size = a.spinons.samples_per_task,
                                     .max_in_flight = std::max(std::size_t{2}, std::size_t(a.threads) * 2)};
   uni20::run_context context(info, {.invocation = std::vector<std::string>(argv, argv + argc)});
   RunReport report(context, "XXX thermodynamic selected spinon contributions");
@@ -504,6 +510,7 @@ int run_spectrum(Arguments const& a, model::StructureFactorOptions<R> options, I
     report.field("six_rapidity_cutoff", "Six-spinon absolute rapidity cutoff", plan->six_cutoff)
         .field("six_replicates", "Six-spinon replicates", a.spinons.sampling.replicates)
         .field("six_samples", "Samples per replicate", a.spinons.sampling.samples_per_replicate)
+        .field("six_samples_per_task", "Maximum samples per Async task", a.spinons.samples_per_task)
         .field("six_seed", "Six-spinon seed", a.spinons.sampling.seed)
         .field("six_streams", "Six-spinon stream identities",
                "first_replicate=grid_index*replicates; distinct streams at each point")

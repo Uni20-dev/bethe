@@ -77,3 +77,45 @@ Each run prints wall/process-CPU timing and writes complete ordered roots,
 diagnostics, spectral lines and reductions using native-precision formatting.
 Timing excludes file serialization. Compare the files before interpreting
 speedup, repeat measurements, and use a quiet machine for performance claims.
+
+## Monte Carlo task granularity
+
+The opt-in `bethe_monte_carlo_benchmark` isolates task granularity with a
+synthetic CPU integrand. It is not a timing of the six-spinon form factor:
+
+```sh
+cmake --build . --target bethe_monte_carlo_benchmark -j2
+# workers, maximum observations per task, replicates, arithmetic iterations
+OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 \
+  ./tests/bethe_monte_carlo_benchmark 3 16 4 20000
+```
+
+Every replicate contains 768 observations. Setting the final argument to zero
+exposes overhead for cheap observations; setting the block size to 768 gives
+one task per replicate. Repeat cases and compare their means and covariance
+before interpreting timing. The benchmark records wall/process CPU time and
+peak simultaneous observations; it does not measure peak memory.
+
+On an i7-12700KF with GCC 13.3, four replicates and three workers, median wall
+time over three trials fell from 0.506 s with the previous replicate-task engine
+to 0.347 s with 16-sample tasks. Process CPU divided by three times wall time
+rose from 68% to 98%. A single replicate reached three simultaneous observations
+instead of one. Cheap observations showed an overhead penalty: roughly 0.78 ms
+for the previous engine, 1.22 ms with blocks of 16, and 4.85 ms with blocks of one
+for all 3,072 draws. These short timings are illustrative, not precise throughput
+predictions. A compiler process also ran elsewhere on the host; no CPU affinity
+was pinned. The [complete records](validation/monte-carlo-sample-tasks-20261101.json)
+retain all repeats, controls and matching numerical results. Full production
+speedup depends on observation costs and ordered-window backpressure.
+
+A separate small physical query used k=pi/2, omega=2, R=8, MPFR384, four
+replicates of 32 draws, and three workers. With the same candidate binary and
+identical spectrum/replicate rows, mean query wall time over two reversed-order
+runs was 11.16 s for one task per replicate, 9.42 s for 16-sample tasks, 13.64 s
+for four-sample tasks, and 21.20 s for one-sample tasks. Query CPU work remained
+26.4–26.9 s. Very small tasks with a six-block ordered window can leave workers
+idle behind expensive observations; tuning must consider admission depth as
+well as task size. The 16-sample default improved this query by about 16%, with
+roughly 95% process-CPU utilization of the three-worker limit. The records
+include complete controls and export hashes; they do not claim a speedup for
+the much larger R=1040 production calculation.

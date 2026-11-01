@@ -54,35 +54,46 @@ void discard_observable_result(uni20::async::Async<Value>& result, uni20::async:
   writer.await_resume()->reset();
 }
 
+struct ObservableIndex
+{
+    std::size_t operator()(std::size_t i) const { return i; }
+};
+
 /// Ordered output requires a different admission policy from unordered/top-K
 /// scanners: uncollected results retain their credits. This is a bounded ring,
 /// not a second thread pool or an unbounded reorder queue.
-template <typename Evaluate> struct ObservableWindow : std::enable_shared_from_this<ObservableWindow<Evaluate>>
+template <typename Evaluate, typename Prepare = ObservableIndex>
+struct ObservableWindow : std::enable_shared_from_this<ObservableWindow<Evaluate, Prepare>>
 {
-    using Result = std::remove_cv_t<std::invoke_result_t<Evaluate&, std::size_t>>;
+    using Input = std::remove_cv_t<std::invoke_result_t<Prepare&, std::size_t>>;
+    static_assert(std::is_object_v<Input> && !std::is_array_v<Input>, "preparation must return an owning input");
+    using Result = std::remove_cv_t<std::invoke_result_t<Evaluate&, Input>>;
     static_assert(std::is_object_v<Result> && !std::is_array_v<Result>,
                   "grid evaluation must return an owning value, not void or a reference");
     using Value = std::optional<Result>;
     using Pending = uni20::async::Async<Value>;
     uni20::async::IAsyncScheduler& scheduler;
+    Prepare prepare;
     Evaluate evaluate;
     ExecutionControl control;
     std::vector<std::unique_ptr<Pending>> slots;
     std::size_t count;
 
-    ObservableWindow(uni20::async::IAsyncScheduler& s, Evaluate e, ExecutionOptions options, std::size_t n)
-        : scheduler(s), evaluate(std::move(e)), control(options.stop), slots(std::min(n, options.max_in_flight)),
-          count(n)
+    ObservableWindow(uni20::async::IAsyncScheduler& s, Evaluate e, ExecutionOptions options, std::size_t n,
+                     Prepare p = {})
+        : scheduler(s), prepare(std::move(p)), evaluate(std::move(e)), control(options.stop),
+          slots(std::min(n, options.max_in_flight)), count(n)
     {}
 
-    static uni20::async::AsyncTask point(std::shared_ptr<ObservableWindow> self, std::size_t i,
+    static uni20::async::AsyncTask point(std::shared_ptr<ObservableWindow> self, std::optional<Input> input,
                                          uni20::async::WriteBuffer<Value> output)
     {
       try
       {
         auto destination = co_await output;
-        destination.emplace(); // explicit empty result when cancelled before entry
-        if (!self->control.stopped()) destination->emplace(std::invoke(self->evaluate, i));
+        ResetObservableValue reset{input}; // release even an unentered input before publishing readiness
+        destination.emplace();             // explicit empty result when cancelled before entry
+        if (!self->control.stopped()) destination->emplace(std::invoke(self->evaluate, std::move(*input)));
       }
       catch (...)
       {
@@ -94,8 +105,9 @@ template <typename Evaluate> struct ObservableWindow : std::enable_shared_from_t
     void start(std::size_t i)
     {
       if (control.stopped()) return;
+      auto input = std::invoke(prepare, i);
       auto pending = std::make_unique<Pending>();
-      auto task = point(this->shared_from_this(), i, pending->write());
+      auto task = point(this->shared_from_this(), std::move(input), pending->write());
       schedule_owned(scheduler, std::move(task));
       slots[i % slots.size()] = std::move(pending); // noexcept, after successful admission
     }
@@ -119,9 +131,9 @@ template <typename Evaluate> struct ObservableWindow : std::enable_shared_from_t
     }
 };
 
-template <typename Evaluate, typename Collect>
-uni20::async::AsyncTask observable_grid_task(std::shared_ptr<ObservableWindow<Evaluate>> window, Collect collect,
-                                             uni20::async::WriteBuffer<std::size_t> output)
+template <typename Evaluate, typename Prepare, typename Collect>
+uni20::async::AsyncTask observable_grid_task(std::shared_ptr<ObservableWindow<Evaluate, Prepare>> window,
+                                             Collect collect, uni20::async::WriteBuffer<std::size_t> output)
 {
   auto destination = co_await output;
   try
@@ -188,6 +200,25 @@ evaluate_observable_grid_async(std::size_t count, Evaluate evaluate, Collect col
 {
   auto& scheduler = execution.continuous_scheduler();
   auto window = std::make_shared<detail::ObservableWindow<Evaluate>>(scheduler, std::move(evaluate), execution, count);
+  uni20::async::Async<std::size_t> result;
+  auto task = detail::observable_grid_task(std::move(window), std::move(collect), result.write());
+  detail::schedule_owned(scheduler, std::move(task));
+  return result;
+}
+
+/// Prepare each owning input serially at admission, then evaluate concurrently.
+/// Preparation and collection run in index order on the scheduler. Their work
+/// should be short; expensive computation belongs in evaluate(input).
+/// Inputs and completed results share the same max_in_flight bound. Preparation
+/// failures drain already admitted work, just like evaluation/collection failures.
+template <typename Prepare, typename Evaluate, typename Collect>
+[[nodiscard]] uni20::async::Async<std::size_t>
+evaluate_prepared_observable_grid_async(std::size_t count, Prepare prepare, Evaluate evaluate, Collect collect,
+                                        ExecutionOptions execution = {})
+{
+  auto& scheduler = execution.continuous_scheduler();
+  using Window = detail::ObservableWindow<Evaluate, Prepare>;
+  auto window = std::make_shared<Window>(scheduler, std::move(evaluate), execution, count, std::move(prepare));
   uni20::async::Async<std::size_t> result;
   auto task = detail::observable_grid_task(std::move(window), std::move(collect), result.write());
   detail::schedule_owned(scheduler, std::move(task));

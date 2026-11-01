@@ -115,6 +115,73 @@ TEST(ObservableGrid, ContinuousAdmissionPastSlowEndOfWindow)
   }
 }
 
+TEST(ObservableGrid, SerialAdmissionOwnsMoveOnlyInputsAndBoundsRetainedPayloads)
+{
+  TbbScheduler scheduler(3);
+  Counts counts;
+  std::size_t prepared = 0, collected = 0;
+  auto pending = bethe::evaluate_prepared_observable_grid_async(
+      1000,
+      [&, owner = std::make_unique<int>(7)](std::size_t i) {
+        EXPECT_EQ(*owner, 7);
+        EXPECT_EQ(i, prepared++);
+        return std::make_unique<Payload>(counts, i);
+      },
+      [](std::unique_ptr<Payload> input) { return input; },
+      [&](std::size_t i, auto value) {
+        EXPECT_EQ(i, collected++);
+        EXPECT_EQ(value->id, i);
+      },
+      {.scheduler = &scheduler, .max_in_flight = 5});
+  EXPECT_EQ(pending.get_wait(scheduler), 1000u);
+  EXPECT_EQ(prepared, 1000u);
+  EXPECT_EQ(collected, 1000u);
+  EXPECT_EQ(counts.live, 0);
+  EXPECT_LE(counts.peak, 5);
+}
+
+TEST(ObservableGrid, AdmissionFailureDrainsAnAlreadyRunningInput)
+{
+  TbbScheduler scheduler(3);
+  Counts counts;
+  std::mutex mutex;
+  std::condition_variable cv;
+  bool entered = false, failed = false, release = false;
+  auto pending = bethe::evaluate_prepared_observable_grid_async(
+      8,
+      [&](std::size_t i) {
+        if (i == 1)
+        {
+          std::unique_lock lock(mutex);
+          if (!cv.wait_for(lock, std::chrono::seconds(5), [&] { return entered; }))
+            throw std::runtime_error("evaluation did not start");
+          failed = true;
+          cv.notify_all();
+          throw std::domain_error("admission failed");
+        }
+        return std::make_unique<Payload>(counts, i);
+      },
+      [&](std::unique_ptr<Payload> input) {
+        std::unique_lock lock(mutex);
+        entered = true;
+        cv.notify_all();
+        if (!cv.wait_for(lock, std::chrono::seconds(5), [&] { return release; }))
+          throw std::runtime_error("release timed out");
+        return input;
+      },
+      [](auto, auto) { ADD_FAILURE() << "failed admission must not collect"; },
+      {.scheduler = &scheduler, .max_in_flight = 2});
+  {
+    std::unique_lock lock(mutex);
+    EXPECT_TRUE(cv.wait_for(lock, std::chrono::seconds(5), [&] { return failed; }));
+    EXPECT_FALSE(pending.read().await_ready());
+    release = true;
+    cv.notify_all();
+  }
+  EXPECT_THROW(pending.get_wait(scheduler), std::domain_error);
+  EXPECT_EQ(counts.live, 0);
+}
+
 TEST(ObservableGrid, SynchronousRefillsBeforePreviousWindowCompletes)
 {
   struct Recording : DebugScheduler

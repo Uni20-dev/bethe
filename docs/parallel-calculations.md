@@ -97,6 +97,20 @@ covers the entire level grid including output. One worker, a single level and
 the analytic free point use direct serial evaluation; see
 [sine-Gordon excitations](sine-gordon-excitations.md).
 
+## Six-spinon Monte Carlo
+
+For selected six-spinon spectra and moments, `--threads N` shares the scheduler
+across blocks of observations within each replicate. `--samples-per-task B`
+(default 16) controls block size without changing the samples or statistical
+replicates. One replicate can therefore occupy several workers; there is no
+wait for a whole set of replicates before more work is admitted.
+
+Use small blocks for expensive, variable-cost observations, and larger blocks
+for cheap kernels. The apps admit up to twice the requested concurrency in
+blocks. Ordered accumulation preserves arithmetic across block sizes, while
+bounding retained observations; a slow early block can still temporarily
+hold up admission. See the [Monte Carlo execution guide](monte-carlo.md).
+
 ## Other frontend scans
 
 `bethe-kondo-response` can evaluate a field scan concurrently; `bethe-potts-pbc`
