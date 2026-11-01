@@ -4,10 +4,52 @@ This validates the record and exact source identities, not the scientific
 sufficiency of its cited evidence. It never fetches or executes that evidence.
 Without a compatibility record, combining different sources remains an error.
 """
+from decimal import Decimal, InvalidOperation
 import re
 
 SCHEMA = 'bethe-spinon-source-compatibility-v1'
 SOURCE_KEYS = ('Bethe revision', 'Uni20 revision')
+PHYSICAL_KEYS = ('Program', 'Hamiltonian', 'Family', 'Channel', 'Exchange J', 'Density convention')
+
+
+def physical_identity(metadata):
+    """Require the physical identity, independently of source/numerical controls.
+
+    Exchange is compared numerically; descriptive fields must agree exactly.
+    This compares declared physics, not the correctness of a calculation.
+    """
+    if not isinstance(metadata, dict):
+        raise ValueError('Expected physical metadata')
+    identity = []
+    for key in PHYSICAL_KEYS:
+        value = metadata.get(key)
+        if not isinstance(value, str) or not value.strip():
+            raise ValueError(f'Missing or invalid physical identity field: {key}')
+        if key == 'Exchange J':
+            try:
+                value = Decimal(value)
+            except InvalidOperation as error:
+                raise ValueError('Invalid physical identity field: Exchange J') from error
+            if not value.is_finite() or value <= 0:
+                raise ValueError('Invalid physical identity field: Exchange J')
+        identity.append(value)
+    return tuple(identity)
+
+
+def validate_physics(metadata):
+    """Require one physical identity, including declared unavailable cohorts."""
+    reference = None
+    for item in metadata:
+        identity = physical_identity(item)
+        if reference is None:
+            reference = identity
+        elif identity != reference:
+            fields = ', '.join(key for key, actual, expected in zip(PHYSICAL_KEYS, identity, reference)
+                               if actual != expected)
+            raise ValueError(f'Cannot combine different physical identities: {fields}')
+    if reference is None:
+        raise ValueError('No physical identities to validate')
+    return reference
 
 
 def source_identity(metadata):
