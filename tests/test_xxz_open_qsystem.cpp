@@ -108,11 +108,31 @@ TYPED_TEST(OpenQSystem, InvalidInputsBudgetsAndAdmissibility)
     EXPECT_EQ(state.iterations, budget);
     EXPECT_EQ(state.residual_norm, qs::System<R>(4, 2, R{3} / R{2}).evaluate(state.coefficients).norm);
   }
-  auto const strict =
-      qs::solve<R>(4, R{3} / R{2}, seed,
-                   {.residual_tolerance = uni20::numeric_limits<R>::epsilon() * uni20::numeric_limits<R>::epsilon(),
-                    .max_iterations = 20});
-  EXPECT_FALSE(strict.converged);
+  R const eps = uni20::numeric_limits<R>::epsilon(), tolerance = eps * eps;
+  auto const strict = qs::solve<R>(4, R{3} / R{2}, seed,
+                                  {.residual_tolerance = tolerance, .max_iterations = 20});
+  auto const fresh = qs::System<R>(4, 2, R{3} / R{2}).evaluate(strict.coefficients);
+  EXPECT_EQ(strict.residual_norm, fresh.norm);
+  // A coefficient residual can round to zero even at this tolerance. Acceptance
+  // must still satisfy the physical checks; tight tolerance alone cannot force
+  // failure or certify an exact-arithmetic solution.
+  if (strict.converged)
+  {
+    EXPECT_EQ(strict.status, qs::Status::converged);
+    EXPECT_LE(fresh.norm, tolerance);
+    EXPECT_TRUE(uni20::isfinite(strict.bethe_residual));
+    EXPECT_TRUE(uni20::isfinite(strict.bethe_residual_bound));
+    EXPECT_LE(strict.bethe_residual, strict.bethe_residual_bound);
+    ASSERT_TRUE(strict.energy);
+    R const delta = R{3} / R{2};
+    EXPECT_REAL_NEAR(*strict.energy, -R{3} * delta / R{4} + std::sqrt(delta * delta + R{2}) / R{2},
+                     R{8192} * eps);
+  }
+  else if (fresh.norm > tolerance)
+    EXPECT_TRUE(strict.status == qs::Status::iteration_limit || strict.status == qs::Status::singular_jacobian ||
+                strict.status == qs::Status::stalled);
+  else
+    EXPECT_TRUE(strict.status == qs::Status::unresolved_roots || strict.status == qs::Status::inadmissible);
   auto const loose = qs::solve<R>(4, R{3} / R{2}, std::vector<R>{R{0}}, {.residual_tolerance = R{1}});
   EXPECT_FALSE(loose.converged); // Coefficient tolerance cannot bypass physical validation.
   EXPECT_EQ(loose.status, qs::Status::inadmissible);
