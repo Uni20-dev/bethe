@@ -28,6 +28,7 @@ def main():
         "2.0857356187851404880309779322375079570900382654030915686633279793820126035814552563203616916129861034106042386768200734652"
     )
     observations = []
+    targets = {}
     for precision in args.precision:
         for repeat in range(args.repeats):
             for name in (("before", "after") if repeat % 2 == 0 else ("after", "before")):
@@ -52,12 +53,17 @@ def main():
                 with localcontext() as context:
                     context.prec = 160
                     tolerance = Decimal(table["metadata"]["Counting tolerance"])
+                    reported_bits = int(table["metadata"]["Working precision (bits)"])
+                    target = (reported_bits, tolerance)
+                    if targets.setdefault(precision, target) != target:
+                        raise ValueError(f"{precision}: before/after precision or counting tolerance differs")
                     residual = sum(Decimal(row[k]) for k in ("residual", "quadrature_error", "tail_bound"))
                     error = abs(Decimal(row["energy"]) - reference)
                     if residual > tolerance or error > tolerance:
                         raise RuntimeError(f"numerical target missed: residual={residual}, energy error={error}")
                 observations.append({
-                    "executable": name, "precision": precision, "repeat": repeat + 1,
+                    "executable": name, "precision": precision, "working_precision_bits": reported_bits,
+                    "repeat": repeat + 1,
                     "iterations": int(row["iterations"]), "phase_evaluations": int(row["evaluations"]),
                     "grid_cpu_seconds": float(table["summary"]["CPU time"].removesuffix(" s")),
                     "process_cpu_seconds": float(table["summary"]["Run CPU seconds"]),
