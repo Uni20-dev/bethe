@@ -158,3 +158,24 @@ summaries and raw-export hashes. They suffice to redraw and independently
 check the plotted estimates without distributing per-observation payloads.
 Different program versions or machines need not reproduce every last digit;
 compare the physical estimates, numerical checks and observed sampling errors.
+
+### Combining reviewed executable versions
+
+The ordinary compact format requires one exact Bethe/Uni20 revision pair.
+Changing executables partway through a calculation therefore creates separate
+data groups. An explicit *slice set* can assemble those groups after their
+compatibility has been reviewed. Each group retains its original compact file,
+source and binary identities, settings, seed assignments and local run indices.
+Their frequency grids must partition the requested grid exactly; the reader
+rejects overlaps, undeclared gaps and changes to the recorded controls.
+
+The [scheduler comparison](../validation/six-spinon-scheduler-controls-20261101.json)
+retains a small example of the evidence for such a change. Whole-replicate tasks,
+16-sample tasks and 7-sample tasks produced identical numerical tables for
+128 matched draws at the production precisions, including 40 supported roots.
+The 7-sample case also checks a partially filled final task. This establishes
+agreement on those samples, not convergence or a production-speed prediction.
+
+The same plotting command accepts either a single-source compact file or a
+reviewed slice set. The latter keeps its compatibility record and both source
+groups visible; it never silently treats different revisions as identical.
