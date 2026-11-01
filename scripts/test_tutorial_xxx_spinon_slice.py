@@ -70,6 +70,53 @@ def cohort_compact_fixture():
 
 
 class CombinedSourceCohorts(unittest.TestCase):
+    def test_executable_permission_does_not_allow_a_different_model(self):
+        from xxx_six_spinon_tutorial_data import read_slice
+        for key, value in [('Hamiltonian', 'XXZ Delta=2'), ('Family', 'another model'),
+                           ('Program', 'another-model-solver')]:
+            with self.subTest(key=key):
+                four, document = cohort_inputs()
+                six = read_slice(document, momentum='1.5')
+                four[0]['metadata'][key] = value
+                with self.assertRaisesRegex(ValueError, key):
+                    tutorial.join_points(four, six['points'], compatibility=six['source_compatibility'])
+
+    def test_missing_physical_identity_cannot_be_defaulted(self):
+        from xxx_six_spinon_tutorial_data import read_slice
+        for key in ('Hamiltonian', 'Family', 'Program'):
+            with self.subTest(key=key):
+                four, document = cohort_inputs()
+                six = read_slice(document, momentum='1.5')
+                four[0]['metadata'].pop(key, None)
+                with self.assertRaisesRegex(ValueError, key):
+                    tutorial.join_points(four, six['points'], compatibility=six['source_compatibility'])
+
+    def test_all_unavailable_six_points_still_bind_physics_against_four(self):
+        from xxx_six_spinon_tutorial_data import read_slice
+        for key, value in [('Hamiltonian', 'XXZ Delta=2'), ('Family', 'another model')]:
+            with self.subTest(key=key):
+                four, document = cohort_inputs()
+                for cohort in document['cohorts']:
+                    cohort['slice']['runs'] = []
+                    cohort['slice']['unavailable'] = [
+                        {'omega': omega, 'status': 'unavailable', 'reason': 'not yet calculated',
+                         'raw_sha256': None} for omega in cohort['slice']['frequencies']]
+                    document['source_compatibility']['cohort_controls'][cohort['id']]['metadata'][key] = value
+                with self.assertRaisesRegex(ValueError, key):
+                    six = read_slice(document, momentum='1.5')
+                    tutorial.join_points(four, six['points'], compatibility=six['source_compatibility'])
+
+    def test_physical_identity_does_not_equate_sector_numerical_controls(self):
+        from xxx_six_spinon_tutorial_data import read_slice
+        four, document = cohort_inputs()
+        six = read_slice(document, momentum='1.5')
+        four[0]['metadata']['Geometry and output bits'] = '192'
+        four[0]['metadata']['Density relative tolerance'] = '1e-8'
+        four[0]['metadata']['Exchange J'] = '1.0'
+        points = tutorial.join_points(four, six['points'], compatibility=six['source_compatibility'])
+        self.assertEqual([Decimal(point['s2_plus_s4_plus_s6']) for point in points],
+                         [Decimal('2.625'), Decimal('2.625')])
+
     def test_collect_retains_full_compatibility_and_cohort_local_run_indices(self):
         four, document = cohort_inputs()
         original = deepcopy(document)
@@ -119,7 +166,7 @@ class CombinedSourceCohorts(unittest.TestCase):
                 four, document = cohort_inputs()
                 six = read_slice(document, momentum='1.5')
                 six['points'][1]['metadata'][key] = value
-                with self.assertRaisesRegex(ValueError, 'physical conventions'):
+                with self.assertRaisesRegex(ValueError, key):
                     tutorial.join_points(four, six['points'], compatibility=six['source_compatibility'])
         four, document = cohort_inputs()
         six = read_slice(document, momentum='1.5')

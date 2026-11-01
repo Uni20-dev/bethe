@@ -31,15 +31,17 @@ def join_points(four_runs, six_points, *, compatibility=None):
     Different executable cohorts require explicit sector-scoped source evidence.
     """
     from xxx_six_spinon_tutorial_data import match_requested_frequency
-    from spinon_tutorial_provenance import validate_sources
+    from spinon_tutorial_provenance import validate_physics, validate_sources
     if not four_runs or not six_points:
         raise ValueError('Both checked two/four and six inputs are required')
     sources = four_runs + [p for p in six_points if p['s6'] is not None]
-    meta = sources[0]['metadata']
     validate_sources((run['metadata'] for run in sources), compatibility)
-    identity = ('Density convention', 'Channel', 'Exchange J')
-    if any(run['metadata'][key] != meta[key] for run in sources for key in identity):
-        raise ValueError('Cannot combine different physical conventions')
+    metadata = [run['metadata'] for run in sources]
+    if compatibility is not None:
+        # Missing six-sector values still declare their physical model. Source
+        # compatibility permits executable changes, never different physics.
+        metadata.extend(contract['metadata'] for contract in compatibility['cohort_controls'].values())
+    validate_physics(metadata)
     four, six = {}, {}
     for point in six_points:
         omega = decimal(point['omega'])
