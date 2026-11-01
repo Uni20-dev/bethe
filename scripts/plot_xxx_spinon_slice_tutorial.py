@@ -219,15 +219,16 @@ def main():
     parser.add_argument('--data', type=Path, default=DATA)
     parser.add_argument('--figure', type=Path, default=FIGURE)
     parser.add_argument('--momentum', default=MOMENTUM)
-    parser.add_argument('--check', action='store_true', help='Check data without plotting')
+    parser.add_argument('--check', action='store_true', help='Validate inputs without writing data or figures')
     args = parser.parse_args()
     if bool(args.four_json) != bool(args.six_data):
         parser.error('Import both --four-json and --six-data together')
     if args.four_json:
         data = collect(args.four_json, json.loads(args.six_data.read_text()), momentum=args.momentum)
-        with args.data.open('x') as output:
-            json.dump(data, output, indent=2)
-            output.write('\n')
+        if not args.check:
+            with args.data.open('x') as output:
+                json.dump(data, output, indent=2)
+                output.write('\n')
     else:
         data = validate(json.loads(args.data.read_text()))
     if not args.check:

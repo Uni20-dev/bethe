@@ -2,6 +2,9 @@
 from copy import deepcopy
 from decimal import Decimal, localcontext
 from importlib.util import find_spec
+from io import StringIO
+from pathlib import Path
+from tempfile import TemporaryDirectory
 import unittest
 import json
 import math
@@ -271,6 +274,35 @@ class SpinonSlice(unittest.TestCase):
         command = tutorial.provenance(four, b'fixture')['command']
         self.assertEqual(command[0], 'bethe-xxx-structure-factor-thermo')
         self.assertEqual(command[-1], 'run.json')
+
+    def test_check_import_validates_without_creating_or_overwriting_files(self):
+        for existing in (False, True):
+            for valid in (False, True):
+                with self.subTest(existing=existing, valid=valid), TemporaryDirectory() as directory:
+                    directory = Path(directory)
+                    raw, six, output = [directory / name for name in ('four.json', 'six.json', 'joined.json')]
+                    document = fixture()
+                    document['tables']['spectrum']['metadata']['Command'] = 'bethe-xxx-structure-factor-thermo --sectors 2,4'
+                    if not valid:
+                        document['tables']['spectrum']['rows'][-1][3] = '0.7'
+                    raw.write_text(json.dumps(document))
+                    six.write_text(json.dumps(six_document()))
+                    if existing:
+                        output.write_text('Existing output must remain untouched.\n')
+                    before = {p.name: p.read_bytes() for p in directory.iterdir()}
+                    command = ['plot_xxx_spinon_slice_tutorial.py', '--four-json', str(raw),
+                               '--six-data', str(six), '--data', str(output),
+                               '--figure', str(directory / 'slice.svg'), '--momentum', '1.5', '--check']
+                    with patch('sys.argv', command), patch('sys.stdout', new_callable=StringIO) as stdout, \
+                            patch.object(tutorial, 'plot') as plot:
+                        if valid:
+                            tutorial.main()
+                            self.assertIn('Checked 1 matched frequencies', stdout.getvalue())
+                        else:
+                            with self.assertRaisesRegex(ValueError, 'Partial sum'):
+                                tutorial.main()
+                        plot.assert_not_called()
+                    self.assertEqual({p.name: p.read_bytes() for p in directory.iterdir()}, before)
 
 
 if __name__ == '__main__':
