@@ -23,6 +23,28 @@ and the unbroadened density $`S^{zz}(q,\omega)`$. Its frequency moments use
 $`d\omega/(2\pi)`$. Bethe supplies the physical normalization of every sector;
 no plotting multiplier or adjustment to a sum rule is needed.
 
+## Choose a learning or reference workflow
+
+For a hands-on calculation, start with the [two-spinon density](xxx-structure-factor-thermo.md),
+[small four-spinon example](xxx-four-spinon.md), or
+[six-spinon sampling examples](xxx-six-spinon.md). These introduce the commands,
+normalization and diagnostics at modest cost. The small four- and six-spinon
+examples use restricted integration domains; they are not converged replacements
+for the reference spectra.
+
+This comparison uses large-domain reference calculations. Once a checked
+compact record is available, [redrawing it](xxx-spinon-slice-reproduction.md#redraw-saved-results)
+requires only the plotting tools; it does not run any integrations. Regenerating
+the reference is a separate, optional production task. The selected two/four
+queries used [14.6 CPU hours](xxx-spinon-slice-reproduction.md#recorded-production-cost),
+and the first successful six-spinon frequency alone used 38.0 CPU hours. The
+reproduction pages retain the measured costs and controls.
+
+**The full sixteen-frequency reference dataset is still being calculated.**
+Its checked compact data and comparison figures will be added after validation.
+The small sector tutorials are available now; running the production recipes
+is not a prerequisite for following them.
+
 ## What the comparison tests
 
 At this momentum the two-spinon continuum lies between
@@ -64,11 +86,13 @@ If six-spinon results are missing, the figure states how many requested
 frequencies are unavailable. Both six-inclusive curves retain those gaps;
 an entirely unavailable sector is labelled as such in the legend.
 
-## Establish the controls before drawing a curve
+## Checks behind the reference calculation
 
-Start at a few interior frequencies on both sides of the two-spinon upper
-edge. Avoid an exactly singular threshold as a finite plotting sample. At each
-anchor, check the individual contributions before requesting a dense grid.
+Before generating new reference data, start at a few interior frequencies on
+both sides of the two-spinon upper edge. Avoid an exactly singular threshold
+as a finite plotting sample. At each anchor, check the individual contributions
+before requesting a dense grid. These checks belong to reference generation;
+reading or redrawing an existing compact record does not repeat them.
 
 - For four spinons, increase quadrature order at a fixed soft domain, then
   extend the domain at fixed order. The [refinement tutorial](xxx-four-spinon.md)

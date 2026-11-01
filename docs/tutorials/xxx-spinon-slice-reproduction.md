@@ -1,4 +1,4 @@
-# Reproducing the two-, four- and six-spinon comparison
+# Regenerating the two-, four- and six-spinon reference data
 
 <!-- BEGIN GENERATED PAGE LINK -->
 [Read this page on the documentation site](https://uni20-dev.github.io/bethe/docs/tutorials/xxx-spinon-slice-reproduction/)
@@ -8,8 +8,11 @@
 [Six-spinon reproduction](xxx-six-spinon-reproduction.md) ·
 [Selected-sector options](../xxx-spinon-sectors.md)
 
-This optional calculation produces two- and four-spinon spectra on the same
-sixteen-frequency grid as the six-spinon recipe. We use $`q=\pi/2`$, $`J=1`$
+This optional production recipe generates two- and four-spinon reference
+spectra on the same sixteen-frequency grid as the six-spinon recipe. It is a
+separate computational project, not a hands-on tutorial prerequisite. To learn
+the commands, use the [small four-spinon example](xxx-four-spinon.md) and
+[six-spinon sampling examples](xxx-six-spinon.md). We use $`q=\pi/2`$, $`J=1`$
 and longitudinal normalization throughout. No normalization multiplier is
 applied when the sectors are combined.
 
@@ -18,6 +21,49 @@ in progress.** The recipe records the requested grid and controls. Completing
 these queries does not bound the omitted integration domains. The frequency range
 $`1.6\le\omega/J\le4`$ samples both sides of the two-spinon upper edge. It
 omits the outer four- and six-spinon upper edges and is not a moment grid.
+
+## Redraw saved results
+
+Once you have a checked compact record named `spinon-slice.json`, run the
+following from the source checkout with the
+[plotting dependencies](contributing.md#plotting-environment) installed:
+
+```sh
+python3 scripts/plot_xxx_spinon_slice_tutorial.py \
+  --data spinon-slice.json --figure spinon-slice.svg
+```
+
+This reads the saved values and sampling errors and writes light/dark figures;
+it does not call a solver or perform an integration. The full reference record
+is still in preparation. The sections below describe how to regenerate it,
+not work required for a redraw.
+
+## Recorded production cost
+
+The [production record](../validation/four-spinon-slice-production-20261031.json)
+retains each frequency's command, raw-export hash, executable hash, CPU model,
+worker count and timings. The sixteen selected two/four queries used
+52,478.8 CPU seconds, or about 14.6 CPU hours. This excludes the calibration
+studies and all six-spinon work. Thirteen queries ran on an Intel Core
+i7-12700KF and three on a Xeon Gold 6254; their differing queries and controls
+do not constitute a hardware benchmark.
+
+The measurements used four workers except at $`\omega/J=2.3,3,4`$, where
+two were used. The recipe below uses four consistently. CPU time sums work
+across threads; wall time measures how long a query takes. The record separates
+application CPU and elapsed time from the external driver's wall time. Its
+wall-time totals sum individual queries, some of which overlapped, so they
+are not the elapsed duration of the campaign. The source revisions and
+executable hashes identify the original calculations; later code improvements
+do not alter these historical measurements.
+
+Six-spinon reference generation is substantially more expensive. The first
+successful large-domain frequency used 38.0 CPU hours and 143 minutes of wall
+time with 24 workers on a Xeon Gold 6254. The
+[six-spinon production recipe](xxx-six-spinon-reproduction.md) records its
+controls and scheduling caveats; its full sixteen-frequency campaign remains
+in progress. These costs are historical measurements, not timings of every
+current implementation or a guarantee for other parameters.
 
 ## Calculate the two- and four-spinon sectors
 
@@ -93,25 +139,6 @@ the loop and leaves its output and logs for inspection. Keep it, investigate
 the failure, and rerun the complete query in another directory. Do not drop
 the frequency or replace a failed sector by zero.
 
-## Recorded production cost
-
-The [production record](../validation/four-spinon-slice-production-20261031.json)
-retains each frequency's command, raw-export hash, executable hash, CPU model,
-worker count and timings. The sixteen selected two/four queries used
-52,478.8 CPU seconds, or about 14.6 CPU hours. This excludes the calibration
-studies and all six-spinon work. Thirteen queries ran on an Intel Core
-i7-12700KF and three on a Xeon Gold 6254; their differing queries and controls
-do not constitute a hardware benchmark.
-
-The measurements used four workers except at $`\omega/J=2.3,3,4`$, where
-two were used. The recipe above uses four consistently. CPU time sums work
-across threads; wall time measures how long a query takes. The record separates
-application CPU and elapsed time from the external driver's wall time. Its
-wall-time totals sum individual queries, some of which overlapped, so they
-are not the elapsed duration of the campaign. The source revisions and
-executable hashes identify the original calculations; later code improvements
-do not alter these historical measurements.
-
 ## Calculate six spinons and combine the results
 
 Run the [six-spinon recipe](xxx-six-spinon-reproduction.md), which supplies
@@ -141,13 +168,8 @@ subprocess.run(command, check=True)
 ```
 
 The plotting dependencies are listed in `docs/tutorials/requirements.txt`.
-The command writes a compact record and light/dark SVG figures. Later redraws
-use only that record:
-
-```sh
-python3 scripts/plot_xxx_spinon_slice_tutorial.py \
-  --data spinon-slice.json --figure spinon-slice.svg
-```
+The command writes a checked compact record and light/dark SVG figures.
+Subsequent [redraws](#redraw-saved-results) use only that record.
 
 Both the individual six-spinon estimates and the $`2+4+6`$ partial sum carry
 the six-spinon sampling standard error. Numerical and omitted-domain effects
