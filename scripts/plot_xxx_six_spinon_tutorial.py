@@ -288,6 +288,10 @@ def main():
         checked = sampling_points(json.loads(other), momentum=args.momentum, exchange=args.exchange)
         result['cutoff_comparison'] = paired_cutoffs(result, checked)
         result['comparison_raw_sha256'] = hashlib.sha256(other).hexdigest()
+    # Share the compact packer's output policy; the original command remains
+    # in the archived raw export identified by raw_sha256.
+    result['metadata'] = {key: value for key, value in result['metadata'].items()
+                          if key != 'Command'}
     with args.output.open('x') as output:
         json.dump(result, output, indent=2)
         output.write('\n')
