@@ -673,6 +673,8 @@
     ]
   },
   "validation": {
+    "revision": "bbfdd612841d0cdf0165d25f8f29d587dd7d1bc2",
+    "scope": "Initial validation at bbfdd61, before the terminal-replicate and cancellation regressions were added. The follow-up sections below record later 15- and 17-test suites; historical counts and measurements are retained.",
     "unit_tests_passed": 74,
     "cli_suites": [
       "check_xxx_spinon_sectors.py",
@@ -700,7 +702,8 @@
       "terminal-block-baseline.log": "68a5c20a379708b6224144f7c4a213006543951288c3b3d28480e20be3f4767c",
       "monte-carlo-terminal-fix.log": "0aa8e4e5edc30ab9fda40ffebdbff33a6667b99f2a325efdfc2347df6d284d07",
       "monte-carlo-terminal-fix-san.log": "7d691346eb9d35de42d365294084d168a09e47824fd9f1cee5c845ae2cddd29b"
-    }
+    },
+    "revision": "e2e2e93b1744a706072ab7b688c7deb97e99f689"
   },
   "cancellation_followup": {
     "review": "https://github.com/Uni20-dev/bethe/pull/90#discussion_r4433711166",
@@ -718,6 +721,14 @@
       "after2-cancellation-repeat.log": "fec65760963dc3844f7e6262cfe4d40bbc10a1b00e644ae05f01ac06852cf8e8",
       "san-final-tests.log": "b2b3574fb83bf42339576c1627cd797b48ce05d6c6dd98d42b13314ae035231f",
       "san-final-cancellation-repeat.log": "5963ec666bf18e8fa9fd42cc24135c6b47d43360cc827d58631ba25fd1b05da7"
-    }
+    },
+    "revision": "616e539bf7b0ba1b41ae5dc841a83495a1d2fd9f"
+  },
+  "benchmark_header_followup": {
+    "review": "https://github.com/Uni20-dev/bethe/pull/90#discussion_r4433805601",
+    "change": "Explicit standard-library includes in the benchmark, including <atomic>; numerical implementation unchanged. Historical benchmark measurements and kernel hash above remain pinned to their original revision.",
+    "benchmark_source_sha256": "c576be17417abf51e3a0dd99fcb995b6bfce6b182d193a9e89689ef76dd68aa8",
+    "validation": "GCC 13 benchmark rebuilt; four correctness smokes at three workers and four replicates, block sizes 768/16 and iterations 0/20000 exactly match the original means and variances for the same workload. Timings from these smokes are not substituted for the original performance measurements.",
+    "smoke_record_sha256": "aec25c8f4ef6b30483dc18bd06d9612c21092e37da1e7559984197b41a92169e"
   }
 }

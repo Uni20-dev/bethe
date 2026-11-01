@@ -1,12 +1,18 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Copyright (C) 2026 Ian McCulloch
 // Synthetic CPU workload: scheduling measurements, not a physical speed claim.
+#include <atomic>
 #include <bethe/monte_carlo.hpp>
+#include <chrono>
 #include <cmath>
+#include <cstddef>
 #include <ctime>
 #include <iomanip>
 #include <iostream>
+#include <stop_token>
+#include <string>
 #include <uni20/async/tbb_scheduler.hpp>
+#include <vector>
 
 int main(int argc, char** argv)
 {
