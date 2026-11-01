@@ -4,10 +4,10 @@
 
 Finite spectral lines give the time correlation directly:
 
-$$
+```math
 C_{AB}(t)=\sum_n c_n e^{-\mathrm{i}(E_n-E_0)t},\qquad
 c_n=\langle0|A|n\rangle\langle n|B|0\rangle.
-$$
+```
 
 There is no time-stepping error. Accuracy still depends on the retained states,
 their energies and coefficients, and the arithmetic used to sum their phases.
