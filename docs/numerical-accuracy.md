@@ -148,12 +148,13 @@ all retained statistics agree within $`4.9\times10^{-30}`$ relative. Their
 supports a stronger precision pair without changing the tolerance or seeking
 an easier seed. It does not certify other streams or a larger domain.
 
-The same follow-up repeats all eight four-spinon refinement points in binary128
-with the stronger native 64/113-bit pair. Every point passes the unchanged
+The [four-spinon refinement comparison](validation/spinon-native-precision-20261031.json)
+checks all eight quadratures in binary128 with the native 64/113-bit pair.
+Every point passes the
 $`10^{-8}`$ relative density screen and agrees with the independently retained
 MPFR192 quadrature within $`6.3\times10^{-31}`$ relative. Total cost is
-348 CPU seconds, about seven times less than the recorded MPFR128 grid.
-The earlier binary128 failures used a 53-bit lower comparison.
+348 CPU seconds. This is the setting used by the refinement tutorial; the
+native 53/64-bit pair does not complete all of its higher-order quadratures.
 
 The [compact audit](validation/spinon-native-precision-20261031.json) retains
 all 20 queries, including failed values as null, complete replicate/covariance
@@ -169,39 +170,34 @@ python3 scripts/check_xxx_native_density_precision.py \
 ```
 
 Regeneration keeps all requested queries. A failure cannot be replaced by an
-estimate over successful samples. Higher precision is still needed where
-geometry, cancellation or exponent range exceed the native formats; the next
-example illustrates why those requirements must be measured separately.
+estimate over successful samples. The [validation ledger](validation/tutorial-precision.md)
+links each recommendation to its measured controls and scope. The separate
+[development study](spinon-numerics-development.md) records implementation
+changes and comparisons with earlier precision policies.
 
 ## Deep-domain geometry needs its own precision
 
-The archived six-spinon
-[deep-domain probe](validation/six-spinon-geometry-precision-20261031.json)
-shows how a coordinate representation can force unnecessary precision. That
-implementation constructed $`p_{\min}=2\arctan(e^{-R})`$ and
-$`p_{\max}=\pi-p_{\min}`$. Keeping the second endpoint distinct from pi in
-that subtraction required roughly $`R/\ln 2`$ significand bits, before further
-accuracy margins. At $`R=1040`$, 1024 bits failed the check while 1536 and 2048
-bits produced matching replicate means and maxima with the same 192/256-bit
-density pair. These remain measurements of the recorded implementation, not
-an intrinsic precision requirement of the observable.
+Geometry determines the integration configurations before the density is
+evaluated. Raising only `--density-guard-bits` cannot repair a poorly resolved
+root or Jacobian. If a geometry check fails, repeat the same input with wider
+`--precision`, then compare the support classification, roots and weighted
+contributions as well as the final estimate.
 
-The surface now retains endpoint distances separately from integer multiples
-of pi. The [complete 64-draw replay](validation/six-spinon-endpoint-geometry-20261101.json)
-passes at 256 geometry bits with the same 192/256-bit density pair, preserving
-sample identities and supported-root counts. Its mean differs from the archived
-1536-bit result by less than $`8\times10^{-74}`$ relative. The pilot has roughly
-100% relative sampling SE: this checks arithmetic on those inputs, not sampling
-or omitted-tail convergence. Conditioning near a degenerate solved pair and
-floating-point exponent range still need separate checks; the
-[surface validation](xxx-spinon-sectors.md) explains those checks and bounded
-MPFR refinement.
+The six-spinon surface retains endpoint distances separately from integer
+multiples of pi. Very soft momenta therefore do not by themselves require a
+large number of significand bits to distinguish them from pi. Near-degenerate
+solved pairs can still be ill-conditioned, and exponent range is a separate
+limit. The [surface guide](xxx-spinon-sectors.md) describes the checks and
+bounded local MPFR refinement. These checks concern the six-spinon surface;
+four-spinon quadrature has its own geometry and needs its own validation.
 
-The production reference recipes retain the settings used to calculate their
-saved data, including 1536-bit geometry. They are not a minimum-precision
-recommendation for later implementations. To reduce that setting, replay the
-complete query with wider references and unchanged density, contour, sampling
-and domain controls; record the new executable and settings separately.
+Keep the domain, sample identities and contour controls fixed when comparing
+geometry precisions. Retain every unsuccessful observation. A small pilot
+can test arithmetic on its inputs without establishing a reliable setting
+for a complete grid. Dataset reproduction recipes record the settings actually
+used for their saved data; they do not prescribe a minimum precision for a new
+calculation. Complete checked-query costs, including any recovery work, are
+the relevant comparison when selecting a cheaper setting.
 
 ## A reproducible decision procedure
 

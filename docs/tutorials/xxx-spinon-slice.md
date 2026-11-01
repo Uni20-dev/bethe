@@ -35,10 +35,11 @@ for the reference spectra.
 This comparison uses large-domain reference calculations. Once a checked
 compact record is available, [redrawing it](xxx-spinon-slice-reproduction.md#redraw-saved-results)
 requires only the plotting tools; it does not run any integrations. Regenerating
-the reference is a separate, optional production task. The selected two/four
-queries used [14.6 CPU hours](xxx-spinon-slice-reproduction.md#recorded-production-cost),
-and the first successful six-spinon frequency alone used 38.0 CPU hours. The
-reproduction pages retain the measured costs and controls.
+the reference is a separate, optional production task. Consult the
+[two/four-spinon compute budget](xxx-spinon-slice-reproduction.md#recorded-production-cost)
+and [six-spinon compute budget](xxx-six-spinon-reproduction.md#dataset-settings-and-compute-budget)
+before running those recipes. Their settings and costs describe the saved
+datasets; benchmark a representative complete query before budgeting new work.
 
 **The full sixteen-frequency reference dataset is still being calculated.**
 Its checked compact data and comparison figures will be added after validation.
@@ -163,18 +164,16 @@ residue budgets from 64/80 to 96/112 and tail orders from 16/20 to 24/28 changes
 it by $`6.43\times10^{-38}`$. These checks explain why outer quadrature and
 domain refinement, rather than more density digits, control this comparison.
 
-The saved deep-domain calculation used wide **geometry** to keep very soft
-coordinates distinguishable before evaluating the density. The density can
-use fewer bits independently. At $`\omega/J=2`$, cutoff 768 and order 4,
-1536-bit geometry with 192/256-bit density comparisons reproduces the
-1472/1536-bit density reference to $`7.90\times10^{-76}`$ relative, while
-reducing measured CPU cost by a factor of 4.37. This validates separating those
-controls at that query; it does not measure the minimum geometry precision.
-The [accuracy guide](../numerical-accuracy.md#deep-domain-geometry-needs-its-own-precision)
-explains how retaining endpoint distances separately can reduce the arithmetic
-requirement. Its six-spinon replay is a separate check, not validation of a
-cheaper setting for this four-spinon quadrature. The reproduction recipe keeps
-the settings used for the saved data.
+Geometry and density precision are separate controls. The saved deep-domain
+four-spinon calculation uses 1536-bit geometry with 192/256-bit density checks.
+At $`\omega/J=2`$, cutoff 768 and order 4, the density comparison agrees with
+a 1472/1536-bit reference within $`7.90\times10^{-76}`$ relative. This supports
+the density choice at that query; it does not measure the minimum geometry
+precision. Validate a different geometry setting on the four-spinon quadrature
+itself, including support and weighted contributions. The
+[accuracy guide](../numerical-accuracy.md#deep-domain-geometry-needs-its-own-precision)
+explains the procedure. The [development study](../spinon-numerics-development.md)
+records the implementation and cost comparisons separately.
 
 The [optional reproduction recipe](xxx-spinon-slice-reproduction.md) records
 the full display grid and controls. The much smaller

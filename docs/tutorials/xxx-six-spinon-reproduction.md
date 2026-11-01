@@ -1,4 +1,4 @@
-# Production reference: a large-domain six-spinon slice
+# Reproducing the six-spinon reference dataset
 
 <!-- BEGIN GENERATED PAGE LINK -->
 [Read this page on the documentation site](https://uni20-dev.github.io/bethe/docs/tutorials/xxx-six-spinon-reproduction/)
@@ -19,10 +19,9 @@ $`q=\pi/2`$, with longitudinal normalization, $`J=1`$ and rapidity cutoff
 $`R=1040`$. Each frequency uses 32 independent replicates of 768 draws.
 The fixed sampling budget was chosen from the
 [calibration calculations](../validation/six-spinon-slice-calibration-20261031.json)
-before production; it does not guarantee a particular sampling error. The first
-large query exposed two contour failures. The revised contour controls below
-come from [exact replays and additional boundary tests](../validation/six-spinon-contour-recovery-20261031.json),
-with unchanged frequencies, sample counts, seeds and tolerances.
+before production; it does not guarantee a particular sampling error. The
+contour controls are checked against [representative configurations and
+boundary tests](../validation/six-spinon-contour-recovery-20261031.json).
 
 **The complete reference grid is not yet included.** This recipe records the
 requested grid and controls. The committed
@@ -35,22 +34,26 @@ $`1.6\le\omega/J\le4`$, including both sides of the two-spinon upper edge.
 It does not reach the four- or six-spinon outer upper edges, and it is not a
 grid for evaluating global moments.
 
-## Compute budget
+## Dataset settings and compute budget
 
-The first large query used 25.7 CPU hours and 104 minutes of wall time with
-sixteen workers on a Xeon Gold 6254, then failed its contour checks. Its
-successful replacement used 38.0 CPU hours and 143 minutes of wall time with
-24 workers on the same machine. These are whole-query costs, including
-preparation and output. These historical runs scheduled whole replicates, so
-worker utilization fell near the end of each query. Current releases split
-replicates into sample blocks; `--samples-per-task` controls that scheduling
-grain without changing sample identities or their accumulation order. See the
-[parallel-calculation guide](../parallel-calculations.md#six-spinon-monte-carlo).
-Allow several hours per frequency with 24 workers, and longer with fewer workers.
-This remains a planning estimate from the original executable, not a measured
-runtime for the newer scheduling implementation. The full sixteen-point grid
-therefore belongs in a substantial compute allocation, rather than an
-interactive tutorial session.
+The recipe below records the settings used for this dataset, including
+1536-bit geometry and 256/320-bit density comparisons. It is a reproducibility
+record, not a recommendation for the minimum precision of a new calculation.
+A lower-cost production recipe needs complete checked-query validation before
+it can replace these settings.
+
+The saved $`\omega=2J`$ query used 38.0 CPU hours and 143 minutes of wall time
+with 24 workers on a Xeon Gold 6254. Its exact executable identity, controls
+and costs are in the [first-query record](../validation/six-spinon-first-production-20261031.json).
+Do not extrapolate that timing to a different executable or precision policy;
+measure a representative query on your system before allocating the full grid.
+The [development study](../spinon-numerics-development.md) explains how the
+numerical representation and scheduling affect the cost.
+
+Current releases split replicates into sample blocks; `--samples-per-task`
+controls the scheduling grain without changing sample identities or their
+accumulation order. Set the worker count to the CPUs available to your job;
+see the [parallel-calculation guide](../parallel-calculations.md#six-spinon-monte-carlo).
 
 ## Run the installed program
 
@@ -118,15 +121,6 @@ the density comparisons use 256/320 bits. The contour comparisons use
 3120/3136 residue terms and tail orders 52/56. These controls address distinct
 numerical limitations, as explained in the [precision study](xxx-six-spinon.md#distinguish-contour-failures-from-arithmetic-failures).
 Sampling error still excludes the omitted rapidity domain.
-
-These settings preserve the recorded reference campaign. The updated
-[endpoint representation](xxx-six-spinon.md#when-the-geometry-needs-higher-precision)
-removes the cutoff-dependent need for roughly 1500 geometry bits at $`R=1040`$.
-The recipe's 1536 bits remain a valid conservative setting, not a demonstrated
-minimum for the newer implementation. Lower-precision pilot comparisons do not
-establish that every production query passes at those settings. Validate a
-cheaper recipe with the same sampling and density/contour controls before
-quoting its accuracy or end-to-end cost.
 
 ## Pack and redraw completed results
 
