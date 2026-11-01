@@ -1,0 +1,156 @@
+{
+  "schema": "bethe-ci-test-cost-v1",
+  "date": "2026-11-02",
+  "baseline_revision": "b28bf3726c9ea3f5a9cdb3ec43b3c5c900593517",
+  "uni20_revision": "1cb2474eb0a54e13ec7d5f2c1823752020b2425c",
+  "ci_profile": {
+    "run_url": "https://github.com/Uni20-dev/bethe/actions/runs/41314957053/attempts/1",
+    "recorded_passed_tests": 1888,
+    "scheduled_tests": 1892,
+    "finished_test_seconds_sum": 6451.44,
+    "slowest_35_seconds_sum": 5144.33,
+    "slowest_10": [
+      {
+        "test": "HubbardThermoMpfr.BoundedChargeContinuumRetainsExplicitPrecision",
+        "seconds": 571.1
+      },
+      {
+        "test": "LiebLinigerThermo.precision.bits333",
+        "seconds": 436.39
+      },
+      {
+        "test": "SineGordonBetheYangMpfr.IndependentPhaseKernelAndLevelsGainAccuracy",
+        "seconds": 413.67
+      },
+      {
+        "test": "SineGordonVacuumMpfr.OwningMixedPrecisionQueriesKeepCompleteStates",
+        "seconds": 372.55
+      },
+      {
+        "test": "LiebLinigerThermal.precision",
+        "seconds": 231.65
+      },
+      {
+        "test": "SineGordonBetheYang.precision",
+        "seconds": 227.33
+      },
+      {
+        "test": "XXXSpinonSectors.cli",
+        "seconds": 224.08
+      },
+      {
+        "test": "HubbardThermo.precision",
+        "seconds": 205.02
+      },
+      {
+        "test": "HubbardThermoMpfr.OwningDopedPreparationsShareMixedPrecisionBackgrounds",
+        "seconds": 198.36
+      },
+      {
+        "test": "SineGordonVacuumMpfr.FourierTableAgainstClosedTransforms",
+        "seconds": 152.69
+      }
+    ],
+    "limitation": "The job timed out after two hours; four unfinished tests are not included in this profile."
+  },
+  "local_configuration": {
+    "cpu": "Intel Core i7-12700KF",
+    "compiler": "Clang 19.1.1",
+    "preset": "ci-sanitizers",
+    "optimization": "-O1 -g1",
+    "instrumentation": [
+      "AddressSanitizer",
+      "UndefinedBehaviorSanitizer"
+    ],
+    "mpfr_backend": "CPU LU, no BLAS or MPLAPACK",
+    "leak_detection": true,
+    "leak_suppression": "Uni20 tests/sanitizers/lsan.supp, unchanged",
+    "ctest_parallel": 2,
+    "limitation": "Shared workstation, single before/after CTest runs with other bounded audit work. Affinity was limited to six physical cores during the baseline and throughout the final run. Compare computation trends, not whole-job CI elapsed time."
+  },
+  "changes": [
+    "Use c=40 instead of c=4 only for Lieb-Liniger grid, scheduling and failure-reporting fixtures; retain full 128/256/333-bit precision and original convergence tolerances.",
+    "Emit CSV and TSV from one solve, retaining the independent JSON run and all field comparisons.",
+    "Add an interacting-energy guard and explicit exported-row count checks."
+  ],
+  "preserved": [
+    "All four CTest entries and every original assertion",
+    "Both excitation branches, endpoints, thirds and fifths",
+    "Serial and three-thread execution, retained and streaming output",
+    "Background-iteration, mesh and momentum-inversion failure cases",
+    "c=4 physical and density-scaling inputs, convergence tolerances and high-precision assertions",
+    "Existing long-running selection, CI job timeout and sanitizer settings"
+  ],
+  "local_test_comparison": [
+    {
+      "test": "LiebLinigerThermo.precision",
+      "before_seconds": 94.3698,
+      "after_seconds": 86.2345
+    },
+    {
+      "test": "LiebLinigerThermo.precision.bits128",
+      "before_seconds": 14.7916,
+      "after_seconds": 12.3753
+    },
+    {
+      "test": "LiebLinigerThermo.precision.bits256",
+      "before_seconds": 37.869,
+      "after_seconds": 15.5352
+    },
+    {
+      "test": "LiebLinigerThermo.precision.bits333",
+      "before_seconds": 236.421,
+      "after_seconds": 37.909
+    }
+  ],
+  "summed_test_seconds": {
+    "before": 383.45,
+    "after": 152.05
+  },
+  "representative_grid_probe": {
+    "command": "bethe-lieb-liniger-dispersion --c C --points 4 --precision digits-100 --p-max 2 --format json",
+    "relative_tolerance": "4.68167635469219832715584941385867656991502333879418331633715545386038327667399964948663509753926463344e-97",
+    "results": [
+      {
+        "c": "4",
+        "cpu_seconds": 31.456171,
+        "wall_seconds": 33.209367,
+        "background_nodes": 256,
+        "background_iterations": 20
+      },
+      {
+        "c": "40",
+        "cpu_seconds": 4.186096,
+        "wall_seconds": 5.193005,
+        "background_nodes": 128,
+        "background_iterations": 14
+      }
+    ]
+  },
+  "trials_not_adopted": [
+    {
+      "test": "SineGordonVacuumMpfr.OwningMixedPrecisionQueriesKeepCompleteStates",
+      "change": "Initial mesh 64 to 8, same error controls and all scheduler modes",
+      "before_seconds": 219.178,
+      "after_seconds": 207.35,
+      "reason": "Only a modest difference on the shared host; retain the original fixture."
+    },
+    {
+      "test": "HubbardThermoMpfr.BoundedChargeContinuumRetainsExplicitPrecision",
+      "change": "Separate U=16 probe with the original bounded-search controls, versus the U=4 test",
+      "before_seconds": 300.798,
+      "probe_seconds": 283.43,
+      "probe_quadrature_evaluations": 4900961,
+      "reason": "No compelling improvement; retain the original U=4 fixture and reference."
+    }
+  ],
+  "follow_up_candidates": [
+    "Sine-Gordon Bethe-Yang uses bisection with a full-accuracy Fourier phase integration at each step; evaluate safeguarded faster root finding as a separately validated production optimization.",
+    "Hubbard charge-continuum searches nest extrema refinement, momentum inversion and quadrature; profile reusable inner work before changing that solver."
+  ],
+  "reproduce": [
+    "cmake --preset ci-sanitizers",
+    "cmake --build --preset ci-sanitizers --target bethe-lieb-liniger-dispersion",
+    "ctest --preset ci-sanitizers -R '^LiebLinigerThermo.precision(\\.bits[0-9]+)?$' --output-junit test-cost.xml"
+  ]
+}

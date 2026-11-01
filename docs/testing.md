@@ -56,6 +56,26 @@ precision and for physical corrections, retaining every original assertion.
 New costly cases should be declared with `LONG_RUNNING_TESTS` alongside their
 target's `bethe_discover_tests` call, using GoogleTest names.
 
+### Keep test computation focused
+
+Use independent physics and precision-growth tests to establish numerical
+accuracy. For grid construction, scheduling, ownership and export checks,
+choose an interacting fixture that converges economically at the same working
+precision and tolerance. Keep every branch, scheduler mode, failure path and
+format assertion. For example, the Lieb–Liniger CLI grid tests use $c=40$;
+the separate $c=4$ accuracy and density-scaling checks keep their original
+inputs and tolerances.
+
+When testing multiple output sinks, attach them to one calculation and compare
+with a separate reference run. This checks simultaneous exports and repeated-run
+consistency without solving the same problem once per file format.
+
+Profile the CTest timing artifacts before changing a fixture, then benchmark
+under the same sanitizer settings. Shared-host timings indicate computation
+cost; they do not predict the whole GitHub job's elapsed time. The
+[November 2026 measurement](validation/ci-test-cost-20261102.json) records an
+initial comparison, including trials that did not give a useful improvement.
+
 ### Continuous integration
 
 Pull requests and pushes to `main` run three Linux configurations, defined in

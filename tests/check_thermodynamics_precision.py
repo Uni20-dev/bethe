@@ -54,12 +54,18 @@ if enabled:
     for precision, bits in (("bits-128", 128), ("bits-256", 256), ("digits-100", 333)):
         if case not in ("all", str(bits)):
             continue
-        base = ["--c", "4", "--points", "3", "--precision", precision]
+        # These cases check grids, ownership and failure reporting at full
+        # working precision. A smooth interacting c=40 background needs fewer
+        # Fredholm nodes; c=4 accuracy and scaling remain in the physical case.
+        base = ["--c", "40", "--points", "3", "--precision", precision]
         serial = table([*base, "--threads", "1"])
         parallel = table([*base, "--threads", "3", "--no-retain"])
         check_precision(serial, precision, bits)
         check_precision(parallel, precision, bits)
         assert serial["rows"] == parallel["rows"]
+        # Stay appreciably away from the free-fermion limit pi^2/3, rather
+        # than making the numerical solver a zero-work endpoint fixture.
+        assert Decimal(2) < Decimal(serial["metadata"]["Ground energy/length"]) < Decimal(3)
         r = rows(serial)
         assert len(r) == 6 and all(row["status"] == "converged" for row in r)
         assert Decimal(r[0]["energy"]) == Decimal(r[3]["energy"]) == Decimal(r[5]["energy"]) == 0
@@ -68,14 +74,14 @@ if enabled:
             failed = table([*base, *args], 2)
             check_precision(failed, precision, bits)
             assert all(row["energy"] is None and row["status"] == expected for row in rows(failed))
-        failed = table(["--c", "4", "--momentum", "1", "--precision", precision, "--max-iterations", "0"], 2)
+        failed = table(["--c", "40", "--momentum", "1", "--precision", precision, "--max-iterations", "0"], 2)
         assert all(row["energy"] is None and row["status"] == "momentum_limit" for row in rows(failed))
 
         # Non-dyadic index fractions remain exact rationals until multiplication
         # by the finite-precision endpoint. Exercise thirds and fifths, not only
         # the half-grid points above, at every supported runtime precision.
         for count in (4, 6):
-            grid = ["--c", "4", "--points", str(count), "--precision", precision, "--p-max", "2"]
+            grid = ["--c", "40", "--points", str(count), "--precision", precision, "--p-max", "2"]
             serial = table([*grid, "--threads", "1"])
             parallel = table([*grid, "--threads", "3", "--no-retain"])
             check_precision(serial, precision, bits)
@@ -121,13 +127,16 @@ if enabled and case in ("all", "physical"):
     with tempfile.TemporaryDirectory() as directory:
         base = ["--c", "4", "--momentum", "1", "--precision", "bits-256"]
         expected = rows(table(base))
+        # Both sinks consume the same computed rows. Keep the separate JSON
+        # run to check deterministic serialization across repeated solves.
+        paths = {extension: Path(directory) / f"curves.{extension}" for extension in ("csv", "tsv")}
+        run([*base, "--csv", str(paths["csv"]), "--tsv", str(paths["tsv"]), "--quiet"])
         for extension, delimiter in (("csv", ","), ("tsv", "\t")):
-            path = Path(directory) / f"curves.{extension}"
-            run([*base, f"--{extension}", str(path), "--quiet"])
-            text = path.read_text()
+            text = paths[extension].read_text()
             assert "256" in text
             exported = list(csv.DictReader([line for line in text.splitlines() if not line.startswith("#")],
                                            delimiter=delimiter))
+            assert len(exported) == len(expected)
             for a, b in zip(expected, exported):
                 for name in ("p", "energy", "rapidity", "edge_distance", "energy_error", "momentum_error"):
                     assert a[name] == b[name], (name, a[name], b[name])
