@@ -91,23 +91,49 @@ template <uni20::Real Real> Real pi_like(Real const& exemplar)
     return uni20::pi<Real>;
 }
 
-// Compensate phase and energy sums at the selected scalar precision.
+// Neumaier compensation retains small terms even when a later term is
+// larger than the running sum. Working precision follows the supplied zero.
 template <typename Real> class CompensatedSum {
   public:
     CompensatedSum() = default;
     explicit CompensatedSum(Real const& zero) : sum_(zero), correction_(zero) {}
     void add(Real value)
     {
-      Real const corrected = value - correction_;
-      Real const next = sum_ + corrected;
-      correction_ = (next - sum_) - corrected;
+      Real const next = sum_ + value;
+      if (!uni20::isfinite(next))
+      {
+        sum_ = next;
+        correction_ = uni20::scalar_like(correction_, 0);
+        return;
+      }
+      if (uni20::math::abs(sum_) >= uni20::math::abs(value))
+        correction_ += (sum_ - next) + value;
+      else
+        correction_ += (value - next) + sum_;
       sum_ = next;
     }
-    Real value() const { return sum_; }
+    Real value() const { return sum_ + correction_; }
 
   private:
     Real sum_ = Real{0};
     Real correction_ = Real{0};
+};
+
+// Complex magnitudes cannot choose the correct addition order for both
+// components. Compensate real and imaginary parts independently.
+template <uni20::Complex Complex> class CompensatedSum<Complex> {
+  public:
+    CompensatedSum() = default;
+    explicit CompensatedSum(Complex const& zero) : real_(zero.real()), imag_(zero.imag()) {}
+    void add(Complex value)
+    {
+      real_.add(value.real());
+      imag_.add(value.imag());
+    }
+    Complex value() const { return {real_.value(), imag_.value()}; }
+
+  private:
+    CompensatedSum<uni20::make_real_t<Complex>> real_, imag_;
 };
 } // namespace detail
 } // namespace bethe

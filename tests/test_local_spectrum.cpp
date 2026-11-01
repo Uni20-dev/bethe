@@ -81,6 +81,41 @@ template <uni20::Real R> void analytic_spectra(R const& zero)
     cancel.push_back({i, zero, C(r(1), r(-1))});
   cancel.push_back({9, zero, C(-large, large)});
   equal(bethe::cross_time_correlation<R>(cancel, zero), C(r(8), r(-8)));
+
+  // Small-before-large cancellation defeats plain Kahan summation. Check
+  // every order, in both cross moments and time sums at each scalar precision.
+  std::array<C, 3> const coefficients{C(r(1), r(-1)), C(large, -large), C(-large, large)};
+  std::array<int, 3> order{0, 1, 2};
+  do
+  {
+    std::array<bethe::CrossSpectralLine<R>, 3> permuted;
+    std::array<bethe::LocalSpectralLine<R>, 3> phased;
+    for (std::size_t j = 0; j < order.size(); ++j)
+    {
+      int const index = order[j];
+      permuted[j] = {j, r(1), coefficients[index]};
+      phased[j] = {j, r(index == 2 ? 1 : 0), index == 0 ? r(1) : large};
+    }
+    equal(bethe::cross_time_correlation<R>(permuted, zero), C(r(1), r(-1)));
+    auto const moment = bethe::cross_spectral_moments<R>(permuted, zero);
+    equal(moment.value, C(r(1), r(-1)));
+    equal(moment.first_moment, C(r(1), r(-1)));
+    bethe::detail::CompensatedSum<R> real_sum(zero);
+    bethe::detail::CompensatedSum<C> complex_sum(C(zero, zero));
+    // Deliberately different component magnitudes: a complex norm cannot
+    // decide which operand dominates each scalar addition.
+    std::array<C, 3> const asymmetric{C(r(1), large), C(large, r(-1)), C(-large, -large)};
+    for (int index : order)
+    {
+      real_sum.add(coefficients[index].real());
+      complex_sum.add(asymmetric[index]);
+    }
+    EXPECT_EQ(real_sum.value(), r(1));
+    equal(complex_sum.value(), C(r(1), r(-1)));
+    EXPECT_EQ(uni20::precision_of(complex_sum.value()), uni20::precision_of(zero));
+    EXPECT_EQ(bethe::local_time_correlation<R>(phased, 2 * time).real(), r(1));
+  }
+  while (std::next_permutation(order.begin(), order.end()));
 }
 
 template <typename T> class LocalSpectrum : public ::testing::Test {};

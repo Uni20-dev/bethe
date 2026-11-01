@@ -44,7 +44,8 @@ auto signal = bethe::local_time_correlation<double>(lines, 0.5);
 
 The moments are sums of coefficients and of gap times coefficient. Consequently
 `C(0)` is the zeroth moment and `C'(0)` is `-i` times the first moment. All sums
-use compensated accumulation. For an autocorrelation, `C(-t)=conj(C(t))`.
+use Neumaier compensated accumulation, separately for the real and imaginary
+components. For an autocorrelation, `C(-t)=conj(C(t))`.
 For complex cross coefficients that identity does not hold in general;
 conjugating the coefficients and reversing time conjugates the result.
 
