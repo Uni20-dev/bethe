@@ -14,6 +14,7 @@ import plot_xxx_spinon_slice_tutorial as tutorial
 from spinon_tutorial_exports import CONVENTION, read_spectrum
 from test_tutorial_spinon_exports import fixture
 from test_tutorial_xxx_six_spinon import fixture as six_fixture
+from test_tutorial_spinon_recovery import mixed_fixture
 from xxx_six_spinon_tutorial_data import compact_slice, read_compact_slice
 
 
@@ -44,6 +45,37 @@ def compact_fixture():
 
 
 class SpinonSlice(unittest.TestCase):
+    def test_staged_six_compact_retains_recovery_and_physical_sums(self):
+        six = compact_slice([json.dumps(mixed_fixture()).encode()], momentum='1.5',
+                            frequencies=['2'], rapidity_cutoff='64')
+        four, _ = checked_inputs()
+        checked = read_compact_slice(six, momentum='1.5')['points']
+        data = compact_fixture()
+        data['six_slice'] = six
+        data['points'] = tutorial.join_points([four], checked)
+        restored = tutorial.validate(json.loads(json.dumps(data)))
+        point, = restored['points']
+        self.assertEqual(Decimal(point['s2_plus_s4_plus_s6']), Decimal('2.625'))
+        self.assertEqual(Decimal(point['s6_sampling_se']), Decimal('1'))
+        self.assertEqual(restored['six_slice']['runs'][0]['recovery'], six['runs'][0]['recovery'])
+        self.assertNotIn('Geometry and output bits', restored['six_slice']['runs'][0]['metadata'])
+
+        # Reopening a cached combined curve must still require the unused
+        # precision stage in the complete recovery accounting.
+        restored['six_slice']['runs'][0]['recovery'].pop()
+        with self.assertRaises(ValueError):
+            tutorial.validate(restored)
+
+    def test_staged_coordinates_use_output_precision_not_native_stage_bits(self):
+        six = compact_slice([json.dumps(mixed_fixture()).encode()], momentum='1.5',
+                            frequencies=['2'], rapidity_cutoff='64')
+        four, _ = checked_inputs()
+        point, = read_compact_slice(six, momentum='1.5')['points']
+        # Below extended80 resolution but distinct at both exports' precision.
+        point['replicate_records'][0]['q'] = '1.500000000000000000000000000001'
+        with self.assertRaisesRegex(ValueError, 'momenta'):
+            tutorial.join_points([four], [point])
+
     def assert_plot_range_rejection(self, data):
         four = [tutorial.checked_four_run(run, momentum=data['momentum'], exchange='1')
                 for run in data['four_runs']]
