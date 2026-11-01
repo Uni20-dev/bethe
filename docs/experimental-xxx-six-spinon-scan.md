@@ -57,7 +57,8 @@ auto pending = six::scan_async(std::move(ground), std::move(requests),
 auto const& result = pending.get_wait(scheduler);
 ```
 
-Include `uni20/async/tbb_scheduler.hpp` for this scheduler. The returned
+Include `uni20/async/tbb_scheduler.hpp` and link `TBB::tbb` for this scheduler.
+The returned
 `Async<ScanResult<Real>>` can also feed another task through `read()`; synchronous
 `scan(...)` is a convenience wrapper. Both own their prepared-ground snapshot
 and canonical requests. The scheduler must outlive completion. Dropping the
