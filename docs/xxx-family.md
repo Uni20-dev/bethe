@@ -25,6 +25,9 @@ precision-sensitive gaps, use [the precision tutorial](tutorials/xxx-precision.m
 
 The [four-spinon tutorial](tutorials/xxx-four-spinon.md) adds a physically
 normalized contribution and measures quadrature/cutoff refinement and cost.
+Continue with [six-spinon sampling](tutorials/xxx-six-spinon.md) and the
+[2/4/6 comparison](tutorials/xxx-spinon-slice.md) to examine individual sectors,
+partial sums and the response above the two-spinon upper edge.
 
 For a dynamical comparison, distinguish the [finite-ring spectral lines](tutorials/xxx-structure-factor.md)
 from the [unbroadened thermodynamic density](tutorials/xxx-structure-factor-thermo.md).

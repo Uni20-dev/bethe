@@ -35,6 +35,8 @@ jobs:
           python scripts/tutorial_links.py --check
           python scripts/check_markdown_math.py
           python -m unittest discover -s scripts -p 'test_build_docs.py'
+          # Keep the documented data checks usable without optional packages.
+          python -S -m unittest discover -s scripts -p 'test_tutorial*.py'
           python -m unittest discover -s scripts -p 'test_tutorial*.py'
       - run: python scripts/build_docs.py
       - run: python scripts/check_docs_site.py

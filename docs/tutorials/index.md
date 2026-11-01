@@ -40,7 +40,11 @@ remain after a solver reports success.
   model guide for normalization and supported families.
 - **Spectral intensity:** [finite XXX two-spinon weights](xxx-structure-factor.md)
   and [the thermodynamic density](xxx-structure-factor-thermo.md), then
-  [four-spinon refinement](xxx-four-spinon.md).
+  [four-spinon refinement](xxx-four-spinon.md),
+  [six-spinon sampling](xxx-six-spinon.md), then the
+  [combined 2/4/6 reference comparison](xxx-spinon-slice.md).
+  Large-domain reference regeneration is optional; the small examples teach
+  the commands without requiring the production calculation.
 
 ## Available tutorials
 
@@ -51,6 +55,8 @@ remain after a solver reports success.
 - [XXX spectral weights](xxx-structure-factor.md): two-spinon intensities, sum rules and plotting broadening.
 - [Thermodynamic XXX intensity](xxx-structure-factor-thermo.md): exact two-spinon spectral density without broadening.
 - [Four-spinon refinement](xxx-four-spinon.md): separate order/cutoff checks, measured cost and a small six-spinon sampling example.
+- [Six-spinon sampling](xxx-six-spinon.md): small worked examples, physical proposals, replicate errors, precision and soft-domain checks.
+- [Two-, four- and six-spinon reference comparison](xxx-spinon-slice.md): interpreting saved sector contributions and partial sums, with optional production regeneration.
 - [XXZ spinons and continua](xxz-spinons.md): gapless/gapped bands and two-site folding.
 - [XYZ](xyz.md): gapped spinons, bound branches and discrete parity copies.
 - [SU(3)/ULS](su3-uls.md): representations, two-/four-soliton thresholds and three-site folding.
@@ -101,7 +107,7 @@ excitation tools. Proposed but unimplemented models in the
 
 | Model family | Worked tutorial |
 | --- | --- |
-| XXX | [Energies](xxx.md), [precision](xxx-precision.md), [finite spectral weights](xxx-structure-factor.md), [thermodynamic intensity](xxx-structure-factor-thermo.md) |
+| XXX | [Energies](xxx.md), [precision](xxx-precision.md), [finite spectral weights](xxx-structure-factor.md), [two-spinon density](xxx-structure-factor-thermo.md), [2/4/6 comparison](xxx-spinon-slice.md) |
 | XXZ | [Tutorial](xxz-spinons.md) |
 | XYZ | [Tutorial](xyz.md) |
 | SU(3)/ULS | [Tutorial](su3-uls.md) |

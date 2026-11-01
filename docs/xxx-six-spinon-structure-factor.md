@@ -7,11 +7,12 @@ It combines the [physical W6 density](xxx-spinon-density.md),
 [bounded density recovery](xxx-spinon-density-recovery.md). It generates fresh
 samples; no research archive or Python process is required.
 
-This library interface is an initial integration checkpoint. It has a finite
-rapidity cutoff and ordinary Monte Carlo errors. A successful result certifies
+The calculation has a finite rapidity cutoff and ordinary Monte Carlo errors.
+A successful result certifies
 completion of its requested numerical checks, not convergence of the cutoff,
-proposal resolution or sampling distribution. Installed command-line spectrum
-and moment front ends are a subsequent integration step.
+proposal resolution or sampling distribution. The installed
+[spectrum app](xxx-spinon-sectors.md) exposes six-spinon points and slices;
+the separate [moments app](xxx-spinon-moments.md) integrates moments directly.
 
 ## Physical measure
 

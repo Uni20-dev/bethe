@@ -31,6 +31,28 @@ finite-volume sine-Gordon examples explicitly use a `1e-7` absolute tolerance
 and report quadrature, source and tail diagnostics separately. Their physical
 finite-size/asymptotic limitations remain distinct from arithmetic.
 
+### What the ordinary tutorial checks establish
+
+Binary64 is the ordinary plotting format, not a claim that every observable
+has sixteen accurate digits. The model tutorials retain their own checks and
+limitations. These examples show where to look before increasing precision:
+
+| Examples | Checks on the saved calculations | Separate limitation or refinement |
+| --- | --- | --- |
+| [Finite XXX spectra](../tutorials/xxx-structure-factor.md#4-read-coverage-not-just-convergence) | State convergence and measured intensity/first-moment coverage | A converged selected family can omit spectral weight; broadening does not restore it. |
+| [Hubbard dispersions](../tutorials/hubbard-doped.md#reproduce-and-extend), [Lieb–Liniger](../tutorials/lieb-liniger.md#5-reproduce-the-figures) | Background/row status, branch identities, units and limiting or symmetry relations | Refine the integral-equation mesh separately from arithmetic, especially near extreme densities or couplings. |
+| [Lee–Yang](../tutorials/lee-yang.md#4-match-a-non-hermitian-mps-calculation), [sine-Gordon](../tutorials/sine-gordon.md#4-compare-with-mps-calculations) | Exported convergence diagnostics, mass/length scaling and available exact limits | Distinguish equation, source and tail errors from finite-volume approximations and lattice/MPS comparison errors. |
+| [Richardson](../tutorials/richardson.md#5-reproduce-and-validate), [central spin](../tutorials/central-spin.md#5-reproduce-and-validate) | Regular-variable equations, constraints and energy reconstruction; optional independent small matrices | Check the physical observable near root collisions; an ill-conditioned root representation need not indicate a singular energy. |
+| [Kondo](../tutorials/kondo.md#4-check-signs-units-and-numerical-errors) | Response bounds, derivatives, scale covariance and independent reference values | Integral/series and tail diagnostics are not rigorous enclosures; their units differ between magnetization and energy. |
+| [Potts](../tutorials/potts.md#5-reproduce-and-validate), [non-Hermitian XXZ](../tutorials/xxz-nonhermitian.md#5-reproduce-and-validate) | Sector labels, dimensions, equations and independent small-matrix checks | Precision does not remove finite-size corrections or enlarge the selected state family. |
+| [TASEP/ASEP](../tutorials/asep.md#5-reproduce-and-validate) | Analytic endpoints, rate/particle symmetries and an independent small generator | Follow the declared mode; a converged continuation is not an enumeration of every eigenvalue. |
+
+These are existing model checks, not new wider-arithmetic comparisons for all
+654 exports. For an observable requiring more accuracy than the tutorial plot,
+compare successive precisions with non-arithmetic controls fixed, then refine
+the mesh, state family or domain separately. The spinon comparisons below measure
+the precision and cost choices explicitly.
+
 ## Four-spinon starting point
 
 The [compact comparison](../tutorials/data/xxx-four-spinon-precision.json)
@@ -143,6 +165,18 @@ and sampling errors. The printed seed42 example remains valid; its arithmetic
 recommendation does not automatically transfer to another stream or sample
 count. No passing seed is substituted for a failed one.
 
+The [native binary128 follow-up](six-spinon-native-comparison-20261031.json)
+repeats the exact three-frequency queries for seeds 42, 2 and 35 with the
+64/113-bit pair and unchanged `rtol=1e-5`, `atol=0`. All three complete, costing
+7.32, 6.34 and 7.02 CPU seconds respectively on the same i7-12700KF. Independent
+reconstruction of all six native/reference exports verifies every compact
+field, stream/work identity and replicate statistic. Means, sampling SE and
+replicate means/maxima differ from MPFR192 by less than 4.9e-30 relative.
+The corresponding checker is `scripts/check_xxx_six_spinon_native_precision.py`.
+This supplies a measured native retry before MPFR for the two observed failures;
+it does not extend the seed scan to forty binary128 queries or establish
+sampling/domain convergence. Original failed native80 records remain intact.
+
 A separate [geometry comparison](six-spinon-geometry-precision-20261031.json)
 holds the density pair at 192/256 bits and probes R1040. Geometry at 256,
 512 and 1024 bits is rejected before export: the soft endpoint rounds onto
@@ -154,11 +188,16 @@ representation, without asserting that the physical estimate has that accuracy.
 Only 64 draws were used; this is a geometry and arithmetic probe, not a
 converged spectral calculation.
 
-## Scope still being checked
+## Scope of the resolved slice
 
 The small examples and large-domain resolved slice need separate
-recommendations. The resolved-slice pilots are still checking their larger
-domains, quadrature and sampling requirements. This inventory does not replace
-model-specific accuracy tests for every parameter in the library.
+recommendations. Representative [four-spinon controls](four-spinon-slice-calibration-20261031.json)
+and [six-spinon controls](six-spinon-slice-calibration-20261031.json) have been
+checked on both sides of the two-spinon upper edge. They separate arithmetic,
+contour, quadrature/sampling and domain comparisons. The sixteen-frequency
+display calculation is still in progress; its final sampling quality and
+figures remain to be assessed. The measured control changes are not bounds on
+the omitted tails. This inventory does not replace model-specific accuracy
+tests for every parameter in the library.
 The [precision guide](../numerical-accuracy.md) gives the decision procedure and
 explains the relative/absolute screen and demonstrated higher-precision case.

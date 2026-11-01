@@ -1,0 +1,694 @@
+{
+  "schema": "bethe-six-spinon-contour-recovery-v1",
+  "scope": "Recovery controls for two failed observations and four constructed geometries; no spectrum estimate, sampling-convergence claim or omitted-domain bound",
+  "source": "b573fb4bba7d7fee9df6853fb29bc7cb051898da",
+  "uni20": "1cb2474eb0a54e13ec7d5f2c1823752020b2425c",
+  "momentum": "1.5707963267948966192313216916397514420985846996875529104874722961539082031431045",
+  "exchange": "1",
+  "channel": "zz",
+  "geometry_bits": 1536,
+  "rapidity_cutoff": "1040",
+  "relative_tolerance": "1e-6",
+  "absolute_tolerance": "0",
+  "failed_query": {
+    "omega": "2",
+    "seed": 7405,
+    "replicates": 32,
+    "samples_per_replicate": 768,
+    "command": [
+      "bethe-xxx-structure-factor-thermo",
+      "--sectors",
+      "6",
+      "--momentum",
+      "1.5707963267948966192313216916397514420985846996875529104874722961539082031431045",
+      "--exchange",
+      "1",
+      "--channel",
+      "zz",
+      "--precision",
+      "bits-1536",
+      "--density-guard-bits",
+      "320",
+      "--threads",
+      "16",
+      "--density-relative-tolerance",
+      "1e-6",
+      "--density-absolute-tolerance",
+      "0",
+      "--density-terms",
+      "1560",
+      "--density-tail-order",
+      "48",
+      "--density-seconds",
+      "60",
+      "--diagnostics",
+      "--replicate-output",
+      "--quiet",
+      "--omega",
+      "2",
+      "--six-cutoff",
+      "1040",
+      "--replicates",
+      "32",
+      "--samples",
+      "768",
+      "--seed",
+      "7405",
+      "--json",
+      "failed-query.json"
+    ],
+    "binary_sha256": "e174b9fac65bc10409409f2bd2af10f9021c6b9712fb5428005891efd5138abc",
+    "raw_sha256": "14436e3a8018502f84227d5da121343b22f4361ce20825b36d6512922629e430",
+    "hardware": "Intel(R) Xeon(R) Gold 6254 CPU @ 3.10GHz",
+    "workers": 16,
+    "exit_code": 2,
+    "timed_out": false,
+    "wall_seconds": "6230.375053329015",
+    "cpu_seconds": "92630.48415199999",
+    "status": "incomplete",
+    "density": null,
+    "sampling_se": null,
+    "failed_replicate_sample_indices": [
+      [
+        16,
+        310
+      ],
+      [
+        24,
+        669
+      ]
+    ]
+  },
+  "replay_scope": "Each case rebuilds both supported roots at the same geometry precision. Constructed cases are additional tests, not Monte Carlo observations. No per-observation payloads are included here.",
+  "replay_wall_limit_seconds": 120,
+  "production_density_wall_limit_seconds": 60,
+  "timing_scope": "Failed query: external whole-process CPU/wall on Xeon Gold 6254 with 16 workers. Replays: external process CPU including density-context preparation, and largest per-root recovery wall time excluding that preparation, on Core i7-12700KF with one worker. Every replayed root completed below the production 60-second limit.",
+  "queries": [
+    {
+      "id": "constructed-boundaries/opposite-pairs/guard320-terms3120-tail48",
+      "kind": "constructed_geometry",
+      "raw_sha256": "343131f15f92cdc9538d154daf114f1aa5e849e0186e9cc0bf7362a2160c9b0e",
+      "density_comparison_bits": 256,
+      "density_guard_bits": 320,
+      "residue_budgets": [
+        3120,
+        3136
+      ],
+      "tail_orders": [
+        48,
+        52
+      ],
+      "root_statuses": [
+        0,
+        0
+      ],
+      "cpu_seconds": "15.174206000000002",
+      "maximum_root_wall_seconds": "7.36125",
+      "maximum_contour_relative": "7.8892663094212221360320944925955437332694718337405353137082476211549200110981604181371213098128711E-7",
+      "maximum_arithmetic_relative": "1.5889479703464525732648770721314739351734946544196361419761854932535290286504969596370328503317239E-23"
+    },
+    {
+      "id": "constructed-boundaries/opposite-pairs/guard320-terms3120-tail52",
+      "kind": "constructed_geometry",
+      "raw_sha256": "c7f6417602929e526fccfcfeafecb47b8ece7331cb9d779d7bd9581ffaf582e3",
+      "density_comparison_bits": 256,
+      "density_guard_bits": 320,
+      "residue_budgets": [
+        3120,
+        3136
+      ],
+      "tail_orders": [
+        52,
+        56
+      ],
+      "root_statuses": [
+        0,
+        0
+      ],
+      "cpu_seconds": "16.299992",
+      "maximum_root_wall_seconds": "7.85708",
+      "maximum_contour_relative": "8.5837157608145440323413630869104457676065385110327378028978820556506111501343474193983481129071172E-11",
+      "maximum_arithmetic_relative": "1.8285282686577969753639045737282755600871574304814098583114394214986215371031194856371337366739359E-23"
+    },
+    {
+      "id": "constructed-boundaries/opposite-pairs/guard320-terms3640-tail52",
+      "kind": "constructed_geometry",
+      "raw_sha256": "670dca56e62a19e812e6f0240e660e4fbd413814754fb7319fc69e4af0a9d799",
+      "density_comparison_bits": 256,
+      "density_guard_bits": 320,
+      "residue_budgets": [
+        3640,
+        3656
+      ],
+      "tail_orders": [
+        52,
+        56
+      ],
+      "root_statuses": [
+        0,
+        0
+      ],
+      "cpu_seconds": "18.525489999999998",
+      "maximum_root_wall_seconds": "9.38735",
+      "maximum_contour_relative": "1.1124810901971640045697032618336075131137795955189703984783402111986456484090964730378552202592539E-21",
+      "maximum_arithmetic_relative": "9.8393913283227493772772318106381885477385268186462126366117175946358896790043559059739316401055683E-31"
+    },
+    {
+      "id": "constructed-boundaries/opposite-pairs/guard384-terms3120-tail52",
+      "kind": "constructed_geometry",
+      "raw_sha256": "eaf4f216abe94a7b13f3421d237f1dfe1d4256964eaac148cfc5809a1f1bd0cf",
+      "density_comparison_bits": 320,
+      "density_guard_bits": 384,
+      "residue_budgets": [
+        3120,
+        3136
+      ],
+      "tail_orders": [
+        52,
+        56
+      ],
+      "root_statuses": [
+        0,
+        0
+      ],
+      "cpu_seconds": "17.158483",
+      "maximum_root_wall_seconds": "8.37437",
+      "maximum_contour_relative": "8.5837157608145440323413630869104457676038844679094654547340652211229820358613564698590979832780231660853020519200224E-11",
+      "maximum_arithmetic_relative": "9.9124716066497079378294790704821584515119351085602424372596155145646660359973163704296393683782243111885544494664822E-43"
+    },
+    {
+      "id": "constructed-boundaries/same-side/guard320-terms3120-tail48",
+      "kind": "constructed_geometry",
+      "raw_sha256": "69c3115eff2cb8cca4d10c26eef68af1fa41d8f2b702d6447a77031dd77103f4",
+      "density_comparison_bits": 256,
+      "density_guard_bits": 320,
+      "residue_budgets": [
+        3120,
+        3136
+      ],
+      "tail_orders": [
+        48,
+        52
+      ],
+      "root_statuses": [
+        0,
+        0
+      ],
+      "cpu_seconds": "16.407465000000002",
+      "maximum_root_wall_seconds": "8.09827",
+      "maximum_contour_relative": "9.8119434362411625270473600203182024286267235566519222890961838717510142349930961637025567429700304E-60",
+      "maximum_arithmetic_relative": "1.4546689280645134614697227863977063754430383736903940992855748206504944213137150277996851193367609E-61"
+    },
+    {
+      "id": "constructed-boundaries/same-side/guard320-terms3120-tail52",
+      "kind": "constructed_geometry",
+      "raw_sha256": "ed804bdf46405d4e139e61c1cdb83b204c641e21c01ab2d911181e111fe998eb",
+      "density_comparison_bits": 256,
+      "density_guard_bits": 320,
+      "residue_budgets": [
+        3120,
+        3136
+      ],
+      "tail_orders": [
+        52,
+        56
+      ],
+      "root_statuses": [
+        0,
+        0
+      ],
+      "cpu_seconds": "17.277428",
+      "maximum_root_wall_seconds": "8.44219",
+      "maximum_contour_relative": "6.6596777526176739849757165894341843035876993251608754720341015898286969325059702874237570759851198E-65",
+      "maximum_arithmetic_relative": "1.6587458275082857893021592396005591286988928520265230642803564660933421887306968450481516026584684E-61"
+    },
+    {
+      "id": "constructed-boundaries/two-soft/guard320-terms3120-tail48",
+      "kind": "constructed_geometry",
+      "raw_sha256": "78af03430b0804305d9c5865a7926d0f992526773dd67a10e1255921f93b0823",
+      "density_comparison_bits": 256,
+      "density_guard_bits": 320,
+      "residue_budgets": [
+        3120,
+        3136
+      ],
+      "tail_orders": [
+        48,
+        52
+      ],
+      "root_statuses": [
+        0,
+        0
+      ],
+      "cpu_seconds": "17.225856999999998",
+      "maximum_root_wall_seconds": "8.41422",
+      "maximum_contour_relative": "1.1788419660799709648636845147194384990525507915307158183413652032013430780562128906112186905162808E-18",
+      "maximum_arithmetic_relative": "9.1658271771351160814248515261108780433132065820852368289297008601453891847175142897292973804402708E-36"
+    },
+    {
+      "id": "constructed-boundaries/two-soft/guard320-terms3120-tail52",
+      "kind": "constructed_geometry",
+      "raw_sha256": "5792f49d0896e5e663e6d459a9cdaafbb8473ea14b21e1e722c6e7133666170f",
+      "density_comparison_bits": 256,
+      "density_guard_bits": 320,
+      "residue_budgets": [
+        3120,
+        3136
+      ],
+      "tail_orders": [
+        52,
+        56
+      ],
+      "root_statuses": [
+        0,
+        0
+      ],
+      "cpu_seconds": "17.089712",
+      "maximum_root_wall_seconds": "8.37875",
+      "maximum_contour_relative": "1.3368935018147030148725705788573728982123361599270150202177136775884723541234026573691696115999838E-22",
+      "maximum_arithmetic_relative": "1.0547841410542265056542764263038098946660065043513049269712590598817084096798599529276089780124584E-35"
+    },
+    {
+      "id": "constructed-boundaries/wide-soft/guard320-terms3120-tail48",
+      "kind": "constructed_geometry",
+      "raw_sha256": "21ab0b40a9363d562446c6d72beebc4fb4a3460f098395b83d5f7ab1e7375489",
+      "density_comparison_bits": 256,
+      "density_guard_bits": 320,
+      "residue_budgets": [
+        3120,
+        3136
+      ],
+      "tail_orders": [
+        48,
+        52
+      ],
+      "root_statuses": [
+        0,
+        0
+      ],
+      "cpu_seconds": "14.993573",
+      "maximum_root_wall_seconds": "7.20189",
+      "maximum_contour_relative": "1.1808404137959574368703416079803422409862958770473432539751075438073965645894624676430288004116646E-14",
+      "maximum_arithmetic_relative": "1.0629124603359234092762724759495885719504130658681914657223191431022175698499819399889114405091985E-31"
+    },
+    {
+      "id": "constructed-boundaries/wide-soft/guard320-terms3120-tail52",
+      "kind": "constructed_geometry",
+      "raw_sha256": "54b657a9ea2abbd5ad814ad2fe4234539c20566fcf948fad44c63e083403c6a3",
+      "density_comparison_bits": 256,
+      "density_guard_bits": 320,
+      "residue_budgets": [
+        3120,
+        3136
+      ],
+      "tail_orders": [
+        52,
+        56
+      ],
+      "root_statuses": [
+        0,
+        0
+      ],
+      "cpu_seconds": "15.634984000000001",
+      "maximum_root_wall_seconds": "7.53733",
+      "maximum_contour_relative": "1.3387892722768035538724246244139877494816466526127073272343171353921888055949296741050856343996591E-18",
+      "maximum_arithmetic_relative": "1.2231771914662258007119711227994790513566925011236730848143827808656710365640917782429314926274562E-31"
+    },
+    {
+      "id": "replicate-16-sample-310/guard320-terms1560-tail48",
+      "kind": "exact_failed_observation",
+      "raw_sha256": "bb66962a67af4a8efd89a7526da258581c589ec4ca433866dc5e28fa6a7d9ac3",
+      "density_comparison_bits": 256,
+      "density_guard_bits": 320,
+      "residue_budgets": [
+        1560,
+        1576
+      ],
+      "tail_orders": [
+        48,
+        52
+      ],
+      "root_statuses": [
+        1,
+        1
+      ],
+      "cpu_seconds": "10.482171000000001",
+      "maximum_root_wall_seconds": "5.23766",
+      "maximum_contour_relative": "83660949326903139026013116276901466853511279911495867314456647893682288755441444899556666005.381836",
+      "maximum_arithmetic_relative": "40505984335388222167890067241540540486460689041279851793859711632.16522595586396377601511700949661"
+    },
+    {
+      "id": "replicate-16-sample-310/guard320-terms2080-tail48",
+      "kind": "exact_failed_observation",
+      "raw_sha256": "319612e44ace7bbf3537079d709c69d52b47fc561f84bc8bf0a52cf5e03785a3",
+      "density_comparison_bits": 256,
+      "density_guard_bits": 320,
+      "residue_budgets": [
+        2080,
+        2096
+      ],
+      "tail_orders": [
+        48,
+        52
+      ],
+      "root_statuses": [
+        1,
+        1
+      ],
+      "cpu_seconds": "11.822795000000001",
+      "maximum_root_wall_seconds": "5.93204",
+      "maximum_contour_relative": "134.86278024219281052194709168005473008937634805728610299906417619628633335093150744191495154614769",
+      "maximum_arithmetic_relative": "8.1169233262512092009531198478794865091534266099182814832700360820496597499121126206102546710349762E-20"
+    },
+    {
+      "id": "replicate-16-sample-310/guard320-terms2080-tail64",
+      "kind": "exact_failed_observation",
+      "raw_sha256": "39d0309aae61766889fdc9ae5ca25f929ca3dd2be5fc8ae5c692911271aab9df",
+      "density_comparison_bits": 256,
+      "density_guard_bits": 320,
+      "residue_budgets": [
+        2080,
+        2096
+      ],
+      "tail_orders": [
+        64,
+        68
+      ],
+      "root_statuses": [
+        0,
+        0
+      ],
+      "cpu_seconds": "18.412011999999997",
+      "maximum_root_wall_seconds": "9.69787",
+      "maximum_contour_relative": "8.8820135324100003588597619460411326721791413750683927701246148200270696646891906320106813003436043E-14",
+      "maximum_arithmetic_relative": "1.0741274973605413296209954098392496626663679595435855744913994197670516094850628502616817364219587E-20"
+    },
+    {
+      "id": "replicate-16-sample-310/guard320-terms3120-tail48",
+      "kind": "exact_failed_observation",
+      "raw_sha256": "a76c695e9215e61534a7a14b85ca7ed72a71309523b180eb672cf640398159c3",
+      "density_comparison_bits": 256,
+      "density_guard_bits": 320,
+      "residue_budgets": [
+        3120,
+        3136
+      ],
+      "tail_orders": [
+        48,
+        52
+      ],
+      "root_statuses": [
+        0,
+        0
+      ],
+      "cpu_seconds": "15.203113",
+      "maximum_root_wall_seconds": "7.67514",
+      "maximum_contour_relative": "4.057425051995870354041938408823863354832338737252982684660997884620185483910523993875521503512516E-26",
+      "maximum_arithmetic_relative": "9.0131298779603758507149477869501766661933494780503712484089905876330653266333634198003632888911589E-39"
+    },
+    {
+      "id": "replicate-16-sample-310/guard320-terms3120-tail52",
+      "kind": "exact_failed_observation",
+      "raw_sha256": "42dbd3f651ef0b21e75c41ad1516562f7e6f8697b7bd9f29df162b709a99ccaf",
+      "density_comparison_bits": 256,
+      "density_guard_bits": 320,
+      "residue_budgets": [
+        3120,
+        3136
+      ],
+      "tail_orders": [
+        52,
+        56
+      ],
+      "root_statuses": [
+        0,
+        0
+      ],
+      "cpu_seconds": "15.757347",
+      "maximum_root_wall_seconds": "7.86151",
+      "maximum_contour_relative": "2.0662152315111765375047827592591064952456407731411799170701429690668497832977186427813874525521548E-30",
+      "maximum_arithmetic_relative": "1.0372180927901518727406664925141902617999133804759512177113094758157976702557540072830911359313851E-38"
+    },
+    {
+      "id": "replicate-16-sample-310/guard384-terms1560-tail48",
+      "kind": "exact_failed_observation",
+      "raw_sha256": "43823ce2706a2a57c093bb3b8ded974e5e51a52779f8f36935e317d72207e016",
+      "density_comparison_bits": 320,
+      "density_guard_bits": 384,
+      "residue_budgets": [
+        1560,
+        1576
+      ],
+      "tail_orders": [
+        48,
+        52
+      ],
+      "root_statuses": [
+        1,
+        1
+      ],
+      "cpu_seconds": "10.803602999999999",
+      "maximum_root_wall_seconds": "5.41185",
+      "maximum_contour_relative": "83660949326903139026013116276901466853511279911495867052001258591454165160596162093053703999.3308982311024350879336665",
+      "maximum_arithmetic_relative": "2195833810754586096815618378079976275339179473.6971043809863626311085466122081580204940487075025863100100853637205531"
+    },
+    {
+      "id": "replicate-16-sample-310/guard384-terms3120-tail48",
+      "kind": "exact_failed_observation",
+      "raw_sha256": "9c187037b53d0b5f54735022f8ad08749d77348d0e0a71af1de3e9bac3b523ed",
+      "density_comparison_bits": 320,
+      "density_guard_bits": 384,
+      "residue_budgets": [
+        3120,
+        3136
+      ],
+      "tail_orders": [
+        48,
+        52
+      ],
+      "root_statuses": [
+        0,
+        0
+      ],
+      "cpu_seconds": "15.109721",
+      "maximum_root_wall_seconds": "7.61291",
+      "maximum_contour_relative": "4.05742505199587035404193840882386335483098509716280536986476121332088214799433138085024174165080663646426085596943281E-26",
+      "maximum_arithmetic_relative": "4.88602749728932447365815427875097853496499484815483463751446279114374840086435490895854355646252606686736286389248597E-58"
+    },
+    {
+      "id": "replicate-24-sample-669/guard320-terms1560-tail48",
+      "kind": "exact_failed_observation",
+      "raw_sha256": "96963a2e88fcd106cd04eb902990c02c082d23e674c65ec6f40d4797eea80f16",
+      "density_comparison_bits": 256,
+      "density_guard_bits": 320,
+      "residue_budgets": [
+        1560,
+        1576
+      ],
+      "tail_orders": [
+        48,
+        52
+      ],
+      "root_statuses": [
+        1,
+        1
+      ],
+      "cpu_seconds": "10.656402",
+      "maximum_root_wall_seconds": "5.39113",
+      "maximum_contour_relative": "29.532757420816419041882430961212121592469509344490354314181286598598236528580807611839705745603243",
+      "maximum_arithmetic_relative": "1.9559245294544881967407786729862489256934322963365491233089359848147540793144553675135890193339816E-25"
+    },
+    {
+      "id": "replicate-24-sample-669/guard320-terms2080-tail48",
+      "kind": "exact_failed_observation",
+      "raw_sha256": "376e075318f9348abd603d45192c558e594b7485a3dc88cee5af8ff1ab19321d",
+      "density_comparison_bits": 256,
+      "density_guard_bits": 320,
+      "residue_budgets": [
+        2080,
+        2096
+      ],
+      "tail_orders": [
+        48,
+        52
+      ],
+      "root_statuses": [
+        0,
+        0
+      ],
+      "cpu_seconds": "12.333883",
+      "maximum_root_wall_seconds": "6.18503",
+      "maximum_contour_relative": "8.0844315608722460749639795488269053151291834923641053989152581308225100915978671816705091535600415E-19",
+      "maximum_arithmetic_relative": "5.5515043047478950121385164233240195110151816722011143944487952745707711016441816294988512762219257E-39"
+    },
+    {
+      "id": "replicate-24-sample-669/guard320-terms3120-tail48",
+      "kind": "exact_failed_observation",
+      "raw_sha256": "ef69a8bf2efd4c98a7be833e696c410de8d7729e6905469864cfb3349cf24dea",
+      "density_comparison_bits": 256,
+      "density_guard_bits": 320,
+      "residue_budgets": [
+        3120,
+        3136
+      ],
+      "tail_orders": [
+        48,
+        52
+      ],
+      "root_statuses": [
+        0,
+        0
+      ],
+      "cpu_seconds": "14.794338",
+      "maximum_root_wall_seconds": "7.54257",
+      "maximum_contour_relative": "1.3341746554472515301847087763642381304410364032309245033450121048223193240271109733573723442041968E-39",
+      "maximum_arithmetic_relative": "5.9520206253081653161916891949856571484418530050536051708514681295889982366035820272926369023168729E-51"
+    },
+    {
+      "id": "replicate-24-sample-669/guard320-terms3120-tail52",
+      "kind": "exact_failed_observation",
+      "raw_sha256": "588c5d10d8012c421603095c5f7a5005cfdaea01856ea5e97f01b46586c8dbe2",
+      "density_comparison_bits": 256,
+      "density_guard_bits": 320,
+      "residue_budgets": [
+        3120,
+        3136
+      ],
+      "tail_orders": [
+        52,
+        56
+      ],
+      "root_statuses": [
+        0,
+        0
+      ],
+      "cpu_seconds": "16.86886",
+      "maximum_root_wall_seconds": "8.55715",
+      "maximum_contour_relative": "5.1340069197560599763688546153027185568882872969543590019159615020655686210864679285281010739886347E-44",
+      "maximum_arithmetic_relative": "6.849510945113022034971254560934341052422567853821334623521276651958025846785324902514699556686075E-51"
+    },
+    {
+      "id": "replicate-24-sample-669/guard384-terms1560-tail48",
+      "kind": "exact_failed_observation",
+      "raw_sha256": "0f8036ff26d877382d43242efcb60e68debb0f5a3d9ad6dec758e84db08cd7be",
+      "density_comparison_bits": 320,
+      "density_guard_bits": 384,
+      "residue_budgets": [
+        1560,
+        1576
+      ],
+      "tail_orders": [
+        48,
+        52
+      ],
+      "root_statuses": [
+        1,
+        1
+      ],
+      "cpu_seconds": "11.462798",
+      "maximum_root_wall_seconds": "5.86303",
+      "maximum_contour_relative": "29.5327574208164190418824309612121215924695093444903524579675631798016703549470089316059399418951344951112490298810672",
+      "maximum_arithmetic_relative": "1.06030881202612205484440514564439511946175220803290228283617312306046259312593942521677600862236177268843722571892713E-44"
+    }
+  ],
+  "comparisons": [
+    {
+      "case": "replicate-16-sample-310",
+      "first": "guard320-terms2080-tail64",
+      "second": "guard320-terms3120-tail48",
+      "comparison": "independent contour controls",
+      "maximum_relative_checked_density_change": "9.802340927890594469956084603451380530715319372080433012278249575500617165434957966023792710820547248968068746169708487948686142262471210512231254774670899173003790355638575445565561151500388801584013719896677072725873899382678278872381773467307621995219719690252218345865248636252171621750075312639568734553955567328652880830115333832085424918109578604995456407268283765442691074852637980956451522082561312534084999951909571471912541797580579082622008574218846654932796382493699302283726765249562084158836362067038860570E-65"
+    },
+    {
+      "case": "replicate-16-sample-310",
+      "first": "guard320-terms3120-tail48",
+      "second": "guard384-terms3120-tail48",
+      "comparison": "wider arithmetic at fixed contours",
+      "maximum_relative_checked_density_change": "2.102990561426310245552842236533830784920509715841001073238458737358008223607912354542267445277430945465226986679904760579098717277544412173870754535712613070901791832631948582861300550351468175883485278054577134010687480253984868068249808877545334050389179534480484749824953566873144516821926077698900906286404431164622222980242801658496691265117763881819034332998046768591240281611571965378230477453411186494568514559815980248137935035674171190277271738749835421270337708817756578467611358659275813579697739106557128632E-91"
+    },
+    {
+      "case": "replicate-24-sample-669",
+      "first": "guard320-terms2080-tail48",
+      "second": "guard320-terms3120-tail48",
+      "comparison": "longer residue sum at fixed arithmetic",
+      "maximum_relative_checked_density_change": "2.247637750792854540963447137998364165741042107895617705884868863560426032103104776396015073076412676450927068376344689901672298727571883367595820672301400691325693566158486602390562567825260041099092554452625703800801248784448283593806859183683890535815414314975825056302363065311721668644652753872596413599900970197517201099100202067164583765236042528528432653988595802648948552720545744710274602260918828357737770863245695231966458247408767671546357759942919570090614794910584540192524698730960762660972203462529311512E-57"
+    },
+    {
+      "case": "constructed-boundaries/opposite-pairs",
+      "first": "guard320-terms3120-tail52",
+      "second": "guard384-terms3120-tail52",
+      "comparison": "wider arithmetic",
+      "maximum_relative_checked_density_change": "9.151878549548838988548733763096252731442995866094419320718126683499820417953720215768260280098954338442549100205483330790477255382104801287919484641184364407696725932049467688971902011993386132280973910477176017172315733013066723796294708483969331984479632770317563572049126222464917833255693396934896074717632227576383446898047110168259679045976980347004797469649658754104393065756282940310096664418678411324660220192566692550101302286506008744507126044793688478578510832920375610446710304628579236039853743412468753834E-91"
+    },
+    {
+      "case": "constructed-boundaries/opposite-pairs",
+      "first": "guard320-terms3120-tail52",
+      "second": "guard320-terms3640-tail52",
+      "comparison": "longer contour",
+      "maximum_relative_checked_density_change": "3.228146386492384962191614372396153700435055225840251038692933538346347212387941242090426377555034024441774120090161674504846013925205593709216292858115942708665532741881330780830198869872995535870558218274195844147308140385884454348506385636999678151511683623943250039834185250643030144458960541110590167866084297153091600533618919382276427330558324254618698036650966055569816259199590427520938724389995564824523834250050761825485872293535885840274411671271127316808309110002963858347024013235925779468954050855707561487E-64"
+    },
+    {
+      "case": "replicate-16-sample-310",
+      "first": "guard320-terms3120-tail48",
+      "second": "guard320-terms3120-tail52",
+      "comparison": "higher tail order",
+      "maximum_relative_checked_density_change": "9.802043045129224622298128238991201495840279156842069643860432904111787351480432632142861509596600382197467770198148907923321303393754500172265213283233737255103532380169766406078121555812907576463052530671930610777594084434823762910816582640316804115632662885020469428780889049488889331104342970432924443973436346166270998104033240703598366232902826651906550808784119849248741749708122778426252901505379322260010044685916576075311027136953429475011836101804394481476696274929412067510641475414305603539836753897075619771E-65"
+    },
+    {
+      "case": "replicate-24-sample-669",
+      "first": "guard320-terms3120-tail48",
+      "second": "guard320-terms3120-tail52",
+      "comparison": "higher tail order",
+      "maximum_relative_checked_density_change": "4.938881971375803144207038345879871363280446562528750205230297672144792625047488686902005109516944713808743856401293712555833219965550619569220404909653445918990913723360594943359594474150455462830662018748457767115972416623214431207265024002382540345458589869872481082147580911107389778911608532572012586950800962105479345233428019440603537267540132654756766685826690657137013651001760387733973250762128662927770993369390129498998210913155279687751501731078231542322665988011104148886954051650782716051239626809263421651E-67"
+    }
+  ],
+  "selected_controls": {
+    "geometry_bits": 1536,
+    "comparison_bits": 256,
+    "guard_bits": 320,
+    "residue_budgets": [
+      3120,
+      3136
+    ],
+    "tail_orders": [
+      52,
+      56
+    ],
+    "rtol": "1e-6",
+    "atol": "0",
+    "cutoff": "1040"
+  },
+  "selected_case_diagnostics": [
+    {
+      "case": "replicate-16-sample-310",
+      "maximum_contour_relative": "2.0662152315111765375047827592591064952456407731411799170701429690668497832977186427813874525521548e-30",
+      "maximum_arithmetic_relative": "1.0372180927901518727406664925141902617999133804759512177113094758157976702557540072830911359313851e-38"
+    },
+    {
+      "case": "replicate-24-sample-669",
+      "maximum_contour_relative": "5.1340069197560599763688546153027185568882872969543590019159615020655686210864679285281010739886347e-44",
+      "maximum_arithmetic_relative": "6.849510945113022034971254560934341052422567853821334623521276651958025846785324902514699556686075e-51"
+    },
+    {
+      "case": "constructed-boundaries/opposite-pairs",
+      "maximum_contour_relative": "8.5837157608145440323413630869104457676065385110327378028978820556506111501343474193983481129071172e-11",
+      "maximum_arithmetic_relative": "1.8285282686577969753639045737282755600871574304814098583114394214986215371031194856371337366739359e-23"
+    },
+    {
+      "case": "constructed-boundaries/wide-soft",
+      "maximum_contour_relative": "1.3387892722768035538724246244139877494816466526127073272343171353921888055949296741050856343996591e-18",
+      "maximum_arithmetic_relative": "1.2231771914662258007119711227994790513566925011236730848143827808656710365640917782429314926274562e-31"
+    },
+    {
+      "case": "constructed-boundaries/two-soft",
+      "maximum_contour_relative": "1.3368935018147030148725705788573728982123361599270150202177136775884723541234026573691696115999838e-22",
+      "maximum_arithmetic_relative": "1.0547841410542265056542764263038098946660065043513049269712590598817084096798599529276089780124584e-35"
+    },
+    {
+      "case": "constructed-boundaries/same-side",
+      "maximum_contour_relative": "6.6596777526176739849757165894341843035876993251608754720341015898286969325059702874237570759851198e-65",
+      "maximum_arithmetic_relative": "1.6587458275082857893021592396005591286988928520265230642803564660933421887306968450481516026584684e-61"
+    }
+  ],
+  "conclusion": "Wider arithmetic alone did not resolve the original contour failures. Stronger contour controls pass both original cases and four constructed near-cutoff geometries without changing precision, tolerances, sampling identities or proposal. Whole-query recovery must still pass before producing a spectrum estimate."
+}

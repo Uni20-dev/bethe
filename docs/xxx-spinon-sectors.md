@@ -10,6 +10,10 @@ a row named `sum:2+4`, `sum:2+4+6`, or the corresponding selected sum.
 No normalization correction is required. For direct frequency integrals, use
 [the separate moments frontend](xxx-spinon-moments.md).
 
+For worked calculations, follow [four-spinon refinement](tutorials/xxx-four-spinon.md),
+[six-spinon sampling](tutorials/xxx-six-spinon.md) and the
+[combined spectral comparison](tutorials/xxx-spinon-slice.md).
+
 ## Start with a small point
 
 ```sh
