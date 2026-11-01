@@ -1,0 +1,88 @@
+{
+  "provenance_kind": "frozen_research_inputs",
+  "description": "Revision and hashes identify inputs before adaptation, including explicitly marked untracked files captured at the source checkpoint; they are not hashes of the public implementation.",
+  "source_checkpoint": "2026-11-02",
+  "sources": [
+    {
+      "repository": "bethe-6spinon",
+      "path": "scripts/spectrum_catalogue.py",
+      "revision": "1222b7ed070c82cd837374956be62b20dce5a89a",
+      "sha256": "d6785ebeae64ca65e42c86fb265919bed771677012bbdb237eb91224d4c9a716",
+      "worktree_status": "clean"
+    },
+    {
+      "repository": "bethe-6spinon",
+      "path": "scripts/test_spectrum_catalogue.py",
+      "revision": "1222b7ed070c82cd837374956be62b20dce5a89a",
+      "sha256": "75851521587fd67f93b80c81ace5f3fba688add63d57775481dde0c57d217027",
+      "worktree_status": "clean"
+    },
+    {
+      "repository": "bethe-6spinon",
+      "path": "scripts/load_xxx_size_spectra.py",
+      "revision": "1222b7ed070c82cd837374956be62b20dce5a89a",
+      "sha256": "080cf4f329e1a930db07e03d78ac12f28a9aef3c15d9b77a21efbab497f9d260",
+      "worktree_status": "?? scripts/load_xxx_size_spectra.py"
+    },
+    {
+      "repository": "bethe-6spinon",
+      "path": "scripts/rebin_xxx_spinon_gap.py",
+      "revision": "1222b7ed070c82cd837374956be62b20dce5a89a",
+      "sha256": "30ae3d7c7d4414954967cf96559e4ffe323b7007e5659cb73e31a83aaca5d34b",
+      "worktree_status": "?? scripts/rebin_xxx_spinon_gap.py"
+    },
+    {
+      "repository": "bethe-6spinon",
+      "path": "scripts/test_rebin_xxx_spinon_gap.py",
+      "revision": "1222b7ed070c82cd837374956be62b20dce5a89a",
+      "sha256": "e065c4e97361cd653365c2a9240bdb82f9a7f24c4d78a09e9786bc3ab7d268b1",
+      "worktree_status": "?? scripts/test_rebin_xxx_spinon_gap.py"
+    },
+    {
+      "repository": "bethe-6spinon",
+      "path": "scripts/relate_xxx_gap_to_finite_size.py",
+      "revision": "1222b7ed070c82cd837374956be62b20dce5a89a",
+      "sha256": "16a7a3edd45ad19e35ee9f83365b504c87d993b69c2eec732a968debd7a21112",
+      "worktree_status": "?? scripts/relate_xxx_gap_to_finite_size.py"
+    },
+    {
+      "repository": "bethe-research",
+      "path": "scripts/analyze_xxx_six_spinon_nearest_neighbour.py",
+      "revision": "2242fd5d78ec2c6c81a64993eca5dd6eea6cd732",
+      "sha256": "c3f1206cb86a585f348d4d101d0168e8e190f6c2885aabb749808f27a169b244",
+      "worktree_status": "?? scripts/analyze_xxx_six_spinon_nearest_neighbour.py"
+    },
+    {
+      "repository": "bethe-research",
+      "path": "scripts/test_xxx_six_spinon_nearest_neighbour.py",
+      "revision": "2242fd5d78ec2c6c81a64993eca5dd6eea6cd732",
+      "sha256": "96da03695d30ed713c16195d38896e57e368e6df3093fca80f306d21becff3a1",
+      "worktree_status": "?? scripts/test_xxx_six_spinon_nearest_neighbour.py"
+    },
+    {
+      "repository": "bethe-research",
+      "path": "scripts/analyze_xxx_six_spinon_next_nearest_neighbour.py",
+      "revision": "2242fd5d78ec2c6c81a64993eca5dd6eea6cd732",
+      "sha256": "bc6c34d8750d1d57d8538abb31efc8263c8599991f6a36c7d36d056a9b9d7715",
+      "worktree_status": "?? scripts/analyze_xxx_six_spinon_next_nearest_neighbour.py"
+    },
+    {
+      "repository": "bethe-research",
+      "path": "scripts/test_xxx_six_spinon_next_nearest_neighbour.py",
+      "revision": "2242fd5d78ec2c6c81a64993eca5dd6eea6cd732",
+      "sha256": "24c649beea7a8fd9a9e1e0d02a1b4aca17ab4b6c0761cc2a67ab24f307d37e83",
+      "worktree_status": "?? scripts/test_xxx_six_spinon_next_nearest_neighbour.py"
+    }
+  ],
+  "adaptation": {
+    "readers": "Typed JSON exports, exact decimal/rational/half-integer values, explicit compound identities, all failed rows, metadata and byte checksum. No campaign-specific reconciliation or recovery precedence.",
+    "spatial": "Caller-supplied Fourier measure and separations; zeroth frequency moments distinct from first moments; reuse spectral_time_transform covariance propagation.",
+    "cutoff": "Explicit inclusive coordinate selection and original sample measure; common-sample cutoff contrasts; independent domains require explicit independence."
+  },
+  "private_dispositions": [
+    "Archive paths, multipart streaming collectors and fixed N/state-count manifests remain campaign adapters.",
+    "Fixed root-repeat tolerances, recovery overlays and preferred-file policy remain campaign adapters.",
+    "Published pi/2 bands, fixed radial/section manifests, empirical finite-size fits and one-off figures remain research analyses.",
+    "No archived per-observation payloads are required or included."
+  ]
+}

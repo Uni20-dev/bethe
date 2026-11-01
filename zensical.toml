@@ -108,6 +108,7 @@ nav = [
     { "Parallel calculations" = "docs/parallel-calculations.md" },
     { "Output and exports" = "docs/output.md" },
     { "Spectral quadrature and time signals" = "docs/spectral-quadrature.md" },
+    { "Spectral tables and spatial correlations" = "docs/spectral-analysis.md" },
     { "App capabilities" = "docs/app-capabilities.md" },
   ] },
   { "C++ library" = [
