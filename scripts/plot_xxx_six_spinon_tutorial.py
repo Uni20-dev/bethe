@@ -178,8 +178,8 @@ def spectrum_figure(document, *, momentum, exchange='1'):
     Validate through the shared compact reader before converting to plotting
     precision. Keep validation-only use free of plotting dependencies.
     """
-    from xxx_six_spinon_tutorial_data import read_compact_slice
-    data = read_compact_slice(document, momentum=momentum, exchange=exchange)
+    from xxx_six_spinon_tutorial_data import read_slice
+    data = read_slice(document, momentum=momentum, exchange=exchange)
     import math
     import matplotlib
     matplotlib.use('Agg')
