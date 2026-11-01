@@ -225,6 +225,18 @@ archives to redraw a figure.
 The high-precision calculations remain valuable references even when they are
 no longer economical production settings. The tutorials should teach the
 current supported method, while the records and this development account
-explain how it was established. The next useful benchmark is the complete
-checked native calculation, including its fallback work: that is what determines
-how much finer a spectrum or how many more samples the same compute budget buys.
+explain how it was established.
+
+The complete checked native calculation is now available in the
+[current tutorial](tutorials/xxx-six-spinon.md#retry-difficult-configurations-at-wider-precision).
+The [installed R=256 example](validation/six-spinon-native-retry-tutorial-20261101.json)
+used 67.75 CPU seconds and 20.15 wall seconds with four workers on a Xeon Gold
+6254. That includes all arithmetic checks and wider-precision retries, not just
+successful native density evaluations.
+
+The [sixteen-frequency R=1040 reference](validation/six-spinon-reference-20261102.json)
+used 30.34 CPU hours and 2.49 summed query wall hours with 24 workers on the same
+machine, for 1,613,824 draws. The records retain sampling errors and finite-domain
+limits alongside the costs. These complete-query measurements show the cost of
+the supported workflow, while the matched controls above explain how its
+implementation improved.
