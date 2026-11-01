@@ -14,7 +14,7 @@ from pathlib import Path
 import re
 import shlex
 
-from spinon_tutorial_exports import CONVENTION, close, decimal, plotting_float, read_spectrum
+from spinon_tutorial_exports import CONVENTION, close, decimal, output_precision_bits, plotting_float, read_spectrum
 from tutorial_common import save_svg
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -52,13 +52,13 @@ def join_points(four_runs, six_points, *, compatibility=None):
         for row in run['spectrum']:
             grouped.setdefault(decimal(row['omega']), {})[row['sector']] = row
         for computed, rows in grouped.items():
-            omega = match_requested_frequency(computed, six, int(run['metadata']['Geometry and output bits']))
+            omega = match_requested_frequency(computed, six, output_precision_bits(run['metadata']))
             if omega in four:
                 raise ValueError('Duplicate two/four frequency')
             four[omega] = (rows, run_index)
     if four.keys() != six.keys():
         raise ValueError('Sector frequency grids differ; interpolation would change the comparison')
-    bits = max(int(run['metadata']['Geometry and output bits']) for run in sources)
+    bits = max(output_precision_bits(run['metadata']) for run in sources)
     points = []
     with localcontext() as context:
         context.prec = max(80, bits // 3 + 50)
@@ -74,8 +74,8 @@ def join_points(four_runs, six_points, *, compatibility=None):
                 point.update(s6=None, s6_sampling_se=None, s2_plus_s4_plus_s6=None,
                              reason=sampled['reason'])
             else:
-                common_bits = min(int(sources[fi]['metadata']['Geometry and output bits']),
-                                  int(sampled['metadata']['Geometry and output bits']))
+                common_bits = min(output_precision_bits(sources[fi]['metadata']),
+                                  output_precision_bits(sampled['metadata']))
                 if any(not close(rows['2']['q'], replica['q'], common_bits)
                        for replica in sampled['replicate_records']):
                     raise ValueError('Sector momenta differ')

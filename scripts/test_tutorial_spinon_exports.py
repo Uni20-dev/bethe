@@ -2,7 +2,7 @@
 from copy import deepcopy
 import unittest
 
-from spinon_tutorial_exports import CONVENTION, plotting_float, read_spectrum
+from spinon_tutorial_exports import CONVENTION, output_precision_bits, plotting_float, read_spectrum
 
 
 def fixture():
@@ -87,6 +87,40 @@ class SpinonExports(unittest.TestCase):
         data['tables']['spectrum']['rows'][0][0] = {'value': '1.5', 'precision': 256}
         with self.assertRaisesRegex(ValueError, 'precision'):
             read_spectrum(data, momentum='1.5')
+
+    def test_mixed_scalars_use_output_precision_not_an_earlier_stage(self):
+        data = fixture()
+        table = data['tables']['spectrum']
+        meta = table['metadata']
+        meta['Accumulation and output bits'] = meta.pop('Geometry and output bits')
+        meta['Six-spinon precision stages'] = 'fp80,fp128,reference'
+        meta['Selected spinon sectors'] = '6'
+        table['rows'] = [['1.5', '2', '6', {'value': '0.125', 'precision': 192}, 'estimated']]
+        self.assertEqual(read_spectrum(data, momentum='1.5')['spectrum'][0]['density'], '0.125')
+        table['rows'][0][3]['precision'] = 64
+        with self.assertRaisesRegex(ValueError, 'precision'):
+            read_spectrum(data, momentum='1.5')
+
+    def test_mixed_precision_cannot_masquerade_as_fixed_geometry(self):
+        good = {'Accumulation and output bits': '192', 'Six-spinon precision stages': 'fp80,fp128,reference',
+                'Selected spinon sectors': '6'}
+        self.assertEqual(output_precision_bits(good), 192)
+        for changes in ({'Geometry and output bits': '192'}, {'Six-spinon precision stages': ''},
+                        {'Six-spinon precision stages': 'fp128,fp80,reference'},
+                        {'Six-spinon precision stages': 'fp80,fp80,reference'},
+                        {'Six-spinon precision stages': 'fp80'}, {'Selected spinon sectors': '2,4'},
+                        {'Accumulation and output bits': True}, {'Accumulation and output bits': '192.5'}):
+            with self.subTest(changes=changes), self.assertRaises(ValueError):
+                output_precision_bits({**good, **changes})
+        for key in ('Six-spinon precision stages', 'Accumulation and output bits'):
+            bad = dict(good)
+            del bad[key]
+            with self.subTest(missing=key), self.assertRaises(ValueError):
+                output_precision_bits(bad)
+        bad = dict(good)
+        bad['Geometry and output bits'] = bad.pop('Accumulation and output bits')
+        with self.assertRaisesRegex(ValueError, 'geometry'):
+            output_precision_bits(bad)
 
 
 if __name__ == '__main__':
