@@ -10,9 +10,16 @@
   "supported_roots": 40,
   "density_attempts": 80,
   "source_changes": [
+    "https://github.com/Uni20-dev/bethe/pull/84",
+    "https://github.com/Uni20-dev/bethe/pull/85",
     "https://github.com/Uni20-dev/bethe/pull/89",
     "https://github.com/Uni20-dev/bethe/pull/90"
   ],
+  "source_range": {
+    "before": "b573fb4bba7d7fee9df6853fb29bc7cb051898da",
+    "after": "fc8320cc148bb3b5243b9cbbdac20bcd16f2a3f0",
+    "scope": "source_changes lists every merged PR changing apps/ or include/ on this first-parent range. PR84 changes failed-control diagnostics; PR85 changes the native DensityLow choice, not the MPFR pair used here. All twelve replicate rows succeeded with no failed sample and an empty reason. These controls compare successful MPFR results, not failure wording across revisions."
+  },
   "independent_review_sha256": [
     "4e53096d404728fc7aa6d3a313bfbaf6d8d7e606e0574c579be6c2f522acfe4a",
     "bf722f91dd34144bb7211ada56c277fa53d295e907d6c176bf8e803198a6a6d3"
