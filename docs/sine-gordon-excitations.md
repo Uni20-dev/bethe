@@ -13,9 +13,9 @@ Two tools cover the first excitation checkpoint:
   These are **asymptotic**, not exact finite-volume excited energies.
 
 Both use fp64 by default, native long-double and optional MPLAPACK fp128.
-Particle dispersions additionally accept `--precision bits-N` or `digits-N`
-with Uni20's MPFR scalars enabled; this requires no MPLAPACK. The scattering
-phase and finite-volume solvers still use the configured fixed formats.
+Both additionally accept `--precision bits-N` or `digits-N` with Uni20's MPFR
+scalars enabled; this requires no MPLAPACK. The Bethe-Yang phase integrals use
+the same explicit working precision as the level solve.
 All dimensional quantities use velocity=hbar=1. The mass input M is the physical
 soliton mass, not the bare cosine coefficient or the lightest breather mass.
 

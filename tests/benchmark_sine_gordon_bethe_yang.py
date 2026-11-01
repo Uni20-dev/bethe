@@ -43,6 +43,8 @@ def main():
                 table = document["tables"]["levels"]
                 if document["status"] != "complete" or len(table["rows"]) != 1:
                     raise RuntimeError("incomplete or unexpected benchmark output")
+                if int(table["metadata"]["Working precision (bits)"]) > 333:
+                    raise ValueError("the independent benchmark reference supports at most 333 bits")
                 row = dict(zip([c["id"] for c in table["columns"]],
                                [v["value"] if isinstance(v, dict) else v for v in table["rows"][0]]))
                 if row["status"] != "converged" or row["phase_status"] != "converged":

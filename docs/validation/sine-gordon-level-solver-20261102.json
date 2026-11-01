@@ -1,0 +1,390 @@
+{
+  "schema": "bethe-solver-efficiency-v1",
+  "date": "2026-11-02",
+  "model": "Sine-Gordon same-charge Bethe-Yang pair",
+  "parameters": {
+    "p": "2",
+    "mass": "1",
+    "length": "10",
+    "number": "0.5",
+    "levels": 1,
+    "threads": 1,
+    "max_iterations": 512
+  },
+  "baseline_source": "9ce2f881f0e4763042480e3875c0a6eb21ab1586",
+  "candidate_solver_commit": "0fc37c76e029903974168d776f911c51266c5419",
+  "candidate_header_sha256": "f5a9d8a95d7ec899c2f8eb628ff54b43ba35ab377474970757c1d8fc0d5804a7",
+  "uni20_revision": "1cb2474eb0a54e13ec7d5f2c1823752020b2425c",
+  "build_provenance": {
+    "candidate_binary_revision": "843cdd96d72086c9140e0a0c806561942677aa9f-dirty",
+    "explanation": "Candidate binaries were built from the numerical patch before commit packaging and rebasing onto PR100. The solver matches the identified commit and header hash; only whitespace formatting changed after compilation. Original binary-reported identity is retained.",
+    "cpu": "Intel Core i7-12700KF",
+    "affinity": "CPU 0 for matched executable benchmarks",
+    "blas_omp_threads": 1,
+    "release_compiler": "GNU 13.3.0",
+    "release_flags": "-O3 -DNDEBUG",
+    "release_mplapack": "3.0.0, existing GCC13 Release provider; the solver uses phase quadrature, not linear algebra",
+    "sanitizer_compiler": "Clang 19.1.1",
+    "sanitizer_flags": "-O1 -g1, ASan and UBSan, MPFR CPU configuration"
+  },
+  "release": [
+    {
+      "precision": "fp64",
+      "before": {
+        "phase_integrals": 39,
+        "integrand_evaluations": 42393,
+        "grid_cpu_seconds": [
+          0.001891,
+          0.001759,
+          0.001759
+        ],
+        "median_grid_cpu_seconds": 0.001759,
+        "process_wall_seconds": [
+          0.014392871002200991,
+          0.004469475010409951,
+          0.004544346011243761
+        ],
+        "energy_errors": [
+          "1.235119690220677624920429099617345969084313366720206179873964185447436796383083870138965893957613231799265348E-13",
+          "1.235119690220677624920429099617345969084313366720206179873964185447436796383083870138965893957613231799265348E-13",
+          "1.235119690220677624920429099617345969084313366720206179873964185447436796383083870138965893957613231799265348E-13"
+        ],
+        "counting_tolerance": "3.637978807091713E-12"
+      },
+      "after": {
+        "phase_integrals": 5,
+        "integrand_evaluations": 5435,
+        "grid_cpu_seconds": [
+          0.000232,
+          0.000232,
+          0.000246
+        ],
+        "median_grid_cpu_seconds": 0.000232,
+        "process_wall_seconds": [
+          0.0021965159685350955,
+          0.001900447008665651,
+          0.0020499160164035857
+        ],
+        "energy_errors": [
+          "3.25119690220677624920429099617345969084313366720206179873964185447436796383083870138965893957613231799265348E-14",
+          "3.25119690220677624920429099617345969084313366720206179873964185447436796383083870138965893957613231799265348E-14",
+          "3.25119690220677624920429099617345969084313366720206179873964185447436796383083870138965893957613231799265348E-14"
+        ],
+        "counting_tolerance": "3.637978807091713E-12"
+      },
+      "observed_cpu_ratio": 7.581896551724138
+    },
+    {
+      "precision": "long-double",
+      "before": {
+        "phase_integrals": 49,
+        "integrand_evaluations": 111328,
+        "grid_cpu_seconds": [
+          0.035397,
+          0.035321,
+          0.03502
+        ],
+        "median_grid_cpu_seconds": 0.035321,
+        "process_wall_seconds": [
+          0.03847265901276842,
+          0.038212771993130445,
+          0.03800676699029282
+        ],
+        "energy_errors": [
+          "3.49609779322375079570900382654030915686633279793820126035814552563203616916129861034106042386768200734652E-17",
+          "3.49609779322375079570900382654030915686633279793820126035814552563203616916129861034106042386768200734652E-17",
+          "3.49609779322375079570900382654030915686633279793820126035814552563203616916129861034106042386768200734652E-17"
+        ],
+        "counting_tolerance": "1.77635683940025046468E-15"
+      },
+      "after": {
+        "phase_integrals": 6,
+        "integrand_evaluations": 13632,
+        "grid_cpu_seconds": [
+          0.004337,
+          0.004338,
+          0.004295
+        ],
+        "median_grid_cpu_seconds": 0.004337,
+        "process_wall_seconds": [
+          0.007349640014581382,
+          0.007082116033416241,
+          0.007206397014670074
+        ],
+        "energy_errors": [
+          "5.09779322375079570900382654030915686633279793820126035814552563203616916129861034106042386768200734652E-20",
+          "5.09779322375079570900382654030915686633279793820126035814552563203616916129861034106042386768200734652E-20",
+          "5.09779322375079570900382654030915686633279793820126035814552563203616916129861034106042386768200734652E-20"
+        ],
+        "counting_tolerance": "1.77635683940025046468E-15"
+      },
+      "observed_cpu_ratio": 8.144108830989163
+    },
+    {
+      "precision": "fp128",
+      "before": {
+        "phase_integrals": 99,
+        "integrand_evaluations": 508167,
+        "grid_cpu_seconds": [
+          2.155061,
+          2.134222,
+          2.124872
+        ],
+        "median_grid_cpu_seconds": 2.134222,
+        "process_wall_seconds": [
+          2.1589252109988593,
+          2.137720113969408,
+          2.1284750230261125
+        ],
+        "energy_errors": [
+          "7.04229099617345969084313366720206179873964185447436796383083870138965893957613231799265348E-32",
+          "7.04229099617345969084313366720206179873964185447436796383083870138965893957613231799265348E-32",
+          "7.04229099617345969084313366720206179873964185447436796383083870138965893957613231799265348E-32"
+        ],
+        "counting_tolerance": "3.15544362088404722164691426113114492E-30"
+      },
+      "after": {
+        "phase_integrals": 7,
+        "integrand_evaluations": 35931,
+        "grid_cpu_seconds": [
+          0.150762,
+          0.150791,
+          0.150951
+        ],
+        "median_grid_cpu_seconds": 0.150791,
+        "process_wall_seconds": [
+          0.1539569299784489,
+          0.1539844509679824,
+          0.15422755799954757
+        ],
+        "energy_errors": [
+          "6.70900382654030915686633279793820126035814552563203616916129861034106042386768200734652E-35",
+          "6.70900382654030915686633279793820126035814552563203616916129861034106042386768200734652E-35",
+          "6.70900382654030915686633279793820126035814552563203616916129861034106042386768200734652E-35"
+        ],
+        "counting_tolerance": "3.15544362088404722164691426113114492E-30"
+      },
+      "observed_cpu_ratio": 14.153510488026471
+    },
+    {
+      "precision": "bits-128",
+      "before": {
+        "phase_integrals": 114,
+        "integrand_evaluations": 598842,
+        "grid_cpu_seconds": [
+          7.21708,
+          7.345659,
+          7.211425
+        ],
+        "median_grid_cpu_seconds": 7.21708,
+        "process_wall_seconds": [
+          7.222586955991574,
+          7.349711390037555,
+          7.215391799050849
+        ],
+        "energy_errors": [
+          "6.39617345969084313366720206179873964185447436796383083870138965893957613231799265348E-38",
+          "6.39617345969084313366720206179873964185447436796383083870138965893957613231799265348E-38",
+          "6.39617345969084313366720206179873964185447436796383083870138965893957613231799265348E-38"
+        ],
+        "counting_tolerance": "9.629649721936179265279889712924636592691E-35"
+      },
+      "after": {
+        "phase_integrals": 7,
+        "integrand_evaluations": 36771,
+        "grid_cpu_seconds": [
+          0.446952,
+          0.446351,
+          0.447661
+        ],
+        "median_grid_cpu_seconds": 0.446952,
+        "process_wall_seconds": [
+          0.45066844596294686,
+          0.44970324699534103,
+          0.4510225679841824
+        ],
+        "energy_errors": [
+          "3.240382654030915686633279793820126035814552563203616916129861034106042386768200734652E-37",
+          "3.240382654030915686633279793820126035814552563203616916129861034106042386768200734652E-37",
+          "3.240382654030915686633279793820126035814552563203616916129861034106042386768200734652E-37"
+        ],
+        "counting_tolerance": "9.629649721936179265279889712924636592691E-35"
+      },
+      "observed_cpu_ratio": 16.147326782294297
+    },
+    {
+      "precision": "bits-256",
+      "before": {
+        "phase_integrals": 239,
+        "integrand_evaluations": 2850792,
+        "grid_cpu_seconds": [
+          43.283036,
+          43.190942,
+          43.789535
+        ],
+        "median_grid_cpu_seconds": 43.283036,
+        "process_wall_seconds": [
+          43.2966762779979,
+          43.21354639204219,
+          44.03525161999278
+        ],
+        "energy_errors": [
+          "1.40262563203616916129861034106042386768200734652E-74",
+          "1.40262563203616916129861034106042386768200734652E-74",
+          "1.40262563203616916129861034106042386768200734652E-74"
+        ],
+        "counting_tolerance": "2.829899712133347614846599778402434931463290999418480684244567153104844162060264E-73"
+      },
+      "after": {
+        "phase_integrals": 9,
+        "integrand_evaluations": 107352,
+        "grid_cpu_seconds": [
+          1.615058,
+          1.656867,
+          1.620108
+        ],
+        "median_grid_cpu_seconds": 1.620108,
+        "process_wall_seconds": [
+          1.631825755990576,
+          1.6608906980254687,
+          1.6428905780194327
+        ],
+        "energy_errors": [
+          "2.563203616916129861034106042386768200734652E-79",
+          "2.563203616916129861034106042386768200734652E-79",
+          "2.563203616916129861034106042386768200734652E-79"
+        ],
+        "counting_tolerance": "2.829899712133347614846599778402434931463290999418480684244567153104844162060264E-73"
+      },
+      "observed_cpu_ratio": 26.716142380631414
+    }
+  ],
+  "sanitizer": [
+    {
+      "precision": "fp64",
+      "before": {
+        "phase_integrals": 39,
+        "integrand_evaluations": 42393,
+        "grid_cpu_seconds": [
+          0.002548
+        ],
+        "median_grid_cpu_seconds": 0.002548,
+        "process_wall_seconds": [
+          0.05374087201198563
+        ],
+        "energy_errors": [
+          "1.235119690220677624920429099617345969084313366720206179873964185447436796383083870138965893957613231799265348E-13"
+        ],
+        "counting_tolerance": "3.637978807091713E-12"
+      },
+      "after": {
+        "phase_integrals": 5,
+        "integrand_evaluations": 5435,
+        "grid_cpu_seconds": [
+          0.000748
+        ],
+        "median_grid_cpu_seconds": 0.000748,
+        "process_wall_seconds": [
+          0.03934710699832067
+        ],
+        "energy_errors": [
+          "3.25119690220677624920429099617345969084313366720206179873964185447436796383083870138965893957613231799265348E-14"
+        ],
+        "counting_tolerance": "3.637978807091713E-12"
+      },
+      "observed_cpu_ratio": 3.406417112299465
+    },
+    {
+      "precision": "bits-128",
+      "before": {
+        "phase_integrals": 114,
+        "integrand_evaluations": 598842,
+        "grid_cpu_seconds": [
+          30.987155
+        ],
+        "median_grid_cpu_seconds": 30.987155,
+        "process_wall_seconds": [
+          31.29704357701121
+        ],
+        "energy_errors": [
+          "6.39617345969084313366720206179873964185447436796383083870138965893957613231799265348E-38"
+        ],
+        "counting_tolerance": "9.629649721936179265279889712924636592691E-35"
+      },
+      "after": {
+        "phase_integrals": 7,
+        "integrand_evaluations": 36771,
+        "grid_cpu_seconds": [
+          1.878983
+        ],
+        "median_grid_cpu_seconds": 1.878983,
+        "process_wall_seconds": [
+          2.042751886008773
+        ],
+        "energy_errors": [
+          "3.240382654030915686633279793820126035814552563203616916129861034106042386768200734652E-37"
+        ],
+        "counting_tolerance": "9.629649721936179265279889712924636592691E-35"
+      },
+      "observed_cpu_ratio": 16.491450428236977
+    },
+    {
+      "precision": "bits-256",
+      "before": {
+        "phase_integrals": 239,
+        "integrand_evaluations": 2850792,
+        "grid_cpu_seconds": [
+          162.738327
+        ],
+        "median_grid_cpu_seconds": 162.738327,
+        "process_wall_seconds": [
+          162.95221668598242
+        ],
+        "energy_errors": [
+          "1.40262563203616916129861034106042386768200734652E-74"
+        ],
+        "counting_tolerance": "2.829899712133347614846599778402434931463290999418480684244567153104844162060264E-73"
+      },
+      "after": {
+        "phase_integrals": 9,
+        "integrand_evaluations": 107352,
+        "grid_cpu_seconds": [
+          5.948715
+        ],
+        "median_grid_cpu_seconds": 5.948715,
+        "process_wall_seconds": [
+          6.148908581002615
+        ],
+        "energy_errors": [
+          "2.563203616916129861034106042386768200734652E-79"
+        ],
+        "counting_tolerance": "2.829899712133347614846599778402434931463290999418480684244567153104844162060264E-73"
+      },
+      "observed_cpu_ratio": 27.356887495870957
+    }
+  ],
+  "validation": {
+    "release_tests": 24,
+    "release_passed": 24,
+    "sanitizer_selected_tests": 19,
+    "sanitizer_passed_after_missing_frontend_build": 19,
+    "setup_note": "The initial sanitizer selection included a CLI check whose dispersion executable was not built. It passed after building that target; the other 17 checks passed on their first run. No numerical setting was changed.",
+    "additional_coverage": [
+      "333-bit independent phase/kernel/energy reference",
+      "bounded iteration count at unchanged full accuracy",
+      "short-length, large-length and near-free bracket cases"
+    ],
+    "baseline_sanitizer_tests": 5,
+    "baseline_sanitizer_passed": 5,
+    "grid_regression": "Original mixed-result, failure, streaming and 129-level admission-window test passes in both builds without changes"
+  },
+  "scope": [
+    "Full phase tolerance, residual-plus-error acceptance, arithmetic precision and failure budgets unchanged.",
+    "All original assertions retained. No production special-case for the benchmark point.",
+    "Three alternating Release repeats on a shared workstation; sanitizer comparisons are single runs.",
+    "The table describes one matched physical level, not all couplings or whole-CI speedup.",
+    "Small native timings are sensitive to timing granularity and shared-host effects; integrand counts are deterministic.",
+    "The numerical checks do not bound omitted finite-volume wrapping corrections."
+  ],
+  "reproduce": "python tests/benchmark_sine_gordon_bethe_yang.py BASELINE_EXECUTABLE CANDIDATE_EXECUTABLE --precision fp64 long-double fp128 bits-128 bits-256 --repeats 3"
+}
