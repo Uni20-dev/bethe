@@ -8,3 +8,8 @@ target_include_directories(bethe_experimental INTERFACE
 if(BETHE_BUILD_TESTS)
   add_subdirectory(tests)
 endif()
+
+if(BETHE_BUILD_EXAMPLES)
+  add_executable(bethe_example_finite_six_spinon examples/xxx_six_spinon.cpp)
+  target_link_libraries(bethe_example_finite_six_spinon PRIVATE bethe::experimental)
+endif()
