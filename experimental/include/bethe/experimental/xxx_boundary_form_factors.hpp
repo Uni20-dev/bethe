@@ -88,6 +88,8 @@ template <uni20::Real R> class BoundaryFormFactors {
         saved->status = BoundaryFormFactorStatus::converged;
     }
     std::size_t sites() const { return sites_; }
+    /// A moved-from object has no snapshot and reports precision_limit.
+    /// This is also a numerical-rejection status; ready() is the usability test.
     BoundaryFormFactorStatus status() const
     {
       return snapshot_ ? snapshot_->status : BoundaryFormFactorStatus::precision_limit;
