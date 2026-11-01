@@ -178,15 +178,22 @@ it does not extend the seed scan to forty binary128 queries or establish
 sampling/domain convergence. Original failed native80 records remain intact.
 
 A separate [geometry comparison](six-spinon-geometry-precision-20261031.json)
-holds the density pair at 192/256 bits and probes R1040. Geometry at 256,
-512 and 1024 bits is rejected before export: the soft endpoint rounds onto
-pi. The same 64-draw stream succeeds at 1536 and 2048 bits, with matching
+held the density pair at 192/256 bits and probed R1040 using the earlier
+endpoint representation. Geometry at 256, 512 and 1024 bits was rejected
+before export: the soft endpoint rounded onto pi. The same 64-draw stream
+succeeded at 1536 and 2048 bits, with matching
 support/work identities and relative changes in replicate means and maxima
 below 1e-450. Individual observation values were not retained in this probe.
-This demonstrates a genuine precision requirement of the current coordinate
-representation, without asserting that the physical estimate has that accuracy.
-Only 64 draws were used; this is a geometry and arithmetic probe, not a
-converged spectral calculation.
+This demonstrated a precision requirement of that coordinate representation,
+without asserting that the physical estimate had that accuracy.
+
+The later [endpoint-preserving replay](six-spinon-endpoint-geometry-20261101.json)
+keeps the soft distances separately and completes the same 64 draws with
+256-bit geometry and the original 192/256-bit density pair. Sample identities
+and counts agree; the mean changes by less than 8e-74 relative to the archived
+1536-bit result. The reference recipes retain their actual earlier settings.
+Neither replay establishes a universal arithmetic floor: the roughly 100%
+relative sampling SE and omitted domain still limit this small pilot.
 
 ## Scope of the resolved slice
 

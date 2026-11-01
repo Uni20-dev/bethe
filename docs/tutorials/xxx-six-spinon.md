@@ -397,25 +397,42 @@ This comparison alone establishes neither a numerical bias nor convergence.
 
 ## When the geometry needs higher precision
 
-Extending the rapidity domain can demand much more precision even with a loose
-sampling target. In a separate fixed-stream check at $`R=1040`$, we held the
-density comparison at 192/256 bits and varied only the geometry precision.
-At 256, 512 and 1024 bits the program rejected the surface with
-`surface cutoff unresolved; increase geometry precision`. At 1536 and 2048
-bits, all 64 draws completed with matching supported-root counts and agreeing
-replicate estimates. The [geometry comparison record](../validation/six-spinon-geometry-precision-20261031.json)
-retains these controls, outcomes and costs.
+The archived [geometry comparison](../validation/six-spinon-geometry-precision-20261031.json)
+shows how the representation of soft momenta can drive arithmetic cost. With
+$`R=1040`$ and the density pair fixed at 192/256 bits, that implementation
+rejected 256-, 512- and 1024-bit geometry. The same 64 draws completed at
+1536 and 2048 bits, with matching supported-root counts and agreeing replicate
+estimates. These are measurements of the recorded implementation.
 
-Very soft momenta approach zero or $`\pi`$ exponentially in the rapidity.
-The current surface representation needs enough bits to distinguish its domain
-boundaries: $`\pi-2\arctan(e^{-R})`$ must remain distinguishable from $`\pi`$.
-This alone requires roughly $`R/\ln 2`$ bits, before allowing for accuracy in
-the subsequent calculation. Raising density precision cannot repair an unresolved surface:
-rebuild the geometry with higher `--precision`. With MPFR,
-`--density-guard-bits 256` keeps the density checks at 192/256 bits while the
-geometry precision increases. That separation substantially reduces cost.
-The 64-draw check establishes feasibility and arithmetic agreement only; it
-does not resolve the spectrum or its omitted soft tail.
+That surface formed $`p_{\max}=\pi-2\arctan(e^{-R})`$. Keeping the tiny
+endpoint displacement distinct from pi required roughly $`R/\ln 2`$
+significand bits before further accuracy margins. The updated surface retains
+endpoint distances separately from integer multiples of pi, avoiding this
+subtraction. The cutoff alone therefore no longer imposes that significand
+requirement.
+
+The [endpoint-preserving replay](../validation/six-spinon-endpoint-geometry-20261101.json)
+completes the same 64 draws with **256-bit geometry and the original 192/256-bit
+density pair**. Its mean changes by less than $`8\times10^{-74}`$ relative to
+the archived 1536-bit result, with matching sample identities and supported-root
+counts. The roughly 100% relative sampling SE remains: this checks arithmetic
+on those inputs, not sampling or cutoff convergence or a universal minimum
+precision.
+
+Conditioning near a degenerate solved pair and floating-point exponent range
+still need checks. The [sector guide](../xxx-spinon-sectors.md) explains the
+representation, bounded MPFR retries and the check that returning roots at the
+requested precision preserves their separation. Refinement cannot restore
+input digits already rounded away. Successful geometry also does not establish
+that the density fits within a native format's exponent range or passes its
+paired-precision and contour checks.
+
+The [production reference recipe](xxx-six-spinon-reproduction.md) retains the
+1536-bit geometry and density controls used for its saved data. Those results
+remain useful references for cheaper implementations; their precision and
+historical timings are not a recommendation to use the same settings in every
+new calculation. Keep sample identities, domain and contour controls fixed when
+comparing alternatives, and record the new settings and cost separately.
 
 For a new calculation, hold the domain, contour budgets and sample identities
 fixed while comparing precisions. Then vary the non-arithmetic controls

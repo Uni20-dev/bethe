@@ -163,13 +163,18 @@ residue budgets from 64/80 to 96/112 and tail orders from 16/20 to 24/28 changes
 it by $`6.43\times10^{-38}`$. These checks explain why outer quadrature and
 domain refinement, rather than more density digits, control this comparison.
 
-Deep soft domains do need wide **geometry**: nearly coincident coordinates
-must remain distinguishable before the density is evaluated. The density can
+The saved deep-domain calculation used wide **geometry** to keep very soft
+coordinates distinguishable before evaluating the density. The density can
 use fewer bits independently. At $`\omega/J=2`$, cutoff 768 and order 4,
 1536-bit geometry with 192/256-bit density comparisons reproduces the
 1472/1536-bit density reference to $`7.90\times10^{-76}`$ relative, while
-reducing measured CPU cost by a factor of 4.37. This is evidence for separating
-those controls at that query, not a reason to lower the geometry precision.
+reducing measured CPU cost by a factor of 4.37. This validates separating those
+controls at that query; it does not measure the minimum geometry precision.
+The [accuracy guide](../numerical-accuracy.md#deep-domain-geometry-needs-its-own-precision)
+explains how retaining endpoint distances separately can reduce the arithmetic
+requirement. Its six-spinon replay is a separate check, not validation of a
+cheaper setting for this four-spinon quadrature. The reproduction recipe keeps
+the settings used for the saved data.
 
 The [optional reproduction recipe](xxx-spinon-slice-reproduction.md) records
 the full display grid and controls. The much smaller

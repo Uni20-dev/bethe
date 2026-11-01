@@ -175,18 +175,33 @@ example illustrates why those requirements must be measured separately.
 
 ## Deep-domain geometry needs its own precision
 
-The six-spinon [deep-domain probe](validation/six-spinon-geometry-precision-20261031.json)
-shows another reason for extra precision: representing an endpoint. The current
-geometry constructs $`p_{\min}=2\arctan(e^{-R})`$ and
-$`p_{\max}=\pi-p_{\min}`$. Keeping the second endpoint distinct from pi requires
-roughly $`R/\ln 2`$ significand bits, before further accuracy margins. At
-$`R=1040`$, 1024 bits fail this check while 1536 and 2048 bits produce matching
-replicate means and maxima with the same 192/256-bit density pair. The final
-observable does not need hundreds of accurate digits; its current coordinates
-need enough bits to retain a very small soft distance. A reformulation that
-stores that distance separately could avoid this subtraction, but would also
-need checked momentum sums, support decisions and solved roots. Removing the
-endpoint guard would not make the lower-precision calculation reliable.
+The archived six-spinon
+[deep-domain probe](validation/six-spinon-geometry-precision-20261031.json)
+shows how a coordinate representation can force unnecessary precision. That
+implementation constructed $`p_{\min}=2\arctan(e^{-R})`$ and
+$`p_{\max}=\pi-p_{\min}`$. Keeping the second endpoint distinct from pi in
+that subtraction required roughly $`R/\ln 2`$ significand bits, before further
+accuracy margins. At $`R=1040`$, 1024 bits failed the check while 1536 and 2048
+bits produced matching replicate means and maxima with the same 192/256-bit
+density pair. These remain measurements of the recorded implementation, not
+an intrinsic precision requirement of the observable.
+
+The surface now retains endpoint distances separately from integer multiples
+of pi. The [complete 64-draw replay](validation/six-spinon-endpoint-geometry-20261101.json)
+passes at 256 geometry bits with the same 192/256-bit density pair, preserving
+sample identities and supported-root counts. Its mean differs from the archived
+1536-bit result by less than $`8\times10^{-74}`$ relative. The pilot has roughly
+100% relative sampling SE: this checks arithmetic on those inputs, not sampling
+or omitted-tail convergence. Conditioning near a degenerate solved pair and
+floating-point exponent range still need separate checks; the
+[surface validation](xxx-spinon-sectors.md) explains those checks and bounded
+MPFR refinement.
+
+The production reference recipes retain the settings used to calculate their
+saved data, including 1536-bit geometry. They are not a minimum-precision
+recommendation for later implementations. To reduce that setting, replay the
+complete query with wider references and unchanged density, contour, sampling
+and domain controls; record the new executable and settings separately.
 
 ## A reproducible decision procedure
 

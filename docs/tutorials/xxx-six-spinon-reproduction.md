@@ -119,6 +119,15 @@ the density comparisons use 256/320 bits. The contour comparisons use
 numerical limitations, as explained in the [precision study](xxx-six-spinon.md#distinguish-contour-failures-from-arithmetic-failures).
 Sampling error still excludes the omitted rapidity domain.
 
+These settings preserve the recorded reference campaign. The updated
+[endpoint representation](xxx-six-spinon.md#when-the-geometry-needs-higher-precision)
+removes the cutoff-dependent need for roughly 1500 geometry bits at $`R=1040`$.
+The recipe's 1536 bits remain a valid conservative setting, not a demonstrated
+minimum for the newer implementation. Lower-precision pilot comparisons do not
+establish that every production query passes at those settings. Validate a
+cheaper recipe with the same sampling and density/contour controls before
+quoting its accuracy or end-to-end cost.
+
 ## Pack and redraw completed results
 
 Once every frequency has completed, run this from the source directory, with
