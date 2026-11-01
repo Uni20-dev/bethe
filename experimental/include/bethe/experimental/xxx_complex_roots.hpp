@@ -175,6 +175,8 @@ template <uni20::Real R> R energy(int n, std::span<C<R> const> roots, R const& e
 template <uni20::Real R>
 heisenberg::FormFactor<R> raising_weight(PreparedSinglet<R> const& ground, std::span<C<R> const> lambda)
 {
+  if (ground.sites() > static_cast<std::size_t>(std::numeric_limits<int>::max()))
+    throw std::invalid_argument("complex-root helpers require a site count representable as int");
   if (lambda.size() + 1 != ground.sites() / 2) throw std::invalid_argument("invalid singlet/triplet root counts");
   heisenberg::FormFactor<R> result;
   result.status = ground.status();
