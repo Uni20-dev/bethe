@@ -108,8 +108,12 @@ They exclude sampling error, rapidity-tail bias and geometry discretization.
 Geometry precision is independent of density recovery: retrying the density
 cannot repair an unresolved energy surface. Compare whole calculations at
 stronger geometry precision using the same sample identities. Geometry must
-also retain the largest density guard precision. R=1040 requires much higher
-geometry precision and stronger contour budgets than this R=8 example.
+also retain the largest density guard precision. Scaled endpoint geometry
+avoids a precision requirement proportional to the cutoff, but deep and
+ill-conditioned configurations still need explicit arithmetic checks. The
+[spectrum app's precision stages](xxx-spinon-sectors.md#retrying-six-spinon-observations-at-wider-precision)
+can retry the entire weighted observation, including its geometry, using the
+same exact uniform sample. This does not establish cutoff convergence.
 
 `estimated` requires every requested replicate to complete. Failed samples
 are retained with their index, failure kind and density status, and prevent a

@@ -257,6 +257,45 @@ The two-spinon contribution retains its separate `--tolerance`,
 `--max-evaluations` and `--max-quadrature-order` controls. Its reported kernel
 error is not an error estimate for a higher-sector partial sum.
 
+## Retrying six-spinon observations at wider precision
+
+`--six-precision-stages fp80,fp128,reference` tries each complete six-spinon
+observation in increasing arithmetic precision. It requires sector 6 and an
+MPFR reference selected with `--precision bits-N` or `digits-N`. Omit an
+unavailable native stage explicitly; an unsupported requested format is an
+error. The list must be ordered, contain no duplicates and end in `reference`.
+Without this option, the fixed-precision calculation is unchanged.
+
+For example, this small interface check requests eight draws, with the same
+default finite domain and density controls at every stage:
+
+```sh
+bethe-xxx-structure-factor-thermo --sectors 6 --momentum 1.5 --omega 2 \
+  --precision bits-192 --six-precision-stages fp80,fp128,reference \
+  --replicates 2 --samples 4 --seed 42 --threads 2 \
+  --diagnostics --replicate-output --quiet --json staged-point.json
+```
+
+Eight draws do not resolve the physical spectrum. Increase the sampling and
+domain controls independently; the arithmetic stages do not remove their
+uncertainties. Validate a proposed policy against a wider calculation with
+the same sample identities before using it for reference data.
+
+Each retry starts from the **same exact uniform sample**, rebuilding the
+proposal, energy surface, density and weighted observation at the next stage.
+Geometry conditioning, exponent-range failures and exhausted density screens
+can trigger a retry. Invalid inputs, inconsistent controls, cancellation and
+time limits remain terminal failures. No observation is discarded or redrawn.
+The reference point determines continuum boundaries before native evaluation.
+
+Every native stage uses its own paired density precisions and retains the
+requested tolerances and contour controls. `--density-guard-bits` applies to
+the MPFR reference; its guard must be at least as wide as every native stage.
+`--precision` sets the reference geometry, accumulation and output precision,
+and also the arithmetic of selected two/four-spinon sectors. Metadata records
+these separately from each six-spinon stage. A 192-bit output scalar therefore
+does not claim that all observations were evaluated to 192-bit accuracy.
+
 ## Tables and failures
 
 The `spectrum` table contains `q`, `omega`, `sector`, `density`,
@@ -269,7 +308,7 @@ combining unlike work units.
 The `continuum` table gives unrestricted kinematic edges for each selected
 sector. It does not describe cutoff-induced holes or certify sampled support.
 
-Two optional detail tables are available:
+Optional detail tables are available:
 
 - `diagnostics`: two-spinon kernel error; four-spinon order and cutoff changes;
   contour and arithmetic diagnostics; six-spinon sampling error; work count
@@ -277,10 +316,25 @@ Two optional detail tables are available:
 - `replicates`: six-spinon replicate IDs, completed sample and supported-root counts,
   density-attempt counts, largest absolute observation, density and
   numerical diagnostics, failed sample identity and reason. Available with 6.
+- `recovery`: stage attempts, accepted observations, retries, inclusive supported
+  roots and density attempts, plus failure buckets with status and reason.
+  Available with `--six-precision-stages`; unused stages have explicit zero rows.
 
-`--diagnostics` and `--replicate-output` show these on screen and in a JSON
-document. A named CSV/TSV export requests that table without showing it on
-screen. Unknown or unavailable table names fail before exports are opened.
+`--diagnostics` shows diagnostics; `--replicate-output` shows replicates and,
+with staged precision, recovery. These selections also include the tables in
+a JSON document. A named CSV/TSV export, such as `--csv-table recovery=retry.csv`,
+requests that table without showing it on screen. Unknown or unavailable table
+names fail before exports are opened. Complete recovery-aware analysis needs
+both detail options, as in the example above.
+
+Physical replicate work counts only the final observation. Recovery work counts
+all retained attempts, including failed stages and a terminal failed sample;
+it excludes speculative work discarded after ordered failure handling. Rows
+are keyed by momentum, frequency, replicate and stage. `kind=stage` holds totals;
+`kind=failure` groups identical failure tags and reasons. Failure buckets have
+absent numeric `accepted`/`retried` fields. Empty enum strings mean no tag;
+the literal `none` is a distinct enum value. Failed runs keep these records and
+an absent spectral estimate, rather than reporting a mean of survivors.
 
 The primary spectrum streams during calculation. Detail rows are retained only
 when requested, then written after the primary table. Their explicit combined
@@ -288,6 +342,9 @@ buffer limit is `--detail-row-limit`, default 100000 rows; it applies even with
 `--no-retain`, which disables each output table's own row retention. Split a
 large grid or raise this limit when requesting detailed records. A spectrum-only
 stream does not build those detail buffers.
+For recovery, the preflight bound allows a distinct failure reason for every
+draw at every stage, plus the stage-total rows. It is checked before opening
+files, even if the eventual successful run uses far fewer rows.
 
 A failed requested contribution makes its partial-sum density absent, even if
 other sectors succeeded. Thresholds also have no finite sum when one term has

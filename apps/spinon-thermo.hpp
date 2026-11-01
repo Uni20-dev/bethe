@@ -4,7 +4,10 @@
 #include "execution-options.hpp"
 #include "result-output.hpp"
 #include "solver-precision.hpp"
+#include "spinon-precision-stages.hpp"
+#include "spinon-recovery-output.hpp"
 #include <bethe/xxx_four_spinon_thermodynamics.hpp>
+#include <bethe/xxx_six_spinon_precision_recovery.hpp>
 #include <bethe/xxx_six_spinon_structure_factor.hpp>
 #include <bethe/xxx_thermodynamic_structure_factor.hpp>
 
@@ -21,6 +24,7 @@ struct Controls
     std::size_t order = 8, nodes = 100000, terms = 64, tail_order = 16, detail_rows = 100000;
     std::optional<std::size_t> fine_order;
     std::optional<std::size_t> density_guard_bits;
+    std::optional<std::string> precision_stages;
     std::optional<std::string> extended_cutoff;
     bethe::MonteCarloOptions sampling{8, 32, 0, 0, 52};
     double recovery_seconds = 60;
@@ -60,6 +64,9 @@ inline void add_options(CLI::App& app, Controls& c, bool moments = false)
   {
     fine->needs(extended);
     extended->needs(fine);
+    text_option(app, "--six-precision-stages", c.precision_stages,
+                "Optional ordered stages from fp80,fp128,reference; final reference uses --precision bits-N and "
+                "--density-guard-bits; requires sector 6");
   }
   option(app, "--six-cutoff", c.six_cutoff, "Six-spinon absolute rapidity cutoff |beta|<R")->capture_default_str();
   option(app, "--six-soft-fraction", c.six_soft, "Soft component fraction of the native rapidity marginal")
@@ -134,8 +141,7 @@ template <uni20::Real R> model::SpinonRecoveryPolicy recovery(Controls const& c,
   }
   else
   {
-    if (c.density_guard_bits)
-      throw std::invalid_argument("--density-guard-bits requires --precision bits-N");
+    if (c.density_guard_bits) throw std::invalid_argument("--density-guard-bits requires --precision bits-N");
     low = uni20::numeric_limits<DensityLow<R>>::digits(DensityLow<R>{1});
   }
   if (guard <= low)
@@ -159,6 +165,8 @@ template <uni20::Real R> struct Point
 {
     std::vector<Row<R>> rows;
     std::optional<model::SixSpinonSpectrumEstimate<R>> six;
+    std::vector<model::SixSpinonPrecisionStageWork> six_stages;
+    std::vector<std::optional<std::vector<model::SixSpinonPrecisionStageWork>>> six_replicate_stages;
 };
 template <uni20::Real R>
 auto joint_proposal(Controls const& controls, R const& one, model::StructureFactorOptions<R> const& options)
@@ -173,6 +181,25 @@ auto joint_proposal(Controls const& controls, R const& one, model::StructureFact
        {Kind::two_pairs, parse(controls.two_pairs_weight), parse(controls.two_pairs_scale),
         parse(controls.two_pairs_gap)}});
 }
+
+// A native stage uses the same physical proposal, tolerances and contour
+// controls as the reference. Only its geometry and density pair change;
+// --density-guard-bits belongs to the MPFR reference, not these native pairs.
+template <uni20::Real Native, uni20::Real Reference>
+auto native_six_stage(Controls const& controls, Reference const& exchange)
+{
+  static_assert(!uni20::has_runtime_precision_v<Native>);
+  Native const one{1};
+  model::StructureFactorOptions<Native> const options;
+  Controls native_controls = controls;
+  native_controls.density_guard_bits.reset();
+  bethe::detail::validate_monte_carlo(controls.sampling, 3, one);
+  Native const native_exchange = uni20::scalar_like(one, exchange);
+  if (!uni20::isfinite(native_exchange) || native_exchange <= Native{0})
+    throw std::invalid_argument("exchange cannot be represented in a requested native precision stage");
+  return model::ThermodynamicSixSpinonStructureFactor<Native, DensityLow<Native>, Native>(
+      joint_proposal(native_controls, one, options), recovery(native_controls, one), native_exchange);
+}
 template <uni20::Real R> struct Plan
 {
     using Four = model::ThermodynamicFourSpinon<R, DensityLow<R>, R>;
@@ -183,6 +210,14 @@ template <uni20::Real R> struct Plan
     model::ThermodynamicTwoSpinonStructureFactor<R> two;
     std::optional<Four> four;
     std::optional<Six> six;
+    std::vector<PrecisionStage> stages;
+    std::optional<model::ThermodynamicSixSpinonStructureFactor<long double, DensityLow<long double>, long double>>
+        six80;
+#if UNI20_HAS_FLOAT128
+    std::optional<
+        model::ThermodynamicSixSpinonStructureFactor<uni20::float128, DensityLow<uni20::float128>, uni20::float128>>
+        six128;
+#endif
     R one, four_cutoff, six_cutoff;
     std::optional<R> extended_cutoff;
     Plan(Controls c, R exchange, model::StructureFactorOptions<R> options)
@@ -213,8 +248,101 @@ template <uni20::Real R> struct Plan
             std::numeric_limits<std::size_t>::max() / controls.sampling.replicates / 6 / (2 * policy.stages.size()))
           throw std::invalid_argument("six-spinon work counters overflow");
       }
+      stages = precision_stages(controls.precision_stages);
+      if (!stages.empty())
+      {
+        if constexpr (!uni20::has_runtime_precision_v<R>)
+          throw std::invalid_argument("--six-precision-stages requires an MPFR reference");
+        else
+        {
+          validate_precision_stages(stages, {PrecisionKind::bits, uni20::numeric_limits<R>::digits(one)}, has(6),
+                                    controls.density_guard_bits);
+          if (std::ranges::find(stages, PrecisionStage::fp80) != stages.end())
+            six80.emplace(native_six_stage<long double>(controls, exchange));
+#if UNI20_HAS_FLOAT128
+          if (std::ranges::find(stages, PrecisionStage::fp128) != stages.end())
+            six128.emplace(native_six_stage<uni20::float128>(controls, exchange));
+#endif
+        }
+      }
     }
 };
+
+// Dispatch only at the query boundary. Each callback owns immutable Points;
+// sample tasks do not parse options or reconstruct density contexts.
+template <uni20::Real R, class Visit>
+auto with_six_precision_points(Plan<R> const& plan, R const& q, R const& omega, Visit&& visit)
+{
+  auto reference = plan.six->at(q, omega);
+  // Reference boundaries bypass sampling and must not require representable
+  // native query coordinates (for example the rounded periodic endpoint).
+  if (reference.boundary_status()) return visit(reference, reference);
+  if (plan.six80)
+  {
+    auto first = plan.six80->at(uni20::scalar_like(1.L, q), uni20::scalar_like(1.L, omega));
+#if UNI20_HAS_FLOAT128
+    if (plan.six128)
+    {
+      auto second =
+          plan.six128->at(uni20::scalar_like(uni20::float128{1}, q), uni20::scalar_like(uni20::float128{1}, omega));
+      return visit(reference, std::move(first), std::move(second), reference);
+    }
+#endif
+    return visit(reference, std::move(first), reference);
+  }
+#if UNI20_HAS_FLOAT128
+  if (plan.six128)
+  {
+    auto first =
+        plan.six128->at(uni20::scalar_like(uni20::float128{1}, q), uni20::scalar_like(uni20::float128{1}, omega));
+    return visit(reference, std::move(first), reference);
+  }
+#endif
+  return visit(reference, reference);
+}
+
+template <uni20::Real R> struct SixPrecisionRun
+{
+    model::SixSpinonSpectrumEstimate<R> spectrum;
+    std::vector<model::SixSpinonPrecisionStageWork> stages;
+    std::vector<std::optional<std::vector<model::SixSpinonPrecisionStageWork>>> replicate_stages;
+};
+
+template <uni20::Real R, class Metadata>
+uni20::async::AsyncTask
+collect_six_precision(uni20::async::ReadBuffer<model::SixSpinonObservedEstimate<R, Metadata>> work,
+                      std::size_t declared_stages, uni20::async::WriteBuffer<SixPrecisionRun<R>> output)
+{
+  auto destination = co_await output;
+  auto const& observed = co_await work;
+  SixPrecisionRun<R> result;
+  result.spectrum = observed.spectrum;
+  // Erase the compile-time stage count once, after the complete query drains.
+  result.stages.assign(observed.metadata.stages.begin(), observed.metadata.stages.end());
+  if (observed.spectrum.replicates.empty()) result.stages.resize(declared_stages);
+  result.replicate_stages.resize(observed.replicate_metadata.size());
+  for (std::size_t i = 0; i < observed.replicate_metadata.size(); ++i)
+    if (observed.replicate_metadata[i])
+    {
+      auto const& stages = observed.replicate_metadata[i]->stages;
+      result.replicate_stages[i].emplace(stages.begin(), stages.end());
+    }
+  destination = std::move(result);
+}
+
+template <uni20::Real R>
+auto six_precision_async(Plan<R> const& plan, R const& q, R const& omega, model::SpinonSamplingOptions sampling,
+                         bethe::ExecutionOptions execution)
+{
+  return with_six_precision_points(plan, q, omega, [&](auto reference, auto... points) {
+    auto observer = model::make_six_spinon_precision_recovery(plan.one, std::move(points)...);
+    auto pending = reference.evaluate_observations_async(sampling, std::move(observer), execution);
+    uni20::async::Async<SixPrecisionRun<R>> output;
+    auto task = collect_six_precision(pending.read(), plan.stages.size(), output.write());
+    bethe::detail::schedule_owned(execution.continuous_scheduler(), std::move(task));
+    return output;
+  });
+}
 
 template <uni20::Real R> Row<R> four_row(model::FourSpinonIntegralResult<R, 1> const& result)
 {
@@ -260,6 +388,7 @@ uni20::async::AsyncTask point_task(std::shared_ptr<Plan<R> const> plan, R q, R o
   std::optional<uni20::async::Async<F>> four;
   std::optional<uni20::async::Async<Refined>> refined;
   std::optional<uni20::async::Async<S>> six;
+  std::optional<uni20::async::Async<SixPrecisionRun<R>>> six_precision;
   auto const& c = plan->controls;
   Point<R> result;
   bethe::detail::ExecutionControl control(execution.stop);
@@ -285,7 +414,10 @@ uni20::async::AsyncTask point_task(std::shared_ptr<Plan<R> const> plan, R q, R o
     {
       auto sampling = c.sampling;
       sampling.first_replicate = std::uint64_t(index) * sampling.replicates;
-      six.emplace(plan->six->at(q, omega).evaluate_async(sampling, execution));
+      if (plan->stages.empty())
+        six.emplace(plan->six->at(q, omega).evaluate_async(sampling, execution));
+      else if constexpr (uni20::has_runtime_precision_v<R>)
+        six_precision.emplace(six_precision_async(*plan, q, omega, sampling, execution));
     }
     if (std::ranges::find(plan->selected, 2) != plan->selected.end())
     {
@@ -351,10 +483,20 @@ uni20::async::AsyncTask point_task(std::shared_ptr<Plan<R> const> plan, R q, R o
   }
   try
   {
-    if (six)
+    if (six || six_precision)
     {
-      auto proxy = co_await six->read();
-      result.six = proxy.get();
+      if (six)
+      {
+        auto proxy = co_await six->read();
+        result.six = proxy.get();
+      }
+      else
+      {
+        auto proxy = co_await six_precision->read();
+        result.six = proxy.get().spectrum;
+        result.six_stages = proxy.get().stages;
+        result.six_replicate_stages = proxy.get().replicate_stages;
+      }
       auto const& v = *result.six;
       Row<R> row;
       row.sector = "6";
@@ -453,20 +595,32 @@ int run_spectrum(Arguments const& a, model::StructureFactorOptions<R> options, I
     throw std::invalid_argument("six-spinon replicate identities overflow on this grid");
   bool const want_diagnostics = a.output.requested("diagnostics") || a.output.screen_table("diagnostics");
   bool const want_replicates = plan->six && (a.output.requested("replicates") || a.output.screen_table("replicates"));
-  std::size_t const per_point =
+  bool const want_recovery =
+      !plan->stages.empty() && (a.output.requested("recovery") || a.output.screen_table("recovery"));
+  std::size_t per_point =
       (want_diagnostics ? plan->selected.size() : 0) + (want_replicates ? a.spinons.sampling.replicates : 0);
+  if (want_recovery)
+  {
+    if (per_point > a.spinons.detail_rows)
+      throw std::invalid_argument("requested detail tables exceed --detail-row-limit");
+    per_point += recovery_detail_bound(a.spinons.sampling.replicates, a.spinons.sampling.samples_per_replicate,
+                                       plan->stages.size(), a.spinons.detail_rows - per_point);
+  }
   if (per_point && count > a.spinons.detail_rows / per_point)
-    throw std::invalid_argument(
-        "requested diagnostic/replicate tables exceed --detail-row-limit; split the grid or raise the limit");
+    throw std::invalid_argument("requested detail tables exceed --detail-row-limit; split the grid or raise the limit");
   // Use the actual query constructor for all geometry validation before opening
   // destinations, including later grid points. No density work is done here;
   // discard each prepared point immediately to keep preparation memory bounded.
   if (plan->six)
     for (auto const& momentum : q)
       for (auto const& frequency : w)
-        (void)plan->six->at(momentum, frequency);
+        if (plan->stages.empty())
+          (void)plan->six->at(momentum, frequency);
+        else if constexpr (uni20::has_runtime_precision_v<R>)
+          with_six_precision_points(*plan, momentum, frequency, [](auto const&, auto const&...) {});
   std::vector<std::tuple<R, R, Row<R>>> diagnostic_rows;
   std::vector<std::tuple<R, R, model::SpinonSpectrumReplicate<R>>> replicate_rows;
+  std::vector<std::tuple<R, R, std::uint64_t, std::vector<model::SixSpinonPrecisionStageWork>>> recovery_rows;
   uni20::async::TbbScheduler scheduler(a.threads);
   bethe::ExecutionOptions execution{.scheduler = &scheduler,
                                     .batch_size = a.spinons.samples_per_task,
@@ -480,9 +634,6 @@ int run_spectrum(Arguments const& a, model::StructureFactorOptions<R> options, I
       .field("family", "Family", "Partial DSF; physical normalization; no fitted rescaling")
       .field("density_convention", "Density convention", "S(q,w); moments use dw/(2*pi); raising=2*zz")
       .precision(a.precision)
-      .field("geometry_bits", "Geometry and output bits", uni20::numeric_limits<R>::digits(one))
-      .field("density_bits", "Density comparison bits", plan->policy.stages[0].bits)
-      .field("density_guard_bits", "Density guard bits", plan->policy.stages[0].guard_bits)
       .field("two_tolerance", "Two-spinon transition-integral tolerance", options.tolerance)
       .field("two_max_order", "Two-spinon maximum quadrature order", options.max_order)
       .field("two_max_evaluations", "Two-spinon kernel budget", options.max_evaluations)
@@ -497,6 +648,49 @@ int run_spectrum(Arguments const& a, model::StructureFactorOptions<R> options, I
       .field("points", "Spectral points", count)
       .field("detail_row_limit", "Maximum buffered detail rows", a.spinons.detail_rows)
       .field("cpu_timing_scope", "CPU timing scope", "spectral grid including geometry and ordered output");
+  if (plan->stages.empty())
+    report.field("geometry_bits", "Geometry and output bits", uni20::numeric_limits<R>::digits(one))
+        .field("density_bits", "Density comparison bits", plan->policy.stages[0].bits)
+        .field("density_guard_bits", "Density guard bits", plan->policy.stages[0].guard_bits);
+  else
+  {
+    report.field("output_bits", "Accumulation and output bits", uni20::numeric_limits<R>::digits(one))
+        .field("precision_scope", "Precision scope",
+               "Reference, accumulation and output; six-spinons use declared stages")
+        .field("six_precision_stages", "Six-spinon precision stages", *a.spinons.precision_stages)
+        .field("reference_density_bits", "Reference density comparison bits", plan->policy.stages[0].bits)
+        .field("reference_density_guard_bits", "Reference density guard bits", plan->policy.stages[0].guard_bits)
+        .field("recovery_accounting", "Recovery accounting",
+               "Retained observations including terminal failure; excludes discarded speculative work");
+    if (plan->four || std::ranges::find(plan->selected, 2) != plan->selected.end())
+      report.field("two_four_geometry_bits", "Two/four-spinon geometry bits", uni20::numeric_limits<R>::digits(one));
+    for (auto stage : plan->stages)
+    {
+      std::string const name = precision_stage_name(stage);
+      std::string const id = "six_" + name + "_", label = "Six-spinon " + name + " ";
+      auto const info = arithmetic_info(
+          stage == PrecisionStage::reference
+              ? parse_precision(a.precision)
+              : PrecisionRequest{stage == PrecisionStage::fp80 ? PrecisionKind::fp80 : PrecisionKind::fp128});
+      int low = plan->policy.stages[0].bits, guard = plan->policy.stages[0].guard_bits;
+      if (stage == PrecisionStage::fp80)
+      {
+        low = uni20::numeric_limits<DensityLow<long double>>::digits();
+        guard = int(info.bits);
+      }
+#if UNI20_HAS_FLOAT128
+      if (stage == PrecisionStage::fp128)
+      {
+        low = uni20::numeric_limits<DensityLow<uni20::float128>>::digits();
+        guard = int(info.bits);
+      }
+#endif
+      report.field(id + "format", label + "arithmetic format", info.format)
+          .field(id + "geometry_bits", label + "geometry bits", info.bits)
+          .field(id + "comparison_bits", label + "density comparison bits", low)
+          .field(id + "guard_bits", label + "density guard bits", guard);
+    }
+  }
   if (plan->four)
   {
     report.field("four_order", "Four-spinon order", a.spinons.order)
@@ -543,8 +737,16 @@ int run_spectrum(Arguments const& a, model::StructureFactorOptions<R> options, I
                             column<Optional>("maximum_absolute_density"), column<Optional>("density"),
                             column<Optional>("contour_diagnostic"), column<Optional>("arithmetic_diagnostic"),
                             column<std::optional<std::size_t>>("failed_sample"), column<std::string>("reason"));
+  using OptionalCount = std::optional<std::size_t>;
+  auto recovery_table = data::make_data_table(
+      "Six-spinon precision recovery", table_options, column<R>("q"), column<R>("omega"),
+      column<std::uint64_t>("replicate"), column<std::string>("stage"), column<std::string>("kind"),
+      column<std::size_t>("attempts"), column<OptionalCount>("accepted"), column<OptionalCount>("retried"),
+      column<std::size_t>("supported_roots"), column<std::size_t>("density_attempts"), column<std::string>("failure"),
+      column<std::string>("density_status"), column<std::string>("density_failure"), column<std::string>("reason"));
   std::vector<std::string> tables{"spectrum", "continuum", "diagnostics"};
   if (plan->six) tables.push_back("replicates");
+  if (!plan->stages.empty()) tables.push_back("recovery");
   DataOutput output(a.output, tables);
   std::size_t failures = 0, thresholds = 0;
   try
@@ -614,6 +816,15 @@ int run_spectrum(Arguments const& a, model::StructureFactorOptions<R> options, I
         if (want_replicates && value.six)
           for (auto const& row : value.six->replicates)
             if (row) replicate_rows.emplace_back(momentum, frequency, *row);
+        if (want_recovery && value.six)
+          for (std::size_t j = 0; j < value.six_replicate_stages.size(); ++j)
+            if (value.six_replicate_stages[j])
+            {
+              if (j >= value.six->replicates.size() || !value.six->replicates[j])
+                throw std::logic_error("recovery accounting has no matching physical replicate");
+              recovery_rows.emplace_back(momentum, frequency, value.six->replicates[j]->id,
+                                         std::move(*value.six_replicate_stages[j]));
+            }
       }
     });
     report.result(failures == 0, failures ? "incomplete" : "finite_domain_estimate");
@@ -646,6 +857,15 @@ int run_spectrum(Arguments const& a, model::StructureFactorOptions<R> options, I
           },
           summary);
     replicate_rows.clear();
+    if (!plan->stages.empty())
+      output.write_table(
+          "recovery", recovery_table,
+          [&](auto& table) {
+            for (auto const& [momentum, frequency, id, stages] : recovery_rows)
+              append_recovery_records(table, momentum, frequency, id, plan->stages, stages);
+          },
+          summary);
+    recovery_rows.clear();
     auto continuum = data::make_data_table("Spinon kinematic continua", table_options, column<R>("q"),
                                            column<int>("sector"), column<R>("lower"), column<R>("upper"));
     output.write_table(
@@ -676,6 +896,7 @@ int run_spectrum(Arguments const& a, model::StructureFactorOptions<R> options, I
     output.abort(spectrum, aborted);
     output.abort(diagnostics, aborted);
     if (plan->six) output.abort(replicates, aborted);
+    if (!plan->stages.empty()) output.abort(recovery_table, aborted);
     throw;
   }
   return failures ? 2 : 0;

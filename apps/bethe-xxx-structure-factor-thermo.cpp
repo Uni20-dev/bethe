@@ -34,7 +34,10 @@ auto program_info()
       "Infinite spin-1/2 XXX chain, H=J sum S_j.S_(j+1), J>0, zero field and temperature.",
       "Default sector 2; --sectors 2,4,6 requests a partial DSF. No broadening or sum-rule rescaling.",
       "Sectors 4/6 have explicit finite cutoffs; their errors exclude omitted tails. Use --diagnostics.",
-      "For 4/6 prefer --precision bits-192 or wider; retained precision is the density guard/geometry precision.",
+      "For 4/6, compare precision pairs and integration controls separately; see the numerical-accuracy guide.",
+      "--six-precision-stages optionally retries whole observations; --precision sets reference/accumulation "
+      "arithmetic.",
+      "With staged precision, --replicate-output also shows recovery counts and reasons; exports can select recovery.",
       "Density is S(q,w) itself, not S/(2*pi) and not a finite-ring line weight; raising (S-+) = 2*zz.",
       "Momenta in [0,2*pi], radians/site. Grid includes endpoints; do not count the periodic seam twice.",
       "At the divergent lower threshold density/error are absent with status lower_threshold (not failure).",
@@ -80,6 +83,10 @@ void add_options(CLI::App& app, Arguments& a)
                                 {.name = "replicates",
                                  .description = "Six-spinon replicate records",
                                  .availability = "sector 6 selected",
+                                 .screen_option = "--replicate-output"},
+                                {.name = "recovery",
+                                 .description = "Six-spinon per-replicate precision-stage work and failure reasons",
+                                 .availability = "--six-precision-stages selected",
                                  .screen_option = "--replicate-output"}});
 }
 char const* status(model::SpectralDensityStatus s)
@@ -246,6 +253,9 @@ int main(int argc, char** argv)
       [&](auto&) {
         a.output.validate();
         auto selected = cli::spinon::sectors(a.spinons.sectors);
+        cli::spinon::validate_precision_stages(
+            cli::spinon::precision_stages(a.spinons.precision_stages), cli::parse_precision(a.precision),
+            std::ranges::find(selected, 6) != selected.end(), a.spinons.density_guard_bits);
         if (a.spinons.density_guard_bits && selected == std::vector<int>{2})
           throw std::invalid_argument("--density-guard-bits requires sector 4 or 6");
         if (a.spinons.replicates && std::ranges::find(selected, 6) == selected.end())
