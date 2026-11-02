@@ -123,9 +123,14 @@ roundoff. The covariance eigenvalue check costs `O(nodes^3)`. Returned marginal
 statistics avoid storing a dense `times × times` covariance; obtain any required
 time contrast through its rows instead. Inputs are not modified.
 
-Ordinary rows use NumPy matrix products. For extreme exponents, covariance
-propagation falls back to exact rational products of the supplied binary64
-entries, then rounds the standard errors and cross covariance to binary64.
+Ordinary rows use NumPy matrix products. A tiny covariance entry alone does
+not select slower arithmetic: an exponent check identifies potentially lost
+underflow terms, then compares a conservative allowance for that loss with
+each row's variances and real/imaginary cross covariance. Negligible tails
+retain the ordinary path. Overflow risk, or underflow loss that cannot be
+shown negligible (including active zero or cancelling results), selects exact
+rational products of the supplied binary64 entries. The standard errors and
+cross covariance are then rounded to binary64.
 This slower path preserves representable standard errors even when their
 squared variances underflow or overflow, and preserves tiny covariances that
 large coefficients amplify. It uses Python's standard library, with no extra
