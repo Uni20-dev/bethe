@@ -253,6 +253,150 @@ TEST(ExperimentalBoundaryMagnetizationExecution, OwnedPreparationPreflightFailur
   EXPECT_THROW((void)cancelled.get_wait(), bethe::ExecutionCancelled);
 }
 
+namespace
+{
+class RejectSubmission : public DebugScheduler {
+  public:
+    explicit RejectSubmission(std::size_t n) : reject(n) {}
+    std::size_t calls = 0, batches = 0, reject;
+    void schedule(AsyncTask&& task) override
+    {
+      if (++calls == reject) throw std::bad_alloc{};
+      DebugScheduler::schedule(std::move(task));
+    }
+    void execute_batch_impl(LightweightTaskBatch const& batch) override
+    {
+      ++batches;
+      for (std::size_t i = 0; i < batch.size(); ++i)
+        batch(i);
+    }
+};
+struct RejectPairMove
+{
+    RejectPairMove() = default;
+    RejectPairMove(RejectPairMove&&) { throw std::bad_alloc{}; }
+    boundary::BoundarySpinElement<double> operator()(auto const&, auto const&, auto const&, std::stop_token) const
+    {
+      return {};
+    }
+};
+struct RejectSpectrumMove
+{
+    std::shared_ptr<bool> armed;
+    explicit RejectSpectrumMove(std::shared_ptr<bool> flag) : armed(std::move(flag)) {}
+    RejectSpectrumMove(RejectSpectrumMove&& other) : armed(other.armed)
+    {
+      if (*armed) throw std::bad_alloc{};
+    }
+    boundary::BoundaryRecord<double> operator()(auto, auto, auto const&, auto const&, std::stop_token) const
+    {
+      throw std::logic_error("spectrum kernel must not run after construction failure");
+    }
+};
+} // namespace
+
+TEST(ExperimentalBoundaryMagnetizationExecution, SingleAdmissionAndConstructionFailures)
+{
+  // This used to admit a spectrum and then lose its handle when admission of
+  // the magnetization task failed. There is now only one submitted owner.
+  RejectSubmission second(2);
+  try
+  {
+    auto pending = boundary::boundary_real_triplet_magnetization_async<double>(4, {}, 6, {&second});
+    EXPECT_TRUE(pending.get_wait(second).converged());
+    EXPECT_EQ(second.calls, 1u);
+  }
+  catch (std::bad_alloc const&)
+  {
+    ADD_FAILURE() << "a separate continuation was submitted";
+  }
+  EXPECT_TRUE(second.done());
+  if (!second.done()) second.run_all(); // Cleanup only for the old-code regression.
+
+  RejectSubmission first(1);
+  EXPECT_THROW((void)boundary::boundary_real_triplet_magnetization_async<double>(4, {}, 6, {&first}), std::bad_alloc);
+  EXPECT_TRUE(first.done());
+  EXPECT_EQ(first.batches, 0u);
+
+  RejectSubmission construction(2);
+  EXPECT_THROW(
+      (void)boundary::boundary_detail::submit_magnetization<double>(4, {}, 6, {&construction}, RejectPairMove{}),
+      std::bad_alloc);
+  EXPECT_EQ(construction.calls, 0u);
+  EXPECT_TRUE(construction.done());
+  if (!construction.done()) construction.run_all(); // Same old-code cleanup.
+}
+
+TEST(ExperimentalBoundaryMagnetizationExecution, NestedConstructionFailureReachesFinalResult)
+{
+  RejectSubmission scheduler(2);
+  auto armed = std::make_shared<bool>(false);
+  auto pending = boundary::boundary_detail::submit_magnetization<double>(
+      4, {}, 6, {&scheduler},
+      [](auto const& calculator, auto const& x, auto const& y, std::stop_token) { return calculator(x, y); },
+      RejectSpectrumMove(armed));
+  *armed = true; // Fail child construction after the owner has been admitted.
+  EXPECT_THROW((void)pending.get_wait(scheduler), std::bad_alloc);
+  EXPECT_EQ(scheduler.calls, 1u);
+  EXPECT_EQ(scheduler.batches, 0u);
+  EXPECT_TRUE(scheduler.done());
+}
+
+TEST(ExperimentalBoundaryMagnetizationExecution, SpectrumFailureAndCancellationHoldFinalResult)
+{
+  TbbScheduler scheduler(2);
+  for (bool cancel : {false, true})
+  {
+    std::mutex mutex;
+    std::condition_variable cv;
+    bool held = false, failed = false, release = false, finished = false;
+    std::stop_source stop;
+    std::size_t index = 0;
+    std::atomic<std::size_t> pairs = 0;
+    auto pending = boundary::boundary_detail::submit_magnetization<double>(
+        4, {}, 6, {&scheduler, 1, 2, stop.get_token()},
+        [&](auto const&, auto const&, auto const&, std::stop_token) {
+          ++pairs;
+          return boundary::BoundarySpinElement<double>{};
+        },
+        [&](auto, auto, auto const&, auto const&, std::stop_token) {
+          std::unique_lock lock(mutex);
+          if (index++ == 0)
+          {
+            held = true;
+            cv.notify_all();
+            EXPECT_TRUE(cv.wait_for(lock, std::chrono::seconds(5), [&] { return release; }));
+            finished = true;
+          }
+          else
+          {
+            EXPECT_TRUE(cv.wait_for(lock, std::chrono::seconds(5), [&] { return held; }));
+            failed = true;
+            cv.notify_all();
+            if (cancel)
+              stop.request_stop();
+            else
+              throw std::bad_alloc{};
+          }
+          return boundary::BoundaryRecord<double>{};
+        });
+    std::jthread observer([&] {
+      std::unique_lock lock(mutex);
+      EXPECT_TRUE(cv.wait_for(lock, std::chrono::seconds(5), [&] { return held && failed; }));
+      EXPECT_FALSE(pending.read().await_ready());
+      release = true;
+      cv.notify_all();
+    });
+    if (cancel)
+      EXPECT_THROW((void)pending.get_wait(scheduler), bethe::ExecutionCancelled);
+    else
+      EXPECT_THROW((void)pending.get_wait(scheduler), std::bad_alloc);
+    observer.join();
+    EXPECT_TRUE(finished);
+    EXPECT_EQ(pairs.load(), 0u);
+  }
+}
+
 TEST(ExperimentalBoundaryMagnetizationExecution, SpectralFamilySurvivesIndependentDensityFailure)
 {
   auto reference = boundary::boundary_real_triplet_magnetization<double>(4);

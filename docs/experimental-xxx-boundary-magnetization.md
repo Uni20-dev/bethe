@@ -230,8 +230,12 @@ auto right = result.at(10.0, true);
 ```
 
 The synchronous `boundary_real_triplet_magnetization` wrapper awaits the same
-final result. The Async task owns its spectrum dependency, state preparations
-and pair records; the caller keeps the scheduler alive until completion.
+final result. One Async coroutine owns both stages: it awaits the spectrum task
+before preparing the signed matrix. Output and coroutine construction finish
+before the sole scheduler submission. If construction or initial admission fails,
+no dependency has started. Later construction or
+kernel failures propagate through the final result after active work drains.
+The caller keeps the scheduler alive until completion.
 Pair workers draw continuously from a bounded queue, without fixed batch
 barriers. Active work drains before a cancellation or exception is delivered.
 Dropping a result handle does not request cancellation.

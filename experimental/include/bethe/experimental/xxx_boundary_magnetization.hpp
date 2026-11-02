@@ -319,13 +319,10 @@ inline std::size_t magnetization_pair_count(std::size_t count, std::size_t max_p
 }
 
 template <uni20::Real R, typename Evaluate>
-uni20::async::AsyncTask magnetization_task(uni20::async::IAsyncScheduler& scheduler,
-                                           uni20::async::ReadBuffer<BoundarySpectrum<R>> input, std::size_t pair_count,
-                                           ExecutionOptions execution, Evaluate evaluate,
-                                           uni20::async::WriteBuffer<BoundaryMagnetization<R>> output)
+BoundaryMagnetization<R> evaluate_magnetization(uni20::async::IAsyncScheduler& scheduler,
+                                                BoundarySpectrum<R> const& spectrum, std::size_t pair_count,
+                                                ExecutionOptions execution, Evaluate evaluate)
 {
-  auto const& spectrum = co_await input;
-  auto destination = co_await output;
   if (execution.stop.stop_requested()) throw ExecutionCancelled("boundary magnetization cancelled");
   BoundaryMagnetization<R> result(spectrum);
   auto const count = spectrum.records.size();
@@ -384,13 +381,42 @@ uni20::async::AsyncTask magnetization_task(uni20::async::IAsyncScheduler& schedu
     }
   }
   if (execution.stop.stop_requested()) throw ExecutionCancelled("boundary magnetization cancelled");
-  destination = std::move(result);
+  return result;
 }
 
+// Prepared-spectrum seam: both entry points use the same pair calculation.
 template <uni20::Real R, typename Evaluate>
-uni20::async::Async<BoundaryMagnetization<R>> submit_magnetization(std::size_t sites, SolverOptions<R> solver,
-                                                                   std::size_t max_pairs, ExecutionOptions execution,
-                                                                   Evaluate evaluate)
+uni20::async::AsyncTask magnetization_task(uni20::async::IAsyncScheduler& scheduler,
+                                           uni20::async::ReadBuffer<BoundarySpectrum<R>> input, std::size_t pair_count,
+                                           ExecutionOptions execution, Evaluate evaluate,
+                                           uni20::async::WriteBuffer<BoundaryMagnetization<R>> output)
+{
+  auto const& spectrum = co_await input;
+  auto destination = co_await output;
+  destination = evaluate_magnetization(scheduler, spectrum, pair_count, execution, std::move(evaluate));
+}
+
+// One admitted owner spans both stages. A nested task is awaited directly, so
+// no failure constructing/submitting a continuation can orphan spectrum work.
+template <uni20::Real R, typename Evaluate, typename EvaluateSpectrum>
+uni20::async::AsyncTask
+solve_magnetization_task(uni20::async::IAsyncScheduler& scheduler, std::size_t sites, std::size_t count,
+                         std::size_t pair_count, SolverOptions<R> solver, ExecutionOptions execution, Evaluate evaluate,
+                         EvaluateSpectrum evaluate_spectrum, uni20::async::WriteBuffer<BoundaryMagnetization<R>> output)
+{
+  auto destination = co_await output;
+  uni20::async::Async<BoundarySpectrum<R>> spectrum;
+  co_await spectrum_task(scheduler, sites, count, std::move(solver), execution, std::move(evaluate_spectrum),
+                         PrepareBoundary<R>{}, spectrum.write());
+  auto reader = spectrum.read();
+  auto const& prepared = co_await reader;
+  destination = evaluate_magnetization(scheduler, prepared, pair_count, execution, std::move(evaluate));
+}
+
+template <uni20::Real R, typename Evaluate, typename EvaluateSpectrum = decltype(&boundary_detail::evaluate<R>)>
+uni20::async::Async<BoundaryMagnetization<R>>
+submit_magnetization(std::size_t sites, SolverOptions<R> solver, std::size_t max_pairs, ExecutionOptions execution,
+                     Evaluate evaluate, EvaluateSpectrum evaluate_spectrum = boundary_detail::evaluate<R>)
 {
   (void)heisenberg::detail::checked_sites(sites);
   if (sites % 2) throw std::invalid_argument("boundary raised-singlet dynamics requires even N");
@@ -398,9 +424,12 @@ uni20::async::Async<BoundaryMagnetization<R>> submit_magnetization(std::size_t s
   auto const pairs = magnetization_pair_count(count, max_pairs); // Before roots or quadratic allocation.
   auto& scheduler = execution.continuous_scheduler();
   execution.scheduler = &scheduler;
-  auto spectrum = boundary_real_triplet_spectrum_async<R>(sites, std::move(solver), count, execution);
+  R const zero = bethe::detail::solver_zero(solver);
+  if (!uni20::isfinite(solver.residual_tolerance) || solver.residual_tolerance <= zero)
+    throw std::invalid_argument("residual tolerance must be finite and positive");
   uni20::async::Async<BoundaryMagnetization<R>> output;
-  auto task = magnetization_task(scheduler, spectrum.read(), pairs, execution, std::move(evaluate), output.write());
+  auto task = solve_magnetization_task(scheduler, sites, count, pairs, std::move(solver), execution,
+                                       std::move(evaluate), std::move(evaluate_spectrum), output.write());
   bethe::detail::schedule_owned(scheduler, std::move(task));
   return output;
 }

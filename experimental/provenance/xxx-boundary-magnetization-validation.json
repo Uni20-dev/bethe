@@ -93,5 +93,30 @@
       }
     },
     "regression": "The old task rejects valid spectral roots if the independent density is missing or fails its moment check. Both conditions now preserve identical N4 signed endpoint curves and projected norm. The nested spectrum still reports the independent diagnostic failure. Existing rejected spectral-state, pair and norm controls are unchanged."
+  },
+  "submission_ownership_followup": {
+    "reviewed_predecessor": "5c9aa4a76ab89339567c34bd14344172cf51d4a1",
+    "implementation": "One admitted coroutine directly awaits spectrum work, then uses the shared signed-pair kernel. No separately submitted finishing task or unreturned dependency. Numerical formulas and continuous-worker drainage are unchanged.",
+    "checks": {
+      "native": {
+        "tests": 10,
+        "failures": 0,
+        "elapsed_seconds": 0.14,
+        "test_log_sha256": "be8079ae4e61c0bb7fbbbbf43bb4e4ddc711888734609eed82f2183df5eec5c6"
+      },
+      "wide": {
+        "tests": 12,
+        "failures": 0,
+        "elapsed_seconds": 1.51,
+        "test_log_sha256": "e2a2e99c5013fa8a8b007438cae77f3c20a66c073c29a1a64173910ba517b611"
+      },
+      "sanitizers": {
+        "tests": 11,
+        "failures": 0,
+        "elapsed_seconds": 33.97,
+        "test_log_sha256": "0c47563333c3eaca227ea346db8a6fb4987a3f2f96aa6b055aeffcdc5ba717d6"
+      }
+    },
+    "regression": "The same submission/construction regression fails the preceding header for both orphan paths and passes this implementation. Additional tests reject the initial submission, throw while constructing the nested task, and hold a spectrum worker through sibling failure/cancellation; final completion waits for drainage. Tests also retain the earlier held-pair checks."
   }
 }
