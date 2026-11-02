@@ -28,7 +28,8 @@ auto program_info()
                                 bethe::citations::Tool::xxx_boundary_dynamics);
   info.examples = {{"bethe-experimental-xxx-boundary-dynamics 16 --threads 2 --csv time.csv",
                     "Boundary correlations at times 0 to 100 from the finite-real triplets"},
-                   {"bethe-experimental-xxx-boundary-dynamics 8 --precision bits-160 --json result.json",
+                   {"bethe-experimental-xxx-boundary-dynamics 8 --precision bits-160 --spectrum --diagnostics "
+                    "--roots --density --json result.json",
                     "Explicit-precision calculation and all declared tables"}};
   info.notes = {
       "Experimental, even N>=2, H=sum S_j.S_(j+1), free ends, J=1, zero field.",
