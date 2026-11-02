@@ -705,8 +705,12 @@ inline constexpr std::array<Use, 3> uses_xxx_boundary_dynamics{{
   {&references[61], "Boundary scalar-product and local endpoint form-factor construction in Sec. 3, specialized to free-end XXX and spin operators; no Pauli or periodic Fourier normalization."},
   {&references[101], "Integrable boundary-impurity coupling. Its derivative at the homogeneous point gives the ground-state boundary bond and full local first moment without a spectral truncation."},
 }};
+inline constexpr std::array<Use, 2> uses_xxx_boundary_magnetization{{
+  {&references[11], "Positive-real-root free-end XXX equations in z=2*lambda_ABA."},
+  {&references[61], "Section 3 boundary scalar products and local operator reconstruction. Our rational, spin-normalized specialization retains the directed product and raising-gauge signs for same-sector endpoint Sz amplitudes."},
+}};
 
-enum class Tool { lee_yang_excited, lee_yang_vacuum, xxz_qg_obc, hubbard_continuum, kondo_response, sine_gordon_dispersion, sine_gordon_bethe_yang, sine_gordon_excited, sine_gordon_vacuum, asep_pbc, tasep_pbc, potts_pbc, xyz_dispersion, xyz_pbc, bose_fermi_pbc, q_boson_pbc, lieb_liniger_thermal, lieb_liniger_dispersion, biquadratic_obc, xxx_pbc, xxx_structure_factor_thermo, xxx_moments_thermo, xxx_structure_factor, xxx_obc, xxz_pbc, xxz_dispersion, xxz_obc, hubbard_dispersion, hubbard_pbc, hubbard_obc, lieb_liniger_pbc, lieb_liniger_obc, su3_dispersion, su3_pbc, tj_pbc, tb_dispersion, tb_pbc, richardson, central_spin, sun_fermions_pbc, ladder_pbc, haldane_shastry_pbc, sutherland_pbc, gaudin_yang_pbc, xxx_boundary_dynamics };
+enum class Tool { lee_yang_excited, lee_yang_vacuum, xxz_qg_obc, hubbard_continuum, kondo_response, sine_gordon_dispersion, sine_gordon_bethe_yang, sine_gordon_excited, sine_gordon_vacuum, asep_pbc, tasep_pbc, potts_pbc, xyz_dispersion, xyz_pbc, bose_fermi_pbc, q_boson_pbc, lieb_liniger_thermal, lieb_liniger_dispersion, biquadratic_obc, xxx_pbc, xxx_structure_factor_thermo, xxx_moments_thermo, xxx_structure_factor, xxx_obc, xxz_pbc, xxz_dispersion, xxz_obc, hubbard_dispersion, hubbard_pbc, hubbard_obc, lieb_liniger_pbc, lieb_liniger_obc, su3_dispersion, su3_pbc, tj_pbc, tb_dispersion, tb_pbc, richardson, central_spin, sun_fermions_pbc, ladder_pbc, haldane_shastry_pbc, sutherland_pbc, gaudin_yang_pbc, xxx_boundary_dynamics, xxx_boundary_magnetization };
 
 [[nodiscard]] constexpr std::span<Use const> for_tool(Tool tool)
 {
@@ -757,6 +761,7 @@ enum class Tool { lee_yang_excited, lee_yang_vacuum, xxz_qg_obc, hubbard_continu
     case Tool::sutherland_pbc: return uses_sutherland_pbc;
     case Tool::gaudin_yang_pbc: return uses_gaudin_yang_pbc;
     case Tool::xxx_boundary_dynamics: return uses_xxx_boundary_dynamics;
+    case Tool::xxx_boundary_magnetization: return uses_xxx_boundary_magnetization;
   }
   throw std::invalid_argument("unknown citation tool");
 }

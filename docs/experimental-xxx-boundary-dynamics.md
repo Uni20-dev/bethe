@@ -195,3 +195,6 @@ The ground-root density and full first-moment reference are evaluated independen
 of spectral form-factor preparation. If spectral preparation fails but the density
 solve succeeds, `moments` still exports the full reference; retained moments and
 omissions are absent, not zero. The time table remains empty and the exit code is 2.
+
+The [boundary-magnetization guide](experimental-xxx-boundary-magnetization.md)
+adds signed same-sector endpoint elements and magnetization after a boundary spin flip.

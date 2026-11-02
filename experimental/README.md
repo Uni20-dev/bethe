@@ -19,3 +19,6 @@ covers normalized local raising weights and a fresh standalone example.
 The [boundary-dynamics guide](../docs/experimental-xxx-boundary-dynamics.md)
 adds local/end-to-end time sums, an owned Async scan and the ground-only
 boundary density matrix.
+
+The [boundary-magnetization guide](../docs/experimental-xxx-boundary-magnetization.md)
+adds signed same-sector endpoint elements and magnetization after a boundary spin flip.
