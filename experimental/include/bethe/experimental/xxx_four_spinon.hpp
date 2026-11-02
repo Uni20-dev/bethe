@@ -125,6 +125,16 @@ heisenberg::FormFactor<R> four_spinon_raising_weight(PreparedSinglet<R> const& g
   auto const gaudin = bethe::detail::log_absolute_determinant<R>(four_detail::gaudin_matrix(state), r + 2, zero);
   result.pivot_margin = std::min(*ground.ground_pivot_margin(), gaudin.pivot_margin);
   if (!gaudin.log_absolute) return result;
+  // For this N=0 mod 4 family the singlet ground momentum is zero.
+  // The q=0 Fourier raising operator is total S+ / sqrt(N), which
+  // annihilates that singlet. Its singular raising matrix is a selection
+  // rule, not a loss of precision. Keep the independently checked norms.
+  if (state.momentum_index() == 0)
+  {
+    result.weight = zero;
+    result.status = heisenberg::FormFactorStatus::converged;
+    return result; // No finite logarithm exists for this exact zero.
+  }
   four_detail::Sum<R> logarithm(zero);
   logarithm.add(*ground.ground_log_prefactor() - *gaudin.log_absolute);
   std::vector<R> h;
