@@ -81,7 +81,7 @@ def time_signals(lines, spectrum, times, phase_order=16):
                    thermo_window_real=continuum.real, thermo_window_imag=continuum.imag,
                    phase_order_change_abs=np.abs(higher-continuum),
                    coarse_grid_change_abs=np.abs(coarse-continuum),
-                   propagated_kernel_error_bound=np.abs(W) @ errors)
+                   propagated_kernel_error_estimate=np.abs(W) @ errors)
     return columns, moments
 
 
@@ -143,9 +143,9 @@ def calculate(args):
         'thermo_full_first_moment': (2/3)*(math.log(2)-1/4)*(1-math.cos(Q)),
         'max_phase_order_change': float(max(columns['phase_order_change_abs'])),
         'max_coarse_grid_change': float(max(columns['coarse_grid_change_abs'])),
-        'max_propagated_kernel_error_bound': float(max(columns['propagated_kernel_error_bound'])),
+        'max_propagated_kernel_error_estimate': float(max(columns['propagated_kernel_error_estimate'])),
         'accuracy_note': 'Order/grid changes are diagnostics, not bounds on interpolation or omitted weight. '
-                         'The kernel bound propagates reported pointwise error estimates only. '
+                         'The kernel estimate propagates reported pointwise error estimates only. '
                          'Both spectra omit higher spinon sectors; no finite-size extrapolation is made.',
         'source_exports': sorted(path.name for path in directory.glob('*-*.csv')),
         'thermo_provenance': provenance,
@@ -166,10 +166,18 @@ def main():
     parser.add_argument('--time-max', type=float, default=20., help='maximum Jt')
     parser.add_argument('--time-points', type=int, default=81)
     args = parser.parse_args()
-    if (args.sites < 4 or args.sites % 4 or args.points < 3 or args.time_points < 2
-            or args.phase_order < 2 or not 1e-10 <= args.lower_offset < UPPER-LOWER
-            or not math.isfinite(args.time_max) or args.time_max <= 0):
-        parser.error('invalid sites/grid; require 1e-10 <= lower-offset < upper-lower')
+    if args.sites < 4 or args.sites % 4:
+        parser.error('--sites must be a multiple of four and at least 4')
+    if args.points < 3:
+        parser.error('--points must be at least 3')
+    if args.time_points < 2:
+        parser.error('--time-points must be at least 2')
+    if args.phase_order < 2:
+        parser.error('--phase-order must be at least 2')
+    if not 1e-10 <= args.lower_offset < UPPER-LOWER:
+        parser.error(f'--lower-offset must satisfy 1e-10 <= value < {UPPER-LOWER:.17g} (in J units)')
+    if not math.isfinite(args.time_max) or args.time_max <= 0:
+        parser.error('--time-max must be finite and positive')
     report = calculate(args)
     print(json.dumps({key: report[key] for key in ('moments', 'max_phase_order_change',
                      'max_coarse_grid_change', 'omitted_threshold_interval')}, indent=2))
