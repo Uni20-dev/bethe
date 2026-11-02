@@ -1,0 +1,630 @@
+{
+  "schema": "xxx-qtm-pointwise-fixture-v1",
+  "scope": "All PRL partitions and one independent JMP partition per sector; no outer integral",
+  "source_sha256": {
+    "experimental/reference/qtm/_reference_support.py": "711a6b0be9443829ddc34b19a92d38d4b64a456018af99e77ebbae87a641b313",
+    "experimental/reference/qtm/audit_xxx_qtm_partitions.py": "163e4ab2fe4f163907d1ddedc85320dfa2a0741cccb71acfd34291a9ce887c19",
+    "experimental/reference/qtm/audit_xxx_qtm_vertex.py": "bb42ce76e9b85059cb71fa1fd9fe2bd9eae0b319cb88966f0119d2eae8cdf798",
+    "experimental/reference/qtm/generate_pointwise_fixture.py": "2cf9dcda0474425c9215ce511f916ee3331d9d195e22a87af36ae68220a8fb70",
+    "experimental/reference/qtm/reference_xxx_qtm.py": "733799f81ae73db7f00bd7ba1437d574aa9b7d9b0e42acd7e33d0854c3ede544",
+    "experimental/reference/qtm/reference_xxx_qtm_vertex.py": "0a1b731cacdc86e2232ac956f342f0202c7fb75a66b078e460392b11458e45d8",
+    "scripts/reference_hypergeometric_tail.py": "d98cd1fc19c2b4a5b2756c4f8dec00d85fa0805cb9949cef8c925a3f3e974191",
+    "scripts/reference_xxx_four_spinon.py": "f195f188dddbf7cf8c38a0ed74df734992dc56827a27d7f86cacec6da75c92b9",
+    "scripts/reference_xxx_six_spinon_tail.py": "3911ae46fa9ab5102b9875c36d970123ffc1514295a1b1fac6026774ac4432a5",
+    "scripts/reference_xxx_six_spinon_vertex.py": "1b796f71a0a69cbd32703c7d1e7668703f61b22fdd859ef9fc0017830da09ea0",
+    "scripts/reference_xxx_transition_rate.py": "d3893f2857951e75e736c1a980820374c97786c0dc74b7eddde06dd6f1b53219",
+    "scripts/reference_xxx_vertex_density.py": "bfd469e0462ce07d13d1f59c3397335d7826327ad768c7340dedb53b1ee3196f"
+  },
+  "invocation": [
+    "--output",
+    "../qtm-review/pointwise-fixture.json"
+  ],
+  "python": "3.12.3",
+  "mpmath": "1.2.1",
+  "wall_seconds": 193.82551979500568,
+  "fixtures": [
+    {
+      "fixture": "two",
+      "beta": [
+        "-1.1",
+        ".7"
+      ],
+      "spinons": 2,
+      "digits": [
+        32,
+        42
+      ],
+      "interior_offset": ".25",
+      "partitions": [
+        {
+          "holes": [
+            0
+          ],
+          "particles": [
+            1
+          ],
+          "reduced_coefficient": {
+            "real": "6.76482417113318679031044896749447733006849",
+            "imag": "11.806845510477045478021648651973404926194"
+          }
+        },
+        {
+          "holes": [
+            1
+          ],
+          "particles": [
+            0
+          ],
+          "reduced_coefficient": {
+            "real": "6.76482417113318679031044896749447733006849",
+            "imag": "-11.806845510477045478021648651973404926194"
+          }
+        }
+      ],
+      "boundary_sine_squared": "0.980644266391193434680329004820998487593862",
+      "boundary_total": {
+        "real": "13.2677720731326343014779744957202779436224",
+        "imag": "0.0"
+      },
+      "vertex_target": {
+        "amplitude": "13.2677720731326343014779744957202779436224",
+        "contour_tail_error": "0.0",
+        "arithmetic_indicator": "4.63675523919963268577007101858529635905783e-40",
+        "momentum_density": "0.351918029034240338569412694595387387156178",
+        "conversion_factor": "37.7013138813690291203244955345317147792075",
+        "terms": 128,
+        "order": 28,
+        "digits": 42
+      },
+      "worst_precision_difference": "3.14752408830714921659449147250713044218564e-33",
+      "vertex_scaled_difference": "1.94672723891138142886644286055441161179647e-42",
+      "selected_quadrature": {
+        "holes": [
+          0
+        ],
+        "offset": ".1",
+        "maxdegree": 9,
+        "split": false,
+        "jmp_reduced": {
+          "real": "6.76482417113318679031044896749447733006849",
+          "imag": "11.806845510477045478021648651973404926194"
+        },
+        "prl_reduced": {
+          "real": "6.76482417113318679031044896749447733006849",
+          "imag": "11.806845510477045478021648651973404926194"
+        },
+        "scaled_difference": "2.35796200965190659245200664818755234156137e-43"
+      },
+      "checks": {
+        "partition_precision": true,
+        "selected_jmp_prl": true,
+        "vertex": true
+      },
+      "passed": true
+    },
+    {
+      "fixture": "four",
+      "beta": [
+        "-2.1",
+        "-1.3",
+        "-.4",
+        ".3"
+      ],
+      "spinons": 4,
+      "digits": [
+        32,
+        42
+      ],
+      "interior_offset": ".25",
+      "partitions": [
+        {
+          "holes": [
+            0,
+            1
+          ],
+          "particles": [
+            2,
+            3
+          ],
+          "reduced_coefficient": {
+            "real": "0.468207026161860112026044083861326858464222",
+            "imag": "4.29367475471264223923553824362569175710196"
+          }
+        },
+        {
+          "holes": [
+            0,
+            2
+          ],
+          "particles": [
+            1,
+            3
+          ],
+          "reduced_coefficient": {
+            "real": "9.32486962787383386343360800764371178114545",
+            "imag": "-9.47976150587797896277569032021958667526867"
+          }
+        },
+        {
+          "holes": [
+            0,
+            3
+          ],
+          "particles": [
+            1,
+            2
+          ],
+          "reduced_coefficient": {
+            "real": "-9.55700882167394542634678059525917125114797",
+            "imag": "0.505155682652490546862592763645972144665853"
+          }
+        },
+        {
+          "holes": [
+            1,
+            2
+          ],
+          "particles": [
+            0,
+            3
+          ],
+          "reduced_coefficient": {
+            "real": "-9.55700882167394542634678059525917125114797",
+            "imag": "-0.505155682652490546862592763645972144665853"
+          }
+        },
+        {
+          "holes": [
+            1,
+            3
+          ],
+          "particles": [
+            0,
+            2
+          ],
+          "reduced_coefficient": {
+            "real": "9.32486962787383386343360800764371178114545",
+            "imag": "9.47976150587797896277569032021958667526867"
+          }
+        },
+        {
+          "holes": [
+            2,
+            3
+          ],
+          "particles": [
+            0,
+            1
+          ],
+          "reduced_coefficient": {
+            "real": "0.468207026161860112026044083861326858464221",
+            "imag": "-4.29367475471264223923553824362569175710196"
+          }
+        }
+      ],
+      "boundary_sine_squared": "0.88825217624810337560890789083879874143353",
+      "boundary_total": {
+        "real": "0.4193755316749911879919571559666072787946",
+        "imag": "7.96612102726172168502089623228355164933958e-43"
+      },
+      "vertex_target": {
+        "amplitude": "0.41937553167499118799195715596660727879453",
+        "contour_tail_error": "1.07694228822954120659512857187308490614345e-48",
+        "arithmetic_indicator": "1.96479874581351412898234884190535713590327e-38",
+        "momentum_density": "0.0000104858741004467903423874350917162426486515",
+        "conversion_factor": "39994.3321517776097117461704094082014086217",
+        "terms": 128,
+        "order": 28,
+        "digits": 42
+      },
+      "worst_precision_difference": "4.18122960550100745265147584980144551413616e-31",
+      "vertex_scaled_difference": "6.96883232470538907604552539806748242249962e-41",
+      "selected_quadrature": {
+        "holes": [
+          0,
+          1
+        ],
+        "offset": ".1",
+        "maxdegree": 9,
+        "split": false,
+        "jmp_reduced": {
+          "real": "0.468207026161860112026044083861326858464245",
+          "imag": "4.29367475471264223923553824362569175710198"
+        },
+        "prl_reduced": {
+          "real": "0.468207026161860112026044083861326858464222",
+          "imag": "4.29367475471264223923553824362569175710196"
+        },
+        "scaled_difference": "7.49088903801989745369276228849633555106307e-42"
+      },
+      "checks": {
+        "partition_precision": true,
+        "selected_jmp_prl": true,
+        "vertex": true
+      },
+      "passed": true
+    },
+    {
+      "fixture": "six-bulk",
+      "beta": [
+        "-2.1",
+        "-1.3",
+        "-.4",
+        ".3",
+        "1.2",
+        "2"
+      ],
+      "spinons": 6,
+      "digits": [
+        32,
+        42
+      ],
+      "interior_offset": ".25",
+      "partitions": [
+        {
+          "holes": [
+            0,
+            1,
+            2
+          ],
+          "particles": [
+            3,
+            4,
+            5
+          ],
+          "reduced_coefficient": {
+            "real": "-4.86553676292695932000188622258965048450246",
+            "imag": "-0.0975882172070714408074237644247652486414434"
+          }
+        },
+        {
+          "holes": [
+            0,
+            1,
+            3
+          ],
+          "particles": [
+            2,
+            4,
+            5
+          ],
+          "reduced_coefficient": {
+            "real": "12.9219545763708094188570870527469846723626",
+            "imag": "14.5172019432532405747012911099271513158065"
+          }
+        },
+        {
+          "holes": [
+            0,
+            1,
+            4
+          ],
+          "particles": [
+            2,
+            3,
+            5
+          ],
+          "reduced_coefficient": {
+            "real": "8.8542343569885013080683326837816869718787",
+            "imag": "-22.6114140741253833442272884817108363971793"
+          }
+        },
+        {
+          "holes": [
+            0,
+            1,
+            5
+          ],
+          "particles": [
+            2,
+            3,
+            4
+          ],
+          "reduced_coefficient": {
+            "real": "-11.4189924136908189435814152653979953544585",
+            "imag": "2.95790701012915487420196991696844367396801"
+          }
+        },
+        {
+          "holes": [
+            0,
+            2,
+            3
+          ],
+          "particles": [
+            1,
+            4,
+            5
+          ],
+          "reduced_coefficient": {
+            "real": "8.85423435698850130806833268378168697187868",
+            "imag": "-22.6114140741253833442272884817108363971793"
+          }
+        },
+        {
+          "holes": [
+            0,
+            2,
+            4
+          ],
+          "particles": [
+            1,
+            3,
+            5
+          ],
+          "reduced_coefficient": {
+            "real": "-70.6232574573531266556702446068197817739964",
+            "imag": "-1.30949239880404003373115625269887666317518"
+          }
+        },
+        {
+          "holes": [
+            0,
+            2,
+            5
+          ],
+          "particles": [
+            1,
+            3,
+            4
+          ],
+          "reduced_coefficient": {
+            "real": "24.786824732830403199040964525349049476021",
+            "imag": "41.0800242574780432089478148017254540734161"
+          }
+        },
+        {
+          "holes": [
+            0,
+            3,
+            4
+          ],
+          "particles": [
+            1,
+            2,
+            5
+          ],
+          "reduced_coefficient": {
+            "real": "18.1592339085340538743543120210366600146589",
+            "imag": "34.5222294905928584591112697179075502368571"
+          }
+        },
+        {
+          "holes": [
+            0,
+            3,
+            5
+          ],
+          "particles": [
+            1,
+            2,
+            4
+          ],
+          "reduced_coefficient": {
+            "real": "24.7868247328304031990409645253490494760216",
+            "imag": "-41.0800242574780432089478148017254540734169"
+          }
+        },
+        {
+          "holes": [
+            0,
+            4,
+            5
+          ],
+          "particles": [
+            1,
+            2,
+            3
+          ],
+          "reduced_coefficient": {
+            "real": "-11.4189924136908189435814152653979953544581",
+            "imag": "-2.95790701012915487420196991696844367396823"
+          }
+        },
+        {
+          "holes": [
+            1,
+            2,
+            3
+          ],
+          "particles": [
+            0,
+            4,
+            5
+          ],
+          "reduced_coefficient": {
+            "real": "-11.4189924136908189435814152653979953544581",
+            "imag": "2.95790701012915487420196991696844367396823"
+          }
+        },
+        {
+          "holes": [
+            1,
+            2,
+            4
+          ],
+          "particles": [
+            0,
+            3,
+            5
+          ],
+          "reduced_coefficient": {
+            "real": "24.7868247328304031990409645253490494760216",
+            "imag": "41.0800242574780432089478148017254540734169"
+          }
+        },
+        {
+          "holes": [
+            1,
+            2,
+            5
+          ],
+          "particles": [
+            0,
+            3,
+            4
+          ],
+          "reduced_coefficient": {
+            "real": "18.1592339085340538743543120210366600146589",
+            "imag": "-34.5222294905928584591112697179075502368571"
+          }
+        },
+        {
+          "holes": [
+            1,
+            3,
+            4
+          ],
+          "particles": [
+            0,
+            2,
+            5
+          ],
+          "reduced_coefficient": {
+            "real": "24.786824732830403199040964525349049476021",
+            "imag": "-41.0800242574780432089478148017254540734161"
+          }
+        },
+        {
+          "holes": [
+            1,
+            3,
+            5
+          ],
+          "particles": [
+            0,
+            2,
+            4
+          ],
+          "reduced_coefficient": {
+            "real": "-70.6232574573531266556702446068197817739964",
+            "imag": "1.30949239880404003373115625269887666317518"
+          }
+        },
+        {
+          "holes": [
+            1,
+            4,
+            5
+          ],
+          "particles": [
+            0,
+            2,
+            3
+          ],
+          "reduced_coefficient": {
+            "real": "8.85423435698850130806833268378168697187868",
+            "imag": "22.6114140741253833442272884817108363971793"
+          }
+        },
+        {
+          "holes": [
+            2,
+            3,
+            4
+          ],
+          "particles": [
+            0,
+            1,
+            5
+          ],
+          "reduced_coefficient": {
+            "real": "-11.4189924136908189435814152653979953544585",
+            "imag": "-2.95790701012915487420196991696844367396801"
+          }
+        },
+        {
+          "holes": [
+            2,
+            3,
+            5
+          ],
+          "particles": [
+            0,
+            1,
+            4
+          ],
+          "reduced_coefficient": {
+            "real": "8.8542343569885013080683326837816869718787",
+            "imag": "22.6114140741253833442272884817108363971793"
+          }
+        },
+        {
+          "holes": [
+            2,
+            4,
+            5
+          ],
+          "particles": [
+            0,
+            1,
+            3
+          ],
+          "reduced_coefficient": {
+            "real": "12.9219545763708094188570870527469846723626",
+            "imag": "-14.5172019432532405747012911099271513158065"
+          }
+        },
+        {
+          "holes": [
+            3,
+            4,
+            5
+          ],
+          "particles": [
+            0,
+            1,
+            2
+          ],
+          "reduced_coefficient": {
+            "real": "-4.86553676292695932000188622258965048450246",
+            "imag": "0.0975882172070714408074237644247652486414435"
+          }
+        }
+      ],
+      "boundary_sine_squared": "0.992584275813380377294871431063528259836411",
+      "boundary_total": {
+        "real": "0.0725134762979296399820919956582082084170884",
+        "imag": "-1.30745241212563555503775551074128959197774e-41"
+      },
+      "vertex_target": {
+        "amplitude": "0.0725134762979296399820919956582082084171528",
+        "contour_tail_error": "1.04542612972479674666611458807267919566391e-47",
+        "arithmetic_indicator": "3.24065359643565513897147049753856112943605e-38",
+        "momentum_density": "0.00000000105661498554316849994535829101796792968301",
+        "conversion_factor": "68628097.5474269079982358945206000697773928",
+        "terms": 128,
+        "order": 28,
+        "digits": 42
+      },
+      "worst_precision_difference": "2.10571245373116763006015243869055084476269e-31",
+      "vertex_scaled_difference": "6.56954289747686124767234549212555998450004e-41",
+      "selected_quadrature": {
+        "holes": [
+          0,
+          1,
+          2
+        ],
+        "offset": ".1",
+        "maxdegree": 9,
+        "split": false,
+        "jmp_reduced": {
+          "real": "-4.86553676292695932000188622258965048450235",
+          "imag": "-0.0975882172070714408074237644247652486421392"
+        },
+        "prl_reduced": {
+          "real": "-4.86553676292695932000188622258965048450246",
+          "imag": "-0.0975882172070714408074237644247652486414434"
+        },
+        "scaled_difference": "1.44818567693216946326328375051261090832553e-40"
+      },
+      "checks": {
+        "partition_precision": true,
+        "selected_jmp_prl": true,
+        "vertex": true
+      },
+      "passed": true
+    }
+  ],
+  "passed": true
+}

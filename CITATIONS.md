@@ -1356,4 +1356,25 @@ Relevant tool modes:
 - `bethe-xxx-structure-factor-thermo`: Thermodynamic sector decomposition, exact two-spinon Szz (Eqs. (9)-(12)), and four-spinon continuum kinematics. Physical higher-sector density normalization is validated independently.
 - `bethe-xxx-moments-thermo`: Thermodynamic spinon decomposition and the two-spinon transition rate, Eqs. (9)-(12). Higher-sector normalization and moment measures are independently validated.
 
+### dugave-gohmann-kozlowski-suzuki-2016
+
+Maxime Dugave, Frank Göhmann, Karol K. Kozlowski, and Junji Suzuki. *Thermal form factor approach to the ground-state correlation functions of the XXZ chain in the antiferromagnetic massive regime*.
+J. Phys. A: Math. Theor. 49, 394001 (2016).
+
+[DOI](<https://doi.org/10.1088/1751-8113/49/39/394001>), [arXiv](<https://arxiv.org/abs/1605.07968>).
+
+### babenko-gohmann-kozlowski-suzuki-2021
+
+Constantin Babenko, Frank Göhmann, Karol K. Kozlowski, and Junji Suzuki. *A thermal form factor series for the longitudinal two-point function of the Heisenberg-Ising chain in the antiferromagnetic massive regime*.
+J. Math. Phys. 62, 041901 (2021).
+
+[DOI](<https://doi.org/10.1063/5.0039863>), [arXiv](<https://arxiv.org/abs/2011.12752>).
+
+### babenko-gohmann-kozlowski-sirker-suzuki-2021
+
+Constantin Babenko, Frank Göhmann, Karol K. Kozlowski, Jesko Sirker, and Junji Suzuki. *Exact real-time longitudinal correlation functions of the massive XXZ chain*.
+Phys. Rev. Lett. 126, 210602 (2021).
+
+[DOI](<https://doi.org/10.1103/PhysRevLett.126.210602>), [arXiv](<https://arxiv.org/abs/2012.07378>).
+
 <!-- END GENERATED BIBLIOGRAPHY -->
