@@ -1,0 +1,99 @@
+{
+  "validation": {
+    "native": {
+      "tests": 28,
+      "failures": 0,
+      "elapsed": "0.63 sec",
+      "test_log_sha256": "2e0fac2255006801739c896dcb889e0463716082ad71146998ff4050318fc081"
+    },
+    "wide": {
+      "tests": 44,
+      "failures": 0,
+      "elapsed": "1.92 sec",
+      "test_log_sha256": "6139ce47cebd9088ce413ef0e987716f85804120a97dd35699e945f080e6a324"
+    },
+    "sanitizers": {
+      "tests": 33,
+      "failures": 0,
+      "elapsed": "17.85 sec",
+      "test_log_sha256": "9167ff45ccf1ea7722e8e55d62490a84b3fc84b909b6b96b498f028f19ec639f"
+    }
+  },
+  "arithmetic": "binary64, native 80-bit long double, binary128, MPFR 128/256; CLI MPFR128; no forced backend",
+  "independent_controls": [
+    "finite-space ABA/reflection",
+    "bit-basis ED",
+    "integrable boundary-impurity Hellmann-Feynman",
+    "analytic dimer",
+    "held-work/cancellation and serial/concurrent identity"
+  ],
+  "smoke": {
+    "sites": 64,
+    "requested": 528,
+    "accepted": 528,
+    "precision": "fp64",
+    "threads": 2,
+    "cpu": "12th Gen Intel(R) Core(TM) i7-12700KF",
+    "compiler": "GNU 13.3.0",
+    "build_type": "Release",
+    "root_iteration_limit": 10000,
+    "cpu_seconds": 0.982709,
+    "elapsed_seconds": 0.49339341300000683,
+    "retained_weight": "0.24898316020617239",
+    "retained_first_moment": "0.21571103179119955",
+    "full_local_first_moment": "0.21725010141104706",
+    "qualification": "single fresh smoke run, not an accuracy estimate or benchmark scaling claim"
+  },
+  "limits": [
+    "only the positive finite-real-root triplet family",
+    "no arbitrary bulk-site or same-sector magnetization matrix elements",
+    "roundoff and root errors are separate from exact spectral truncation bounds",
+    "full CI/default-OFF/install and reciprocal/Claude reviews remain required"
+  ],
+  "density_independence_followup": {
+    "checks": {
+      "native": {
+        "tests": 7,
+        "failures": 0,
+        "elapsed_seconds": 0.14,
+        "test_log_sha256": "d34937c4705a1b4dd4f99b981321f1da0ad68814adaa219add682e1ac926691a"
+      },
+      "wide": {
+        "tests": 9,
+        "failures": 0,
+        "elapsed_seconds": 0.88,
+        "test_log_sha256": "fedf70884a5e28a46b3668f63e854f8336e0ea02d53b610f06bda3d442c169a8"
+      },
+      "sanitizers": {
+        "tests": 8,
+        "failures": 0,
+        "elapsed_seconds": 13.42,
+        "test_log_sha256": "90809835eef0e4f7f7db531076999f9fec54408eaf0b045d55519565b00e00e8"
+      }
+    },
+    "regression": "Inject rejected spectral preparation after valid N4 roots. The analytic ground bond and full first moment survive; retained sums and omissions are absent and no excited roots are attempted. CLI root convergence and spectral preparation are reported separately."
+  },
+  "unattempted_sum_rule_followup": {
+    "checks": {
+      "native": {
+        "tests": 7,
+        "failures": 0,
+        "elapsed_seconds": 0.14,
+        "test_log_sha256": "c45e7fb1255a926f0337b9a99202c20e01b6dc4758dd5d77ffb6b0049c629916"
+      },
+      "wide": {
+        "tests": 9,
+        "failures": 0,
+        "elapsed_seconds": 0.84,
+        "test_log_sha256": "fbb20894588824b66e49533bf2517c49f51fbf319b2d0f7e9c94146ab8ef5e3b"
+      },
+      "sanitizers": {
+        "tests": 8,
+        "failures": 0,
+        "elapsed_seconds": 41.66,
+        "test_log_sha256": "34da146e7d9982fbf34bb02ea1941f4e0b8510998aad682e854ff83796175c1d"
+      }
+    },
+    "regression": "The rejected-preparation test fails the old predicate: no retained sum must not report sum_rules_consistent=true. The full ground-density result remains independently available."
+  }
+}

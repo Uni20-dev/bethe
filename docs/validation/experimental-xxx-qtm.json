@@ -1,6 +1,6 @@
 {
   "scope": "Optional pointwise isotropic QTM numerical references and complex partition/vertex boundary comparisons. No outer integral or global sector-equivalence proof.",
-  "base_revision": "e916ab29aaa44d7fad264f583a0e79a51d3798c0",
+  "base_revision": "63af197f403e956ff27bd8e55fe8d571603cfb8b",
   "research_origin": {
     "research_revision": "2242fd5d78ec2c6c81a64993eca5dd6eea6cd732",
     "files": [
@@ -122,12 +122,12 @@
   ],
   "validated_public_inputs": {
     "files_sha256": {
-      "CITATIONS.md": "a3d043838cb3f8555014bc1803b64f62b67da78160de260d18b36312cfeed3eb",
-      "data/citations.json": "999631cee23b83712509aaad6ebfa2946f21c92500177f06c5377679a3f2097e",
+      "CITATIONS.md": "851d711ab9c5a7a10021626fb994b2333d33bf652589024ed5b6293f60dbce7e",
+      "data/citations.json": "225a286804809dd2369c951a2245658e8f8b74c4f5f5474acc67e2b7b467d82f",
       "docs/experimental-xxx-qtm-derivation.md": "6e77a19e2ab6313036362bced2e608dd3ee033dfb0ccaba6261a7a95c7117651",
       "docs/experimental-xxx-qtm.md": "5f1b6bd2a8c57aa853c169d510c5657a328e2c0ced40b043ef25a21c1d830520",
-      "docs/experimental.md": "a07ce51dab6607bc386976deed8416035dabe02a0eabec0d4fa03ac70d803a8d",
-      "experimental/README.md": "5f531e439c04286e2692d142a717a2a97c3d3836b519a3e38ad291623e77f89c",
+      "docs/experimental.md": "92ec411559ff19928f153c6a709176d7638a276081f010cc625b89363fcee5ae",
+      "experimental/README.md": "755eb9a62fb853e3d88bb0ed32c1a1d21f37ae5d04fb6e4550e625748dbd23e9",
       "experimental/reference/qtm/README.md": "7019c599ea6c267bc0b7e03eed2ee6118f82a539993f1d92ff7ac062a1c2a6d2",
       "experimental/reference/qtm/_reference_support.py": "acf2440efb6e3f87fb6841201cd75a182b25fccd6e6ff91557588af043e4624a",
       "experimental/reference/qtm/audit_xxx_qtm_partitions.py": "163e4ab2fe4f163907d1ddedc85320dfa2a0741cccb71acfd34291a9ce887c19",
@@ -142,8 +142,8 @@
       "experimental/reference/qtm/test_reference_xxx_qtm.py": "5b78d39bf9a68d96495f025a1db7abc4fd744b850e37cf2f264a2f21cbac8ca2",
       "experimental/reference/qtm/test_reference_xxx_qtm_partitions.py": "ef078bbddb07348c51c546485bfaa42091b4f49f7532911402d6d30b912301c8",
       "experimental/reference/qtm/test_reference_xxx_qtm_vertex.py": "b789f0de414ecbf33cd2eff42f07c115ce4c54c03c12162b01e1b6d7122fe934",
-      "include/bethe/citations.hpp": "882235256593ea226a0abb3ad14a2ae11969df8b9e9fa3a1d85158ae8c89f821",
-      "zensical.toml": "70e9c7f7e16be48fb391f87cbd586ea2cdc33b45a8464da683258a9ee4267c54"
+      "include/bethe/citations.hpp": "927e2fe45296eb07a5cb51c5efacd2b28650e70d9431f2d7b7898fcd4c055538",
+      "zensical.toml": "6f35b8e78eb1947be6f24b1ddf4390e14378b6cfd21026e934e406ea0e41b4fe"
     },
     "scope": "Changed/added files relative to base_revision excluding this manifest; unchanged public reference dependencies are additionally bound by the compact fixture source hashes. Enclosing commit binds this record."
   },
@@ -183,10 +183,10 @@
     "validated_at": "43cc7bfebd3fbcfe4db79b4644d76f8246861b2f; CLI/evaluator code unchanged. New clean-copy suite and fixture regeneration are recorded separately above."
   },
   "documentation": {
-    "pages": 155,
-    "bibliography_urls": 171,
-    "equations": 1984,
-    "scope": "Local site and source/HTML link/math checks; deployment remains pending."
+    "pages": 160,
+    "bibliography_urls": 173,
+    "equations": 2068,
+    "scope": "Merged local site and source/HTML link/math checks; deployment remains pending."
   },
   "import_validation": {
     "scope": "Prefer same-checkout controls over foreign PYTHONPATH; reject cached direct/transitive/QTM modules and foreign reference modules at provenance recording.",
@@ -194,5 +194,19 @@
     "new_import_tests_passed": 3,
     "fixture_dependency_hashes_verified": 12,
     "numerical_formulas_unchanged": true
+  },
+  "main_integration": {
+    "reviewed_head": "5ae663dbf61573efc8f48b369df008229544b08a",
+    "previous_base": "e916ab29aaa44d7fad264f583a0e79a51d3798c0",
+    "merged_main": "63af197f403e956ff27bd8e55fe8d571603cfb8b",
+    "resolution": "Union of QTM and boundary citations and experimental guides; regenerate the bibliography and C++ citation header. Navigation and experimental README merge additively.",
+    "unchanged_qtm_package_files": 14,
+    "mathematical_revalidation": "All QTM package files, including numerical evaluators, tests, fixture and provenance helper, are byte-identical to the reviewed head. Prior numerical evidence is carried forward, not described as a new numerical run.",
+    "checks": [
+      "citation generator --check",
+      "Markdown math: 2068 expressions in 130 files",
+      "local site: links/assets in 160 pages, 173 bibliography URLs, 2068 equations",
+      "tutorial link check"
+    ]
   }
 }

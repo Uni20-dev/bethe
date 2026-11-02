@@ -93,6 +93,22 @@ optional Python source-checkout tools, separate from the C++ build option.
 They need mpmath, but no private data or C++ build. Detailed limiting algebra
 is in the [derivation](experimental-xxx-qtm-derivation.md).
 
+## Open XXX boundary weights
+
+The [boundary form-factor guide](experimental-xxx-boundary-form-factors.md)
+describes local singlet-to-triplet weights, an owned prepared normalization,
+the fixed-imaginary-root construction, explicit precision and independent
+small-chain checks. These free-end weights carry no periodic Fourier factor.
+Build the standalone example with `BETHE_BUILD_EXPERIMENTAL=ON` and
+`BETHE_BUILD_EXAMPLES=ON`.
+
+## Free-end XXX time correlations
+
+The [boundary-dynamics guide](experimental-xxx-boundary-dynamics.md) adds an owned
+real-root triplet scan, local and signed end-to-end time correlations, full
+ground-state boundary density and first-moment references. It includes a
+fresh CLI with explicit failed records and declared exports.
+
 ## Scope and promotion
 
 Each experimental feature must document supported inputs, numerical controls,
@@ -101,3 +117,6 @@ later become a supported API; this requires independent physical checks,
 precision/conditioning evidence, documentation and normal packaging. Supported
 code cannot acquire a hidden dependency on experimental headers during that
 promotion. Known wrong results are not acceptable experimental output.
+
+The [boundary-magnetization guide](experimental-xxx-boundary-magnetization.md)
+adds signed same-sector endpoint elements and magnetization after a boundary spin flip.
