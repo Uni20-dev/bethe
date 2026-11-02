@@ -43,6 +43,12 @@ stops admission, requests cooperative cancellation, and drains accepted work.
 Unexpected exceptions also propagate after draining. There is no extra thread
 pool and no `run_all()` call.
 
+The public call admits one owning coroutine. If constructing or submitting that
+owner fails, no numerical work has been admitted. A later submission failure
+reaches the returned result only after accepted observations drain. The two- and
+four-spinon moment adapters directly await the quadrature task inside their own
+result owner, preserving this guarantee through result assembly.
+
 A reduction contains sums only after complete success. On failure or cancellation
 it retains the collected-prefix count and failure information, without presenting
 that prefix as an integral. Work counts describe collected observations, including
