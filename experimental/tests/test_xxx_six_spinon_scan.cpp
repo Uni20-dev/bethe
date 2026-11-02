@@ -102,6 +102,44 @@ AsyncTask count_lines(ReadBuffer<six::ScanResult<double>> input, WriteBuffer<std
   auto const& result = co_await input;
   co_await output = result.lines.size();
 }
+
+template <uni20::Real R> void zero_momentum_scan(R const& zero)
+{
+  six::MomentumCatalogue const catalogue(12, 0);
+  ASSERT_EQ(catalogue.size(), 4u);
+  DebugScheduler serial;
+  auto const reference = six::scan(background(zero), catalogue.requests(), {&serial});
+  TbbScheduler concurrent(2);
+  auto pending = six::scan_async(background(zero), catalogue.requests(), {&concurrent, 1, 2});
+  auto const& result = pending.get_wait(concurrent);
+  ASSERT_TRUE(reference.converged());
+  ASSERT_TRUE(result.converged());
+  ASSERT_EQ(result.records.size(), catalogue.size());
+  ASSERT_EQ(result.lines.size(), catalogue.size());
+  ASSERT_EQ(result.moments.size(), 12u);
+  for (std::size_t i = 0; i < result.records.size(); ++i)
+  {
+    auto const& row = result.records[i];
+    EXPECT_EQ(row.candidate_id, reference.records[i].candidate_id);
+    ASSERT_TRUE(row.solved.converged());
+    ASSERT_TRUE(row.factor);
+    EXPECT_TRUE(row.factor->converged());
+    EXPECT_FALSE(row.factor->log_weight);
+    ASSERT_TRUE(row.line);
+    EXPECT_EQ(row.line->momentum_index, 0u);
+    EXPECT_EQ(row.line->weight, zero);
+    EXPECT_EQ(uni20::precision_of(row.line->weight), uni20::precision_of(zero));
+    EXPECT_GT(row.line->gap, zero);
+    EXPECT_EQ(row.line->gap, reference.records[i].line->gap);
+    EXPECT_EQ(row.line->state_id, i + 1);
+    EXPECT_TRUE(row.diagnostic.empty());
+  }
+  for (auto const& moment : result.moments)
+  {
+    EXPECT_EQ(moment.weight, zero);
+    EXPECT_EQ(moment.first_moment, zero);
+  }
+}
 } // namespace
 
 TEST(ExperimentalSixCatalogue, ExhaustiveLabelsAndMomentumIndependentOfSuffixCounts)
@@ -208,6 +246,7 @@ TEST(ExperimentalSixCatalogue, IndexedReferenceIdentityAndBudgets)
 template <typename R> class ExperimentalSixScan : public ::testing::Test {};
 TYPED_TEST_SUITE(ExperimentalSixScan, test_support::RealTypes, test_support::PrecisionNames);
 TYPED_TEST(ExperimentalSixScan, IndependentWeightsAndSerialConcurrentAgreement) { numerical_scan(TypeParam{0}); }
+TYPED_TEST(ExperimentalSixScan, RetainsAllZeroMomentumSelectionLines) { zero_momentum_scan(TypeParam{0}); }
 
 TEST(ExperimentalSixScanExecution, OwnershipCompositionPreflightAndEmpty)
 {
@@ -353,7 +392,10 @@ TEST(ExperimentalSixScanMpfr, ExplicitPrecisionInWorkers)
 {
   auto const ambient = mpfr_get_default_prec();
   for (int bits : {128, 256})
+  {
     numerical_scan(uni20::mpreal(0, uni20::Precision::bits(bits)));
+    zero_momentum_scan(uni20::mpreal(0, uni20::Precision::bits(bits)));
+  }
   EXPECT_EQ(mpfr_get_default_prec(), ambient);
 }
 #endif

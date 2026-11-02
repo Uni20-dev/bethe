@@ -79,6 +79,11 @@ zero-weight lines. The N-bin `moments` contain only accepted lines; they do not
 estimate missing intensity. `converged()` means all submitted requests produced
 lines, including the vacuous empty scan, not full physical-sector completeness.
 
+Successful symmetry zeros are retained as accepted lines: the four N=12
+zero-transfer requests have resolved states and norms, exactly zero weights,
+and no finite `log_weight`. Their zeroth and first moments vanish. This is
+distinct from an unresolved candidate, which has no accepted line.
+
 Cancellation stops new admission. Already active numerical kernels finish before
 the operation reports `ExecutionCancelled`; execution exceptions similarly wait
 for admitted work before propagation. An interrupted operation does not publish
