@@ -4,6 +4,7 @@
 from decimal import Decimal, localcontext
 import math
 import unittest
+from unittest.mock import patch
 
 import numpy as np
 
@@ -216,6 +217,57 @@ class SpectralTimeTests(unittest.TestCase):
         np.testing.assert_allclose(result['real_standard_error'], [1e200], rtol=2e-15)
         np.testing.assert_allclose(result['imag_standard_error'], [1e-200], rtol=2e-15)
         np.testing.assert_allclose(result['real_imag_covariance'], [1.], rtol=2e-15)
+
+    def test_tiny_covariance_tail_does_not_force_exact_ordinary_results(self):
+        omega = np.linspace(-3, 3, 201)
+        W = weights(omega, np.linspace(0, 20, 10))
+        density = np.where(omega < 0, np.exp(100*omega), 1.)
+        errors = 1e-3*density
+        i = np.arange(len(omega))
+        C = errors[:, None]*np.exp(-abs(i[:, None]-i)/10)*errors
+        # Assert the execution choice, not a machine-dependent time limit.
+        with patch('spectral_time_transform._wide_covariance_row',
+                   side_effect=AssertionError('insignificant tails selected exact arithmetic')):
+            result = statistics(W, density, C)
+        expected_real = np.sqrt(np.einsum('ij,ij->i', W.real@C, W.real))
+        expected_imag = np.sqrt(np.einsum('ij,ij->i', W.imag@C, W.imag))
+        np.testing.assert_allclose(result['real_standard_error'], expected_real, rtol=2e-15)
+        np.testing.assert_allclose(result['imag_standard_error'], expected_imag, rtol=2e-15)
+
+    def test_cancelled_large_terms_do_not_hide_representable_tiny_error(self):
+        C = np.ones((3, 3))
+        C[2, :] = C[:, 2] = 0.
+        C[2, 2] = np.nextafter(0., 1.)
+        # The unit covariance block cancels exactly. Only the tiny independent
+        # component remains, with an unrepresentable variance but finite error.
+        result = statistics([[1., -1., 1e-10]], [0., 0., 0.], C)
+        with localcontext() as context:
+            context.prec = 100
+            expected = float(Decimal.from_float(float(C[2, 2])).sqrt()
+                             * Decimal.from_float(1e-10))
+        self.assertGreater(result['real_standard_error'][0], 0.)
+        np.testing.assert_allclose(result['real_standard_error'], [expected], rtol=2e-15, atol=0)
+
+    def test_mixed_covariance_dispatch_preserves_row_identity(self):
+        tiny = np.nextafter(0., 1.)
+        C = np.diag([1., tiny])
+        W = np.array([[1., 0.], [0., 1e-10], [1e200, 0.],
+                      [1j, 0.], [0., 0.]], dtype=complex)
+        with localcontext() as context:
+            context.prec = 100
+            small_error = float(Decimal.from_float(float(tiny)).sqrt()
+                                * Decimal.from_float(1e-10))
+        expected_real = np.array([1., small_error, 1e200, 0., 0.])
+        expected_imag = np.array([0., 0., 0., 1., 0.])
+        # Ordinary, underflow-sensitive and overflow-sensitive rows coexist;
+        # changing their order must not mix their output destinations.
+        for order in ([0, 1, 2, 3, 4], [2, 4, 1, 0, 3]):
+            result = statistics(W[order], [0., 0.], C)
+            np.testing.assert_allclose(result['real_standard_error'], expected_real[order],
+                                       rtol=2e-15, atol=0)
+            np.testing.assert_allclose(result['imag_standard_error'], expected_imag[order],
+                                       rtol=2e-15, atol=0)
+            np.testing.assert_array_equal(result['real_imag_covariance'], np.zeros(5))
 
     def test_covariance_cancellation_does_not_overflow_its_allowance(self):
         for scale in (1e154, 1e200):
