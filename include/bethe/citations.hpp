@@ -611,6 +611,10 @@ inline constexpr std::array<Use, 5> uses_xxz_pbc{{
   {&references[7], "XXX limit at Delta=1 and the conventional real-root quantum-number window."},
   {&references[12], "Background for the XXX window used to restrict the XXZ scan; not a complete XXZ state classification."},
 }};
+inline constexpr std::array<Use, 2> uses_xxz_structure_factor_thermo{{
+  {&references[82], "Zero-field massive transverse two-spinon DSF, published Eqs. (44), (51), (56). Both spectral sheets and their unequal intensities; physical k=pi-Q. S-+(k,omega), integrals use domega/(2*pi), no sum-rule rescaling. Longitudinal and higher-spinon responses are not included."},
+  {&references[99], "Independent reference uses the original vertex q-products in Eqs. (2.6)-(2.7) restricted to two spinons, with the two-vacuum completeness measure. No four-spinon contour or prefactor is used by this tool."},
+}};
 inline constexpr std::array<Use, 4> uses_xxz_dispersion{{
   {&references[10], "Zero-field gapless spinon dispersion, -1<Delta<=1; our positive spinon momentum reverses the notes' sign convention."},
   {&references[82], "Massive spinon dispersion, Eqs. (21)-(23), and two-spinon kinematics, Eq. (32). Both unfolded and two-site-folded continuum edges are implemented, not structure factors or spectral weights."},
@@ -696,7 +700,7 @@ inline constexpr std::array<Use, 3> uses_gaudin_yang_pbc{{
   {&references[60], "Hamiltonian and periodic fermion equations (1), (2), (7), (8), (25); even N, odd minority population as in Sec. 5. Weak and strong limits (12), (15)-(16) provide checks. Hard walls, attraction and excitations are not implemented."},
 }};
 
-enum class Tool { lee_yang_excited, lee_yang_vacuum, xxz_qg_obc, hubbard_continuum, kondo_response, sine_gordon_dispersion, sine_gordon_bethe_yang, sine_gordon_excited, sine_gordon_vacuum, asep_pbc, tasep_pbc, potts_pbc, xyz_dispersion, xyz_pbc, bose_fermi_pbc, q_boson_pbc, lieb_liniger_thermal, lieb_liniger_dispersion, biquadratic_obc, xxx_pbc, xxx_structure_factor_thermo, xxx_moments_thermo, xxx_structure_factor, xxx_obc, xxz_pbc, xxz_dispersion, xxz_obc, hubbard_dispersion, hubbard_pbc, hubbard_obc, lieb_liniger_pbc, lieb_liniger_obc, su3_dispersion, su3_pbc, tj_pbc, tb_dispersion, tb_pbc, richardson, central_spin, sun_fermions_pbc, ladder_pbc, haldane_shastry_pbc, sutherland_pbc, gaudin_yang_pbc };
+enum class Tool { lee_yang_excited, lee_yang_vacuum, xxz_qg_obc, hubbard_continuum, kondo_response, sine_gordon_dispersion, sine_gordon_bethe_yang, sine_gordon_excited, sine_gordon_vacuum, asep_pbc, tasep_pbc, potts_pbc, xyz_dispersion, xyz_pbc, bose_fermi_pbc, q_boson_pbc, lieb_liniger_thermal, lieb_liniger_dispersion, biquadratic_obc, xxx_pbc, xxx_structure_factor_thermo, xxx_moments_thermo, xxx_structure_factor, xxx_obc, xxz_pbc, xxz_structure_factor_thermo, xxz_dispersion, xxz_obc, hubbard_dispersion, hubbard_pbc, hubbard_obc, lieb_liniger_pbc, lieb_liniger_obc, su3_dispersion, su3_pbc, tj_pbc, tb_dispersion, tb_pbc, richardson, central_spin, sun_fermions_pbc, ladder_pbc, haldane_shastry_pbc, sutherland_pbc, gaudin_yang_pbc };
 
 [[nodiscard]] constexpr std::span<Use const> for_tool(Tool tool)
 {
@@ -727,6 +731,7 @@ enum class Tool { lee_yang_excited, lee_yang_vacuum, xxz_qg_obc, hubbard_continu
     case Tool::xxx_structure_factor: return uses_xxx_structure_factor;
     case Tool::xxx_obc: return uses_xxx_obc;
     case Tool::xxz_pbc: return uses_xxz_pbc;
+    case Tool::xxz_structure_factor_thermo: return uses_xxz_structure_factor_thermo;
     case Tool::xxz_dispersion: return uses_xxz_dispersion;
     case Tool::xxz_obc: return uses_xxz_obc;
     case Tool::hubbard_dispersion: return uses_hubbard_dispersion;

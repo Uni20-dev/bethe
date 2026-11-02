@@ -1157,6 +1157,7 @@ J. Stat. Mech. 2008, P08006 (2008).
 Relevant tool modes:
 
 - `bethe-xxx-structure-factor`: Transverse integrated and first-frequency sum rules, Eqs. (62)-(63), evaluated at Delta=1; thermodynamic fractions are not finite-size identities.
+- `bethe-xxz-structure-factor-thermo`: Zero-field massive transverse two-spinon DSF, published Eqs. (44), (51), (56). Both spectral sheets and their unequal intensities; physical k=pi-Q. S-+(k,omega), integrals use domega/(2\*pi), no sum-rule rescaling. Longitudinal and higher-spinon responses are not included.
 - `bethe-xxz-dispersion`: Massive spinon dispersion, Eqs. (21)-(23), and two-spinon kinematics, Eq. (32). Both unfolded and two-site-folded continuum edges are implemented, not structure factors or spectral weights.
 
 ### bortz-gohmann-2005
@@ -1343,6 +1344,7 @@ Relevant tool modes:
 
 - `bethe-xxx-structure-factor-thermo`: General n-spinon contour representation and its isotropic limit, used by the four- and six-spinon density evaluators. Physical normalization is checked independently, not adjusted by the user.
 - `bethe-xxx-moments-thermo`: General n-spinon contour representation and its isotropic limit, used by the four- and six-spinon density evaluators. Physical normalization is checked independently, not adjusted by the user.
+- `bethe-xxz-structure-factor-thermo`: Independent reference uses the original vertex q-products in Eqs. (2.6)-(2.7) restricted to two spinons, with the two-vacuum completeness measure. No four-spinon contour or prefactor is used by this tool.
 
 ### caux-hagemans-2006
 

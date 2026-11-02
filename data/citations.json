@@ -1282,6 +1282,14 @@
       ]
     },
     {
+      "id": "xxz_structure_factor_thermo",
+      "executable": "bethe-xxz-structure-factor-thermo",
+      "references": [
+        {"id": "caux-mossel-perez-castillo-2008", "context": "Zero-field massive transverse two-spinon DSF, published Eqs. (44), (51), (56). Both spectral sheets and their unequal intensities; physical k=pi-Q. S-+(k,omega), integrals use domega/(2*pi), no sum-rule rescaling. Longitudinal and higher-spinon responses are not included."},
+        {"id": "abada-bougourzi-si-lakhal-1997", "context": "Independent reference uses the original vertex q-products in Eqs. (2.6)-(2.7) restricted to two spinons, with the two-vacuum completeness measure. No four-spinon contour or prefactor is used by this tool."}
+      ]
+    },
+    {
       "id": "xxz_dispersion",
       "executable": "bethe-xxz-dispersion",
       "references": [

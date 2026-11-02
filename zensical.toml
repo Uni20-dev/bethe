@@ -63,6 +63,7 @@ nav = [
     { "Spin chains" = [
       { "XXX family" = "docs/xxx-family.md" },
       { "XXZ family" = "docs/xxz-family.md" },
+      { "Massive XXZ spectral intensity" = "docs/xxz-structure-factor-thermo.md" },
       { "XYZ" = "docs/xyz.md" },
       { "SU(3)/ULS" = "docs/su3.md" },
       { "Spin-1 TB" = "docs/takhtajan-babujian.md" },

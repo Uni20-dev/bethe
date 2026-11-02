@@ -1,0 +1,113 @@
+{
+  "source_revision": "2242fd5d78ec2c6c81a64993eca5dd6eea6cd732",
+  "source_files_sha256": {
+    "include/bethe/xxz_thermodynamic_structure_factor.hpp": "3e9c892357bb938d7f1cc6d0471ed6d3f5eafc2dd9bc44349d82ddd5dca4e616",
+    "include/bethe/detail/carlson_rf.hpp": "18536d1ce9cd5344e08036e364cc6abc71f85785c9f512d6c9ae9c629582b60c",
+    "apps/bethe-xxz-structure-factor-thermo.cpp": "3fb1d415b58f64d497e6d1639ee7abfa926d1a8bab811c6dceeb91c52151b0b8",
+    "tests/test_xxz_thermodynamic_structure_factor.cpp": "cc3da0069e2875ea8f275dd121a21af51644fddb35700abab7dda1abc3c7d790",
+    "scripts/reference_xxz_two_spinon.py": "44c171606c86b71dabc14b1c47c89760fc8a1093e8444ac319bb709a02440d3d",
+    "scripts/reference_xxz_vertex_limit.py": "9721747884cf1abe9f15c4d0b3fe3002309b0dca502d8a013c26206a1aad7b88",
+    "scripts/reference_xxz_ising_weight.py": "efb2d77b3d4175c114eaeb9c7d51ab088804af14b4c3d57b481c5a9429c2f1a2",
+    "scripts/reference_xxz_vertex_integral.py": "8dccf087eb1b501e9e8d13e93b264bca77c5e857d0aa92ba0fa565408e54304b",
+    "scripts/test_xxz_two_spinon.py": "08621c9375a60c9dfa00480f477a3c5f507184dc6146e7b1d28b0e97bee6bab1"
+  },
+  "public_base": "cf1ae311cef37ca643e196be4346d8d1721136d5",
+  "uni20_revision": "1cb2474eb0a54e13ec7d5f2c1823752020b2425c",
+  "scope": "Supported infinite massive XXZ transverse two-spinon density only. Higher-sector finite-q and QTM ports remain separate. No broadening or fitted rescaling.",
+  "adaptation": [
+    "Uni20 scaled theta constants/jets and explicit runtime precision replace research special-function wrappers.",
+    "Restricted shared internal RF(x,y,1), dimensionless arguments in [0,1], with native/MPFR validation; not a general elliptic-integral API.",
+    "Declared frontend tables, shared ordered bounded Async grid and run-context output.",
+    "Standalone two-spinon reference extracted without higher-sector contour/perturbation code; complex amplitudes and full measures rechecked against frozen sources."
+  ],
+  "numerical_controls": [
+    "Three 120-digit independent reduced-form points and original vertex momentum-root controls.",
+    "130-digit near-edge points at relative offsets 1e-8 and 1e-24; wider precision required for the latter. Includes both sides of the internal sheet edge.",
+    "Independent full two-vacuum intensity and first moment at Delta1.5/4; resolved C++ sheet integral with separate 2*pi measures.",
+    "Pointwise/integrated approach to independent XXX limit; Ising saturation Delta4/8/16.",
+    "Carlson unit-domain analytic identities; exchange and momentum symmetry; exact-endpoint/no-value and zero outside support; budget/failure and MPFR128/256 precision ownership."
+  ],
+  "python_validation": {
+    "tests": 2,
+    "failures": 0,
+    "log_sha256": "01eafb773ded467be72642febeb278721bc41027871ee9262e90386f7eec9b2b",
+    "dependencies": [
+      "mpmath",
+      "numpy"
+    ],
+    "scope": "Optional standalone reference checks, not runtime dependencies."
+  },
+  "routine_cost_contract": "Focused C++ numerical suite should remain below five seconds in native/wide configurations on the reference host; bounded CLI/sanitizer startup is separate. Reference tests are optional and under one second on that host. No production grid in routine CI.",
+  "validation_status": "Current-source focused CMake/CLI matrix and local documentation checks pass. Review, full CI and integration gates remain open.",
+  "remaining_gates": [
+    "reciprocal exact-head review",
+    "completed Claude review",
+    "current CI",
+    "integrated installation and deployed documentation"
+  ],
+  "cmake_validation": {
+    "scope": "Focused numerical, declared-output, serial/Async, shared-argument and citation checks in separate CMake builds; not the full repository test suite.",
+    "compiler_native_wide": "GCC 13.3 Release",
+    "compiler_sanitizers": "Clang 19.1 Debug, ASan/UBSan, existing Uni20 MPFR cache suppressions",
+    "host_cpu": "Intel Core i7-12700KF",
+    "thread_limits": "One compiler process; affinity to six logical CPUs; BLAS/OMP one thread.",
+    "lanes": {
+      "native": {
+        "passed": 17,
+        "failed": 0,
+        "elapsed_seconds": 0.79,
+        "numerical_tests": 14,
+        "numerical_seconds_rounded_sum": 0.53,
+        "test_log_sha256": "861d551ab7d6908e8fe35e4309bcede3db8f332a00175fe7d988879350063567",
+        "build_log_sha256": "e28d3446f5236c0b7acdb5d48c20fe6493c604410efe696f3c4dfad24e3823d3"
+      },
+      "wide": {
+        "passed": 24,
+        "failed": 0,
+        "elapsed_seconds": 0.99,
+        "numerical_tests": 21,
+        "numerical_seconds_rounded_sum": 0.58,
+        "test_log_sha256": "e824239d321d96c917c5b3c00865f7795ff3a1034a22d9fe1463e0f7f03ea508",
+        "build_log_sha256": "f67567a47646a6d528ab10f3efd5eca9d9b7320a69f69c1e76c1ee03ec916062"
+      },
+      "sanitizers": {
+        "passed": 19,
+        "failed": 0,
+        "elapsed_seconds": 24.26,
+        "numerical_tests": 16,
+        "numerical_seconds_rounded_sum": 1.06,
+        "test_log_sha256": "febbf82534cf6f5c6ca9b0814feb2a80edf1743b8a12ae943e8cd9b433fa8d3b",
+        "build_log_sha256": "e2f9ae184df91628a124c05dd0d42bca86571f14bc910db9f6916b6616a08296"
+      }
+    }
+  },
+  "documentation_validation": {
+    "equations": 1870,
+    "source_files_with_math": 123,
+    "built_pages": 153,
+    "bibliography_urls": 165,
+    "native_cpp_example": "compiled and executed",
+    "mpfr160_companion": "compiled and executed",
+    "note": "Local site build and source-to-HTML checks; public deployment remains pending."
+  },
+  "library_only_validation": {
+    "scope": "Fresh enclosing CMake project with Bethe apps, tests, examples and Uni20 CLI disabled; link bethe::bethe and run the documented native query.",
+    "results": [
+      {
+        "step": "configure",
+        "returncode": 0,
+        "elapsed_seconds": 4.676311249029823
+      },
+      {
+        "step": "build",
+        "returncode": 0,
+        "elapsed_seconds": 32.93442205002066
+      },
+      {
+        "step": "run",
+        "returncode": 0,
+        "elapsed_seconds": 0.0012606230448000133
+      }
+    ]
+  }
+}
