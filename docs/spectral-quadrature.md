@@ -128,7 +128,7 @@ not select slower arithmetic: an exponent check identifies potentially lost
 underflow terms, then compares a conservative allowance for that loss with
 each row's variances and real/imaginary cross covariance. Negligible tails
 retain the ordinary path. Overflow risk, or underflow loss that cannot be
-shown negligible (including active zero or cancelling results), selects exact
+shown negligible (including active zeros from cancellation), selects exact
 rational products of the supplied binary64 entries. The standard errors and
 cross covariance are then rounded to binary64.
 This slower path preserves representable standard errors even when their
