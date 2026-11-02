@@ -83,19 +83,19 @@
     "mpmath": "1.2.1",
     "host_cpu": "Intel Core i7-12700KF",
     "processes": 1,
-    "affinity": "six logical CPUs; BLAS/OMP one thread"
+    "affinity": "latest import-fix validation: logical CPUs 0,2; one process and BLAS/OMP one thread"
   },
   "tests": {
-    "passed": 24,
+    "passed": 27,
     "failed": 0,
-    "seconds": 106.747,
-    "log_sha256": "744d8c060787055710b06a0693fb64ffd2b1baaf4382e21fb13c5287b48c38aa",
-    "scope": "All 23 original mathematical regressions plus fresh-reference/checkpoint-source guards; decimal inputs and explicit precision retained."
+    "seconds": 105.00407280802028,
+    "log_sha256": "6f8bce55df3ccdcf73332d2e56d8fb87abd8961001b865f37722ddf4089e19bc",
+    "scope": "Clean copied checkout: original mathematical/checkpoint tests plus three isolated import/provenance regressions. Old helper fails all three new cases, with five failing subchecks."
   },
   "compact_fixture": {
     "path": "experimental/reference/qtm/pointwise-fixture.json",
-    "sha256": "f14a7038a8f80a1a10349a1d65f9463c27c49992821f49377f9706bce685a465",
-    "seconds": 193.82551979500568,
+    "sha256": "03b7970e279fbd0d68f8b84221df96f1c11321d086980cefde52a2259f4084e0",
+    "seconds": 192.50796476198593,
     "decimal_digits": [
       32,
       42
@@ -109,7 +109,8 @@
     "selected_jmp_maxdegree": 9,
     "selected_jmp_split": false,
     "vertex_terms": 128,
-    "vertex_tail_order": 28
+    "vertex_tail_order": 28,
+    "numerical_values_equal_previous_fixture": true
   },
   "routine_cost_contract": "Optional mpmath suite, about two minutes on the recorded host; not added to routine C++ CI or installed as a runtime dependency. The compact fixture generator takes about three minutes. Full all-partition JMP audits are separate explicit commands.",
   "reader_review": "Fresh reader verified setup, precision, measures, audit choices and proof limits. Corrected conversion direction, defined the full boundary sum explicitly and replaced historical paths.",
@@ -127,16 +128,17 @@
       "docs/experimental-xxx-qtm.md": "5f1b6bd2a8c57aa853c169d510c5657a328e2c0ced40b043ef25a21c1d830520",
       "docs/experimental.md": "a07ce51dab6607bc386976deed8416035dabe02a0eabec0d4fa03ac70d803a8d",
       "experimental/README.md": "5f531e439c04286e2692d142a717a2a97c3d3836b519a3e38ad291623e77f89c",
-      "experimental/reference/qtm/README.md": "f7b45cee36f5c63c6a79b839c66f1186b2a65c99cc43ac76771be2db989827cf",
-      "experimental/reference/qtm/_reference_support.py": "711a6b0be9443829ddc34b19a92d38d4b64a456018af99e77ebbae87a641b313",
+      "experimental/reference/qtm/README.md": "7019c599ea6c267bc0b7e03eed2ee6118f82a539993f1d92ff7ac062a1c2a6d2",
+      "experimental/reference/qtm/_reference_support.py": "acf2440efb6e3f87fb6841201cd75a182b25fccd6e6ff91557588af043e4624a",
       "experimental/reference/qtm/audit_xxx_qtm_partitions.py": "163e4ab2fe4f163907d1ddedc85320dfa2a0741cccb71acfd34291a9ce887c19",
       "experimental/reference/qtm/audit_xxx_qtm_pointwise.py": "a5066494cc7930844dcaba07bae6172c6805c9f0e9c1926a4ee969278d1fe6a0",
       "experimental/reference/qtm/audit_xxx_qtm_vertex.py": "bb42ce76e9b85059cb71fa1fd9fe2bd9eae0b319cb88966f0119d2eae8cdf798",
       "experimental/reference/qtm/generate_pointwise_fixture.py": "2cf9dcda0474425c9215ce511f916ee3331d9d195e22a87af36ae68220a8fb70",
-      "experimental/reference/qtm/pointwise-fixture.json": "f14a7038a8f80a1a10349a1d65f9463c27c49992821f49377f9706bce685a465",
+      "experimental/reference/qtm/pointwise-fixture.json": "03b7970e279fbd0d68f8b84221df96f1c11321d086980cefde52a2259f4084e0",
       "experimental/reference/qtm/reference_xxx_qtm.py": "733799f81ae73db7f00bd7ba1437d574aa9b7d9b0e42acd7e33d0854c3ede544",
       "experimental/reference/qtm/reference_xxx_qtm_vertex.py": "0a1b731cacdc86e2232ac956f342f0202c7fb75a66b078e460392b11458e45d8",
       "experimental/reference/qtm/requirements.txt": "6bec4bbd4ca67b05c9309fac7787d09b24910e97ec6b9759f01550f24e953277",
+      "experimental/reference/qtm/test_reference_support.py": "2603d5a1c6223ccb043b68e02376bf2c3cfcaf3c7002fb75e961b252e31fd83f",
       "experimental/reference/qtm/test_reference_xxx_qtm.py": "5b78d39bf9a68d96495f025a1db7abc4fd744b850e37cf2f264a2f21cbac8ca2",
       "experimental/reference/qtm/test_reference_xxx_qtm_partitions.py": "ef078bbddb07348c51c546485bfaa42091b4f49f7532911402d6d30b912301c8",
       "experimental/reference/qtm/test_reference_xxx_qtm_vertex.py": "b789f0de414ecbf33cd2eff42f07c115ce4c54c03c12162b01e1b6d7122fe934",
@@ -177,12 +179,20 @@
       "literal_guide_example_seconds": 1.2606959830154665,
       "existing_output_rejected_unchanged": true
     },
-    "generated_citation_header": "GCC13 C++23 syntax-only pass; citation generator --check pass"
+    "generated_citation_header": "GCC13 C++23 syntax-only pass; citation generator --check pass",
+    "validated_at": "43cc7bfebd3fbcfe4db79b4644d76f8246861b2f; CLI/evaluator code unchanged. New clean-copy suite and fixture regeneration are recorded separately above."
   },
   "documentation": {
     "pages": 155,
     "bibliography_urls": 171,
     "equations": 1984,
     "scope": "Local site and source/HTML link/math checks; deployment remains pending."
+  },
+  "import_validation": {
+    "scope": "Prefer same-checkout controls over foreign PYTHONPATH; reject cached direct/transitive/QTM modules and foreign reference modules at provenance recording.",
+    "old_helper_tests_failed": 3,
+    "new_import_tests_passed": 3,
+    "fixture_dependency_hashes_verified": 12,
+    "numerical_formulas_unchanged": true
   }
 }
