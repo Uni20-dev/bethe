@@ -91,6 +91,13 @@ single observation is not subdivided by this engine. There is no whole-batch
 join. Buffered observations scale with `batch_size * max_in_flight`, rather than
 the total requested sample count.
 
+One owning coroutine spans sampling and result assembly. The public call
+constructs it before its sole initial scheduler submission. Construction or
+initial-admission failure leaves no numerical work running; a later admission
+or evaluator failure reaches the returned result after accepted blocks drain.
+The six-spinon spectrum and moment adapters directly await this sampling task
+under their own result owner.
+
 Callers may use `.get_wait(scheduler)` or await the
 result in another coroutine. The borrowed scheduler must outlive completion,
 including work whose handle was dropped. Cancellation drains admitted work;
