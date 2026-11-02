@@ -186,3 +186,8 @@ Long-time phase accuracy still depends on energy accuracy. Increasing the
 number of time samples does not improve the root solutions or restore omitted
 complex-root states. The complete two-site ground density and full local
 sum rules should not be confused with the retained dynamical spectrum.
+
+The ground-root density and full first-moment reference are evaluated independently
+of spectral form-factor preparation. If spectral preparation fails but the density
+solve succeeds, `moments` still exports the full reference; retained moments and
+omissions are absent, not zero. The time table remains empty and the exit code is 2.

@@ -55,6 +55,17 @@ template <uni20::Real R> struct BoundarySpectrum
              moments.first_moment <= -*zz + gate;
     }
     bool converged() const { return family_converged() && density.converged() && sum_rules_consistent(); }
+    /// Absent if spectral preparation failed; an unattempted sum is not zero.
+    std::optional<LocalSpectralMoments<R>> retained_moments() const
+    {
+      if (ground_status != BoundaryFormFactorStatus::converged) return {};
+      return moments;
+    }
+    std::optional<CrossSpectralMoments<R>> retained_end_to_end_moments() const
+    {
+      if (ground_status != BoundaryFormFactorStatus::converged) return {};
+      return end_to_end_moments;
+    }
     /// Uniform absolute truncation bound for exact retained weights/energies.
     /// Numerical errors are separate. An exceeded norm is absent, never clamped.
     std::optional<R> omitted_weight() const
@@ -68,7 +79,7 @@ template <uni20::Real R> struct BoundarySpectrum
     std::optional<R> omitted_first_moment() const
     {
       auto const zz = density.zz();
-      if (!zz || !uni20::isfinite(moments.first_moment)) return {};
+      if (!retained_moments() || !zz || !uni20::isfinite(moments.first_moment)) return {};
       R const missing = -*zz - moments.first_moment;
       if (!uni20::isfinite(missing) || missing < uni20::scalar_like(missing, 0)) return {};
       return missing;
@@ -117,10 +128,18 @@ BoundaryRecord<R> evaluate(std::size_t sites, heisenberg::QuantumNumbers numbers
   return row;
 }
 
-template <uni20::Real R, typename Evaluate>
+template <uni20::Real R> struct PrepareBoundary
+{
+    BoundaryFormFactors<R> operator()(std::size_t sites, model::RealState<R> const& ground) const
+    {
+      return BoundaryFormFactors<R>(sites, ground);
+    }
+};
+
+template <uni20::Real R, typename Evaluate, typename Prepare>
 uni20::async::AsyncTask spectrum_task(uni20::async::IAsyncScheduler& scheduler, std::size_t sites, std::size_t count,
                                       SolverOptions<R> solver, ExecutionOptions execution, Evaluate evaluate,
-                                      uni20::async::WriteBuffer<BoundarySpectrum<R>> output)
+                                      Prepare prepare, uni20::async::WriteBuffer<BoundarySpectrum<R>> output)
 {
   auto destination = co_await output;
   if (execution.stop.stop_requested()) throw ExecutionCancelled("boundary spectrum cancelled");
@@ -128,9 +147,12 @@ uni20::async::AsyncTask spectrum_task(uni20::async::IAsyncScheduler& scheduler, 
   BoundarySpectrum<R> result(sites, zero);
   result.ground_state = model::ground_state<R>(sites, solver);
   if (execution.stop.stop_requested()) throw ExecutionCancelled("boundary spectrum cancelled");
-  BoundaryFormFactors<R> prepared(sites, result.ground_state);
+  // Independent ground-root observable: spectral normalization must not gate it.
+  result.density = boundary_two_site_density(sites, result.ground_state);
+  if (execution.stop.stop_requested()) throw ExecutionCancelled("boundary spectrum cancelled");
+  auto prepared = prepare(sites, result.ground_state);
   result.ground_status = prepared.status();
-  result.ground_residual = prepared.ground_residual();
+  result.ground_residual = result.density.ground_residual;
   result.ground_reflection_parity = real_root_reflection_parity(sites, result.ground_state.quantum_numbers);
   auto const m = sites / 2 - 1;
   heisenberg::QuantumNumbers labels(m);
@@ -147,7 +169,6 @@ uni20::async::AsyncTask spectrum_task(uni20::async::IAsyncScheduler& scheduler, 
   }
   if (prepared.ready())
   {
-    result.density = boundary_two_site_density(sites, result.ground_state);
     auto const completed = bethe::detail::continuous_work(
         scheduler, execution.max_in_flight, count,
         [&](std::size_t i, std::stop_token stop) {
@@ -172,10 +193,10 @@ uni20::async::AsyncTask spectrum_task(uni20::async::IAsyncScheduler& scheduler, 
 }
 
 /// Owning numerical seam, also used by admitted-work lifetime tests.
-template <uni20::Real R, typename Evaluate>
+template <uni20::Real R, typename Evaluate, typename Prepare = PrepareBoundary<R>>
 uni20::async::Async<BoundarySpectrum<R>> submit_spectrum(std::size_t sites, SolverOptions<R> solver,
                                                          std::size_t max_candidates, ExecutionOptions execution,
-                                                         Evaluate evaluate)
+                                                         Evaluate evaluate, Prepare prepare = {})
 {
   (void)heisenberg::detail::checked_sites(sites);
   if (sites % 2) throw std::invalid_argument("boundary singlet dynamics requires even N");
@@ -185,7 +206,8 @@ uni20::async::Async<BoundarySpectrum<R>> submit_spectrum(std::size_t sites, Solv
   if (!uni20::isfinite(solver.residual_tolerance) || solver.residual_tolerance <= zero)
     throw std::invalid_argument("residual tolerance must be finite and positive");
   uni20::async::Async<BoundarySpectrum<R>> output;
-  auto task = spectrum_task(scheduler, sites, count, std::move(solver), execution, std::move(evaluate), output.write());
+  auto task = spectrum_task(scheduler, sites, count, std::move(solver), execution, std::move(evaluate),
+                            std::move(prepare), output.write());
   bethe::detail::schedule_owned(scheduler, std::move(task));
   return output;
 }

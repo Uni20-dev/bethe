@@ -211,6 +211,46 @@ TEST(ExperimentalBoundaryDynamicsExecution, OwnershipFailuresPreflightAndComposi
   EXPECT_THROW((void)cancelled.get_wait(scheduler), bethe::ExecutionCancelled);
 }
 
+TEST(ExperimentalBoundaryDynamicsExecution, FullDensitySurvivesRejectedSpectralPreparation)
+{
+  DebugScheduler scheduler;
+  std::size_t attempted = 0;
+  auto pending = boundary::boundary_detail::submit_spectrum<double>(
+      4, {}, 100, {&scheduler},
+      [&](auto, auto, auto const&, auto const&, std::stop_token) {
+        ++attempted;
+        return boundary::BoundaryRecord<double>{};
+      },
+      [](auto sites, auto const& ground) {
+        boundary::BoundaryFormFactors<double> rejected(sites, ground);
+        auto saved = std::move(rejected);
+        EXPECT_TRUE(saved.ready());
+        EXPECT_FALSE(rejected.ready());
+        return rejected; // Inject spectral rejection after a valid independent root solve.
+      });
+  auto const& result = pending.get_wait(scheduler);
+  EXPECT_TRUE(result.ground_state.converged);
+  EXPECT_FALSE(result.family_converged());
+  EXPECT_FALSE(result.converged());
+  EXPECT_EQ(attempted, 0u);
+  ASSERT_TRUE(result.density.converged());
+  EXPECT_EQ(result.ground_residual, result.density.ground_residual);
+  EXPECT_NEAR(*result.density.bond_correlation, -(1.0 + std::sqrt(3.0)) / 4, 3e-12);
+  EXPECT_NEAR(-*result.density.zz(), (1.0 + std::sqrt(3.0)) / 12, 3e-12);
+  EXPECT_FALSE(result.retained_moments());
+  EXPECT_FALSE(result.retained_end_to_end_moments());
+  EXPECT_FALSE(result.omitted_weight());
+  EXPECT_FALSE(result.omitted_first_moment());
+  EXPECT_TRUE(result.lines.empty());
+  ASSERT_EQ(result.records.size(), 3u);
+  for (auto const& row : result.records)
+  {
+    EXPECT_FALSE(row.state);
+    EXPECT_FALSE(row.line);
+    EXPECT_FALSE(row.diagnostic.empty());
+  }
+}
+
 TEST(ExperimentalBoundaryDynamicsExecution, FailureAndCancellationDrainAdmittedWork)
 {
   TbbScheduler scheduler(2);

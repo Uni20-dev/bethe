@@ -131,7 +131,9 @@ template <uni20::Real R> int run(Arguments const& a, int argc, char** argv, beth
   });
   auto const& result = calculation.first;
   bool const complete = result.converged();
-  bool const ground_ready = result.ground_status == model::BoundaryFormFactorStatus::converged;
+  bool const ground_ready = result.ground_state.converged;
+  auto const retained = result.retained_moments();
+  auto const cross = result.retained_end_to_end_moments();
   cli::RunReport report(context, "Experimental free-end XXX boundary dynamics");
   report.field("sites", "Sites", a.sites)
       .field("hamiltonian", "Hamiltonian", "H=sum S_j.S_(j+1); free ends; J=1; zero field")
@@ -148,7 +150,8 @@ template <uni20::Real R> int run(Arguments const& a, int argc, char** argv, beth
       .field("ground_iterations", "Ground iterations", result.ground_state.iterations)
       .field("ground_solver_residual", "Ground solver residual", result.ground_state.residual_norm)
       .field("ground_energy", "Ground energy", ground_ready ? Optional(result.ground_state.energy) : Optional{})
-      .field("ground_status", "Ground preparation", status(result.ground_status))
+      .field("ground_solver_converged", "Ground root solver converged", ground_ready)
+      .field("ground_status", "Spectral ground preparation", status(result.ground_status))
       .field("ground_residual", "Ground equation residual", result.ground_residual)
       .field("bond_status", "Boundary bond status", status(result.density.status))
       .field("bond", "Full boundary bond", result.density.bond_correlation)
@@ -173,15 +176,17 @@ template <uni20::Real R> int run(Arguments const& a, int argc, char** argv, beth
   output.table(
       "moments", "Retained moments and complete local sum rules",
       [&](auto& table) {
-        if (!ground_ready) return;
+        if (!retained && !result.density.converged()) return;
         auto const zz = result.density.zz();
-        table.append(result.moments.weight, one / 4, result.omitted_weight(), result.moments.first_moment,
-                     zz ? Optional(-*zz) : Optional{}, result.omitted_first_moment(),
-                     result.end_to_end_moments.value.real(), result.end_to_end_moments.first_moment.real());
+        table.append(retained ? Optional(retained->weight) : Optional{}, one / 4, result.omitted_weight(),
+                     retained ? Optional(retained->first_moment) : Optional{}, zz ? Optional(-*zz) : Optional{},
+                     result.omitted_first_moment(), cross ? Optional(cross->value.real()) : Optional{},
+                     cross ? Optional(cross->first_moment.real()) : Optional{});
       },
-      column<R>("retained_weight"), column<R>("full_local_weight"), column<Optional>("omitted_weight"),
-      column<R>("retained_first_moment"), column<Optional>("full_local_first_moment"),
-      column<Optional>("omitted_first_moment"), column<R>("end_to_end_static"), column<R>("end_to_end_first_moment"));
+      column<Optional>("retained_weight"), column<R>("full_local_weight"), column<Optional>("omitted_weight"),
+      column<Optional>("retained_first_moment"), column<Optional>("full_local_first_moment"),
+      column<Optional>("omitted_first_moment"), column<Optional>("end_to_end_static"),
+      column<Optional>("end_to_end_first_moment"));
   output.table(
       "spectrum", "Accepted local weights and signed endpoint coefficients",
       [&](auto& table) {

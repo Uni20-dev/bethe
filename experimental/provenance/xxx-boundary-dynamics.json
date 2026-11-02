@@ -19,5 +19,15 @@
       "sha256": "8109dbfbbcb256a788840758228cba4e482e25af09b4dadbc3ee3b8f05c78b2a"
     }
   ],
-  "adaptation": "Own complete Async scan with fused root/weight work; shared local/cross time primitives; explicit precision; ordinary Uni20 solve; complete ground-root bond; declared CLI exports. Same-sector magnetization is a separate port."
+  "adaptation": "Own complete Async scan with fused root/weight work; shared local/cross time primitives; explicit precision; ordinary Uni20 solve; complete ground-root bond; declared CLI exports. Same-sector magnetization is a separate port.",
+  "public_outputs": [
+    "experimental/include/bethe/experimental/xxx_boundary_dynamics.hpp",
+    "experimental/include/bethe/experimental/xxx_boundary_correlations.hpp",
+    "experimental/apps/bethe-xxx-boundary-dynamics.cpp",
+    "experimental/tests/test_xxx_boundary_dynamics.cpp",
+    "experimental/tests/test_xxx_boundary_correlations.cpp",
+    "experimental/tests/check_boundary_dynamics_cli.py",
+    "docs/experimental-xxx-boundary-dynamics.md"
+  ],
+  "input_paths_note": "sources records pre-adaptation paths at the recorded source revision; public_outputs names the ported implementation, tests and guide."
 }
