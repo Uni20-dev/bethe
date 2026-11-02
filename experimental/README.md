@@ -14,3 +14,13 @@ Regular finite-root equations and unreduced form factors are described in
 building blocks; family-specific complex-root solvers are not yet provided. Experimental status does not permit silent
 failed-state deletion, altered physical normalization or an undocumented
 ideal-string fallback.
+
+The [open XXX boundary guide](../docs/experimental-xxx-boundary-form-factors.md)
+covers normalized local raising weights and a fresh standalone example.
+
+The [boundary-dynamics guide](../docs/experimental-xxx-boundary-dynamics.md)
+adds local/end-to-end time sums, an owned Async scan and the ground-only
+boundary density matrix.
+
+The [boundary-magnetization guide](../docs/experimental-xxx-boundary-magnetization.md)
+adds signed same-sector endpoint elements and magnetization after a boundary spin flip.
