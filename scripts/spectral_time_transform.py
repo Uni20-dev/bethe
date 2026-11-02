@@ -141,7 +141,7 @@ def _underflow_negligible(W, vr, vi, ri):
     those errors and their subsequent rounding. Compare exponent bounds,
     avoiding underflow in the allowance itself, with extra mantissa headroom.
     This bounds underflow loss, not the usual relative rounding error or
-    covariance-conditioning error. Active zero/cancelling results stay exact.
+    covariance-conditioning error. Active computed zeros stay exact.
     """
     n = W.shape[1]
     common = -1074 + 2 + (n-1).bit_length() + n.bit_length()
