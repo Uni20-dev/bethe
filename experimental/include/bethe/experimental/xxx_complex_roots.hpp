@@ -151,7 +151,23 @@ template <uni20::Real R> R residual_tolerance(int n, std::span<C<R> const> roots
   R const zero = bethe::detail::precision_zero(exemplar);
   R const s = separation<R>(roots, zero), eps = uni20::numeric_limits<R>::epsilon(zero);
   if (!(s > 64 * uni20::math::sqrt(eps))) throw std::runtime_error("unresolved complex roots; increase precision");
-  return 256 * eps * n / s;
+  // Coincident roots are inadmissible, but are not poles of the Bethe
+  // equations: their scattering factors have denominators d +/- i, not d.
+  // Letting |d| inflate this allowance can accept a Newton iterate collapsing
+  // onto a duplicate-root solution. Keep that geometry gate above separate
+  // from the roundoff amplification at actual equation poles.
+  R const one = uni20::scalar_like(zero, 1);
+  R poles = one;
+  for (std::size_t i = 0; i < roots.size(); ++i)
+  {
+    poles = std::min(poles, uni20::math::abs(roots[i] * roots[i] + one / 4));
+    for (std::size_t j = 0; j < i; ++j)
+    {
+      auto const d = roots[i] - roots[j];
+      poles = std::min(poles, uni20::math::abs(one + d * d));
+    }
+  }
+  return 256 * eps * n / poles;
 }
 
 template <uni20::Real R> R energy(int n, std::span<C<R> const> roots, R const& exemplar = R{0})
@@ -172,12 +188,19 @@ template <uni20::Real R> R energy(int n, std::span<C<R> const> roots, R const& e
 // CHM unreduced finite-root raising determinant. The two column products are
 // independent for complex roots, NOT conjugates. Fourier raising weight has
 // no 2*pi or thermodynamic coefficient. This is not the stabilized pair formula.
+// An optional absolute excited momentum index must come from validated family
+// labels. It is cross-checked against these roots before applying the exact
+// singlet selection rule; unlabeled calls evaluate the determinant only.
 template <uni20::Real R>
-heisenberg::FormFactor<R> raising_weight(PreparedSinglet<R> const& ground, std::span<C<R> const> lambda)
+heisenberg::FormFactor<R> raising_weight(PreparedSinglet<R> const& ground, std::span<C<R> const> lambda,
+                                         std::optional<int> validated_momentum_index = std::nullopt)
 {
   if (ground.sites() > static_cast<std::size_t>(std::numeric_limits<int>::max()))
     throw std::invalid_argument("complex-root helpers require a site count representable as int");
   if (lambda.size() + 1 != ground.sites() / 2) throw std::invalid_argument("invalid singlet/triplet root counts");
+  if (validated_momentum_index &&
+      (*validated_momentum_index < 0 || static_cast<std::size_t>(*validated_momentum_index) >= ground.sites()))
+    throw std::invalid_argument("excited momentum index must be in [0,N)");
   heisenberg::FormFactor<R> result;
   result.status = ground.status();
   if (!ground.ready()) return result;
@@ -189,7 +212,8 @@ heisenberg::FormFactor<R> raising_weight(PreparedSinglet<R> const& ground, std::
   if (!(s > 64 * uni20::math::sqrt(eps))) return result;
   R const measured = rational_residual<R>(n, lambda, zero);
   if (!uni20::isfinite(measured)) return result;
-  if (measured > 4 * (256 * eps * n / s))
+  R const tolerance = 4 * residual_tolerance<R>(n, lambda, zero);
+  if (measured > tolerance)
   {
     result.status = heisenberg::FormFactorStatus::roots_unconverged;
     return result;
@@ -199,6 +223,36 @@ heisenberg::FormFactor<R> raising_weight(PreparedSinglet<R> const& ground, std::
   auto const norm = bethe::detail::log_absolute_determinant<R>(gaudin<R>(n, lambda, zero), lambda.size(), zero);
   result.pivot_margin = std::min(*ground.ground_pivot_margin(), norm.pivot_margin);
   if (!norm.log_absolute) return result;
+  if (validated_momentum_index)
+  {
+    R const pi = bethe::detail::pi_like(zero);
+    // Do not infer an integer sector by rounding a noisy phase. Require the
+    // supplied label to agree within the original precision-scaled tolerance,
+    // with a strict separation from neighbouring lattice momenta.
+    if (!uni20::isfinite(tolerance) || tolerance >= pi / (2 * one * n)) return result;
+    C<R> const imaginary(zero, one);
+    Sum<C<R>> momentum(C<R>(zero, zero));
+    for (auto const& v : lambda)
+      momentum.add(uni20::math::log(v + imaginary / (2 * one)) - uni20::math::log(v - imaginary / (2 * one)));
+    R const angular_error = uni20::math::abs(phase(momentum.value().imag() - 2 * pi * *validated_momentum_index / n));
+    R const magnitude_error = uni20::math::abs(momentum.value().real());
+    if (!uni20::isfinite(angular_error) || !uni20::isfinite(magnitude_error) || angular_error > tolerance ||
+        magnitude_error > tolerance)
+    {
+      result.status = heisenberg::FormFactorStatus::roots_unconverged;
+      return result;
+    }
+    // PreparedSinglet validates the centred even-ring ground quantum numbers.
+    // Its momentum is zero for N=0 mod 4 and pi for N=2 mod 4. Only zero
+    // transfer, not necessarily zero absolute excited momentum, is forbidden.
+    int const ground_momentum_index = n % 4 == 0 ? 0 : n / 2;
+    if (*validated_momentum_index == ground_momentum_index)
+    {
+      result.weight = zero;
+      result.status = heisenberg::FormFactorStatus::converged;
+      return result; // log_weight stays absent: log(0) is not finite.
+    }
+  }
   std::vector<C<R>> h(m * m, C<R>(zero, zero));
   Sum<R> logarithm(zero);
   logarithm.add(*ground.ground_log_prefactor() - *norm.log_absolute);

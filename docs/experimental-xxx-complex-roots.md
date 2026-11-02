@@ -24,6 +24,14 @@ using an expm1/trigonometric expression near zero. `gaudin` returns the
 unscaled Gaudin matrix; differentiation gives dL_i/dlambda_j = -i G_ij.
 `energy` evaluates J=1 energy and rejects a nonreal or nonfinite result.
 
+The residual allowance accounts for proximity to the equation poles at
+lambda = +/- i/2 and root differences = +/- i. A root coincidence is still
+rejected by the separate geometry gate, but does not enlarge this allowance:
+the scattering factors are regular there. This distinction prevents an
+iterate approaching duplicate real roots from passing a progressively looser
+equation check. The allowance remains a numerical screening rule, not a
+rigorous bound on root or form-factor errors.
+
 | Helper | Inputs after the real template argument |
 | --- | --- |
 | `log_equation` | sites, complex-root span, root index, real exemplar |
@@ -52,6 +60,22 @@ through the current Uni20 determinant dispatch. It returns the same
 real-root API. The weight is N times the normalized local raising matrix element
 squared, with no 2*pi factor or thermodynamic spinon coefficient.
 
+Family callers can supply a third argument, the validated **absolute excited
+momentum index** in `[0,N)`. It is checked against the roots using the existing
+precision-scaled residual tolerance, which must also distinguish neighbouring
+lattice momenta. When that index equals the singlet ground momentum, total
+spin raising annihilates the singlet: the result is `converged` with exactly
+zero `weight` and absent `log_weight`. The ground momentum index is zero for
+N divisible by four and N/2 otherwise. Root, precision, original-equation and
+Gaudin-norm checks still precede this selection zero; a bad state cannot acquire
+a successful zero by supplying a momentum label. A mismatched label gives
+`roots_unconverged`; an index outside `[0,N)` throws `std::invalid_argument`.
+
+The two-argument call evaluates the unreduced determinant without inferring a
+discrete label from a rounded phase. At a symmetry-forbidden state it may give
+a precision failure or a small numerical residual weight. Family solvers
+should supply the momentum obtained from their validated quantum numbers.
+
 The two products in a complex-root raising column are evaluated independently.
 They are not conjugates, unlike the real-root specialization. Ground-only
 normalization is reused from the prepared context. The rational determinant
@@ -74,6 +98,10 @@ are separate work; no ideal-string fallback is used here.
 ## Independent controls
 
 An analytic N=4 control gives excited energy -1 and Fourier raising weight 4/3.
+An N=6 triplet checks that zero absolute momentum is not confused with zero
+momentum transfer from its momentum-pi ground state. A nonsingular N=12
+zero-momentum triplet checks exact zero output, a resolved norm, and rejection
+of off-shell, singular, incorrectly labelled and mixed-precision inputs.
 The tests also differentiate the logarithmic equations numerically to check
 Gaudin entries and check both signed-zero sides of the atan convention. A resolved
 N=12 state with holes {-3,-1,0,2}, two-string branch 1 and momentum index 9
@@ -93,6 +121,7 @@ python3 -m venv /path/to/reference-env
 /path/to/reference-env/bin/pip install 'mpmath>=1.2'
 /path/to/reference-env/bin/python experimental/reference/xxx_regular_roots.py --verify
 /path/to/reference-env/bin/python experimental/reference/xxx_regular_roots.py --digits 130 --verify
+/path/to/reference-env/bin/python experimental/reference/xxx_zero_momentum.py --verify
 ```
 
 The independent program solves all five complex multiplicative equations and
