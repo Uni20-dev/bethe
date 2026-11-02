@@ -239,5 +239,59 @@
       }
     },
     "scope": "Focused rebuilds with the same configured providers. Prior interior cost/example evidence remains historical at the baseline; not rerun or claimed as new measurements."
+  },
+  "evidence_layout": "The top-level dependencies, source hashes, checks and cost record the validated_revision checkpoint. Named follow-ups record subsequent changes and their own validation; historical cost measurements are not repeated or claimed for later heads.",
+  "recovery_dependency_followup": {
+    "previous_published_revision": "17c97f371ab606e4eaed295e4e5078c51c0b1cd7",
+    "validated_revision": "605ea241cae57ccd4403158f00d4bc534eba2f5b",
+    "dependencies": {
+      "recovery_progress": "2d5f0e115fc9cb9288a9f7647dd1aba6fb1b6063",
+      "recovery_store": "ca585d405044002c96e23fddf21e67fcb4e1fb4d"
+    },
+    "change": "Inherit explicit incomplete recovery prefixes, imported-diagnostic error classification, and final-assessment time freezing across publication-lock waits. Observation mathematics, persistence adapter and tests are unchanged.",
+    "correspondence": "The complete eight-file change from the previous published revision equals recovery_store 19041c8 -> ca585d4 byte-for-byte; merge ancestry is preserved.",
+    "source_sha256": {
+      "docs/experimental-spinon-observation-groups.md": "9a83214633fefcbf92d679f7d612a57f9ee317e86a4d3ba9baa618fd55c1d02d",
+      "experimental/examples/spinon_observation_store.cpp": "b51c2363cc8e62daeed2c501bc940038cd7a82f2f37e4853948f9dcb98ee111c",
+      "experimental/include/bethe/experimental/detail/spinon_exact_decimal.hpp": "1db3bfde4e7e4ca5925f4ec5ddde580c5903b61b2cb7361c832bc4ef4872903e",
+      "experimental/include/bethe/experimental/spinon_observation_group.hpp": "3c50ca845261f39468cde299c333fa02ea940baa561845c7ec1197dad1a07bc1",
+      "experimental/include/bethe/experimental/spinon_observation_store.hpp": "7957a46ea29508e28d17b6766c1ce172b7bad70fa04f1fee0df356b6cc8ad49d",
+      "experimental/include/bethe/experimental/spinon_recovery_store.hpp": "3f4f0afcd3f7189ca0908796a78a0f59e42b80c44a141fc49eb314311b0da703",
+      "experimental/tests/test_spinon_observation_group.cpp": "dc0cc455ae8c4bcbf666ffab09a8d57abe1b89e5613cacc2ca0a4afa0ffc7e82",
+      "experimental/tests/test_spinon_observation_store.cpp": "7036547a9fd2fa8fff372b2930408e9712f607cfb6e4ef62a4856a13deec2210",
+      "include/bethe/xxx_spinon_density_recovery.hpp": "bc9722a0bcc2dcea1ca33725f1e05151f43c3511d8af8433cceb65ac34bc1b54",
+      "include/bethe/xxx_spinon_observation.hpp": "52be605b3849aa4594ab0dfd0c9611d2a6a72871020889dd04bf8928d5a75ae7"
+    },
+    "checks": {
+      "group_wide": {
+        "tests": 9,
+        "failures": 0,
+        "disabled": 0,
+        "errors": 0,
+        "time": "4.043s"
+      },
+      "group_sanitizers": {
+        "tests": 7,
+        "failures": 0,
+        "disabled": 0,
+        "errors": 0,
+        "time": "19.176s"
+      },
+      "store_wide": {
+        "tests": 12,
+        "failures": 0,
+        "disabled": 0,
+        "errors": 0,
+        "time": "3.902s"
+      },
+      "store_sanitizers": {
+        "tests": 12,
+        "failures": 0,
+        "disabled": 0,
+        "errors": 0,
+        "time": "18.989s"
+      }
+    },
+    "scope": "Independent fresh compilation of actual consumer group and observation-store test translation units against existing configured GCC13 wide and Clang19 ASan/UBSan providers. Existing Uni20 MPFR cache suppressions apply. No fresh full CMake matrix, new performance measurement or production calculation claimed."
   }
 }
