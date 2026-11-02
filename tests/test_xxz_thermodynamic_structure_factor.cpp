@@ -131,6 +131,37 @@ TEST(XXZThermodynamicDSFMpfr, ExactEndpointSheetSupportAndValues)
 }
 #endif
 
+TYPED_TEST(XXZThermodynamicDSF, LargeRepresentableExchangePreservesSupport)
+{
+  using R = TypeParam;
+  R const zero{0}, exchange = uni20::numeric_limits<R>::max() / (R{9} / R{2});
+  R const momentum = R{3} / R{2}, omega = R{23} / R{10}, eps = uni20::numeric_limits<R>::epsilon();
+  // The dispersion reconstructs the mass through exp(log(J) + log(gap/J));
+  // that round trip has O(epsilon*|log(J)|) relative error near max().
+  R const range_error = (R{1} + uni20::math::abs(uni20::math::log(exchange))) * eps;
+  model::ThermodynamicTwoSpinonStructureFactor<R> unit(R{2}), scaled(R{2}, exchange);
+  auto const expected_sheets = unit.sheets(momentum), actual_sheets = scaled.sheets(momentum);
+  for (std::size_t i = 0; i < 2; ++i)
+  {
+    ASSERT_TRUE(expected_sheets[i].present && actual_sheets[i].present);
+    ASSERT_TRUE(uni20::isfinite(actual_sheets[i].lower));
+    ASSERT_TRUE(uni20::isfinite(actual_sheets[i].upper));
+    EXPECT_REAL_NEAR(actual_sheets[i].lower / exchange, expected_sheets[i].lower, R{8} * range_error);
+    EXPECT_REAL_NEAR(actual_sheets[i].upper / exchange, expected_sheets[i].upper, R{8} * range_error);
+  }
+  auto const expected = unit(momentum, omega), actual = scaled(momentum, omega * exchange);
+  ASSERT_EQ(actual.status, model::SpectralDensityStatus::converged);
+  ASSERT_TRUE(expected.value && actual.value);
+  EXPECT_GT(*actual.value, zero);
+  EXPECT_REAL_NEAR(*actual.value * exchange, *expected.value, R{128} * range_error * *expected.value);
+
+  // At omega/J=2.5 the weaker sheet falls below the normal scalar range.
+  // Preserve the explicit arithmetic failure, never an outside-support zero.
+  auto const unresolved = scaled(momentum, (R{5} / R{2}) * exchange);
+  EXPECT_EQ(unresolved.status, model::SpectralDensityStatus::numerical_failure);
+  EXPECT_FALSE(unresolved.value);
+}
+
 TYPED_TEST(XXZThermodynamicDSF, HighPrecisionReferences)
 {
   using Real = TypeParam;

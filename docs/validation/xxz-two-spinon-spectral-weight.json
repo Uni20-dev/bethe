@@ -130,7 +130,7 @@
       "docs/xxz-structure-factor-thermo.md": "212b2c2e9b66b0833622748319a518187eec3c4ec4b33f76b0777c0eb3c2b524",
       "include/bethe/citations.hpp": "3aaf1fe528ad8206a00d72fd43ecf5f06f2922d6d4bfdf884b717b57764f78d7",
       "include/bethe/detail/carlson_rf.hpp": "49783c7d1217b90ab40fff74fb48cae0e600a1025c03dab7d5944a947118d7c1",
-      "include/bethe/xxz_thermodynamic_structure_factor.hpp": "8ca617b4b451e97c9a8a9d857c88c43da3d6dae50d4eabfbb36b84b47cbfab22",
+      "include/bethe/xxz_thermodynamic_structure_factor.hpp": "dd70686d23327e120bb62e4eefd04c17d9948287c22024b5f67d688a4eb9012c",
       "scripts/reference_xxz_two_spinon.py": "70945142241c5160265dd6a400f5dd9ec98642c9fab318b77ac25eb39119670a",
       "scripts/test_reference_xxz_two_spinon.py": "5399b8ee6b560d023746230f3e5d638f564b862e871bdb20bf467d551e0c154c",
       "tests/CMakeLists.txt": "6ff88c668e07c3079a5de4fd73305af554503e47769c52798e37f4db603fff3f",
@@ -138,7 +138,7 @@
       "tests/check_precision_info.py": "e3a66fb4432c844f5fbbbf2d94c5946405e7979492c15030ceaab5f8ac0b355f",
       "tests/check_shared_arguments.py": "82dc9a2f3031d3a7ad4e6f11928468152db722482980bc9db3659a7a26a716aa",
       "tests/check_xxz_thermodynamic_structure_factor.py": "7cf7082ee090ab8d9791ce15967ee0960342e196120901ecf631e7e25433acf8",
-      "tests/test_xxz_thermodynamic_structure_factor.cpp": "d98c491564e5b01f7b415dde8d96c0590d700a7cfada06095215679db0b1b2af",
+      "tests/test_xxz_thermodynamic_structure_factor.cpp": "26d9f7f4900bb1588e50371a64cfc80f6b3421509b4acf14168d138bf7f22f6b",
       "zensical.toml": "837c8c8a0c3416ce44505ff94ed5b37556d54e77bc03310bf2a12a98d7d81994"
     },
     "scope": "All changed source/test/document files relative to base_revision, excluding this self-describing manifest. These hashes identify the actual public input files; unchanged files come from the base. The enclosing Git commit binds this manifest to the reviewed tree."
@@ -246,5 +246,66 @@
       "test_log_sha256": "28032b8faf4d42e7ff96c2429f6a364da3da0b23672afced5edc788ca65a32cb"
     },
     "remaining": "Exact-head peer/Claude review and current full CI; installed/deployed integration."
+  },
+  "large_exchange_bound_correction": {
+    "previous_revision": "924ee142d5654ae18a253957dcc25a1dc6950b16",
+    "change": "Form the bounded dimensionless angular factor before multiplying by the energy scale. No kernel, precision threshold or existing tolerance changes.",
+    "regression": "For Delta=2, k=1.5 and J=max()/4.5, both sheet bounds must remain finite and obey exchange scaling. At omega/J=2.3 both sheet densities remain normal and converge. At omega/J=2.5 the weaker sheet is subnormal: retain numerical_failure with absent value, never outside_continuum with zero. Native binary64/80 reproduced infinite bounds before the fix; binary64/80/128 now pass.",
+    "reference": {
+      "precision_decimal_digits": 80,
+      "method": "Independent public mpmath reduced formula evaluated separately for each sheet. Values are J*S_sheet at k=1.5, Delta=2.",
+      "values": [
+        {
+          "omega_over_exchange": "2.3",
+          "sheet": 1,
+          "density_times_exchange": "3.61466717676886237505892472818268607983558660206969981615839",
+          "scaled_fp64_density_at_J_4e307": "9.03666794192215593764731182045671519958896650517424954039597e-308"
+        },
+        {
+          "omega_over_exchange": "2.3",
+          "sheet": -1,
+          "density_times_exchange": "6.0640595443087881926252499243957445417110155615660663538491",
+          "scaled_fp64_density_at_J_4e307": "1.51601488607719704815631248109893613542775389039151658846228e-307"
+        },
+        {
+          "omega_over_exchange": "2.5",
+          "sheet": 1,
+          "density_times_exchange": "0.798434428660973244949173468709020112799132803067201012339128",
+          "scaled_fp64_density_at_J_4e307": "1.99608607165243311237293367177255028199783200766800253084782e-308"
+        },
+        {
+          "omega_over_exchange": "2.5",
+          "sheet": -1,
+          "density_times_exchange": "2.35143661427772450872999015606745039377794444971233271959637",
+          "scaled_fp64_density_at_J_4e307": "5.87859153569431127182497539016862598444486112428083179899091e-308"
+        }
+      ]
+    },
+    "test_error_budget": "The near-max dispersion mass uses exp(log(J)+constant), so exchange-scaling checks include O(epsilon*abs(log(J))) roundoff amplification. Existing regression tolerances are unchanged.",
+    "checks": {
+      "native": {
+        "passed": 23,
+        "failed": 0,
+        "elapsed_seconds": 0.9,
+        "test_log_sha256": "88af1357a00d048141b46d905f2ab2196f49a280e1ad9e6212c5e03738cd848b",
+        "build_log_sha256": "fed5dad6571a947d8bf8be1438188111a0d5910e34e2c3d3b7ae8898dfb8db33"
+      },
+      "wide": {
+        "passed": 35,
+        "failed": 0,
+        "elapsed_seconds": 1.08,
+        "test_log_sha256": "0fd12f8d368f4d7ca7e750481ddbbec57788398d473f499a296db9042d6cde92",
+        "build_log_sha256": "7a7eeb52f8b0b65c3e52fe7f1a9ddced2ee4a35447f94f8bbac0ad575128a0f8"
+      },
+      "sanitizers": {
+        "passed": 27,
+        "failed": 0,
+        "elapsed_seconds": 155.23,
+        "test_log_sha256": "11e4bb6545bf228e0fe84c8627ce048575213316ce4fc262f1b934da0927eb2b",
+        "build_log_sha256": "23d24d577b40b7269ac7bf7eebe3af2a201bd1164ff52635ad8522ec5277e2cf"
+      }
+    },
+    "scope": "Focused CMake numerical, frontend/exports/serial-Async/precision, shared argument and citation checks. One compiler process and six-CPU affinity. Existing Uni20 MPFR cache suppressions in ASan/UBSan. Initial failed tests retained locally. No full repository or production-grid claim.",
+    "remaining": "Exact-head peer/Claude review, full CI and installed/deployed integration."
   }
 }
