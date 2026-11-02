@@ -1,0 +1,191 @@
+{
+  "schema": "bethe-experimental-recovery-store-validation-v1",
+  "date": "2026-11-02",
+  "dependencies": {
+    "numerical_recovery": "2d5f0e115fc9cb9288a9f7647dd1aba6fb1b6063",
+    "experimental_foundation": "e916ab29aaa44d7fad264f583a0e79a51d3798c0"
+  },
+  "scope": "Bounded POSIX storage around supported density recovery; not a weighted observation or distributed job controller",
+  "research_provenance": {
+    "revision": "2242fd5d78ec2c6c81a64993eca5dd6eea6cd732",
+    "disposition": "Storage/restart requirements extracted from frozen sources; historical serialization, cluster policies and old kernels are not ported",
+    "sources": [
+      {
+        "path": "tests/driver_native_surface.cpp",
+        "sha256": "7281a7f8b03c8a6ce1877fe4ef30ab747ed58fba4739162c9e007f9661f86fec"
+      },
+      {
+        "path": "tests/vertex_worker_storage.hpp",
+        "sha256": "e4fab2adfe1434fec19bf97779c789712b1f90c146d5056180d2d0601b42a957"
+      },
+      {
+        "path": "scripts/test_native_surface_worker.py",
+        "sha256": "868243fde9a0b9f9ff7c524a04eacd896050108b52488b93d8e603590c3f0f09"
+      }
+    ]
+  },
+  "sources": {
+    "experimental/include/bethe/experimental/detail/spinon_checkpoint_codec.hpp": "cce16a71eff967d2c588eb7b965f77d1d23cbdb0b601ea0a0b0f9c1b40051d06",
+    "experimental/include/bethe/experimental/spinon_recovery_store.hpp": "3f4f0afcd3f7189ca0908796a78a0f59e42b80c44a141fc49eb314311b0da703",
+    "experimental/tests/test_spinon_recovery_store.cpp": "0a8fa65c3d7b440621a9d06ccc19f6afed78f06bf2af0abde1eb34716e576803",
+    "experimental/examples/spinon_recovery_store.cpp": "a91043f52b55220cdf8974fb7a1e4b848bdd551868c64297b48d42b967197f61"
+  },
+  "checks": {
+    "wide": {
+      "tests": 15,
+      "failures": 0,
+      "errors": 0,
+      "time": "7.051s",
+      "sha256": "33337f369d3108229a48ad373b8b13c7d7c80262263ed06eb07e1c5bec47571e",
+      "scope": "Focused direct build of current store test against actual recovery dependency; existing configured providers."
+    },
+    "sanitizers": {
+      "tests": 14,
+      "failures": 0,
+      "errors": 0,
+      "time": "8.202s",
+      "sha256": "97feb4269ff5524e86f1ac2b9c29bc8688da7c69360519dbcab89caab9f5ca8d",
+      "scope": "Focused direct build of current store test against actual recovery dependency; existing configured providers."
+    },
+    "native": {
+      "tests": 13,
+      "failures": 0,
+      "errors": 0,
+      "time": "6",
+      "sha256": "8a54b113aa209f23d865fa7df19a5a9b1a4355915d8cf336438ce7792eb37f9a",
+      "scope": "Rebuilt native CMake store test/example targets in the existing configuration."
+    }
+  },
+  "example": [
+    {
+      "arguments": [
+        "--stop-after-control"
+      ],
+      "returncode": 2,
+      "stdout": "two: 1 new controls; no accepted value; recovery cancelled; completed controls saved\n",
+      "stderr": ""
+    },
+    {
+      "arguments": [],
+      "returncode": 0,
+      "stdout": "two: 1 new controls; W=0.981164913616476045744\nfour: 2 new controls; W=9.45648964162608848186e-07\nsix: 2 new controls; W=1.05661498554316861361e-09\n",
+      "stderr": ""
+    },
+    {
+      "arguments": [],
+      "returncode": 0,
+      "stdout": "two: 0 new controls; W=0.981164913616476045744\nfour: 0 new controls; W=9.45648964162608848186e-07\nsix: 0 new controls; W=1.05661498554316861361e-09\n",
+      "stderr": ""
+    }
+  ],
+  "cost": {
+    "repetitions": 9,
+    "warmup_excluded": 1,
+    "alternating_order": true,
+    "affinity": [
+      16
+    ],
+    "blas_threads": 1,
+    "filesystem": "host-local build scratch; no NFS or power-loss durability measurement",
+    "seconds": {
+      "direct": 0.0060747349999999995,
+      "stored": 0.008163265,
+      "replay": 0.0004563495
+    },
+    "store_overhead_percent": 34.380594379837135,
+    "values_identical": true,
+    "replay_new_controls": 0,
+    "points": 3,
+    "sectors": [
+      2,
+      4,
+      6
+    ],
+    "precision": "binary64 / native binary80",
+    "source_sha256": "435f9c59b0c44fc06aef3ffdeb850471b8f47d43c7c9fe4f1a454464ea6d9ccb",
+    "machine": {
+      "architecture": "x86_64",
+      "cpu_model": "12th Gen Intel Core i7-12700KF",
+      "compiler": "13.3.0",
+      "optimization": "Release -O3 -DNDEBUG"
+    },
+    "measured_public_revision": "571fa42a21a0af319beb26f70fec9f393e2cf09a",
+    "scope": "Historical baseline before later deadline and recovery-status fixes; not a timing claim for the current source."
+  },
+  "coverage": [
+    "native binary64 and long double; wide binary128; MPFR 80/128/160/256 scalar serialization and mixed 32/64 to 160/256 recovery",
+    "POSIX fork/exit before and after rename; competing owner; failed publication; expired and slow-publication deadlines; concurrency replay",
+    "file count bounded per chunk; no production inputs or archive dependency",
+    "accepted result retains its assessed time despite a sibling holding the publication lock beyond its deadline; reopened replay remains accepted without kernels"
+  ],
+  "limits": [
+    "native uses rebuilt CMake targets in an existing configuration; wide/sanitizer use focused direct builds with existing configured provider libraries",
+    "sanitizers retain existing Uni20 MPFR cache leak suppressions",
+    "local filesystem process-restart semantics only; no power-loss or NFS certification",
+    "historical cost is eight alternating measured repetitions after one warmup for three small interior points at cost.measured_public_revision; no current-head or campaign throughput claim",
+    "public review, current CI, dependency landing, default-OFF/install and final deployed docs remain separate gates"
+  ],
+  "regression": {
+    "previous_store_head": "19041c8e2db9ce0e63c1e17aab9d62f09e213a1f",
+    "test": "RecoveryStore.SiblingPublicationAfterFinalAssessmentCannotExpireAcceptance",
+    "old_failures": 1,
+    "old_tests": 1,
+    "current_passes": true
+  },
+  "main_integration": {
+    "date": "2026-11-03",
+    "previous_reviewed_head": "ca585d405044002c96e23fddf21e67fcb4e1fb4d",
+    "merged_main": "6ae45c440f88f1782953ae04c77d7dc3fde4a1ca",
+    "resolution": "Preserve main and append the exact reviewed store blocks to both experimental CMake files; add the store index section without removing boundary content. Clarify the already-recorded historical timing revision in the guide.",
+    "numerical_source_changes": false,
+    "native_checks": {
+      "native_tests": 13,
+      "split_runs": [
+        11,
+        2
+      ],
+      "examples": [
+        {
+          "arguments": [
+            "--stop-after-control"
+          ],
+          "returncode": 2,
+          "stdout": "two: 1 new controls; no accepted value; recovery cancelled; completed controls saved\n",
+          "stderr": ""
+        },
+        {
+          "arguments": [],
+          "returncode": 0,
+          "stdout": "two: 1 new controls; W=0.981164913616476045744\nfour: 2 new controls; W=9.45648964162608848186e-07\nsix: 2 new controls; W=1.05661498554316861361e-09\n",
+          "stderr": ""
+        },
+        {
+          "arguments": [],
+          "returncode": 0,
+          "stdout": "two: 0 new controls; W=0.981164913616476045744\nfour: 0 new controls; W=9.45648964162608848186e-07\nsix: 0 new controls; W=1.05661498554316861361e-09\n",
+          "stderr": ""
+        }
+      ],
+      "store_discovery": {
+        "tests": 13,
+        "label": "experimental",
+        "timeout": 60,
+        "blas_omp_threads": 1
+      },
+      "boundary_targets_configured": true,
+      "scope": "Reconfigured existing native CMake tree, rebuilt store test and example, ran all 13 store/codec cases and fresh interruption/resume/replay. Other boundary targets verified in generated build graph, not rebuilt or executed. First filter selected 11 store cases; the two codec cases were run separately."
+    },
+    "logs_sha256": {
+      "configure.log": "673fe33fff910c9ccf3e231dae86b679cac3cc2664069fe5d898dce8b07c4612",
+      "build.log": "005a32aa5bd8b6af0e9b09998cd154fe61dadbee1b514b0a362b72761a78d63d",
+      "tests.xml": "dfa0022e3a3424bc72095bd1eabb089d1ae70ed00bd9647cfb03f664cadb7f4f",
+      "codec-tests.xml": "75346a768834e031ef5c59331d9ee42a7c70e128c8b9c7b3a02106b1352a5ca4",
+      "test-discovery.json": "cc1e244dad4a64a16cdf4dbda503bb9d944b11c8188b2008a2c562fbc6b9b2d9"
+    },
+    "remaining_gates": [
+      "Exact-head reciprocal correspondence review",
+      "Current CI and completed Claude review",
+      "Public landing and final integrated installation/deployment"
+    ]
+  }
+}
