@@ -80,6 +80,41 @@ template <uni20::Real R> void selected_references(R const& zero)
   }
 }
 
+template <uni20::Real R> void selection_zeros(R const& zero)
+{
+  std::array<six::Configuration, 2> requests{
+      {{12,
+        six::Family::triple,
+        {uni20::from_twice(-7), uni20::from_twice(-5), uni20::from_twice(-3), uni20::from_twice(-1),
+         uni20::from_twice(1), uni20::from_twice(3)},
+        {0}},
+       {16, six::Family::two_pairs, {-2, -1, 1, 2, 3, 4}, {uni20::from_twice(-3), uni20::from_twice(1)}}}};
+  for (auto const& c : requests)
+  {
+    auto const solved = six::solve<R>(c, zero);
+    ASSERT_TRUE(solved.converged()) << solved.diagnostic;
+    ASSERT_EQ(six::labels(c).momentum_index, 0);
+    auto const gs = xxx::sector_ground_state<R>(c.sites, uni20::half_int{0}, options(zero));
+    experimental_xxx::PreparedSinglet<R> const ground(c.sites, gs);
+    ASSERT_TRUE(ground.ready());
+    auto const factor = six::raising_weight(ground, solved);
+    ASSERT_TRUE(factor.converged());
+    ASSERT_TRUE(factor.weight);
+    EXPECT_EQ(*factor.weight, zero);
+    EXPECT_EQ(uni20::precision_of(*factor.weight), uni20::precision_of(zero));
+    EXPECT_FALSE(factor.log_weight);
+    EXPECT_TRUE(uni20::isfinite(factor.pivot_margin));
+    EXPECT_GT(factor.pivot_margin, zero);
+    auto changed = solved;
+    changed.state->roots.front() += uni20::scalar_like(zero, 1) / 1000;
+    EXPECT_FALSE(six::raising_weight(ground, changed).weight);
+    changed = solved;
+    changed.status = six::SolveStatus::unresolved_geometry;
+    changed.state.reset();
+    EXPECT_FALSE(six::raising_weight(ground, changed).weight);
+  }
+}
+
 template <uni20::Real R> void jacobians(R const& zero)
 {
   R const one = uni20::scalar_like(zero, 1), h = uni20::math::cbrt(uni20::numeric_limits<R>::epsilon(zero));
@@ -139,6 +174,7 @@ template <typename T> class ExperimentalSix : public ::testing::Test {};
 TYPED_TEST_SUITE(ExperimentalSix, test_support::RealTypes, test_support::PrecisionNames);
 TYPED_TEST(ExperimentalSix, IndependentSelectedRootsEnergiesAndWeights) { selected_references(TypeParam{0}); }
 TYPED_TEST(ExperimentalSix, AnalyticJacobians) { jacobians(TypeParam{0}); }
+TYPED_TEST(ExperimentalSix, BothFamiliesRespectZeroMomentumSelection) { selection_zeros(TypeParam{0}); }
 TYPED_TEST(ExperimentalSix, SameMomentumDifferentLabelsReject)
 {
   using R = TypeParam;
@@ -178,6 +214,7 @@ TEST(ExperimentalSixMpfr, ExplicitPrecision)
     uni20::mpreal const zero(0, uni20::Precision::bits(bits));
     selected_references(zero);
     jacobians(zero);
+    selection_zeros(zero);
     auto answer = six::solve(request(six_fixture::entries[0]), zero);
     ASSERT_TRUE(answer.converged());
     auto const ground_state = xxx::sector_ground_state<uni20::mpreal>(12, uni20::half_int{0}, options(zero));
