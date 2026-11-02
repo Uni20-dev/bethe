@@ -6,6 +6,8 @@ See [the build and API guide](../docs/experimental.md).
 
 | Component | Current scope |
 | --- | --- |
+| `bethe::experimental::xxx::scan_four_spinons_async` | Bounded finite-four requests with deterministic records, explicit failures, partial spectra and table exports |
+| `bethe::experimental::xxx::FourSpinonState<Real>` | Selected finite narrow two-string triplets, explicit deviations and stabilized raising weights |
 | `bethe::experimental::xxx::complex_roots` | Regular complex-root equations, Gaudin matrices and unreduced raising form factors |
 | `reference/qtm/` | Optional isotropic QTM quadrature/hypergeometric and vertex correspondence controls; [guide](../docs/experimental-xxx-qtm.md) |
 | `bethe::experimental::xxx::PreparedSinglet<Real>` | Validated even-ring XXX singlet preparation, reusable ground factors and energy, J=1 |
@@ -14,7 +16,8 @@ See [the build and API guide](../docs/experimental.md).
 
 Regular finite-root equations and unreduced form factors are described in
 [the complex-root guide](../docs/experimental-xxx-complex-roots.md). They are
-building blocks used by the [selected six-spinon solver](../docs/experimental-xxx-six-spinon.md).
+building blocks for the [selected four-spinon](../docs/experimental-xxx-four-spinon.md)
+and [selected six-spinon](../docs/experimental-xxx-six-spinon.md) solvers.
 The [bounded six-spinon catalogue and scan](../docs/experimental-xxx-six-spinon-scan.md)
 add direct momentum indexing and owned Async evaluation with retained failures.
 Experimental status does not permit silent
