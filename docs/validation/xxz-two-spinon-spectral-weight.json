@@ -130,7 +130,7 @@
       "docs/xxz-structure-factor-thermo.md": "212b2c2e9b66b0833622748319a518187eec3c4ec4b33f76b0777c0eb3c2b524",
       "include/bethe/citations.hpp": "3aaf1fe528ad8206a00d72fd43ecf5f06f2922d6d4bfdf884b717b57764f78d7",
       "include/bethe/detail/carlson_rf.hpp": "49783c7d1217b90ab40fff74fb48cae0e600a1025c03dab7d5944a947118d7c1",
-      "include/bethe/xxz_thermodynamic_structure_factor.hpp": "5f2f04ffd083dc6a0691a7bbf97e1901cae6b599874a70fecf50eaa7af194845",
+      "include/bethe/xxz_thermodynamic_structure_factor.hpp": "8ca617b4b451e97c9a8a9d857c88c43da3d6dae50d4eabfbb36b84b47cbfab22",
       "scripts/reference_xxz_two_spinon.py": "70945142241c5160265dd6a400f5dd9ec98642c9fab318b77ac25eb39119670a",
       "scripts/test_reference_xxz_two_spinon.py": "5399b8ee6b560d023746230f3e5d638f564b862e871bdb20bf467d551e0c154c",
       "tests/CMakeLists.txt": "6ff88c668e07c3079a5de4fd73305af554503e47769c52798e37f4db603fff3f",
@@ -138,7 +138,7 @@
       "tests/check_precision_info.py": "e3a66fb4432c844f5fbbbf2d94c5946405e7979492c15030ceaab5f8ac0b355f",
       "tests/check_shared_arguments.py": "82dc9a2f3031d3a7ad4e6f11928468152db722482980bc9db3659a7a26a716aa",
       "tests/check_xxz_thermodynamic_structure_factor.py": "7cf7082ee090ab8d9791ce15967ee0960342e196120901ecf631e7e25433acf8",
-      "tests/test_xxz_thermodynamic_structure_factor.cpp": "99d5511b4299056c553964c79df2ae2e00b78beb28897109dedc03a3f0324d80",
+      "tests/test_xxz_thermodynamic_structure_factor.cpp": "d98c491564e5b01f7b415dde8d96c0590d700a7cfada06095215679db0b1b2af",
       "zensical.toml": "837c8c8a0c3416ce44505ff94ed5b37556d54e77bc03310bf2a12a98d7d81994"
     },
     "scope": "All changed source/test/document files relative to base_revision, excluding this self-describing manifest. These hashes identify the actual public input files; unchanged files come from the base. The enclosing Git commit binds this manifest to the reviewed tree."
@@ -212,6 +212,39 @@
         "build_log_sha256": "23d24d577b40b7269ac7bf7eebe3af2a201bd1164ff52635ad8522ec5277e2cf"
       }
     },
-    "scope": "Focused numerical suite, frontend/exports/serial-Async/precision checks and shared CLI arguments, rebuilt in existing configured CMake lanes. Existing Uni20 MPFR LSan policy. Full repository CI and exact-head review remain separate gates."
+    "scope": "Focused numerical suite, frontend/exports/serial-Async/precision checks and shared CLI arguments, rebuilt in existing configured CMake lanes. Existing Uni20 MPFR LSan policy. Full repository CI and exact-head review remain separate gates.",
+    "validated_revision": "a2bce80dbb97cd135231519c215546bcc0f452bf"
+  },
+  "midpoint_sheet_symmetry_correction": {
+    "previous_revision": "a2bce80dbb97cd135231519c215546bcc0f452bf",
+    "change": "At k=pi/2 both half-angle factors use the same working-precision sqrt(1/2), preserving exactly coincident sheet edges under reflection.",
+    "regression": "Old native binary64/80 exact-sheet equality checks fail at Delta1.1/1.025. The unchanged finite-q two-spinon convolution test also fails on an artificial one-ulp interval. Both pass the corrected kernel. No tolerance or quadrature reduction.",
+    "checks": {
+      "native": {
+        "passed": 20,
+        "failures": 0,
+        "elapsed_seconds": 0.76,
+        "test_log_sha256": "ab406a3ad66a5f2d0c6457d142bc072e742ec7f8ef4e3528c31efc08c5f29f9f"
+      },
+      "wide": {
+        "passed": 31,
+        "failures": 0,
+        "elapsed_seconds": 0.96,
+        "test_log_sha256": "761b99064d460dfdee6e145a014a97feba3304ec841fd4ca7279ec7912402b21"
+      },
+      "sanitizers": {
+        "passed": 24,
+        "failures": 0,
+        "elapsed_seconds": 24.49,
+        "test_log_sha256": "bbc15bbd6b64f801ba5bc3702501cdc85d28cde7c0a89b517483be7dc9225412"
+      }
+    },
+    "finite_q_consumer": {
+      "passed": 21,
+      "failures": 0,
+      "scope": "Native finite-q tests/example against this exact corrected header; configured CMake build, not a complete independent precision matrix.",
+      "test_log_sha256": "28032b8faf4d42e7ff96c2429f6a364da3da0b23672afced5edc788ca65a32cb"
+    },
+    "remaining": "Exact-head peer/Claude review and current full CI; installed/deployed integration."
   }
 }

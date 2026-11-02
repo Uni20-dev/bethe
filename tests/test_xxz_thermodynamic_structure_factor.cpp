@@ -72,6 +72,16 @@ template <uni20::Real R> void check_tiny_momentum_and_threshold_priority(R const
   R const pi = bethe::detail::spinon_pi(zero), near_pi = pi - R{16} * eps;
   R const reflected = tiny.sheets(pi - near_pi)[0].lower;
   EXPECT_REAL_NEAR(tiny.sheets(near_pi)[1].lower, reflected, R{10000} * eps * reflected);
+  // Reflection exchanges the sheets at k=pi/2. A one-ulp false interval
+  // between their upper edges breaks quadrature split at sheet boundaries.
+  for (auto const delta : {parse("1.1"), parse("1.025")})
+  {
+    model::ThermodynamicTwoSpinonStructureFactor<R> symmetric(delta);
+    auto const midpoint = symmetric.sheets(pi / R{2});
+    ASSERT_TRUE(midpoint[0].present && midpoint[1].present);
+    EXPECT_EQ(midpoint[0].lower, midpoint[1].lower);
+    EXPECT_EQ(midpoint[0].upper, midpoint[1].upper);
+  }
 
   auto options = [&] {
     if constexpr (uni20::has_runtime_precision_v<R>)

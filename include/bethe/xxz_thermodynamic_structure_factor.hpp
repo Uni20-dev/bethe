@@ -196,6 +196,13 @@ template <uni20::Real Real> class ThermodynamicTwoSpinonStructureFactor {
     }
     std::pair<Real, Real> half_angles(Real const& k) const
     {
+      // At the reflection fixed point the two sheet edges must coincide,
+      // rather than differ because sin(pi/4) and cos(pi/4) round separately.
+      if (k == pi() / Real{2})
+      {
+        Real const half = uni20::math::sqrt(uni20::scalar_like(zero_, 1) / Real{2});
+        return {half, half};
+      }
       if (k <= pi() / Real{2}) return {uni20::math::sin(k / Real{2}), uni20::math::cos(k / Real{2})};
       Real const distance = (pi() - k) / Real{2};
       return {uni20::math::cos(distance), uni20::math::sin(distance)};
