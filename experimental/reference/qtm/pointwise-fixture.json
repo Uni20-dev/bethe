@@ -2,7 +2,7 @@
   "schema": "xxx-qtm-pointwise-fixture-v1",
   "scope": "All PRL partitions and one independent JMP partition per sector; no outer integral",
   "source_sha256": {
-    "experimental/reference/qtm/_reference_support.py": "711a6b0be9443829ddc34b19a92d38d4b64a456018af99e77ebbae87a641b313",
+    "experimental/reference/qtm/_reference_support.py": "acf2440efb6e3f87fb6841201cd75a182b25fccd6e6ff91557588af043e4624a",
     "experimental/reference/qtm/audit_xxx_qtm_partitions.py": "163e4ab2fe4f163907d1ddedc85320dfa2a0741cccb71acfd34291a9ce887c19",
     "experimental/reference/qtm/audit_xxx_qtm_vertex.py": "bb42ce76e9b85059cb71fa1fd9fe2bd9eae0b319cb88966f0119d2eae8cdf798",
     "experimental/reference/qtm/generate_pointwise_fixture.py": "2cf9dcda0474425c9215ce511f916ee3331d9d195e22a87af36ae68220a8fb70",
@@ -15,13 +15,9 @@
     "scripts/reference_xxx_transition_rate.py": "d3893f2857951e75e736c1a980820374c97786c0dc74b7eddde06dd6f1b53219",
     "scripts/reference_xxx_vertex_density.py": "bfd469e0462ce07d13d1f59c3397335d7826327ad768c7340dedb53b1ee3196f"
   },
-  "invocation": [
-    "--output",
-    "../qtm-review/pointwise-fixture.json"
-  ],
   "python": "3.12.3",
   "mpmath": "1.2.1",
-  "wall_seconds": 193.82551979500568,
+  "wall_seconds": 192.43889703898458,
   "fixtures": [
     {
       "fixture": "two",

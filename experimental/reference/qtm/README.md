@@ -9,6 +9,10 @@ distinguished-column sum and nonuniform hypergeometric tail limit.
 Run from a complete public Bethe checkout; the vertex comparison imports the
 already-public `scripts/reference_*.py` controls from this checkout. No local
 papers, private checkpoint, C++ build or cluster account is needed.
+These controls take precedence over `PYTHONPATH`. If numerical reference
+modules from another checkout are already imported, the audit fails explicitly;
+start a fresh Python process instead of mixing implementations. Source records
+include the loaded transitive controls and reject foreign reference modules.
 
 ```sh
 python3 -m venv /path/to/qtm-venv
