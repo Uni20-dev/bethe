@@ -9,6 +9,10 @@ one prepared background. It does not parallelize coupled Newton iterations.
 
 ## Embed the library
 
+For sampled spectral data, the standalone [Python quadrature tools](spectral-quadrature.md)
+provide time transforms and correlated-error propagation with NumPy alone.
+They do not require C++ bindings.
+
 `BETHE_BUILD_APPS` and `BETHE_BUILD_TESTS` default to `ON` standalone and
 `OFF` when embedded. No Python bindings or installed CMake package are provided
 yet. Use `add_subdirectory`/FetchContent and link `bethe::bethe` in a parent.
@@ -80,6 +84,8 @@ one scheduler; each request owns its controls.
 
 ## Compose larger calculations
 
+- [Finite spectra and time correlations](spectral-time.md): local and complex
+  cross coefficients, moments and precision-generic Lehmann sums.
 - [Thermodynamic spinon densities](xxx-spinon-density.md): physical W2/W4/W6
   weights, rapidity conventions and numerical diagnostics.
 - [Massive XXZ spectral intensity](xxz-structure-factor-thermo.md): transverse

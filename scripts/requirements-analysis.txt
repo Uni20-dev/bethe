@@ -1,0 +1,2 @@
+# NumPy only: spectral quadrature and covariance; no plotting dependencies.
+numpy>=1.24,<3
