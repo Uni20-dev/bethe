@@ -1,0 +1,53 @@
+{
+  "validation": {
+    "native": {
+      "tests": 28,
+      "failures": 0,
+      "elapsed": "0.63 sec",
+      "test_log_sha256": "2e0fac2255006801739c896dcb889e0463716082ad71146998ff4050318fc081"
+    },
+    "wide": {
+      "tests": 44,
+      "failures": 0,
+      "elapsed": "1.92 sec",
+      "test_log_sha256": "6139ce47cebd9088ce413ef0e987716f85804120a97dd35699e945f080e6a324"
+    },
+    "sanitizers": {
+      "tests": 33,
+      "failures": 0,
+      "elapsed": "17.85 sec",
+      "test_log_sha256": "9167ff45ccf1ea7722e8e55d62490a84b3fc84b909b6b96b498f028f19ec639f"
+    }
+  },
+  "arithmetic": "binary64, native 80-bit long double, binary128, MPFR 128/256; CLI MPFR128; no forced backend",
+  "independent_controls": [
+    "finite-space ABA/reflection",
+    "bit-basis ED",
+    "integrable boundary-impurity Hellmann-Feynman",
+    "analytic dimer",
+    "held-work/cancellation and serial/concurrent identity"
+  ],
+  "smoke": {
+    "sites": 64,
+    "requested": 528,
+    "accepted": 528,
+    "precision": "fp64",
+    "threads": 2,
+    "cpu": "12th Gen Intel(R) Core(TM) i7-12700KF",
+    "compiler": "GNU 13.3.0",
+    "build_type": "Release",
+    "root_iteration_limit": 10000,
+    "cpu_seconds": 0.982709,
+    "elapsed_seconds": 0.49339341300000683,
+    "retained_weight": "0.24898316020617239",
+    "retained_first_moment": "0.21571103179119955",
+    "full_local_first_moment": "0.21725010141104706",
+    "qualification": "single fresh smoke run, not an accuracy estimate or benchmark scaling claim"
+  },
+  "limits": [
+    "only the positive finite-real-root triplet family",
+    "no arbitrary bulk-site or same-sector magnetization matrix elements",
+    "roundoff and root errors are separate from exact spectral truncation bounds",
+    "full CI/default-OFF/install and reciprocal/Claude reviews remain required"
+  ]
+}

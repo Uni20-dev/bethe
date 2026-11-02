@@ -1058,6 +1058,23 @@
       "year": 2006,
       "links": [{"label": "arXiv", "url": "https://arxiv.org/abs/cond-mat/0611319"},
                 {"label": "Eq. (31) correction", "url": "https://scipost.org/commentary/10.1088/1742-5468/2006/12/P12013/"}]
+    },
+    {
+      "id": "wang-boundary-1997",
+      "authors": "Yupeng Wang",
+      "title": "Exact solution of the open Heisenberg chain with two impurities",
+      "publication": "Phys. Rev. B 56, 14045",
+      "year": 1997,
+      "links": [
+        {
+          "label": "DOI",
+          "url": "https://doi.org/10.1103/PhysRevB.56.14045"
+        },
+        {
+          "label": "arXiv",
+          "url": "https://arxiv.org/abs/cond-mat/9805253"
+        }
+      ]
     }
   ],
   "tools": [
@@ -1439,6 +1456,24 @@
         {"id": "gaudin-1967", "context": "Original spin-1/2 continuum fermion solution; we implement repulsive periodic ground states in selected sectors, not attraction."},
         {"id": "yang-1967", "context": "Original multicomponent delta-gas solution; our implementation has two spin components only."},
         {"id": "oelkers-2006", "context": "Hamiltonian and periodic fermion equations (1), (2), (7), (8), (25); even N, odd minority population as in Sec. 5. Weak and strong limits (12), (15)-(16) provide checks. Hard walls, attraction and excitations are not implemented."}
+      ]
+    },
+    {
+      "id": "xxx_boundary_dynamics",
+      "executable": "bethe-experimental-xxx-boundary-dynamics",
+      "references": [
+        {
+          "id": "mei-2017",
+          "context": "Positive-real-root free-end equations; z=2*lambda_ABA."
+        },
+        {
+          "id": "grijalva-2019",
+          "context": "Boundary scalar-product and local endpoint form-factor construction in Sec. 3, specialized to free-end XXX and spin operators; no Pauli or periodic Fourier normalization."
+        },
+        {
+          "id": "wang-boundary-1997",
+          "context": "Integrable boundary-impurity coupling. Its derivative at the homogeneous point gives the ground-state boundary bond and full local first moment without a spectral truncation."
+        }
       ]
     }
   ]
