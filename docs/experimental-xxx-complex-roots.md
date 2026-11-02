@@ -24,6 +24,14 @@ using an expm1/trigonometric expression near zero. `gaudin` returns the
 unscaled Gaudin matrix; differentiation gives dL_i/dlambda_j = -i G_ij.
 `energy` evaluates J=1 energy and rejects a nonreal or nonfinite result.
 
+The residual allowance accounts for proximity to the equation poles at
+lambda = +/- i/2 and root differences = +/- i. A root coincidence is still
+rejected by the separate geometry gate, but does not enlarge this allowance:
+the scattering factors are regular there. This distinction prevents an
+iterate approaching duplicate real roots from passing a progressively looser
+equation check. The allowance remains a numerical screening rule, not a
+rigorous bound on root or form-factor errors.
+
 | Helper | Inputs after the real template argument |
 | --- | --- |
 | `log_equation` | sites, complex-root span, root index, real exemplar |
