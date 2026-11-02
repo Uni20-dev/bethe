@@ -21,6 +21,25 @@ template <uni20::Real R> R parse(std::string_view text, R const& zero)
     return uni20::parse_real<R>(text);
 }
 
+template <uni20::Real R> void equation_conditioning(R const& zero)
+{
+  using C = uni20::complex<R>;
+  R const one = uni20::scalar_like(zero, 1), eps = uni20::numeric_limits<R>::epsilon(zero);
+  R const spacing = 128 * uni20::math::sqrt(eps);
+  std::vector<C> lambda{{one, zero}, {one + spacing, zero}};
+  // A small real-real difference does not make log(d-i)-log(d+i)
+  // ill-conditioned. It must not loosen the original-equation check.
+  EXPECT_EQ(roots::residual_tolerance<R>(20, lambda, zero), 256 * eps * 20);
+  lambda[1] = C(one + 2 * spacing, zero);
+  EXPECT_EQ(roots::residual_tolerance<R>(20, lambda, zero), 256 * eps * 20);
+  lambda[1] = lambda[0];
+  EXPECT_THROW((void)roots::residual_tolerance<R>(20, lambda, zero), std::runtime_error);
+  // An actual near-string pole still has its original allowance and gate.
+  lambda = {{one, zero}, {one, one - spacing}};
+  R const pole = spacing * (2 * one - spacing);
+  EXPECT_REAL_NEAR(roots::residual_tolerance<R>(20, lambda, zero) * pole / (256 * eps * 20), one, 8 * eps / spacing);
+}
+
 template <uni20::Real R> void real_reference(R const& zero)
 {
   using C = uni20::complex<R>;
@@ -197,6 +216,10 @@ TYPED_TEST(ExperimentalComplexRoots, IndependentComplexPairReference) { complex_
 TYPED_TEST(ExperimentalComplexRoots, AnalyticDerivativeAndAtanCut) { derivative_and_cut(TypeParam{0}); }
 TYPED_TEST(ExperimentalComplexRoots, ZeroTransferAfterStateAndNormValidation) { selection_zero(TypeParam{0}); }
 TYPED_TEST(ExperimentalComplexRoots, SixSiteGroundMomentumIsPi) { six_site_momentum(TypeParam{0}); }
+TYPED_TEST(ExperimentalComplexRoots, CoincidenceDoesNotInflateEquationAllowance)
+{
+  equation_conditioning(TypeParam{0});
+}
 
 #if UNI20_HAS_MPREAL
 TEST(ExperimentalComplexRootsMpfr, ExplicitPrecisionAndValidation)
@@ -212,6 +235,7 @@ TEST(ExperimentalComplexRootsMpfr, ExplicitPrecisionAndValidation)
     derivative_and_cut(zero);
     selection_zero(zero);
     six_site_momentum(zero);
+    equation_conditioning(zero);
     EXPECT_EQ(roots::energy<R>(8, {}, zero).precision(), p);
     EXPECT_THROW((void)roots::energy<R>(8, {}), std::invalid_argument);
     for (C const& bad : {C{}, C(uni20::uninitialized), C(R{1}, R{0}),
