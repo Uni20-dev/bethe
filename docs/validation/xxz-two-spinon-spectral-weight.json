@@ -1,16 +1,4 @@
 {
-  "source_revision": "2242fd5d78ec2c6c81a64993eca5dd6eea6cd732",
-  "source_files_sha256": {
-    "include/bethe/xxz_thermodynamic_structure_factor.hpp": "3e9c892357bb938d7f1cc6d0471ed6d3f5eafc2dd9bc44349d82ddd5dca4e616",
-    "include/bethe/detail/carlson_rf.hpp": "18536d1ce9cd5344e08036e364cc6abc71f85785c9f512d6c9ae9c629582b60c",
-    "apps/bethe-xxz-structure-factor-thermo.cpp": "3fb1d415b58f64d497e6d1639ee7abfa926d1a8bab811c6dceeb91c52151b0b8",
-    "tests/test_xxz_thermodynamic_structure_factor.cpp": "cc3da0069e2875ea8f275dd121a21af51644fddb35700abab7dda1abc3c7d790",
-    "scripts/reference_xxz_two_spinon.py": "44c171606c86b71dabc14b1c47c89760fc8a1093e8444ac319bb709a02440d3d",
-    "scripts/reference_xxz_vertex_limit.py": "9721747884cf1abe9f15c4d0b3fe3002309b0dca502d8a013c26206a1aad7b88",
-    "scripts/reference_xxz_ising_weight.py": "efb2d77b3d4175c114eaeb9c7d51ab088804af14b4c3d57b481c5a9429c2f1a2",
-    "scripts/reference_xxz_vertex_integral.py": "8dccf087eb1b501e9e8d13e93b264bca77c5e857d0aa92ba0fa565408e54304b",
-    "scripts/test_xxz_two_spinon.py": "08621c9375a60c9dfa00480f477a3c5f507184dc6146e7b1d28b0e97bee6bab1"
-  },
   "public_base": "cf1ae311cef37ca643e196be4346d8d1721136d5",
   "uni20_revision": "1cb2474eb0a54e13ec7d5f2c1823752020b2425c",
   "scope": "Supported infinite massive XXZ transverse two-spinon density only. Higher-sector finite-q and QTM ports remain separate. No broadening or fitted rescaling.",
@@ -79,7 +67,8 @@
         "test_log_sha256": "febbf82534cf6f5c6ca9b0814feb2a80edf1743b8a12ae943e8cd9b433fa8d3b",
         "build_log_sha256": "e2f9ae184df91628a124c05dd0d42bca86571f14bc910db9f6916b6616a08296"
       }
-    }
+    },
+    "validated_revision": "2a367544f92154415cf273ac53ccffbeefe2fc81"
   },
   "documentation_validation": {
     "equations": 1870,
@@ -109,5 +98,120 @@
         "elapsed_seconds": 0.0012606230448000133
       }
     ]
+  },
+  "research_origin": {
+    "revision": "2242fd5d78ec2c6c81a64993eca5dd6eea6cd732",
+    "files_sha256": {
+      "include/bethe/xxz_thermodynamic_structure_factor.hpp": "3e9c892357bb938d7f1cc6d0471ed6d3f5eafc2dd9bc44349d82ddd5dca4e616",
+      "include/bethe/detail/carlson_rf.hpp": "18536d1ce9cd5344e08036e364cc6abc71f85785c9f512d6c9ae9c629582b60c",
+      "apps/bethe-xxz-structure-factor-thermo.cpp": "3fb1d415b58f64d497e6d1639ee7abfa926d1a8bab811c6dceeb91c52151b0b8",
+      "tests/test_xxz_thermodynamic_structure_factor.cpp": "cc3da0069e2875ea8f275dd121a21af51644fddb35700abab7dda1abc3c7d790",
+      "scripts/reference_xxz_two_spinon.py": "44c171606c86b71dabc14b1c47c89760fc8a1093e8444ac319bb709a02440d3d",
+      "scripts/reference_xxz_vertex_limit.py": "9721747884cf1abe9f15c4d0b3fe3002309b0dca502d8a013c26206a1aad7b88",
+      "scripts/reference_xxz_ising_weight.py": "efb2d77b3d4175c114eaeb9c7d51ab088804af14b4c3d57b481c5a9429c2f1a2",
+      "scripts/reference_xxz_vertex_integral.py": "8dccf087eb1b501e9e8d13e93b264bca77c5e857d0aa92ba0fa565408e54304b",
+      "scripts/test_xxz_two_spinon.py": "08621c9375a60c9dfa00480f477a3c5f507184dc6146e7b1d28b0e97bee6bab1"
+    },
+    "purpose": "Historical extraction lineage, not public validation inputs. Some original research-only files are intentionally not distributed. The extracted standalone public reference and its tests are listed under validated_public_inputs and require no original files."
+  },
+  "validated_public_inputs": {
+    "base_revision": "cf1ae311cef37ca643e196be4346d8d1721136d5",
+    "files_sha256": {
+      "CITATIONS.md": "6bff56e96eafde77595789a88ed02aaabf6f82bc3f75037d67682dc432be8acb",
+      "CMakeLists.txt": "3dad8f4c9eaecfdb395e3ff58c68952c1ad501c1a39c11d19c5ba434165d4c03",
+      "apps/bethe-info.cpp": "881c5b5ee161834e5f1068fb03c6e94a7acd131e80897b1226e93b7149a20af8",
+      "apps/bethe-xxz-structure-factor-thermo.cpp": "9ade17946f9de270c8e92b19ce810ee42508ab07f2a5e9df4c56b0d5c1b04824",
+      "data/citations.json": "71ac28d310b4ea4b6870210d956ea50617d3b1ae55fe7a6ef3dbf2c9a9fa066a",
+      "docs/app-capabilities.md": "97708bc51cbeff4b8ff23afbf81b455573cc1fcb28b9ba0edf82703b3fbaa638",
+      "docs/library.md": "025453a725e6c59ee4f0241ff7a99283fdf76c190f8ddab2652c947b7c66f23c",
+      "docs/models.md": "08254969a8196b732f832290bf392d74f7616add30af1b06f805146c958e5f68",
+      "docs/xxz-dispersion.md": "56d21577c602f9ac061dd006243361b25fe2dc84f82884115a83ae8d167d73e0",
+      "docs/xxz-family.md": "f3e9e199ad1d575e5ba51deae87083068e8ab0ed10e5d02f11a45d35f37b8072",
+      "docs/xxz-structure-factor-thermo.md": "212b2c2e9b66b0833622748319a518187eec3c4ec4b33f76b0777c0eb3c2b524",
+      "include/bethe/citations.hpp": "3aaf1fe528ad8206a00d72fd43ecf5f06f2922d6d4bfdf884b717b57764f78d7",
+      "include/bethe/detail/carlson_rf.hpp": "49783c7d1217b90ab40fff74fb48cae0e600a1025c03dab7d5944a947118d7c1",
+      "include/bethe/xxz_thermodynamic_structure_factor.hpp": "5f2f04ffd083dc6a0691a7bbf97e1901cae6b599874a70fecf50eaa7af194845",
+      "scripts/reference_xxz_two_spinon.py": "70945142241c5160265dd6a400f5dd9ec98642c9fab318b77ac25eb39119670a",
+      "scripts/test_reference_xxz_two_spinon.py": "5399b8ee6b560d023746230f3e5d638f564b862e871bdb20bf467d551e0c154c",
+      "tests/CMakeLists.txt": "6ff88c668e07c3079a5de4fd73305af554503e47769c52798e37f4db603fff3f",
+      "tests/check_citations_cli.cmake": "34d6b76684162cfe53f9d3601b6cd02d3f3893dbf698311da890afb85e8c062c",
+      "tests/check_precision_info.py": "e3a66fb4432c844f5fbbbf2d94c5946405e7979492c15030ceaab5f8ac0b355f",
+      "tests/check_shared_arguments.py": "82dc9a2f3031d3a7ad4e6f11928468152db722482980bc9db3659a7a26a716aa",
+      "tests/check_xxz_thermodynamic_structure_factor.py": "7cf7082ee090ab8d9791ce15967ee0960342e196120901ecf631e7e25433acf8",
+      "tests/test_xxz_thermodynamic_structure_factor.cpp": "99d5511b4299056c553964c79df2ae2e00b78beb28897109dedc03a3f0324d80",
+      "zensical.toml": "837c8c8a0c3416ce44505ff94ed5b37556d54e77bc03310bf2a12a98d7d81994"
+    },
+    "scope": "All changed source/test/document files relative to base_revision, excluding this self-describing manifest. These hashes identify the actual public input files; unchanged files come from the base. The enclosing Git commit binds this manifest to the reviewed tree."
+  },
+  "endpoint_review_followup": {
+    "finding": "An absent endpoint sheet was assumed to be present. Existing evaluator and sheet logic are unchanged.",
+    "reference": "Independent 120-digit reduced endpoint formula: k=0/2pi C_plus only; k=pi C_minus only. At omega=gap all are outside the continuum.",
+    "checks": {
+      "native": {
+        "passed": 16,
+        "failures": 0,
+        "elapsed_seconds": 0.56,
+        "test_log_sha256": "13ebafc14c075e10389f7a9f9b96c6c28db379bb54970a757eeb8ba8c24fadb7",
+        "scope": "All numerical tests rebuilt, including added endpoint/support controls; no CLI rerun needed for this test/metadata-only delta."
+      },
+      "wide": {
+        "passed": 25,
+        "failures": 0,
+        "elapsed_seconds": 0.64,
+        "test_log_sha256": "e706e3081e4dd702e904031a364291189024e6697e76987f5bd9c185c3c00439",
+        "scope": "All numerical tests rebuilt, including added endpoint/support controls; no CLI rerun needed for this test/metadata-only delta."
+      },
+      "sanitizers": {
+        "passed": 19,
+        "failures": 0,
+        "elapsed_seconds": 1.16,
+        "test_log_sha256": "f847e3d1d93ec2d1f8c71ec64907bbf302a845616a51e6dfac6360e4149a4f59",
+        "scope": "All numerical tests rebuilt, including added endpoint/support controls; no CLI rerun needed for this test/metadata-only delta."
+      }
+    },
+    "validated_revision": "aa5c71085c642c77ee903192bf9bc2d895a6fe8f"
+  },
+  "near_endpoint_status_correction": {
+    "previous_revision": "aa5c71085c642c77ee903192bf9bc2d895a6fe8f",
+    "changes": [
+      "Evaluate both sheets and the interior kernel with common half-angle factors taken from the resolved distance to the nearest physical momentum endpoint.",
+      "Check endpoints of all present sheets before evaluating any interior kernel."
+    ],
+    "regressions": [
+      "Identical new tests fail old code in binary64/80/128 and MPFR128/256: tiny resolved momentum is lost or inaccurate; an internal endpoint can report numerical failure when the other sheet exhausts its budget.",
+      "180-digit independent lower-edge reference at Delta=1.001, k=1e-30; zero outside support; reflected-sheet consistency a few ulps below represented pi.",
+      "All present sheet endpoints return threshold with absent values and zero evaluations even at max_terms=0; ordinary interior budget failure remains numerical_failure."
+    ],
+    "reference": {
+      "delta": "1.001",
+      "momentum": "1e-30",
+      "lower": "0.00000000000000000000000000000157131989067221842204201947428688679823688926103408411321082462098715666655803642503581403863943373583368574847747458379036614246560640802186550722226",
+      "upper": "3.14263978134443684408403894857377345536710759638185268593041419084423768254870302915482948463869318770725888692845008172660074128178870120483887006492",
+      "precision_digits": 180
+    },
+    "checks": {
+      "native": {
+        "passed": 20,
+        "failures": 0,
+        "elapsed_seconds": 0.71,
+        "test_log_sha256": "0f4adf260c6db2eaa33b36696669451748a314637985d3050e116e5aadfc8e53",
+        "build_log_sha256": "b353e2a90ffcd0b922d373240f492230756a383d74f8759666fb805ee6372152"
+      },
+      "wide": {
+        "passed": 31,
+        "failures": 0,
+        "elapsed_seconds": 0.96,
+        "test_log_sha256": "ffc8a56092ad9fe4be35ed00b8cb0ee5cf21effd85208c5ee186b44e6f4e786e",
+        "build_log_sha256": "7a7eeb52f8b0b65c3e52fe7f1a9ddced2ee4a35447f94f8bbac0ad575128a0f8"
+      },
+      "sanitizers": {
+        "passed": 24,
+        "failures": 0,
+        "elapsed_seconds": 22.8,
+        "test_log_sha256": "c77958cc0ca5639602651a858a002d3ec00fa98ef6299b06ee9da4b2fef128a7",
+        "build_log_sha256": "23d24d577b40b7269ac7bf7eebe3af2a201bd1164ff52635ad8522ec5277e2cf"
+      }
+    },
+    "scope": "Focused numerical suite, frontend/exports/serial-Async/precision checks and shared CLI arguments, rebuilt in existing configured CMake lanes. Existing Uni20 MPFR LSan policy. Full repository CI and exact-head review remain separate gates."
   }
 }

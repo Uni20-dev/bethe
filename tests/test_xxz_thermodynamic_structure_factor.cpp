@@ -6,8 +6,120 @@
 #include <bethe/xxz_thermodynamic_structure_factor.hpp>
 
 namespace model = bethe::xxz;
+namespace
+{
+template <uni20::Real R> void check_endpoint_sheets(R const& zero)
+{
+  auto parse = [&](char const* text) {
+    if constexpr (uni20::has_runtime_precision_v<R>)
+      return uni20::parse_real<R>(text, uni20::precision_of(zero));
+    else
+      return uni20::parse_real<R>(text);
+  };
+  model::ThermodynamicTwoSpinonStructureFactor<R> sf(parse("1.5"));
+  R const pi = bethe::detail::spinon_pi(zero), eps = uni20::numeric_limits<R>::epsilon(zero);
+  // Independent 120-digit endpoint ellipf/theta formula. At k=0/2pi only
+  // C_plus is present; at k=pi only C_minus. No zero-width phantom sheet.
+  R const zero_reference = parse("0."
+                                 "0330938625053190738022060577865551460009708231616226312401322230475315369554475892781"
+                                 "5761898306062317767035538700393");
+  R const pi_reference = parse("1."
+                               "395025762335287507543322808120529828201314925795779189153370708341520541943932514840840"
+                               "065406043936735920107386919");
+  for (auto const& k : std::array<R, 3>{zero, pi, R{2} * pi})
+  {
+    auto const sheets = sf.sheets(k);
+    EXPECT_EQ(sheets[0].present, k != pi);
+    EXPECT_EQ(sheets[1].present, k == pi);
+    auto const below = sf(k, sf.gap());
+    ASSERT_TRUE(below.value && below.error);
+    EXPECT_EQ(below.status, model::SpectralDensityStatus::outside_continuum);
+    EXPECT_EQ(*below.value, zero);
+    auto const result = sf(k, parse("2"));
+    ASSERT_TRUE(result.value && result.error);
+    EXPECT_EQ(result.status, model::SpectralDensityStatus::converged);
+    R const reference = k == pi ? pi_reference : zero_reference;
+    EXPECT_REAL_NEAR(*result.value, reference, R{50000} * eps);
+    EXPECT_LE(uni20::math::abs(*result.value - reference), *result.error);
+  }
+}
+template <uni20::Real R> void check_tiny_momentum_and_threshold_priority(R const& zero)
+{
+  auto parse = [&](char const* text) {
+    if constexpr (uni20::has_runtime_precision_v<R>)
+      return uni20::parse_real<R>(text, uni20::precision_of(zero));
+    else
+      return uni20::parse_real<R>(text);
+  };
+  R const eps = uni20::numeric_limits<R>::epsilon(zero), k = parse("1e-30");
+  model::ThermodynamicTwoSpinonStructureFactor<R> tiny(parse("1.001"));
+  // Independent 180-digit evaluation of the original complementary-angle
+  // formula. Computing pi-k first loses this resolved k in native arithmetic.
+  R const lower = parse("1."
+                        "5713198906722184220420194742868867982368892610340841132108246209871566665580364250358140386394"
+                        "3373583368574847747458379036614246560640802186550722226e-30");
+  auto const sheets = tiny.sheets(k);
+  ASSERT_TRUE(sheets[0].present);
+  EXPECT_FALSE(sheets[1].present);
+  EXPECT_REAL_NEAR(sheets[0].lower, lower, R{10000} * eps * lower);
+  auto const below = tiny(k, lower / R{2});
+  EXPECT_EQ(below.status, model::SpectralDensityStatus::outside_continuum);
+  ASSERT_TRUE(below.value && below.error);
+  EXPECT_EQ(*below.value, zero);
+  EXPECT_EQ(below.evaluations, 0U);
+  // The reflected sheet must use the same resolved endpoint distance, also
+  // when that distance is only a few ulps below the represented pi.
+  R const pi = bethe::detail::spinon_pi(zero), near_pi = pi - R{16} * eps;
+  R const reflected = tiny.sheets(pi - near_pi)[0].lower;
+  EXPECT_REAL_NEAR(tiny.sheets(near_pi)[1].lower, reflected, R{10000} * eps * reflected);
+
+  auto options = [&] {
+    if constexpr (uni20::has_runtime_precision_v<R>)
+      return model::TwoSpinonStructureFactorOptions<R>(uni20::precision_of(zero));
+    else
+      return model::TwoSpinonStructureFactorOptions<R>{};
+  }();
+  options.max_terms = 0;
+  model::ThermodynamicTwoSpinonStructureFactor<R> failed(parse("1.5"), parse("1"), options);
+  R const momentum = parse("1.5");
+  auto const bands = failed.sheets(momentum);
+  ASSERT_TRUE(bands[0].present && bands[1].present);
+  ASSERT_GT(bands[1].upper, bands[0].lower);
+  ASSERT_LT(bands[1].upper, bands[0].upper);
+  for (auto const& band : bands)
+    for (auto const& endpoint : {band.lower, band.upper})
+    {
+      auto const result = failed(momentum, endpoint);
+      EXPECT_EQ(result.status, model::SpectralDensityStatus::threshold);
+      EXPECT_FALSE(result.value || result.error);
+      EXPECT_EQ(result.evaluations, 0U);
+    }
+  EXPECT_EQ(failed(momentum, parse("2")).status, model::SpectralDensityStatus::numerical_failure);
+}
+} // namespace
 template <typename T> class XXZThermodynamicDSF : public ::testing::Test {};
 TYPED_TEST_SUITE(XXZThermodynamicDSF, test_support::RealTypes, test_support::PrecisionNames);
+
+TYPED_TEST(XXZThermodynamicDSF, TinyMomentumAndThresholdPriority)
+{
+  check_tiny_momentum_and_threshold_priority(TypeParam{0});
+}
+
+TYPED_TEST(XXZThermodynamicDSF, ExactEndpointSheetSupportAndValues) { check_endpoint_sheets(TypeParam{0}); }
+
+#if UNI20_HAS_MPREAL
+TEST(XXZThermodynamicDSFMpfr, TinyMomentumAndThresholdPriority)
+{
+  for (auto bits : {128, 256})
+    check_tiny_momentum_and_threshold_priority(uni20::mpreal(0, uni20::Precision::bits(bits)));
+}
+
+TEST(XXZThermodynamicDSFMpfr, ExactEndpointSheetSupportAndValues)
+{
+  for (auto bits : {128, 256})
+    check_endpoint_sheets(uni20::mpreal(0, uni20::Precision::bits(bits)));
+}
+#endif
 
 TYPED_TEST(XXZThermodynamicDSF, HighPrecisionReferences)
 {

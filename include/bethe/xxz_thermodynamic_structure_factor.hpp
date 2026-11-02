@@ -88,13 +88,16 @@ template <uni20::Real Real> class ThermodynamicTwoSpinonStructureFactor {
     std::array<SpectralSheet<Real>, 2> sheets(Real momentum) const
     {
       Real const k = folded(momentum);
+      auto const [sh, ch] = half_angles(k);
       auto plus = [&](Real Q, int sign) -> SpectralSheet<Real> {
         if (Q < critical_) return {sign, zero_, zero_, false};
-        Real const s = Q == Real{0} ? Real{0} : uni20::math::sin(Q / Real{2});
-        Real const c = Q == pi() ? Real{0} : uni20::math::cos(Q / Real{2});
+        // Preserve the small physical distance from an endpoint. Forming
+        // pi-k before trigonometry can erase a resolved nonzero momentum.
+        Real const s = sign == 1 ? ch : sh;
+        Real const c = sign == 1 ? sh : ch;
         Real const upper = Real{2} * scale_ * uni20::math::hypot(s, kp_ * c);
         Real const distance_from_pi = sign == 1 ? k : pi() - k;
-        Real const lower = distance_from_pi >= critical_ ? scale_ * (Real{1} + kp_) * uni20::math::sin(k)
+        Real const lower = distance_from_pi >= critical_ ? scale_ * (Real{1} + kp_) * Real{2} * sh * ch
                                                          : Real{2} * scale_ * uni20::math::hypot(c, kp_ * s);
         return {sign, lower, upper, true};
       };
@@ -107,16 +110,19 @@ template <uni20::Real Real> class ThermodynamicTwoSpinonStructureFactor {
       if (!uni20::isfinite(omega)) throw std::invalid_argument("frequency must be finite");
       Real const k = folded(momentum), w = omega / scale_;
       SpectralDensity<Real> out{zero_, zero_, 0, SpectralDensityStatus::outside_continuum};
-      for (auto const& sheet : sheets(momentum))
+      auto const bands = sheets(momentum);
+      // The total density is undefined at any sheet endpoint, even when the
+      // other sheet contains this frequency and exhausts its kernel budget.
+      for (auto const& sheet : bands)
+        if (sheet.present && (omega == sheet.lower || omega == sheet.upper))
+          return {{}, {}, 0, SpectralDensityStatus::threshold};
+      auto const [sh, ch] = half_angles(k);
+      for (auto const& sheet : bands)
       {
         if (!sheet.present || omega < sheet.lower || omega > sheet.upper) continue;
-        if (omega == sheet.lower || omega == sheet.upper)
-          return {{}, {}, out.evaluations, SpectralDensityStatus::threshold};
         // Rationalize both cancellations in Eq. (44)/(54). In particular
         // W_sigma and 1+sigma*cos(Q) vanish together at k=0,pi; compute their
         // quotient directly. This also includes the exact endpoint momenta.
-        Real const sh = k == Real{0} ? Real{0} : uni20::math::sin(k / Real{2});
-        Real const ch = k == pi() ? Real{0} : uni20::math::cos(k / Real{2});
         Real const a = Real{2} * (sheet.sign == 1 ? sh * sh : ch * ch);
         Real const other = Real{2} * (sheet.sign == 1 ? ch * ch : sh * sh);
         Real const s2 = a * other, w0 = (Real{1} + kp_) * uni20::math::sqrt(s2);
@@ -187,6 +193,12 @@ template <uni20::Real Real> class ThermodynamicTwoSpinonStructureFactor {
         return uni20::math::next_up(zero_);
       else
         return uni20::numeric_limits<Real>::min();
+    }
+    std::pair<Real, Real> half_angles(Real const& k) const
+    {
+      if (k <= pi() / Real{2}) return {uni20::math::sin(k / Real{2}), uni20::math::cos(k / Real{2})};
+      Real const distance = (pi() - k) / Real{2};
+      return {uni20::math::cos(distance), uni20::math::sin(distance)};
     }
     Real folded(Real k) const
     {
