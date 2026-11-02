@@ -40,34 +40,30 @@ struct SpinonSampleMetadata
 
 namespace bethe::heisenberg
 {
-/// Apply observable log weights to one checked physical W_n. The columns are
-/// all values, then their contour diagnostics, then arithmetic diagnostics.
-/// No physical measure is inferred here: the adapter supplies every Jacobian,
-/// moment factor and exchange scale. Density recovery always sees the same
-/// geometry coordinates, imported afresh at each declared precision.
-template <uni20::Real G, uni20::Real Low, uni20::Real High>
-bethe::MonteCarloObservation<G, SpinonSampleMetadata>
-weighted_spinon_observation(std::span<G const> beta, std::span<G const> log_weights,
-                            XXXSpinonDensityRecovery<Low, High> const& recovery, std::stop_token stop = {})
+namespace detail
+{
+template <uni20::Real G> void validate_spinon_log_weights(std::span<G const> log_weights)
 {
   if (log_weights.empty() || log_weights.size() > std::numeric_limits<std::size_t>::max() / 3)
     throw std::invalid_argument("require a bounded nonempty observable weight vector");
-  G const one = uni20::scalar_like(log_weights.front(), 1), zero = uni20::scalar_like(one, 0);
+  G const one = uni20::scalar_like(log_weights.front(), 1);
   for (auto const& w : log_weights)
   {
     bethe::detail::require_same_precision(w, one);
     if (!uni20::isfinite(w)) throw std::invalid_argument("observable log weight must be finite");
   }
+}
+
+// A recovered result must come from the driver or its validated restore seam.
+// Keep weighting identical for live evaluation and persistent observation replay.
+template <uni20::Real G, uni20::Real High>
+bethe::MonteCarloObservation<G, SpinonSampleMetadata>
+weight_recovered_spinon_observation(std::span<G const> log_weights, SpinonRecoveryResult<High> const& recovered)
+{
+  validate_spinon_log_weights(log_weights);
+  G const one = uni20::scalar_like(log_weights.front(), 1), zero = uni20::scalar_like(one, 0);
   bethe::MonteCarloObservation<G, SpinonSampleMetadata> result;
   result.metadata.supported_configurations = 1;
-  auto recovered = recovery.recover(
-      [&](auto const& context) {
-        std::vector<decltype(context.parse("0"))> converted;
-        for (auto const& b : beta)
-          converted.push_back(context.import(b));
-        return converted;
-      },
-      stop);
   result.metadata.density_attempts = recovered.attempts.size();
   if (!recovered.accepted())
   {
@@ -101,5 +97,27 @@ weighted_spinon_observation(std::span<G const> beta, std::span<G const> log_weig
   }
   result.values = std::move(values);
   return result;
+}
+} // namespace detail
+
+/// Apply observable log weights to one checked physical W_n. Columns are all
+/// values, then contour diagnostics, then arithmetic diagnostics. The adapter
+/// supplies every measure and exchange scale. Each control imports the original
+/// geometry coordinates afresh at its declared precision.
+template <uni20::Real G, uni20::Real Low, uni20::Real High>
+bethe::MonteCarloObservation<G, SpinonSampleMetadata>
+weighted_spinon_observation(std::span<G const> beta, std::span<G const> log_weights,
+                            XXXSpinonDensityRecovery<Low, High> const& recovery, std::stop_token stop = {})
+{
+  detail::validate_spinon_log_weights(log_weights);
+  auto recovered = recovery.recover(
+      [&](auto const& context) {
+        std::vector<decltype(context.parse("0"))> converted;
+        for (auto const& b : beta)
+          converted.push_back(context.import(b));
+        return converted;
+      },
+      stop);
+  return detail::weight_recovered_spinon_observation(log_weights, recovered);
 }
 } // namespace bethe::heisenberg
