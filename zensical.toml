@@ -107,6 +107,7 @@ nav = [
     { "Command examples" = "docs/command-examples.md" },
     { "Parallel calculations" = "docs/parallel-calculations.md" },
     { "Output and exports" = "docs/output.md" },
+    { "Spectral quadrature and time signals" = "docs/spectral-quadrature.md" },
     { "App capabilities" = "docs/app-capabilities.md" },
   ] },
   { "C++ library" = [

@@ -222,6 +222,7 @@ template <uni20::Real Geometry, uni20::Real Low, uni20::Real High = Low> class T
         {
           validate(options);
           auto& scheduler = execution.continuous_scheduler();
+          execution.scheduler = &scheduler;
           auto run = std::make_shared<Run>(*this, options);
           uni20::async::Async<Result> output;
           if (boundary_)
@@ -231,11 +232,11 @@ template <uni20::Real Geometry, uni20::Real Low, uni20::Real High = Low> class T
           }
           else
           {
-            auto work = bethe::monte_carlo_async<5>(
+            auto sampling = bethe::detail::prepare_monte_carlo_run<5>(
                 options, 3, kernel_->one,
                 [point = *this](auto const& identity, std::stop_token token) { return point.sample(identity, token); },
                 execution);
-            auto task = finish(work.read(), std::move(run), output.write());
+            auto task = finish(std::move(sampling), execution, std::move(run), output.write());
             bethe::detail::schedule_owned(scheduler, std::move(task));
           }
           return output;
@@ -259,6 +260,7 @@ template <uni20::Real Geometry, uni20::Real Low, uni20::Real High = Low> class T
           using ObservedResult = SixSpinonObservedEstimate<G, Metadata>;
           validate(options);
           auto& scheduler = execution.continuous_scheduler();
+          execution.scheduler = &scheduler;
           auto run = std::make_shared<Run>(*this, options);
           uni20::async::Async<ObservedResult> output;
           if (boundary_)
@@ -268,8 +270,9 @@ template <uni20::Real Geometry, uni20::Real Low, uni20::Real High = Low> class T
           }
           else
           {
-            auto work = bethe::monte_carlo_async<5>(options, 3, kernel_->one, std::move(observe), execution);
-            auto task = finish_observations<Metadata>(work.read(), std::move(run), output.write());
+            auto sampling =
+                bethe::detail::prepare_monte_carlo_run<5>(options, 3, kernel_->one, std::move(observe), execution);
+            auto task = finish_observations<Metadata>(std::move(sampling), execution, std::move(run), output.write());
             bethe::detail::schedule_owned(scheduler, std::move(task));
           }
           return output;
@@ -456,11 +459,15 @@ template <uni20::Real Geometry, uni20::Real Low, uni20::Real High = Low> class T
           destination = std::move(run->result);
         }
 
-        static uni20::async::AsyncTask finish(uni20::async::ReadBuffer<SamplingResult> work, std::shared_ptr<Run> run,
-                                              uni20::async::WriteBuffer<Result> output)
+        template <class SamplingRun>
+        static uni20::async::AsyncTask finish(std::shared_ptr<SamplingRun> sampling, bethe::ExecutionOptions execution,
+                                              std::shared_ptr<Run> run, uni20::async::WriteBuffer<Result> output)
         {
           auto destination = co_await output;
-          auto const& sample = co_await work;
+          uni20::async::Async<SamplingResult> work;
+          co_await SamplingRun::execute(std::move(sampling), execution, work.write());
+          auto reader = work.read();
+          auto const& sample = co_await reader;
           assemble_sample(*run, sample);
           destination = std::move(run->result);
         }
@@ -475,14 +482,17 @@ template <uni20::Real Geometry, uni20::Real Low, uni20::Real High = Low> class T
           destination = SixSpinonObservedEstimate<G, Metadata>{std::move(run->result), {}, {}};
         }
 
-        template <class Metadata>
+        template <class Metadata, class SamplingRun>
         static uni20::async::AsyncTask
-        finish_observations(uni20::async::ReadBuffer<bethe::MonteCarloEstimate<G, Metadata>> work,
+        finish_observations(std::shared_ptr<SamplingRun> sampling, bethe::ExecutionOptions execution,
                             std::shared_ptr<Run> run,
                             uni20::async::WriteBuffer<SixSpinonObservedEstimate<G, Metadata>> output)
         {
           auto destination = co_await output;
-          auto const& sample = co_await work;
+          uni20::async::Async<bethe::MonteCarloEstimate<G, Metadata>> work;
+          co_await SamplingRun::execute(std::move(sampling), execution, work.write());
+          auto reader = work.read();
+          auto const& sample = co_await reader;
           assemble_sample(*run, sample);
           SixSpinonObservedEstimate<G, Metadata> result{std::move(run->result), sample.metadata, {}};
           result.replicate_metadata.resize(sample.replicates.size());

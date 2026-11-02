@@ -342,6 +342,12 @@ the source's preparation status. The source of a move is explicitly
 non-ready (`precision_limit`), and returns no weights for a valid excited-state
 input; assignment can restore it. Self-move assignment is a no-op.
 
+A moved-from context has no `ground_residual()`. Its remaining numerical
+contents, including `root_tolerance()`, are unspecified; assign another context
+before using those values in calculations. In particular, a moved-from MPFR
+tolerance can be unset. This differs from a failed preparation that has not
+been moved: its tolerance and any measured residual remain useful diagnostics.
+
 Invalid state shape, sector or quantum-number labels throw
 `std::invalid_argument`. Numerical failures are reported as
 `roots_unconverged` or `precision_limit`, with absent weights, never a fabricated

@@ -9,6 +9,23 @@ if(BETHE_BUILD_TESTS)
   add_subdirectory(tests)
 endif()
 
+if(BETHE_BUILD_EXAMPLES)
+  add_executable(bethe_example_boundary_form_factors examples/xxx_boundary_form_factors.cpp)
+  target_link_libraries(bethe_example_boundary_form_factors PRIVATE bethe::experimental)
+endif()
+
+if(BETHE_BUILD_APPS)
+  add_executable(bethe-experimental-xxx-boundary-dynamics apps/bethe-xxx-boundary-dynamics.cpp)
+  target_link_libraries(bethe-experimental-xxx-boundary-dynamics PRIVATE bethe::experimental bethe_cli TBB::tbb)
+  set_target_properties(bethe-experimental-xxx-boundary-dynamics PROPERTIES CXX_EXTENSIONS OFF)
+endif()
+
+if(BETHE_BUILD_APPS)
+  add_executable(bethe-experimental-xxx-boundary-magnetization apps/bethe-xxx-boundary-magnetization.cpp)
+  target_link_libraries(bethe-experimental-xxx-boundary-magnetization PRIVATE bethe::experimental bethe_cli TBB::tbb)
+  set_target_properties(bethe-experimental-xxx-boundary-magnetization PROPERTIES CXX_EXTENSIONS OFF)
+endif()
+
 if(UNIX AND BETHE_BUILD_EXAMPLES)
   add_executable(bethe-experimental-recovery-store-example examples/spinon_recovery_store.cpp)
   target_link_libraries(bethe-experimental-recovery-store-example PRIVATE bethe::experimental)

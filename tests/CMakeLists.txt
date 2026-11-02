@@ -79,6 +79,10 @@ add_executable(bethe_monte_carlo_tests test_monte_carlo.cpp)
 target_link_libraries(bethe_monte_carlo_tests PRIVATE bethe::bethe TBB::tbb)
 bethe_discover_tests(bethe_monte_carlo_tests)
 
+add_executable(bethe_sampling_ownership_tests test_sampling_ownership.cpp)
+target_link_libraries(bethe_sampling_ownership_tests PRIVATE bethe::bethe TBB::tbb)
+bethe_discover_tests(bethe_sampling_ownership_tests)
+
 add_executable(bethe_monte_carlo_benchmark EXCLUDE_FROM_ALL benchmark_monte_carlo.cpp)
 target_link_libraries(bethe_monte_carlo_benchmark PRIVATE bethe::bethe TBB::tbb)
 set_target_properties(bethe_monte_carlo_benchmark PROPERTIES CXX_EXTENSIONS OFF)
@@ -276,6 +280,10 @@ set_target_properties(bethe_observable_grid_benchmark PROPERTIES CXX_EXTENSIONS 
 add_executable(bethe_xxx_structure_factor_tests test_xxx_structure_factor.cpp)
 target_link_libraries(bethe_xxx_structure_factor_tests PRIVATE bethe::bethe)
 bethe_discover_tests(bethe_xxx_structure_factor_tests)
+
+add_executable(bethe_local_spectrum_tests test_local_spectrum.cpp)
+target_link_libraries(bethe_local_spectrum_tests PRIVATE bethe::bethe)
+bethe_discover_tests(bethe_local_spectrum_tests)
 
 add_executable(bethe_xxx_prepared_form_factor_tests test_xxx_prepared_form_factors.cpp)
 target_link_libraries(bethe_xxx_prepared_form_factor_tests PRIVATE bethe::bethe)
