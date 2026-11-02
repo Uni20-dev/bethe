@@ -58,7 +58,10 @@ without each nominal string being self-conjugate. Their doubled Takahashi labels
 are (3,5,2) and (-5,-3,-2). The mapping follows Deguchi and Giri's
 [non-self-conjugate solutions](https://arxiv.org/abs/1408.7030), Table I.
 It is a bounded mapping, not a general exceptional-string algorithm. Other
-collapsed, singular or unresolved configurations can fail explicitly.
+collapsed, singular or unresolved configurations remain explicit failures.
+In particular, a small residual does not validate a trajectory approaching
+duplicate real roots. Root coincidences do not inflate the equation tolerance;
+only the actual equation poles contribute to that allowance.
 
 The Takahashi solution supplies a seed. Damped Newton iteration then solves the
 full finite-root equations with an analytic Jacobian. Success additionally
@@ -140,7 +143,7 @@ at any of those sizes.
 
 The independent mpmath reference solves multiplicative equations and evaluates
 direct products/determinants, separate from the C++ logarithmic form-factor
-implementation. With mpmath >=1.2 installed, regenerate the fixtures:
+implementation. With mpmath >=1.2 installed, verify the fixtures against fresh solves:
 
 ```sh
 python3 experimental/reference/xxx_six_spinon.py --digits 110 --verify
