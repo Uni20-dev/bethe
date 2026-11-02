@@ -236,6 +236,12 @@ Pair workers draw continuously from a bounded queue, without fixed batch
 barriers. Active work drains before a cancellation or exception is delivered.
 Dropping a result handle does not request cancellation.
 
+Magnetization requires the spectral family and signed matrix elements, not the
+independent ground-density diagnostic. If that density calculation fails, or its
+first-moment comparison fails, the signed calculation still runs on valid roots.
+The failure remains visible in `result.spectrum`; the magnetization result has
+its own norm and pair checks. No failed spectral state or pair is bypassed.
+
 `BoundarySpinFormFactors<Real>` also provides individual same-sector elements.
 Its `prepare(state)` rechecks the original equations and computes the raising
 gauge, cached products and analytic diagonal. Prepared states are immutable;

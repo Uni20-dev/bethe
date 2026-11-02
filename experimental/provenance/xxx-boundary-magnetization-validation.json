@@ -69,5 +69,29 @@
       "elapsed_seconds": 17.41,
       "test_log_sha256": "44b8633cf841abe14f834e445a8ad472098e6b19dca6fb1c61dadc0aeabcbdf2"
     }
+  },
+  "density_independence_followup": {
+    "parent": "4dc686288720d46c10aa2214a541beb220da16d0",
+    "checks": {
+      "native": {
+        "tests": 7,
+        "failures": 0,
+        "elapsed_seconds": 0.12,
+        "test_log_sha256": "8e8fe87bdb7a69f1a1bcff29475d9c85a3d81276f515aeb1d8b3a4309fe1677a"
+      },
+      "wide": {
+        "tests": 9,
+        "failures": 0,
+        "elapsed_seconds": 1.5,
+        "test_log_sha256": "ac1db1ed9d23727eb5f86dd94769b2efed70ea0c8a95854e7a58f33fa1a36cb6"
+      },
+      "sanitizers": {
+        "tests": 8,
+        "failures": 0,
+        "elapsed_seconds": 17.18,
+        "test_log_sha256": "23769fb8a4b6950cf9dd10994c8172f946ab5e7d69228e0db5e8b9d7a245b97d"
+      }
+    },
+    "regression": "The old task rejects valid spectral roots if the independent density is missing or fails its moment check. Both conditions now preserve identical N4 signed endpoint curves and projected norm. The nested spectrum still reports the independent diagnostic failure. Existing rejected spectral-state, pair and norm controls are unchanged."
   }
 }

@@ -274,7 +274,7 @@ template <uni20::Real R> struct BoundaryMagnetization
     std::vector<BoundaryMagnetizationPair<R>> pairs;
     std::optional<R> projected_norm;
     bool matrix_ready = false;
-    bool converged() const { return matrix_ready && spectrum.converged(); }
+    bool converged() const { return matrix_ready && spectrum.family_converged(); }
     std::optional<R> omitted_norm() const
     {
       if (!matrix_ready || !projected_norm || !uni20::isfinite(*projected_norm) || *projected_norm < 0 ||
@@ -334,7 +334,7 @@ uni20::async::AsyncTask magnetization_task(uni20::async::IAsyncScheduler& schedu
   for (std::size_t i = 0; i < count; ++i)
     for (std::size_t j = i; j < count; ++j)
       result.pairs.push_back({i + 1, j + 1, {}, {}, "state preparation unavailable"});
-  if (spectrum.converged())
+  if (spectrum.family_converged())
   {
     BoundarySpinFormFactors<R> calculator(spectrum.sites, spectrum.ground_state);
     auto completed = bethe::detail::continuous_work(

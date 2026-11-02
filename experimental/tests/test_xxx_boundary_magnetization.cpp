@@ -253,6 +253,48 @@ TEST(ExperimentalBoundaryMagnetizationExecution, OwnedPreparationPreflightFailur
   EXPECT_THROW((void)cancelled.get_wait(), bethe::ExecutionCancelled);
 }
 
+TEST(ExperimentalBoundaryMagnetizationExecution, SpectralFamilySurvivesIndependentDensityFailure)
+{
+  auto reference = boundary::boundary_real_triplet_magnetization<double>(4);
+  ASSERT_TRUE(reference.converged());
+  for (bool rejected_density : {false, true})
+  {
+    SCOPED_TRACE(rejected_density);
+    auto spectrum = reference.spectrum;
+    if (rejected_density)
+      spectrum.density = {}; // Failed independent ground-density calculation.
+    else
+      spectrum.density.bond_correlation = 0.; // Density-based first-moment diagnostic fails.
+    ASSERT_TRUE(spectrum.family_converged());
+    ASSERT_FALSE(spectrum.sum_rules_consistent());
+    ASSERT_FALSE(spectrum.converged());
+    DebugScheduler scheduler;
+    Async<boundary::BoundarySpectrum<double>> input(std::move(spectrum));
+    Async<boundary::BoundaryMagnetization<double>> output;
+    std::size_t evaluated = 0;
+    auto task = boundary::boundary_detail::magnetization_task<double>(
+        scheduler, input.read(), reference.pairs.size(), {&scheduler},
+        [&](auto const& calculator, auto const& x, auto const& y, std::stop_token) {
+          ++evaluated;
+          return calculator(x, y);
+        },
+        output.write());
+    bethe::detail::schedule_owned(scheduler, std::move(task));
+    auto const& result = output.get_wait(scheduler);
+    ASSERT_TRUE(result.converged());
+    EXPECT_TRUE(result.matrix_ready);
+    EXPECT_FALSE(result.spectrum.converged()); // The independent diagnostic remains visible.
+    EXPECT_EQ(result.spectrum.density.converged(), !rejected_density);
+    EXPECT_EQ(evaluated, reference.pairs.size());
+    EXPECT_EQ(result.projected_norm, reference.projected_norm);
+    for (double time : {0., 1., 10., 100.})
+    {
+      EXPECT_EQ(result.at(time), reference.at(time));
+      EXPECT_EQ(result.at(time, true), reference.at(time, true));
+    }
+  }
+}
+
 TEST(ExperimentalBoundaryMagnetizationExecution, PairFailureAndCancellationDrainAdmittedWork)
 {
   TbbScheduler scheduler(2);
