@@ -8,3 +8,9 @@ target_include_directories(bethe_experimental INTERFACE
 if(BETHE_BUILD_TESTS)
   add_subdirectory(tests)
 endif()
+
+if(UNIX AND BETHE_BUILD_EXAMPLES)
+  add_executable(bethe-experimental-recovery-store-example examples/spinon_recovery_store.cpp)
+  target_link_libraries(bethe-experimental-recovery-store-example PRIVATE bethe::experimental)
+  set_target_properties(bethe-experimental-recovery-store-example PROPERTIES CXX_EXTENSIONS OFF)
+endif()

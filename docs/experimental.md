@@ -84,6 +84,14 @@ This interface intentionally has no disk-cache reader. Historical serialized
 factors with a different determinant method or precision contract must not be
 silently substituted for validated preparation.
 
+## Restartable density controls
+
+The [spinon recovery store](experimental-spinon-recovery-store.md) binds a
+bounded chunk of decimal inputs to a numerical policy and producer provenance.
+It publishes completed controls atomically for process restart, preserving
+precision and the original deadline. Its portable example needs no research
+archive; POSIX locking and filesystem limitations are documented separately.
+
 ## Scope and promotion
 
 Each experimental feature must document supported inputs, numerical controls,
