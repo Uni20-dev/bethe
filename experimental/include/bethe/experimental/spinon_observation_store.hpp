@@ -332,18 +332,43 @@ template <uni20::Real G, uni20::Real Low, uni20::Real High = Low> class SpinonOb
     }
 };
 
+namespace observation_store_detail
+{
+/// Owned execution for a chunk exposing size() and run(index, stop).
+template <class Store, class Collect>
+[[nodiscard]] uni20::async::Async<std::size_t> evaluate_chunk_async(std::shared_ptr<Store> store, Collect collect,
+                                                                    bethe::ExecutionOptions execution)
+{
+  if (!store) throw std::invalid_argument("observation chunk is null");
+  auto const count = store->size();
+  auto& scheduler = execution.continuous_scheduler();
+  struct Evaluate
+  {
+      std::shared_ptr<Store> store;
+      std::stop_token stop;
+      auto operator()(std::size_t i) const { return store->run(i, stop); }
+  };
+  using Window = bethe::detail::ObservableWindow<Evaluate>;
+  auto window = std::make_shared<Window>(scheduler, Evaluate{std::move(store), {}}, execution, count);
+  // Bind before admission so collector/submission failures stop running
+  // recovery calls between controls, as well as preventing new observations.
+  window->evaluate.stop = window->control.token();
+  uni20::async::Async<std::size_t> result;
+  auto task = bethe::detail::observable_grid_task(std::move(window), std::move(collect), result.write());
+  bethe::detail::schedule_owned(scheduler, std::move(task));
+  return result;
+}
+} // namespace observation_store_detail
+
 /// Own the chunk through every admitted task, including exception/cancellation
 /// drainage. Collection is ordered and failed observations remain explicit.
+/// Collector/admission failures request stop between running density controls.
 /// The existing scheduler/window bounds admission; no extra pool or batch join.
 template <uni20::Real G, uni20::Real Low, uni20::Real High, class Collect>
 [[nodiscard]] uni20::async::Async<std::size_t>
 evaluate_spinon_observation_chunk_async(std::shared_ptr<SpinonObservationStore<G, Low, High>> store, Collect collect,
                                         bethe::ExecutionOptions execution = {})
 {
-  if (!store) throw std::invalid_argument("observation chunk is null");
-  auto const count = store->size();
-  return bethe::evaluate_observable_grid_async(
-      count, [store = std::move(store), stop = execution.stop](std::size_t i) { return store->run(i, stop); },
-      std::move(collect), execution);
+  return observation_store_detail::evaluate_chunk_async(std::move(store), std::move(collect), execution);
 }
 } // namespace bethe::experimental::xxx

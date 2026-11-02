@@ -165,7 +165,10 @@ and do not detect deliberate rollback of the whole dataset.
 `evaluate_spinon_observation_chunk_async(shared_store, collect, execution)`
 uses the existing bounded observable grid. It owns the shared store through
 all admitted work, collects in input order, and drains siblings before exposing
-an exception or cancellation. The borrowed scheduler must outlive completion.
+an exception or cancellation. A collector or submission failure also requests
+stop in running recovery calls between density controls; an active kernel runs
+to completion and its durable controls remain available for restart.
+The borrowed scheduler must outlive completion.
 Changing `max_in_flight` on restart changes neither identity nor accumulation
 order. Direct concurrent `run` calls on different indices are supported; a
 second active call for the same observation is rejected. Callbacks must allow
@@ -208,7 +211,9 @@ masks, and reject mixed precision and preparation ownership.
 Storage tests use native binary64/long-double recovery and MPFR80/128 recovery
 with MPFR160 geometry. They include cross-precision rounding ties, process death
 after a completed control, replay without kernels, valid-checksum altered results,
-publication failure, and held Async work on cancellation/error. The
+publication failure, and held Async work on cancellation/error. Deterministic
+held-recovery tests check that collector and submission failures stop sibling
+controls without requesting cancellation of the caller's stop source. The
 [validation record](../experimental/provenance/spinon-observation-chunks.json)
 separates fresh CMake checks from focused configured-provider builds.
 

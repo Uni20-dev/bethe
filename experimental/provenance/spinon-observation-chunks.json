@@ -351,5 +351,37 @@
       "include/bethe/xxx_spinon_density_recovery.hpp": "bc9722a0bcc2dcea1ca33725f1e05151f43c3511d8af8433cceb65ac34bc1b54",
       "include/bethe/xxx_spinon_observation.hpp": "52be605b3849aa4594ab0dfd0c9611d2a6a72871020889dd04bf8928d5a75ae7"
     }
+  },
+  "local_stop_followup": {
+    "date": "2026-11-03",
+    "public_base": "2c7b3f258b64cfda3c095f2920fe1ecddb2c70e5",
+    "uni20_revision": "ca350254e723b9909571e860318bd274cb0c9ddb",
+    "change": "Bind owned recovery calls to the observable window local stop token, forwarding collector/admission failures between controls while draining admitted work. Public signatures and persistence format are unchanged.",
+    "source_sha256": {
+      "experimental/include/bethe/experimental/spinon_observation_store.hpp": "c7390f6d2641e08a2f7a21180e20cc6b3a9fd700d5fb5472f7acf40a00f7cc4a",
+      "experimental/tests/test_spinon_observation_store.cpp": "66d9495f5037ba9d3170b44e28a40466ab42fc3b76508da0ea0af633feb3897b",
+      "docs/experimental-spinon-observation-groups.md": "67c64180e6b830feb45fcd4d5664973522c36f79c4b3a66f2dbc795a3f44c582"
+    },
+    "checks": {
+      "native": {
+        "tests": 13,
+        "failures": 0,
+        "skipped": 0,
+        "seconds": 0.24994624499231577,
+        "scope": "Fresh CMake configuration and target build, then incremental rebuild after formatting; observation-store tests only. GCC13 binary64/long-double recovery.",
+        "xml_sha256": "1876d65e11a4b72107d4ccb69ebb886ec9678fcff0dafd5adfbd39c53d0c6f00"
+      },
+      "sanitizers": {
+        "tests": 14,
+        "failures": 0,
+        "skipped": 0,
+        "seconds": 21.253383543982636,
+        "scope": "Fresh CMake configuration and target build, then incremental rebuild after formatting; observation-store tests only. Clang19 ASan/UBSan, native and MPFR; existing Uni20 LSan cache suppressions.",
+        "xml_sha256": "391e8c025832ac42c11d1b77fe1ca277254b9419edb1cc4933597c9287a79595"
+      }
+    },
+    "regression": "Two deterministic held-recovery tests check collector and sibling-admission failure. The external-token-only binding variant fails both: no stop arrives and a second control begins. Fixed native tests pass 25 repeated pairs; caller stop source remains unset and work drains before error propagation.",
+    "regression_variant": "Only token binding restored to external execution.stop; internal executor extraction retained so the same tests run. This is not a full historical-header rebuild.",
+    "scope": "Numerical kernels, reference values, accumulated weights and checkpoint encoding unchanged. Prior costs and broader worker checks remain historical at their recorded revisions."
   }
 }
