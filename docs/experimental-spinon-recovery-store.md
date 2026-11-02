@@ -107,7 +107,8 @@ uses system wall time across processes, not CPU time.
 An already finalized accepted or rejected result can be replayed later without
 acquiring a new deadline. Consumed time is frozen at final assessment: publishing
 that finalized snapshot and replaying it later cannot expire an accepted result.
-Publication and observer time for the last control still count, because they
+Waiting for another point to release the publication mutex after final assessment
+also leaves that result unchanged. Publication and observer time for the last control still count, because they
 precede final assessment. Cancellation leaves a resumable prefix when the
 numerical history is not already terminal. Cancellation and budget checks
 occur between kernels; they cannot interrupt one kernel or an in-progress

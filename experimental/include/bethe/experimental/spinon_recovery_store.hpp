@@ -223,7 +223,11 @@ template <uni20::Real Low, uni20::Real High = Low> class SpinonRecoveryStore {
         auto& e = entries_[index];
         bool const cancelled = result.status == heisenberg::SpinonRecoveryStatus::cancelled;
         e.result = result;
-        e.result.wall_seconds = std::max(e.result.wall_seconds, now_locked() - e.started);
+        // The driver has already charged progress publication and observers
+        // through its final assessment. Waiting for a sibling's publication
+        // after that assessment must not expire a terminal result.
+        if (!terminal(result))
+          e.result.wall_seconds = std::max(e.result.wall_seconds, now_locked() - e.started);
         e.result = driver_.restore(e.result);
         e.finished = terminal(e.result);
         save_locked();

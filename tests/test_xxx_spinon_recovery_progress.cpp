@@ -43,6 +43,8 @@ TEST(SpinonRecoveryProgress, PartialPrefixAndCompletedReplayDoNotRepeatKernels)
   ASSERT_EQ(saved.attempts.size(), 1u);
   EXPECT_EQ(calls, 2);
   EXPECT_EQ(publications, 1);
+  EXPECT_NE(saved.status, SpinonRecoveryStatus::exhausted);
+  EXPECT_FALSE(saved.reason.empty());
   EXPECT_GT(saved.attempts[0].completed_wall_seconds, 0);
   auto result = recovery.recover(source, saved, [&](auto const& progress) {
     ++publications;
@@ -78,6 +80,9 @@ TEST(SpinonRecoveryProgress, DecimalIdentityCancellationAndUntrustedTopLevelFlag
   fake.estimate = partial.attempts[0].checked->estimate;
   auto checked = recovery.restore(fake);
   EXPECT_FALSE(checked.accepted());
+  EXPECT_NE(checked.status, SpinonRecoveryStatus::exhausted);
+  EXPECT_FALSE(checked.reason.empty());
+  EXPECT_FALSE(checked.density_failure);
   EXPECT_FALSE(checked.estimate);
   int publications = 0;
   auto done = recovery.resume(beta, fake, [&](auto const&) { ++publications; });
@@ -92,6 +97,44 @@ TEST(SpinonRecoveryProgress, DecimalIdentityCancellationAndUntrustedTopLevelFlag
   EXPECT_THROW(recovery.recover([](auto const& c) { return std::vector{c.parse("-2"), c.parse("1")}; }, fake,
                                 [](auto const&) {}),
                std::invalid_argument);
+}
+
+TEST(SpinonRecoveryProgress, IncompletePrefixesAndTerminalExhaustionAreDistinct)
+{
+  if (!native_pair()) GTEST_SKIP();
+  auto p = policy();
+  auto next = p.stages.front();
+  next.contours = {{{96, 22}, {128, 24}}};
+  p.stages.push_back(next);
+  Driver recovery(p);
+  Driver::Result empty;
+  empty.policy = p;
+  auto prefix = recovery.restore(empty);
+  EXPECT_NE(prefix.status, SpinonRecoveryStatus::exhausted);
+  EXPECT_FALSE(prefix.reason.empty());
+  int publications = 0;
+  auto failed = recovery.recover(
+      [](auto const& context) -> decltype(std::vector{context.parse("0")}) {
+        throw SpinonDensityError(SpinonDensityFailure::tail_domain, "injected failed control");
+      },
+      {},
+      [&](auto const& progress) {
+        ++publications;
+        EXPECT_NE(progress.status, SpinonRecoveryStatus::exhausted);
+        EXPECT_FALSE(progress.reason.empty());
+        if (progress.attempts.size() < 4)
+        {
+          auto restored = recovery.restore(progress);
+          EXPECT_NE(restored.status, SpinonRecoveryStatus::exhausted);
+          EXPECT_FALSE(restored.reason.empty());
+          EXPECT_FALSE(restored.estimate);
+          EXPECT_FALSE(restored.density_failure);
+        }
+      });
+  EXPECT_EQ(publications, 4);
+  EXPECT_EQ(failed.status, SpinonRecoveryStatus::exhausted);
+  EXPECT_EQ(failed.density_failure, SpinonDensityFailure::tail_domain);
+  EXPECT_EQ(recovery.restore(failed).status, SpinonRecoveryStatus::exhausted);
 }
 
 TEST(SpinonRecoveryProgress, PolicyOrderingDiagnosticsAndBudgetCannotBeReset)
@@ -120,6 +163,7 @@ TEST(SpinonRecoveryProgress, PolicyOrderingDiagnosticsAndBudgetCannotBeReset)
   reject([](auto& x) { x.attempts[0].checked->requested_error *= 2; });
   reject([](auto& x) { x.attempts[0].checked->arithmetic_screen *= 2; });
   reject([](auto& x) { x.attempts[0].checked->low_arithmetic_indicator = -1; });
+  reject([](auto& x) { x.attempts[0].checked->low_log_scale = 20000; });
   reject([](auto& x) { x.attempts[0].checked->estimate.value = 0; });
   reject([](auto& x) { ++x.attempts[0].checked->estimate.terms; });
   reject([](auto& x) { x.attempts[0].checked->estimate.amplitudes.clear(); });
@@ -268,6 +312,11 @@ TEST(SpinonRecoveryProgressMpfr, MixedStagePrecisionsSurviveRestart)
                    }),
                SavedControl);
   ASSERT_EQ(saved.attempts.size(), 2u);
+  auto restored_prefix = recovery.restore(saved);
+  EXPECT_NE(restored_prefix.status, SpinonRecoveryStatus::exhausted);
+  EXPECT_FALSE(restored_prefix.reason.empty());
+  EXPECT_FALSE(restored_prefix.density_failure);
+  EXPECT_FALSE(restored_prefix.estimate);
   auto result = recovery.recover(
       [&](auto const& c) {
         ++calls;
