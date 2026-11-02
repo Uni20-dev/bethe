@@ -145,6 +145,9 @@ jobs:
           ctest --preset ci-long-running --output-junit "${RUNNER_TEMP}/ctest-long-running.xml" \
             2>&1 | tee "${RUNNER_TEMP}/ctest-long-running.log"
 
+      - name: Verify experimental components remain opt-in
+        run: python3 tests/check_experimental_default.py --build "build/$PRESET"
+
       - name: Compiler cache statistics
         if: always()
         run: ccache --show-stats

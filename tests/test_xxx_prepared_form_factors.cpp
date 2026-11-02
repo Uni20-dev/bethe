@@ -90,12 +90,14 @@ TYPED_TEST(XXXPreparedFormFactors, MoveConstructionInvalidatesSource)
   EXPECT_EQ(actual.log_weight, expected.log_weight);
   EXPECT_EQ(actual.pivot_margin, expected.pivot_margin);
   EXPECT_FALSE(source.ready());
+  EXPECT_FALSE(source.ground_residual());
   EXPECT_EQ(source.status(), model::FormFactorStatus::precision_limit);
   EXPECT_FALSE(source(excited).weight);
   EXPECT_FALSE(source(excited).log_weight);
   // Moving again cannot resurrect the source's old successful status.
   auto unavailable = std::move(source);
   EXPECT_FALSE(unavailable.ready());
+  EXPECT_FALSE(unavailable.ground_residual());
   EXPECT_FALSE(unavailable(excited).weight);
 }
 
@@ -121,6 +123,7 @@ TYPED_TEST(XXXPreparedFormFactors, MoveAssignmentReuseAndSelfMove)
   EXPECT_EQ(actual.log_weight, expected.log_weight);
   EXPECT_EQ(actual.pivot_margin, expected.pivot_margin);
   EXPECT_FALSE(source.ready());
+  EXPECT_FALSE(source.ground_residual());
   EXPECT_EQ(source.status(), model::FormFactorStatus::precision_limit);
   EXPECT_FALSE(source(excited).weight);
   // Copy assignment remains available, including restoration of a moved-from object.
