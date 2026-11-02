@@ -6,8 +6,56 @@
 #include <bethe/xxz_thermodynamic_structure_factor.hpp>
 
 namespace model = bethe::xxz;
+namespace
+{
+template <uni20::Real R> void check_endpoint_sheets(R const& zero)
+{
+  auto parse = [&](char const* text) {
+    if constexpr (uni20::has_runtime_precision_v<R>)
+      return uni20::parse_real<R>(text, uni20::precision_of(zero));
+    else
+      return uni20::parse_real<R>(text);
+  };
+  model::ThermodynamicTwoSpinonStructureFactor<R> sf(parse("1.5"));
+  R const pi = bethe::detail::spinon_pi(zero), eps = uni20::numeric_limits<R>::epsilon(zero);
+  // Independent 120-digit endpoint ellipf/theta formula. At k=0/2pi only
+  // C_plus is present; at k=pi only C_minus. No zero-width phantom sheet.
+  R const zero_reference = parse("0."
+                                 "0330938625053190738022060577865551460009708231616226312401322230475315369554475892781"
+                                 "5761898306062317767035538700393");
+  R const pi_reference = parse("1."
+                               "395025762335287507543322808120529828201314925795779189153370708341520541943932514840840"
+                               "065406043936735920107386919");
+  for (auto const& k : std::array<R, 3>{zero, pi, R{2} * pi})
+  {
+    auto const sheets = sf.sheets(k);
+    EXPECT_EQ(sheets[0].present, k != pi);
+    EXPECT_EQ(sheets[1].present, k == pi);
+    auto const below = sf(k, sf.gap());
+    ASSERT_TRUE(below.value && below.error);
+    EXPECT_EQ(below.status, model::SpectralDensityStatus::outside_continuum);
+    EXPECT_EQ(*below.value, zero);
+    auto const result = sf(k, parse("2"));
+    ASSERT_TRUE(result.value && result.error);
+    EXPECT_EQ(result.status, model::SpectralDensityStatus::converged);
+    R const reference = k == pi ? pi_reference : zero_reference;
+    EXPECT_REAL_NEAR(*result.value, reference, R{50000} * eps);
+    EXPECT_LE(uni20::math::abs(*result.value - reference), *result.error);
+  }
+}
+} // namespace
 template <typename T> class XXZThermodynamicDSF : public ::testing::Test {};
 TYPED_TEST_SUITE(XXZThermodynamicDSF, test_support::RealTypes, test_support::PrecisionNames);
+
+TYPED_TEST(XXZThermodynamicDSF, ExactEndpointSheetSupportAndValues) { check_endpoint_sheets(TypeParam{0}); }
+
+#if UNI20_HAS_MPREAL
+TEST(XXZThermodynamicDSFMpfr, ExactEndpointSheetSupportAndValues)
+{
+  for (auto bits : {128, 256})
+    check_endpoint_sheets(uni20::mpreal(0, uni20::Precision::bits(bits)));
+}
+#endif
 
 TYPED_TEST(XXZThermodynamicDSF, HighPrecisionReferences)
 {
