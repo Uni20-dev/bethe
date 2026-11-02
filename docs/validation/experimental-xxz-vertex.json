@@ -1,6 +1,6 @@
 {
   "scope": "Experimental infinite massive XXZ two/four-spinon complex vertex amplitudes, fixed-order full-zone moments and Gaussian frequency cuts. No convergence certification or fitted normalization.",
-  "integration_base": "375f32c0b41a0439cee04d1c3c864bcfce59ea8f",
+  "integration_base": "1fedd95471da8b2d57d93d0744eddbaa3388615d",
   "prerequisites": {
     "experimental_foundation": "e916ab29aaa44d7fad264f583a0e79a51d3798c0",
     "two_spinon_spectrum": "375f32c0b41a0439cee04d1c3c864bcfce59ea8f"
@@ -141,9 +141,9 @@
   "validated_public_inputs": {
     "files_sha256": {
       "docs/experimental-xxz-vertex.md": "fbe1fd440c084af282c1a21d219eeccac0f8df3add2f783e7f6b655d99fcdac9",
-      "docs/experimental.md": "512940afde4f794122c4287dd8153ce57d068395e2e79db18c183f3d8d852db5",
-      "experimental/CMakeLists.txt": "c753e3a6f04cd79afe26ba560d79fda0d59369c99a37dc178bc70ba3d844681e",
-      "experimental/README.md": "cab27749a788a9dc25dd57d541451d6526fc6d6ac0b12b3c7fe8933bd9779867",
+      "docs/experimental.md": "1632c5d8f6dc107d93dbd2483a825f153966f424ac2f06f6137d3bc2ac2e1aa4",
+      "experimental/CMakeLists.txt": "e9f5f9c7217ff5c7e12fa38d617a00644d8096215c49be1cbe4f8bc89bded518",
+      "experimental/README.md": "7b8864e47932178421745d688debb2daf81e00cdcf77318c8bab1b3db9641517",
       "experimental/examples/xxz_vertex.cpp": "534ccfc040019deb9b019c518084b9a7d83858cf1a8d7a9a911ad5b393e9335d",
       "experimental/include/bethe/experimental/detail/scaled_complex_product.hpp": "b5edf3e130fff04e8bbe2f72335e1a47cdf53bc15a30731a0df0336e3e9e1b52",
       "experimental/include/bethe/experimental/detail/xxz_spectral_kinematics.hpp": "9ff46ed98e335052b885bfbe04221aa84ea4d3331d97830b5897ceb92fa88aa5",
@@ -157,9 +157,9 @@
       "experimental/reference/xxz/vertex_numpy.py": "60bc4b8b1d2bd4026c754f0f15296d5c93691ceaed56c27e340e53480d52e7f6",
       "experimental/reference/xxz/vertex_quadrature.py": "9c5acd1359439475bf917ca72d9af73c4c0a0bc6267e8add5de6b0dbbe7d93bc",
       "experimental/reference/xxz/vertex_reference.py": "82d3d0935da677057c74df9772c273b6759aa5d14a462d9a0e02fbb1e234ab18",
-      "experimental/tests/CMakeLists.txt": "0e401d56952aa8ba52400c6edf2b2adf08215fba07561f8318fd65c65f6795d0",
+      "experimental/tests/CMakeLists.txt": "158fdc7804bb3130731156bde22b76859699235304f65ad96ad71e85c565fcda",
       "experimental/tests/test_xxz_vertex.cpp": "0a596d6c3f4a7c0b2178ac35ece2c13319c6bca151c02f868b595d7390d69474",
-      "zensical.toml": "b626c0e819f6264353a9d31eba2fc930ef996a79632e1471440e7ea219dc35cf"
+      "zensical.toml": "81cdab43cbea133c06deb8ba85bdc69e1e9ec6cc24035a79ba398cad2ba3a824"
     },
     "scope": "Exactly the added/changed files relative to the top-level integration_base, excluding this self-describing manifest. Unchanged parent files are bound by that revision and the prerequisite commits. Historical follow-up counts describe their original checkpoints; the enclosing commit binds this current record."
   },
@@ -314,25 +314,73 @@
     }
   },
   "current_parent_integration": {
-    "previous_head": "bd99e1f79d4302c78baa22c1b026d1078489b8ea",
-    "parent": "375f32c0b41a0439cee04d1c3c864bcfce59ea8f",
-    "change": "Merge the current supported-XXZ parent, including public-main OBC packages. Conflicts are additive experimental CMake registrations and guide entries. Preserve both parents unchanged in those sections.",
-    "source_correspondence": "All 15 non-integration finite-q input blobs are byte-identical to bd99e1f, including numerical headers, tests, example, references and guide. Supported parent headers, apps, tests, scripts and citations are byte-identical to375f32c. No new numerical implementation or tolerance change.",
+    "previous_head": "a62edcc40b6c9e36d8f4c405686d0a1aa3a6fc00",
+    "parent": "1fedd95471da8b2d57d93d0744eddbaa3388615d",
+    "change": "Merge current public main, retaining both sides of additive experimental indexes and test registration. QTM, storage/worker packages and sampling ownership fixes are inherited unchanged.",
+    "source_correspondence": {
+      "unchanged_finite_q_inputs": [
+        "docs/experimental-xxz-vertex.md",
+        "experimental/examples/xxz_vertex.cpp",
+        "experimental/include/bethe/experimental/detail/scaled_complex_product.hpp",
+        "experimental/include/bethe/experimental/detail/xxz_spectral_kinematics.hpp",
+        "experimental/include/bethe/experimental/xxz_vertex.hpp",
+        "experimental/include/bethe/experimental/xxz_vertex_spectrum.hpp",
+        "experimental/reference/xxz/README.md",
+        "experimental/reference/xxz/requirements.txt",
+        "experimental/reference/xxz/test_vertex_quadrature.py",
+        "experimental/reference/xxz/test_vertex_reference.py",
+        "experimental/reference/xxz/vertex-point.json",
+        "experimental/reference/xxz/vertex_numpy.py",
+        "experimental/reference/xxz/vertex_quadrature.py",
+        "experimental/reference/xxz/vertex_reference.py",
+        "experimental/tests/test_xxz_vertex.cpp"
+      ],
+      "combined_integration_inputs": [
+        "docs/experimental.md",
+        "experimental/CMakeLists.txt",
+        "experimental/README.md",
+        "experimental/tests/CMakeLists.txt",
+        "zensical.toml"
+      ],
+      "all_other_parent_inputs_unchanged": true
+    },
     "native": {
       "passed": 27,
       "failed": 0,
-      "seconds": 3.82,
-      "scope": "Reconfigure/rebuild existing native CMake targets and run the complete finite-q suite plus Async example; this checks the merged target registration and inherited public-main consumers. Earlier wide/sanitizer numerical evidence is carried forward, not rerun.",
-      "build_log_sha256": "0f8575b2792e0b53be2688c476f9f12fadfe85b7a08fe472244dd024dbfd937f",
-      "test_log_sha256": "a22188839be834870c3f05cd5bf32bbfa853b85b94350dbc41dd715378253d84"
+      "seconds": 7.644498917972669,
+      "scope": "Rebuilt the native finite-q test/example targets and ran their complete focused CTest suite. This checks registration and the inherited sampling adapters. Earlier wide/sanitizer numerical evidence is carried forward, not rerun.",
+      "build_log_sha256": "d3fb24c2375bfb7394538bf20174a8896837704afaf059b479c1705fad3e861d",
+      "test_log_sha256": "ca3597aaa391caa933598ff5c742dffc597c4d74b23185b24fb90fd8a071df64"
     },
     "documentation": {
-      "pages": 161,
-      "bibliography_urls": 167,
-      "equations": 1961,
-      "scope": "Fresh local merged site, source math, generated citations and tutorial-link checks; deployment pending.",
-      "log_sha256": "4987e77800e0fc41122a6b92d1bd11c0953c8e18b7cd7dc7e8fc6968ff1d0b99"
+      "result": "Checked links/assets in 166 pages, 173 bibliography URLs, and preserved 2084 equations.",
+      "scope": "Fresh local site plus citation, source math and tutorial-link checks; deployment remains pending.",
+      "log_sha256": "c7c23c658553d60f65070a8425517463420a4696457b27b1c623c648159d8717"
     },
-    "manifest": "Exactly the20 changed inputs relative to the current parent, excluding this manifest; earlier follow-up sections retain their historical counts."
-  }
+    "manifest": "Exactly the20 changed inputs relative to integration_base, excluding this manifest. Earlier integration records retain their historical counts."
+  },
+  "parent_integration_history": [
+    {
+      "previous_head": "bd99e1f79d4302c78baa22c1b026d1078489b8ea",
+      "parent": "375f32c0b41a0439cee04d1c3c864bcfce59ea8f",
+      "change": "Merge the current supported-XXZ parent, including public-main OBC packages. Conflicts are additive experimental CMake registrations and guide entries. Preserve both parents unchanged in those sections.",
+      "source_correspondence": "All 15 non-integration finite-q input blobs are byte-identical to bd99e1f, including numerical headers, tests, example, references and guide. Supported parent headers, apps, tests, scripts and citations are byte-identical to375f32c. No new numerical implementation or tolerance change.",
+      "native": {
+        "passed": 27,
+        "failed": 0,
+        "seconds": 3.82,
+        "scope": "Reconfigure/rebuild existing native CMake targets and run the complete finite-q suite plus Async example; this checks the merged target registration and inherited public-main consumers. Earlier wide/sanitizer numerical evidence is carried forward, not rerun.",
+        "build_log_sha256": "0f8575b2792e0b53be2688c476f9f12fadfe85b7a08fe472244dd024dbfd937f",
+        "test_log_sha256": "a22188839be834870c3f05cd5bf32bbfa853b85b94350dbc41dd715378253d84"
+      },
+      "documentation": {
+        "pages": 161,
+        "bibliography_urls": 167,
+        "equations": 1961,
+        "scope": "Fresh local merged site, source math, generated citations and tutorial-link checks; deployment pending.",
+        "log_sha256": "4987e77800e0fc41122a6b92d1bd11c0953c8e18b7cd7dc7e8fc6968ff1d0b99"
+      },
+      "manifest": "Exactly the20 changed inputs relative to the current parent, excluding this manifest; earlier follow-up sections retain their historical counts."
+    }
+  ]
 }

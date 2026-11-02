@@ -109,6 +109,7 @@ nav = [
     { "Parallel calculations" = "docs/parallel-calculations.md" },
     { "Output and exports" = "docs/output.md" },
     { "Spectral quadrature and time signals" = "docs/spectral-quadrature.md" },
+    { "Spectral tables and spatial correlations" = "docs/spectral-analysis.md" },
     { "App capabilities" = "docs/app-capabilities.md" },
   ] },
   { "C++ library" = [
@@ -133,6 +134,8 @@ nav = [
     { "Performance measurements" = "docs/benchmarks.md" },
     { "Spinon numerical development" = "docs/spinon-numerics-development.md" },
     { "Validation records" = "docs/validation-records.md" },
+    { "Isotropic QTM references" = "docs/experimental-xxx-qtm.md" },
+    { "QTM limiting algebra" = "docs/experimental-xxx-qtm-derivation.md" },
     { "Model roadmap" = "docs/model-roadmap.md" },
     { "Citation maintenance" = "docs/citations.md" },
     { "Contributing tutorials" = "docs/tutorials/contributing.md" },

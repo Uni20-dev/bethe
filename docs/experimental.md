@@ -84,6 +84,15 @@ This interface intentionally has no disk-cache reader. Historical serialized
 factors with a different determinant method or precision contract must not be
 silently substituted for validated preparation.
 
+## Independent QTM references
+
+The [isotropic QTM reference package](experimental-xxx-qtm.md) compares JMP
+quadrature with an analytic PRL hypergeometric limit, then checks complete
+complex partition sums against the public spinon vertex controls. These are
+optional Python source-checkout tools, separate from the C++ build option.
+They need mpmath, but no private data or C++ build. Detailed limiting algebra
+is in the [derivation](experimental-xxx-qtm-derivation.md).
+
 ## Open XXX boundary weights
 
 The [boundary form-factor guide](experimental-xxx-boundary-form-factors.md)
@@ -108,6 +117,14 @@ frequency cuts. It supports native formats and explicit MPFR/MPC precision.
 Its independent residue and NumPy/SciPy controls run without research data.
 Product/residue truncation, outer quadrature and arithmetic precision require
 separate checks; the four-spinon calculation is not a certified spectral density.
+
+## Restartable density controls
+
+The [spinon recovery store](experimental-spinon-recovery-store.md) binds a
+bounded chunk of decimal inputs to a numerical policy and producer provenance.
+It publishes completed controls atomically for process restart, preserving
+precision and the original deadline. Its portable example needs no research
+archive; POSIX locking and filesystem limitations are documented separately.
 
 ## Scope and promotion
 
