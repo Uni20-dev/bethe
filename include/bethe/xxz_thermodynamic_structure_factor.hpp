@@ -97,7 +97,9 @@ template <uni20::Real Real> class ThermodynamicTwoSpinonStructureFactor {
         Real const c = sign == 1 ? sh : ch;
         Real const upper = Real{2} * scale_ * uni20::math::hypot(s, kp_ * c);
         Real const distance_from_pi = sign == 1 ? k : pi() - k;
-        Real const lower = distance_from_pi >= critical_ ? scale_ * (Real{1} + kp_) * Real{2} * sh * ch
+        // Form the bounded angular factor first: 2*scale_ is representable,
+        // but 2*scale_*(1+kp_) need not be.
+        Real const lower = distance_from_pi >= critical_ ? scale_ * ((Real{1} + kp_) * (Real{2} * sh * ch))
                                                          : Real{2} * scale_ * uni20::math::hypot(c, kp_ * s);
         return {sign, lower, upper, true};
       };
