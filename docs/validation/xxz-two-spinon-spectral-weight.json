@@ -130,7 +130,7 @@
       "docs/xxz-structure-factor-thermo.md": "212b2c2e9b66b0833622748319a518187eec3c4ec4b33f76b0777c0eb3c2b524",
       "include/bethe/citations.hpp": "3aaf1fe528ad8206a00d72fd43ecf5f06f2922d6d4bfdf884b717b57764f78d7",
       "include/bethe/detail/carlson_rf.hpp": "49783c7d1217b90ab40fff74fb48cae0e600a1025c03dab7d5944a947118d7c1",
-      "include/bethe/xxz_thermodynamic_structure_factor.hpp": "3a87102d972c020356b921e7fd00d3acf18cd0289e99043c418ba39b7dadb29b",
+      "include/bethe/xxz_thermodynamic_structure_factor.hpp": "5f2f04ffd083dc6a0691a7bbf97e1901cae6b599874a70fecf50eaa7af194845",
       "scripts/reference_xxz_two_spinon.py": "70945142241c5160265dd6a400f5dd9ec98642c9fab318b77ac25eb39119670a",
       "scripts/test_reference_xxz_two_spinon.py": "5399b8ee6b560d023746230f3e5d638f564b862e871bdb20bf467d551e0c154c",
       "tests/CMakeLists.txt": "6ff88c668e07c3079a5de4fd73305af554503e47769c52798e37f4db603fff3f",
@@ -138,7 +138,7 @@
       "tests/check_precision_info.py": "e3a66fb4432c844f5fbbbf2d94c5946405e7979492c15030ceaab5f8ac0b355f",
       "tests/check_shared_arguments.py": "82dc9a2f3031d3a7ad4e6f11928468152db722482980bc9db3659a7a26a716aa",
       "tests/check_xxz_thermodynamic_structure_factor.py": "7cf7082ee090ab8d9791ce15967ee0960342e196120901ecf631e7e25433acf8",
-      "tests/test_xxz_thermodynamic_structure_factor.cpp": "cd18728f58a2446e891c1bb8ad1913c435ae2c127ed68db39d829bdbb2480995",
+      "tests/test_xxz_thermodynamic_structure_factor.cpp": "99d5511b4299056c553964c79df2ae2e00b78beb28897109dedc03a3f0324d80",
       "zensical.toml": "837c8c8a0c3416ce44505ff94ed5b37556d54e77bc03310bf2a12a98d7d81994"
     },
     "scope": "All changed source/test/document files relative to base_revision, excluding this self-describing manifest. These hashes identify the actual public input files; unchanged files come from the base. The enclosing Git commit binds this manifest to the reviewed tree."
@@ -168,6 +168,50 @@
         "test_log_sha256": "f847e3d1d93ec2d1f8c71ec64907bbf302a845616a51e6dfac6360e4149a4f59",
         "scope": "All numerical tests rebuilt, including added endpoint/support controls; no CLI rerun needed for this test/metadata-only delta."
       }
-    }
+    },
+    "validated_revision": "aa5c71085c642c77ee903192bf9bc2d895a6fe8f"
+  },
+  "near_endpoint_status_correction": {
+    "previous_revision": "aa5c71085c642c77ee903192bf9bc2d895a6fe8f",
+    "changes": [
+      "Evaluate both sheets and the interior kernel with common half-angle factors taken from the resolved distance to the nearest physical momentum endpoint.",
+      "Check endpoints of all present sheets before evaluating any interior kernel."
+    ],
+    "regressions": [
+      "Identical new tests fail old code in binary64/80/128 and MPFR128/256: tiny resolved momentum is lost or inaccurate; an internal endpoint can report numerical failure when the other sheet exhausts its budget.",
+      "180-digit independent lower-edge reference at Delta=1.001, k=1e-30; zero outside support; reflected-sheet consistency a few ulps below represented pi.",
+      "All present sheet endpoints return threshold with absent values and zero evaluations even at max_terms=0; ordinary interior budget failure remains numerical_failure."
+    ],
+    "reference": {
+      "delta": "1.001",
+      "momentum": "1e-30",
+      "lower": "0.00000000000000000000000000000157131989067221842204201947428688679823688926103408411321082462098715666655803642503581403863943373583368574847747458379036614246560640802186550722226",
+      "upper": "3.14263978134443684408403894857377345536710759638185268593041419084423768254870302915482948463869318770725888692845008172660074128178870120483887006492",
+      "precision_digits": 180
+    },
+    "checks": {
+      "native": {
+        "passed": 20,
+        "failures": 0,
+        "elapsed_seconds": 0.71,
+        "test_log_sha256": "0f4adf260c6db2eaa33b36696669451748a314637985d3050e116e5aadfc8e53",
+        "build_log_sha256": "b353e2a90ffcd0b922d373240f492230756a383d74f8759666fb805ee6372152"
+      },
+      "wide": {
+        "passed": 31,
+        "failures": 0,
+        "elapsed_seconds": 0.96,
+        "test_log_sha256": "ffc8a56092ad9fe4be35ed00b8cb0ee5cf21effd85208c5ee186b44e6f4e786e",
+        "build_log_sha256": "7a7eeb52f8b0b65c3e52fe7f1a9ddced2ee4a35447f94f8bbac0ad575128a0f8"
+      },
+      "sanitizers": {
+        "passed": 24,
+        "failures": 0,
+        "elapsed_seconds": 22.8,
+        "test_log_sha256": "c77958cc0ca5639602651a858a002d3ec00fa98ef6299b06ee9da4b2fef128a7",
+        "build_log_sha256": "23d24d577b40b7269ac7bf7eebe3af2a201bd1164ff52635ad8522ec5277e2cf"
+      }
+    },
+    "scope": "Focused numerical suite, frontend/exports/serial-Async/precision checks and shared CLI arguments, rebuilt in existing configured CMake lanes. Existing Uni20 MPFR LSan policy. Full repository CI and exact-head review remain separate gates."
   }
 }
