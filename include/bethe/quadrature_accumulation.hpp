@@ -107,16 +107,22 @@ template <uni20::Real R, std::size_t N, class Metadata, class Evaluate> struct Q
       try
       {
         execution.stop = run->control.token();
-        auto evaluate = [run](std::size_t index) {
-          try
-          {
-            return std::invoke(run->evaluate, index, run->control.token());
-          }
-          catch (...)
-          {
-            run->control.fail();
-            throw;
-          }
+        struct EvaluatePoint
+        {
+            std::shared_ptr<QuadratureRun> run;
+            std::stop_token stop;
+            Observation operator()(std::size_t index) const
+            {
+              try
+              {
+                return std::invoke(run->evaluate, index, stop);
+              }
+              catch (...)
+              {
+                run->control.fail();
+                throw;
+              }
+            }
         };
         auto collect = [run](std::size_t index, auto observation) {
           try
@@ -129,9 +135,12 @@ template <uni20::Real R, std::size_t N, class Metadata, class Evaluate> struct Q
             throw;
           }
         };
-        using Window = ObservableWindow<decltype(evaluate)>;
-        auto window = std::make_shared<Window>(execution.continuous_scheduler(), std::move(evaluate), execution,
+        using Window = ObservableWindow<EvaluatePoint>;
+        auto window = std::make_shared<Window>(execution.continuous_scheduler(), EvaluatePoint{run, {}}, execution,
                                                run->result.total_nodes);
+        // Bind before admission: grid failures must stop observers already
+        // running, as well as preventing new observations from entering.
+        window->evaluate.stop = window->control.token();
         uni20::async::Async<std::size_t> work;
         // Construct the grid inside its sole admitted owner. The directly
         // awaited child drains all accepted observations before propagating.

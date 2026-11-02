@@ -5,7 +5,9 @@
 #include <bethe/xxx_six_spinon_moments.hpp>
 #include <bethe/xxx_six_spinon_structure_factor.hpp>
 #include <bethe/xxx_two_spinon_moments.hpp>
+#include <condition_variable>
 #include <uni20/async/debug_scheduler.hpp>
+#include <uni20/async/tbb_scheduler.hpp>
 
 namespace
 {
@@ -48,7 +50,93 @@ template <class Submit> void check_owner(Submit submit)
     if (!scheduler.done()) scheduler.run_all(); // Drain only a failing old-code test.
   }
 }
+
+struct ActiveObserver
+{
+    std::mutex mutex;
+    std::condition_variable cv;
+    bool started = false, rejected = false, stopped = false, release = false;
+};
+
+class RejectAfterObserverStarts : public TbbScheduler {
+    std::shared_ptr<ActiveObserver> state_;
+    std::atomic<std::size_t> calls_{0};
+
+  public:
+    explicit RejectAfterObserverStarts(std::shared_ptr<ActiveObserver> state)
+        : TbbScheduler(3), state_(std::move(state))
+    {}
+    void schedule(AsyncTask&& task) override
+    {
+      if (++calls_ == 3)
+      {
+        std::unique_lock lock(state_->mutex);
+        if (!state_->cv.wait_for(lock, std::chrono::seconds(5), [&] { return state_->started; }))
+          throw std::runtime_error("first observer did not start");
+        state_->rejected = true;
+        state_->cv.notify_all();
+        throw std::bad_alloc{};
+      }
+      TbbScheduler::schedule(std::move(task));
+    }
+};
+
+template <class Submit> void check_admission_stop(Submit submit)
+{
+  auto state = std::make_shared<ActiveObserver>();
+  RejectAfterObserverStarts scheduler(state);
+  std::stop_source external;
+  auto wait_for_stop = [state](std::stop_token stop) {
+    std::stop_callback callback(stop, [state] {
+      std::lock_guard lock(state->mutex);
+      state->stopped = true;
+      state->cv.notify_all();
+    });
+    std::unique_lock lock(state->mutex);
+    state->started = true;
+    state->cv.notify_all();
+    if (!state->cv.wait_for(lock, std::chrono::seconds(10), [&] { return state->stopped || state->release; }))
+      throw std::runtime_error("observer did not receive stop or test release");
+  };
+  auto pending = submit(scheduler, wait_for_stop, external.get_token());
+  {
+    std::unique_lock lock(state->mutex);
+    EXPECT_TRUE(state->cv.wait_for(lock, std::chrono::seconds(5), [&] { return state->rejected; }));
+    EXPECT_TRUE(state->cv.wait_for(lock, std::chrono::seconds(5), [&] { return state->stopped; }));
+    // Bound an old-code failure without leaking the deliberately held worker.
+    state->release = true;
+    state->cv.notify_all();
+  }
+  EXPECT_THROW((void)pending.get_wait(scheduler), std::bad_alloc);
+  EXPECT_FALSE(external.stop_requested()); // failure is local to this operation
+}
 } // namespace
+
+TEST(SamplingOwnership, QuadratureAdmissionFailureStopsActiveObserver)
+{
+  check_admission_stop([](auto& scheduler, auto wait_for_stop, std::stop_token external) {
+    return bethe::accumulate_quadrature_async<double, 1>(
+        4,
+        [wait_for_stop](std::size_t, std::stop_token stop) {
+          wait_for_stop(stop);
+          return bethe::QuadratureObservation<double, 1>{{{{1.}}}};
+        },
+        1., {&scheduler, 1, 2, external});
+  });
+}
+
+TEST(SamplingOwnership, MonteCarloAdmissionFailureStopsActiveObserver)
+{
+  check_admission_stop([](auto& scheduler, auto wait_for_stop, std::stop_token external) {
+    return bethe::monte_carlo_async<1>(
+        {2, 2, 42}, 1, 1.,
+        [wait_for_stop](auto const&, std::stop_token stop) {
+          wait_for_stop(stop);
+          return bethe::MonteCarloObservation<double>{std::vector{1.}};
+        },
+        {&scheduler, 1, 2, external});
+  });
+}
 
 TEST(SamplingOwnership, MonteCarloAdmissionFailuresRetainOneOwner)
 {
