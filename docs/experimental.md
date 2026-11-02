@@ -1,5 +1,11 @@
 # Experimental numerical components
 
+The [selected finite-four-spinon solver](experimental-xxx-four-spinon.md)
+adds explicit finite deviations and stabilized raising weights to the common
+finite-XXX foundation.
+The [finite-four scanner](experimental-xxx-four-spinon-scan.md) adds bounded
+catalogues, Async execution and an experimental table/export frontend.
+
 Experimental components live under `experimental/` and have explicitly limited
 API or scientific coverage. They use the supported library and Uni20; supported
 headers do not depend on them. They are disabled by default and are not
