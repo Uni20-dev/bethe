@@ -277,6 +277,57 @@ TEST(RecoveryStore, InitialPublicationTimeCannotBuyExtraKernelBudget)
   EXPECT_TRUE(result.attempts.empty());
 }
 
+TEST(RecoveryStore, FinalPublicationDoesNotExpireCompletedResult)
+{
+  if (!native_pair()) GTEST_SKIP();
+  Scratch scratch;
+  auto b = binding();
+  b.policy.max_wall_seconds = 1;
+  double completed_wall = 0;
+  {
+    int publications = 0;
+    Store store(scratch.path, b, [&](auto phase) {
+      // Initial snapshot, admission, two controls, then the finalized result.
+      // Only the last publication is delayed past the numerical deadline.
+      if (phase == cd::PublicationPhase::before_replace && ++publications == 5)
+        std::this_thread::sleep_for(std::chrono::milliseconds(1100));
+    });
+    auto result = store.run(0);
+    ASSERT_TRUE(result.accepted());
+    ASSERT_EQ(publications, 5);
+    EXPECT_LT(result.wall_seconds, b.policy.max_wall_seconds);
+    completed_wall = result.wall_seconds;
+    ASSERT_TRUE(store.load(0)->accepted());
+  }
+  Store reopened(scratch.path, b);
+  auto result = reopened.run(0, [](auto const&) { ADD_FAILURE() << "finalized result ran a control"; });
+  EXPECT_TRUE(result.accepted());
+  EXPECT_EQ(result.wall_seconds, completed_wall);
+  EXPECT_EQ(reopened.load(0)->wall_seconds, completed_wall);
+}
+
+TEST(RecoveryStore, LastControlObserverStillConsumesNumericalBudget)
+{
+  if (!native_pair()) GTEST_SKIP();
+  Scratch scratch;
+  auto b = binding();
+  b.policy.max_wall_seconds = 1;
+  {
+    Store store(scratch.path, b);
+    auto result = store.run(0, [](auto const& progress) {
+      if (progress.attempts.size() == 2) std::this_thread::sleep_for(std::chrono::milliseconds(1100));
+    });
+    ASSERT_EQ(result.attempts.size(), 2u);
+    EXPECT_EQ(result.status, SpinonRecoveryStatus::time_limit);
+    EXPECT_FALSE(result.estimate);
+    EXPECT_GE(result.wall_seconds, b.policy.max_wall_seconds);
+  }
+  Store reopened(scratch.path, b);
+  auto result = reopened.run(0, [](auto const&) { ADD_FAILURE() << "expired result ran a control"; });
+  EXPECT_EQ(result.status, SpinonRecoveryStatus::time_limit);
+  EXPECT_FALSE(result.estimate);
+}
+
 TEST(RecoveryStore, ProcessDeathBeforeAndAfterAtomicReplacement)
 {
   if (!native_pair()) GTEST_SKIP();
