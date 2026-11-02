@@ -312,6 +312,34 @@ TEST(ObservationStore, SavedValuesAreRecomputedEvenWhenChecksumIsValid)
   EXPECT_THROW((Store(scratch.path, group(1.L), samples(), policy(), "v1", "fixture")), std::invalid_argument);
 }
 
+TEST(ObservationStore, SectionUpperEdgeReplaysAsZeroWithoutDensityControls)
+{
+  if (!native_pair()) GTEST_SKIP();
+  Scratch scratch;
+  using Group = Store::Group;
+  Group::Proposal proposal(8.L, .5L, {{h::detail::SpinonProposalKind::background, 1.L, 1.L, 1.L}});
+  bethe::UniformSample<5>::Words words;
+  words[0] = {0};
+  for (int i = 1; i < 5; ++i)
+    words[i] = {std::uint64_t{1} << 22};
+  bethe::UniformSample<5> identity(24, words);
+  auto draw = proposal.draw(identity.at_precision(1.L));
+  long double const k = 12 * uni20::math::atan(uni20::math::exp(draw.beta[0]));
+  long double const pi = 4 * uni20::math::atan(1.L), upper = 3 * pi * uni20::math::sin(k / 6);
+  ASSERT_LT(k, 2 * pi);
+  Group model(proposal, 1.L, {{"section-zero-edge", k, upper, 0.L, 8.L, 0}});
+  for (int replay = 0; replay < 2; ++replay)
+  {
+    Store store(scratch.path, model, {{"edge", identity}}, policy(), "v1", "equal-momentum section edge");
+    std::size_t calls = 0;
+    auto value = store.run(0, [&](auto, auto, auto const&) { ++calls; });
+    ASSERT_TRUE(value.values);
+    EXPECT_EQ(*value.values, (std::vector<long double>{0, 0, 0}));
+    EXPECT_EQ(calls, 0u);
+    EXPECT_FALSE(std::filesystem::exists(scratch.path / "controls"));
+  }
+}
+
 TEST(ObservationStore, PhysicalAsyncResultsSurviveReversedReplayOrder)
 {
   if (!native_pair()) GTEST_SKIP();

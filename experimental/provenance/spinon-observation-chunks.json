@@ -183,5 +183,61 @@
     "POSIX stable locks and atomic rename; no fsync/NFS durability certificate",
     "experimental build-tree API, not installed",
     "no full repository CI, normal installation, publication or production throughput claim"
-  ]
+  ],
+  "validated_revision": "1c500a413ab24f8a059fd0160efa0eb2a1b195a9",
+  "section_upper_edge_followup": {
+    "baseline": "1c500a413ab24f8a059fd0160efa0eb2a1b195a9",
+    "change": "Classify each requested momentum section using its own equal-momentum upper edge, rather than the maximum across sections.",
+    "regression": "Exact background draws with six equal momenta in nonmaximal sections 0 and 2, J=1 and J=3; all old scalar-lane cases fail. A persisted native observation also reopens as exact zero without density controls.",
+    "source_sha256": {
+      "experimental/include/bethe/experimental/spinon_observation_group.hpp": "3c50ca845261f39468cde299c333fa02ea940baa561845c7ec1197dad1a07bc1",
+      "experimental/tests/test_spinon_observation_group.cpp": "dc0cc455ae8c4bcbf666ffab09a8d57abe1b89e5613cacc2ca0a4afa0ffc7e82",
+      "experimental/tests/test_spinon_observation_store.cpp": "7036547a9fd2fa8fff372b2930408e9712f607cfb6e4ef62a4856a13deec2210",
+      "docs/experimental-spinon-observation-groups.md": "9a83214633fefcbf92d679f7d612a57f9ee317e86a4d3ba9baa618fd55c1d02d"
+    },
+    "checks": {
+      "old_regression": {
+        "tests": 4,
+        "failures": 4,
+        "disabled": 0,
+        "errors": 0,
+        "time": "3.677s"
+      },
+      "group_wide": {
+        "tests": 9,
+        "failures": 0,
+        "disabled": 0,
+        "errors": 0,
+        "time": "3.93s"
+      },
+      "group_sanitizers": {
+        "tests": 7,
+        "failures": 0,
+        "disabled": 0,
+        "errors": 0,
+        "time": "18.968s"
+      },
+      "store_wide": {
+        "tests": 12,
+        "failures": 0,
+        "disabled": 0,
+        "errors": 0,
+        "time": "3.983s"
+      },
+      "store_sanitizers": {
+        "tests": 12,
+        "failures": 0,
+        "disabled": 0,
+        "errors": 0,
+        "time": "19.099s"
+      },
+      "native": {
+        "passed": 29,
+        "failed": 0,
+        "seconds": 4.8,
+        "scope": "rebuilt configured ci-native CMake targets; group, observation store and recovery store"
+      }
+    },
+    "scope": "Focused rebuilds with the same configured providers. Prior interior cost/example evidence remains historical at the baseline; not rerun or claimed as new measurements."
+  }
 }

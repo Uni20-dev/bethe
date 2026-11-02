@@ -120,6 +120,43 @@ template <uni20::Real R> void check_geometry(R const& one)
   }
 }
 
+// Concavity of sin(p) fixes the maximum of each momentum section at equal
+// momenta, even when another section extends to a larger frequency.
+template <uni20::Real R> void check_section_upper_zeros(R const& one)
+{
+  using Group = x::SixSpinonObservationGroup<R>;
+  R const zero = uni20::scalar_like(one, 0), pi = 4 * uni20::math::atan(one);
+  typename Group::Proposal p(8 * one, one / 2, {{h::detail::SpinonProposalKind::background, one, one, one}});
+  for (std::uint64_t word : {std::uint64_t{1} << 22, std::uint64_t{3} << 22})
+  {
+    bethe::UniformSample<5>::Words words;
+    words[0] = {0};
+    for (int i = 1; i < 5; ++i)
+      words[i] = {word};
+    bethe::UniformSample<5> identity(24, words);
+    auto draw = p.draw(identity.at_precision(one));
+    R const momentum = 2 * uni20::math::atan(uni20::math::exp(draw.beta[0]));
+    R const total = 6 * momentum;
+    int const section = total >= 4 * pi ? 2 : total >= 2 * pi ? 1 : 0;
+    ASSERT_NE(section, 1); // The tested edge is strictly below the full upper edge.
+    R const k = total - 2 * section * pi;
+    for (R const exchange : {one, 3 * one})
+    {
+      R const upper = exchange * 3 * pi * uni20::math::sin((k + 2 * section * pi) / 6);
+      Group g(p, exchange, {{"edge", k, upper, zero, 8 * one, section}});
+      auto prepared = g.prepare("equal-momenta", identity);
+      EXPECT_EQ(prepared.rows()[0].support, x::SpinonSectionSupport::support_zero) << prepared.rows()[0].reason;
+      ASSERT_TRUE(prepared.sections()[0].geometry);
+      EXPECT_FALSE(prepared.sections()[0].geometry->inside);
+      std::size_t called = 0;
+      auto result = g.observe(prepared, unit_density<R>(called));
+      ASSERT_TRUE(result.values) << result.reason;
+      EXPECT_EQ(*result.values, (std::vector<R>{zero, zero, zero}));
+      EXPECT_EQ(called, 0u);
+    }
+  }
+}
+
 template <uni20::Real G, uni20::Real Low, uni20::Real High>
 void physical_match(G const& one, h::SpinonRecoveryPolicy policy)
 {
@@ -156,6 +193,8 @@ void physical_match(G const& one, h::SpinonRecoveryPolicy policy)
 
 template <typename R> class SpinonObservationGroup : public ::testing::Test {};
 TYPED_TEST_SUITE(SpinonObservationGroup, test_support::RealTypes, test_support::PrecisionNames);
+TYPED_TEST(SpinonObservationGroup, EachSectionUpperEdgeIsAResolvedZero) { check_section_upper_zeros(TypeParam{1}); }
+
 TYPED_TEST(SpinonObservationGroup, LabelledRootsMasksAndJointCovariance) { check_geometry(TypeParam{1}); }
 
 TEST(SpinonObservationGroup, FreshPhysicalObservationsMatchPublicPoint)
@@ -238,6 +277,7 @@ TEST(SpinonObservationGroupMpfr, GeometryAndPhysicalRecoveryKeepExplicitPrecisio
   auto const ambient = mpfr_get_default_prec();
   R const one(1, uni20::Precision::bits(160));
   check_geometry(one);
+  check_section_upper_zeros(one);
   physical_match<R, R, R>(one, {"1e-5", "0", {{80, 128, {{{32, 12}, {64, 20}}}}}, 60});
   auto r = requests(one);
   r[0].outer_cutoff = R(8, uni20::Precision::bits(80));

@@ -85,9 +85,11 @@ a mean over surviving observations.
 - Masks satisfy `0 <= inner < outer <= proposal.cutoff()`. Both solved roots
   have the same maximum rapidity magnitude, so a mask retains both or neither.
 - Exact lower thresholds require a limiting calculation. Frequencies below
-  the lower boundary, above the sector upper boundary, or at the vanishing
-  outer upper edge produce resolved zeros. Ambiguous internal surface edges
-  remain geometry failures.
+  the lower boundary, above the requested momentum section's upper boundary,
+  or at its vanishing upper edge produce resolved zeros. Each section's maximum
+  occurs at six equal momenta. Other momentum sections can still contribute at
+  that frequency, so this check uses the requested section, not the full band's
+  maximum. Other ambiguous internal surface edges remain geometry failures.
 - A mask boundary within the geometry's `sqrt(epsilon)` screening scale is
   unresolved, rather than silently assigned to one region. This conservative
   check is not an interval certificate.

@@ -85,9 +85,10 @@ template <uni20::Real G> class SixSpinonObservationGroup {
                   "invalid observation identity, interior momentum, frequency, mask or section");
             G const folded = std::min(request.momentum, G(2 * pi - request.momentum));
             G const lower = folded == pi ? zero : G(exchange * pi / 2 * uni20::math::sin(folded));
-            G upper = zero;
-            for (int s = 0; s < 3; ++s)
-              upper = std::max(upper, G(exchange * 3 * pi * uni20::math::sin((request.momentum + 2 * s * pi) / 6)));
+            // Concavity fixes each section's maximum at six equal momenta.
+            // Another section may extend higher, but cannot give this request
+            // support above its own edge or remove its vanishing edge value.
+            G const upper = exchange * 3 * pi * uni20::math::sin((request.momentum + 2 * request.section * pi) / 6);
             if (!uni20::isfinite(lower) || !uni20::isfinite(upper))
               throw std::overflow_error("observation support exceeds exponent range");
             if (folded != pi && lower <= zero) throw std::underflow_error("observation lower boundary lost scale");
