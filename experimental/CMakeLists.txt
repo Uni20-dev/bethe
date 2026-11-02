@@ -30,6 +30,12 @@ if(BETHE_BUILD_APPS)
   set_target_properties(bethe-experimental-xxx-boundary-magnetization PROPERTIES CXX_EXTENSIONS OFF)
 endif()
 
+if(BETHE_BUILD_APPS)
+  add_executable(bethe-experimental-xxx-four-spinon apps/bethe-xxx-four-spinon.cpp)
+  target_link_libraries(bethe-experimental-xxx-four-spinon PRIVATE bethe::experimental bethe_cli TBB::tbb)
+  set_target_properties(bethe-experimental-xxx-four-spinon PROPERTIES CXX_EXTENSIONS OFF)
+endif()
+
 if(UNIX AND BETHE_BUILD_EXAMPLES)
   add_executable(bethe-experimental-recovery-store-example examples/spinon_recovery_store.cpp)
   target_link_libraries(bethe-experimental-recovery-store-example PRIVATE bethe::experimental)
