@@ -1161,6 +1161,7 @@ J. Stat. Mech. 2008, P08006 (2008).
 Relevant tool modes:
 
 - `bethe-xxx-structure-factor`: Transverse integrated and first-frequency sum rules, Eqs. (62)-(63), evaluated at Delta=1; thermodynamic fractions are not finite-size identities.
+- `bethe-xxz-structure-factor-thermo`: Zero-field massive transverse two-spinon DSF, published Eqs. (44), (51), (56). Both spectral sheets and their unequal intensities; physical k=pi-Q. S-+(k,omega), integrals use domega/(2\*pi), no sum-rule rescaling. Longitudinal and higher-spinon responses are not included.
 - `bethe-xxz-dispersion`: Massive spinon dispersion, Eqs. (21)-(23), and two-spinon kinematics, Eq. (32). Both unfolded and two-site-folded continuum edges are implemented, not structure factors or spectral weights.
 
 ### bortz-gohmann-2005
@@ -1347,6 +1348,7 @@ Relevant tool modes:
 
 - `bethe-xxx-structure-factor-thermo`: General n-spinon contour representation and its isotropic limit, used by the four- and six-spinon density evaluators. Physical normalization is checked independently, not adjusted by the user.
 - `bethe-xxx-moments-thermo`: General n-spinon contour representation and its isotropic limit, used by the four- and six-spinon density evaluators. Physical normalization is checked independently, not adjusted by the user.
+- `bethe-xxz-structure-factor-thermo`: Independent reference uses the original vertex q-products in Eqs. (2.6)-(2.7) restricted to two spinons, with the two-vacuum completeness measure. No four-spinon contour or prefactor is used by this tool.
 
 ### caux-hagemans-2006
 
@@ -1359,6 +1361,27 @@ Relevant tool modes:
 
 - `bethe-xxx-structure-factor-thermo`: Thermodynamic sector decomposition, exact two-spinon Szz (Eqs. (9)-(12)), and four-spinon continuum kinematics. Physical higher-sector density normalization is validated independently.
 - `bethe-xxx-moments-thermo`: Thermodynamic spinon decomposition and the two-spinon transition rate, Eqs. (9)-(12). Higher-sector normalization and moment measures are independently validated.
+
+### dugave-gohmann-kozlowski-suzuki-2016
+
+Maxime Dugave, Frank Göhmann, Karol K. Kozlowski, and Junji Suzuki. *Thermal form factor approach to the ground-state correlation functions of the XXZ chain in the antiferromagnetic massive regime*.
+J. Phys. A: Math. Theor. 49, 394001 (2016).
+
+[DOI](<https://doi.org/10.1088/1751-8113/49/39/394001>), [arXiv](<https://arxiv.org/abs/1605.07968>).
+
+### babenko-gohmann-kozlowski-suzuki-2021
+
+Constantin Babenko, Frank Göhmann, Karol K. Kozlowski, and Junji Suzuki. *A thermal form factor series for the longitudinal two-point function of the Heisenberg-Ising chain in the antiferromagnetic massive regime*.
+J. Math. Phys. 62, 041901 (2021).
+
+[DOI](<https://doi.org/10.1063/5.0039863>), [arXiv](<https://arxiv.org/abs/2011.12752>).
+
+### babenko-gohmann-kozlowski-sirker-suzuki-2021
+
+Constantin Babenko, Frank Göhmann, Karol K. Kozlowski, Jesko Sirker, and Junji Suzuki. *Exact real-time longitudinal correlation functions of the massive XXZ chain*.
+Phys. Rev. Lett. 126, 210602 (2021).
+
+[DOI](<https://doi.org/10.1103/PhysRevLett.126.210602>), [arXiv](<https://arxiv.org/abs/2012.07378>).
 
 ### wang-boundary-1997
 

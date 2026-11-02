@@ -11,6 +11,7 @@ solver. Choose the boundary condition and calculation before selecting a tool.
 | Free-end ground states and sector minima | `bethe-xxz-obc` | [Open XXZ](xxz-open.md): Delta>-1, including massive boundary roots |
 | Selected real-root excitation scans | Either finite-chain tool | The respective guide restricts these scans to 0<=Delta<=1 |
 | Zero-field bulk energy, spinons and two-spinon continuum edges | `bethe-xxz-dispersion` | [Thermodynamic dispersion](xxz-dispersion.md): gapless and massive regimes, Delta>-1 |
+| Massive transverse two-spinon intensity | `bethe-xxz-structure-factor-thermo` | [Spectral density](xxz-structure-factor-thermo.md): zero field, Delta>1, separate sheets and physical weights |
 | Quantum-group open chain with imaginary end fields | `bethe-xxz-qg-obc` | [Non-Hermitian XXZ](xxz-nonhermitian.md): regular roots and the distinct free-point/Jordan-block calculation |
 
 ## MPS and iMPS comparisons
