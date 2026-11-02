@@ -212,9 +212,9 @@ def _table(value):
 
 
 def read_tables(path, *, sha256=None, table_name=None, expected_metadata=None):
-    """Read a combined --format json export or a single --json-table file.
+    """Read combined or single-table --format json / --json FILE output.
 
-    A single-table file needs an explicit table_name. expected_metadata maps
+    Output from a program without named tables needs an explicit table_name. expected_metadata maps
     table names to required metadata fields; missing named tables are errors.
     The file hash binds exactly the bytes read, including incomplete results.
     The envelope 'status' describes output transport, not solver success.
@@ -244,7 +244,7 @@ def read_tables(path, *, sha256=None, table_name=None, expected_metadata=None):
 def group_rows(table, keys):
     """Group all rows by explicit identity fields; nothing is silently replaced.
 
-    Use (candidate_id, root_index) to index roots, or add run/precision identity
+    Use (state_id, root_index) to index roots, or add run/precision identity
     when combining repeated calculations. No recovery precedence is assumed.
     """
     _require(not isinstance(keys, str), "identity keys must be a sequence")

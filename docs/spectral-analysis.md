@@ -39,8 +39,10 @@ spectrum = export.tables["spectrum"]
 print(export.sha256, dict(spectrum.metadata), spectrum.summary)
 ```
 
-`read_tables` accepts combined `--format json` output. For a single
-`--json-table TABLE=FILE` export, pass `table_name="TABLE"`. An optional
+`read_tables` accepts combined `--format json` or `--json FILE` output from
+programs with named tables. Programs without named tables, such as
+`bethe-hubbard-dispersion`, emit a single table instead; pass
+`table_name="dispersion"` when reading that output. An optional
 `sha256=...` checks the exact bytes read. `expected_metadata` maps table names
 to required metadata fields, for example
 `{"spectrum": {"Channel": "zz"}}`; a missing table or different convention
@@ -66,8 +68,8 @@ Fixed and runtime-precision real cells become `RealValue` objects:
 | `value.float64()` | Explicit binary64 conversion; rejects overflow, nonfinite values and a nonzero value rounding to zero |
 
 Exact MPFR rationals such as `1/3` are retained as written. Use `fraction()`;
-`decimal()` rejects a nonterminating rational representation rather than
-silently selecting a decimal rounding precision. Optional missing values stay
+`decimal()` rejects every rational spelling `p/q`, including terminating
+fractions such as `1/2`, rather than selecting a decimal rounding precision. Optional missing values stay
 `None`; `nan`/`inf` diagnostics are retained but rejected by finite conversion.
 Wide integers and native half-integers are read exactly. None of these checks
 establishes that a value is accurate to its advertised working precision.
@@ -75,9 +77,9 @@ Decimal **arithmetic**, as distinct from parsing, still needs an explicit
 `decimal.localcontext()` precision appropriate to your calculation.
 
 Tables, rows and metadata are immutable. For finite-state exports with the
-corresponding columns, `index_rows(table, ["candidate_id"])` requires unique
-state identities. For roots use `index_rows(roots, ["candidate_id", "root_index"])`;
-`group_rows(roots, ["candidate_id"])` retains all roots for each state.
+corresponding columns, `index_rows(table, ["state_id"])` requires unique
+state identities. For roots use `index_rows(roots, ["state_id", "root_index"])`;
+`group_rows(roots, ["state_id"])` retains all roots for each state.
 Repeated calculations must keep their run/precision identity and source hashes.
 No duplicate is silently replaced by a preferred recovery result, and no
 failure is converted to a zero spectral line. Family labels, root-coordinate
