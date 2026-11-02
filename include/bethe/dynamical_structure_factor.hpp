@@ -2,7 +2,7 @@
 // Copyright (C) 2026 Ian McCulloch
 #pragma once
 
-#include <bethe/solver.hpp>
+#include <bethe/local_spectrum.hpp>
 #include <optional>
 #include <span>
 #include <stdexcept>
@@ -55,6 +55,28 @@ std::vector<SpectralMoment<Real>> spectral_moments(std::size_t momenta, std::spa
       throw std::overflow_error("nonfinite Lehmann moment sum");
     result[q] = {weights[q].value(), first[q].value()};
   }
+  return result;
+}
+
+/// One finite Lehmann time sum per momentum index, without broadening or
+/// rescaling an incomplete family. The time scalar supplies working precision.
+template <uni20::Real Real>
+[[nodiscard]] std::vector<uni20::complex<Real>>
+spectral_time_correlation(std::size_t momenta, std::span<LehmannLine<Real> const> lines, Real const& time)
+{
+  Real const zero = detail::spectral_time_zero(time);
+  std::vector<detail::SpectralComplexSum<Real>> sums(momenta, detail::SpectralComplexSum<Real>(zero));
+  for (auto const& line : lines)
+  {
+    if (line.momentum_index >= momenta) throw std::invalid_argument("invalid Lehmann momentum index");
+    detail::validate_spectral_gap(line.gap, zero);
+    detail::validate_spectral_weight(line.weight, zero);
+    detail::add_spectral_phase(sums[line.momentum_index], line.gap, line.weight, zero, time);
+  }
+  std::vector<uni20::complex<Real>> result;
+  result.reserve(momenta);
+  for (auto const& sum : sums)
+    result.push_back(sum.value());
   return result;
 }
 } // namespace bethe
