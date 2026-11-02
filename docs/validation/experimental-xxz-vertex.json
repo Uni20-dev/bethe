@@ -142,7 +142,7 @@
     "files_sha256": {
       "docs/experimental-xxz-vertex.md": "fbe1fd440c084af282c1a21d219eeccac0f8df3add2f783e7f6b655d99fcdac9",
       "docs/experimental.md": "5f846b004ba7c2f919b90fedfc69a353839fc61177f4c8f7322b101a93ce16f3",
-      "docs/validation/xxz-two-spinon-spectral-weight.json": "620e53315c6db223d6447c04f81e7446dad5caedc65cead857d5581964ea6b19",
+      "docs/validation/xxz-two-spinon-spectral-weight.json": "cf98814c57116bd55240d720c417127dec83dad753a20a1fe55e2fd3754932b1",
       "experimental/CMakeLists.txt": "3db347ef58735851f691a650946c2617bb94882aa3c70773e1f5a4f59b0b2ec7",
       "experimental/README.md": "6055e96e870a5735be9e28cf2a8bc15ef52d12fba2f0e74abe60f492fddc40f2",
       "experimental/examples/xxz_vertex.cpp": "534ccfc040019deb9b019c518084b9a7d83858cf1a8d7a9a911ad5b393e9335d",
@@ -160,8 +160,8 @@
       "experimental/reference/xxz/vertex_reference.py": "82d3d0935da677057c74df9772c273b6759aa5d14a462d9a0e02fbb1e234ab18",
       "experimental/tests/CMakeLists.txt": "c5388060f5d1e035195d7dc4563e8f9a8b8412b3ee1a285b1d0d6fcee25d2f16",
       "experimental/tests/test_xxz_vertex.cpp": "583bb0b62f6430caf07548dc80badde22e6bf0d2776b8af7ff8d4562e8571975",
-      "include/bethe/xxz_thermodynamic_structure_factor.hpp": "dd70686d23327e120bb62e4eefd04c17d9948287c22024b5f67d688a4eb9012c",
-      "tests/test_xxz_thermodynamic_structure_factor.cpp": "26d9f7f4900bb1588e50371a64cfc80f6b3421509b4acf14168d138bf7f22f6b",
+      "include/bethe/xxz_thermodynamic_structure_factor.hpp": "98aee1a2495c60173ee424fbba109b0c204755da6f82176d8968d7a175452bc7",
+      "tests/test_xxz_thermodynamic_structure_factor.cpp": "e12ccb907a0fea2a32f73600bad129850a1b82e69dbd7873bbf2c1e25e619671",
       "zensical.toml": "27b4670ec6c963ecccac8794e4455b7642171a92307ce4fd5c8cad00bff567d9"
     },
     "scope": "Added/changed files relative to integration_base e03690a, excluding this self-describing manifest. That integration base already contains the experimental foundation; its unchanged headers are bound by that revision and the prerequisite commit, rather than listed as XXZ changes. Subsequent parent updates are included. The enclosing commit binds this record."
@@ -222,5 +222,18 @@
       }
     },
     "sanitizer_retry_scope": "All 23 numerical tests passed initially; the Async example timed out at60s without diagnostics. The unchanged binary passed in1.84s on retry. The initial timeout log is retained; no cause is asserted and no timeout/suppression was changed."
+  },
+  "closing_sheet_parent_followup": {
+    "previous_head": "23c7906ed2dd8b988ebc09499b495ac84d34a1d2",
+    "parent": "2d7d39c1b5a8a8c2e855feb5f2fb19404051c3aa",
+    "change": "Inherit the reviewed-work-in-progress parent correction that keeps closing spectral intervals ordered. No finite-q source or test changes.",
+    "validation": {
+      "native_passed": 23,
+      "failed": 0,
+      "elapsed_seconds": 3.76,
+      "test_log_sha256": "26a5304da41b77fbcc64311a5d7bbdf23bae7aa33fe15c3d27346d6bef096feb",
+      "build_log_sha256": "f723bb923aff48102221b4bc2c7f57e3134d966fc34b3fa9c8e60c202ed7a224"
+    },
+    "scope": "Rebuilt and ran the complete focused native finite-q suite and Async example, including near-isotropic two-spinon convolution. Parent independently passes 25 native/39 wide/30 sanitizer checks. Earlier finite-q wide/sanitizer checks are preserved under their original checkpoint; no new full precision-matrix claim."
   }
 }
