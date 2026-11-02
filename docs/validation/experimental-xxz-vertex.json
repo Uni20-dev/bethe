@@ -1,9 +1,9 @@
 {
   "scope": "Experimental infinite massive XXZ two/four-spinon complex vertex amplitudes, fixed-order full-zone moments and Gaussian frequency cuts. No convergence certification or fitted normalization.",
-  "integration_base": "e03690a9184c0299c3f679d6405d9b952702a93d",
+  "integration_base": "375f32c0b41a0439cee04d1c3c864bcfce59ea8f",
   "prerequisites": {
     "experimental_foundation": "e916ab29aaa44d7fad264f583a0e79a51d3798c0",
-    "two_spinon_spectrum": "87fdadc529b1792542fea4f06861b21186cc1108"
+    "two_spinon_spectrum": "375f32c0b41a0439cee04d1c3c864bcfce59ea8f"
   },
   "uni20_revision": "1cb2474eb0a54e13ec7d5f2c1823752020b2425c",
   "research_origin": {
@@ -141,11 +141,9 @@
   "validated_public_inputs": {
     "files_sha256": {
       "docs/experimental-xxz-vertex.md": "fbe1fd440c084af282c1a21d219eeccac0f8df3add2f783e7f6b655d99fcdac9",
-      "docs/experimental.md": "5f846b004ba7c2f919b90fedfc69a353839fc61177f4c8f7322b101a93ce16f3",
-      "docs/validation/xxz-two-spinon-spectral-weight.json": "cf98814c57116bd55240d720c417127dec83dad753a20a1fe55e2fd3754932b1",
-      "docs/xxz-structure-factor-thermo.md": "fdb6a06db0c1504f28c2502fa858f359aee58a8a62f537b0184c04a1f972ddf9",
-      "experimental/CMakeLists.txt": "3db347ef58735851f691a650946c2617bb94882aa3c70773e1f5a4f59b0b2ec7",
-      "experimental/README.md": "6055e96e870a5735be9e28cf2a8bc15ef52d12fba2f0e74abe60f492fddc40f2",
+      "docs/experimental.md": "512940afde4f794122c4287dd8153ce57d068395e2e79db18c183f3d8d852db5",
+      "experimental/CMakeLists.txt": "c753e3a6f04cd79afe26ba560d79fda0d59369c99a37dc178bc70ba3d844681e",
+      "experimental/README.md": "cab27749a788a9dc25dd57d541451d6526fc6d6ac0b12b3c7fe8933bd9779867",
       "experimental/examples/xxz_vertex.cpp": "534ccfc040019deb9b019c518084b9a7d83858cf1a8d7a9a911ad5b393e9335d",
       "experimental/include/bethe/experimental/detail/scaled_complex_product.hpp": "b5edf3e130fff04e8bbe2f72335e1a47cdf53bc15a30731a0df0336e3e9e1b52",
       "experimental/include/bethe/experimental/detail/xxz_spectral_kinematics.hpp": "9ff46ed98e335052b885bfbe04221aa84ea4d3331d97830b5897ceb92fa88aa5",
@@ -159,13 +157,11 @@
       "experimental/reference/xxz/vertex_numpy.py": "60bc4b8b1d2bd4026c754f0f15296d5c93691ceaed56c27e340e53480d52e7f6",
       "experimental/reference/xxz/vertex_quadrature.py": "9c5acd1359439475bf917ca72d9af73c4c0a0bc6267e8add5de6b0dbbe7d93bc",
       "experimental/reference/xxz/vertex_reference.py": "82d3d0935da677057c74df9772c273b6759aa5d14a462d9a0e02fbb1e234ab18",
-      "experimental/tests/CMakeLists.txt": "c5388060f5d1e035195d7dc4563e8f9a8b8412b3ee1a285b1d0d6fcee25d2f16",
+      "experimental/tests/CMakeLists.txt": "0e401d56952aa8ba52400c6edf2b2adf08215fba07561f8318fd65c65f6795d0",
       "experimental/tests/test_xxz_vertex.cpp": "0a596d6c3f4a7c0b2178ac35ece2c13319c6bca151c02f868b595d7390d69474",
-      "include/bethe/xxz_thermodynamic_structure_factor.hpp": "98aee1a2495c60173ee424fbba109b0c204755da6f82176d8968d7a175452bc7",
-      "tests/test_xxz_thermodynamic_structure_factor.cpp": "e12ccb907a0fea2a32f73600bad129850a1b82e69dbd7873bbf2c1e25e619671",
-      "zensical.toml": "27b4670ec6c963ecccac8794e4455b7642171a92307ce4fd5c8cad00bff567d9"
+      "zensical.toml": "b626c0e819f6264353a9d31eba2fc930ef996a79632e1471440e7ea219dc35cf"
     },
-    "scope": "Added/changed files relative to integration_base e03690a, excluding this self-describing manifest. That integration base already contains the experimental foundation; its unchanged headers are bound by that revision and the prerequisite commit, rather than listed as XXZ changes. Subsequent parent updates are included. The enclosing commit binds this record."
+    "scope": "Exactly the added/changed files relative to the top-level integration_base, excluding this self-describing manifest. Unchanged parent files are bound by that revision and the prerequisite commits. Historical follow-up counts describe their original checkpoints; the enclosing commit binds this current record."
   },
   "parent_range_followup": {
     "merge_revision": "5a9f7ffe836c0afa2cfbaaee9356bee4d27119dd",
@@ -316,5 +312,27 @@
       ],
       "bound_inputs": 24
     }
+  },
+  "current_parent_integration": {
+    "previous_head": "bd99e1f79d4302c78baa22c1b026d1078489b8ea",
+    "parent": "375f32c0b41a0439cee04d1c3c864bcfce59ea8f",
+    "change": "Merge the current supported-XXZ parent, including public-main OBC packages. Conflicts are additive experimental CMake registrations and guide entries. Preserve both parents unchanged in those sections.",
+    "source_correspondence": "All 15 non-integration finite-q input blobs are byte-identical to bd99e1f, including numerical headers, tests, example, references and guide. Supported parent headers, apps, tests, scripts and citations are byte-identical to375f32c. No new numerical implementation or tolerance change.",
+    "native": {
+      "passed": 27,
+      "failed": 0,
+      "seconds": 3.82,
+      "scope": "Reconfigure/rebuild existing native CMake targets and run the complete finite-q suite plus Async example; this checks the merged target registration and inherited public-main consumers. Earlier wide/sanitizer numerical evidence is carried forward, not rerun.",
+      "build_log_sha256": "0f8575b2792e0b53be2688c476f9f12fadfe85b7a08fe472244dd024dbfd937f",
+      "test_log_sha256": "a22188839be834870c3f05cd5bf32bbfa853b85b94350dbc41dd715378253d84"
+    },
+    "documentation": {
+      "pages": 161,
+      "bibliography_urls": 167,
+      "equations": 1961,
+      "scope": "Fresh local merged site, source math, generated citations and tutorial-link checks; deployment pending.",
+      "log_sha256": "4987e77800e0fc41122a6b92d1bd11c0953c8e18b7cd7dc7e8fc6968ff1d0b99"
+    },
+    "manifest": "Exactly the20 changed inputs relative to the current parent, excluding this manifest; earlier follow-up sections retain their historical counts."
   }
 }

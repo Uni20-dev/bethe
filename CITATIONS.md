@@ -396,6 +396,8 @@ Relevant tool modes:
 
 - `bethe-xxx-obc`: Free-end XXX equations: rational limit of Eqs. (11)-(12) and footnote 2; our spin-1/2 normalization differs.
 - `bethe-xxz-obc`: Free-end XXZ equations and boundary reflection phase, Eqs. (11)-(12); our Hamiltonian is divided by four and shifted. Negative-Delta ground states use an algebraically rank-subtracted, rescaled form of these equations.
+- `bethe-experimental-xxx-boundary-dynamics`: Positive-real-root free-end equations; z=2\*lambda\_ABA.
+- `bethe-experimental-xxx-boundary-magnetization`: Positive-real-root free-end XXX equations in z=2\*lambda\_ABA.
 
 ### caux-xxx-states
 
@@ -939,6 +941,8 @@ SciPost Phys. 7, 023 (2019).
 Relevant tool modes:
 
 - `bethe-xxz-obc`: Massive open XXZ boundary root and finite-size deviation, Sec. 4.3.2, specialized to zero boundary fields; used for Delta\>1 ground states, not boundary correlations or excitation scans.
+- `bethe-experimental-xxx-boundary-dynamics`: Boundary scalar-product and local endpoint form-factor construction in Sec. 3, specialized to free-end XXX and spin operators; no Pauli or periodic Fourier normalization.
+- `bethe-experimental-xxx-boundary-magnetization`: Section 3 boundary scalar products and local operator reconstruction. Our rational, spin-normalized specialization retains the directed product and raising-gauge signs for same-sector endpoint Sz amplitudes.
 
 ### dugave-2015
 
@@ -1357,5 +1361,16 @@ Relevant tool modes:
 
 - `bethe-xxx-structure-factor-thermo`: Thermodynamic sector decomposition, exact two-spinon Szz (Eqs. (9)-(12)), and four-spinon continuum kinematics. Physical higher-sector density normalization is validated independently.
 - `bethe-xxx-moments-thermo`: Thermodynamic spinon decomposition and the two-spinon transition rate, Eqs. (9)-(12). Higher-sector normalization and moment measures are independently validated.
+
+### wang-boundary-1997
+
+Yupeng Wang. *Exact solution of the open Heisenberg chain with two impurities*.
+Phys. Rev. B 56, 14045 (1997).
+
+[DOI](<https://doi.org/10.1103/PhysRevB.56.14045>), [arXiv](<https://arxiv.org/abs/cond-mat/9805253>).
+
+Relevant tool modes:
+
+- `bethe-experimental-xxx-boundary-dynamics`: Integrable boundary-impurity coupling. Its derivative at the homogeneous point gives the ground-state boundary bond and full local first moment without a spectral truncation.
 
 <!-- END GENERATED BIBLIOGRAPHY -->

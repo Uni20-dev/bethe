@@ -73,12 +73,16 @@ template <uni20::Real Geometry, uni20::Real Low, uni20::Real High = Low> class T
     std::shared_ptr<Kernel const> kernel_;
 
     using Integral = bethe::MonteCarloEstimate<G, SpinonSampleMetadata>;
-    static uni20::async::AsyncTask finish(uni20::async::ReadBuffer<Integral> input,
+    template <class SamplingRun>
+    static uni20::async::AsyncTask finish(std::shared_ptr<SamplingRun> sampling, bethe::ExecutionOptions execution,
                                           std::shared_ptr<Kernel const> kernel,
                                           uni20::async::WriteBuffer<Result> output)
     {
       auto destination = co_await output;
-      auto const& integral = co_await input;
+      uni20::async::Async<Integral> input;
+      co_await SamplingRun::execute(std::move(sampling), execution, input.write());
+      auto reader = input.read();
+      auto const& integral = co_await reader;
       Result result;
       result.integral = integral;
       result.exchange = kernel->exchange;
@@ -149,6 +153,7 @@ template <uni20::Real Geometry, uni20::Real Low, uni20::Real High = Low> class T
         {
           validate(options);
           auto& scheduler = execution.continuous_scheduler();
+          execution.scheduler = &scheduler;
           uni20::async::Async<FixedResult> output;
           if (!proposal_)
           {
@@ -157,11 +162,11 @@ template <uni20::Real Geometry, uni20::Real Low, uni20::Real High = Low> class T
           }
           else
           {
-            auto work = bethe::monte_carlo_async<6>(
+            auto sampling = bethe::detail::prepare_monte_carlo_run<6>(
                 options, 6, kernel_->one,
                 [self = *this](auto const& identity, std::stop_token stop) { return self.observation(identity, stop); },
                 execution);
-            auto task = finish(work.read(), *this, output.write());
+            auto task = finish(std::move(sampling), execution, *this, output.write());
             bethe::detail::schedule_owned(scheduler, std::move(task));
           }
           return output;
@@ -240,11 +245,15 @@ template <uni20::Real Geometry, uni20::Real Low, uni20::Real High = Low> class T
           result.integral.reason = result.reason;
           destination = std::move(result);
         }
-        static uni20::async::AsyncTask finish(uni20::async::ReadBuffer<Integral> input, FixedQuery query,
-                                              uni20::async::WriteBuffer<FixedResult> output)
+        template <class SamplingRun>
+        static uni20::async::AsyncTask finish(std::shared_ptr<SamplingRun> sampling, bethe::ExecutionOptions execution,
+                                              FixedQuery query, uni20::async::WriteBuffer<FixedResult> output)
         {
           auto destination = co_await output;
-          auto completed = co_await input;
+          uni20::async::Async<Integral> input;
+          co_await SamplingRun::execute(std::move(sampling), execution, input.write());
+          auto reader = input.read();
+          auto completed = co_await reader;
           auto result = query.initial();
           result.integral = std::move(completed);
           auto& integral = result.integral;
@@ -310,14 +319,15 @@ template <uni20::Real Geometry, uni20::Real Low, uni20::Real High = Low> class T
       if (options.samples_per_replicate > std::numeric_limits<std::size_t>::max() / options.replicates / (2 * stages))
         throw std::invalid_argument("global moment work counters overflow");
       auto& scheduler = execution.continuous_scheduler();
-      auto work = bethe::monte_carlo_async<7>(
+      execution.scheduler = &scheduler;
+      auto sampling = bethe::detail::prepare_monte_carlo_run<7>(
           options, 6, kernel_->one,
           [self = *this](auto const& identity, std::stop_token stop) {
             return self.global_observation(identity, stop);
           },
           execution);
       uni20::async::Async<Result> output;
-      auto task = finish(work.read(), kernel_, output.write());
+      auto task = finish(std::move(sampling), execution, kernel_, output.write());
       bethe::detail::schedule_owned(scheduler, std::move(task));
       return output;
     }

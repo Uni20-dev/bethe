@@ -1,5 +1,5 @@
 {
-  "public_base": "cf1ae311cef37ca643e196be4346d8d1721136d5",
+  "public_base": "6ae45c440f88f1782953ae04c77d7dc3fde4a1ca",
   "uni20_revision": "1cb2474eb0a54e13ec7d5f2c1823752020b2425c",
   "scope": "Supported infinite massive XXZ transverse two-spinon density only. Higher-sector finite-q and QTM ports remain separate. No broadening or fitted rescaling.",
   "adaptation": [
@@ -115,31 +115,31 @@
     "purpose": "Historical extraction lineage, not public validation inputs. Some original research-only files are intentionally not distributed. The extracted standalone public reference and its tests are listed under validated_public_inputs and require no original files."
   },
   "validated_public_inputs": {
-    "base_revision": "cf1ae311cef37ca643e196be4346d8d1721136d5",
+    "base_revision": "6ae45c440f88f1782953ae04c77d7dc3fde4a1ca",
     "files_sha256": {
-      "CITATIONS.md": "6bff56e96eafde77595789a88ed02aaabf6f82bc3f75037d67682dc432be8acb",
-      "CMakeLists.txt": "3dad8f4c9eaecfdb395e3ff58c68952c1ad501c1a39c11d19c5ba434165d4c03",
+      "CITATIONS.md": "cb6d4360ebf62dc13b6bf37db4becde03cae744679b25ce879a7c1250c5178aa",
+      "CMakeLists.txt": "d5645aaea5d3c618954595e1a7d61753996029dbebac74c27ec1f9b778ce41b8",
       "apps/bethe-info.cpp": "881c5b5ee161834e5f1068fb03c6e94a7acd131e80897b1226e93b7149a20af8",
       "apps/bethe-xxz-structure-factor-thermo.cpp": "9ade17946f9de270c8e92b19ce810ee42508ab07f2a5e9df4c56b0d5c1b04824",
-      "data/citations.json": "71ac28d310b4ea4b6870210d956ea50617d3b1ae55fe7a6ef3dbf2c9a9fa066a",
+      "data/citations.json": "7437b279e2a12ee816a02e729c17eb7ca41eae4e8e199cf42dc9037dce168ae3",
       "docs/app-capabilities.md": "97708bc51cbeff4b8ff23afbf81b455573cc1fcb28b9ba0edf82703b3fbaa638",
-      "docs/library.md": "025453a725e6c59ee4f0241ff7a99283fdf76c190f8ddab2652c947b7c66f23c",
+      "docs/library.md": "bc9696f768e9bdbad3010d4304f41b87f66a6368430fb14bad3ffe7c672342cb",
       "docs/models.md": "08254969a8196b732f832290bf392d74f7616add30af1b06f805146c958e5f68",
       "docs/xxz-dispersion.md": "56d21577c602f9ac061dd006243361b25fe2dc84f82884115a83ae8d167d73e0",
       "docs/xxz-family.md": "f3e9e199ad1d575e5ba51deae87083068e8ab0ed10e5d02f11a45d35f37b8072",
       "docs/xxz-structure-factor-thermo.md": "fdb6a06db0c1504f28c2502fa858f359aee58a8a62f537b0184c04a1f972ddf9",
-      "include/bethe/citations.hpp": "3aaf1fe528ad8206a00d72fd43ecf5f06f2922d6d4bfdf884b717b57764f78d7",
+      "include/bethe/citations.hpp": "be10cdb5a3a08932a636b63effd370824787c0ae6106527631ee4eabc16c21ab",
       "include/bethe/detail/carlson_rf.hpp": "49783c7d1217b90ab40fff74fb48cae0e600a1025c03dab7d5944a947118d7c1",
       "include/bethe/xxz_thermodynamic_structure_factor.hpp": "98aee1a2495c60173ee424fbba109b0c204755da6f82176d8968d7a175452bc7",
       "scripts/reference_xxz_two_spinon.py": "70945142241c5160265dd6a400f5dd9ec98642c9fab318b77ac25eb39119670a",
       "scripts/test_reference_xxz_two_spinon.py": "5399b8ee6b560d023746230f3e5d638f564b862e871bdb20bf467d551e0c154c",
-      "tests/CMakeLists.txt": "6ff88c668e07c3079a5de4fd73305af554503e47769c52798e37f4db603fff3f",
+      "tests/CMakeLists.txt": "bfcb8a883594b2834f096b25931d4e8866c810677c4a04305f6d7106335e4d46",
       "tests/check_citations_cli.cmake": "34d6b76684162cfe53f9d3601b6cd02d3f3893dbf698311da890afb85e8c062c",
       "tests/check_precision_info.py": "e3a66fb4432c844f5fbbbf2d94c5946405e7979492c15030ceaab5f8ac0b355f",
       "tests/check_shared_arguments.py": "82dc9a2f3031d3a7ad4e6f11928468152db722482980bc9db3659a7a26a716aa",
       "tests/check_xxz_thermodynamic_structure_factor.py": "7cf7082ee090ab8d9791ce15967ee0960342e196120901ecf631e7e25433acf8",
       "tests/test_xxz_thermodynamic_structure_factor.cpp": "e12ccb907a0fea2a32f73600bad129850a1b82e69dbd7873bbf2c1e25e619671",
-      "zensical.toml": "837c8c8a0c3416ce44505ff94ed5b37556d54e77bc03310bf2a12a98d7d81994"
+      "zensical.toml": "c520aa9e2e3e2b3f27ccf7ea3fc8fc938744f443796015f9f655736c66e7d418"
     },
     "scope": "All changed source/test/document files relative to base_revision, excluding this self-describing manifest. These hashes identify the actual public input files; unchanged files come from the base. The enclosing Git commit binds this manifest to the reviewed tree."
   },
@@ -346,5 +346,33 @@
     "configured_uni20_revision": "1cb2474eb0a54e13ec7d5f2c1823752020b2425c",
     "scope": "Focused numerical suite plus frontend/exports/serial-Async/precision, shared arguments and citations, rebuilt in existing configured lanes. Existing physical-reference tolerances and Uni20 MPFR LSan suppression policy are unchanged. Formatting-only edits follow the builds; no full repository or fresh pinned-provider claim.",
     "remaining": "Exact-head peer/Claude review, current full CI and final installed/deployed integration."
+  },
+  "main_integration": {
+    "reviewed_head": "2d7d39c1b5a8a8c2e855feb5f2fb19404051c3aa",
+    "previous_base": "cf1ae311cef37ca643e196be4346d8d1721136d5",
+    "merged_main": "6ae45c440f88f1782953ae04c77d7dc3fde4a1ca",
+    "resolution": "Only generated citations.hpp conflicted; regenerated from the automatically merged registry, independently checked as the exact parent union. CMake, navigation and guides merge additively.",
+    "model_source_correspondence": "The model header, Carlson helper, frontend, C++/CLI model tests and both Python reference files are byte-identical to reviewed 2d7d39c.",
+    "native_validation": {
+      "model_and_cli_passed": 25,
+      "precision_info_passed": 1,
+      "scope": "Rebuilt model/frontend/bethe-info against merged main. The first PrecisionInfo invocation failed because the focused build had not built its two XXX executable prerequisites. Built both and reran that unchanged test successfully; the initial failure log is retained.",
+      "logs_sha256": {
+        "xxz-main-native-tests.log": "df27b4b296a081ebb877917f01c0dcb548db16205c3fe94589886f00580913d3",
+        "xxz-main-precision-retry.log": "146033ced664ae9858ee7b327bc81a6fc675f6d36cb805db909710b9b563a075"
+      }
+    },
+    "documentation": {
+      "pages": 160,
+      "bibliography_urls": 167,
+      "equations": 1959,
+      "checks": [
+        "generated citations",
+        "tutorial links",
+        "Markdown math",
+        "rendered site links/assets/equations"
+      ]
+    },
+    "scope": "No numerical implementation or prior reference tolerance changed. Earlier wide/sanitizer evidence carries forward for unchanged model code; this is a new native merged-consumer and documentation check, not a new full matrix."
   }
 }
