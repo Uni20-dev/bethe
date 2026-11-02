@@ -1060,6 +1060,57 @@
                 {"label": "Eq. (31) correction", "url": "https://scipost.org/commentary/10.1088/1742-5468/2006/12/P12013/"}]
     },
     {
+      "id": "dugave-gohmann-kozlowski-suzuki-2016",
+      "authors": "Maxime Dugave, Frank Göhmann, Karol K. Kozlowski, and Junji Suzuki",
+      "title": "Thermal form factor approach to the ground-state correlation functions of the XXZ chain in the antiferromagnetic massive regime",
+      "publication": "J. Phys. A: Math. Theor. 49, 394001",
+      "year": 2016,
+      "links": [
+        {
+          "label": "DOI",
+          "url": "https://doi.org/10.1088/1751-8113/49/39/394001"
+        },
+        {
+          "label": "arXiv",
+          "url": "https://arxiv.org/abs/1605.07968"
+        }
+      ]
+    },
+    {
+      "id": "babenko-gohmann-kozlowski-suzuki-2021",
+      "authors": "Constantin Babenko, Frank Göhmann, Karol K. Kozlowski, and Junji Suzuki",
+      "title": "A thermal form factor series for the longitudinal two-point function of the Heisenberg-Ising chain in the antiferromagnetic massive regime",
+      "publication": "J. Math. Phys. 62, 041901",
+      "year": 2021,
+      "links": [
+        {
+          "label": "DOI",
+          "url": "https://doi.org/10.1063/5.0039863"
+        },
+        {
+          "label": "arXiv",
+          "url": "https://arxiv.org/abs/2011.12752"
+        }
+      ]
+    },
+    {
+      "id": "babenko-gohmann-kozlowski-sirker-suzuki-2021",
+      "authors": "Constantin Babenko, Frank Göhmann, Karol K. Kozlowski, Jesko Sirker, and Junji Suzuki",
+      "title": "Exact real-time longitudinal correlation functions of the massive XXZ chain",
+      "publication": "Phys. Rev. Lett. 126, 210602",
+      "year": 2021,
+      "links": [
+        {
+          "label": "DOI",
+          "url": "https://doi.org/10.1103/PhysRevLett.126.210602"
+        },
+        {
+          "label": "arXiv",
+          "url": "https://arxiv.org/abs/2012.07378"
+        }
+      ]
+    },
+    {
       "id": "wang-boundary-1997",
       "authors": "Yupeng Wang",
       "title": "Exact solution of the open Heisenberg chain with two impurities",

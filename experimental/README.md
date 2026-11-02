@@ -8,6 +8,7 @@ See [the build and API guide](../docs/experimental.md).
 | --- | --- |
 | `bethe::experimental::xxx::FourSpinonState<Real>` | Selected finite narrow two-string triplets, explicit deviations and stabilized raising weights |
 | `bethe::experimental::xxx::complex_roots` | Regular complex-root equations, Gaudin matrices and unreduced raising form factors |
+| `reference/qtm/` | Optional isotropic QTM quadrature/hypergeometric and vertex correspondence controls; [guide](../docs/experimental-xxx-qtm.md) |
 | `bethe::experimental::xxx::PreparedSinglet<Real>` | Validated even-ring XXX singlet preparation, reusable ground factors and energy, J=1 |
 
 Regular finite-root equations and unreduced form factors are described in

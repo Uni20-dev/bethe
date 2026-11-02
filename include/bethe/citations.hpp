@@ -387,11 +387,23 @@ inline constexpr std::array<Link, 2> links_100{{
   {"Eq. (31) correction", "https://scipost.org/commentary/10.1088/1742-5468/2006/12/P12013/"},
 }};
 inline constexpr std::array<Link, 2> links_101{{
+  {"DOI", "https://doi.org/10.1088/1751-8113/49/39/394001"},
+  {"arXiv", "https://arxiv.org/abs/1605.07968"},
+}};
+inline constexpr std::array<Link, 2> links_102{{
+  {"DOI", "https://doi.org/10.1063/5.0039863"},
+  {"arXiv", "https://arxiv.org/abs/2011.12752"},
+}};
+inline constexpr std::array<Link, 2> links_103{{
+  {"DOI", "https://doi.org/10.1103/PhysRevLett.126.210602"},
+  {"arXiv", "https://arxiv.org/abs/2012.07378"},
+}};
+inline constexpr std::array<Link, 2> links_104{{
   {"DOI", "https://doi.org/10.1103/PhysRevB.56.14045"},
   {"arXiv", "https://arxiv.org/abs/cond-mat/9805253"},
 }};
 
-inline constexpr std::array<Reference, 102> references{{
+inline constexpr std::array<Reference, 105> references{{
   {"barber-batchelor-1989", "Michael N. Barber and Murray T. Batchelor", "Spectrum of the biquadratic spin-1 antiferromagnetic chain", "Phys. Rev. B 40, 4621-4626", 1989, links_0},
   {"albertini-2000", "Giuseppe Albertini", "Is the purely biquadratic spin 1 chain always massive?", "arXiv:cond-mat/0012439", 2000, links_1},
   {"aufgebauer-klumper-2010", "Britta Aufgebauer and Andreas Klümper", "Quantum spin chains of Temperley-Lieb type: periodic boundary conditions, spectral multiplicities and finite temperature", "J. Stat. Mech. 2010, P05018", 2010, links_2},
@@ -493,7 +505,10 @@ inline constexpr std::array<Reference, 102> references{{
   {"karbach-muller-bougourzi-1996", "Michael Karbach, Gerhard Müller, and A. Hamid Bougourzi", "Two-spinon dynamic structure factor of the one-dimensional S=1/2 Heisenberg antiferromagnet", "arXiv:cond-mat/9606068v2", 1996, links_98},
   {"abada-bougourzi-si-lakhal-1997", "A. Abada, A. H. Bougourzi, and B. Si-Lakhal", "Exact four-spinon dynamical correlation function of the Heisenberg model", "Nucl. Phys. B 497, 733-753", 1997, links_99},
   {"caux-hagemans-2006", "Jean-Sébastien Caux and Rob Hagemans", "The 4-spinon dynamical structure factor of the Heisenberg chain", "J. Stat. Mech. 2006, P12013", 2006, links_100},
-  {"wang-boundary-1997", "Yupeng Wang", "Exact solution of the open Heisenberg chain with two impurities", "Phys. Rev. B 56, 14045", 1997, links_101},
+  {"dugave-gohmann-kozlowski-suzuki-2016", "Maxime Dugave, Frank Göhmann, Karol K. Kozlowski, and Junji Suzuki", "Thermal form factor approach to the ground-state correlation functions of the XXZ chain in the antiferromagnetic massive regime", "J. Phys. A: Math. Theor. 49, 394001", 2016, links_101},
+  {"babenko-gohmann-kozlowski-suzuki-2021", "Constantin Babenko, Frank Göhmann, Karol K. Kozlowski, and Junji Suzuki", "A thermal form factor series for the longitudinal two-point function of the Heisenberg-Ising chain in the antiferromagnetic massive regime", "J. Math. Phys. 62, 041901", 2021, links_102},
+  {"babenko-gohmann-kozlowski-sirker-suzuki-2021", "Constantin Babenko, Frank Göhmann, Karol K. Kozlowski, Jesko Sirker, and Junji Suzuki", "Exact real-time longitudinal correlation functions of the massive XXZ chain", "Phys. Rev. Lett. 126, 210602", 2021, links_103},
+  {"wang-boundary-1997", "Yupeng Wang", "Exact solution of the open Heisenberg chain with two impurities", "Phys. Rev. B 56, 14045", 1997, links_104},
 }};
 
 inline constexpr std::array<Use, 2> uses_lee_yang_excited{{
@@ -703,7 +718,7 @@ inline constexpr std::array<Use, 3> uses_gaudin_yang_pbc{{
 inline constexpr std::array<Use, 3> uses_xxx_boundary_dynamics{{
   {&references[11], "Positive-real-root free-end equations; z=2*lambda_ABA."},
   {&references[61], "Boundary scalar-product and local endpoint form-factor construction in Sec. 3, specialized to free-end XXX and spin operators; no Pauli or periodic Fourier normalization."},
-  {&references[101], "Integrable boundary-impurity coupling. Its derivative at the homogeneous point gives the ground-state boundary bond and full local first moment without a spectral truncation."},
+  {&references[104], "Integrable boundary-impurity coupling. Its derivative at the homogeneous point gives the ground-state boundary bond and full local first moment without a spectral truncation."},
 }};
 inline constexpr std::array<Use, 2> uses_xxx_boundary_magnetization{{
   {&references[11], "Positive-real-root free-end XXX equations in z=2*lambda_ABA."},
