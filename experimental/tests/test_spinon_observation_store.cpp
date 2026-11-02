@@ -4,6 +4,7 @@
 #include <bethe/experimental/spinon_observation_store.hpp>
 #include <condition_variable>
 #include <fstream>
+#include <oneapi/tbb/global_control.h>
 #include <sys/wait.h>
 #include <thread>
 #include <uni20/async/tbb_scheduler.hpp>
@@ -84,7 +85,93 @@ void replace(std::filesystem::path const& p, std::string const& data)
   out.write(data.data(), static_cast<std::streamsize>(data.size()));
   if (!out) throw std::runtime_error("test replacement failed");
 }
+
+// Exercise the production chunk executor with a held recovery call, without
+// depending on the duration of a numerical kernel or filesystem operation.
+struct HeldChunk
+{
+    std::mutex mutex;
+    std::condition_variable changed;
+    std::size_t held_index = 0, controls = 0;
+    bool started = false, stopped = false, release = false, exited = false;
+    std::size_t size() const { return 2; }
+    int run(std::size_t index, std::stop_token stop)
+    {
+      if (index != held_index)
+      {
+        std::unique_lock lock(mutex);
+        if (!changed.wait_for(lock, std::chrono::seconds(5), [&] { return started; }))
+          throw std::runtime_error("sibling recovery did not start");
+        return 0;
+      }
+      std::stop_callback callback(stop, [&] {
+        std::lock_guard lock(mutex);
+        stopped = true;
+        changed.notify_all();
+      });
+      std::unique_lock lock(mutex);
+      started = true;
+      ++controls;
+      changed.notify_all();
+      if (!changed.wait_for(lock, std::chrono::seconds(10), [&] { return stopped || release; }))
+        throw std::runtime_error("held recovery did not receive stop or test release");
+      if (!stopped) ++controls; // A second control must not start after grid failure.
+      exited = true;
+      return 0;
+    }
+};
+
+class RejectChunkSibling : public uni20::async::TbbScheduler {
+    std::shared_ptr<HeldChunk> chunk_;
+    bool reject_;
+    std::atomic<std::size_t> calls_ = 0;
+
+  public:
+    RejectChunkSibling(std::shared_ptr<HeldChunk> chunk, bool reject)
+        : TbbScheduler(3), chunk_(std::move(chunk)), reject_(reject)
+    {}
+    void schedule(uni20::async::AsyncTask&& task) override
+    {
+      if (++calls_ == 3 && reject_)
+      {
+        std::unique_lock lock(chunk_->mutex);
+        if (!chunk_->changed.wait_for(lock, std::chrono::seconds(5), [&] { return chunk_->started; }))
+          throw std::runtime_error("first recovery did not start");
+        throw std::bad_alloc{};
+      }
+      TbbScheduler::schedule(std::move(task));
+    }
+};
+
+void check_chunk_failure_stops_recovery(bool reject)
+{
+  oneapi::tbb::global_control workers(oneapi::tbb::global_control::max_allowed_parallelism, 3);
+  auto chunk = std::make_shared<HeldChunk>();
+  chunk->held_index = reject ? 0 : 1;
+  RejectChunkSibling scheduler(chunk, reject);
+  std::stop_source external;
+  auto pending = x::observation_store_detail::evaluate_chunk_async(
+      chunk, [](auto, auto) { throw std::runtime_error("collector failed"); },
+      {.scheduler = &scheduler, .max_in_flight = 2, .stop = external.get_token()});
+  {
+    std::unique_lock lock(chunk->mutex);
+    EXPECT_TRUE(chunk->changed.wait_for(lock, std::chrono::seconds(5), [&] { return chunk->stopped; }));
+    chunk->release = true; // Bound an old-code failure without orphaning held work.
+    chunk->changed.notify_all();
+  }
+  if (reject)
+    EXPECT_THROW((void)pending.get_wait(scheduler), std::bad_alloc);
+  else
+    EXPECT_THROW((void)pending.get_wait(scheduler), std::runtime_error);
+  EXPECT_TRUE(chunk->exited);
+  EXPECT_EQ(chunk->controls, 1u);
+  EXPECT_FALSE(external.stop_requested());
+}
 } // namespace
+
+TEST(ObservationStore, CollectorFailureStopsRunningRecovery) { check_chunk_failure_stops_recovery(false); }
+
+TEST(ObservationStore, AdmissionFailureStopsRunningRecovery) { check_chunk_failure_stops_recovery(true); }
 
 TEST(ObservationStore, ExactDecimalsPreserveCrossPrecisionTies)
 {
