@@ -86,6 +86,8 @@ one scheduler; each request owns its controls.
 
 ## Compose larger calculations
 
+- [Finite spectra and time correlations](spectral-time.md): local and complex
+  cross coefficients, moments and precision-generic Lehmann sums.
 - [Thermodynamic spinon densities](xxx-spinon-density.md): physical W2/W4/W6
   weights, rapidity conventions and numerical diagnostics.
 - [Direct spinon moments](xxx-spinon-moments.md): fixed-momentum and global

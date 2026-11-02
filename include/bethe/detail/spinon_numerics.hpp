@@ -33,8 +33,7 @@ template <uni20::RealOrComplex V> struct SpinonFunctionEstimate
 };
 
 // Neumaier's correction, including when a new contour term exceeds the
-// accumulated magnitude. The Kahan accumulator used by other Bethe solvers
-// has different cancellation behaviour; retain this algorithm for residue sums.
+// accumulated magnitude.
 template <class T> class SpinonSum {
   public:
     explicit SpinonSum(T const& initial) : value_(initial), correction_(initial - initial) {}

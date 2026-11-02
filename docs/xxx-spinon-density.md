@@ -1,6 +1,7 @@
 # Thermodynamic XXX spinon densities
 
-[C++ library](library.md) · [Two-spinon spectrum](xxx-structure-factor-thermo.md)
+[C++ library](library.md) · [Two-spinon spectrum](xxx-structure-factor-thermo.md) ·
+[Resuming recovery controls](spinon-recovery-progress.md)
 
 `bethe::heisenberg::XXXSpinonDensity<Real>` evaluates the physical longitudinal
 weights of two, four or six spinons in the zero-field, zero-temperature XXX
