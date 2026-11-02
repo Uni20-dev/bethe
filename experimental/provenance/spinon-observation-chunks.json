@@ -1,0 +1,186 @@
+{
+  "schema": "bethe-experimental-observation-chunks-validation-v1",
+  "date": "2026-11-02",
+  "research_origin": {
+    "inventory": "compact/remainder worker capability audit",
+    "revision": "2242fd5d78ec2c6c81a64993eca5dd6eea6cd732",
+    "scope": "new adapter around public mathematical kernels; no historical controller or density implementation copied"
+  },
+  "dependencies": {
+    "public_base": "cf1ae311cef37ca643e196be4346d8d1721136d5",
+    "recovery_progress": "cb22d522e6b78373677004a33635842539c6dc1a",
+    "recovery_store": "19041c8e2db9ce0e63c1e17aab9d62f09e213a1f"
+  },
+  "source_sha256": {
+    "experimental/include/bethe/experimental/spinon_observation_group.hpp": "9fa884a1a29240f54f4429724bf860ca8d60f39d2725a04d723d7b84f064ab22",
+    "experimental/include/bethe/experimental/spinon_observation_store.hpp": "7957a46ea29508e28d17b6766c1ce172b7bad70fa04f1fee0df356b6cc8ad49d",
+    "experimental/include/bethe/experimental/detail/spinon_exact_decimal.hpp": "1db3bfde4e7e4ca5925f4ec5ddde580c5903b61b2cb7361c832bc4ef4872903e",
+    "include/bethe/xxx_spinon_observation.hpp": "52be605b3849aa4594ab0dfd0c9611d2a6a72871020889dd04bf8928d5a75ae7",
+    "experimental/tests/test_spinon_observation_store.cpp": "1abcca5c9f226ecb7f0cf51a9ae66b6c8dad7406e62313fca1b7484e9668ec06",
+    "experimental/examples/spinon_observation_store.cpp": "b51c2363cc8e62daeed2c501bc940038cd7a82f2f37e4853948f9dcb98ee111c"
+  },
+  "checks": {
+    "native": {
+      "passed": 25,
+      "failed": 0,
+      "seconds": 4.75,
+      "scope": "fresh ci-native CMake; observation store, group and recovery store"
+    },
+    "wide": {
+      "passed": 35,
+      "failed": 0,
+      "seconds": 73.989,
+      "scope": "configured GCC13 providers; observation store plus original density recovery, moments and spectra"
+    },
+    "sanitizers": {
+      "passed": 10,
+      "failed": 0,
+      "seconds": 20.858,
+      "scope": "configured Clang19 providers; observation store including native/MPFR; existing Uni20 LSan suppressions"
+    },
+    "documentation": {
+      "pages": 156,
+      "bibliography_urls": 165,
+      "math_expressions": 1864
+    }
+  },
+  "tested_storage_lanes": [
+    "long double geometry, binary64/long double density",
+    "MPFR160 geometry, MPFR80/128 density"
+  ],
+  "independent_controls": [
+    "exact cross-precision rounding ties versus direct binary import; shortest decimal control demonstrably differs",
+    "fork/process exit after first control: resumed controls equal fresh count minus one",
+    "live versus stored physical weighted observations and annular sums",
+    "completed replay has zero new controls",
+    "cancelled prefix, numerical rejection and absent record remain distinct",
+    "altered identity/order/requests/producer, truncation, valid-checksum altered result rejected",
+    "publication failure poisons instance; reopen recovers persisted controls",
+    "one admitted Async owner, ordered replay with different windows, initial/later submission rejection and collector errors",
+    "held publication remains unready until released on cancellation and exception"
+  ],
+  "cost": {
+    "records": [
+      {
+        "trial": 0,
+        "mode": "direct",
+        "seconds": 0.0138582,
+        "controls": 4,
+        "values_sha256": "b5f847bbb4f9004e34478d50421b8586cb781362517e8102128e15b74a53ce78"
+      },
+      {
+        "trial": 0,
+        "mode": "stored",
+        "seconds": 0.0164888,
+        "controls": 4,
+        "values_sha256": "b5f847bbb4f9004e34478d50421b8586cb781362517e8102128e15b74a53ce78"
+      },
+      {
+        "trial": 0,
+        "mode": "replay",
+        "seconds": 0.00250434,
+        "controls": 0,
+        "values_sha256": "b5f847bbb4f9004e34478d50421b8586cb781362517e8102128e15b74a53ce78"
+      },
+      {
+        "trial": 1,
+        "mode": "direct",
+        "seconds": 0.0119797,
+        "controls": 4,
+        "values_sha256": "b5f847bbb4f9004e34478d50421b8586cb781362517e8102128e15b74a53ce78"
+      },
+      {
+        "trial": 1,
+        "mode": "stored",
+        "seconds": 0.0161515,
+        "controls": 4,
+        "values_sha256": "b5f847bbb4f9004e34478d50421b8586cb781362517e8102128e15b74a53ce78"
+      },
+      {
+        "trial": 1,
+        "mode": "replay",
+        "seconds": 0.00243502,
+        "controls": 0,
+        "values_sha256": "b5f847bbb4f9004e34478d50421b8586cb781362517e8102128e15b74a53ce78"
+      },
+      {
+        "trial": 2,
+        "mode": "direct",
+        "seconds": 0.0119657,
+        "controls": 4,
+        "values_sha256": "b5f847bbb4f9004e34478d50421b8586cb781362517e8102128e15b74a53ce78"
+      },
+      {
+        "trial": 2,
+        "mode": "stored",
+        "seconds": 0.0158663,
+        "controls": 4,
+        "values_sha256": "b5f847bbb4f9004e34478d50421b8586cb781362517e8102128e15b74a53ce78"
+      },
+      {
+        "trial": 2,
+        "mode": "replay",
+        "seconds": 0.00249249,
+        "controls": 0,
+        "values_sha256": "b5f847bbb4f9004e34478d50421b8586cb781362517e8102128e15b74a53ce78"
+      },
+      {
+        "trial": 3,
+        "mode": "direct",
+        "seconds": 0.0119049,
+        "controls": 4,
+        "values_sha256": "b5f847bbb4f9004e34478d50421b8586cb781362517e8102128e15b74a53ce78"
+      },
+      {
+        "trial": 3,
+        "mode": "stored",
+        "seconds": 0.0159801,
+        "controls": 4,
+        "values_sha256": "b5f847bbb4f9004e34478d50421b8586cb781362517e8102128e15b74a53ce78"
+      },
+      {
+        "trial": 3,
+        "mode": "replay",
+        "seconds": 0.00249569,
+        "controls": 0,
+        "values_sha256": "b5f847bbb4f9004e34478d50421b8586cb781362517e8102128e15b74a53ce78"
+      },
+      {
+        "trial": 4,
+        "mode": "direct",
+        "seconds": 0.0120544,
+        "controls": 4,
+        "values_sha256": "b5f847bbb4f9004e34478d50421b8586cb781362517e8102128e15b74a53ce78"
+      },
+      {
+        "trial": 4,
+        "mode": "stored",
+        "seconds": 0.0168058,
+        "controls": 4,
+        "values_sha256": "b5f847bbb4f9004e34478d50421b8586cb781362517e8102128e15b74a53ce78"
+      },
+      {
+        "trial": 4,
+        "mode": "replay",
+        "seconds": 0.00256089,
+        "controls": 0,
+        "values_sha256": "b5f847bbb4f9004e34478d50421b8586cb781362517e8102128e15b74a53ce78"
+      }
+    ],
+    "medians_seconds": {
+      "direct": 0.0119797,
+      "stored": 0.0161515,
+      "replay": 0.00249569
+    },
+    "scope": "serial fresh 12-observation interior chunk, local SSD, CPU16, one BLAS thread; includes geometry, storage open and revalidation; not production or NFS throughput"
+  },
+  "limits": [
+    "1..64 samples and <=64 selected labelled roots per chunk",
+    "1..32 requests per group",
+    "16 MiB snapshot and 64 KiB strings",
+    "same producer/configuration; recomputed geometry must match",
+    "POSIX stable locks and atomic rename; no fsync/NFS durability certificate",
+    "experimental build-tree API, not installed",
+    "no full repository CI, normal installation, publication or production throughput claim"
+  ]
+}
