@@ -72,5 +72,28 @@
       }
     },
     "regression": "Inject rejected spectral preparation after valid N4 roots. The analytic ground bond and full first moment survive; retained sums and omissions are absent and no excited roots are attempted. CLI root convergence and spectral preparation are reported separately."
+  },
+  "unattempted_sum_rule_followup": {
+    "checks": {
+      "native": {
+        "tests": 7,
+        "failures": 0,
+        "elapsed_seconds": 0.14,
+        "test_log_sha256": "c45e7fb1255a926f0337b9a99202c20e01b6dc4758dd5d77ffb6b0049c629916"
+      },
+      "wide": {
+        "tests": 9,
+        "failures": 0,
+        "elapsed_seconds": 0.84,
+        "test_log_sha256": "fbb20894588824b66e49533bf2517c49f51fbf319b2d0f7e9c94146ab8ef5e3b"
+      },
+      "sanitizers": {
+        "tests": 8,
+        "failures": 0,
+        "elapsed_seconds": 41.66,
+        "test_log_sha256": "34da146e7d9982fbf34bb02ea1941f4e0b8510998aad682e854ff83796175c1d"
+      }
+    },
+    "regression": "The rejected-preparation test fails the old predicate: no retained sum must not report sum_rules_consistent=true. The full ground-density result remains independently available."
   }
 }
