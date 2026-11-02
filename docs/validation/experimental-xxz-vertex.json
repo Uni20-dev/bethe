@@ -143,7 +143,7 @@
       "docs/experimental-xxz-vertex.md": "fbe1fd440c084af282c1a21d219eeccac0f8df3add2f783e7f6b655d99fcdac9",
       "docs/experimental.md": "1343228fb5829a98985e28a5feaae52bea99d794b825e4fa4957cc6bd04f3c8a",
       "experimental/CMakeLists.txt": "e7c75f14c6ef94013316e0dc38d7b411ecd174aa15834c6a90779704930f483b",
-      "experimental/README.md": "12a2e267bd48230347ad9872e90285ca8328cbb5b920bfe2d71fa5084187d23c",
+      "experimental/README.md": "f641bde0ecf38b38019abcd63e2855779937f98b439d4a82807f0376e5af2ccd",
       "experimental/examples/xxz_vertex.cpp": "534ccfc040019deb9b019c518084b9a7d83858cf1a8d7a9a911ad5b393e9335d",
       "experimental/include/bethe/experimental/detail/scaled_complex_product.hpp": "b5edf3e130fff04e8bbe2f72335e1a47cdf53bc15a30731a0df0336e3e9e1b52",
       "experimental/include/bethe/experimental/detail/xxz_spectral_kinematics.hpp": "9ff46ed98e335052b885bfbe04221aa84ea4d3331d97830b5897ceb92fa88aa5",
@@ -481,5 +481,10 @@
       "manifest": "Exactly the 20 changed inputs relative to integration_base, excluding this manifest. Prior integration records are retained unchanged."
     }
   ],
-  "uni20_revision_scope": "Current source pin and current_parent_integration. Earlier validation sections used 1cb2474 unless separately stated; their results are historical evidence, not reruns with ca350254."
+  "uni20_revision_scope": "Current source pin and current_parent_integration. Earlier validation sections used 1cb2474 unless separately stated; their results are historical evidence, not reruns with ca350254.",
+  "index_order_followup": {
+    "previous_head": "de25d7e5a00e724e0cee21c0b8d33cd240d90907",
+    "change": "Move the two unchanged XXZ component rows after the existing storage row, avoiding an insertion conflict with the reviewed Six-family row. All row text, links and numerical inputs are unchanged.",
+    "scope": "Documentation ordering only. Previous numerical and integration evidence is retained unchanged; source correspondence, documentation checks and current CI/reviews apply."
+  }
 }
