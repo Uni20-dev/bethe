@@ -126,6 +126,9 @@ TYPED_TEST(XXZVertex, SmallComplementSurvivesRoundedMainModulus)
   R const eps = uni20::numeric_limits<R>::epsilon(), kp = model.complementary_modulus();
   ASSERT_GT(kp, R{0});
   EXPECT_EQ(R{1} - kp * kp, R{1}); // even fp128 cannot recover k' by subtraction
+  R const pi = bethe::detail::pi<R>();
+  EXPECT_EQ(model.jacobian(R{0}), model.jacobian(pi));
+  EXPECT_REAL_NEAR(model.jacobian(R{0}) * kp, model.jacobian(pi / R{2}), R{64} * eps);
   for (R phi : {R{.5}, R{1}, R{1.4L}})
   {
     R const p = model.momentum(phi);
@@ -175,6 +178,40 @@ TYPED_TEST(XXZVertex, BroadenedExchangeScalingAndDeterministicReduction)
   EXPECT_THROW(base.broadened_cut(4, R{1.5}, omega, R{.1}, 3), std::invalid_argument);
   R const eps = uni20::numeric_limits<R>::epsilon();
   EXPECT_THROW(base.broadened_cut(2, eps * eps, omega, R{.1}, 4), std::underflow_error);
+}
+
+TYPED_TEST(XXZVertex, LargeExchangePreservesJacobianAndCut)
+{
+  using R = TypeParam;
+  R const pi = bethe::detail::pi<R>(), eps = uni20::numeric_limits<R>::epsilon();
+  R const maximum = uni20::numeric_limits<R>::max();
+  bethe::experimental::xxz::SpectralKinematics<R> large(R{2}, maximum / R{4.5});
+  ASSERT_TRUE(uni20::isfinite(R{2} * large.maximum_energy()));
+  // Independent 100-digit theta-constant evaluation of 1/(2 K) at Delta=2.
+  R const midpoint = uni20::parse_real<R>(
+      "0.1331393188395339061872077240699224023339178280223141019043160248768945368247581602632319402406991944");
+  EXPECT_REAL_NEAR(large.jacobian(pi / R{2}), midpoint, R{256} * eps);
+  EXPECT_THROW(large.jacobian(-eps), std::invalid_argument);
+
+  bethe::experimental::xxz::ThermodynamicVertexSpectrum<R> base(R{2});
+  R const w = uni20::parse_real<R>("2.3"), width = uni20::parse_real<R>(".1");
+  std::array<R, 1> const omega{w};
+  auto const expected = base.broadened_cut(2, R{1.5}, omega, width, 8);
+  ASSERT_GT(expected.moments.weight, R{0});
+  for (int divisor : {8, 10, 12, 16})
+  {
+    R const exchange = maximum / R(divisor);
+    bethe::experimental::xxz::ThermodynamicVertexSpectrum<R> scaled(R{2}, exchange);
+    std::array<R, 1> const frequencies{exchange * w};
+    auto const actual = scaled.broadened_cut(2, R{1.5}, frequencies, exchange * width, 8);
+    // The existing band constructs its gap through exp(log(J)+constant).
+    // At extreme J that contributes O(epsilon*abs(log(J))) relative error.
+    R const tolerance = R{16} * eps * (R{1} + uni20::math::abs(uni20::math::log(exchange)));
+    EXPECT_REAL_NEAR(actual.moments.weight / expected.moments.weight, R{1}, tolerance);
+    EXPECT_REAL_NEAR((actual.moments.first_moment / exchange) / expected.moments.first_moment, R{1}, tolerance);
+    EXPECT_REAL_NEAR((actual.density[0] * exchange) / expected.density[0], R{1}, tolerance);
+    EXPECT_EQ(actual.moments.nodes, expected.moments.nodes);
+  }
 }
 
 TEST(XXZVertexIntegration, IndependentPythonIntegratedWeight)

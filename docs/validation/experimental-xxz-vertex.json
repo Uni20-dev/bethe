@@ -125,7 +125,7 @@
     "examples": "Both literal C++ guide snippets compile and run in a fresh library-only consumer.",
     "scope": "Local build and source/HTML link/math checks; deployment remains pending."
   },
-  "routine_cost_contract": "Reviewer target on this host: focused native/wide suite under25s and sanitizer under60s; seven optional Python checks under5s. No production grid added to CI.",
+  "routine_cost_contract": "Focused native/wide/sanitizer CTest runs are recorded, not portable wall-time guarantees. The peer independently ran the prior29-case wide and21-case sanitizer binaries serially in25.126 and62.871seconds, and seven optional Python cases in5.714seconds. No production grid is added to CI.",
   "limitations": [
     "Finite product/residue/grid orders are independently tunable; arithmetic indicators are conditioning screens, not certified errors.",
     "Near-coincident spectral nodes require confluent formulas and are explicitly rejected.",
@@ -147,7 +147,7 @@
       "experimental/README.md": "6055e96e870a5735be9e28cf2a8bc15ef52d12fba2f0e74abe60f492fddc40f2",
       "experimental/examples/xxz_vertex.cpp": "534ccfc040019deb9b019c518084b9a7d83858cf1a8d7a9a911ad5b393e9335d",
       "experimental/include/bethe/experimental/detail/scaled_complex_product.hpp": "b5edf3e130fff04e8bbe2f72335e1a47cdf53bc15a30731a0df0336e3e9e1b52",
-      "experimental/include/bethe/experimental/detail/xxz_spectral_kinematics.hpp": "5e82108b59a4ddf7f424c0ee12c280b5936de099e48026c1b39b46cbc28a0133",
+      "experimental/include/bethe/experimental/detail/xxz_spectral_kinematics.hpp": "9ff46ed98e335052b885bfbe04221aa84ea4d3331d97830b5897ceb92fa88aa5",
       "experimental/include/bethe/experimental/xxz_vertex.hpp": "448aa5b9bcff369ffec7fac90a16dcb8d17b0cf787f5f0d7aa86c5b4c3ea1d05",
       "experimental/include/bethe/experimental/xxz_vertex_spectrum.hpp": "0b82a5a9ea988897a4994d681ff618a3880f2349271430d89325b6de797e3174",
       "experimental/reference/xxz/README.md": "7f2ca1ccf2a6f6beeb348cc5dfe0eea5a5e7f4055c6e3c8260fb2150004ae3fe",
@@ -159,7 +159,7 @@
       "experimental/reference/xxz/vertex_quadrature.py": "9c5acd1359439475bf917ca72d9af73c4c0a0bc6267e8add5de6b0dbbe7d93bc",
       "experimental/reference/xxz/vertex_reference.py": "82d3d0935da677057c74df9772c273b6759aa5d14a462d9a0e02fbb1e234ab18",
       "experimental/tests/CMakeLists.txt": "c5388060f5d1e035195d7dc4563e8f9a8b8412b3ee1a285b1d0d6fcee25d2f16",
-      "experimental/tests/test_xxz_vertex.cpp": "c36ee782bed865aad437f8865af6966e1a070896a0c5cdf8c0b657963fc1f96b",
+      "experimental/tests/test_xxz_vertex.cpp": "583bb0b62f6430caf07548dc80badde22e6bf0d2776b8af7ff8d4562e8571975",
       "include/bethe/xxz_thermodynamic_structure_factor.hpp": "dd70686d23327e120bb62e4eefd04c17d9948287c22024b5f67d688a4eb9012c",
       "tests/test_xxz_thermodynamic_structure_factor.cpp": "26d9f7f4900bb1588e50371a64cfc80f6b3421509b4acf14168d138bf7f22f6b",
       "zensical.toml": "27b4670ec6c963ecccac8794e4455b7642171a92307ce4fd5c8cad00bff567d9"
@@ -189,5 +189,38 @@
         "log_sha256": "22f2a6181dd3ced7c05296ff71e9a7bdfcd13a329b3909ce880fda391418d171"
       }
     }
+  },
+  "jacobian_range_followup": {
+    "previous_head": "fb17a0d6e1f7e0bb77392ad5cc8ab4f8e5902cda",
+    "finding": "An overflowing 2*K*energy denominator silently zeroed a dimensionless positive Jacobian and could suppress the cut weight.",
+    "correction": "Cancel Emax analytically; evaluate (1/(2*K))/hypot(sin(p),kp*cos(p)), reflecting p before trigonometry to retain the soft endpoint mass; reject nonpositive/nonfinite results.",
+    "regression": "Old header fails native64/80/128. Tests check the independent 100-digit midpoint Jacobian, both tiny-mass endpoints, and cut m0, m1/J, density*J at J=max/{8,10,12,16}. Existing physical-control tolerances unchanged.",
+    "lanes": {
+      "native": {
+        "passed": 23,
+        "failed": 0,
+        "seconds": 7.18191983102588,
+        "log_sha256": "b5460302336164a3e19aae1e437babe2f52d624af8ca818006b5311b69bae555"
+      },
+      "wide": {
+        "passed": 33,
+        "failed": 0,
+        "seconds": 14.423257025016937,
+        "log_sha256": "a3f027e3b12dae634b18c7bfcbb96d02516592eb4b9a819a4704b52a54f3302c"
+      },
+      "sanitizers": {
+        "passed": 23,
+        "failed": 1,
+        "seconds": 92.80473683698801,
+        "log_sha256": "9d03e67d9adbf357ae15e8a8acb8ece56b6f44c920b0bc5599d89c2deacab609",
+        "unchanged_example_retry": {
+          "passed": 1,
+          "failed": 0,
+          "seconds": 1.84,
+          "log_sha256": "4b66c996e08a3e39d428d35b8b2c24368dbff94d944d14c85e29ccb7439578df"
+        }
+      }
+    },
+    "sanitizer_retry_scope": "All 23 numerical tests passed initially; the Async example timed out at60s without diagnostics. The unchanged binary passed in1.84s on retry. The initial timeout log is retained; no cause is asserted and no timeout/suppression was changed."
   }
 }

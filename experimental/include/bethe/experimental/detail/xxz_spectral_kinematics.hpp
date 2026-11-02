@@ -32,7 +32,20 @@ template <uni20::Real R> class SpectralKinematics {
     }
     R zero() const { return zero_; }
     uni20::Precision precision() const { return uni20::precision_of(zero_); }
-    R jacobian(R p) const { return band_.maximum_energy() / (R{2} * K_ * energy(p)); }
+    R jacobian(R p) const
+    {
+      validate_momentum(p);
+      // E(p)=Emax*dn(p): cancel the exchange scale before evaluating
+      // Emax/(2*K*E(p)). Its denominator can overflow at finite energies.
+      // Divide by dn last, retaining the soft-mode enhancement without
+      // first forming either the large energy or its reciprocal ratio.
+      p = std::min(p, pi() - p); // preserve the small mass at the pi endpoint
+      R const dn = uni20::math::hypot(uni20::math::sin(p), kp_ * uni20::math::cos(p));
+      R const value = (R{1} / (R{2} * K_)) / dn;
+      if (!uni20::isfinite(value) || !(value > R{0}))
+        throw std::overflow_error("XXZ spectral Jacobian outside scalar range");
+      return value;
+    }
     R angle(R p) const
     {
       validate_momentum(p);
