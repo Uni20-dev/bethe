@@ -20,7 +20,8 @@ From your build directory:
 ```sh
 cmake --build . --target bethe-experimental-xxx-boundary-dynamics
 ./experimental/bethe-experimental-xxx-boundary-dynamics 16 --threads 2 --csv time.csv
-./experimental/bethe-experimental-xxx-boundary-dynamics 8 --precision bits-160 --json result.json
+./experimental/bethe-experimental-xxx-boundary-dynamics 8 --precision bits-160 \
+  --spectrum --diagnostics --roots --density --json result.json
 ```
 
 The default grid has 101 points from time zero to 100. `--time-max` and
@@ -39,9 +40,12 @@ long double and, when configured, binary128 or explicit MPFR precision.
 | `density` | Full ground-state boundary two-site density matrix | `--density` |
 
 For example, `--csv-table spectrum=lines.csv` writes the weights without
-also displaying them. `--json result.json` writes the declared tables together
-with conventions, provenance, status and CPU time. Unknown table names are
-errors. Exit status 2 denotes an incomplete or inconsistent numerical result;
+also displaying them. `--json result.json` writes `time` and `moments`, plus
+auxiliary tables selected by `--spectrum`, `--diagnostics`, `--roots` or
+`--density`, together with conventions, provenance, status and CPU time.
+The example above selects all six tables; `--quiet` suppresses their screen
+display without changing the JSON selection. Unknown table names are errors.
+Exit status 2 denotes an incomplete or inconsistent numerical result;
 failed requests remain in `diagnostics`, with unavailable values left absent.
 A failed ground state produces no time curve. An incomplete excited family
 retains its computed contribution with explicit failed records.
