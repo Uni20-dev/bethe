@@ -2,6 +2,7 @@
 // Copyright (C) 2026 Ian McCulloch
 #include "test_support.hpp"
 #include "xxx_complex_fixture.hpp"
+#include "xxx_zero_momentum_fixture.hpp"
 #include <bethe/experimental/xxx_complex_roots.hpp>
 
 namespace roots = bethe::experimental::xxx::complex_roots;
@@ -60,6 +61,12 @@ template <uni20::Real R> void complex_reference(R const& zero)
   ASSERT_TRUE(weight.weight);
   R const relative_tolerance = 32768 * eps / roots::separation<R>(lambda, zero);
   EXPECT_REAL_NEAR(*weight.weight / parse(complex_fixture::weight, zero), one, relative_tolerance);
+  auto const labelled = roots::raising_weight<R>(ground, lambda, 9);
+  ASSERT_TRUE(labelled.weight);
+  EXPECT_EQ(*labelled.weight, *weight.weight);
+  auto const wrong_label = roots::raising_weight<R>(ground, lambda, 0);
+  EXPECT_EQ(wrong_label.status, xxx::FormFactorStatus::roots_unconverged);
+  EXPECT_FALSE(wrong_label.weight);
   EXPECT_REAL_NEAR(roots::energy<R>(12, lambda, zero), parse(complex_fixture::energy, zero), 4096 * eps);
   EXPECT_LT(roots::rational_residual<R>(12, lambda, zero), roots::residual_tolerance<R>(12, lambda, zero));
   for (auto& z : lambda)
@@ -77,6 +84,74 @@ template <uni20::Real R> void complex_reference(R const& zero)
   auto const unresolved = roots::raising_weight<R>(ground, lambda);
   EXPECT_EQ(unresolved.status, xxx::FormFactorStatus::precision_limit);
   EXPECT_FALSE(unresolved.weight);
+}
+
+template <uni20::Real R> void selection_zero(R const& zero)
+{
+  using C = uni20::complex<R>;
+  R const one = uni20::scalar_like(zero, 1);
+  xxx::RealState<R> state;
+  state.converged = true;
+  state.sz = uni20::half_int{0};
+  state.quantum_numbers = xxx::sector_ground_quantum_numbers(12, state.sz);
+  for (auto value : complex_fixture::ground)
+    state.rapidities.push_back(2 * parse(value, zero));
+  exp_xxx::PreparedSinglet<R> const ground(12, state);
+  ASSERT_TRUE(ground.ready());
+  std::vector<C> lambda;
+  for (auto const& value : zero_momentum_fixture::roots)
+    lambda.emplace_back(parse(value[0], zero), parse(value[1], zero));
+  auto const result = roots::raising_weight<R>(ground, lambda, 0);
+  ASSERT_TRUE(result.converged());
+  ASSERT_TRUE(result.weight);
+  EXPECT_EQ(*result.weight, zero);
+  EXPECT_EQ(uni20::precision_of(*result.weight), uni20::precision_of(zero));
+  EXPECT_FALSE(result.log_weight);
+  EXPECT_TRUE(uni20::isfinite(result.pivot_margin));
+  EXPECT_GT(result.pivot_margin, zero);
+  auto const wrong_label = roots::raising_weight<R>(ground, lambda, 1);
+  EXPECT_EQ(wrong_label.status, xxx::FormFactorStatus::roots_unconverged);
+  EXPECT_FALSE(wrong_label.weight);
+  EXPECT_THROW((void)roots::raising_weight<R>(ground, lambda, -1), std::invalid_argument);
+  EXPECT_THROW((void)roots::raising_weight<R>(ground, lambda, 12), std::invalid_argument);
+  auto offshell = lambda;
+  offshell.front() += one / 1000;
+  auto const failed = roots::raising_weight<R>(ground, offshell, 0);
+  EXPECT_EQ(failed.status, xxx::FormFactorStatus::roots_unconverged);
+  EXPECT_FALSE(failed.weight);
+  lambda[3] = C(one, one / 2);
+  lambda[4] = C(one, -one / 2);
+  auto const unresolved = roots::raising_weight<R>(ground, lambda, 0);
+  EXPECT_EQ(unresolved.status, xxx::FormFactorStatus::precision_limit);
+  EXPECT_FALSE(unresolved.weight);
+}
+
+template <uni20::Real R> void six_site_momentum(R const& zero)
+{
+  using C = uni20::complex<R>;
+  auto options = [&] {
+    if constexpr (uni20::has_runtime_precision_v<R>)
+      return bethe::SolverOptions<R>(uni20::precision_of(zero));
+    else
+      return bethe::SolverOptions<R>{};
+  }();
+  auto const state = xxx::sector_ground_state<R>(6, uni20::half_int{0}, options);
+  ASSERT_TRUE(state.converged);
+  exp_xxx::PreparedSinglet<R> const ground(6, state);
+  ASSERT_TRUE(ground.ready());
+  // Analytic +/- lambda triplet: total absolute momentum zero, but the
+  // N=6 singlet has momentum pi. This is an allowed nonzero-transfer weight.
+  R const root = uni20::math::tan(bethe::detail::pi_like(zero) / 10) / 2;
+  std::vector<C> const lambda{C(-root, zero), C(root, zero)};
+  auto const raw = roots::raising_weight<R>(ground, lambda);
+  auto const labelled = roots::raising_weight<R>(ground, lambda, 0);
+  ASSERT_TRUE(raw.weight);
+  ASSERT_TRUE(labelled.weight);
+  EXPECT_EQ(*raw.weight, *labelled.weight);
+  EXPECT_GT(*labelled.weight, zero);
+  auto const wrong_label = roots::raising_weight<R>(ground, lambda, 3);
+  EXPECT_EQ(wrong_label.status, xxx::FormFactorStatus::roots_unconverged);
+  EXPECT_FALSE(wrong_label.weight);
 }
 
 template <uni20::Real R> void derivative_and_cut(R const& zero)
@@ -120,6 +195,8 @@ TYPED_TEST_SUITE(ExperimentalComplexRoots, test_support::RealTypes, test_support
 TYPED_TEST(ExperimentalComplexRoots, FourSiteAnalyticRaisingWeight) { real_reference(TypeParam{0}); }
 TYPED_TEST(ExperimentalComplexRoots, IndependentComplexPairReference) { complex_reference(TypeParam{0}); }
 TYPED_TEST(ExperimentalComplexRoots, AnalyticDerivativeAndAtanCut) { derivative_and_cut(TypeParam{0}); }
+TYPED_TEST(ExperimentalComplexRoots, ZeroTransferAfterStateAndNormValidation) { selection_zero(TypeParam{0}); }
+TYPED_TEST(ExperimentalComplexRoots, SixSiteGroundMomentumIsPi) { six_site_momentum(TypeParam{0}); }
 
 #if UNI20_HAS_MPREAL
 TEST(ExperimentalComplexRootsMpfr, ExplicitPrecisionAndValidation)
@@ -133,6 +210,8 @@ TEST(ExperimentalComplexRootsMpfr, ExplicitPrecisionAndValidation)
     real_reference(zero);
     complex_reference(zero);
     derivative_and_cut(zero);
+    selection_zero(zero);
+    six_site_momentum(zero);
     EXPECT_EQ(roots::energy<R>(8, {}, zero).precision(), p);
     EXPECT_THROW((void)roots::energy<R>(8, {}), std::invalid_argument);
     for (C const& bad : {C{}, C(uni20::uninitialized), C(R{1}, R{0}),
@@ -142,6 +221,15 @@ TEST(ExperimentalComplexRootsMpfr, ExplicitPrecisionAndValidation)
       EXPECT_THROW((void)roots::gaudin<R>(8, values, zero), std::invalid_argument);
       EXPECT_THROW((void)roots::energy<R>(8, values, zero), std::invalid_argument);
       EXPECT_THROW((void)roots::rational_residual<R>(8, values, zero), std::invalid_argument);
+      std::vector<C> invalid(5, bad);
+      xxx::RealState<R> gs;
+      gs.converged = true;
+      gs.sz = uni20::half_int{0};
+      gs.quantum_numbers = xxx::sector_ground_quantum_numbers(12, gs.sz);
+      for (auto value : complex_fixture::ground)
+        gs.rapidities.push_back(2 * parse(value, zero));
+      exp_xxx::PreparedSinglet<R> const prepared(12, gs);
+      EXPECT_THROW((void)roots::raising_weight<R>(prepared, invalid, 0), std::invalid_argument);
     }
     EXPECT_THROW((void)roots::bethe_atan<R>(C{}), std::invalid_argument);
     EXPECT_THROW((void)roots::bethe_atan<R>(C(uni20::uninitialized)), std::invalid_argument);
