@@ -58,11 +58,12 @@ template <uni20::Real R> class ThermodynamicTwoSpinonMoments {
         [[nodiscard]] uni20::async::Async<Result> evaluate_async(bethe::ExecutionOptions execution = {}) const
         {
           auto& scheduler = execution.continuous_scheduler();
-          auto work = bethe::accumulate_quadrature_async<R, 4>(
+          execution.scheduler = &scheduler;
+          auto run = bethe::detail::prepare_quadrature_run<R, 4>(
               size(), [self = *this](std::size_t i, std::stop_token stop) { return self.observe(i, stop); },
               kernel_->one, execution);
           uni20::async::Async<Result> output;
-          auto task = finish(work.read(), initial_, output.write());
+          auto task = finish(std::move(run), execution, initial_, output.write());
           bethe::detail::schedule_owned(scheduler, std::move(task));
           return output;
         }
@@ -194,10 +195,14 @@ template <uni20::Real R> class ThermodynamicTwoSpinonMoments {
           }
           return observation;
         }
-        static uni20::async::AsyncTask finish(uni20::async::ReadBuffer<bethe::QuadratureReduction<R, 4>> input,
+        template <class QuadratureRun>
+        static uni20::async::AsyncTask finish(std::shared_ptr<QuadratureRun> run, bethe::ExecutionOptions execution,
                                               Result result, uni20::async::WriteBuffer<Result> output)
         {
           auto destination = co_await output;
+          uni20::async::Async<bethe::QuadratureReduction<R, 4>> work;
+          co_await QuadratureRun::execute(std::move(run), execution, work.write());
+          auto input = work.read();
           result.integral = co_await input;
           if (result.integral.status == bethe::QuadratureStatus::cancelled)
             result.status = TwoSpinonMomentStatus::cancelled;

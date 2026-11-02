@@ -111,14 +111,15 @@ template <uni20::Real Geometry, uni20::Real Low, uni20::Real High = Low> class T
         [[nodiscard]] uni20::async::Async<Result> evaluate_async(bethe::ExecutionOptions execution = {}) const
         {
           auto& scheduler = execution.continuous_scheduler();
-          auto work = bethe::accumulate_quadrature_async<G, 5 * N, std::optional<SpinonRecoveryStatus>>(
+          execution.scheduler = &scheduler;
+          auto run = bethe::detail::prepare_quadrature_run<G, 5 * N, std::optional<SpinonRecoveryStatus>>(
               initial_.total_nodes,
               [kernel = kernel_, node = node_](std::size_t i, std::stop_token stop) {
                 return observe(*kernel, node, i, stop);
               },
               kernel_->one, execution);
           uni20::async::Async<Result> result;
-          auto task = finish(work.read(), initial_, result.write());
+          auto task = finish(std::move(run), execution, initial_, result.write());
           bethe::detail::schedule_owned(scheduler, std::move(task));
           return result;
         }
@@ -203,10 +204,15 @@ template <uni20::Real Geometry, uni20::Real Low, uni20::Real High = Low> class T
           }
           return observation;
         }
-        static uni20::async::AsyncTask finish(uni20::async::ReadBuffer<Reduction> work, Result result,
+        template <class QuadratureRun>
+        static uni20::async::AsyncTask finish(std::shared_ptr<QuadratureRun> run, bethe::ExecutionOptions execution,
+                                              Result result,
                                               uni20::async::WriteBuffer<Result> output)
         {
           auto destination = co_await output;
+          uni20::async::Async<Reduction> input;
+          co_await QuadratureRun::execute(std::move(run), execution, input.write());
+          auto work = input.read();
           auto summary = co_await work;
           result.completed_nodes = summary.completed_nodes;
           result.density_attempts = summary.work_units;

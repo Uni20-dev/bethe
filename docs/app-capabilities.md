@@ -9,7 +9,7 @@ and [Async ownership](async-execution.md).
 
 The table records implemented execution paths and numerical limits. An app can
 remain serial when its work is too cheap to benefit from scheduling; independent
-parameter sweeps can still use the generic library grid. All 44 numerical
+parameter sweeps can still use the generic library grid. All 45 numerical
 frontends below expose explicit MPFR when that scalar family is configured.
 Names omit the `bethe-` executable prefix. This inventory describes the current
 source tree. Rebuild an older
@@ -44,6 +44,7 @@ validation; their measurements are historical records, not new integration runs.
 | `tb-dispersion` | Serial analytic CLI; owning mixed-precision Async queries ([#22](https://github.com/Uni20-dev/bethe/pull/22)) | Yes, MPFR scalars | Analytic spinon kinematics; no operator-dependent spectral weights |
 | `sine-gordon-dispersion` | Serial analytic CLI; owning mixed-precision Async queries ([#23](https://github.com/Uni20-dev/bethe/pull/23)) | Yes, MPFR scalars | Particle kinematics are distinct from scattering and finite-volume numerical convergence |
 | `xyz-dispersion` | Serial CLI; owning bound branches and shared Async preparation / parameter curves ([#24](https://github.com/Uni20-dev/bethe/pull/24)) | Explicit MPFR scalars | Shared Uni20 complex theta jets; owning mixed-precision bound readers; no MPLAPACK required |
+| `xxz-structure-factor-thermo` | Bounded ordered Async momentum/frequency grid | Explicit scalar MPFR; no MPLAPACK required | Massive transverse two-spinon contribution; both sheets, endpoint diagnostics and independent kernel/arithmetic controls |
 | `xxz-dispersion` | Immutable band with cheap queries; bulk preparation remains serial | Explicit scalar MPFR | Scaled theta constants, finite quadrature and analytic limits; no MPLAPACK required |
 | `xxz-qg-obc` | Continuous regular-root scans; owning regular/free-sector queries ([#26](https://github.com/Uni20-dev/bethe/pull/26)) | Yes, MPFR scalars | Critical regular-root/free-endpoint scope; cheap free blocks stay serial |
 | `sine-gordon-bethe-yang` | Bounded independent level scans ([#27](https://github.com/Uni20-dev/bethe/pull/27)) | Explicit MPFR scalars | No MPLAPACK; Fourier, iteration and omitted-wrapping limits remain separate |
@@ -58,7 +59,7 @@ validation; their measurements are historical records, not new integration runs.
 | `xyz-pbc` | Serial CLI; owning mixed-precision size/eta/t sweeps | Explicit MPFR; CPU/provider LU | Shared complex theta jets, precision-aware roots, Newton controls and failure results |
 
 `bethe-info` reports capabilities and has no numerical parallelism to add.
-The inventory covers 44 numerical frontends; it does not extend any model's
+The inventory covers 45 numerical frontends; it does not extend any model's
 physical state family. Generic scalar functions and numerical primitives belong
 in Uni20; model equations and physical normalization remain in Bethe.
 

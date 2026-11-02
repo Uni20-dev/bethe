@@ -12,6 +12,8 @@ one prepared background. It does not parallelize coupled Newton iterations.
 For sampled spectral data, the standalone [Python quadrature tools](spectral-quadrature.md)
 provide time transforms and correlated-error propagation with NumPy alone.
 They do not require C++ bindings.
+The [table readers and spatial/cutoff operators](spectral-analysis.md) preserve
+exported precision and failed records, and reuse the same covariance analysis.
 
 `BETHE_BUILD_APPS` and `BETHE_BUILD_TESTS` default to `ON` standalone and
 `OFF` when embedded. No Python bindings or installed CMake package are provided
@@ -88,12 +90,17 @@ one scheduler; each request owns its controls.
   cross coefficients, moments and precision-generic Lehmann sums.
 - [Thermodynamic spinon densities](xxx-spinon-density.md): physical W2/W4/W6
   weights, rapidity conventions and numerical diagnostics.
+- [Massive XXZ spectral intensity](xxz-structure-factor-thermo.md): transverse
+  two-spinon weights with separate sheets and explicit-precision queries.
 - [Direct spinon moments](xxx-spinon-moments.md): fixed-momentum and global
   observables, physical reference denominators and separate error controls.
 - [Async execution](async-execution.md): state scans, bounded grids, shared
   preparation, lifetime, cancellation and completion contracts.
 - [Observable grids](parallel-grids.md): a caller-thread collection example
   suitable for streaming and ordered reductions.
+- [Experimental observation chunks](experimental-spinon-observation-groups.md):
+  common-sample annular selection, bounded storage and replay of six-spinon
+  density controls and weighted observations.
 - [Complete C++ examples](async-examples.md): buildable parameter sweeps and
   shared-background calculations, including native-only demonstrations.
 - [Execution capabilities](app-capabilities.md): which paths each app exposes.

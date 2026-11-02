@@ -316,6 +316,10 @@ add_executable(bethe_least_squares_tests test_least_squares.cpp)
 target_link_libraries(bethe_least_squares_tests PRIVATE bethe::bethe)
 bethe_discover_tests(bethe_least_squares_tests)
 
+add_executable(bethe_xxz_thermodynamic_structure_factor_tests test_xxz_thermodynamic_structure_factor.cpp)
+target_link_libraries(bethe_xxz_thermodynamic_structure_factor_tests PRIVATE bethe::bethe)
+bethe_discover_tests(bethe_xxz_thermodynamic_structure_factor_tests)
+
 add_executable(bethe_xxz_dispersion_tests test_xxz_dispersion.cpp)
 target_link_libraries(bethe_xxz_dispersion_tests PRIVATE bethe::bethe)
 bethe_discover_tests(bethe_xxz_dispersion_tests)
@@ -1115,3 +1119,17 @@ endif()
 # Small dense systems and short CLI checks do not benefit from BLAS thread pools.
 get_property(bethe_test_names DIRECTORY PROPERTY TESTS)
 set_tests_properties(${bethe_test_names} PROPERTIES ENVIRONMENT "${bethe_test_environment}")
+
+if(BETHE_BUILD_APPS AND Python3_Interpreter_FOUND)
+  add_test(NAME XXZThermodynamicDSF.cli
+    COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_xxz_thermodynamic_structure_factor.py"
+      "$<TARGET_FILE:bethe-xxz-structure-factor-thermo>" "${BETHE_HAS_FLOAT128}" "${BETHE_HAS_MPREAL}")
+  add_test(NAME Arguments.bethe-xxz-structure-factor-thermo.cli
+    COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_shared_arguments.py"
+      "$<TARGET_FILE:bethe-xxz-structure-factor-thermo>")
+  add_test(NAME Citations.bethe-xxz-structure-factor-thermo.cli
+    COMMAND "${CMAKE_COMMAND}" "-DPROGRAM=$<TARGET_FILE:bethe-xxz-structure-factor-thermo>"
+      "-DTOOL=bethe-xxz-structure-factor-thermo" -P "${CMAKE_CURRENT_SOURCE_DIR}/check_citations_cli.cmake")
+  set_tests_properties(XXZThermodynamicDSF.cli Arguments.bethe-xxz-structure-factor-thermo.cli
+    Citations.bethe-xxz-structure-factor-thermo.cli PROPERTIES TIMEOUT 180 ENVIRONMENT "${bethe_test_environment}")
+endif()
