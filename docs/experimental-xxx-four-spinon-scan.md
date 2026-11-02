@@ -34,6 +34,9 @@ To attempt all four-hole labels at that momentum, remove the explicit holes:
 Some requested weights can be unavailable. The tool then writes its accepted
 lines and diagnostics and exits with status 2. A rejected line is absent from
 the spectrum; it is not replaced by zero or estimated from nearby states.
+A validated q=0 state is different: spin symmetry fixes its weight to exactly
+zero. Such states remain accepted lines in the spectrum and diagnostics and
+contribute zero to the moments; they do not cause exit status 2.
 Without `--momentum-index`, the catalogue includes every momentum. The default
 10,000-candidate budget rejects a larger catalogue before solving the ground
 or opening exports. Explicit `--holes` and `--branch` avoid constructing a full

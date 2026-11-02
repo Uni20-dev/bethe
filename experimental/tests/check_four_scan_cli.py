@@ -41,6 +41,14 @@ permuted = json.loads(run(["12", "--holes=2,-3,0,-1", "--branch", "1", "--format
 assert rows(permuted["spectrum"]) == rows(zz["spectrum"])
 assert rows(permuted["diagnostics"]) == rows(zz["diagnostics"])
 
+zero = json.loads(run(["12", "--holes=-2,-1,0,2", "--branch", "-1", "--momentum-index", "0",
+                       "--format", "json", "--diagnostics"]).stdout)["tables"]
+assert len(rows(zero["spectrum"])) == 1
+assert Decimal(str(rows(zero["spectrum"])[0]["weight"])) == 0
+assert rows(zero["diagnostics"])[0]["accepted"] is True
+assert rows(zero["diagnostics"])[0]["factor_status"] == "converged"
+assert Decimal(str(rows(zero["moments"])[0]["retained_weight"])) == 0
+
 with tempfile.TemporaryDirectory() as directory:
     root = Path(directory)
     rejected = root / "rejected.csv"

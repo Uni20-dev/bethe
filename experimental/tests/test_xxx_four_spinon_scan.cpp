@@ -38,14 +38,16 @@ template <uni20::Real R> void numerical_scan(R const& zero)
 {
   auto ground = background(zero);
   ASSERT_TRUE(ground.ready());
+  auto requests = selected();
+  requests.push_back({12, {-2, -1, 0, 2}, -1}); // Exact q=0 selection-rule zero.
   DebugScheduler serial;
-  auto reference = f::scan_four_spinons(ground, selected(), {&serial});
+  auto reference = f::scan_four_spinons(ground, requests, {&serial});
   TbbScheduler concurrent(2);
-  auto pending = f::scan_four_spinons_async(std::move(ground), selected(), {&concurrent, 1, 2});
+  auto pending = f::scan_four_spinons_async(std::move(ground), requests, {&concurrent, 1, 2});
   EXPECT_FALSE(ground.ready());
   auto const& scan = pending.get_wait(concurrent);
-  ASSERT_EQ(scan.records.size(), 3u);
-  ASSERT_EQ(scan.lines.size(), 2u);
+  ASSERT_EQ(scan.records.size(), 4u);
+  ASSERT_EQ(scan.lines.size(), 3u);
   EXPECT_FALSE(scan.converged());
   ASSERT_EQ(scan.moments.size(), 12u);
   R const one = uni20::scalar_like(zero, 1), eps = uni20::numeric_limits<R>::epsilon(zero);
@@ -70,12 +72,21 @@ template <uni20::Real R> void numerical_scan(R const& zero)
     EXPECT_EQ(uni20::precision_of(row.line->weight), uni20::precision_of(zero));
     EXPECT_EQ(row.line->momentum_index, f::four_spinon_transfer_index(row.solved.request));
     EXPECT_EQ(row.line->momentum_index, (12 - row.solved.state->momentum_index()) % 12);
-    EXPECT_REAL_NEAR(row.line->weight / expected, one, 1000000 * eps);
+    if (row.line->momentum_index == 0)
+    {
+      EXPECT_EQ(row.line->weight, zero);
+      ASSERT_TRUE(row.factor);
+      EXPECT_TRUE(row.factor->converged());
+      EXPECT_FALSE(row.factor->log_weight);
+      EXPECT_TRUE(row.diagnostic.empty());
+    }
+    else
+      EXPECT_REAL_NEAR(row.line->weight / expected, one, 1000000 * eps);
     EXPECT_EQ(scan.moments[row.line->momentum_index].weight, row.line->weight);
     EXPECT_EQ(scan.moments[row.line->momentum_index].first_moment, row.line->gap * row.line->weight);
     transfers.insert(row.line->momentum_index);
   }
-  EXPECT_EQ(transfers, (std::set<std::size_t>{3, 9}));
+  EXPECT_EQ(transfers, (std::set<std::size_t>{0, 3, 9}));
 }
 
 AsyncTask count_lines(ReadBuffer<f::FourSpinonScan<double>> input, WriteBuffer<std::size_t> output)
