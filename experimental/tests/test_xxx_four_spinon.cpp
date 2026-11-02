@@ -136,6 +136,32 @@ template <uni20::Real R> void physical_weights(R const& zero)
   }
 }
 
+template <uni20::Real R> void symmetry_zero(R const& zero)
+{
+  bethe::heisenberg::RealState<R> ground_state;
+  ground_state.converged = true;
+  ground_state.sz = uni20::half_int{0};
+  ground_state.quantum_numbers = bethe::heisenberg::sector_ground_quantum_numbers(12, ground_state.sz);
+  for (auto value : complex_fixture::ground)
+    ground_state.rapidities.push_back(2 * parse(value, zero));
+  f::PreparedSinglet<R> const ground(12, ground_state);
+  ASSERT_TRUE(ground.ready());
+  for (auto const request : {f::FourSpinonRequest{12, {-2, -1, 0, 2}, -1}, {12, {-3, 0, 1, 2}, 0}})
+  {
+    auto const solved = f::solve_four_spinon<R>(request, zero);
+    ASSERT_TRUE(solved.converged()) << solved.diagnostic;
+    ASSERT_EQ(solved.state->momentum_index(), 0);
+    auto const factor = f::four_spinon_raising_weight(ground, *solved.state);
+    ASSERT_TRUE(factor.converged());
+    ASSERT_TRUE(factor.weight);
+    EXPECT_EQ(*factor.weight, zero);
+    EXPECT_FALSE(factor.log_weight); // A symmetry zero has no finite logarithm.
+    EXPECT_TRUE(uni20::isfinite(factor.pivot_margin));
+    EXPECT_GT(factor.pivot_margin, zero); // Ground and excited norms still checked.
+    EXPECT_EQ(uni20::precision_of(*factor.weight), uni20::precision_of(zero));
+  }
+}
+
 template <uni20::Real R> void jacobian_and_failures(R const& zero)
 {
   R const one = uni20::scalar_like(zero, 1), eps = uni20::numeric_limits<R>::epsilon(zero);
@@ -174,6 +200,7 @@ TYPED_TEST(ExperimentalFourSpinon, SelectedStateAndLifetime) { solved_reference(
 TYPED_TEST(ExperimentalFourSpinon, ExplicitTinyDeviations) { tiny_deviations(TypeParam{0}); }
 TYPED_TEST(ExperimentalFourSpinon, JacobianAndFailures) { jacobian_and_failures(TypeParam{0}); }
 TYPED_TEST(ExperimentalFourSpinon, NormalizedRaisingWeights) { physical_weights(TypeParam{0}); }
+TYPED_TEST(ExperimentalFourSpinon, ZeroMomentumSelectionRule) { symmetry_zero(TypeParam{0}); }
 #if UNI20_HAS_MPREAL
 TEST(ExperimentalFourSpinonMpfr, PrecisionGrowthAndValidation)
 {
@@ -185,6 +212,7 @@ TEST(ExperimentalFourSpinonMpfr, PrecisionGrowthAndValidation)
     tiny_deviations(zero);
     jacobian_and_failures(zero);
     physical_weights(zero);
+    symmetry_zero(zero);
     auto const result = f::solve_four_spinon<R>({12, {-3, -1, 0, 2}, 1}, zero);
     ASSERT_TRUE(result.converged());
     EXPECT_EQ(result.state->deviation().precision(), zero.precision());

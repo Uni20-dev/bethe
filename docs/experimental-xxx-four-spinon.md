@@ -66,6 +66,12 @@ one of `converged`, `unsupported_geometry`, `unconverged` or `precision_limit`.
 Only a converged result contains a state. Numerical failures carry a diagnostic;
 they never stand for a zero spectral weight. The form-factor call separately
 returns the supported `heisenberg::FormFactor<Real>` status and optional weight.
+For a validated zero-momentum state it returns `converged` with exactly zero
+`weight` and absent `log_weight`: the zero-momentum raising operator is total
+spin raising divided by the square root of N and annihilates the singlet.
+Ground and excited norms are still checked, while the structurally singular
+raising determinant is bypassed. This selection rule is distinct from a
+numerical failure and does not require higher precision.
 
 `FourSpinonState<Real>` is an immutable shared snapshot. It retains the request,
 real rapidities, centre, signed deviation, log absolute deviation, momentum
@@ -100,6 +106,9 @@ General collapsed/singular-string regularization is outside this family.
 
 ## Numerical controls
 
+- Two nonsingular N=12 zero-momentum states exercise the exact singlet selection
+  rule in every configured precision; they have resolved norms, converged zero
+  weights and no finite log weight.
 - N=12 roots, energy and raising weight agree with the independent direct
   complex-equation/determinant fixture and its small-chain ED control described
   in [the complex-root guide](experimental-xxx-complex-roots.md).
