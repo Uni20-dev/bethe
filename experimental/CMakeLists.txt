@@ -10,6 +10,10 @@ if(BETHE_BUILD_TESTS)
 endif()
 
 if(BETHE_BUILD_EXAMPLES)
+  add_executable(bethe-experimental-four-spinon-example examples/xxx_four_spinon.cpp)
+  target_link_libraries(bethe-experimental-four-spinon-example PRIVATE bethe::experimental)
+  set_target_properties(bethe-experimental-four-spinon-example PROPERTIES CXX_EXTENSIONS OFF)
+
   add_executable(bethe_example_boundary_form_factors examples/xxx_boundary_form_factors.cpp)
   target_link_libraries(bethe_example_boundary_form_factors PRIVATE bethe::experimental)
 endif()
