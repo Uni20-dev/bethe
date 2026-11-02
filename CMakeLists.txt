@@ -7,6 +7,7 @@ set(CMAKE_CXX_SCAN_FOR_MODULES OFF)
 option(BETHE_BUILD_APPS "Build Bethe ansatz command-line programs" ${PROJECT_IS_TOP_LEVEL})
 option(BETHE_BUILD_TESTS "Build Bethe ansatz regression tests" ${PROJECT_IS_TOP_LEVEL})
 option(BETHE_BUILD_EXAMPLES "Build library composition examples" OFF)
+option(BETHE_BUILD_EXPERIMENTAL "Enable experimental APIs and their tests when BETHE_BUILD_TESTS is ON" OFF)
 option(BETHE_INSTALL_APPS "Install Bethe command-line programs" ${PROJECT_IS_TOP_LEVEL})
 
 # Reuse an enclosing project's Uni20 when present. Otherwise use a reproducible
@@ -227,5 +228,10 @@ endif()
 
 if(BETHE_BUILD_TESTS)
   enable_testing()
+  include(cmake/BetheTesting.cmake)
   add_subdirectory(tests)
+endif()
+
+if(BETHE_BUILD_EXPERIMENTAL)
+  add_subdirectory(experimental)
 endif()

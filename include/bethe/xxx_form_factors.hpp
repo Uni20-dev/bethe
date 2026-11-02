@@ -124,7 +124,8 @@ template <uni20::Real Real> class PreparedRaisingFormFactors {
     PreparedRaisingFormFactors(PreparedRaisingFormFactors&& other) noexcept(std::is_nothrow_move_constructible_v<Real>)
         : status_(std::exchange(other.status_, FormFactorStatus::precision_limit)), sites_(other.sites_),
           aba_rapidities_(std::move(other.aba_rapidities_)), last_column_(std::move(other.last_column_)),
-          ground_residual_(std::move(other.ground_residual_)), root_tolerance_(std::move(other.root_tolerance_)),
+          ground_residual_(std::exchange(other.ground_residual_, std::nullopt)),
+          root_tolerance_(std::move(other.root_tolerance_)),
           ground_log_prefactor_(std::move(other.ground_log_prefactor_)),
           ground_pivot_margin_(std::move(other.ground_pivot_margin_)), working_zero_(std::move(other.working_zero_))
     {}
@@ -139,7 +140,7 @@ template <uni20::Real Real> class PreparedRaisingFormFactors {
       sites_ = other.sites_;
       aba_rapidities_ = std::move(other.aba_rapidities_);
       last_column_ = std::move(other.last_column_);
-      ground_residual_ = std::move(other.ground_residual_);
+      ground_residual_ = std::exchange(other.ground_residual_, std::nullopt);
       root_tolerance_ = std::move(other.root_tolerance_);
       ground_log_prefactor_ = std::move(other.ground_log_prefactor_);
       ground_pivot_margin_ = std::move(other.ground_pivot_margin_);
@@ -151,7 +152,7 @@ template <uni20::Real Real> class PreparedRaisingFormFactors {
     std::size_t sites() const { return sites_; }
     /// Owned standard ABA lambda, not the solver's scaled coordinate z.
     std::span<Real const> aba_rapidities() const { return aba_rapidities_; }
-    /// Measured max|F|/N at the supplied ground roots, absent if not evaluated.
+    /// Measured max|F|/N at the supplied ground roots; absent if not evaluated or moved from.
     std::optional<Real> ground_residual() const { return ground_residual_; }
     Real root_tolerance() const { return root_tolerance_; }
     FormFactorStatus status() const
@@ -163,6 +164,22 @@ template <uni20::Real Real> class PreparedRaisingFormFactors {
       return status_;
     }
     bool ready() const { return status() == FormFactorStatus::converged; }
+
+    /// Ground-only part of the log Fourier raising weight, shared by real and
+    /// complex excited-root formulas. Absent unless this snapshot is ready.
+    /// log(N)-log|det G|+sum log(mu^2+1/4)-sum_{a>b} log(1+(mu_a-mu_b)^2).
+    std::optional<Real> ground_log_prefactor() const
+    {
+      if (!ready()) return {};
+      return ground_log_prefactor_;
+    }
+
+    /// Ground norm's rejection diagnostic, not a condition-number/error bound.
+    std::optional<Real> ground_pivot_margin() const
+    {
+      if (!ready()) return {};
+      return ground_pivot_margin_;
+    }
 
     [[nodiscard]] FormFactor<Real> operator()(RealState<Real> const& excited) const
     {
