@@ -2,7 +2,7 @@
   "schema": "bethe-experimental-recovery-store-validation-v1",
   "date": "2026-11-02",
   "dependencies": {
-    "numerical_recovery": "cb22d522e6b78373677004a33635842539c6dc1a",
+    "numerical_recovery": "2d5f0e115fc9cb9288a9f7647dd1aba6fb1b6063",
     "experimental_foundation": "e916ab29aaa44d7fad264f583a0e79a51d3798c0"
   },
   "scope": "Bounded POSIX storage around supported density recovery; not a weighted observation or distributed job controller",
@@ -26,34 +26,34 @@
   },
   "sources": {
     "experimental/include/bethe/experimental/detail/spinon_checkpoint_codec.hpp": "cce16a71eff967d2c588eb7b965f77d1d23cbdb0b601ea0a0b0f9c1b40051d06",
-    "experimental/include/bethe/experimental/spinon_recovery_store.hpp": "f32379969921378953366bff09d6d98cf233d19afe5cca7fd395b1e8fde002c4",
-    "experimental/tests/test_spinon_recovery_store.cpp": "5a8efcb232c8d0308135d80e4df1eb8946927f862e85c70591c230b53a5dc91c",
+    "experimental/include/bethe/experimental/spinon_recovery_store.hpp": "3f4f0afcd3f7189ca0908796a78a0f59e42b80c44a141fc49eb314311b0da703",
+    "experimental/tests/test_spinon_recovery_store.cpp": "0a8fa65c3d7b440621a9d06ccc19f6afed78f06bf2af0abde1eb34716e576803",
     "experimental/examples/spinon_recovery_store.cpp": "a91043f52b55220cdf8974fb7a1e4b848bdd551868c64297b48d42b967197f61"
   },
   "checks": {
     "wide": {
-      "tests": 12,
+      "tests": 15,
       "failures": 0,
       "errors": 0,
-      "time": "2.553s",
-      "sha256": "720a1d2743559c541fc3752251bd02247b917cefe5ff1b6caabd3f32856a510a"
+      "time": "7.051s",
+      "sha256": "33337f369d3108229a48ad373b8b13c7d7c80262263ed06eb07e1c5bec47571e",
+      "scope": "Focused direct build of current store test against actual recovery dependency; existing configured providers."
     },
     "sanitizers": {
-      "tests": 11,
+      "tests": 14,
       "failures": 0,
       "errors": 0,
-      "time": "3.672s",
-      "sha256": "db06785543edb053ac23634c9ff63118969d5d6246867e6e612fd903d2b9fb56"
+      "time": "8.202s",
+      "sha256": "97feb4269ff5524e86f1ac2b9c29bc8688da7c69360519dbcab89caab9f5ca8d",
+      "scope": "Focused direct build of current store test against actual recovery dependency; existing configured providers."
     },
     "native": {
-      "name": "(empty)",
-      "tests": "10",
-      "failures": "0",
-      "disabled": "0",
-      "skipped": "0",
-      "hostname": "",
-      "time": "1",
-      "timestamp": "2026-11-02T08:36:08"
+      "tests": 13,
+      "failures": 0,
+      "errors": 0,
+      "time": "6",
+      "sha256": "8a54b113aa209f23d865fa7df19a5a9b1a4355915d8cf336438ce7792eb37f9a",
+      "scope": "Rebuilt native CMake store test/example targets in the existing configuration."
     }
   },
   "example": [
@@ -108,18 +108,28 @@
       "cpu_model": "12th Gen Intel Core i7-12700KF",
       "compiler": "13.3.0",
       "optimization": "Release -O3 -DNDEBUG"
-    }
+    },
+    "measured_public_revision": "571fa42a21a0af319beb26f70fec9f393e2cf09a",
+    "scope": "Historical baseline before later deadline and recovery-status fixes; not a timing claim for the current source."
   },
   "coverage": [
     "native binary64 and long double; wide binary128; MPFR 80/128/160/256 scalar serialization and mixed 32/64 to 160/256 recovery",
     "POSIX fork/exit before and after rename; competing owner; failed publication; expired and slow-publication deadlines; concurrency replay",
-    "file count bounded per chunk; no production inputs or archive dependency"
+    "file count bounded per chunk; no production inputs or archive dependency",
+    "accepted result retains its assessed time despite a sibling holding the publication lock beyond its deadline; reopened replay remains accepted without kernels"
   ],
   "limits": [
-    "native is a fresh configured CMake build; wide/sanitizer are independent focused direct builds with existing configured provider libraries",
+    "native uses rebuilt CMake targets in an existing configuration; wide/sanitizer use focused direct builds with existing configured provider libraries",
     "sanitizers retain existing Uni20 MPFR cache leak suppressions",
     "local filesystem process-restart semantics only; no power-loss or NFS certification",
-    "cost is eight alternating measured repetitions after one warmup for three small interior points; no campaign throughput claim",
+    "historical cost is eight alternating measured repetitions after one warmup for three small interior points at cost.measured_public_revision; no current-head or campaign throughput claim",
     "public review, current CI, dependency landing, default-OFF/install and final deployed docs remain separate gates"
-  ]
+  ],
+  "regression": {
+    "previous_store_head": "19041c8e2db9ce0e63c1e17aab9d62f09e213a1f",
+    "test": "RecoveryStore.SiblingPublicationAfterFinalAssessmentCannotExpireAcceptance",
+    "old_failures": 1,
+    "old_tests": 1,
+    "current_passes": true
+  }
 }

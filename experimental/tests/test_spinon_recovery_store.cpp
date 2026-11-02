@@ -6,6 +6,7 @@
 #include <bethe/experimental/spinon_recovery_store.hpp>
 #include <csignal>
 #include <fstream>
+#include <future>
 #include <sys/wait.h>
 #include <thread>
 #include <uni20/async/tbb_scheduler.hpp>
@@ -302,6 +303,64 @@ TEST(RecoveryStore, FinalPublicationDoesNotExpireCompletedResult)
   Store reopened(scratch.path, b);
   auto result = reopened.run(0, [](auto const&) { ADD_FAILURE() << "finalized result ran a control"; });
   EXPECT_TRUE(result.accepted());
+  EXPECT_EQ(result.wall_seconds, completed_wall);
+  EXPECT_EQ(reopened.load(0)->wall_seconds, completed_wall);
+}
+
+TEST(RecoveryStore, SiblingPublicationAfterFinalAssessmentCannotExpireAcceptance)
+{
+  if (!native_pair()) GTEST_SKIP();
+  Scratch scratch;
+  auto b = binding();
+  b.points.resize(2);
+  b.policy.max_wall_seconds = 2;
+  double completed_wall = 0;
+  {
+    std::promise<void> start_sibling, holding_mutex;
+    auto start = start_sibling.get_future();
+    auto holding = holding_mutex.get_future();
+    thread_local bool sibling_publication = false;
+    bool delayed = false;
+    Store store(scratch.path, b, [&](auto phase) {
+      if (phase == cd::PublicationPhase::before_replace && sibling_publication && !delayed)
+      {
+        delayed = true;
+        holding_mutex.set_value();
+        std::this_thread::sleep_for(std::chrono::milliseconds(2300));
+      }
+    });
+    std::exception_ptr sibling_error;
+    std::jthread sibling([&] {
+      if (start.wait_for(std::chrono::seconds(5)) != std::future_status::ready) return;
+      sibling_publication = true;
+      try
+      {
+        (void)store.run(1);
+      }
+      catch (...)
+      {
+        sibling_error = std::current_exception();
+      }
+    });
+    auto result = store.run(0, [&](auto const& progress) {
+      if (progress.attempts.size() == 2)
+      {
+        start_sibling.set_value();
+        // Return while the sibling holds the store mutex. The driver's final
+        // budget check/assessment precedes its subsequent lock wait.
+        EXPECT_EQ(holding.wait_for(std::chrono::seconds(5)), std::future_status::ready);
+      }
+    });
+    sibling.join();
+    if (sibling_error) std::rethrow_exception(sibling_error);
+    ASSERT_TRUE(delayed);
+    ASSERT_TRUE(result.accepted()) << result.reason;
+    EXPECT_LT(result.wall_seconds, b.policy.max_wall_seconds);
+    completed_wall = result.wall_seconds;
+  }
+  Store reopened(scratch.path, b);
+  auto result = reopened.run(0, [](auto const&) { ADD_FAILURE() << "accepted point reran a control"; });
+  ASSERT_TRUE(result.accepted()) << result.reason;
   EXPECT_EQ(result.wall_seconds, completed_wall);
   EXPECT_EQ(reopened.load(0)->wall_seconds, completed_wall);
 }
