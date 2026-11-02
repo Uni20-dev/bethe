@@ -66,7 +66,14 @@ with tempfile.TemporaryDirectory() as directory:
     assert records[0]["deviation"] == ""
     assert records[0]["diagnostic"]
     for args in (["12", "--max-candidates", "1"],
-                 [*selected, "--momentum-index", "9"],
+                 ["12", "--max-candidates", "104"],
+                 ["36"],
+                 ["12", "--momentum-index", "3", "--max-candidates", "1"]):
+        target = root / "over-budget.csv"
+        result = run([*args, "--csv", str(target)], 1)
+        assert "four-spinon catalogue exceeds max_candidates" in result.stderr, result
+        assert not target.exists(), result
+    for args in ([*selected, "--momentum-index", "9"],
                  ["12", "--branch", "0"],
                  ["12", "--holes=-2,-2,1,2", "--branch", "0"]):
         target = root / "must-not-exist.csv"

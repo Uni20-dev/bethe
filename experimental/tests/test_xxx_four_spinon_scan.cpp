@@ -138,10 +138,22 @@ TEST(ExperimentalFourCatalogue, IndependentExhaustiveLabelsAndMomentumFilters)
   EXPECT_EQ(f::four_spinon_transfer_index({12, {-3, -1, 0, 2}, 1}), 3);
   EXPECT_THROW(f::four_spinon_catalogue(10), std::invalid_argument);
   EXPECT_THROW(f::four_spinon_catalogue(12, 12), std::invalid_argument);
-  EXPECT_THROW(f::four_spinon_catalogue(12, {}, 104), std::length_error);
+  auto rejects_budget = [](std::optional<int> transfer, std::size_t limit) {
+    try
+    {
+      (void)f::four_spinon_catalogue(12, transfer, limit);
+      FAIL() << "over-budget catalogue was accepted";
+    }
+    catch (std::length_error const& error)
+    {
+      EXPECT_STREQ(error.what(), "four-spinon catalogue exceeds max_candidates");
+    }
+  };
+  rejects_budget({}, 104);
+  rejects_budget({}, 2);
   auto const size = f::four_spinon_catalogue(12, 3).size();
   EXPECT_EQ(f::four_spinon_catalogue(12, 3, size).size(), size);
-  EXPECT_THROW(f::four_spinon_catalogue(12, 3, size - 1), std::length_error);
+  rejects_budget(3, size - 1);
 }
 
 template <typename R> class ExperimentalFourScan : public ::testing::Test {};

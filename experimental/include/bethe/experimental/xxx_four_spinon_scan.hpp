@@ -58,7 +58,18 @@ inline std::vector<FourSpinonRequest> four_spinon_catalogue(int sites, std::opti
     throw std::invalid_argument("momentum-transfer index must lie in [0,N)");
   std::vector<FourSpinonRequest> result;
   if (!transfer_index)
-    result.reserve(3 * bethe::detail::bounded_binomial(static_cast<std::size_t>(sites / 2) + 1, 4, max_candidates / 3));
+  {
+    std::size_t count;
+    try
+    {
+      count = bethe::detail::bounded_binomial(static_cast<std::size_t>(sites / 2) + 1, 4, max_candidates / 3);
+    }
+    catch (std::length_error const&)
+    {
+      throw std::length_error("four-spinon catalogue exceeds max_candidates");
+    }
+    result.reserve(3 * count);
+  }
   auto append = [&](int a, int b, int c, int d, int branch) {
     if (result.size() == max_candidates) throw std::length_error("four-spinon catalogue exceeds max_candidates");
     result.push_back({sites, {a, b, c, d}, branch});
