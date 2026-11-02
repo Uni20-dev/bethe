@@ -115,11 +115,11 @@ def weights(frequencies, times, *, offsets=None, indices=None, order=24,
     return result
 
 
-def _wide_covariance_rows(W, C):
-    """Conservative exponent check for unscaled binary64 quadratic forms."""
+def _covariance_range_risks(W, C):
+    """Separate possible underflow from possible overflow in quadratic forms."""
     nonzero = C[C != 0]
     if not len(nonzero):
-        return np.zeros(len(W), dtype=bool)
+        return np.zeros(len(W), dtype=bool), np.zeros(len(W), dtype=bool)
     ce = np.frexp(nonzero)[1]
     parts = np.stack((W.real, W.imag))
     exponents = np.frexp(parts)[1]
@@ -128,8 +128,34 @@ def _wide_covariance_rows(W, C):
     # Leave headroom for matrix products, n^2-term allowances and sqrt.
     # This is an arithmetic dispatch check, not a statistical tolerance.
     headroom = 2*(W.shape[1]-1).bit_length()
-    return ((2*smallest + int(ce.min()) < -900) |
-            (2*largest + int(ce.max()) + headroom > 900))
+    return (2*smallest + int(ce.min()) < -900,
+            2*largest + int(ce.max()) + headroom > 900)
+
+
+def _underflow_negligible(W, vr, vi, ri):
+    """Check lost underflow terms against each computed observable.
+
+    In (a @ C) @ b, gradual-underflow errors contribute at most about
+    2*n*eta*(1+sum(abs(b))), where eta is the minimum binary64 subnormal.
+    Use 4*n*(n+1)*eta*max(1,max(abs(b))) as a conservative allowance for
+    those errors and their subsequent rounding. Compare exponent bounds,
+    avoiding underflow in the allowance itself, with extra mantissa headroom.
+    This bounds underflow loss, not the usual relative rounding error or
+    covariance-conditioning error. Active zero/cancelling results stay exact.
+    """
+    n = W.shape[1]
+    common = -1074 + 2 + (n-1).bit_length() + n.bit_length()
+
+    def safe(value, right, active):
+        largest = np.frexp(np.max(np.abs(right), axis=1))[1]
+        lost_exponent = common + np.maximum(0, largest)
+        value_exponent = np.frexp(value)[1]
+        return ~active | ((value != 0) & (value_exponent > lost_exponent + 56))
+
+    real_active = np.any(W.real != 0, axis=1)
+    imag_active = np.any(W.imag != 0, axis=1)
+    return (safe(vr, W.real, real_active) & safe(vi, W.imag, imag_active)
+            & safe(ri, W.imag, real_active & imag_active))
 
 
 def _fraction_sqrt(value):
@@ -182,8 +208,9 @@ def statistics(operator, mean, covariance):
 
     Covariance is checked for symmetry and positive semidefiniteness (an O(n^3)
     eigenvalue check); roundoff-size violations are tolerated, not a physical
-    negative variance. Extreme exponent rows use exact products of the input
-    binary64 entries before rounding outputs. Inputs are not mutated.
+    negative variance. Rows at risk of overflow, or where underflow loss is
+    not negligible for a computed quadratic form, use exact products of the
+    input binary64 entries before rounding outputs. Inputs are not mutated.
     """
     W = np.asarray(operator, dtype=complex)
     m = _real_array(mean, "mean")
@@ -208,12 +235,12 @@ def statistics(operator, mean, covariance):
         symmetric[safe_sum] = (C[safe_sum] + C.T[safe_sum])/2
         symmetric[~safe_sum] = C[~safe_sum]/2 + C.T[~safe_sum]/2
         C = symmetric
-    wide = _wide_covariance_rows(W, C)
-    any_wide = bool(wide.any())
+    underflow_risk, wide = _covariance_range_risks(W, C)
+    ordinary_indices = np.flatnonzero(~wide)
     try:
         with np.errstate(over="raise", invalid="raise"):
             y = W@m
-            ordinary = W[~wide] if any_wide else W
+            ordinary = W[ordinary_indices] if wide.any() else W
             vr = np.einsum("ij,ij->i", ordinary.real@C, ordinary.real)
             vi = np.einsum("ij,ij->i", ordinary.imag@C, ordinary.imag)
             ri = np.einsum("ij,ij->i", ordinary.real@C, ordinary.imag)
@@ -223,13 +250,21 @@ def statistics(operator, mean, covariance):
                           for part in (ordinary.real, ordinary.imag)]
         if not all(np.isfinite(x).all() for x in (y, vr, vi, ri, *allowances)):
             raise OverflowError("nonfinite transformed statistics")
+        sensitive = underflow_risk[ordinary_indices]
+        if sensitive.any():
+            keep = np.ones(len(ordinary), dtype=bool)
+            keep[sensitive] = _underflow_negligible(
+                ordinary[sensitive], vr[sensitive], vi[sensitive], ri[sensitive])
+            wide[ordinary_indices[~keep]] = True
+            vr, vi, ri = vr[keep], vi[keep], ri[keep]
+            allowances = [a[keep] for a in allowances]
         _require(np.all(vr >= -allowances[0]) and np.all(vi >= -allowances[1]),
                  "negative transformed variance")
         real_error, imag_error, covariance_ri = (np.zeros(len(W)) for _ in range(3))
         real_error[~wide] = np.sqrt(np.maximum(0, vr))
         imag_error[~wide] = np.sqrt(np.maximum(0, vi))
         covariance_ri[~wide] = ri
-        if any_wide:
+        if wide.any():
             exact = [list(map(Fraction, row)) for row in C.tolist()]
             tolerance = Fraction(tol)
             for i in np.flatnonzero(wide):
