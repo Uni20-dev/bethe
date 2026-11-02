@@ -151,7 +151,23 @@ template <uni20::Real R> R residual_tolerance(int n, std::span<C<R> const> roots
   R const zero = bethe::detail::precision_zero(exemplar);
   R const s = separation<R>(roots, zero), eps = uni20::numeric_limits<R>::epsilon(zero);
   if (!(s > 64 * uni20::math::sqrt(eps))) throw std::runtime_error("unresolved complex roots; increase precision");
-  return 256 * eps * n / s;
+  // Coincident roots are inadmissible, but are not poles of the Bethe
+  // equations: their scattering factors have denominators d +/- i, not d.
+  // Letting |d| inflate this allowance can accept a Newton iterate collapsing
+  // onto a duplicate-root solution. Keep that geometry gate above separate
+  // from the roundoff amplification at actual equation poles.
+  R const one = uni20::scalar_like(zero, 1);
+  R poles = one;
+  for (std::size_t i = 0; i < roots.size(); ++i)
+  {
+    poles = std::min(poles, uni20::math::abs(roots[i] * roots[i] + one / 4));
+    for (std::size_t j = 0; j < i; ++j)
+    {
+      auto const d = roots[i] - roots[j];
+      poles = std::min(poles, uni20::math::abs(one + d * d));
+    }
+  }
+  return 256 * eps * n / poles;
 }
 
 template <uni20::Real R> R energy(int n, std::span<C<R> const> roots, R const& exemplar = R{0})
@@ -196,7 +212,7 @@ heisenberg::FormFactor<R> raising_weight(PreparedSinglet<R> const& ground, std::
   if (!(s > 64 * uni20::math::sqrt(eps))) return result;
   R const measured = rational_residual<R>(n, lambda, zero);
   if (!uni20::isfinite(measured)) return result;
-  R const tolerance = 4 * (256 * eps * n / s);
+  R const tolerance = 4 * residual_tolerance<R>(n, lambda, zero);
   if (measured > tolerance)
   {
     result.status = heisenberg::FormFactorStatus::roots_unconverged;

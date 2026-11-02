@@ -4,7 +4,7 @@
 
 Two two-strings or one three-string, with resolved finite-size deviations.
 Requires mpmath >= 1.2; no private data or Bethe extension is imported.
-Use --verify to regenerate all eight committed root/energy/weight fixtures.
+Use --verify to check all eight committed root/energy/weight fixtures against fresh solves.
 Includes the two N=12 non-self-conjugate-string configurations identified in
 Deguchi-Giri (2015), Table I; not a general exceptional-string solver.
 Not a thermodynamic spectral function. All energies

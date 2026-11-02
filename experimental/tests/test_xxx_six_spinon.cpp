@@ -80,6 +80,27 @@ template <uni20::Real R> void selected_references(R const& zero)
   }
 }
 
+template <uni20::Real R> void collapsed_triples(R const& zero)
+{
+  for (int sign : {-1, 1})
+  {
+    six::Configuration request{20, six::Family::triple, {}, {sign}};
+    for (int h : {-9, -7, -5, 1, 3, 11})
+      request.holes.push_back(uni20::from_twice(sign * h));
+    auto const solved = six::solve<R>(request, zero);
+    // These Newton trajectories approach a duplicate real root. Previously
+    // the coincidence-dependent allowance accepted them in binary128/MPFR256.
+    EXPECT_FALSE(solved.converged());
+    EXPECT_FALSE(solved.state);
+    EXPECT_FALSE(solved.attempted_variables.empty());
+    EXPECT_FALSE(solved.diagnostic.empty());
+    auto const gs = xxx::sector_ground_state<R>(20, uni20::half_int{0}, options(zero));
+    experimental_xxx::PreparedSinglet<R> const ground(20, gs);
+    ASSERT_TRUE(ground.ready());
+    EXPECT_FALSE(six::raising_weight(ground, solved).weight);
+  }
+}
+
 template <uni20::Real R> void selection_zeros(R const& zero)
 {
   std::array<six::Configuration, 2> requests{
@@ -175,6 +196,7 @@ TYPED_TEST_SUITE(ExperimentalSix, test_support::RealTypes, test_support::Precisi
 TYPED_TEST(ExperimentalSix, IndependentSelectedRootsEnergiesAndWeights) { selected_references(TypeParam{0}); }
 TYPED_TEST(ExperimentalSix, AnalyticJacobians) { jacobians(TypeParam{0}); }
 TYPED_TEST(ExperimentalSix, BothFamiliesRespectZeroMomentumSelection) { selection_zeros(TypeParam{0}); }
+TYPED_TEST(ExperimentalSix, CollapsedThreeStringTrajectoriesRemainFailures) { collapsed_triples(TypeParam{0}); }
 TYPED_TEST(ExperimentalSix, SameMomentumDifferentLabelsReject)
 {
   using R = TypeParam;
@@ -215,6 +237,7 @@ TEST(ExperimentalSixMpfr, ExplicitPrecision)
     selected_references(zero);
     jacobians(zero);
     selection_zeros(zero);
+    collapsed_triples(zero);
     auto answer = six::solve(request(six_fixture::entries[0]), zero);
     ASSERT_TRUE(answer.converged());
     auto const ground_state = xxx::sector_ground_state<uni20::mpreal>(12, uni20::half_int{0}, options(zero));
