@@ -8,6 +8,50 @@
 namespace model = bethe::xxz;
 namespace
 {
+template <uni20::Real R> void check_critical_sheet_order(R const& zero)
+{
+  auto parse = [&](char const* text) {
+    if constexpr (uni20::has_runtime_precision_v<R>)
+      return uni20::parse_real<R>(text, uni20::precision_of(zero));
+    else
+      return uni20::parse_real<R>(text);
+  };
+  R const eps = uni20::numeric_limits<R>::epsilon(zero), pi = bethe::detail::spinon_pi(zero);
+  for (auto const* text : {"1.01", "1.1", "1.5", "2", "4", "16"})
+  {
+    SCOPED_TRACE(text);
+    model::ThermodynamicTwoSpinonStructureFactor<R> sf(parse(text));
+    R const critical = R{2} * uni20::math::atan(uni20::math::sqrt(sf.gap() / sf.maximum_energy()));
+    auto check = [&](R const& k) {
+      auto const sheets = sf.sheets(k);
+      ASSERT_EQ(sheets[0].present, pi - k >= critical);
+      ASSERT_EQ(sheets[1].present, k >= critical);
+      for (auto const& sheet : sheets)
+        if (sheet.present)
+        {
+          ASSERT_TRUE(uni20::isfinite(sheet.lower) && uni20::isfinite(sheet.upper));
+          ASSERT_LE(sheet.lower, sheet.upper) << "k=" << uni20::format_scalar(k) << ", sign=" << sheet.sign;
+          EXPECT_EQ(sf(k, sheet.lower).status, model::SpectralDensityStatus::threshold);
+          EXPECT_EQ(sf(k, sheet.upper).status, model::SpectralDensityStatus::threshold);
+        }
+    };
+    // The sheet width vanishes quadratically. Probe both closure momenta at
+    // epsilon and sqrt(epsilon) scales, where separately rounded bounds cross.
+    for (R const& center : std::array<R, 2>{critical, pi - critical})
+    {
+      for (int offset = -32; offset <= 32; ++offset)
+        check(center + critical * (R(offset) * eps));
+      for (int offset : {-256, -16, -4, -1, 1, 4, 16, 256})
+        check(center + critical * (R(offset) * uni20::math::sqrt(eps)));
+    }
+  }
+  // Concrete binary64 failures reported independently by the reviewer.
+  for (auto const& input : {std::pair{"4", "1.0735024270630484"}, {"1.5", "2.8359505389696045"}})
+    for (auto const& sheet :
+         model::ThermodynamicTwoSpinonStructureFactor<R>(parse(input.first)).sheets(parse(input.second)))
+      if (sheet.present) EXPECT_LE(sheet.lower, sheet.upper);
+}
+
 template <uni20::Real R> void check_endpoint_sheets(R const& zero)
 {
   auto parse = [&](char const* text) {
@@ -110,6 +154,8 @@ template <uni20::Real R> void check_tiny_momentum_and_threshold_priority(R const
 template <typename T> class XXZThermodynamicDSF : public ::testing::Test {};
 TYPED_TEST_SUITE(XXZThermodynamicDSF, test_support::RealTypes, test_support::PrecisionNames);
 
+TYPED_TEST(XXZThermodynamicDSF, CriticalSheetBoundsRemainOrdered) { check_critical_sheet_order(TypeParam{0}); }
+
 TYPED_TEST(XXZThermodynamicDSF, TinyMomentumAndThresholdPriority)
 {
   check_tiny_momentum_and_threshold_priority(TypeParam{0});
@@ -118,6 +164,12 @@ TYPED_TEST(XXZThermodynamicDSF, TinyMomentumAndThresholdPriority)
 TYPED_TEST(XXZThermodynamicDSF, ExactEndpointSheetSupportAndValues) { check_endpoint_sheets(TypeParam{0}); }
 
 #if UNI20_HAS_MPREAL
+TEST(XXZThermodynamicDSFMpfr, CriticalSheetBoundsRemainOrdered)
+{
+  for (auto bits : {128, 256})
+    check_critical_sheet_order(uni20::mpreal(0, uni20::Precision::bits(bits)));
+}
+
 TEST(XXZThermodynamicDSFMpfr, TinyMomentumAndThresholdPriority)
 {
   for (auto bits : {128, 256})

@@ -95,13 +95,20 @@ template <uni20::Real Real> class ThermodynamicTwoSpinonStructureFactor {
         // pi-k before trigonometry can erase a resolved nonzero momentum.
         Real const s = sign == 1 ? ch : sh;
         Real const c = sign == 1 ? sh : ch;
-        Real const upper = Real{2} * scale_ * uni20::math::hypot(s, kp_ * c);
         Real const distance_from_pi = sign == 1 ? k : pi() - k;
-        // Form the bounded angular factor first: 2*scale_ is representable,
-        // but 2*scale_*(1+kp_) need not be.
-        Real const lower = distance_from_pi >= critical_ ? scale_ * ((Real{1} + kp_) * (Real{2} * sh * ch))
-                                                         : Real{2} * scale_ * uni20::math::hypot(c, kp_ * s);
-        return {sign, lower, upper, true};
+        if (distance_from_pi >= critical_)
+        {
+          // In angular units, upper^2-lower^2=(s^2-kp*c^2)^2.
+          // Use this nonnegative difference to keep a closing sheet ordered;
+          // separately rounded formulas can otherwise give lower > upper.
+          // Form bounded factors first: 2*scale_ is representable, whereas
+          // 2*scale_*(1+kp_) need not be.
+          Real const lower = (Real{1} + kp_) * (sh * ch);
+          Real const width = s * s - kp_ * c * c;
+          return {sign, Real{2} * scale_ * lower, Real{2} * scale_ * uni20::math::hypot(lower, width), true};
+        }
+        return {sign, Real{2} * scale_ * uni20::math::hypot(c, kp_ * s),
+                Real{2} * scale_ * uni20::math::hypot(s, kp_ * c), true};
       };
       return {plus(pi() - k, 1), plus(k, -1)};
     }

@@ -154,6 +154,14 @@ elliptic map with a restricted Carlson RF helper, and uses Uni20's scaled theta
 constants/jets. It sums the nondecaying harmonic part of the transition kernel
 analytically and bounds the remaining geometrically decaying series tail.
 
+At a sheet's closing momentum its width vanishes quadratically. Independently
+rounding the upper and lower bounds can invert that narrow interval. On the
+branch with lower angular bound $`\ell=(1+k')sc`$, the code instead uses
+$`u=\sqrt{\ell^2+(s^2-k'c^2)^2}`$, where $`s^2+c^2=1`$ and $`k'`$ is the
+single-spinon gap divided by its maximum energy. Both bounds are then scaled
+by twice that maximum energy. This keeps the interval ordered; a width below
+the chosen precision may round to zero. Increase precision to resolve it.
+
 The standalone `scripts/reference_xxz_two_spinon.py` provides a direct mpmath
 elliptic/theta implementation and a separate original q-product vertex route
 from [Abada–Bougourzi–Si-Lakhal](../CITATIONS.md#abada-bougourzi-si-lakhal-1997),

@@ -127,10 +127,10 @@
       "docs/models.md": "08254969a8196b732f832290bf392d74f7616add30af1b06f805146c958e5f68",
       "docs/xxz-dispersion.md": "56d21577c602f9ac061dd006243361b25fe2dc84f82884115a83ae8d167d73e0",
       "docs/xxz-family.md": "f3e9e199ad1d575e5ba51deae87083068e8ab0ed10e5d02f11a45d35f37b8072",
-      "docs/xxz-structure-factor-thermo.md": "212b2c2e9b66b0833622748319a518187eec3c4ec4b33f76b0777c0eb3c2b524",
+      "docs/xxz-structure-factor-thermo.md": "fdb6a06db0c1504f28c2502fa858f359aee58a8a62f537b0184c04a1f972ddf9",
       "include/bethe/citations.hpp": "3aaf1fe528ad8206a00d72fd43ecf5f06f2922d6d4bfdf884b717b57764f78d7",
       "include/bethe/detail/carlson_rf.hpp": "49783c7d1217b90ab40fff74fb48cae0e600a1025c03dab7d5944a947118d7c1",
-      "include/bethe/xxz_thermodynamic_structure_factor.hpp": "dd70686d23327e120bb62e4eefd04c17d9948287c22024b5f67d688a4eb9012c",
+      "include/bethe/xxz_thermodynamic_structure_factor.hpp": "98aee1a2495c60173ee424fbba109b0c204755da6f82176d8968d7a175452bc7",
       "scripts/reference_xxz_two_spinon.py": "70945142241c5160265dd6a400f5dd9ec98642c9fab318b77ac25eb39119670a",
       "scripts/test_reference_xxz_two_spinon.py": "5399b8ee6b560d023746230f3e5d638f564b862e871bdb20bf467d551e0c154c",
       "tests/CMakeLists.txt": "6ff88c668e07c3079a5de4fd73305af554503e47769c52798e37f4db603fff3f",
@@ -138,7 +138,7 @@
       "tests/check_precision_info.py": "e3a66fb4432c844f5fbbbf2d94c5946405e7979492c15030ceaab5f8ac0b355f",
       "tests/check_shared_arguments.py": "82dc9a2f3031d3a7ad4e6f11928468152db722482980bc9db3659a7a26a716aa",
       "tests/check_xxz_thermodynamic_structure_factor.py": "7cf7082ee090ab8d9791ce15967ee0960342e196120901ecf631e7e25433acf8",
-      "tests/test_xxz_thermodynamic_structure_factor.cpp": "26d9f7f4900bb1588e50371a64cfc80f6b3421509b4acf14168d138bf7f22f6b",
+      "tests/test_xxz_thermodynamic_structure_factor.cpp": "e12ccb907a0fea2a32f73600bad129850a1b82e69dbd7873bbf2c1e25e619671",
       "zensical.toml": "837c8c8a0c3416ce44505ff94ed5b37556d54e77bc03310bf2a12a98d7d81994"
     },
     "scope": "All changed source/test/document files relative to base_revision, excluding this self-describing manifest. These hashes identify the actual public input files; unchanged files come from the base. The enclosing Git commit binds this manifest to the reviewed tree."
@@ -307,5 +307,44 @@
     },
     "scope": "Focused CMake numerical, frontend/exports/serial-Async/precision, shared argument and citation checks. One compiler process and six-CPU affinity. Existing Uni20 MPFR cache suppressions in ASan/UBSan. Initial failed tests retained locally. No full repository or production-grid claim.",
     "remaining": "Exact-head peer/Claude review, full CI and installed/deployed integration."
+  },
+  "closing_sheet_bounds_correction": {
+    "previous_revision": "87fdadc529b1792542fea4f06861b21186cc1108",
+    "change": "On the central-lower branch, use u=hypot(l,s*s-kp*c*c) with l=(1+kp)*s*c; scale both angular bounds by the same 2*maximum_energy. This retains ordered bounds when the quadratic width is unresolved, without tolerance clamping.",
+    "regression": "Old header fails the identical closing-sheet tests in binary64, native 80-bit extended precision, binary128 and MPFR128/256. Probe both critical momenta at epsilon and sqrt(epsilon) offsets for Delta=1.01,1.1,1.5,2,4,16, plus the two concrete review examples. Present sheets must be finite and ordered and both endpoints must return threshold.",
+    "old_test_log_sha256": "cffb887d6efe65c53ab3c86e06270bb3a366f1dc0e20bef804b2ec79387d59d2",
+    "checks": {
+      "native": {
+        "passed": 25,
+        "failed": 0,
+        "elapsed_seconds": 0.49,
+        "test_logs_sha256": {
+          "xxz-critical-native-tests.log": "7efe918ef1c7ee2ea161f85d4d087e1dc26b7564541c8598940ecfc6ff75c9ab"
+        },
+        "build_log_sha256": "3d3e74b9b66afc4e34ba1b7a39fcad4919c11bf73dd52161f4edf247c0aa646d"
+      },
+      "wide": {
+        "passed": 39,
+        "failed": 0,
+        "elapsed_seconds": 0.81,
+        "test_logs_sha256": {
+          "xxz-critical-wide-tests.log": "2ed47413718fa4284c702f1430cd0e883b388cadd2277934add58aedf5215679",
+          "xxz-critical-wide-cli-tests.log": "234f5709df3b44cc201920f72ca464c3bb78d24015b9f59a347c569eaf0bc862"
+        },
+        "build_log_sha256": "d15f06f539851bb9c16a0ddf6c9319c6643dc63ce7eb0e8d53b0dd5e6163fb8c"
+      },
+      "sanitizers": {
+        "passed": 30,
+        "failed": 0,
+        "elapsed_seconds": 22.43,
+        "test_logs_sha256": {
+          "xxz-critical-sanitizers-tests.log": "52cd1d49ff2c441763b85bd4d26c7a1625f0359b54c842d838e41e0c8d73c31a"
+        },
+        "build_log_sha256": "e1db251cc26885c69e74048b9bf1eba879dd8d07fd58f6c4221379e8ea5d2086"
+      }
+    },
+    "configured_uni20_revision": "1cb2474eb0a54e13ec7d5f2c1823752020b2425c",
+    "scope": "Focused numerical suite plus frontend/exports/serial-Async/precision, shared arguments and citations, rebuilt in existing configured lanes. Existing physical-reference tolerances and Uni20 MPFR LSan suppression policy are unchanged. Formatting-only edits follow the builds; no full repository or fresh pinned-provider claim.",
+    "remaining": "Exact-head peer/Claude review, current full CI and final installed/deployed integration."
   }
 }
