@@ -131,5 +131,61 @@
     "old_failures": 1,
     "old_tests": 1,
     "current_passes": true
+  },
+  "main_integration": {
+    "date": "2026-11-03",
+    "previous_reviewed_head": "ca585d405044002c96e23fddf21e67fcb4e1fb4d",
+    "merged_main": "6ae45c440f88f1782953ae04c77d7dc3fde4a1ca",
+    "resolution": "Preserve main and append the exact reviewed store blocks to both experimental CMake files; add the store index section without removing boundary content. Clarify the already-recorded historical timing revision in the guide.",
+    "numerical_source_changes": false,
+    "native_checks": {
+      "native_tests": 13,
+      "split_runs": [
+        11,
+        2
+      ],
+      "examples": [
+        {
+          "arguments": [
+            "--stop-after-control"
+          ],
+          "returncode": 2,
+          "stdout": "two: 1 new controls; no accepted value; recovery cancelled; completed controls saved\n",
+          "stderr": ""
+        },
+        {
+          "arguments": [],
+          "returncode": 0,
+          "stdout": "two: 1 new controls; W=0.981164913616476045744\nfour: 2 new controls; W=9.45648964162608848186e-07\nsix: 2 new controls; W=1.05661498554316861361e-09\n",
+          "stderr": ""
+        },
+        {
+          "arguments": [],
+          "returncode": 0,
+          "stdout": "two: 0 new controls; W=0.981164913616476045744\nfour: 0 new controls; W=9.45648964162608848186e-07\nsix: 0 new controls; W=1.05661498554316861361e-09\n",
+          "stderr": ""
+        }
+      ],
+      "store_discovery": {
+        "tests": 13,
+        "label": "experimental",
+        "timeout": 60,
+        "blas_omp_threads": 1
+      },
+      "boundary_targets_configured": true,
+      "scope": "Reconfigured existing native CMake tree, rebuilt store test and example, ran all 13 store/codec cases and fresh interruption/resume/replay. Other boundary targets verified in generated build graph, not rebuilt or executed. First filter selected 11 store cases; the two codec cases were run separately."
+    },
+    "logs_sha256": {
+      "configure.log": "673fe33fff910c9ccf3e231dae86b679cac3cc2664069fe5d898dce8b07c4612",
+      "build.log": "005a32aa5bd8b6af0e9b09998cd154fe61dadbee1b514b0a362b72761a78d63d",
+      "tests.xml": "dfa0022e3a3424bc72095bd1eabb089d1ae70ed00bd9647cfb03f664cadb7f4f",
+      "codec-tests.xml": "75346a768834e031ef5c59331d9ee42a7c70e128c8b9c7b3a02106b1352a5ca4",
+      "test-discovery.json": "cc1e244dad4a64a16cdf4dbda503bb9d944b11c8188b2008a2c562fbc6b9b2d9"
+    },
+    "remaining_gates": [
+      "Exact-head reciprocal correspondence review",
+      "Current CI and completed Claude review",
+      "Public landing and final integrated installation/deployment"
+    ]
   }
 }

@@ -136,10 +136,11 @@ process exits immediately before and after atomic replacement. Deadline tests
 include downtime and slow initial publication. These establish the restart
 contract; they do not independently validate the underlying physical formulas.
 
-A local one-core cost check of the example's three points took median 6.07 ms
+A local one-core cost check at revision `571fa42` of the example's three points took median 6.07 ms
 through the recovery driver and 8.16 ms with publication; completed replay took
 0.456 ms and executed zero new controls. These include context construction and
-use binary64 with a binary80 guard. Eight alternating repetitions follow one
+use binary64 with a binary80 guard. These are baseline timings before the later
+deadline fixes, not measurements of the current revision. Eight alternating repetitions follow one
 warmup, with identical accepted values. This measures about 2.09 ms of storage
 overhead for very small kernels on one local filesystem, not network-filesystem
 or production throughput. The [validation record](../experimental/provenance/spinon-recovery-store.json)
