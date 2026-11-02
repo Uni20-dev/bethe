@@ -8,3 +8,8 @@ target_include_directories(bethe_experimental INTERFACE
 if(BETHE_BUILD_TESTS)
   add_subdirectory(tests)
 endif()
+
+if(BETHE_BUILD_EXAMPLES)
+  add_executable(bethe_example_boundary_form_factors examples/xxx_boundary_form_factors.cpp)
+  target_link_libraries(bethe_example_boundary_form_factors PRIVATE bethe::experimental)
+endif()
