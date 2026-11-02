@@ -12,11 +12,11 @@
     "recovery_store": "19041c8e2db9ce0e63c1e17aab9d62f09e213a1f"
   },
   "source_sha256": {
-    "experimental/include/bethe/experimental/spinon_observation_group.hpp": "9fa884a1a29240f54f4429724bf860ca8d60f39d2725a04d723d7b84f064ab22",
+    "experimental/include/bethe/experimental/spinon_observation_group.hpp": "3c50ca845261f39468cde299c333fa02ea940baa561845c7ec1197dad1a07bc1",
     "experimental/include/bethe/experimental/spinon_observation_store.hpp": "7957a46ea29508e28d17b6766c1ce172b7bad70fa04f1fee0df356b6cc8ad49d",
     "experimental/include/bethe/experimental/detail/spinon_exact_decimal.hpp": "1db3bfde4e7e4ca5925f4ec5ddde580c5903b61b2cb7361c832bc4ef4872903e",
     "include/bethe/xxx_spinon_observation.hpp": "52be605b3849aa4594ab0dfd0c9611d2a6a72871020889dd04bf8928d5a75ae7",
-    "experimental/tests/test_spinon_observation_store.cpp": "59bdfa6d9524984733b8d9aa2ad83505d3812b186f56dbb155d5dd75fbc69c4d",
+    "experimental/tests/test_spinon_observation_store.cpp": "7036547a9fd2fa8fff372b2930408e9712f607cfb6e4ef62a4856a13deec2210",
     "experimental/examples/spinon_observation_store.cpp": "b51c2363cc8e62daeed2c501bc940038cd7a82f2f37e4853948f9dcb98ee111c"
   },
   "checks": {
@@ -293,5 +293,51 @@
       }
     },
     "scope": "Independent fresh compilation of actual consumer group and observation-store test translation units against existing configured GCC13 wide and Clang19 ASan/UBSan providers. Existing Uni20 MPFR cache suppressions apply. No fresh full CMake matrix, new performance measurement or production calculation claimed."
+  },
+  "main_integration": {
+    "date": "2026-11-03",
+    "previous_reviewed_head": "a9fba9aabf1ee795bfce11fa62b33a6d55779d37",
+    "parent_recovery_store": "8a5810702c0dfed5cdcbabe9b88834a606d3ff5a",
+    "public_main": "6ae45c440f88f1782953ae04c77d7dc3fde4a1ca",
+    "merge": "Clean merge; the nine non-integration input blobs are unchanged, with additive CMake and library-guide integration. This record is the only subsequent edit.",
+    "native_checks": {
+      "tests": 17,
+      "failures": 0,
+      "examples": [
+        {
+          "arguments": [
+            "--stop-after-control"
+          ],
+          "returncode": 2,
+          "stdout": "Stopped after one newly completed density control; rerun without the stop option.\n",
+          "stderr": ""
+        },
+        {
+          "arguments": [],
+          "returncode": 0,
+          "stdout": "12 original samples; 7 committed observations replayed; 0 failed observations\nWhole-point sample mean: 2.05341554126191939019e-06; joint covariance dimension 81\nSmall restart demonstration, not a converged DSF estimate.\n",
+          "stderr": ""
+        },
+        {
+          "arguments": [],
+          "returncode": 0,
+          "stdout": "12 original samples; 12 committed observations replayed; 0 failed observations\nWhole-point sample mean: 2.05341554126191939019e-06; joint covariance dimension 81\nSmall restart demonstration, not a converged DSF estimate.\n",
+          "stderr": ""
+        }
+      ],
+      "discovery": "All17 have experimental label,60s timeout and single-thread BLAS/OMP",
+      "scope": "Actual merged source in the existing native CMake configuration; group/store targets rebuilt. Same-coordinate mean and covariance output match resumed/replayed runs; no convergence or production performance claim."
+    },
+    "logs_sha256": {
+      "configure.log": "4dc024cd26c2288aef3b905f62e4fb59a0a2d97f1d05c569063d4f2aa6a79478",
+      "build.log": "0120a5e3473fcdfc0337ea6efcace714c70c4edc13ff7d16f64f3ecb37d9a904",
+      "tests.xml": "bac7ab4890631c8c15801975655e2eac8222ebbdaaf4d516fe55700e783899b0",
+      "test-discovery.json": "562794c970baea122b76d36cb8be5605f0e4cc55355e4e785ff4e44783363525"
+    },
+    "remaining_gates": [
+      "Exact-head correspondence review",
+      "Current CI and completed Claude review",
+      "Parent landing and final public-main installation/deployment"
+    ]
   }
 }
