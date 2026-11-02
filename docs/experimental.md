@@ -114,6 +114,14 @@ real-root triplet scan, local and signed end-to-end time correlations, full
 ground-state boundary density and first-moment references. It includes a
 fresh CLI with explicit failed records and declared exports.
 
+## Restartable density controls
+
+The [spinon recovery store](experimental-spinon-recovery-store.md) binds a
+bounded chunk of decimal inputs to a numerical policy and producer provenance.
+It publishes completed controls atomically for process restart, preserving
+precision and the original deadline. Its portable example needs no research
+archive; POSIX locking and filesystem limitations are documented separately.
+
 ## Scope and promotion
 
 Each experimental feature must document supported inputs, numerical controls,

@@ -325,11 +325,19 @@ template <std::size_t D, uni20::Real R, class Observe> struct MonteCarloRun
         // The grid is a directly awaited child, not separately admitted work.
         // Its existing failure path drains every accepted observation block.
         auto prepare = [run](std::size_t i) { return run->prepare(i); };
-        auto evaluate = [run, stop = execution.stop](Input input) { return run->evaluate(std::move(input), stop); };
+        struct EvaluateBlock
+        {
+            std::shared_ptr<MonteCarloRun> run;
+            std::stop_token stop;
+            std::shared_ptr<Block> operator()(Input input) const { return run->evaluate(std::move(input), stop); }
+        };
         auto collect = [run](std::size_t i, std::shared_ptr<Block> block) { run->collect(i, std::move(block)); };
-        using Window = ObservableWindow<decltype(evaluate), decltype(prepare)>;
-        auto window = std::make_shared<Window>(execution.continuous_scheduler(), std::move(evaluate), execution,
+        using Window = ObservableWindow<EvaluateBlock, decltype(prepare)>;
+        auto window = std::make_shared<Window>(execution.continuous_scheduler(), EvaluateBlock{run, {}}, execution,
                                                run->options.replicates * run->blocks_per_replicate, std::move(prepare));
+        // Include the grid's failure stop, not just external cancellation.
+        // No observation can enter before this token is bound.
+        window->evaluate.stop = window->control.token();
         uni20::async::Async<std::size_t> work;
         co_await observable_grid_task(std::move(window), std::move(collect), work.write());
       }

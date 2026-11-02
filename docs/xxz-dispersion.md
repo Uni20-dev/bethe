@@ -113,9 +113,9 @@ not imply two symmetry-broken Néel vacua.
 
 Folding energies does **not** make a structure factor π-periodic: the two
 translation branches can have different matrix elements. In particular,
-some weights vanish in the isotropic limit. The tool computes kinematics,
-not intensities, observable selection rules, or the complete multiparticle
-spectrum. See [Caux–Mossel–Pérez Castillo](../CITATIONS.md#caux-mossel-perez-castillo-2008)
+some weights vanish in the isotropic limit. The dispersion tool computes kinematics. For massive transverse weights, use
+[`bethe-xxz-structure-factor-thermo`](xxz-structure-factor-thermo.md); it supplies
+the two-spinon contribution, not the complete multiparticle spectrum. See [Caux–Mossel–Pérez Castillo](../CITATIONS.md#caux-mossel-perez-castillo-2008)
 and the [topological MPS excitation framework](../CITATIONS.md#zauner-stauber-2018).
 
 ## Single-spinon dispersion
