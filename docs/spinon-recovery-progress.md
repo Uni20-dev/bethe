@@ -57,10 +57,19 @@ It retains the low-precision value, log scale and arithmetic indicator at the
 corresponding guard precision, allowing it to reconstruct the precision and
 arithmetic screens. Requested tolerances are recomputed from the bound policy.
 
-The overall status and estimate are rebuilt from this evidence. Every earlier
-passing control still participates in the agreement check, including one
-followed by a failed control. A later pair cannot erase a contradiction.
-Histories continuing beyond an already terminal stage are rejected.
+The overall status and estimate are rebuilt from this evidence. A resumable
+prefix has status `incomplete`, a reason, and no accepted estimate; `exhausted`
+means all declared stages have been tried. Progress views passed to the observer
+are also `incomplete`, because the budget check and final assessment follow the
+observer call. A cancelled result becomes `incomplete` when restored if work and
+budget remain; restoration does not preserve an old stop request.
+
+Every earlier passing control still participates in the agreement check,
+including one followed by a failed control. A later pair cannot erase a
+contradiction. Histories continuing beyond an already terminal stage are
+rejected. Invalid saved evidence raises `std::invalid_argument`, including
+arithmetic overflow or underflow while rebuilding its diagnostics. Numerical
+failures during a fresh control remain recorded as control failures.
 
 Already accepted, inconsistent or fully exhausted histories perform no new
 numerical kernels. A partial cancelled history can continue with a new stop

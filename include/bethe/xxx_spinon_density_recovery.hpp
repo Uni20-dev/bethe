@@ -35,7 +35,8 @@ enum class SpinonRecoveryStatus
   time_limit,
   invalid_input,
   unsupported_limit,
-  inconsistent_controls
+  inconsistent_controls,
+  incomplete
 };
 
 template <uni20::Real R> struct CheckedSpinonDensity
@@ -60,7 +61,7 @@ template <uni20::Real R> struct SpinonRecoveryAttempt
 
 template <uni20::Real R> struct SpinonRecoveryResult
 {
-    SpinonRecoveryStatus status = SpinonRecoveryStatus::exhausted;
+    SpinonRecoveryStatus status = SpinonRecoveryStatus::incomplete;
     std::vector<SpinonRecoveryAttempt<R>> attempts;
     std::vector<std::size_t> conflicting_attempts;
     std::optional<SpinonDensityEstimate<R>> estimate;
@@ -69,7 +70,7 @@ template <uni20::Real R> struct SpinonRecoveryResult
     // exhausted. Cancellation, time limits and inconsistent controls have
     // their own terminal reason rather than an earlier attempt's failure.
     std::optional<SpinonDensityFailure> density_failure;
-    std::string reason;
+    std::string reason = "recovery controls not yet fully assessed";
     double wall_seconds = 0;
     // Bind the declared numerical policy. Generic input factories remain the
     // caller's identity contract; decimal-input calls also retain exact text.
@@ -489,6 +490,7 @@ template <uni20::Real Low, uni20::Real High = Low> class XXXSpinonDensityRecover
 
     static void exhaust(Result& result)
     {
+      result.status = SpinonRecoveryStatus::exhausted;
       result.reason = "all declared recovery stages exhausted";
       for (auto attempt = result.attempts.rbegin(); attempt != result.attempts.rend(); ++attempt)
         if (attempt->failure != SpinonDensityFailure::none)
@@ -539,12 +541,21 @@ template <uni20::Real Low, uni20::Real High = Low> class XXXSpinonDensityRecover
       for (auto const& value : {x.low_value, x.low_log_scale, x.low_arithmetic_indicator})
         if (contexts.high.import(contexts.low.import(value)) != value)
           throw std::invalid_argument("low-precision recovery evidence is not exactly representable");
-      auto rebuilt = check_imported(contexts.high, x.low_value, x.low_log_scale, x.low_arithmetic_indicator, e);
-      if (x.failure != rebuilt.failure || attempt.failure != rebuilt.failure ||
-          x.precision_difference != rebuilt.precision_difference ||
-          x.scalar_precision_difference != rebuilt.scalar_precision_difference ||
-          x.arithmetic_screen != rebuilt.arithmetic_screen || x.requested_error != rebuilt.requested_error)
-        throw std::invalid_argument("recovery diagnostics or acceptance changed");
+      try
+      {
+        auto rebuilt = check_imported(contexts.high, x.low_value, x.low_log_scale, x.low_arithmetic_indicator, e);
+        if (x.failure != rebuilt.failure || attempt.failure != rebuilt.failure ||
+            x.precision_difference != rebuilt.precision_difference ||
+            x.scalar_precision_difference != rebuilt.scalar_precision_difference ||
+            x.arithmetic_screen != rebuilt.arithmetic_screen || x.requested_error != rebuilt.requested_error)
+          throw std::invalid_argument("recovery diagnostics or acceptance changed");
+      }
+      catch (SpinonDensityError const&)
+      {
+        // A failed reconstruction is invalid saved evidence, not a fresh
+        // numerical failure of a control that the driver should retry.
+        throw std::invalid_argument("recovery diagnostics cannot be reconstructed");
+      }
     }
 
     bool assess(Result& result, XXXSpinonDensity<High> const& context) const

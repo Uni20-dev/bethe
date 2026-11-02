@@ -43,6 +43,8 @@ inline char const* recovery_status_name(heisenberg::SpinonRecoveryStatus status)
   using S = heisenberg::SpinonRecoveryStatus;
   switch (status)
   {
+    case S::incomplete:
+      return "incomplete";
     case S::accepted:
       return "accepted";
     case S::exhausted:
