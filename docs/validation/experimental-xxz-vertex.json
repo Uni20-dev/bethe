@@ -1,11 +1,11 @@
 {
   "scope": "Experimental infinite massive XXZ two/four-spinon complex vertex amplitudes, fixed-order full-zone moments and Gaussian frequency cuts. No convergence certification or fitted normalization.",
-  "integration_base": "1fedd95471da8b2d57d93d0744eddbaa3388615d",
+  "integration_base": "2c7b3f258b64cfda3c095f2920fe1ecddb2c70e5",
   "prerequisites": {
     "experimental_foundation": "e916ab29aaa44d7fad264f583a0e79a51d3798c0",
     "two_spinon_spectrum": "375f32c0b41a0439cee04d1c3c864bcfce59ea8f"
   },
-  "uni20_revision": "1cb2474eb0a54e13ec7d5f2c1823752020b2425c",
+  "uni20_revision": "ca350254e723b9909571e860318bd274cb0c9ddb",
   "research_origin": {
     "revision": "2242fd5d78ec2c6c81a64993eca5dd6eea6cd732",
     "files_sha256": {
@@ -141,9 +141,9 @@
   "validated_public_inputs": {
     "files_sha256": {
       "docs/experimental-xxz-vertex.md": "fbe1fd440c084af282c1a21d219eeccac0f8df3add2f783e7f6b655d99fcdac9",
-      "docs/experimental.md": "1632c5d8f6dc107d93dbd2483a825f153966f424ac2f06f6137d3bc2ac2e1aa4",
+      "docs/experimental.md": "df8a0d7435374beb78bb4d21f8e29ef63b0efc99e97a1bda1c7ccca110ffb314",
       "experimental/CMakeLists.txt": "e9f5f9c7217ff5c7e12fa38d617a00644d8096215c49be1cbe4f8bc89bded518",
-      "experimental/README.md": "7b8864e47932178421745d688debb2daf81e00cdcf77318c8bab1b3db9641517",
+      "experimental/README.md": "f2ca568a76f0b205800786e885d79e710d6ded272020f6418515fc2a888e2115",
       "experimental/examples/xxz_vertex.cpp": "534ccfc040019deb9b019c518084b9a7d83858cf1a8d7a9a911ad5b393e9335d",
       "experimental/include/bethe/experimental/detail/scaled_complex_product.hpp": "b5edf3e130fff04e8bbe2f72335e1a47cdf53bc15a30731a0df0336e3e9e1b52",
       "experimental/include/bethe/experimental/detail/xxz_spectral_kinematics.hpp": "9ff46ed98e335052b885bfbe04221aa84ea4d3331d97830b5897ceb92fa88aa5",
@@ -157,7 +157,7 @@
       "experimental/reference/xxz/vertex_numpy.py": "60bc4b8b1d2bd4026c754f0f15296d5c93691ceaed56c27e340e53480d52e7f6",
       "experimental/reference/xxz/vertex_quadrature.py": "9c5acd1359439475bf917ca72d9af73c4c0a0bc6267e8add5de6b0dbbe7d93bc",
       "experimental/reference/xxz/vertex_reference.py": "82d3d0935da677057c74df9772c273b6759aa5d14a462d9a0e02fbb1e234ab18",
-      "experimental/tests/CMakeLists.txt": "158fdc7804bb3130731156bde22b76859699235304f65ad96ad71e85c565fcda",
+      "experimental/tests/CMakeLists.txt": "d15d3e913b88b1c10ccbe7aa600ea8211ad38feae84df2df583dda3ac3af7f28",
       "experimental/tests/test_xxz_vertex.cpp": "0a596d6c3f4a7c0b2178ac35ece2c13319c6bca151c02f868b595d7390d69474",
       "zensical.toml": "81cdab43cbea133c06deb8ba85bdc69e1e9ec6cc24035a79ba398cad2ba3a824"
     },
@@ -314,9 +314,10 @@
     }
   },
   "current_parent_integration": {
-    "previous_head": "a62edcc40b6c9e36d8f4c405686d0a1aa3a6fc00",
-    "parent": "1fedd95471da8b2d57d93d0744eddbaa3388615d",
-    "change": "Merge current public main, retaining both sides of additive experimental indexes and test registration. QTM, storage/worker packages and sampling ownership fixes are inherited unchanged.",
+    "previous_head": "85635748a27e65fe822c3d10fd2fc15aa1d6921d",
+    "parent": "2c7b3f258b64cfda3c095f2920fe1ecddb2c70e5",
+    "previous_uni20_revision": "1cb2474eb0a54e13ec7d5f2c1823752020b2425c",
+    "change": "Merge actual landed finite-XXX foundation. The only conflict joins the complex-root and finite-q guide paragraphs in experimental/README.md. Numerical/test/example/reference inputs are unchanged.",
     "source_correspondence": {
       "unchanged_finite_q_inputs": [
         "docs/experimental-xxz-vertex.md",
@@ -347,17 +348,19 @@
     "native": {
       "passed": 27,
       "failed": 0,
-      "seconds": 7.644498917972669,
-      "scope": "Rebuilt the native finite-q test/example targets and ran their complete focused CTest suite. This checks registration and the inherited sampling adapters. Earlier wide/sanitizer numerical evidence is carried forward, not rerun.",
-      "build_log_sha256": "d3fb24c2375bfb7394538bf20174a8896837704afaf059b479c1705fad3e861d",
-      "test_log_sha256": "ca3597aaa391caa933598ff5c742dffc597c4d74b23185b24fb90fd8a071df64"
+      "skipped": 0,
+      "seconds": 7.671031999983825,
+      "scope": "Reconfigured and rebuilt the complete native finite-q tests and Async example against merged Uni20 ca350254. Earlier wide/sanitizer checks remain historical; current full CI is required.",
+      "configure_log_sha256": "4662f1ce501693192bc272abe6353bc3fcbbd70b9235820d574602b11b3e8b04",
+      "build_log_sha256": "37e5e574e725933a56c513d9783f8ee9527a34695ce262abfdf08d5b6ab4ac25",
+      "test_log_sha256": "d09c51863794b5c0c0d6c9d9ec01b33330bc8db37efa10a120c437dbb07fcf28"
     },
     "documentation": {
-      "result": "Checked links/assets in 166 pages, 173 bibliography URLs, and preserved 2084 equations.",
-      "scope": "Fresh local site plus citation, source math and tutorial-link checks; deployment remains pending.",
-      "log_sha256": "c7c23c658553d60f65070a8425517463420a4696457b27b1c623c648159d8717"
+      "result": "Checked links/assets in 167 pages, 173 bibliography URLs, and preserved 2085 equations.",
+      "scope": "Fresh local site, citation, source-math and tutorial-link checks; final deployment remains outstanding.",
+      "log_sha256": "d2f0e5c201bb3d9ce9d56631bb3cc517fb5d9e4d7cab21c70efcb8c1b850c7e6"
     },
-    "manifest": "Exactly the20 changed inputs relative to integration_base, excluding this manifest. Earlier integration records retain their historical counts."
+    "manifest": "Exactly the 20 changed inputs relative to integration_base, excluding this manifest. Prior integration records are retained unchanged."
   },
   "parent_integration_history": [
     {
@@ -381,6 +384,53 @@
         "log_sha256": "4987e77800e0fc41122a6b92d1bd11c0953c8e18b7cd7dc7e8fc6968ff1d0b99"
       },
       "manifest": "Exactly the20 changed inputs relative to the current parent, excluding this manifest; earlier follow-up sections retain their historical counts."
+    },
+    {
+      "previous_head": "a62edcc40b6c9e36d8f4c405686d0a1aa3a6fc00",
+      "parent": "1fedd95471da8b2d57d93d0744eddbaa3388615d",
+      "change": "Merge current public main, retaining both sides of additive experimental indexes and test registration. QTM, storage/worker packages and sampling ownership fixes are inherited unchanged.",
+      "source_correspondence": {
+        "unchanged_finite_q_inputs": [
+          "docs/experimental-xxz-vertex.md",
+          "experimental/examples/xxz_vertex.cpp",
+          "experimental/include/bethe/experimental/detail/scaled_complex_product.hpp",
+          "experimental/include/bethe/experimental/detail/xxz_spectral_kinematics.hpp",
+          "experimental/include/bethe/experimental/xxz_vertex.hpp",
+          "experimental/include/bethe/experimental/xxz_vertex_spectrum.hpp",
+          "experimental/reference/xxz/README.md",
+          "experimental/reference/xxz/requirements.txt",
+          "experimental/reference/xxz/test_vertex_quadrature.py",
+          "experimental/reference/xxz/test_vertex_reference.py",
+          "experimental/reference/xxz/vertex-point.json",
+          "experimental/reference/xxz/vertex_numpy.py",
+          "experimental/reference/xxz/vertex_quadrature.py",
+          "experimental/reference/xxz/vertex_reference.py",
+          "experimental/tests/test_xxz_vertex.cpp"
+        ],
+        "combined_integration_inputs": [
+          "docs/experimental.md",
+          "experimental/CMakeLists.txt",
+          "experimental/README.md",
+          "experimental/tests/CMakeLists.txt",
+          "zensical.toml"
+        ],
+        "all_other_parent_inputs_unchanged": true
+      },
+      "native": {
+        "passed": 27,
+        "failed": 0,
+        "seconds": 7.644498917972669,
+        "scope": "Rebuilt the native finite-q test/example targets and ran their complete focused CTest suite. This checks registration and the inherited sampling adapters. Earlier wide/sanitizer numerical evidence is carried forward, not rerun.",
+        "build_log_sha256": "d3fb24c2375bfb7394538bf20174a8896837704afaf059b479c1705fad3e861d",
+        "test_log_sha256": "ca3597aaa391caa933598ff5c742dffc597c4d74b23185b24fb90fd8a071df64"
+      },
+      "documentation": {
+        "result": "Checked links/assets in 166 pages, 173 bibliography URLs, and preserved 2084 equations.",
+        "scope": "Fresh local site plus citation, source math and tutorial-link checks; deployment remains pending.",
+        "log_sha256": "c7c23c658553d60f65070a8425517463420a4696457b27b1c623c648159d8717"
+      },
+      "manifest": "Exactly the20 changed inputs relative to integration_base, excluding this manifest. Earlier integration records retain their historical counts."
     }
-  ]
+  ],
+  "uni20_revision_scope": "Current source pin and current_parent_integration. Earlier validation sections used 1cb2474 unless separately stated; their results are historical evidence, not reruns with ca350254."
 }

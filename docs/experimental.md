@@ -67,7 +67,8 @@ Fourier raising weight 4/3. See [finite-chain conventions](xxx-structure-factor.
 
 The same snapshot can evaluate existing real-root triplets through
 `real_raising_form_factor(excited)`. It does not yet solve complex-root states
-or supply their form factors. The general numerical formulas and physical
+itself. The separate [regular complex-root helpers](experimental-xxx-complex-roots.md)
+supply unreduced form factors. The general numerical formulas and physical
 normalization must be validated for each added family.
 
 Use `working_zero()` to create scratch with the prepared precision. MPFR inputs
