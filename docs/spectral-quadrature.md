@@ -21,6 +21,61 @@ or place your program beside the module. There is no installed Python package
 yet. NumPy 1.24 or later, below 3, is required; CI checks the 1.x minimum and
 a current 2.x environment.
 
+## A fresh finite-chain versus thermodynamic example
+
+With the installed Bethe programs on `PATH`, run:
+
+```sh
+python scripts/example_xxx_two_spinon_time.py --output xxx-time-example
+```
+
+This small calculation compares the longitudinal two-spinon response at
+`q=pi/2`, using a 16-site periodic chain and the infinite chain. It calculates
+fresh spectra with `bethe-xxx-structure-factor` and
+`bethe-xxx-structure-factor-thermo`; no downloaded data or plotting dependency
+is needed. `--finite-solver` and `--thermo-solver` accept explicit executable
+paths when the programs are not on `PATH`. Both calculations use fp64 and one
+solver thread. The example's default grids require only seconds on an ordinary
+CPU, not a production run.
+
+`time.csv` contains real and imaginary signals on `0 <= Jt <= 20`:
+
+- `finite_all_*`: every calculated finite-chain two-spinon line at this momentum.
+- `finite_window_*`: only those lines within the sampled thermodynamic interval.
+- `thermo_window_*`: the integrated thermodynamic two-spinon density on that interval.
+
+The finite lines are summed directly without broadening. The thermodynamic
+frequency grid is concentrated near the lower threshold using geometric
+segment boundaries, with 129 uniformly spaced points in each segment
+(769 unique frequencies by default). The integral uses the threshold-coordinate
+interpolant described below. The first sampled point is `omega_lower + 1e-6 J`:
+the divergent endpoint and its missing interval are **not filled or estimated**.
+The upper boundary is included with its zero density. Both signals omit
+higher-spinon sectors, and the finite spectrum is not a thermodynamic
+extrapolation; its weights and line positions need not match the infinite chain.
+
+`report.json` records the support, zeroth/first moments, full first-moment sum
+rules and calculation provenance. The original solver CSV exports are retained,
+including their conventions, build revisions, controls and convergence status.
+An existing output directory is refused. A failed source calculation stops the
+example, retaining any earlier exports without declaring a completed report.
+
+The time table separately records changes from doubling phase-quadrature order
+and coarsening the frequency grid, plus propagation of the solver's pointwise
+kernel error estimates. These are diagnostics, not a combined error bar or a
+bound on the missing threshold interval. Change these controls separately:
+
+```sh
+python scripts/example_xxx_two_spinon_time.py --points 257 --output xxx-time-grid-refined
+python scripts/example_xxx_two_spinon_time.py --points 257 \
+  --lower-offset 1e-7 --output xxx-time-refined
+```
+
+`--sites` accepts multiples of four, keeping the momentum exactly `pi/2`.
+`--time-max`, `--time-points` and `--phase-order` control the transform. Long
+times require separate phase and frequency-grid checks. No signal is normalized
+to another signal or to a sum rule.
+
 ## Integration and physical measure
 
 For the density convention used by the thermodynamic tools,
