@@ -315,14 +315,23 @@ template <std::size_t D, uni20::Real R, class Observe> struct MonteCarloRun
         }
     }
 
-    static uni20::async::AsyncTask finish(uni20::async::ReadBuffer<std::size_t> work,
-                                          std::shared_ptr<MonteCarloRun> run, uni20::async::WriteBuffer<Result> output)
+    static uni20::async::AsyncTask execute(std::shared_ptr<MonteCarloRun> run, ExecutionOptions execution,
+                                           uni20::async::WriteBuffer<Result> output)
     {
       auto destination = co_await output;
       bool cancelled = false;
       try
       {
-        (void)co_await work;
+        // The grid is a directly awaited child, not separately admitted work.
+        // Its existing failure path drains every accepted observation block.
+        auto prepare = [run](std::size_t i) { return run->prepare(i); };
+        auto evaluate = [run, stop = execution.stop](Input input) { return run->evaluate(std::move(input), stop); };
+        auto collect = [run](std::size_t i, std::shared_ptr<Block> block) { run->collect(i, std::move(block)); };
+        using Window = ObservableWindow<decltype(evaluate), decltype(prepare)>;
+        auto window = std::make_shared<Window>(execution.continuous_scheduler(), std::move(evaluate), execution,
+                                               run->options.replicates * run->blocks_per_replicate, std::move(prepare));
+        uni20::async::Async<std::size_t> work;
+        co_await observable_grid_task(std::move(window), std::move(collect), work.write());
       }
       catch (ExecutionCancelled const&)
       {
@@ -379,6 +388,19 @@ template <std::size_t D, uni20::Real R, class Observe> struct MonteCarloRun
       destination = std::move(r);
     }
 };
+
+// Prepare owned numerical state without constructing or admitting a task.
+// Model adapters construct the child task only after their owner is running.
+template <std::size_t D, uni20::Real R, class Observe>
+auto prepare_monte_carlo_run(MonteCarloOptions options, std::size_t dimension, R exemplar, Observe observe,
+                             ExecutionOptions execution)
+{
+  static_assert(D > 0);
+  validate_monte_carlo(options, dimension, exemplar);
+  (void)execution.continuous_scheduler();
+  using Run = MonteCarloRun<D, R, Observe>;
+  return std::make_shared<Run>(options, dimension, std::move(exemplar), std::move(observe), execution);
+}
 } // namespace detail
 
 /// Bounded Async execution of sample blocks within independent replicates.
@@ -394,18 +416,12 @@ template <std::size_t D, uni20::Real R, class Observe>
 [[nodiscard]] auto monte_carlo_async(MonteCarloOptions options, std::size_t dimension, R exemplar, Observe observe,
                                      ExecutionOptions execution = {})
 {
-  static_assert(D > 0);
-  detail::validate_monte_carlo(options, dimension, exemplar);
   auto& scheduler = execution.continuous_scheduler();
+  execution.scheduler = &scheduler;
   using Run = detail::MonteCarloRun<D, R, Observe>;
-  auto run = std::make_shared<Run>(options, dimension, std::move(exemplar), std::move(observe), execution);
-  auto work = evaluate_prepared_observable_grid_async(
-      options.replicates * run->blocks_per_replicate, [run](std::size_t i) { return run->prepare(i); },
-      [run, stop = execution.stop](typename Run::Input input) { return run->evaluate(std::move(input), stop); },
-      [run](std::size_t i, std::shared_ptr<typename Run::Block> block) { run->collect(i, std::move(block)); },
-      execution);
+  auto run = detail::prepare_monte_carlo_run<D>(options, dimension, std::move(exemplar), std::move(observe), execution);
   uni20::async::Async<typename Run::Result> output;
-  auto task = Run::finish(work.read(), std::move(run), output.write());
+  auto task = Run::execute(std::move(run), execution, output.write());
   detail::schedule_owned(scheduler, std::move(task));
   return output;
 }

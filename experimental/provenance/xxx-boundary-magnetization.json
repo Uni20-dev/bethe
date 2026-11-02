@@ -1,0 +1,31 @@
+{
+  "schema": "bethe.experimental-port-provenance.v1",
+  "source_revision": "2242fd5d78ec2c6c81a64993eca5dd6eea6cd732",
+  "frozen_research_inputs": [
+    {
+      "path": "include/bethe/xxx_boundary_magnetization.hpp",
+      "sha256": "c950fb2c0025561fbb0e3a8b31ddae500e9d22a710a0710a617f91211c3579ae"
+    },
+    {
+      "path": "tests/test_xxx_boundary_magnetization.cpp",
+      "sha256": "0d82a0f420e5e36649352e4129e0bd5ce055df4662d4a710994c9fdc7ca5cb14"
+    },
+    {
+      "path": "docs/xxx-boundary-magnetization.md",
+      "sha256": "e26d4d99f117dde2cb645fcd0a95de86a2f41fd3b69e318344acd7ea23d01e1e"
+    }
+  ],
+  "public_outputs": [
+    "experimental/include/bethe/experimental/xxx_boundary_magnetization.hpp",
+    "experimental/apps/bethe-xxx-boundary-magnetization.cpp",
+    "experimental/tests/test_xxx_boundary_magnetization.cpp",
+    "experimental/tests/check_boundary_magnetization_cli.py",
+    "docs/experimental-xxx-boundary-magnetization.md"
+  ],
+  "changes": [
+    "Immutable calculator-bound preparations; explicit task-local precision including MPFR.",
+    "Shared Uni20 square solve and phased log determinant; no backend override.",
+    "Final-result Async dependency with continuous pair workers, upfront pair budget and canonical failure records.",
+    "Current CLI/run context/table exports; no renormalization or hidden omitted weights."
+  ]
+}

@@ -154,6 +154,7 @@ template <uni20::Real Real> class PreparedRaisingFormFactors {
     std::span<Real const> aba_rapidities() const { return aba_rapidities_; }
     /// Measured max|F|/N at the supplied ground roots; absent if not evaluated or moved from.
     std::optional<Real> ground_residual() const { return ground_residual_; }
+    /// Acceptance threshold. Its moved-from value is unspecified and must not be used numerically.
     Real root_tolerance() const { return root_tolerance_; }
     FormFactorStatus status() const
     {
