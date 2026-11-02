@@ -1475,6 +1475,14 @@
           "context": "Integrable boundary-impurity coupling. Its derivative at the homogeneous point gives the ground-state boundary bond and full local first moment without a spectral truncation."
         }
       ]
+    },
+    {
+      "id": "xxx_boundary_magnetization",
+      "executable": "bethe-experimental-xxx-boundary-magnetization",
+      "references": [
+        {"id": "mei-2017", "context": "Positive-real-root free-end XXX equations in z=2*lambda_ABA."},
+        {"id": "grijalva-2019", "context": "Section 3 boundary scalar products and local operator reconstruction. Our rational, spin-normalized specialization retains the directed product and raising-gauge signs for same-sector endpoint Sz amplitudes."}
+      ]
     }
   ]
 }

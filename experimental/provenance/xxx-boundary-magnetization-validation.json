@@ -1,0 +1,73 @@
+{
+  "validation": {
+    "native": {
+      "tests": 6,
+      "failures": 0,
+      "elapsed_seconds": 0.14,
+      "test_log_sha256": "b4594c7fa6730678ec6c955dd11b87a709f68726ca41ccdcbd0cd291616aa9a5"
+    },
+    "wide": {
+      "tests": 8,
+      "failures": 0,
+      "elapsed_seconds": 1.53,
+      "test_log_sha256": "4752b0ec6b34d3a83a00cea5c8f90710bae316cb7d4954c7047e1c0d84e78b50"
+    },
+    "sanitizers": {
+      "tests": 7,
+      "failures": 0,
+      "elapsed_seconds": 56.14,
+      "test_log_sha256": "e2724c5862b806feaf42d1704ffa4913d7ce58dc98f335da11e223d9a8096435"
+    }
+  },
+  "configurations": "GCC 13 native/OpenBLAS; GCC 13 binary80/binary128/MPFR with configured MPLAPACK; Clang 19 ASan+UBSan/MPFR CPU with existing Uni20 LSan suppressions. Focused CMake builds, not a full matrix.",
+  "controls": [
+    "N2/N4 analytic and small bit-basis ED evolution",
+    "Native-precision independent finite-space ABA signed cyclic products, Hermiticity and both endpoints through N8",
+    "MPFR 128/256; input/time precision checking; no ambient precision change",
+    "Serial/concurrent pair identity; dropped handle, exception/cancellation held-work drainage",
+    "Canonical failed state/pair exports; invalid table/budget inputs rejected before files; MPFR CLI128"
+  ],
+  "smoke": {
+    "sites": 32,
+    "states": 136,
+    "pairs": 9316,
+    "threads": 2,
+    "cpu": "12th Gen Intel(R) Core(TM) i7-12700KF",
+    "compiler": "GNU 13.3.0",
+    "native_elapsed_seconds": "0.0640490119999981288856",
+    "native_cpu_seconds": "0.12607399999999999999",
+    "binary128_elapsed_seconds": "8.79810472100001561557",
+    "projected_norm_binary64": "0.99874892226739664",
+    "max_endpoint_difference_binary64_vs_binary128": "9.815116890507338710298E-14",
+    "qualification": "One fresh run per arithmetic at t=0,50,100; same-formula precision comparison, not independent physics or a throughput benchmark."
+  },
+  "documentation": "Exact Async snippet compiled and ran; 157-page site, 167 bibliography URLs, 1946 equations validated.",
+  "remaining_gates": [
+    "prerequisite merges",
+    "reciprocal exact-head review",
+    "completed Claude review",
+    "current CI",
+    "integrated default-OFF/install/deployed-doc checks"
+  ],
+  "integrated_parent": "ddeb04b8ec63e62996afa0985f8a804f746bba5c",
+  "integration_checks": {
+    "native": {
+      "tests": 6,
+      "failures": 0,
+      "elapsed_seconds": 0.18,
+      "test_log_sha256": "116bd906f684e37ca55cc8e0e93744b65221f3468be7156d5bcaa295685a8831"
+    },
+    "wide": {
+      "tests": 8,
+      "failures": 0,
+      "elapsed_seconds": 1.53,
+      "test_log_sha256": "4752b0ec6b34d3a83a00cea5c8f90710bae316cb7d4954c7047e1c0d84e78b50"
+    },
+    "sanitizers": {
+      "tests": 7,
+      "failures": 0,
+      "elapsed_seconds": 17.41,
+      "test_log_sha256": "44b8633cf841abe14f834e445a8ad472098e6b19dca6fb1c61dadc0aeabcbdf2"
+    }
+  }
+}

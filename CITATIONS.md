@@ -397,6 +397,7 @@ Relevant tool modes:
 - `bethe-xxx-obc`: Free-end XXX equations: rational limit of Eqs. (11)-(12) and footnote 2; our spin-1/2 normalization differs.
 - `bethe-xxz-obc`: Free-end XXZ equations and boundary reflection phase, Eqs. (11)-(12); our Hamiltonian is divided by four and shifted. Negative-Delta ground states use an algebraically rank-subtracted, rescaled form of these equations.
 - `bethe-experimental-xxx-boundary-dynamics`: Positive-real-root free-end equations; z=2\*lambda\_ABA.
+- `bethe-experimental-xxx-boundary-magnetization`: Positive-real-root free-end XXX equations in z=2\*lambda\_ABA.
 
 ### caux-xxx-states
 
@@ -941,6 +942,7 @@ Relevant tool modes:
 
 - `bethe-xxz-obc`: Massive open XXZ boundary root and finite-size deviation, Sec. 4.3.2, specialized to zero boundary fields; used for Delta\>1 ground states, not boundary correlations or excitation scans.
 - `bethe-experimental-xxx-boundary-dynamics`: Boundary scalar-product and local endpoint form-factor construction in Sec. 3, specialized to free-end XXX and spin operators; no Pauli or periodic Fourier normalization.
+- `bethe-experimental-xxx-boundary-magnetization`: Section 3 boundary scalar products and local operator reconstruction. Our rational, spin-normalized specialization retains the directed product and raising-gauge signs for same-sector endpoint Sz amplitudes.
 
 ### dugave-2015
 

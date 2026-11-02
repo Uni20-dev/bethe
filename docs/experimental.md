@@ -108,3 +108,6 @@ later become a supported API; this requires independent physical checks,
 precision/conditioning evidence, documentation and normal packaging. Supported
 code cannot acquire a hidden dependency on experimental headers during that
 promotion. Known wrong results are not acceptable experimental output.
+
+The [boundary-magnetization guide](experimental-xxx-boundary-magnetization.md)
+adds signed same-sector endpoint elements and magnetization after a boundary spin flip.

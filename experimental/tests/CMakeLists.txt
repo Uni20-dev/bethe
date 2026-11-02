@@ -32,3 +32,17 @@ if(BETHE_BUILD_APPS)
       LABELS "experimental" TIMEOUT 90 ENVIRONMENT "${bethe_test_environment}")
   endif()
 endif()
+
+add_executable(bethe_experimental_boundary_magnetization_tests test_xxx_boundary_magnetization.cpp)
+target_link_libraries(bethe_experimental_boundary_magnetization_tests PRIVATE bethe::experimental TBB::tbb)
+target_include_directories(bethe_experimental_boundary_magnetization_tests PRIVATE "${PROJECT_SOURCE_DIR}/tests")
+bethe_discover_tests(bethe_experimental_boundary_magnetization_tests TEST_PREFIX "Experimental."
+  LABELS "experimental" TIMEOUT 90)
+
+if(BETHE_BUILD_APPS AND Python3_Interpreter_FOUND)
+  add_test(NAME Experimental.BoundaryMagnetization.cli
+    COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_boundary_magnetization_cli.py"
+      "$<TARGET_FILE:bethe-experimental-xxx-boundary-magnetization>" "${BETHE_HAS_MPREAL}")
+  set_tests_properties(Experimental.BoundaryMagnetization.cli PROPERTIES
+    LABELS "experimental" TIMEOUT 90 ENVIRONMENT "${bethe_test_environment}")
+endif()
