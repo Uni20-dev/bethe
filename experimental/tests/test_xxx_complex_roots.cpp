@@ -221,6 +221,36 @@ TYPED_TEST(ExperimentalComplexRoots, CoincidenceDoesNotInflateEquationAllowance)
   equation_conditioning(TypeParam{0});
 }
 
+#if UNI20_HAS_FLOAT128
+TEST(ExperimentalComplexRootsBinary128, RejectCollapsedCandidateBeforeFormFactor)
+{
+  using R = uni20::float128;
+  using C = uni20::complex<R>;
+  R const zero{0};
+  // The former N=20 three-string solver accepted this off-shell iterate.
+  // Keep the roots directly so bypassing solve() exercises the common
+  // form-factor validation too. The close pair is resolved arithmetically,
+  // but its original-equation residual is far above the pole-only allowance.
+  std::vector<C> lambda;
+  for (auto value : {"-1.27023803666736062908322553098408307", "-0.169234877615986008057963141028373053",
+                     "-0.0704526355542760254770468857633289889", "0.226135650644512053040391776309456972",
+                     "0.361959344646961266509367488125691848", "0.616462100468790789020457681214401906",
+                     "0.616462100468791790395183024690336766"})
+    lambda.emplace_back(parse(value, zero), zero);
+  R const centre = parse("0.665651412276037647799913525849466774", zero);
+  R const height = parse("0.958396298694217976753921955944205754", zero);
+  lambda.emplace_back(centre, height);
+  lambda.emplace_back(centre, -height);
+  ASSERT_GT(roots::separation<R>(lambda, zero), 64 * uni20::math::sqrt(uni20::numeric_limits<R>::epsilon(zero)));
+  auto const state = xxx::sector_ground_state<R>(20, uni20::half_int{0});
+  exp_xxx::PreparedSinglet<R> const ground(20, state);
+  ASSERT_TRUE(ground.ready());
+  auto const factor = roots::raising_weight<R>(ground, lambda, 6);
+  EXPECT_EQ(factor.status, xxx::FormFactorStatus::roots_unconverged);
+  EXPECT_FALSE(factor.weight);
+}
+#endif
+
 #if UNI20_HAS_MPREAL
 TEST(ExperimentalComplexRootsMpfr, ExplicitPrecisionAndValidation)
 {
