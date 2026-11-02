@@ -191,7 +191,10 @@ template <uni20::Real R> class ThermodynamicVertexSpectrum {
                 ++out.moments.nodes;
                 for (std::size_t j = 0; j < omega.size(); ++j)
                 {
-                  R const x = (omega[j] - energy) / width;
+                  // Energy and width are positive. Scale opposite signs
+                  // separately so a finite Gaussian argument is not lost to
+                  // overflow in omega-energy; retain the difference otherwise.
+                  R const x = omega[j] < R{0} ? omega[j] / width - energy / width : (omega[j] - energy) / width;
                   R const gaussian = gaussian_normalization * uni20::math::exp(-x * x / R{2}); // includes 2pi
                   density[j].add(gaussian * weight);
                   error[j].add(gaussian * screen);

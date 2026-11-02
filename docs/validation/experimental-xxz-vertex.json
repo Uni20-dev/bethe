@@ -149,7 +149,7 @@
       "experimental/include/bethe/experimental/detail/scaled_complex_product.hpp": "b5edf3e130fff04e8bbe2f72335e1a47cdf53bc15a30731a0df0336e3e9e1b52",
       "experimental/include/bethe/experimental/detail/xxz_spectral_kinematics.hpp": "9ff46ed98e335052b885bfbe04221aa84ea4d3331d97830b5897ceb92fa88aa5",
       "experimental/include/bethe/experimental/xxz_vertex.hpp": "448aa5b9bcff369ffec7fac90a16dcb8d17b0cf787f5f0d7aa86c5b4c3ea1d05",
-      "experimental/include/bethe/experimental/xxz_vertex_spectrum.hpp": "0b82a5a9ea988897a4994d681ff618a3880f2349271430d89325b6de797e3174",
+      "experimental/include/bethe/experimental/xxz_vertex_spectrum.hpp": "d686b1f79550d121cdc5374950673909a8f8c0b23df559fcfb75e96c699f405e",
       "experimental/reference/xxz/README.md": "7f2ca1ccf2a6f6beeb348cc5dfe0eea5a5e7f4055c6e3c8260fb2150004ae3fe",
       "experimental/reference/xxz/requirements.txt": "72884cb92e7fc8e8b829b5e9acd7d96490c0d37e6d730a1d8068cb7628504344",
       "experimental/reference/xxz/test_vertex_quadrature.py": "eeff98adb32ee5e5f6985c38f8f52440ba8ea1410b93e4abd427e5d6ee208ee5",
@@ -159,7 +159,7 @@
       "experimental/reference/xxz/vertex_quadrature.py": "9c5acd1359439475bf917ca72d9af73c4c0a0bc6267e8add5de6b0dbbe7d93bc",
       "experimental/reference/xxz/vertex_reference.py": "82d3d0935da677057c74df9772c273b6759aa5d14a462d9a0e02fbb1e234ab18",
       "experimental/tests/CMakeLists.txt": "c5388060f5d1e035195d7dc4563e8f9a8b8412b3ee1a285b1d0d6fcee25d2f16",
-      "experimental/tests/test_xxz_vertex.cpp": "583bb0b62f6430caf07548dc80badde22e6bf0d2776b8af7ff8d4562e8571975",
+      "experimental/tests/test_xxz_vertex.cpp": "085db662df99b77eba3b64818540dbd02c386874acf669b02e0879770d9e660b",
       "include/bethe/xxz_thermodynamic_structure_factor.hpp": "98aee1a2495c60173ee424fbba109b0c204755da6f82176d8968d7a175452bc7",
       "tests/test_xxz_thermodynamic_structure_factor.cpp": "e12ccb907a0fea2a32f73600bad129850a1b82e69dbd7873bbf2c1e25e619671",
       "zensical.toml": "27b4670ec6c963ecccac8794e4455b7642171a92307ce4fd5c8cad00bff567d9"
@@ -235,5 +235,33 @@
       "build_log_sha256": "f723bb923aff48102221b4bc2c7f57e3134d966fc34b3fa9c8e60c202ed7a224"
     },
     "scope": "Rebuilt and ran the complete focused native finite-q suite and Async example, including near-isotropic two-spinon convolution. Parent independently passes 25 native/39 wide/30 sanitizer checks. Earlier finite-q wide/sanitizer checks are preserved under their original checkpoint; no new full precision-matrix claim."
+  },
+  "gaussian_range_followup": {
+    "previous_head": "d3f1597dafbad916aa3f1d541d2b578d6b0007cb",
+    "finding": "For finite negative omega, omega-energy can overflow before division by width, silently replacing a representable Gaussian tail with zero.",
+    "correction": "For omega<0, use omega/width-energy/width, whose terms have opposite signs and no cancellation; retain (omega-energy)/width otherwise. Energy and width are positive. No normalization, physical kernel, quadrature order or existing tolerance changes.",
+    "regression": "The identical extreme-range regression fails the old header in binary64, native 80-bit extended precision and binary128. At J=max/16, width=max and omega=-max, require a positive tail and compare J*density with the J=1, width=16, omega=-16 control. Zero and positive frequencies are controls. MPFR128/256 additionally checks negative-frequency exchange scaling at J=1e1000 and retained precision; these MPFR cases are not exponent-overflow reproducers.",
+    "old_header_log_sha256": "e9d6a1d9160bdf50cceac46fc08d9cdcccf6920a6d564f2a2a0f6a79e0bdc79c",
+    "lanes": {
+      "native": {
+        "passed": 25,
+        "failed": 0,
+        "seconds": 3.68,
+        "log_sha256": "7318039cadb38f334c0cb1764906543aabf370c692488c9697ad98140eef6006"
+      },
+      "wide": {
+        "passed": 37,
+        "failed": 0,
+        "seconds": 7.67,
+        "log_sha256": "a5cddac2e6db50961b805191d5649d9c80d3f3d2ee59d1cd1666a647e558c094"
+      },
+      "sanitizers": {
+        "passed": 27,
+        "failed": 0,
+        "seconds": 22.16,
+        "log_sha256": "567b005242e5cdcee7d37493db2197471c42219ad0ec0c9091d2ff80df5a113f"
+      }
+    },
+    "scope": "Focused existing CMake builds, numerical suites and Async example; configured providers at the recorded Uni20 revision. GCC13 native/wide and Clang19 ASan/UBSan, two compiler jobs per lane, BLAS/OpenMP threads=1. Existing sanitizer suppression policy. No fresh full repository build or new Python benchmark claimed."
   }
 }

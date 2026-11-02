@@ -180,6 +180,30 @@ TYPED_TEST(XXZVertex, BroadenedExchangeScalingAndDeterministicReduction)
   EXPECT_THROW(base.broadened_cut(2, eps * eps, omega, R{.1}, 4), std::underflow_error);
 }
 
+TYPED_TEST(XXZVertex, NegativeFrequencyGaussianSurvivesLargeExchange)
+{
+  using R = TypeParam;
+  R const maximum = uni20::numeric_limits<R>::max(), exchange = maximum / R{16};
+  bethe::experimental::xxz::ThermodynamicVertexSpectrum<R> base(R{2}), scaled(R{2}, exchange);
+  // The physical Gaussian is unchanged when frequency, width and J scale
+  // together. The negative-frequency subtraction overflows before division
+  // in the old expression, although both the normalized argument and tail fit.
+  std::array<R, 3> const omega{R{-16}, R{0}, R{16}}, large{-maximum, R{0}, maximum};
+  auto const expected = base.broadened_cut(2, R{1.5}, omega, R{16}, 8);
+  auto const actual = scaled.broadened_cut(2, R{1.5}, large, maximum, 8);
+  R const tolerance = R{16} * uni20::numeric_limits<R>::epsilon() *
+                      (R{1} + uni20::math::abs(uni20::math::log(exchange)));
+  for (std::size_t j = 0; j < omega.size(); ++j)
+  {
+    ASSERT_GT(actual.density[j], R{0});
+    // Compare after rescaling: an absolute tolerance on the subnormal result
+    // would let the erroneous zero pass.
+    EXPECT_REAL_NEAR((actual.density[j] * exchange) / expected.density[j], R{1}, tolerance);
+  }
+  EXPECT_REAL_NEAR(actual.moments.weight / expected.moments.weight, R{1}, tolerance);
+  EXPECT_EQ(actual.moments.nodes, expected.moments.nodes);
+}
+
 TYPED_TEST(XXZVertex, LargeExchangePreservesJacobianAndCut)
 {
   using R = TypeParam;
@@ -303,6 +327,26 @@ TEST(XXZVertexIntegration, IndependentLeadingIsingWeight)
 }
 
 #if UNI20_HAS_MPREAL
+TEST(XXZVertexMpfr, NegativeFrequencyGaussianPreservesPrecisionAndScaling)
+{
+  using R = uni20::mpreal;
+  for (auto bits : {128, 256})
+  {
+    auto const precision = uni20::Precision::bits(bits);
+    auto parse = [&](char const* value) { return R(value, precision); };
+    R const exchange = parse("1e1000"), momentum = parse("1.5"), width = parse("16");
+    std::array<R, 1> const omega{parse("-16")}, large{exchange * omega[0]};
+    bethe::experimental::xxz::ThermodynamicVertexSpectrum<R> base(parse("2")), scaled(parse("2"), exchange);
+    auto const expected = base.broadened_cut(2, momentum, omega, width, 8);
+    auto const actual = scaled.broadened_cut(2, momentum, large, exchange * width, 8);
+    R const tolerance = R{16} * uni20::numeric_limits<R>::epsilon(precision) *
+                        (R{1} + uni20::math::abs(uni20::math::log(exchange)));
+    EXPECT_EQ(uni20::precision_of(actual.density[0]), precision);
+    ASSERT_GT(actual.density[0], R{0});
+    EXPECT_REAL_NEAR((actual.density[0] * exchange) / expected.density[0], R{1}, tolerance);
+  }
+}
+
 TEST(XXZVertexMpfr, ExplicitPrecisionAmplitudesGeometryAndQuadrature)
 {
   using R = uni20::mpreal;
