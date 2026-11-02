@@ -3,7 +3,7 @@
   "integration_base": "e03690a9184c0299c3f679d6405d9b952702a93d",
   "prerequisites": {
     "experimental_foundation": "e916ab29aaa44d7fad264f583a0e79a51d3798c0",
-    "two_spinon_spectrum": "924ee142d5654ae18a253957dcc25a1dc6950b16"
+    "two_spinon_spectrum": "87fdadc529b1792542fea4f06861b21186cc1108"
   },
   "uni20_revision": "1cb2474eb0a54e13ec7d5f2c1823752020b2425c",
   "research_origin": {
@@ -65,7 +65,7 @@
       "log_sha256": "bf534a2791a72de5a792ada242de35d79e438ef73722afe309eccca4e905d39d"
     },
     "controls": [
-      "Eight independent complex amplitudes with100-digit references and65/100-digit refinement; direct shifted-residue checks.",
+      "Eight independent complex amplitudes with 100-digit references and 65/100-digit refinement; direct shifted-residue checks.",
       "Product/residue refinement; finite-q normalization controls; native64/80/128 and MPFR128/256.",
       "Fixed-order full-zone moments and two/four Gaussian cuts, with separate vacuum interference, winding and measure checks.",
       "Near-isotropic two-spinon cuts versus an independent reduced-form Gaussian convolution; leading-Ising four-spinon weight.",
@@ -142,6 +142,7 @@
     "files_sha256": {
       "docs/experimental-xxz-vertex.md": "fbe1fd440c084af282c1a21d219eeccac0f8df3add2f783e7f6b655d99fcdac9",
       "docs/experimental.md": "5f846b004ba7c2f919b90fedfc69a353839fc61177f4c8f7322b101a93ce16f3",
+      "docs/validation/xxz-two-spinon-spectral-weight.json": "620e53315c6db223d6447c04f81e7446dad5caedc65cead857d5581964ea6b19",
       "experimental/CMakeLists.txt": "3db347ef58735851f691a650946c2617bb94882aa3c70773e1f5a4f59b0b2ec7",
       "experimental/README.md": "6055e96e870a5735be9e28cf2a8bc15ef52d12fba2f0e74abe60f492fddc40f2",
       "experimental/examples/xxz_vertex.cpp": "534ccfc040019deb9b019c518084b9a7d83858cf1a8d7a9a911ad5b393e9335d",
@@ -159,8 +160,34 @@
       "experimental/reference/xxz/vertex_reference.py": "82d3d0935da677057c74df9772c273b6759aa5d14a462d9a0e02fbb1e234ab18",
       "experimental/tests/CMakeLists.txt": "c5388060f5d1e035195d7dc4563e8f9a8b8412b3ee1a285b1d0d6fcee25d2f16",
       "experimental/tests/test_xxz_vertex.cpp": "c36ee782bed865aad437f8865af6966e1a070896a0c5cdf8c0b657963fc1f96b",
+      "include/bethe/xxz_thermodynamic_structure_factor.hpp": "dd70686d23327e120bb62e4eefd04c17d9948287c22024b5f67d688a4eb9012c",
+      "tests/test_xxz_thermodynamic_structure_factor.cpp": "26d9f7f4900bb1588e50371a64cfc80f6b3421509b4acf14168d138bf7f22f6b",
       "zensical.toml": "27b4670ec6c963ecccac8794e4455b7642171a92307ce4fd5c8cad00bff567d9"
     },
-    "scope": "The added/changed public files relative to integration_base, excluding this self-describing manifest. The enclosing commit binds the record; all required runtime and reference dependencies are public."
+    "scope": "Added/changed files relative to integration_base e03690a, excluding this self-describing manifest. That integration base already contains the experimental foundation; its unchanged headers are bound by that revision and the prerequisite commit, rather than listed as XXZ changes. Subsequent parent updates are included. The enclosing commit binds this record."
+  },
+  "parent_range_followup": {
+    "merge_revision": "5a9f7ffe836c0afa2cfbaaee9356bee4d27119dd",
+    "change": "Merged the supported XXZ large-exchange bound correction with ancestry preserved; experimental algorithms and tests are unchanged.",
+    "checks": {
+      "native": {
+        "passed": 21,
+        "failed": 0,
+        "elapsed_seconds": 7.44,
+        "log_sha256": "591e57b302d7395e087a5b93ef3855506ce17107b9c59b87ae805f97db06ea4e"
+      },
+      "wide": {
+        "passed": 30,
+        "failed": 0,
+        "elapsed_seconds": 14.49,
+        "log_sha256": "00a5f686a21e3f640f55fb4c7e4330caa085f59b46accb585d90be3f291ae1f2"
+      },
+      "sanitizers": {
+        "passed": 22,
+        "failed": 0,
+        "elapsed_seconds": 35.25,
+        "log_sha256": "22f2a6181dd3ced7c05296ff71e9a7bdfcd13a329b3909ce880fda391418d171"
+      }
+    }
   }
 }
