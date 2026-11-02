@@ -1,0 +1,4 @@
+# Optional standalone references; not needed to build the C++ library.
+mpmath
+numpy
+scipy

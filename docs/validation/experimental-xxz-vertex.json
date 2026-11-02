@@ -1,0 +1,166 @@
+{
+  "scope": "Experimental infinite massive XXZ two/four-spinon complex vertex amplitudes, fixed-order full-zone moments and Gaussian frequency cuts. No convergence certification or fitted normalization.",
+  "integration_base": "e03690a9184c0299c3f679d6405d9b952702a93d",
+  "prerequisites": {
+    "experimental_foundation": "e916ab29aaa44d7fad264f583a0e79a51d3798c0",
+    "two_spinon_spectrum": "924ee142d5654ae18a253957dcc25a1dc6950b16"
+  },
+  "uni20_revision": "1cb2474eb0a54e13ec7d5f2c1823752020b2425c",
+  "research_origin": {
+    "revision": "2242fd5d78ec2c6c81a64993eca5dd6eea6cd732",
+    "files_sha256": {
+      "include/bethe/xxz_vertex_spectrum.hpp": "a195a500886e09201dfcb5a8b6856d8878828486eb3790b9f8462273b4f550ee",
+      "include/bethe/detail/xxz_vertex.hpp": "a40b139e834412f0cd320626132328c16d0ed6c15f2508965f34fe3695d09633",
+      "include/bethe/detail/xxz_spectral_kinematics.hpp": "80ba539bf0124de09be967b5fd175e9d677e8d6309dfc26b8860e6cdc94f6476",
+      "include/bethe/detail/scaled_complex_product.hpp": "067a0ddad699ae9e7dc090bcb36adc82954151149f6a387d7d0dd482b8bae39e",
+      "tests/test_xxz_vertex.cpp": "9b1b3060b7981bf9695a614caae5a16f97baf6d0fd4cdc9dd7336dcd2abfcc5e",
+      "scripts/reference_xxz_ising_weight.py": "efb2d77b3d4175c114eaeb9c7d51ab088804af14b4c3d57b481c5a9429c2f1a2",
+      "scripts/reference_xxz_four_spinon_spectrum.py": "11e15abf9ee12553ce0194ed8ed4297ac903ac6b90bdee677621c8ca042a1493",
+      "scripts/reference_xxz_vertex_integral.py": "8dccf087eb1b501e9e8d13e93b264bca77c5e857d0aa92ba0fa565408e54304b",
+      "scripts/reference_xxz_vertex_limit.py": "9721747884cf1abe9f15c4d0b3fe3002309b0dca502d8a013c26206a1aad7b88"
+    },
+    "scope": "Extraction lineage, not required public inputs. Standalone public controls and their actual hashes are recorded below."
+  },
+  "adaptation": [
+    "Current Uni20 real/complex math, scaled theta functions and explicit runtime precision.",
+    "Scaled binary-exponent products; literal first residues and cancelled recurrence. No manual linear-algebra backend.",
+    "Both vacua/polarizations retained, with coherent momentum sectors, completeness and Fourier factors.",
+    "Pair quadrature joins through the existing bounded Async grid in the example, with fixed row reduction.",
+    "Standalone mpmath and NumPy/SciPy controls; six original-versus-extracted quadrature results match exactly."
+  ],
+  "validation": {
+    "compiler_native_wide": "GCC13.3 Release",
+    "compiler_sanitizers": "Clang19.1 Debug/O1, ASan/UBSan; existing Uni20 MPFR cache suppressions",
+    "host_cpu": "Intel Core i7-12700KF",
+    "thread_limits": "Six logical CPUs available; one compiler process and BLAS/OMP one thread.",
+    "scope": "Focused CMake rebuild/tests in three separately configured trees. All existing source integration controls retained, plus explicit MPFR and momentum-resolution cases. Not a full repository suite.",
+    "lanes": {
+      "native": {
+        "passed": 21,
+        "failed": 0,
+        "elapsed_seconds": 7.32,
+        "log_sha256": "fa2932d429b792734eff0205f27c1db54fb0ba932f4e5f5b93a5850308e63e9b"
+      },
+      "wide": {
+        "passed": 30,
+        "failed": 0,
+        "elapsed_seconds": 14.37,
+        "log_sha256": "8778fa39ea670bbce795eb956d0468cb57471b9733cefb9ecf3a23c758589b5b"
+      },
+      "sanitizers": {
+        "passed": 22,
+        "failed": 0,
+        "elapsed_seconds": 39.85,
+        "log_sha256": "76f1177d4186c18d2f205c796ec649c9552f3ace7505498ac50cde843edaf53b"
+      }
+    },
+    "python": {
+      "tests": 7,
+      "failures": 0,
+      "seconds": 2.631,
+      "python": "3.12.3",
+      "mpmath": "1.2.1",
+      "numpy": "1.26.4",
+      "scipy": "1.11.4",
+      "log_sha256": "bf534a2791a72de5a792ada242de35d79e438ef73722afe309eccca4e905d39d"
+    },
+    "controls": [
+      "Eight independent complex amplitudes with100-digit references and65/100-digit refinement; direct shifted-residue checks.",
+      "Product/residue refinement; finite-q normalization controls; native64/80/128 and MPFR128/256.",
+      "Fixed-order full-zone moments and two/four Gaussian cuts, with separate vacuum interference, winding and measure checks.",
+      "Near-isotropic two-spinon cuts versus an independent reduced-form Gaussian convolution; leading-Ising four-spinon weight.",
+      "Explicit failure for collisions, unresolved momentum shifts, invalid controls/precision and scalar range. Serial/executor reduction and exchange scaling."
+    ],
+    "preserved_failed_checks": [
+      "First Gaussian partial-window test used a cutoff whose lost tail rounded away; changed the test window to the mean energy, retaining full-axis normalization. No numerical code/tolerance changed.",
+      "Consumer integration exposed PR118 midpoint sheet splitting; upstream924ee14 fixes it. The original convolution test remains unchanged and now passes."
+    ]
+  },
+  "library_consumers": {
+    "library-consumer": {
+      "steps": [
+        {
+          "kind": "configure",
+          "returncode": 0,
+          "elapsed": 4.597976677003317
+        },
+        {
+          "kind": "build",
+          "returncode": 0,
+          "elapsed": 33.57732488802867
+        },
+        {
+          "kind": "run",
+          "returncode": 0,
+          "elapsed": 3.2957855429849587
+        }
+      ],
+      "scope": "Fresh enclosing CMake with apps/tests/examples/Uni20 CLI disabled. Opt-in builds/runs exact guide snippets; default build checks experimental targets absent and runs a supported dispersion query."
+    },
+    "default-off-consumer": {
+      "steps": [
+        {
+          "kind": "configure",
+          "returncode": 0,
+          "elapsed": 4.710020772006828
+        },
+        {
+          "kind": "build",
+          "returncode": 0,
+          "elapsed": 32.66428105602972
+        },
+        {
+          "kind": "run",
+          "returncode": 0,
+          "elapsed": 0.0019977170159108937
+        }
+      ],
+      "scope": "Fresh enclosing CMake with apps/tests/examples/Uni20 CLI disabled. Opt-in builds/runs exact guide snippets; default build checks experimental targets absent and runs a supported dispersion query."
+    }
+  },
+  "documentation": {
+    "pages": 155,
+    "bibliography_urls": 165,
+    "equations": 1873,
+    "examples": "Both literal C++ guide snippets compile and run in a fresh library-only consumer.",
+    "scope": "Local build and source/HTML link/math checks; deployment remains pending."
+  },
+  "routine_cost_contract": "Reviewer target on this host: focused native/wide suite under25s and sanitizer under60s; seven optional Python checks under5s. No production grid added to CI.",
+  "limitations": [
+    "Finite product/residue/grid orders are independently tunable; arithmetic indicators are conditioning screens, not certified errors.",
+    "Near-coincident spectral nodes require confluent formulas and are explicitly rejected.",
+    "Small unresolved mass, momentum shifts and scalar range fail rather than discarding nodes.",
+    "No support for six-spinons, longitudinal response or a generally converged four-spinon DSF is claimed."
+  ],
+  "remaining_gates": [
+    "Exact-head reciprocal review and agreed routine cost",
+    "Completed Claude review",
+    "Current CI and prerequisite merges",
+    "Normal integrated installation and deployed documentation"
+  ],
+  "validated_public_inputs": {
+    "files_sha256": {
+      "docs/experimental-xxz-vertex.md": "fbe1fd440c084af282c1a21d219eeccac0f8df3add2f783e7f6b655d99fcdac9",
+      "docs/experimental.md": "5f846b004ba7c2f919b90fedfc69a353839fc61177f4c8f7322b101a93ce16f3",
+      "experimental/CMakeLists.txt": "3db347ef58735851f691a650946c2617bb94882aa3c70773e1f5a4f59b0b2ec7",
+      "experimental/README.md": "6055e96e870a5735be9e28cf2a8bc15ef52d12fba2f0e74abe60f492fddc40f2",
+      "experimental/examples/xxz_vertex.cpp": "534ccfc040019deb9b019c518084b9a7d83858cf1a8d7a9a911ad5b393e9335d",
+      "experimental/include/bethe/experimental/detail/scaled_complex_product.hpp": "b5edf3e130fff04e8bbe2f72335e1a47cdf53bc15a30731a0df0336e3e9e1b52",
+      "experimental/include/bethe/experimental/detail/xxz_spectral_kinematics.hpp": "5e82108b59a4ddf7f424c0ee12c280b5936de099e48026c1b39b46cbc28a0133",
+      "experimental/include/bethe/experimental/xxz_vertex.hpp": "448aa5b9bcff369ffec7fac90a16dcb8d17b0cf787f5f0d7aa86c5b4c3ea1d05",
+      "experimental/include/bethe/experimental/xxz_vertex_spectrum.hpp": "0b82a5a9ea988897a4994d681ff618a3880f2349271430d89325b6de797e3174",
+      "experimental/reference/xxz/README.md": "7f2ca1ccf2a6f6beeb348cc5dfe0eea5a5e7f4055c6e3c8260fb2150004ae3fe",
+      "experimental/reference/xxz/requirements.txt": "72884cb92e7fc8e8b829b5e9acd7d96490c0d37e6d730a1d8068cb7628504344",
+      "experimental/reference/xxz/test_vertex_quadrature.py": "eeff98adb32ee5e5f6985c38f8f52440ba8ea1410b93e4abd427e5d6ee208ee5",
+      "experimental/reference/xxz/test_vertex_reference.py": "7ec825f998b204c23d1e91b59fe5517cf3675ac978c5d83710831ea66a50780a",
+      "experimental/reference/xxz/vertex-point.json": "9e95ccf8baf53c313dd12421de8a444117a8fabc9b2a7ad6d466b33044d00e3c",
+      "experimental/reference/xxz/vertex_numpy.py": "60bc4b8b1d2bd4026c754f0f15296d5c93691ceaed56c27e340e53480d52e7f6",
+      "experimental/reference/xxz/vertex_quadrature.py": "9c5acd1359439475bf917ca72d9af73c4c0a0bc6267e8add5de6b0dbbe7d93bc",
+      "experimental/reference/xxz/vertex_reference.py": "82d3d0935da677057c74df9772c273b6759aa5d14a462d9a0e02fbb1e234ab18",
+      "experimental/tests/CMakeLists.txt": "c5388060f5d1e035195d7dc4563e8f9a8b8412b3ee1a285b1d0d6fcee25d2f16",
+      "experimental/tests/test_xxz_vertex.cpp": "c36ee782bed865aad437f8865af6966e1a070896a0c5cdf8c0b657963fc1f96b",
+      "zensical.toml": "27b4670ec6c963ecccac8794e4455b7642171a92307ce4fd5c8cad00bff567d9"
+    },
+    "scope": "The added/changed public files relative to integration_base, excluding this self-describing manifest. The enclosing commit binds the record; all required runtime and reference dependencies are public."
+  }
+}

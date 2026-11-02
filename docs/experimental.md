@@ -84,6 +84,15 @@ This interface intentionally has no disk-cache reader. Historical serialized
 factors with a different determinant method or precision contract must not be
 silently substituted for validated preparation.
 
+## Massive XXZ vertex amplitudes and spectra
+
+The [finite-q XXZ package](experimental-xxz-vertex.md) evaluates two- and
+four-spinon complex amplitudes, fixed-order integrated moments and Gaussian
+frequency cuts. It supports native formats and explicit MPFR/MPC precision.
+Its independent residue and NumPy/SciPy controls run without research data.
+Product/residue truncation, outer quadrature and arithmetic precision require
+separate checks; the four-spinon calculation is not a certified spectral density.
+
 ## Scope and promotion
 
 Each experimental feature must document supported inputs, numerical controls,
