@@ -25,6 +25,37 @@ constexpr char const* amplitude_reference[8][2] = {
      "0.13981804779106014248232286776582321807498154436765716586583059544928607367550472288006818734632"},
     {"-0.19364083111043985364970505414973310427079401886670403375646411914605992256238391476201915054496",
      "-0.31077357468231429858684972332368110580385247390609090126103971366066287080700273178915005573954"}};
+// These complete-cut controls were evaluated with the original exp(-x*x/2)
+// expression at 256 and 384 MPFR bits. MPFR's wider exponent range keeps that
+// independent arithmetic path representable; no normalization fit is used.
+template <typename R> void check_small_exchange_gaussian(R const& zero, bool wide_exponent)
+{
+  auto const precision = uni20::precision_of(zero);
+  auto parse = [&](char const* value) {
+    if constexpr (requires { uni20::parse_real<R>(value, precision); })
+      return uni20::parse_real<R>(value, precision);
+    else
+      return uni20::parse_real<R>(value);
+  };
+  R const exchange = parse(wide_exponent ? "1e-4900" : "1e-300");
+  R const negative = parse(wide_exponent ? "-152" : "-40"), positive = parse(wide_exponent ? "156" : "44");
+  std::array<R, 2> const omega{exchange * negative, exchange * positive};
+  std::array<R, 2> const expected = wide_exponent
+      ? std::array<R, 2>{parse("5.8121211166281540194065444419529513584901056071965429809322405416226211966706141436306825902181916240718440e-269"),
+                         parse("7.4621686533450705671584978594579468196477648256869562943162211750522403706020334288401332728233712763982593e-187")}
+      : std::array<R, 2>{parse("3.3283318823181014611775405028558064483833406868952958033097480443934362634044741922732043887019574315222298e-89"),
+                         parse("3.0650212499907369607855171482580218266490925577614039072021491650187428290508783466278863981237069931086624e-70")};
+  bethe::experimental::xxz::ThermodynamicVertexSpectrum<R> model(parse("2"), exchange);
+  auto const cut = model.broadened_cut(2, parse("1.5"), omega, exchange, 8);
+  R const tolerance = R{32} * uni20::numeric_limits<R>::epsilon(precision) *
+                      (R{1} + uni20::math::abs(uni20::math::log(exchange))) * positive;
+  for (std::size_t j = 0; j < omega.size(); ++j)
+  {
+    ASSERT_GT(cut.density[j], zero);
+    EXPECT_EQ(uni20::precision_of(cut.density[j]), precision);
+    EXPECT_REAL_NEAR(cut.density[j] / expected[j], R{1}, tolerance);
+  }
+}
 }
 
 template <typename T> class XXZVertex : public ::testing::Test {};
@@ -204,6 +235,14 @@ TYPED_TEST(XXZVertex, NegativeFrequencyGaussianSurvivesLargeExchange)
   EXPECT_EQ(actual.moments.nodes, expected.moments.nodes);
 }
 
+TYPED_TEST(XXZVertex, SmallExchangePreservesRepresentableGaussianTails)
+{
+  using R = TypeParam;
+  // Exercise each native type's own exponent limit, not only double's.
+  bool const wide_exponent = uni20::math::log(uni20::numeric_limits<R>::max()) > R{2000};
+  check_small_exchange_gaussian(R{0}, wide_exponent);
+}
+
 TYPED_TEST(XXZVertex, LargeExchangePreservesJacobianAndCut)
 {
   using R = TypeParam;
@@ -327,6 +366,13 @@ TEST(XXZVertexIntegration, IndependentLeadingIsingWeight)
 }
 
 #if UNI20_HAS_MPREAL
+TEST(XXZVertexMpfr, SmallExchangeGaussianTailsPreservePrecision)
+{
+  for (int bits : {128, 256})
+    for (bool wide_exponent : {false, true})
+      check_small_exchange_gaussian(uni20::mpreal("0", uni20::Precision::bits(bits)), wide_exponent);
+}
+
 TEST(XXZVertexMpfr, NegativeFrequencyGaussianPreservesPrecisionAndScaling)
 {
   using R = uni20::mpreal;

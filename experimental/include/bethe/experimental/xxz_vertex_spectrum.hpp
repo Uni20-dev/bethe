@@ -113,6 +113,7 @@ template <uni20::Real R> class ThermodynamicVertexSpectrum {
       R const gaussian_normalization = uni20::math::sqrt(R{2} * pi()) / width;
       if (!uni20::isfinite(gaussian_normalization))
         throw std::overflow_error("Gaussian normalization outside scalar range; increase width or precision");
+      R const gaussian_root_normalization = uni20::math::sqrt(gaussian_normalization);
       for (R w : omega)
         if (!uni20::isfinite(w)) throw std::invalid_argument("nonfinite frequency");
       auto const rows = n == 4 ? order : std::size_t{1};
@@ -195,7 +196,10 @@ template <uni20::Real R> class ThermodynamicVertexSpectrum {
                   // separately so a finite Gaussian argument is not lost to
                   // overflow in omega-energy; retain the difference otherwise.
                   R const x = omega[j] < R{0} ? omega[j] / width - energy / width : (omega[j] - energy) / width;
-                  R const gaussian = gaussian_normalization * uni20::math::exp(-x * x / R{2}); // includes 2pi
+                  // Form the square root first: exp(-x*x/2) can underflow
+                  // before a large normalization restores a representable tail.
+                  R const root = gaussian_root_normalization * uni20::math::exp(-x * x / R{4});
+                  R const gaussian = root * root; // includes 2pi
                   density[j].add(gaussian * weight);
                   error[j].add(gaussian * screen);
                 }

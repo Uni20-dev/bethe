@@ -143,13 +143,14 @@
       "docs/experimental-xxz-vertex.md": "fbe1fd440c084af282c1a21d219eeccac0f8df3add2f783e7f6b655d99fcdac9",
       "docs/experimental.md": "5f846b004ba7c2f919b90fedfc69a353839fc61177f4c8f7322b101a93ce16f3",
       "docs/validation/xxz-two-spinon-spectral-weight.json": "cf98814c57116bd55240d720c417127dec83dad753a20a1fe55e2fd3754932b1",
+      "docs/xxz-structure-factor-thermo.md": "fdb6a06db0c1504f28c2502fa858f359aee58a8a62f537b0184c04a1f972ddf9",
       "experimental/CMakeLists.txt": "3db347ef58735851f691a650946c2617bb94882aa3c70773e1f5a4f59b0b2ec7",
       "experimental/README.md": "6055e96e870a5735be9e28cf2a8bc15ef52d12fba2f0e74abe60f492fddc40f2",
       "experimental/examples/xxz_vertex.cpp": "534ccfc040019deb9b019c518084b9a7d83858cf1a8d7a9a911ad5b393e9335d",
       "experimental/include/bethe/experimental/detail/scaled_complex_product.hpp": "b5edf3e130fff04e8bbe2f72335e1a47cdf53bc15a30731a0df0336e3e9e1b52",
       "experimental/include/bethe/experimental/detail/xxz_spectral_kinematics.hpp": "9ff46ed98e335052b885bfbe04221aa84ea4d3331d97830b5897ceb92fa88aa5",
       "experimental/include/bethe/experimental/xxz_vertex.hpp": "448aa5b9bcff369ffec7fac90a16dcb8d17b0cf787f5f0d7aa86c5b4c3ea1d05",
-      "experimental/include/bethe/experimental/xxz_vertex_spectrum.hpp": "d686b1f79550d121cdc5374950673909a8f8c0b23df559fcfb75e96c699f405e",
+      "experimental/include/bethe/experimental/xxz_vertex_spectrum.hpp": "3c7423c3604a50f71a1db2aebc2de34b2dcb43f5524f0ffe09807da02d747760",
       "experimental/reference/xxz/README.md": "7f2ca1ccf2a6f6beeb348cc5dfe0eea5a5e7f4055c6e3c8260fb2150004ae3fe",
       "experimental/reference/xxz/requirements.txt": "72884cb92e7fc8e8b829b5e9acd7d96490c0d37e6d730a1d8068cb7628504344",
       "experimental/reference/xxz/test_vertex_quadrature.py": "eeff98adb32ee5e5f6985c38f8f52440ba8ea1410b93e4abd427e5d6ee208ee5",
@@ -159,7 +160,7 @@
       "experimental/reference/xxz/vertex_quadrature.py": "9c5acd1359439475bf917ca72d9af73c4c0a0bc6267e8add5de6b0dbbe7d93bc",
       "experimental/reference/xxz/vertex_reference.py": "82d3d0935da677057c74df9772c273b6759aa5d14a462d9a0e02fbb1e234ab18",
       "experimental/tests/CMakeLists.txt": "c5388060f5d1e035195d7dc4563e8f9a8b8412b3ee1a285b1d0d6fcee25d2f16",
-      "experimental/tests/test_xxz_vertex.cpp": "085db662df99b77eba3b64818540dbd02c386874acf669b02e0879770d9e660b",
+      "experimental/tests/test_xxz_vertex.cpp": "0a596d6c3f4a7c0b2178ac35ece2c13319c6bca151c02f868b595d7390d69474",
       "include/bethe/xxz_thermodynamic_structure_factor.hpp": "98aee1a2495c60173ee424fbba109b0c204755da6f82176d8968d7a175452bc7",
       "tests/test_xxz_thermodynamic_structure_factor.cpp": "e12ccb907a0fea2a32f73600bad129850a1b82e69dbd7873bbf2c1e25e619671",
       "zensical.toml": "27b4670ec6c963ecccac8794e4455b7642171a92307ce4fd5c8cad00bff567d9"
@@ -263,5 +264,57 @@
       }
     },
     "scope": "Focused existing CMake builds, numerical suites and Async example; configured providers at the recorded Uni20 revision. GCC13 native/wide and Clang19 ASan/UBSan, two compiler jobs per lane, BLAS/OpenMP threads=1. Existing sanitizer suppression policy. No fresh full repository build or new Python benchmark claimed."
+  },
+  "gaussian_underflow_followup": {
+    "previous_head": "3afe8939ac1a43b0ec773dbc84f6f27abdbd1cdb",
+    "finding": "exp(-x*x/2) can underflow before multiplication by a large Gaussian normalization; representable tails are silently zeroed.",
+    "correction": "Form sqrt(normalization)*exp(-x*x/4), then square. This retains representable tails without cancellation between logarithms or an additional transcendental call per frequency. Existing finite-normalization rejection is retained.",
+    "reference": "Complete order-8 two-spinon cut at Delta=2, k=1.5, width=J. Original exp(-x*x/2) expression evaluated with MPFR256 and MPFR384 at the previous head; MPFR exponent range keeps that independent arithmetic path representable. Regression constants use the MPFR384 results.",
+    "reference_points": [
+      {
+        "exchange": "1e-300",
+        "frequency_over_exchange": [
+          "-40",
+          "44"
+        ]
+      },
+      {
+        "exchange": "1e-4900",
+        "frequency_over_exchange": [
+          "-152",
+          "156"
+        ]
+      }
+    ],
+    "regression": "Identical new tests fail the old header in native64/80/128 at their own exponent limits; MPFR128/256 controls pass. Corrected tests require positive tails and compare relative errors, so absolute tolerances cannot admit zero. Existing physical controls and tolerances are unchanged.",
+    "old_header_log_sha256": "cb6ec416bed7f30e5a9899efff456a00d718bfc30f877757fe077b30289638ec",
+    "lanes": {
+      "native": {
+        "passed": 27,
+        "failed": 0,
+        "seconds": 3.81,
+        "log_sha256": "eb10c27bb68114b5432546e552edc8c8825a566e3d551f3ca2e889fc19b5d6b7"
+      },
+      "wide": {
+        "passed": 41,
+        "failed": 0,
+        "seconds": 7.59,
+        "log_sha256": "d5262e636d390527f2f3ec7a913fb9ef2385d7d25d873ecee421585cee6201d6"
+      },
+      "sanitizers": {
+        "passed": 30,
+        "failed": 0,
+        "seconds": 41.06,
+        "log_sha256": "873fa495a142b0c0adc5a6b92060fbda3cc5af1fd1f80287d2b8299a1234c198"
+      }
+    },
+    "scope": "Existing focused GCC13 native/wide and Clang19 ASan/UBSan CMake targets, all XXZVertex tests and the Async example. Host affinity remains within six allocated logical CPUs; no full repository or performance rerun claimed.",
+    "manifest_reconciliation": {
+      "scope": "Compare all changed files against integration_base, excluding this manifest.",
+      "added": [
+        "docs/xxz-structure-factor-thermo.md"
+      ],
+      "bound_inputs": 24
+    }
   }
 }
