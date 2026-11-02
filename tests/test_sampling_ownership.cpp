@@ -6,6 +6,7 @@
 #include <bethe/xxx_six_spinon_structure_factor.hpp>
 #include <bethe/xxx_two_spinon_moments.hpp>
 #include <condition_variable>
+#include <oneapi/tbb/global_control.h>
 #include <uni20/async/debug_scheduler.hpp>
 #include <uni20/async/tbb_scheduler.hpp>
 
@@ -83,6 +84,10 @@ class RejectAfterObserverStarts : public TbbScheduler {
 
 template <class Submit> void check_admission_stop(Submit submit)
 {
+  // The coordinator deliberately blocks admission until an observer starts.
+  // Permit both background workers even when CPU affinity limits the default
+  // pool to one. This scoped test budget does not require three physical CPUs.
+  oneapi::tbb::global_control workers(oneapi::tbb::global_control::max_allowed_parallelism, 3);
   auto state = std::make_shared<ActiveObserver>();
   RejectAfterObserverStarts scheduler(state);
   std::stop_source external;
