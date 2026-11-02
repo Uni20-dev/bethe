@@ -1,8 +1,10 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Copyright (C) 2026 Ian McCulloch
 #include "test_support.hpp"
+#include <bethe/xxx_four_spinon_thermodynamics.hpp>
 #include <bethe/xxx_six_spinon_moments.hpp>
 #include <bethe/xxx_six_spinon_structure_factor.hpp>
+#include <bethe/xxx_two_spinon_moments.hpp>
 #include <uni20/async/debug_scheduler.hpp>
 
 namespace
@@ -73,6 +75,34 @@ TEST(SamplingOwnership, ThrowingObserverMoveCannotAdmitWork)
   EXPECT_THROW((void)bethe::monte_carlo_async<1>({2, 2}, 1, 1., ThrowMove{}, {&scheduler}), std::bad_alloc);
   EXPECT_EQ(scheduler.calls, 0u);
   EXPECT_TRUE(scheduler.done());
+}
+
+TEST(SamplingOwnership, QuadratureAdmissionFailuresRetainOneOwner)
+{
+  check_owner([](auto& scheduler) {
+    return bethe::accumulate_quadrature_async<double, 1>(
+        4, [](std::size_t, std::stop_token) { return bethe::QuadratureObservation<double, 1>{{{{1.}}}}; }, 1.,
+        {&scheduler, 1, 2});
+  });
+}
+
+TEST(SamplingOwnership, TwoSpinonMomentsOwnTheirQuadratureDependency)
+{
+  using namespace bethe::heisenberg;
+  StructureFactorOptions<double> options;
+  options.tolerance = 1e-10;
+  ThermodynamicTwoSpinonMoments<double> model(1., options);
+  check_owner([&](auto& scheduler) { return model.global_moments(8, 4.).evaluate_async({&scheduler, 1, 2}); });
+}
+
+TEST(SamplingOwnership, FourSpinonMomentsOwnTheirQuadratureDependency)
+{
+  using namespace bethe::heisenberg;
+  if (uni20::numeric_limits<long double>::digits() <= uni20::numeric_limits<double>::digits()) GTEST_SKIP();
+  SpinonRecoveryPolicy policy{
+      "1e-5", "0", {{53, uni20::numeric_limits<long double>::digits(), {{{32, 12}, {64, 20}}}}}, 60};
+  ThermodynamicFourSpinon<long double, double, long double> model(policy, 1.L);
+  check_owner([&](auto& scheduler) { return model.global_moments(2, {2.L, 2.L, 2.L}).evaluate_async({&scheduler, 1, 2}); });
 }
 
 TEST(SamplingOwnership, SpectrumAndMomentsOwnTheirSamplingDependency)

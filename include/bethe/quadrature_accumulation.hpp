@@ -99,14 +99,43 @@ template <uni20::Real R, std::size_t N, class Metadata, class Evaluate> struct Q
       ++result.completed_nodes;
     }
 
-    static uni20::async::AsyncTask finish(uni20::async::ReadBuffer<std::size_t> work,
-                                          std::shared_ptr<QuadratureRun> run, uni20::async::WriteBuffer<Result> output)
+    static uni20::async::AsyncTask execute(std::shared_ptr<QuadratureRun> run, ExecutionOptions execution,
+                                           uni20::async::WriteBuffer<Result> output)
     {
       auto destination = co_await output;
       bool complete = false;
       try
       {
-        (void)co_await work;
+        execution.stop = run->control.token();
+        auto evaluate = [run](std::size_t index) {
+          try
+          {
+            return std::invoke(run->evaluate, index, run->control.token());
+          }
+          catch (...)
+          {
+            run->control.fail();
+            throw;
+          }
+        };
+        auto collect = [run](std::size_t index, auto observation) {
+          try
+          {
+            run->collect(index, std::move(observation));
+          }
+          catch (...)
+          {
+            run->control.fail();
+            throw;
+          }
+        };
+        using Window = ObservableWindow<decltype(evaluate)>;
+        auto window = std::make_shared<Window>(execution.continuous_scheduler(), std::move(evaluate), execution,
+                                               run->result.total_nodes);
+        uni20::async::Async<std::size_t> work;
+        // Construct the grid inside its sole admitted owner. The directly
+        // awaited child drains all accepted observations before propagating.
+        co_await observable_grid_task(std::move(window), std::move(collect), work.write());
         complete = true;
       }
       catch (QuadratureStop const&)
@@ -144,6 +173,16 @@ template <uni20::Real R, std::size_t N, class Metadata, class Evaluate> struct Q
       destination = std::move(result);
     }
 };
+
+// Prepare owned state without constructing or admitting a task, so model
+// adapters can directly await the reduction inside their own final-result task.
+template <uni20::Real R, std::size_t N, class Metadata = std::monostate, class Evaluate>
+auto prepare_quadrature_run(std::size_t count, Evaluate evaluate, R const& exemplar, ExecutionOptions execution)
+{
+  (void)execution.continuous_scheduler();
+  using Run = QuadratureRun<R, N, Metadata, Evaluate>;
+  return std::make_shared<Run>(count, std::move(evaluate), exemplar, execution.stop);
+}
 } // namespace detail
 
 /// Bounded ordered reduction of already weighted quadrature observations.
@@ -152,41 +191,18 @@ template <uni20::Real R, std::size_t N, class Metadata, class Evaluate> struct Q
 /// belong to the caller. No failed node is replaced or dropped; incomplete
 /// prefixes never become sums. Unexpected exceptions propagate after draining.
 /// The scheduler remains borrowed through completion; callables are owned.
+/// The public call admits only its final-result owner; child admission failures
+/// are reported through that result after accepted observations have drained.
 template <uni20::Real R, std::size_t N, class Metadata = std::monostate, class Evaluate>
 [[nodiscard]] uni20::async::Async<QuadratureReduction<R, N, Metadata>>
 accumulate_quadrature_async(std::size_t count, Evaluate evaluate, R const& exemplar, ExecutionOptions execution = {})
 {
   using Run = detail::QuadratureRun<R, N, Metadata, Evaluate>;
   auto& scheduler = execution.continuous_scheduler();
-  auto run = std::make_shared<Run>(count, std::move(evaluate), exemplar, execution.stop);
-  execution.stop = run->control.token();
-  auto work = evaluate_observable_grid_async(
-      count,
-      [run](std::size_t index) {
-        try
-        {
-          return std::invoke(run->evaluate, index, run->control.token());
-        }
-        catch (...)
-        {
-          run->control.fail();
-          throw;
-        }
-      },
-      [run](std::size_t index, auto observation) {
-        try
-        {
-          run->collect(index, std::move(observation));
-        }
-        catch (...)
-        {
-          run->control.fail();
-          throw;
-        }
-      },
-      execution);
+  execution.scheduler = &scheduler;
+  auto run = detail::prepare_quadrature_run<R, N, Metadata>(count, std::move(evaluate), exemplar, execution);
   uni20::async::Async<typename Run::Result> output;
-  auto task = Run::finish(work.read(), std::move(run), output.write());
+  auto task = Run::execute(std::move(run), execution, output.write());
   detail::schedule_owned(scheduler, std::move(task));
   return output;
 }
