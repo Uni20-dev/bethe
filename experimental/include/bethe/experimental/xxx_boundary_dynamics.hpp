@@ -48,7 +48,7 @@ template <uni20::Real R> struct BoundarySpectrum
     bool sum_rules_consistent() const
     {
       auto const zz = density.zz();
-      if (!zz || !uni20::isfinite(moments.weight) || !uni20::isfinite(moments.first_moment)) return false;
+      if (!retained_moments() || !zz || !uni20::isfinite(moments.weight) || !uni20::isfinite(moments.first_moment)) return false;
       R const zero = uni20::scalar_like(moments.weight, 0), quarter = uni20::scalar_like(zero, 1) / 4;
       R const gate = 4096 * uni20::scalar_like(zero, sites) * uni20::numeric_limits<R>::epsilon(zero);
       return moments.weight >= zero && moments.first_moment >= zero && moments.weight <= quarter + gate &&

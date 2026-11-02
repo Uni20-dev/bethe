@@ -232,6 +232,7 @@ TEST(ExperimentalBoundaryDynamicsExecution, FullDensitySurvivesRejectedSpectralP
   EXPECT_TRUE(result.ground_state.converged);
   EXPECT_FALSE(result.family_converged());
   EXPECT_FALSE(result.converged());
+  EXPECT_FALSE(result.sum_rules_consistent());
   EXPECT_EQ(attempted, 0u);
   ASSERT_TRUE(result.density.converged());
   EXPECT_EQ(result.ground_residual, result.density.ground_residual);
