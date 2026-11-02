@@ -312,6 +312,54 @@ TEST(ObservationStore, SavedValuesAreRecomputedEvenWhenChecksumIsValid)
   EXPECT_THROW((Store(scratch.path, group(1.L), samples(), policy(), "v1", "fixture")), std::invalid_argument);
 }
 
+TEST(ObservationStore, PhysicalAsyncResultsSurviveReversedReplayOrder)
+{
+  if (!native_pair()) GTEST_SKIP();
+  Scratch scratch;
+  auto model = group(1.L);
+  auto identities = samples();
+  auto found = std::find_if(identities.begin(), identities.end(), [&](auto const& sample) {
+    auto p = model.prepare(sample.id, sample.uniforms);
+    return std::any_of(p.rows().begin(), p.rows().end(),
+                       [](auto const& row) { return row.support == x::SpinonSectionSupport::selected; });
+  });
+  ASSERT_NE(found, identities.end());
+  // Deliberately duplicate the coordinates under distinct observation IDs to
+  // exercise concurrent distinct control histories. This is a replay fixture,
+  // not a claim of independent Monte Carlo samples or a covariance estimate.
+  std::vector<x::SpinonObservationIdentity> inputs{{"first", found->uniforms}, {"second", found->uniforms}};
+  h::XXXSpinonDensityRecovery<double, long double> recovery(policy());
+  auto expected = model.observation(model.prepare(inputs[0].id, inputs[0].uniforms), recovery);
+  ASSERT_TRUE(expected.values);
+  ASSERT_GT(expected.metadata.density_attempts, 0u);
+  {
+    uni20::async::TbbScheduler scheduler(2);
+    auto store = std::make_shared<Store>(scratch.path, model, inputs, policy(), "v1", "correlated replay fixture");
+    std::size_t collected = 0;
+    auto pending = x::evaluate_spinon_observation_chunk_async(store,
+                                                              [&](auto i, auto actual) {
+                                                                EXPECT_EQ(i, collected++);
+                                                                same(actual, expected);
+                                                              },
+                                                              {.scheduler = &scheduler, .max_in_flight = 2});
+    EXPECT_EQ(pending.get_wait(scheduler), 2u);
+    EXPECT_EQ(collected, 2u);
+  }
+  {
+    uni20::async::DebugScheduler scheduler({.order = uni20::async::DebugSchedulerOrder::reverse});
+    auto store = std::make_shared<Store>(scratch.path, model, inputs, policy(), "v1", "correlated replay fixture");
+    std::size_t collected = 0;
+    auto pending = x::evaluate_spinon_observation_chunk_async(store,
+                                                              [&](auto i, auto actual) {
+                                                                EXPECT_EQ(i, collected++);
+                                                                same(actual, expected);
+                                                              },
+                                                              {.scheduler = &scheduler, .max_in_flight = 1});
+    EXPECT_EQ(pending.get_wait(scheduler), 2u);
+    EXPECT_EQ(collected, 2u);
+  }
+}
+
 TEST(ObservationStore, AsyncSubmissionAndCollectorFailuresDrainOwnership)
 {
   if (!native_pair()) GTEST_SKIP();

@@ -16,26 +16,26 @@
     "experimental/include/bethe/experimental/spinon_observation_store.hpp": "7957a46ea29508e28d17b6766c1ce172b7bad70fa04f1fee0df356b6cc8ad49d",
     "experimental/include/bethe/experimental/detail/spinon_exact_decimal.hpp": "1db3bfde4e7e4ca5925f4ec5ddde580c5903b61b2cb7361c832bc4ef4872903e",
     "include/bethe/xxx_spinon_observation.hpp": "52be605b3849aa4594ab0dfd0c9611d2a6a72871020889dd04bf8928d5a75ae7",
-    "experimental/tests/test_spinon_observation_store.cpp": "1abcca5c9f226ecb7f0cf51a9ae66b6c8dad7406e62313fca1b7484e9668ec06",
+    "experimental/tests/test_spinon_observation_store.cpp": "59bdfa6d9524984733b8d9aa2ad83505d3812b186f56dbb155d5dd75fbc69c4d",
     "experimental/examples/spinon_observation_store.cpp": "b51c2363cc8e62daeed2c501bc940038cd7a82f2f37e4853948f9dcb98ee111c"
   },
   "checks": {
     "native": {
-      "passed": 25,
+      "passed": 26,
       "failed": 0,
-      "seconds": 4.75,
+      "seconds": 4.8,
       "scope": "fresh ci-native CMake; observation store, group and recovery store"
     },
     "wide": {
-      "passed": 35,
+      "passed": 36,
       "failed": 0,
-      "seconds": 73.989,
+      "seconds": 76.041,
       "scope": "configured GCC13 providers; observation store plus original density recovery, moments and spectra"
     },
     "sanitizers": {
-      "passed": 10,
+      "passed": 11,
       "failed": 0,
-      "seconds": 20.858,
+      "seconds": 19.25,
       "scope": "configured Clang19 providers; observation store including native/MPFR; existing Uni20 LSan suppressions"
     },
     "documentation": {
@@ -57,7 +57,8 @@
     "altered identity/order/requests/producer, truncation, valid-checksum altered result rejected",
     "publication failure poisons instance; reopen recovers persisted controls",
     "one admitted Async owner, ordered replay with different windows, initial/later submission rejection and collector errors",
-    "held publication remains unready until released on cancellation and exception"
+    "held publication remains unready until released on cancellation and exception",
+    "Concurrent physical density histories replay in the same input order with a different scheduler and window; correlated fixture is not used as independent Monte Carlo data"
   ],
   "cost": {
     "records": [
