@@ -100,6 +100,9 @@ if(BETHE_BUILD_APPS)
   add_executable(bethe-su3-dispersion apps/bethe-su3-dispersion.cpp)
   target_link_libraries(bethe-su3-dispersion PRIVATE bethe_cli)
   set_target_properties(bethe-su3-dispersion PROPERTIES CXX_EXTENSIONS OFF)
+  add_executable(bethe-xxz-structure-factor-thermo apps/bethe-xxz-structure-factor-thermo.cpp)
+  target_link_libraries(bethe-xxz-structure-factor-thermo PRIVATE bethe_cli)
+  set_target_properties(bethe-xxz-structure-factor-thermo PROPERTIES CXX_EXTENSIONS OFF)
   add_executable(bethe-xxz-dispersion apps/bethe-xxz-dispersion.cpp)
   target_link_libraries(bethe-xxz-dispersion PRIVATE bethe_cli)
   set_target_properties(bethe-xxz-dispersion PROPERTIES CXX_EXTENSIONS OFF)
@@ -161,7 +164,7 @@ if(BETHE_BUILD_APPS)
 
   set(bethe_parallel_apps
     bethe-lee-yang-excited bethe-sine-gordon-excited
-    bethe-xxx-structure-factor-thermo bethe-xxx-structure-factor bethe-xxx-moments-thermo
+    bethe-xxz-structure-factor-thermo bethe-xxx-structure-factor-thermo bethe-xxx-structure-factor bethe-xxx-moments-thermo
     bethe-xxx-pbc bethe-xxx-obc bethe-xxz-pbc bethe-xxz-obc
     bethe-lieb-liniger-pbc bethe-lieb-liniger-obc bethe-q-boson-pbc
     bethe-xxz-qg-obc bethe-biquadratic-obc

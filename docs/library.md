@@ -90,6 +90,8 @@ one scheduler; each request owns its controls.
   cross coefficients, moments and precision-generic Lehmann sums.
 - [Thermodynamic spinon densities](xxx-spinon-density.md): physical W2/W4/W6
   weights, rapidity conventions and numerical diagnostics.
+- [Massive XXZ spectral intensity](xxz-structure-factor-thermo.md): transverse
+  two-spinon weights with separate sheets and explicit-precision queries.
 - [Direct spinon moments](xxx-spinon-moments.md): fixed-momentum and global
   observables, physical reference denominators and separate error controls.
 - [Async execution](async-execution.md): state scans, bounded grids, shared
