@@ -15,3 +15,7 @@ ideal-string fallback.
 
 The [open XXX boundary guide](../docs/experimental-xxx-boundary-form-factors.md)
 covers normalized local raising weights and a fresh standalone example.
+
+The [boundary-dynamics guide](../docs/experimental-xxx-boundary-dynamics.md)
+adds local/end-to-end time sums, an owned Async scan and the ground-only
+boundary density matrix.

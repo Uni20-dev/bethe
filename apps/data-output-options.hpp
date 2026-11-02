@@ -42,7 +42,8 @@ inline void add_data_output_options(CLI::App& app, DataOutputOptions& options, T
       names.push_back(t.name);
       description +=
           t.name + (t.primary ? " [primary when available]" : "") + ": " + t.description + "; " + t.availability;
-      if (!t.screen_option.empty()) description += "; screen: " + t.screen_option + " (not required for file export)";
+      if (!t.screen_option.empty())
+        description += "; screen: " + t.screen_option + " (not required for named CSV/TSV exports)";
       description += '\n';
     }
     auto* tables = app.add_option_group("Output tables", description);

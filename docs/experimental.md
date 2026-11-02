@@ -93,6 +93,13 @@ small-chain checks. These free-end weights carry no periodic Fourier factor.
 Build the standalone example with `BETHE_BUILD_EXPERIMENTAL=ON` and
 `BETHE_BUILD_EXAMPLES=ON`.
 
+## Free-end XXX time correlations
+
+The [boundary-dynamics guide](experimental-xxx-boundary-dynamics.md) adds an owned
+real-root triplet scan, local and signed end-to-end time correlations, full
+ground-state boundary density and first-moment references. It includes a
+fresh CLI with explicit failed records and declared exports.
+
 ## Scope and promotion
 
 Each experimental feature must document supported inputs, numerical controls,
