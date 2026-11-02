@@ -26,6 +26,14 @@ There is no 2 pi multiplier or thermodynamic sector coefficient in this weight.
 The [complex-root guide](experimental-xxx-complex-roots.md) describes its Gaudin
 norm matrices, determinant evaluation and independent normalization controls.
 
+At validated zero momentum transfer, total spin raising annihilates the
+singlet. The form-factor result is `converged` with exactly zero `weight` and
+absent `log_weight`. Family labels, original equations, precision and norms
+are still checked before applying this selection rule; unresolved states
+remain failures. The family passes its revalidated momentum label to the
+shared complex-root helper, rather than identifying a zero from a small
+computed weight.
+
 ## Requests and supported geometry
 
 `Configuration` contains `sites`, `family`, six hole labels and the string

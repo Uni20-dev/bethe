@@ -567,6 +567,6 @@ heisenberg::FormFactor<R> raising_weight(PreparedSinglet<R> const& ground, Solve
   R const error = uni20::math::abs(complex_roots::phase(
       momentum.value().imag() - 2 * bethe::detail::pi_like(zero) * labels(request).momentum_index / request.sites));
   if (!uni20::isfinite(error) || error > tolerance) return failure;
-  return complex_roots::raising_weight<R>(ground, state.roots);
+  return complex_roots::raising_weight<R>(ground, state.roots, labels(request).momentum_index);
 }
 } // namespace bethe::experimental::xxx::six_spinon
