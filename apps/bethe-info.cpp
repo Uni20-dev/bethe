@@ -54,7 +54,8 @@ int run(cli::DataOutputOptions const& options, int argc, char** argv)
                    "bethe-haldane-shastry-pbc, bethe-sutherland-pbc, bethe-tb-dispersion, "
                    "bethe-sine-gordon-dispersion, bethe-sine-gordon-bethe-yang, bethe-sine-gordon-vacuum, "
                    "bethe-sine-gordon-excited, bethe-lee-yang-vacuum, bethe-lee-yang-excited, bethe-potts-pbc, "
-                   "bethe-xxz-dispersion, bethe-xxz-qg-obc, bethe-tb-pbc, bethe-sun-fermions-pbc, "
+                   "bethe-xxz-dispersion, bethe-xxz-structure-factor-thermo, bethe-xxz-qg-obc, bethe-tb-pbc, "
+                   "bethe-sun-fermions-pbc, "
                    "bethe-kondo-response, bethe-xyz-dispersion, bethe-xyz-pbc"
                  : "none enabled in this build")
       .field("precision_scope", "Native precision scope", "all numerical frontends, subject to availability")
