@@ -27,7 +27,8 @@ auto program_info()
                                 bethe::citations::Tool::xxx_boundary_magnetization);
   info.examples = {{"bethe-experimental-xxx-boundary-magnetization 16 --threads 2 --csv time.csv",
                     "Both endpoints after sqrt(2) S_1^+ acting on the singlet"},
-                   {"bethe-experimental-xxx-boundary-magnetization 8 --precision bits-160 --json result.json",
+                   {"bethe-experimental-xxx-boundary-magnetization 8 --precision bits-160 --states --pairs "
+                    "--roots --json result.json",
                     "Explicit precision, signed pair coefficients and state diagnostics"}};
   info.notes = {
       "Experimental, even N>=2, H=sum S_j.S_(j+1), free ends, J=1, zero field.",

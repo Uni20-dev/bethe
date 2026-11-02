@@ -183,7 +183,8 @@ From a new build directory, configure the source directory and build the target:
 cmake /path/to/bethe -DBETHE_BUILD_EXPERIMENTAL=ON -DBETHE_BUILD_APPS=ON
 cmake --build . --target bethe-experimental-xxx-boundary-magnetization -j2
 ./experimental/bethe-experimental-xxx-boundary-magnetization 16 --threads 2 --csv time.csv
-./experimental/bethe-experimental-xxx-boundary-magnetization 8 --precision bits-160 --json result.json
+./experimental/bethe-experimental-xxx-boundary-magnetization 8 --precision bits-160 \
+  --states --pairs --roots --json result.json
 ```
 
 The default time grid has 101 points from zero to 100. Set `--time-max` and
@@ -203,7 +204,10 @@ Tables are declared in `--help`:
 | `roots` | Ground and attempted excited roots in solver coordinates | `--roots` |
 
 For example, `--csv-table pairs=pairs.csv` exports all pair records without
-showing them on screen. `--json result.json` exports all declared tables.
+showing them on screen. `--json result.json` exports `time` and `summary`, plus
+auxiliary tables selected by `--states`, `--pairs` or `--roots`. The example
+above selects all five tables; `--quiet` suppresses their screen display
+without changing the JSON selection.
 Unknown table names are errors. A missing scalar is absent/null, never a
 successful zero. Failed preparations retain every requested state and pair;
 an unresolved pair produces **no time curve**, and the executable returns 2.
