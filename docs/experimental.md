@@ -121,6 +121,15 @@ real-root triplet scan, local and signed end-to-end time correlations, full
 ground-state boundary density and first-moment references. It includes a
 fresh CLI with explicit failed records and declared exports.
 
+## Massive XXZ vertex amplitudes and spectra
+
+The [finite-q XXZ package](experimental-xxz-vertex.md) evaluates two- and
+four-spinon complex amplitudes, fixed-order integrated moments and Gaussian
+frequency cuts. It supports native formats and explicit MPFR/MPC precision.
+Its independent residue and NumPy/SciPy controls run without research data.
+Product/residue truncation, outer quadrature and arithmetic precision require
+separate checks; the four-spinon calculation is not a certified spectral density.
+
 ## Restartable density controls
 
 The [spinon recovery store](experimental-spinon-recovery-store.md) binds a

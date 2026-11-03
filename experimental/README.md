@@ -13,6 +13,11 @@ See [the build and API guide](../docs/experimental.md).
 | `bethe::experimental::xxx::PreparedSinglet<Real>` | Validated even-ring XXX singlet preparation, reusable ground factors and energy, J=1 |
 | `bethe::experimental::xxx::six_spinon` | Selected two-pair and three-string triplets with resolved deviations and explicit failed results |
 | [`bethe::experimental::xxx::SpinonRecoveryStore<Low, High>`](../docs/experimental-spinon-recovery-store.md) | Bounded POSIX restart storage for two-, four- and six-spinon density controls |
+| `bethe::experimental::xxz::VertexEvaluator<Real>` | Infinite massive XXZ two/four-spinon complex vertex amplitudes, with independent product/residue controls |
+| `bethe::experimental::xxz::ThermodynamicVertexSpectrum<Real>` | Fixed-order full-zone moments and Gaussian frequency cuts, including coherent vacuum sectors |
+
+See [finite-q XXZ spectra](../docs/experimental-xxz-vertex.md) for the reference
+scripts, normalized measures and explicit convergence limitations.
 
 Regular finite-root equations and unreduced form factors are described in
 [the complex-root guide](../docs/experimental-xxx-complex-roots.md). They are

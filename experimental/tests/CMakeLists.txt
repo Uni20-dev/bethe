@@ -88,6 +88,12 @@ if(BETHE_BUILD_APPS)
   endif()
 endif()
 
+add_executable(bethe_experimental_xxz_vertex_tests test_xxz_vertex.cpp)
+target_link_libraries(bethe_experimental_xxz_vertex_tests PRIVATE bethe::experimental)
+target_include_directories(bethe_experimental_xxz_vertex_tests PRIVATE "${PROJECT_SOURCE_DIR}/tests")
+bethe_discover_tests(bethe_experimental_xxz_vertex_tests
+  TEST_PREFIX "Experimental." LABELS "experimental" TIMEOUT 300)
+
 if(UNIX)
   add_executable(bethe_experimental_recovery_store_tests test_spinon_recovery_store.cpp)
   target_link_libraries(bethe_experimental_recovery_store_tests PRIVATE bethe::experimental TBB::tbb)

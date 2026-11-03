@@ -123,6 +123,10 @@ nav = [
     { "Async execution" = "docs/async-execution.md" },
     { "Composition examples" = "docs/async-examples.md" },
     { "Observable grids" = "docs/parallel-grids.md" },
+    { "Experimental APIs" = [
+      { "Build and scope" = "docs/experimental.md" },
+      { "Finite-q XXZ spectra" = "docs/experimental-xxz-vertex.md" },
+    ] },
   ] },
   { "Development" = [
     { "Source organization and methods" = "docs/development.md" },

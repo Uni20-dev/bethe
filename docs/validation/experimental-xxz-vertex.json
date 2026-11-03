@@ -1,0 +1,490 @@
+{
+  "scope": "Experimental infinite massive XXZ two/four-spinon complex vertex amplitudes, fixed-order full-zone moments and Gaussian frequency cuts. No convergence certification or fitted normalization.",
+  "integration_base": "4ef7f0d576f2132091a3a50a60c8230b50f826a7",
+  "prerequisites": {
+    "experimental_foundation": "e916ab29aaa44d7fad264f583a0e79a51d3798c0",
+    "two_spinon_spectrum": "375f32c0b41a0439cee04d1c3c864bcfce59ea8f"
+  },
+  "uni20_revision": "ca350254e723b9909571e860318bd274cb0c9ddb",
+  "research_origin": {
+    "revision": "2242fd5d78ec2c6c81a64993eca5dd6eea6cd732",
+    "files_sha256": {
+      "include/bethe/xxz_vertex_spectrum.hpp": "a195a500886e09201dfcb5a8b6856d8878828486eb3790b9f8462273b4f550ee",
+      "include/bethe/detail/xxz_vertex.hpp": "a40b139e834412f0cd320626132328c16d0ed6c15f2508965f34fe3695d09633",
+      "include/bethe/detail/xxz_spectral_kinematics.hpp": "80ba539bf0124de09be967b5fd175e9d677e8d6309dfc26b8860e6cdc94f6476",
+      "include/bethe/detail/scaled_complex_product.hpp": "067a0ddad699ae9e7dc090bcb36adc82954151149f6a387d7d0dd482b8bae39e",
+      "tests/test_xxz_vertex.cpp": "9b1b3060b7981bf9695a614caae5a16f97baf6d0fd4cdc9dd7336dcd2abfcc5e",
+      "scripts/reference_xxz_ising_weight.py": "efb2d77b3d4175c114eaeb9c7d51ab088804af14b4c3d57b481c5a9429c2f1a2",
+      "scripts/reference_xxz_four_spinon_spectrum.py": "11e15abf9ee12553ce0194ed8ed4297ac903ac6b90bdee677621c8ca042a1493",
+      "scripts/reference_xxz_vertex_integral.py": "8dccf087eb1b501e9e8d13e93b264bca77c5e857d0aa92ba0fa565408e54304b",
+      "scripts/reference_xxz_vertex_limit.py": "9721747884cf1abe9f15c4d0b3fe3002309b0dca502d8a013c26206a1aad7b88"
+    },
+    "scope": "Extraction lineage, not required public inputs. Standalone public controls and their actual hashes are recorded below."
+  },
+  "adaptation": [
+    "Current Uni20 real/complex math, scaled theta functions and explicit runtime precision.",
+    "Scaled binary-exponent products; literal first residues and cancelled recurrence. No manual linear-algebra backend.",
+    "Both vacua/polarizations retained, with coherent momentum sectors, completeness and Fourier factors.",
+    "Pair quadrature joins through the existing bounded Async grid in the example, with fixed row reduction.",
+    "Standalone mpmath and NumPy/SciPy controls; six original-versus-extracted quadrature results match exactly."
+  ],
+  "validation": {
+    "compiler_native_wide": "GCC13.3 Release",
+    "compiler_sanitizers": "Clang19.1 Debug/O1, ASan/UBSan; existing Uni20 MPFR cache suppressions",
+    "host_cpu": "Intel Core i7-12700KF",
+    "thread_limits": "Six logical CPUs available; one compiler process and BLAS/OMP one thread.",
+    "scope": "Focused CMake rebuild/tests in three separately configured trees. All existing source integration controls retained, plus explicit MPFR and momentum-resolution cases. Not a full repository suite.",
+    "lanes": {
+      "native": {
+        "passed": 21,
+        "failed": 0,
+        "elapsed_seconds": 7.32,
+        "log_sha256": "fa2932d429b792734eff0205f27c1db54fb0ba932f4e5f5b93a5850308e63e9b"
+      },
+      "wide": {
+        "passed": 30,
+        "failed": 0,
+        "elapsed_seconds": 14.37,
+        "log_sha256": "8778fa39ea670bbce795eb956d0468cb57471b9733cefb9ecf3a23c758589b5b"
+      },
+      "sanitizers": {
+        "passed": 22,
+        "failed": 0,
+        "elapsed_seconds": 39.85,
+        "log_sha256": "76f1177d4186c18d2f205c796ec649c9552f3ace7505498ac50cde843edaf53b"
+      }
+    },
+    "python": {
+      "tests": 7,
+      "failures": 0,
+      "seconds": 2.631,
+      "python": "3.12.3",
+      "mpmath": "1.2.1",
+      "numpy": "1.26.4",
+      "scipy": "1.11.4",
+      "log_sha256": "bf534a2791a72de5a792ada242de35d79e438ef73722afe309eccca4e905d39d"
+    },
+    "controls": [
+      "Eight independent complex amplitudes with 100-digit references and 65/100-digit refinement; direct shifted-residue checks.",
+      "Product/residue refinement; finite-q normalization controls; native64/80/128 and MPFR128/256.",
+      "Fixed-order full-zone moments and two/four Gaussian cuts, with separate vacuum interference, winding and measure checks.",
+      "Near-isotropic two-spinon cuts versus an independent reduced-form Gaussian convolution; leading-Ising four-spinon weight.",
+      "Explicit failure for collisions, unresolved momentum shifts, invalid controls/precision and scalar range. Serial/executor reduction and exchange scaling."
+    ],
+    "preserved_failed_checks": [
+      "First Gaussian partial-window test used a cutoff whose lost tail rounded away; changed the test window to the mean energy, retaining full-axis normalization. No numerical code/tolerance changed.",
+      "Consumer integration exposed PR118 midpoint sheet splitting; upstream924ee14 fixes it. The original convolution test remains unchanged and now passes."
+    ]
+  },
+  "library_consumers": {
+    "library-consumer": {
+      "steps": [
+        {
+          "kind": "configure",
+          "returncode": 0,
+          "elapsed": 4.597976677003317
+        },
+        {
+          "kind": "build",
+          "returncode": 0,
+          "elapsed": 33.57732488802867
+        },
+        {
+          "kind": "run",
+          "returncode": 0,
+          "elapsed": 3.2957855429849587
+        }
+      ],
+      "scope": "Fresh enclosing CMake with apps/tests/examples/Uni20 CLI disabled. Opt-in builds/runs exact guide snippets; default build checks experimental targets absent and runs a supported dispersion query."
+    },
+    "default-off-consumer": {
+      "steps": [
+        {
+          "kind": "configure",
+          "returncode": 0,
+          "elapsed": 4.710020772006828
+        },
+        {
+          "kind": "build",
+          "returncode": 0,
+          "elapsed": 32.66428105602972
+        },
+        {
+          "kind": "run",
+          "returncode": 0,
+          "elapsed": 0.0019977170159108937
+        }
+      ],
+      "scope": "Fresh enclosing CMake with apps/tests/examples/Uni20 CLI disabled. Opt-in builds/runs exact guide snippets; default build checks experimental targets absent and runs a supported dispersion query."
+    }
+  },
+  "documentation": {
+    "pages": 155,
+    "bibliography_urls": 165,
+    "equations": 1873,
+    "examples": "Both literal C++ guide snippets compile and run in a fresh library-only consumer.",
+    "scope": "Local build and source/HTML link/math checks; deployment remains pending."
+  },
+  "routine_cost_contract": "Focused native/wide/sanitizer CTest runs are recorded, not portable wall-time guarantees. The peer independently ran the prior29-case wide and21-case sanitizer binaries serially in25.126 and62.871seconds, and seven optional Python cases in5.714seconds. No production grid is added to CI.",
+  "limitations": [
+    "Finite product/residue/grid orders are independently tunable; arithmetic indicators are conditioning screens, not certified errors.",
+    "Near-coincident spectral nodes require confluent formulas and are explicitly rejected.",
+    "Small unresolved mass, momentum shifts and scalar range fail rather than discarding nodes.",
+    "No support for six-spinons, longitudinal response or a generally converged four-spinon DSF is claimed."
+  ],
+  "remaining_gates": [
+    "Exact-head reciprocal review and agreed routine cost",
+    "Completed Claude review",
+    "Current CI and prerequisite merges",
+    "Normal integrated installation and deployed documentation"
+  ],
+  "validated_public_inputs": {
+    "files_sha256": {
+      "docs/experimental-xxz-vertex.md": "fbe1fd440c084af282c1a21d219eeccac0f8df3add2f783e7f6b655d99fcdac9",
+      "docs/experimental.md": "1343228fb5829a98985e28a5feaae52bea99d794b825e4fa4957cc6bd04f3c8a",
+      "experimental/CMakeLists.txt": "e7c75f14c6ef94013316e0dc38d7b411ecd174aa15834c6a90779704930f483b",
+      "experimental/README.md": "f641bde0ecf38b38019abcd63e2855779937f98b439d4a82807f0376e5af2ccd",
+      "experimental/examples/xxz_vertex.cpp": "534ccfc040019deb9b019c518084b9a7d83858cf1a8d7a9a911ad5b393e9335d",
+      "experimental/include/bethe/experimental/detail/scaled_complex_product.hpp": "b5edf3e130fff04e8bbe2f72335e1a47cdf53bc15a30731a0df0336e3e9e1b52",
+      "experimental/include/bethe/experimental/detail/xxz_spectral_kinematics.hpp": "9ff46ed98e335052b885bfbe04221aa84ea4d3331d97830b5897ceb92fa88aa5",
+      "experimental/include/bethe/experimental/xxz_vertex.hpp": "448aa5b9bcff369ffec7fac90a16dcb8d17b0cf787f5f0d7aa86c5b4c3ea1d05",
+      "experimental/include/bethe/experimental/xxz_vertex_spectrum.hpp": "3c7423c3604a50f71a1db2aebc2de34b2dcb43f5524f0ffe09807da02d747760",
+      "experimental/reference/xxz/README.md": "7f2ca1ccf2a6f6beeb348cc5dfe0eea5a5e7f4055c6e3c8260fb2150004ae3fe",
+      "experimental/reference/xxz/requirements.txt": "72884cb92e7fc8e8b829b5e9acd7d96490c0d37e6d730a1d8068cb7628504344",
+      "experimental/reference/xxz/test_vertex_quadrature.py": "eeff98adb32ee5e5f6985c38f8f52440ba8ea1410b93e4abd427e5d6ee208ee5",
+      "experimental/reference/xxz/test_vertex_reference.py": "7ec825f998b204c23d1e91b59fe5517cf3675ac978c5d83710831ea66a50780a",
+      "experimental/reference/xxz/vertex-point.json": "9e95ccf8baf53c313dd12421de8a444117a8fabc9b2a7ad6d466b33044d00e3c",
+      "experimental/reference/xxz/vertex_numpy.py": "60bc4b8b1d2bd4026c754f0f15296d5c93691ceaed56c27e340e53480d52e7f6",
+      "experimental/reference/xxz/vertex_quadrature.py": "9c5acd1359439475bf917ca72d9af73c4c0a0bc6267e8add5de6b0dbbe7d93bc",
+      "experimental/reference/xxz/vertex_reference.py": "82d3d0935da677057c74df9772c273b6759aa5d14a462d9a0e02fbb1e234ab18",
+      "experimental/tests/CMakeLists.txt": "f0764a7d046bae764077b123aa91e595f9b14b787467bda6128ecd194c3e9782",
+      "experimental/tests/test_xxz_vertex.cpp": "0a596d6c3f4a7c0b2178ac35ece2c13319c6bca151c02f868b595d7390d69474",
+      "zensical.toml": "81cdab43cbea133c06deb8ba85bdc69e1e9ec6cc24035a79ba398cad2ba3a824"
+    },
+    "scope": "Exactly the added/changed files relative to the top-level integration_base, excluding this self-describing manifest. Unchanged parent files are bound by that revision and the prerequisite commits. Historical follow-up counts describe their original checkpoints; the enclosing commit binds this current record."
+  },
+  "parent_range_followup": {
+    "merge_revision": "5a9f7ffe836c0afa2cfbaaee9356bee4d27119dd",
+    "change": "Merged the supported XXZ large-exchange bound correction with ancestry preserved; experimental algorithms and tests are unchanged.",
+    "checks": {
+      "native": {
+        "passed": 21,
+        "failed": 0,
+        "elapsed_seconds": 7.44,
+        "log_sha256": "591e57b302d7395e087a5b93ef3855506ce17107b9c59b87ae805f97db06ea4e"
+      },
+      "wide": {
+        "passed": 30,
+        "failed": 0,
+        "elapsed_seconds": 14.49,
+        "log_sha256": "00a5f686a21e3f640f55fb4c7e4330caa085f59b46accb585d90be3f291ae1f2"
+      },
+      "sanitizers": {
+        "passed": 22,
+        "failed": 0,
+        "elapsed_seconds": 35.25,
+        "log_sha256": "22f2a6181dd3ced7c05296ff71e9a7bdfcd13a329b3909ce880fda391418d171"
+      }
+    }
+  },
+  "jacobian_range_followup": {
+    "previous_head": "fb17a0d6e1f7e0bb77392ad5cc8ab4f8e5902cda",
+    "finding": "An overflowing 2*K*energy denominator silently zeroed a dimensionless positive Jacobian and could suppress the cut weight.",
+    "correction": "Cancel Emax analytically; evaluate (1/(2*K))/hypot(sin(p),kp*cos(p)), reflecting p before trigonometry to retain the soft endpoint mass; reject nonpositive/nonfinite results.",
+    "regression": "Old header fails native64/80/128. Tests check the independent 100-digit midpoint Jacobian, both tiny-mass endpoints, and cut m0, m1/J, density*J at J=max/{8,10,12,16}. Existing physical-control tolerances unchanged.",
+    "lanes": {
+      "native": {
+        "passed": 23,
+        "failed": 0,
+        "seconds": 7.18191983102588,
+        "log_sha256": "b5460302336164a3e19aae1e437babe2f52d624af8ca818006b5311b69bae555"
+      },
+      "wide": {
+        "passed": 33,
+        "failed": 0,
+        "seconds": 14.423257025016937,
+        "log_sha256": "a3f027e3b12dae634b18c7bfcbb96d02516592eb4b9a819a4704b52a54f3302c"
+      },
+      "sanitizers": {
+        "passed": 23,
+        "failed": 1,
+        "seconds": 92.80473683698801,
+        "log_sha256": "9d03e67d9adbf357ae15e8a8acb8ece56b6f44c920b0bc5599d89c2deacab609",
+        "unchanged_example_retry": {
+          "passed": 1,
+          "failed": 0,
+          "seconds": 1.84,
+          "log_sha256": "4b66c996e08a3e39d428d35b8b2c24368dbff94d944d14c85e29ccb7439578df"
+        }
+      }
+    },
+    "sanitizer_retry_scope": "All 23 numerical tests passed initially; the Async example timed out at60s without diagnostics. The unchanged binary passed in1.84s on retry. The initial timeout log is retained; no cause is asserted and no timeout/suppression was changed."
+  },
+  "closing_sheet_parent_followup": {
+    "previous_head": "23c7906ed2dd8b988ebc09499b495ac84d34a1d2",
+    "parent": "2d7d39c1b5a8a8c2e855feb5f2fb19404051c3aa",
+    "change": "Inherit the reviewed-work-in-progress parent correction that keeps closing spectral intervals ordered. No finite-q source or test changes.",
+    "validation": {
+      "native_passed": 23,
+      "failed": 0,
+      "elapsed_seconds": 3.76,
+      "test_log_sha256": "26a5304da41b77fbcc64311a5d7bbdf23bae7aa33fe15c3d27346d6bef096feb",
+      "build_log_sha256": "f723bb923aff48102221b4bc2c7f57e3134d966fc34b3fa9c8e60c202ed7a224"
+    },
+    "scope": "Rebuilt and ran the complete focused native finite-q suite and Async example, including near-isotropic two-spinon convolution. Parent independently passes 25 native/39 wide/30 sanitizer checks. Earlier finite-q wide/sanitizer checks are preserved under their original checkpoint; no new full precision-matrix claim."
+  },
+  "gaussian_range_followup": {
+    "previous_head": "d3f1597dafbad916aa3f1d541d2b578d6b0007cb",
+    "finding": "For finite negative omega, omega-energy can overflow before division by width, silently replacing a representable Gaussian tail with zero.",
+    "correction": "For omega<0, use omega/width-energy/width, whose terms have opposite signs and no cancellation; retain (omega-energy)/width otherwise. Energy and width are positive. No normalization, physical kernel, quadrature order or existing tolerance changes.",
+    "regression": "The identical extreme-range regression fails the old header in binary64, native 80-bit extended precision and binary128. At J=max/16, width=max and omega=-max, require a positive tail and compare J*density with the J=1, width=16, omega=-16 control. Zero and positive frequencies are controls. MPFR128/256 additionally checks negative-frequency exchange scaling at J=1e1000 and retained precision; these MPFR cases are not exponent-overflow reproducers.",
+    "old_header_log_sha256": "e9d6a1d9160bdf50cceac46fc08d9cdcccf6920a6d564f2a2a0f6a79e0bdc79c",
+    "lanes": {
+      "native": {
+        "passed": 25,
+        "failed": 0,
+        "seconds": 3.68,
+        "log_sha256": "7318039cadb38f334c0cb1764906543aabf370c692488c9697ad98140eef6006"
+      },
+      "wide": {
+        "passed": 37,
+        "failed": 0,
+        "seconds": 7.67,
+        "log_sha256": "a5cddac2e6db50961b805191d5649d9c80d3f3d2ee59d1cd1666a647e558c094"
+      },
+      "sanitizers": {
+        "passed": 27,
+        "failed": 0,
+        "seconds": 22.16,
+        "log_sha256": "567b005242e5cdcee7d37493db2197471c42219ad0ec0c9091d2ff80df5a113f"
+      }
+    },
+    "scope": "Focused existing CMake builds, numerical suites and Async example; configured providers at the recorded Uni20 revision. GCC13 native/wide and Clang19 ASan/UBSan, two compiler jobs per lane, BLAS/OpenMP threads=1. Existing sanitizer suppression policy. No fresh full repository build or new Python benchmark claimed."
+  },
+  "gaussian_underflow_followup": {
+    "previous_head": "3afe8939ac1a43b0ec773dbc84f6f27abdbd1cdb",
+    "finding": "exp(-x*x/2) can underflow before multiplication by a large Gaussian normalization; representable tails are silently zeroed.",
+    "correction": "Form sqrt(normalization)*exp(-x*x/4), then square. This retains representable tails without cancellation between logarithms or an additional transcendental call per frequency. Existing finite-normalization rejection is retained.",
+    "reference": "Complete order-8 two-spinon cut at Delta=2, k=1.5, width=J. Original exp(-x*x/2) expression evaluated with MPFR256 and MPFR384 at the previous head; MPFR exponent range keeps that independent arithmetic path representable. Regression constants use the MPFR384 results.",
+    "reference_points": [
+      {
+        "exchange": "1e-300",
+        "frequency_over_exchange": [
+          "-40",
+          "44"
+        ]
+      },
+      {
+        "exchange": "1e-4900",
+        "frequency_over_exchange": [
+          "-152",
+          "156"
+        ]
+      }
+    ],
+    "regression": "Identical new tests fail the old header in native64/80/128 at their own exponent limits; MPFR128/256 controls pass. Corrected tests require positive tails and compare relative errors, so absolute tolerances cannot admit zero. Existing physical controls and tolerances are unchanged.",
+    "old_header_log_sha256": "cb6ec416bed7f30e5a9899efff456a00d718bfc30f877757fe077b30289638ec",
+    "lanes": {
+      "native": {
+        "passed": 27,
+        "failed": 0,
+        "seconds": 3.81,
+        "log_sha256": "eb10c27bb68114b5432546e552edc8c8825a566e3d551f3ca2e889fc19b5d6b7"
+      },
+      "wide": {
+        "passed": 41,
+        "failed": 0,
+        "seconds": 7.59,
+        "log_sha256": "d5262e636d390527f2f3ec7a913fb9ef2385d7d25d873ecee421585cee6201d6"
+      },
+      "sanitizers": {
+        "passed": 30,
+        "failed": 0,
+        "seconds": 41.06,
+        "log_sha256": "873fa495a142b0c0adc5a6b92060fbda3cc5af1fd1f80287d2b8299a1234c198"
+      }
+    },
+    "scope": "Existing focused GCC13 native/wide and Clang19 ASan/UBSan CMake targets, all XXZVertex tests and the Async example. Host affinity remains within six allocated logical CPUs; no full repository or performance rerun claimed.",
+    "manifest_reconciliation": {
+      "scope": "Compare all changed files against integration_base, excluding this manifest.",
+      "added": [
+        "docs/xxz-structure-factor-thermo.md"
+      ],
+      "bound_inputs": 24
+    }
+  },
+  "current_parent_integration": {
+    "previous_head": "6c3b8339e4c5c94450dc9c942bf908419d66a61c",
+    "parent": "4ef7f0d576f2132091a3a50a60c8230b50f826a7",
+    "previous_uni20_revision": "ca350254e723b9909571e860318bd274cb0c9ddb",
+    "change": "Merge actual landed Four solver/scanner. Two CMake conflicts retain the complete Four and finite-q registration blocks separately, outside the POSIX storage guards. The code, controls, examples and guides are unchanged.",
+    "source_correspondence": {
+      "unchanged_finite_q_inputs": [
+        "docs/experimental-xxz-vertex.md",
+        "experimental/examples/xxz_vertex.cpp",
+        "experimental/include/bethe/experimental/detail/scaled_complex_product.hpp",
+        "experimental/include/bethe/experimental/detail/xxz_spectral_kinematics.hpp",
+        "experimental/include/bethe/experimental/xxz_vertex.hpp",
+        "experimental/include/bethe/experimental/xxz_vertex_spectrum.hpp",
+        "experimental/reference/xxz/README.md",
+        "experimental/reference/xxz/requirements.txt",
+        "experimental/reference/xxz/test_vertex_quadrature.py",
+        "experimental/reference/xxz/test_vertex_reference.py",
+        "experimental/reference/xxz/vertex-point.json",
+        "experimental/reference/xxz/vertex_numpy.py",
+        "experimental/reference/xxz/vertex_quadrature.py",
+        "experimental/reference/xxz/vertex_reference.py",
+        "experimental/tests/test_xxz_vertex.cpp"
+      ],
+      "combined_integration_inputs": [
+        "docs/experimental.md",
+        "experimental/CMakeLists.txt",
+        "experimental/README.md",
+        "experimental/tests/CMakeLists.txt",
+        "zensical.toml"
+      ],
+      "all_other_parent_inputs_unchanged": true
+    },
+    "native": {
+      "passed": 27,
+      "failed": 0,
+      "skipped": 0,
+      "seconds": 7.592763277993072,
+      "scope": "Reconfigured the combined actual-main registrations and rebuilt/reran the complete native finite-q tests and Async example using merged Uni20 ca350254. Prior wide/sanitizer numerical runs remain separately scoped.",
+      "configure_log_sha256": "0c328fd33c3441cede1f6e0c4c5d0701db2152afae9c525950fa28cde9758a0d",
+      "build_log_sha256": "b3adffa5f945d13c2e8bcc150e57ce5d9a99e0424734c7f0aa069746b48efc1a",
+      "test_log_sha256": "46919bff92eadb6949efe8398fe1f66391abd902b430d872d389e6cc8a328f91"
+    },
+    "documentation": {
+      "result": "Checked links/assets in 169 pages, 173 bibliography URLs, and preserved 2086 equations.",
+      "scope": "Fresh combined local site, citation, source-math and tutorial-link checks. Final deployment remains outstanding.",
+      "log_sha256": "63302d12a234de0a4271fd1cbcdff12a822dcc33cb24c3ff7a00d04156172dbe"
+    },
+    "manifest": "Exactly the 20 changed inputs relative to integration_base, excluding this manifest. Prior integration records are retained unchanged."
+  },
+  "parent_integration_history": [
+    {
+      "previous_head": "bd99e1f79d4302c78baa22c1b026d1078489b8ea",
+      "parent": "375f32c0b41a0439cee04d1c3c864bcfce59ea8f",
+      "change": "Merge the current supported-XXZ parent, including public-main OBC packages. Conflicts are additive experimental CMake registrations and guide entries. Preserve both parents unchanged in those sections.",
+      "source_correspondence": "All 15 non-integration finite-q input blobs are byte-identical to bd99e1f, including numerical headers, tests, example, references and guide. Supported parent headers, apps, tests, scripts and citations are byte-identical to375f32c. No new numerical implementation or tolerance change.",
+      "native": {
+        "passed": 27,
+        "failed": 0,
+        "seconds": 3.82,
+        "scope": "Reconfigure/rebuild existing native CMake targets and run the complete finite-q suite plus Async example; this checks the merged target registration and inherited public-main consumers. Earlier wide/sanitizer numerical evidence is carried forward, not rerun.",
+        "build_log_sha256": "0f8575b2792e0b53be2688c476f9f12fadfe85b7a08fe472244dd024dbfd937f",
+        "test_log_sha256": "a22188839be834870c3f05cd5bf32bbfa853b85b94350dbc41dd715378253d84"
+      },
+      "documentation": {
+        "pages": 161,
+        "bibliography_urls": 167,
+        "equations": 1961,
+        "scope": "Fresh local merged site, source math, generated citations and tutorial-link checks; deployment pending.",
+        "log_sha256": "4987e77800e0fc41122a6b92d1bd11c0953c8e18b7cd7dc7e8fc6968ff1d0b99"
+      },
+      "manifest": "Exactly the20 changed inputs relative to the current parent, excluding this manifest; earlier follow-up sections retain their historical counts."
+    },
+    {
+      "previous_head": "a62edcc40b6c9e36d8f4c405686d0a1aa3a6fc00",
+      "parent": "1fedd95471da8b2d57d93d0744eddbaa3388615d",
+      "change": "Merge current public main, retaining both sides of additive experimental indexes and test registration. QTM, storage/worker packages and sampling ownership fixes are inherited unchanged.",
+      "source_correspondence": {
+        "unchanged_finite_q_inputs": [
+          "docs/experimental-xxz-vertex.md",
+          "experimental/examples/xxz_vertex.cpp",
+          "experimental/include/bethe/experimental/detail/scaled_complex_product.hpp",
+          "experimental/include/bethe/experimental/detail/xxz_spectral_kinematics.hpp",
+          "experimental/include/bethe/experimental/xxz_vertex.hpp",
+          "experimental/include/bethe/experimental/xxz_vertex_spectrum.hpp",
+          "experimental/reference/xxz/README.md",
+          "experimental/reference/xxz/requirements.txt",
+          "experimental/reference/xxz/test_vertex_quadrature.py",
+          "experimental/reference/xxz/test_vertex_reference.py",
+          "experimental/reference/xxz/vertex-point.json",
+          "experimental/reference/xxz/vertex_numpy.py",
+          "experimental/reference/xxz/vertex_quadrature.py",
+          "experimental/reference/xxz/vertex_reference.py",
+          "experimental/tests/test_xxz_vertex.cpp"
+        ],
+        "combined_integration_inputs": [
+          "docs/experimental.md",
+          "experimental/CMakeLists.txt",
+          "experimental/README.md",
+          "experimental/tests/CMakeLists.txt",
+          "zensical.toml"
+        ],
+        "all_other_parent_inputs_unchanged": true
+      },
+      "native": {
+        "passed": 27,
+        "failed": 0,
+        "seconds": 7.644498917972669,
+        "scope": "Rebuilt the native finite-q test/example targets and ran their complete focused CTest suite. This checks registration and the inherited sampling adapters. Earlier wide/sanitizer numerical evidence is carried forward, not rerun.",
+        "build_log_sha256": "d3fb24c2375bfb7394538bf20174a8896837704afaf059b479c1705fad3e861d",
+        "test_log_sha256": "ca3597aaa391caa933598ff5c742dffc597c4d74b23185b24fb90fd8a071df64"
+      },
+      "documentation": {
+        "result": "Checked links/assets in 166 pages, 173 bibliography URLs, and preserved 2084 equations.",
+        "scope": "Fresh local site plus citation, source math and tutorial-link checks; deployment remains pending.",
+        "log_sha256": "c7c23c658553d60f65070a8425517463420a4696457b27b1c623c648159d8717"
+      },
+      "manifest": "Exactly the20 changed inputs relative to integration_base, excluding this manifest. Earlier integration records retain their historical counts."
+    },
+    {
+      "previous_head": "85635748a27e65fe822c3d10fd2fc15aa1d6921d",
+      "parent": "2c7b3f258b64cfda3c095f2920fe1ecddb2c70e5",
+      "previous_uni20_revision": "1cb2474eb0a54e13ec7d5f2c1823752020b2425c",
+      "change": "Merge actual landed finite-XXX foundation. The only conflict joins the complex-root and finite-q guide paragraphs in experimental/README.md. Numerical/test/example/reference inputs are unchanged.",
+      "source_correspondence": {
+        "unchanged_finite_q_inputs": [
+          "docs/experimental-xxz-vertex.md",
+          "experimental/examples/xxz_vertex.cpp",
+          "experimental/include/bethe/experimental/detail/scaled_complex_product.hpp",
+          "experimental/include/bethe/experimental/detail/xxz_spectral_kinematics.hpp",
+          "experimental/include/bethe/experimental/xxz_vertex.hpp",
+          "experimental/include/bethe/experimental/xxz_vertex_spectrum.hpp",
+          "experimental/reference/xxz/README.md",
+          "experimental/reference/xxz/requirements.txt",
+          "experimental/reference/xxz/test_vertex_quadrature.py",
+          "experimental/reference/xxz/test_vertex_reference.py",
+          "experimental/reference/xxz/vertex-point.json",
+          "experimental/reference/xxz/vertex_numpy.py",
+          "experimental/reference/xxz/vertex_quadrature.py",
+          "experimental/reference/xxz/vertex_reference.py",
+          "experimental/tests/test_xxz_vertex.cpp"
+        ],
+        "combined_integration_inputs": [
+          "docs/experimental.md",
+          "experimental/CMakeLists.txt",
+          "experimental/README.md",
+          "experimental/tests/CMakeLists.txt",
+          "zensical.toml"
+        ],
+        "all_other_parent_inputs_unchanged": true
+      },
+      "native": {
+        "passed": 27,
+        "failed": 0,
+        "skipped": 0,
+        "seconds": 7.671031999983825,
+        "scope": "Reconfigured and rebuilt the complete native finite-q tests and Async example against merged Uni20 ca350254. Earlier wide/sanitizer checks remain historical; current full CI is required.",
+        "configure_log_sha256": "4662f1ce501693192bc272abe6353bc3fcbbd70b9235820d574602b11b3e8b04",
+        "build_log_sha256": "37e5e574e725933a56c513d9783f8ee9527a34695ce262abfdf08d5b6ab4ac25",
+        "test_log_sha256": "d09c51863794b5c0c0d6c9d9ec01b33330bc8db37efa10a120c437dbb07fcf28"
+      },
+      "documentation": {
+        "result": "Checked links/assets in 167 pages, 173 bibliography URLs, and preserved 2085 equations.",
+        "scope": "Fresh local site, citation, source-math and tutorial-link checks; final deployment remains outstanding.",
+        "log_sha256": "d2f0e5c201bb3d9ce9d56631bb3cc517fb5d9e4d7cab21c70efcb8c1b850c7e6"
+      },
+      "manifest": "Exactly the 20 changed inputs relative to integration_base, excluding this manifest. Prior integration records are retained unchanged."
+    }
+  ],
+  "uni20_revision_scope": "Current source pin and current_parent_integration. Earlier validation sections used 1cb2474 unless separately stated; their results are historical evidence, not reruns with ca350254.",
+  "index_order_followup": {
+    "previous_head": "de25d7e5a00e724e0cee21c0b8d33cd240d90907",
+    "change": "Move the two unchanged XXZ component rows after the existing storage row, avoiding an insertion conflict with the reviewed Six-family row. All row text, links and numerical inputs are unchanged.",
+    "scope": "Documentation ordering only. Previous numerical and integration evidence is retained unchanged; source correspondence, documentation checks and current CI/reviews apply."
+  }
+}

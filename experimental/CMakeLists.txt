@@ -14,6 +14,14 @@ if(BETHE_BUILD_EXAMPLES)
   target_link_libraries(bethe-experimental-four-spinon-example PRIVATE bethe::experimental)
   set_target_properties(bethe-experimental-four-spinon-example PROPERTIES CXX_EXTENSIONS OFF)
 
+  add_executable(bethe_example_xxz_vertex examples/xxz_vertex.cpp)
+  target_link_libraries(bethe_example_xxz_vertex PRIVATE bethe::experimental TBB::tbb)
+  if(BETHE_BUILD_TESTS)
+    add_test(NAME Experimental.XXZVertex.example COMMAND bethe_example_xxz_vertex)
+    set_tests_properties(Experimental.XXZVertex.example PROPERTIES LABELS "experimental" TIMEOUT 60
+      ENVIRONMENT "${bethe_test_environment}")
+  endif()
+
   add_executable(bethe_example_boundary_form_factors examples/xxx_boundary_form_factors.cpp)
   target_link_libraries(bethe_example_boundary_form_factors PRIVATE bethe::experimental)
 endif()
