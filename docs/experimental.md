@@ -76,6 +76,8 @@ The same snapshot can evaluate existing real-root triplets through
 itself. The separate [regular complex-root helpers](experimental-xxx-complex-roots.md)
 supply unreduced form factors. The general numerical formulas and physical
 normalization must be validated for each added family.
+The [selected six-spinon families](experimental-xxx-six-spinon.md) add a solver
+and a fresh-state example on this foundation.
 
 Use `working_zero()` to create scratch with the prepared precision. MPFR inputs
 must already have one explicit finite precision; mixed, exact or unset root

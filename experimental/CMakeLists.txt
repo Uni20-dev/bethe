@@ -30,6 +30,11 @@ if(BETHE_BUILD_APPS)
   set_target_properties(bethe-experimental-xxx-boundary-magnetization PROPERTIES CXX_EXTENSIONS OFF)
 endif()
 
+if(BETHE_BUILD_EXAMPLES)
+  add_executable(bethe_example_finite_six_spinon examples/xxx_six_spinon.cpp)
+  target_link_libraries(bethe_example_finite_six_spinon PRIVATE bethe::experimental)
+endif()
+
 if(BETHE_BUILD_APPS)
   add_executable(bethe-experimental-xxx-four-spinon apps/bethe-xxx-four-spinon.cpp)
   target_link_libraries(bethe-experimental-xxx-four-spinon PRIVATE bethe::experimental bethe_cli TBB::tbb)

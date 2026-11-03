@@ -53,6 +53,12 @@ if(BETHE_BUILD_APPS AND Python3_Interpreter_FOUND)
     LABELS "experimental" TIMEOUT 90 ENVIRONMENT "${bethe_test_environment}")
 endif()
 
+add_executable(bethe_experimental_six_spinon_tests test_xxx_six_spinon.cpp)
+target_link_libraries(bethe_experimental_six_spinon_tests PRIVATE bethe::experimental)
+target_include_directories(bethe_experimental_six_spinon_tests PRIVATE "${PROJECT_SOURCE_DIR}/tests")
+bethe_discover_tests(bethe_experimental_six_spinon_tests
+  TEST_PREFIX "Experimental." LABELS "experimental" TIMEOUT 60)
+
 add_executable(bethe_experimental_four_spinon_tests test_xxx_four_spinon.cpp)
 target_link_libraries(bethe_experimental_four_spinon_tests PRIVATE bethe::experimental)
 target_include_directories(bethe_experimental_four_spinon_tests PRIVATE "${PROJECT_SOURCE_DIR}/tests")
