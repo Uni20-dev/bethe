@@ -18,6 +18,8 @@ Regular finite-root equations and unreduced form factors are described in
 [the complex-root guide](../docs/experimental-xxx-complex-roots.md). They are
 building blocks for the [selected four-spinon](../docs/experimental-xxx-four-spinon.md)
 and [selected six-spinon](../docs/experimental-xxx-six-spinon.md) solvers.
+The [bounded six-spinon catalogue and scan](../docs/experimental-xxx-six-spinon-scan.md)
+add direct momentum indexing and owned Async evaluation with retained failures.
 Experimental status does not permit silent
 failed-state deletion, altered physical normalization or an undocumented
 ideal-string fallback.

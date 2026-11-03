@@ -78,6 +78,9 @@ supply unreduced form factors. The general numerical formulas and physical
 normalization must be validated for each added family.
 The [selected six-spinon families](experimental-xxx-six-spinon.md) add a solver
 and a fresh-state example on this foundation.
+[Six-spinon catalogues and scans](experimental-xxx-six-spinon-scan.md) enumerate
+bounded label sets and reuse that solver through owned Async operations,
+preserving failed candidates and the distinction between state and transfer momentum.
 
 Use `working_zero()` to create scratch with the prepared precision. MPFR inputs
 must already have one explicit finite precision; mixed, exact or unset root
