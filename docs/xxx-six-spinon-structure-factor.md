@@ -1,5 +1,8 @@
 # Six-spinon spectral points
 
+See [momentum input near endpoints](momentum-input.md) for distance and beta
+inputs, conversion warnings, and the current scalar-geometry limit.
+
 `bethe/xxx_six_spinon_structure_factor.hpp` evaluates the longitudinal
 six-spinon response of the infinite antiferromagnetic XXX chain at zero field.
 It combines the [physical W6 density](xxx-spinon-density.md),

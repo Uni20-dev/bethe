@@ -1,5 +1,8 @@
 # Direct six-spinon moments
 
+See [momentum input near endpoints](momentum-input.md) for distance and beta
+inputs, conversion warnings, and the current scalar-geometry limit.
+
 `bethe/xxx_six_spinon_moments.hpp` calculates the longitudinal six-spinon
 intensity and first moment directly, without integrating a displayed frequency
 grid. `ThermodynamicSixSpinonMoments<Geometry,Low,High>` reuses the same physical

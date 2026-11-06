@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Copyright (C) 2026 Ian McCulloch
 #include "execution-options.hpp"
+#include "momentum-input.hpp"
 #include "spinon-thermo.hpp"
 #include <bethe/xxx_six_spinon_moments.hpp>
 #include <bethe/xxx_two_spinon_moments.hpp>
@@ -13,7 +14,8 @@ namespace model = bethe::heisenberg;
 struct Arguments
 {
     bool global = false, covariance = false;
-    std::optional<std::string> momentum, tolerance;
+    std::optional<std::string> tolerance;
+    cli::MomentumArguments momentum;
     std::string exchange = "1", channel = "zz", precision = "fp64", two_cutoff = "48";
     std::size_t two_order = 16, evaluations = 200000;
     std::optional<std::size_t> max_order;
@@ -45,8 +47,8 @@ auto program_info()
 void add_options(CLI::App& app, Arguments& a)
 {
   auto* global = app.add_flag("--global", a.global, "Integrate over frequency and momentum");
-  auto* q = cli::text_option(app, "--momentum", a.momentum, "Fixed momentum in radians/site, [0,2*pi]");
-  global->excludes(q);
+  for (auto* q : cli::add_momentum_options(app, a.momentum))
+    global->excludes(q);
   cli::option(app, "--exchange", a.exchange, "Positive exchange J")->capture_default_str();
   cli::option(app, "--channel", a.channel, "zz or raising (S-+)")
       ->check(CLI::IsMember({"zz", "raising"}))
@@ -103,6 +105,7 @@ template <class R> struct Prepared
     using Six = model::ThermodynamicSixSpinonMoments<R, spinon::DensityLow<R>, R>;
     R one, exchange, two_cutoff, four_cutoff, six_cutoff;
     std::optional<R> momentum;
+    std::optional<bethe::ResolvedMomentum<R>> momentum_input;
     std::array<R, 3> gaps;
     std::optional<std::array<R, 3>> extended_gaps;
     std::optional<R> extended_cutoff;
@@ -123,7 +126,11 @@ template <class R> struct Prepared
           selected(spinon::sectors(a.controls.sectors)), sampling(a.controls.sampling)
     {
       auto parse = [&](std::string const& text) { return cli::parse_solver_real<R>(text, options); };
-      if (a.momentum) momentum = parse(*a.momentum);
+      if (a.momentum)
+      {
+        momentum_input = a.momentum.resolve(one);
+        momentum = cli::momentum_radians(*momentum_input);
+      }
       options.max_evaluations = a.evaluations;
       if (a.max_order) options.max_order = *a.max_order;
       if (a.tolerance) options.tolerance = parse(*a.tolerance);
@@ -384,6 +391,7 @@ template <class R> int run(Arguments const& a, model::StructureFactorOptions<R> 
                                     .max_in_flight = std::max(std::size_t{2}, std::size_t(a.threads) * 2)};
   uni20::run_context context(program_info(), {.invocation = std::vector<std::string>(argv, argv + argc)});
   cli::RunReport report(context, "XXX thermodynamic spinon moments");
+  if (p->momentum_input) cli::report_momentum_input(report, a.momentum, *p->momentum_input);
   report.field("hamiltonian", "Hamiltonian", "H=J sum S_j.S_(j+1); infinite chain; zero field and temperature")
       .field("exchange", "Exchange J", p->exchange)
       .field("channel", "Channel", a.channel)
@@ -591,7 +599,7 @@ int main(int argc, char** argv)
   return cli::program_main(
       argc, argv, program_info(), [&](auto& app) { add_options(app, a); },
       [&](auto&) {
-        if (a.global == bool(a.momentum)) throw std::invalid_argument("choose exactly one of --global and --momentum");
+        if (a.global == bool(a.momentum)) throw std::invalid_argument("choose --global or one momentum input");
         auto selected = spinon::sectors(a.controls.sectors);
         if (a.controls.density_guard_bits && selected == std::vector<int>{2})
           throw std::invalid_argument("--density-guard-bits requires sector 4 or 6");

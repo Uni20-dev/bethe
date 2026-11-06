@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Copyright (C) 2026 Ian McCulloch
 #include "execution-options.hpp"
+#include "momentum-input.hpp"
 #include "result-output.hpp"
 #include "solver-precision.hpp"
 #include "spinon-thermo.hpp"
@@ -14,7 +15,8 @@ namespace model = bethe::heisenberg;
 struct Arguments
 {
     std::string exchange = "1", channel = "zz", precision = "fp64", omega_min = "0";
-    std::optional<std::string> momentum, omega, omega_max, tolerance;
+    std::optional<std::string> omega, omega_max, tolerance;
+    cli::MomentumArguments momentum;
     std::size_t points = 201, momentum_points = 65, evaluations = 200000;
     std::optional<std::size_t> max_order;
     int threads = 1;
@@ -50,7 +52,8 @@ void add_options(CLI::App& app, Arguments& a)
 {
   auto* nq = cli::count_option(app, "--momentum-points", a.momentum_points, "Uniform q grid, 2..1000000")
                  ->capture_default_str();
-  cli::text_option(app, "--momentum", a.momentum, "Single momentum, radians/site")->excludes(nq)->type_name("REAL");
+  for (auto* option : cli::add_momentum_options(app, a.momentum))
+    option->excludes(nq);
   auto* nw =
       cli::count_option(app, "--points", a.points, "Uniform frequency samples, 2..1000000")->capture_default_str();
   auto* lo = cli::option(app, "--omega-min", a.omega_min, "Frequency grid lower endpoint")->capture_default_str();
@@ -127,7 +130,9 @@ int run(Arguments const& a, model::StructureFactorOptions<Real> options, int arg
     }
     return values;
   };
-  auto const q = grid(a.momentum, zero, Real{2} * pi, a.momentum_points);
+  auto const input = a.momentum ? std::optional(a.momentum.resolve(one)) : std::nullopt;
+  auto const q = input ? std::vector<Real>{cli::momentum_radians(*input)}
+                       : grid(std::nullopt, zero, Real{2} * pi, a.momentum_points);
   auto const w = grid(a.omega, cli::parse_solver_real<Real>(a.omega_min, options),
                       a.omega_max ? cli::parse_solver_real<Real>(*a.omega_max, options) : pi * exchange, a.points);
   for (Real p : q)
@@ -159,6 +164,7 @@ int run(Arguments const& a, model::StructureFactorOptions<Real> options, int arg
       .field("block_size", "Points per task", block_size)
       .field("cpu_timing_scope", "CPU timing scope", "spectral grid including ordered row output")
       .field("points", "Spectral points", count);
+  if (input) cli::report_momentum_input(report, a.momentum, *input);
   namespace data = cli::data;
   using Optional = std::optional<Real>;
   using cli::column;
