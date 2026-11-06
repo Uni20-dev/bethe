@@ -69,7 +69,13 @@ template <uni20::Real R> class MomentumCoordinate {
       if (endpoint_ == MomentumEndpoint::zero) return uni20::scalar_like(beta_, 0);
       if (endpoint_ == MomentumEndpoint::pi) return pi;
       if (endpoint_ == MomentumEndpoint::two_pi) return R{2} * pi;
-      R const d = R{2} * uni20::math::atan(uni20::math::exp(-uni20::math::abs(beta_)));
+      R const log_t = -uni20::math::abs(beta_);
+      // For small t, atan(t)=t to working precision. Scale in the exponent
+      // before rounding: t can underflow while the final distance 2*t is
+      // still representable (including the smallest native subnormal).
+      R const d = log_t < uni20::math::log(uni20::numeric_limits<R>::epsilon(one)) / R{2}
+                      ? uni20::math::exp(log_t + uni20::math::log(R{2} * one))
+                      : R{2} * uni20::math::atan(uni20::math::exp(log_t));
       R const folded = beta_ <= R{0} ? d : pi - d;
       R const q = reflected_ ? R{2} * pi - folded : folded;
       if (!(q > R{0} && q < R{2} * pi) || q == pi)
@@ -153,6 +159,21 @@ template <uni20::Real R> R momentum_small_beta(R const& distance)
   return uni20::math::log(uni20::math::tan(distance / R{2}));
 }
 
+// d(beta)/dq = 1/sin(q). Estimate amplification of angle/pi roundoff
+// when forming an endpoint distance by subtraction. Tiny q or an explicitly
+// supplied tiny distance has condition near one. Exact endpoints have no beta.
+template <uni20::Real R> R momentum_angle_condition(R const& q, R const& one)
+{
+  R const pi = R{4} * uni20::math::atan(one);
+  if (q > R{0} && q < R{2} * pi)
+  {
+    R const folded = q <= pi ? q : R{2} * pi - q;
+    R const distance = std::min(folded, pi - folded);
+    if (distance > R{0}) return std::max(one, q / distance);
+  }
+  return one;
+}
+
 template <uni20::Real R> MomentumCoordinate<R> momentum_from_radians(R const& q, R const& one)
 {
   R const pi = R{4} * uni20::math::atan(one);
@@ -172,6 +193,16 @@ template <uni20::Real R> R momentum_parse(std::string_view text, R const& one)
     return uni20::parse_real<R>(text, one.precision());
   else
     return uni20::parse_real<R>(text);
+}
+
+template <uni20::Real R, uni20::Real From> R momentum_cast(R const& one, From const& value)
+{
+  if constexpr (uni20::has_runtime_precision_v<R>)
+    return uni20::scalar_like(one, value);
+  else
+    // Native narrowing is intentional. GCC's C++23 extended-float rules
+    // require an explicit cast for binary128 -> double/long double.
+    return static_cast<R>(value);
 }
 } // namespace detail
 
@@ -216,6 +247,7 @@ struct MomentumInput
         throw std::invalid_argument("momentum beta tolerance must be positive and finite");
       Ref const pi = Ref{4} * uni20::math::atan(reference_one);
       Ref input_condition = reference_one;
+      std::optional<Ref> input_angle;
       auto const reference = [&] {
         if (kind == MomentumInputKind::radians && (text == "pi" || text == "2*pi"))
           return MomentumCoordinate<Ref>::at_endpoint(text == "pi" ? MomentumEndpoint::pi : MomentumEndpoint::two_pi,
@@ -228,18 +260,11 @@ struct MomentumInput
           throw std::range_error("momentum input underflows the input format; specify beta instead");
         if (!uni20::isfinite(value)) throw std::invalid_argument("momentum input must be finite");
         if (kind == MomentumInputKind::beta) return MomentumCoordinate<Ref>::from_beta(value);
-        // d(beta)/dq = 1/sin(q). Include amplification of input/pi
-        // rounding when forming an endpoint distance by subtraction. Tiny
-        // q or an explicitly supplied tiny distance has condition near one.
-        if (value > Ref{0} && value < Ref{2} * pi)
-        {
-          Ref const folded = value <= pi ? value : Ref{2} * pi - value;
-          Ref const distance = std::min(folded, pi - folded);
-          if (distance > Ref{0}) input_condition = std::max(reference_one, value / distance);
-        }
+        input_condition = detail::momentum_angle_condition(value, reference_one);
         if (kind == MomentumInputKind::distance_from_pi)
         {
           if (value < Ref{0} || value > pi) throw std::invalid_argument("distance from pi must lie in [0,pi]");
+          input_angle = pi - value;
           auto const distance = detail::momentum_from_radians(value, reference_one);
           if (distance.endpoint() == MomentumEndpoint::zero)
             return MomentumCoordinate<Ref>::at_endpoint(MomentumEndpoint::pi, reference_one);
@@ -248,12 +273,16 @@ struct MomentumInput
                 "decimal distance is indistinguishable from pi at input precision; specify pi or beta");
           return MomentumCoordinate<Ref>::from_beta(-*distance.beta());
         }
+        input_angle = value;
         auto coordinate = detail::momentum_from_radians(value, reference_one);
         // Exact nonzero endpoints require symbolic input: a rounded decimal
         // equal to this precision's pi cannot identify its side or offset.
-        if (coordinate.endpoint() == MomentumEndpoint::pi || coordinate.endpoint() == MomentumEndpoint::two_pi)
+        if (coordinate.endpoint() == MomentumEndpoint::pi)
           throw std::range_error("decimal momentum is indistinguishable from pi at input precision; specify pi, an "
                                  "endpoint distance, or beta");
+        if (coordinate.endpoint() == MomentumEndpoint::two_pi)
+          throw std::range_error("decimal momentum is indistinguishable from 2*pi at input precision; specify 2*pi "
+                                 "for the exact endpoint, or use wider input precision for an interior decimal");
         return coordinate;
       }();
       if (!reference.beta())
@@ -264,7 +293,7 @@ struct MomentumInput
             mpfr};
       }
       Ref const beta = *reference.beta();
-      R const rounded = uni20::scalar_like(one, beta);
+      R const rounded = detail::momentum_cast(one, beta);
       if (!uni20::isfinite(rounded)) throw std::range_error("momentum beta exceeds the working format's range");
       auto coordinate = MomentumCoordinate<R>::from_beta(rounded, reference.reflected());
       Ref const reference_error = Ref{8} * uni20::numeric_limits<Ref>::epsilon(reference_one) *
@@ -275,15 +304,41 @@ struct MomentumInput
       bool angle_warning = false;
       try
       {
-        angle = coordinate.radians();
-        auto const roundtrip = detail::momentum_from_radians(uni20::scalar_like(reference_one, *angle), reference_one);
-        if (!roundtrip.beta() || roundtrip.reflected() != reference.reflected())
-          angle.reset();
-        else
+        // Preserve supplied angles, and convert beta/distance inputs before
+        // rounding to R. Reconstructing from the rounded working beta can
+        // shift ordinary q by several ULPs, or hide an endpoint collapse.
+        angle = detail::momentum_cast(one, input_angle ? *input_angle : reference.radians());
+        if (kind == MomentumInputKind::radians)
         {
-          Ref const difference = uni20::math::abs(beta - *roundtrip.beta()) + reference_error;
-          angle_error = uni20::format_scalar(difference);
-          angle_warning = difference > tolerance;
+          // Direct parsing avoids double rounding through a native reference.
+          // Uni20's native parser rejects ERANGE even for representable
+          // subnormals; the guarded conversion above supplies those values.
+          try
+          {
+            angle = detail::momentum_parse(text, one);
+          }
+          catch (std::out_of_range const&)
+          {}
+        }
+        R const working_pi = R{4} * uni20::math::atan(one);
+        if (!(*angle > R{0} && *angle < R{2} * working_pi) || *angle == working_pi) angle.reset();
+        if (angle)
+        {
+          Ref const reference_angle = uni20::scalar_like(reference_one, *angle);
+          auto const roundtrip = detail::momentum_from_radians(reference_angle, reference_one);
+          if (!roundtrip.beta() || roundtrip.reflected() != reference.reflected())
+            angle.reset();
+          else
+          {
+            // The roundtrip oracle has its own pi-subtraction uncertainty,
+            // even when the original beta input needed no subtraction at all.
+            Ref const roundtrip_error = Ref{8} * uni20::numeric_limits<Ref>::epsilon(reference_one) *
+                                        std::max(detail::momentum_angle_condition(reference_angle, reference_one),
+                                                 uni20::math::abs(*roundtrip.beta()));
+            Ref const difference = uni20::math::abs(beta - *roundtrip.beta()) + reference_error + roundtrip_error;
+            angle_error = uni20::format_scalar(difference);
+            angle_warning = difference > tolerance;
+          }
         }
       }
       catch (std::range_error const&)

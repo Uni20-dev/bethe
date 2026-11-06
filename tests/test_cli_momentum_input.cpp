@@ -27,6 +27,24 @@ TEST(CliMomentumInput, PreservesInputAndDetectsScalarCollapse)
   EXPECT_GT(*r.coordinate.beta(), 230.);
   EXPECT_THROW(cli::momentum_radians(r), std::range_error);
 }
+TEST(CliMomentumInput, ExplicitToleranceRequiresMomentumInEitherOrder)
+{
+  for (auto text : {"--momentum-beta-tolerance -5", "--momentum-beta-tolerance 1e-8"})
+  {
+    CLI::App app;
+    cli::MomentumArguments args;
+    cli::add_momentum_options(app, args);
+    EXPECT_THROW(app.parse(text), CLI::ValidationError);
+  }
+  for (auto text : {"--momentum-beta-tolerance 1e-8 --momentum 2", "--momentum 2 --momentum-beta-tolerance 1e-8"})
+  {
+    CLI::App app;
+    cli::MomentumArguments args;
+    cli::add_momentum_options(app, args);
+    EXPECT_NO_THROW(app.parse(text));
+    EXPECT_EQ(args.beta_tolerance, "1e-8");
+  }
+}
 TEST(CliMomentumInput, WarnsWhenOnlyScalarGeometryLosesAccuracy)
 {
   cli::MomentumArguments args;

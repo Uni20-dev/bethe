@@ -45,11 +45,23 @@ separate from kernel, quadrature, sampling and rapidity-cutoff tolerances. The
 reported estimates include a guard-precision roundoff allowance and its
 amplification when subtracting an angle from pi or 2 pi; they are not
 rigorous interval bounds or an uncertainty assigned to the supplied decimal.
+An explicit tolerance requires one of the three momentum inputs; it is rejected
+with a momentum grid or global moments instead of being ignored.
 
 Two conversions are reported separately:
 
 1. High-precision input to the working beta coordinate.
 2. The coordinate to a scalar angle, when the selected backend requires one.
+
+The scalar adapter preserves ordinary decimal angles independently of the
+working beta. Distance and beta inputs are converted at the reference precision
+before rounding to the working scalar type. An ordinary angle that rounds onto
+an endpoint is rejected too: use `pi` for exact pi, rather than its rounded
+decimal representation.
+
+The second diagnostic also includes the reference precision's uncertainty in
+pi. A same-precision roundtrip near pi can agree almost perfectly while missing
+the true endpoint distance; that agreement alone cannot establish accuracy.
 
 Warnings go to stderr. Output metadata retains the original input form and text,
 working beta, reflection, input precision, estimated conversion errors and warning
@@ -91,3 +103,15 @@ of CLI11, model code and the number of spinons. The shared application helper
 `apps/momentum-input.hpp` registers the options, reports metadata and emits
 warnings. New frontends should use those facilities rather than parsing through
 double or reconstructing pi minus a tiny distance themselves.
+
+Use `ResolvedMomentum::require_radians()` for a scalar backend. Calling
+`MomentumCoordinate::radians()` directly reconstructs from its stored beta in
+the working type; it can differ by a few ULPs from a supplied decimal angle.
+
+## Development checks
+
+Validate the native-only and MPFR builds, plus binary128 with MPFR disabled:
+the latter exercises a distinct input-reference path. The focused
+`ci-momentum-native128` configure/build/test presets compile both frontends and
+run the momentum checks. This is a separate, manually invoked preset; the
+standard GitHub CI matrix does not currently include it.

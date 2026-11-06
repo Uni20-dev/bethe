@@ -38,7 +38,14 @@ inline std::array<CLI::Option*, 3> add_momentum_options(CLI::App& app, MomentumA
       if (option != other) option->excludes(other);
   option(app, "--momentum-beta-tolerance", a.beta_tolerance,
          "Warning threshold for estimated absolute beta conversion error; not a kernel tolerance")
-      ->capture_default_str();
+      ->capture_default_str()
+      ->check(CLI::Validator(
+          [options](std::string&) {
+            for (auto* input : options)
+              if (input->count()) return std::string{};
+            return std::string("requires --momentum, --momentum-from-pi or --momentum-beta");
+          },
+          ""));
   return options;
 }
 
@@ -46,11 +53,11 @@ template <uni20::Real R> R momentum_radians(ResolvedMomentum<R> const& value)
 {
   R const result = value.require_radians();
   if (value.beta_accuracy_warning)
-    std::cerr << "warning: momentum input to working beta loses approximately " << value.beta_absolute_error
-              << " in beta; increase working precision\n";
+    std::cerr << "warning: momentum input to working beta: estimated absolute beta error " << value.beta_absolute_error
+              << "; increase working precision\n";
   if (value.scalar_accuracy_warning)
-    std::cerr << "warning: scalar momentum geometry loses approximately " << value.scalar_beta_absolute_error
-              << " in beta; increase geometry precision\n";
+    std::cerr << "warning: scalar momentum geometry: estimated absolute beta error " << value.scalar_beta_absolute_error
+              << "; increase geometry precision\n";
   return result;
 }
 

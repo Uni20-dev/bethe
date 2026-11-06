@@ -2,6 +2,7 @@
 #include <bethe/momentum_input.hpp>
 #include <cmath>
 #include <gtest/gtest.h>
+#include <limits>
 
 using bethe::MomentumCoordinate;
 using bethe::MomentumEndpoint;
@@ -32,16 +33,47 @@ TEST(MomentumInput, ExplicitDistancePreservesBothSidesWithoutSubtraction)
   EXPECT_FALSE(b.beta_accuracy_warning);
 }
 
-TEST(MomentumInput, OrdinaryAndReflectedAnglesRemainSupported)
+TEST(MomentumInput, ScalarDistanceDoesNotUnderflowThroughTheHalfAngle)
 {
-  for (auto text : {"0.3", "1.5", "3.0", "3.2", "5.0"})
+  double const smallest = std::numeric_limits<double>::denorm_min();
+  for (auto text : {"3e-324", "5e-324", "7e-324"})
   {
     auto r = MomentumInput{Kind::radians, text}.resolve(1.);
-    EXPECT_NEAR(r.require_radians(), std::stod(text), 1e-15);
+    ASSERT_TRUE(r.scalar_radians) << text;
+    EXPECT_EQ(*r.scalar_radians, smallest) << text;
+    EXPECT_EQ(r.coordinate.radians(), smallest) << text;
+  }
+  auto two = MomentumInput{Kind::radians, "8e-324"}.resolve(1.);
+  EXPECT_EQ(two.require_radians(), 2 * smallest);
+  EXPECT_EQ(two.coordinate.radians(), 2 * smallest);
+  auto too_small = MomentumInput{Kind::radians, "2e-324"}.resolve(1.);
+  EXPECT_TRUE(too_small.coordinate.beta());
+  EXPECT_FALSE(too_small.scalar_radians);
+}
+
+TEST(MomentumInput, OrdinaryAndReflectedAnglesRemainSupported)
+{
+  for (auto text : {"0.3", "1.5", "1.8", "2", "3.0", "3.2", "5.0"})
+  {
+    auto r = MomentumInput{Kind::radians, text}.resolve(1.);
+    EXPECT_EQ(r.require_radians(), std::stod(text));
+    EXPECT_EQ((MomentumInput{Kind::radians, text}.resolve(1.L).require_radians()), std::stold(text));
+#if UNI20_HAS_FLOAT128
+    EXPECT_EQ((MomentumInput{Kind::radians, text}.resolve(uni20::float128{1}).require_radians()),
+              uni20::parse_real<uni20::float128>(text));
+#endif
     EXPECT_EQ(r.coordinate.reflected(), std::stod(text) > std::acos(-1.));
     EXPECT_FALSE(r.beta_accuracy_warning);
     EXPECT_FALSE(r.scalar_accuracy_warning);
   }
+}
+
+TEST(MomentumInput, OrdinaryDecimalThatRoundsOntoPiIsRejected)
+{
+  auto r = MomentumInput{Kind::radians, "3.141592653589793"}.resolve(1.);
+  ASSERT_TRUE(r.coordinate.beta());
+  EXPECT_FALSE(r.scalar_radians);
+  EXPECT_THROW(r.require_radians(), std::range_error);
 }
 
 TEST(MomentumInput, ExactEndpointsAreDistinctFromFiniteBeta)
@@ -93,6 +125,69 @@ TEST(MomentumInput, DistinguishesBetaAndScalarGeometryAccuracy)
   EXPECT_TRUE(r.scalar_accuracy_warning);
 }
 
+TEST(MomentumInput, ScalarRoundtripIncludesItsOwnReferenceConditioning)
+{
+  // Independent high-precision evaluation of this scalar angle against pi
+  // gives |delta beta| = 8.85411894716521739146e-5. A native reference can
+  // accidentally reproduce the input beta instead; it must flag uncertainty.
+  auto r = MomentumInput{Kind::beta, "35.80001810975594200500693453648182185134"}.resolve(1.);
+  ASSERT_TRUE(r.scalar_radians);
+  EXPECT_EQ(*r.scalar_radians, 0x1.921fb54442d17p+1);
+  EXPECT_FALSE(r.beta_accuracy_warning);
+  EXPECT_TRUE(r.scalar_accuracy_warning);
+  EXPECT_GT(std::stod(r.scalar_beta_absolute_error), 8e-5);
+  if constexpr (std::numeric_limits<long double>::digits == 64)
+  {
+    // The corresponding x86 extended-precision example has true error
+    // 0.26311679938959533976, despite matching the native reference closely.
+    auto extended = MomentumInput{Kind::beta, "43.6682723752765544929"}.resolve(1.L);
+    ASSERT_TRUE(extended.scalar_radians);
+    EXPECT_EQ(*extended.scalar_radians, 0xc.90fdaa22168c234p-2L);
+    EXPECT_TRUE(extended.scalar_accuracy_warning);
+    EXPECT_GT(std::stod(extended.scalar_beta_absolute_error), 0.26);
+  }
+}
+
+#if UNI20_HAS_FLOAT128
+TEST(MomentumInput, Binary128CannotCertifyItsOwnLastEndpointInterval)
+{
+  using R = uni20::float128;
+  R const one = 1, pi = R{4} * uni20::math::atan(one);
+  R const q = pi - R{2} * uni20::numeric_limits<R>::epsilon(one);
+  // Deliberately derive beta from a same-precision approximation of pi.
+  // A nearly perfect same-precision roundtrip is not an accurate oracle.
+  R const beta = -uni20::math::log((pi - q) / R{2});
+  auto r = MomentumInput{Kind::beta, uni20::format_scalar(beta)}.resolve(one);
+  ASSERT_TRUE(r.scalar_radians);
+  EXPECT_EQ(*r.scalar_radians, q);
+  EXPECT_TRUE(r.scalar_accuracy_warning);
+}
+#endif
+
+#if !UNI20_HAS_MPREAL
+TEST(MomentumInput, RoundedEndpointDiagnosticNamesTheRequestedEndpoint)
+{
+#if UNI20_HAS_FLOAT128
+  uni20::float128 const one = 1;
+#else
+  long double const one = 1;
+#endif
+  auto const pi = 4 * uni20::math::atan(one);
+  for (auto const& [value, endpoint] : {std::pair{pi, "pi"}, std::pair{2 * pi, "2*pi"}})
+  {
+    try
+    {
+      (void)MomentumInput{Kind::radians, uni20::format_scalar(value)}.resolve(1.);
+      FAIL() << "rounded endpoint was accepted";
+    }
+    catch (std::range_error const& error)
+    {
+      EXPECT_NE(std::string(error.what()).find(std::string("specify ") + endpoint), std::string::npos);
+    }
+  }
+}
+#endif
+
 TEST(MomentumInput, NativeExtendedTypesKeepTheirWorkingType)
 {
   auto a = MomentumInput{Kind::beta, "10.5"}.resolve(1.L);
@@ -112,6 +207,8 @@ TEST(MomentumInputMpfr, DecimalMomentumIsConvertedBeforeWorkingPrecisionRounding
   using uni20::Precision;
   auto before = mpfr_get_default_prec();
   mpreal const one(1, Precision::bits(1024)), pi = 4 * uni20::math::atan(one);
+  for (auto angle : {"1.8", "2", "3.2"})
+    EXPECT_EQ((MomentumInput{Kind::radians, angle}.resolve(one).require_radians()), mpreal(angle, one.precision()));
   mpreal const distance("1e-100", one.precision());
   std::string const text = (pi - distance).to_string(180);
   auto native = MomentumInput{Kind::radians, text}.resolve(1.);

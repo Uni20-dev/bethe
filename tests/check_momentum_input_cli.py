@@ -40,6 +40,9 @@ for sectors in ("2", "2,4,6"):
     assert metadata["Momentum input"] == "0"
     assert metadata["Folded momentum beta"] == "0"
     assert abs(float(rows(doc, "spectrum")[0]["q"]) - math.pi / 2) < 1e-15
+    for text in ("1.8", "2", "3.2"):
+        ordinary = document(spectrum, ["--momentum", text, "--omega", "0", "--sectors", sectors])
+        assert float(rows(ordinary, "spectrum")[0]["q"]) == float(text)
 
 # Conversion failure must precede opening any file, including --force exports.
 with tempfile.TemporaryDirectory() as tmp:
@@ -47,16 +50,19 @@ with tempfile.TemporaryDirectory() as tmp:
     absent = Path(tmp) / "new.csv"
     for program, extra in ((spectrum, ["--omega", "0"]), (moments, [])):
         for sector in ("2", "6"):
-            protected.write_text("preserve prior result\n")
-            result = invoke(program, [*extra, "--momentum-from-pi", "1e-100",
-                                      "--sectors", sector, "--precision", "fp64",
-                                      "--json", protected, "--csv", absent, "--force"], False)
-            assert "scalar-q backend" in result.stderr
-            assert protected.read_text() == "preserve prior result\n"
-            assert not absent.exists()
+            for query in (["--momentum-from-pi", "1e-100"], ["--momentum", "3.141592653589793"]):
+                protected.write_text("preserve prior result\n")
+                result = invoke(program, [*extra, *query, "--sectors", sector, "--precision", "fp64",
+                                          "--json", protected, "--csv", absent, "--force"], False)
+                assert "scalar-q backend" in result.stderr
+                assert protected.read_text() == "preserve prior result\n"
+                assert not absent.exists()
 
 invoke(spectrum, ["--momentum-beta", "0", "--momentum-points", "3"], False)
 invoke(moments, ["--momentum-from-pi", "1", "--global"], False)
+for value in ("-5", "1e-8"):
+    invoke(spectrum, ["--momentum-points", "3", "--points", "2", "--momentum-beta-tolerance", value], False)
+    invoke(moments, ["--global", "--momentum-beta-tolerance", value], False)
 
 # Scalar-q loss is observable separately from accurate input-to-beta conversion.
 warning = invoke(spectrum, ["--momentum-from-pi", "1e-10", "--omega", "0", "--format", "json"])
@@ -64,6 +70,15 @@ assert "scalar momentum geometry" in warning.stderr
 metadata = json.loads(warning.stdout)["tables"]["spectrum"]["metadata"]
 assert metadata["Momentum conversion warning"] == "true"
 assert float(metadata["Estimated beta conversion error"]) < 1e-12
+
+# The native reference's own approximation of pi must not hide scalar-q loss
+# merely because the user supplied beta directly, without any input subtraction.
+warning = invoke(spectrum, ["--momentum-beta", "35.80001810975594200500693453648182185134",
+                            "--omega", "0", "--format", "json"])
+assert "scalar momentum geometry" in warning.stderr
+metadata = json.loads(warning.stdout)["tables"]["spectrum"]["metadata"]
+assert metadata["Momentum conversion warning"] == "true"
+assert float(metadata["Estimated scalar-q beta error"]) > 8e-5
 
 # Actual nonzero moments must be unchanged by the choice of input coordinate.
 controls = ["--sectors", "2", "--two-order", "4", "--two-gap-cutoff", "1"]

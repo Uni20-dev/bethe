@@ -43,6 +43,18 @@
       }
     },
     {
+      "name": "ci-momentum-native128",
+      "displayName": "Momentum inputs: binary128 reference without MPFR",
+      "inherits": "ci-native",
+      "cacheVariables": {
+        "UNI20_ENABLE_FLOAT80": "ON",
+        "UNI20_ENABLE_FLOAT128": "ON",
+        "UNI20_ENABLE_MPREAL": "OFF",
+        "BETHE_BUILD_EXPERIMENTAL": "OFF",
+        "BETHE_BUILD_EXAMPLES": "OFF"
+      }
+    },
+    {
       "name": "ci-sanitizers",
       "displayName": "Clang 19 ASan/UBSan: native and MPFR CPU kernels",
       "inherits": "ci-base",
@@ -71,6 +83,13 @@
     }
   ],
   "buildPresets": [
+    {
+      "name": "ci-momentum-native128",
+      "configurePreset": "ci-momentum-native128",
+      "jobs": 2,
+      "targets": ["bethe_momentum_input_tests", "bethe_cli_momentum_input_tests",
+                  "bethe-xxx-structure-factor-thermo", "bethe-xxx-moments-thermo"]
+    },
     { "name": "ci-native", "configurePreset": "ci-native", "jobs": 2 },
     { "name": "ci-sanitizers", "configurePreset": "ci-sanitizers", "jobs": 2 },
     { "name": "ci-wide", "configurePreset": "ci-wide", "jobs": 2 }
@@ -90,6 +109,12 @@
       "filter": { "exclude": { "label": "^long-running$" } }
     },
     { "name": "ci-native", "configurePreset": "ci-native", "inherits": "ci-routine-tests" },
+    {
+      "name": "ci-momentum-native128",
+      "configurePreset": "ci-momentum-native128",
+      "inherits": "ci-tests",
+      "filter": { "include": { "name": "^(MomentumInput|CliMomentumInput)" } }
+    },
     {
       "name": "ci-sanitizers",
       "configurePreset": "ci-sanitizers",
