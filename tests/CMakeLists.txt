@@ -1,3 +1,13 @@
+add_executable(bethe_momentum_input_tests test_momentum_input.cpp)
+target_link_libraries(bethe_momentum_input_tests PRIVATE bethe::bethe)
+bethe_discover_tests(bethe_momentum_input_tests)
+
+if(BETHE_BUILD_APPS)
+  add_executable(bethe_cli_momentum_input_tests test_cli_momentum_input.cpp)
+  target_link_libraries(bethe_cli_momentum_input_tests PRIVATE bethe_cli)
+  bethe_discover_tests(bethe_cli_momentum_input_tests)
+endif()
+
 add_executable(bethe_xxx_spinon_proposal_tests test_xxx_spinon_proposal.cpp)
 target_link_libraries(bethe_xxx_spinon_proposal_tests PRIVATE bethe::bethe)
 bethe_discover_tests(bethe_xxx_spinon_proposal_tests)
@@ -569,6 +579,11 @@ if(BETHE_BUILD_APPS)
     COMMAND "${CMAKE_COMMAND}" "-DPROGRAM=$<TARGET_FILE:bethe-xxx-moments-thermo>"
       "-DTOOL=bethe-xxx-moments-thermo" -P "${CMAKE_CURRENT_SOURCE_DIR}/check_citations_cli.cmake")
   if(Python3_Interpreter_FOUND)
+    add_test(NAME MomentumInput.frontends
+      COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_momentum_input_cli.py"
+        "$<TARGET_FILE:bethe-xxx-structure-factor-thermo>"
+        "$<TARGET_FILE:bethe-xxx-moments-thermo>" "${BETHE_HAS_MPREAL}")
+    set_tests_properties(MomentumInput.frontends PROPERTIES TIMEOUT 180)
     add_test(NAME XXXSpinonMoments.cli
       COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/check_xxx_spinon_moments.py"
         "$<TARGET_FILE:bethe-xxx-moments-thermo>" "${BETHE_HAS_MPREAL}")

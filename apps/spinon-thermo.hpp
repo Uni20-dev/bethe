@@ -2,6 +2,7 @@
 // Copyright (C) 2026 Ian McCulloch
 #pragma once
 #include "execution-options.hpp"
+#include "momentum-input.hpp"
 #include "result-output.hpp"
 #include "solver-precision.hpp"
 #include "spinon-precision-stages.hpp"
@@ -581,7 +582,9 @@ int run_spectrum(Arguments const& a, model::StructureFactorOptions<R> options, I
     }
     return values;
   };
-  auto const q = grid(a.momentum, zero, R{2} * pi, a.momentum_points);
+  auto const input = a.momentum ? std::optional(a.momentum.resolve(one)) : std::nullopt;
+  auto const q =
+      input ? std::vector<R>{momentum_radians(*input)} : grid(std::nullopt, zero, R{2} * pi, a.momentum_points);
   R const upper_default = uni20::scalar_like(one, plan->selected.back() / 2) * pi * exchange;
   auto const w = grid(a.omega, parse_solver_real<R>(a.omega_min, options),
                       a.omega_max ? parse_solver_real<R>(*a.omega_max, options) : upper_default, a.points);
@@ -632,6 +635,7 @@ int run_spectrum(Arguments const& a, model::StructureFactorOptions<R> options, I
                                     .max_in_flight = std::max(std::size_t{2}, std::size_t(a.threads) * 2)};
   uni20::run_context context(info, {.invocation = std::vector<std::string>(argv, argv + argc)});
   RunReport report(context, "XXX thermodynamic selected spinon contributions");
+  if (input) report_momentum_input(report, a.momentum, *input);
   report.field("hamiltonian", "Hamiltonian", "H=J sum S_j.S_(j+1); infinite chain; zero field and temperature")
       .field("exchange", "Exchange J", exchange)
       .field("channel", "Channel", a.channel)

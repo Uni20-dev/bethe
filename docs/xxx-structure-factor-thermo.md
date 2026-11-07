@@ -1,5 +1,8 @@
 # Thermodynamic XXX two-spinon structure factor
 
+See [momentum input near endpoints](momentum-input.md) for distance and beta
+inputs, conversion warnings, and the current scalar-geometry limit.
+
 [XXX family](xxx-family.md) · [Supported models](models.md)
 
 `bethe-xxx-structure-factor-thermo` evaluates the **spectral density** of the

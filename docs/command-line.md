@@ -60,6 +60,9 @@ It defaults to two spinons; [selected-sector controls](xxx-spinon-sectors.md)
 add four and six with separate quadrature, sampling and cutoff diagnostics.
 For frequency moments, use [`bethe-xxx-moments-thermo`](xxx-spinon-moments.md)
 with either `--momentum Q` or `--global` to integrate the moment measure directly.
+Both thermodynamic XXX tools also accept `--momentum-from-pi D` and
+`--momentum-beta B`; see [momentum input near an endpoint](momentum-input.md)
+for conversion diagnostics and scalar-geometry limits.
 
 XXZ uses the same common precision and output controls, but different mode
 combinations: `--excitations` selects a family at fixed `--sz`, not `--spin`.
