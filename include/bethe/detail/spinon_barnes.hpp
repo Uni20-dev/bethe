@@ -4,6 +4,7 @@
 #include <bethe/detail/spinon_numerics.hpp>
 #include <uni20/core/complex_log_gamma.hpp>
 #include <uni20/core/scalar_precision.hpp>
+#include <optional>
 #include <vector>
 
 namespace bethe::detail
@@ -22,12 +23,16 @@ template <uni20::Real Real> class SpinonBarnesContext {
     explicit SpinonBarnesContext(uni20::Precision precision, uni20::log_gamma_options options = {})
         : output_(precision), working_(working_precision(precision)), options_(options), gamma_(working_, options)
     {
+      // Normalize both Uni20's legacy integer cap and its optional cap.
+      // An unset cap leaves the precision-derived coefficient count unchanged.
+      std::optional<std::size_t> const coefficient_budget = options.max_terms;
       std::size_t count = 16;
 #if UNI20_HAS_MPREAL
       if constexpr (uni20::has_runtime_precision_v<Real>)
       {
         count = static_cast<std::size_t>(working_.bit_count() / 6) + 8;
-        if (count > options.max_terms) throw std::invalid_argument("Barnes precision exceeds coefficient budget");
+        if (coefficient_budget && count > *coefficient_budget)
+          throw std::invalid_argument("Barnes precision exceeds coefficient budget");
         // Shared exact Bernoulli recurrence; internal dependency is pinned with
         // Uni20. No finite table caps the MPFR precision.
         uni20::detail::exact_bernoulli_sequence sequence(2 * count);
@@ -42,7 +47,8 @@ template <uni20::Real Real> class SpinonBarnesContext {
       else
 #endif
       {
-        if (options.max_terms < count) throw std::invalid_argument("Barnes requires sixteen native coefficients");
+        if (coefficient_budget && *coefficient_budget < count)
+          throw std::invalid_argument("Barnes requires sixteen native coefficients");
         auto table = uni20::detail::native_stirling_coefficients<Real>();
         coefficients_.assign(table.begin(), table.end());
       }

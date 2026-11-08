@@ -1,3 +1,7 @@
+add_executable(bethe_spinon_barnes_tests test_spinon_barnes.cpp)
+target_link_libraries(bethe_spinon_barnes_tests PRIVATE bethe::bethe)
+bethe_discover_tests(bethe_spinon_barnes_tests)
+
 add_executable(bethe_momentum_input_tests test_momentum_input.cpp)
 target_link_libraries(bethe_momentum_input_tests PRIVATE bethe::bethe)
 bethe_discover_tests(bethe_momentum_input_tests)
