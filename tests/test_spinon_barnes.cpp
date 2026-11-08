@@ -38,11 +38,16 @@ TEST(SpinonBarnesMpfr, DefaultAndExplicitCoefficientBudgets)
   for (int bits : {128, 256})
   {
     auto precision = uni20::Precision::bits(bits);
+    // With optional budgets, this catches Bethe's unset-cap regression.
     check_barnes<R>(precision);
     uni20::log_gamma_options options;
     options.max_terms = 256;
     check_barnes<R>(precision, options);
     options.max_terms = 16;
+    // Gamma is constructed before Bethe's constructor body. It adds 64 guard
+    // bits to Bethe's p+64, requiring (p+128)/6+8 coefficients rather than
+    // Bethe's (p+64)/6+8. Gamma therefore rejects this explicit cap first:
+    // this checks end-to-end rejection, not coverage of Bethe's defensive guard.
     EXPECT_THROW((bethe::detail::SpinonBarnesContext<R>(precision, options)), std::invalid_argument);
   }
 }
